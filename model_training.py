@@ -1,5 +1,7 @@
 import logging
 import pandas as pd
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report
@@ -42,6 +44,36 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
                 ),
             ]
         ),
+        "XGBoost": Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "classifier",
+                    XGBClassifier(
+                        n_estimators=200,
+                        max_depth=6,
+                        learning_rate=0.05,
+                        random_state=42,
+                        eval_metric="logloss",
+                    ),
+                ),
+            ]
+        ),
+        "LightGBM": Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "classifier",
+                    LGBMClassifier(
+                        n_estimators=200,
+                        max_depth=6,
+                        learning_rate=0.05,
+                        random_state=42,
+                        verbose=-1,
+                    ),
+                ),
+            ]
+        ),
     }
 
     trained_models = {}
@@ -71,18 +103,18 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
             y_pred_vet = pipeline.predict(X_test_veterans)
             acc_vet = accuracy_score(y_test_veterans, y_pred_vet)
 
-        print(f"\n{'='*55}")
-        print(f"Wyniki: {name}")
-        print(f"-> Accuracy (Cały zbiór testowy, N={len(X_test)}): {acc_all:.4f}")
+        logger.info(f"\n{'='*55}")
+        logger.info(f"Wyniki: {name}")
+        logger.info(f"-> Accuracy (Cały zbiór testowy, N={len(X_test)}): {acc_all:.4f}")
         if not X_test_veterans.empty:
-            print(
+            logger.info(
                 f"-> Accuracy (Tylko Weterani, N={len(X_test_veterans)}):   {acc_vet:.4f}"
             )
         else:
-            print(
+            logger.info(
                 "-> Brak weteranów w zbiorze testowym przy obecnych kryteriach (N=0)."
             )
-        print(f"{'='*55}")
+        logger.info(f"{'='*55}")
 
         trained_models[name] = pipeline
 
@@ -94,7 +126,7 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
         fi_df = pd.DataFrame({"Feature": X_train.columns, "Importance": importances})
         fi_df = fi_df.sort_values(by="Importance", ascending=False).head(10)
 
-        print(f"\n--- Top 10 najważniejszych cech (Random Forest) ---")
-        print(fi_df.to_string(index=False))
+        logger.info(f"\n--- Top 10 najważniejszych cech (Random Forest) ---")
+        logger.info(fi_df.to_string(index=False))
 
     return trained_models

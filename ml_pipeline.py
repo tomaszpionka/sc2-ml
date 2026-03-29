@@ -122,34 +122,32 @@ def perform_feature_engineering(df):
 
     # UWAGA: Wyrzucamy wszystko, co dotyczy BIEŻĄCEGO meczu i nie jest znane w lobby.
     cols_to_drop = [
-        "match_id",
-        "p1_name",
-        "p2_name",
         "p1_result",
-        # "p1_startLocX",
-        # "p1_startLocY",
-        # "p2_startLocX",
-        # "p2_startLocY",
+        "p1_startLocX",
+        "p1_startLocY",
+        "p2_startLocX",
+        "p2_startLocY",
         "p1_apm",
         "p2_apm",
         "p1_sq",
         "p2_sq",
         "p1_supply_capped_pct",
-        "p2_supply_capped_pct",  # <- WYCIEK DANYCH
+        "p2_supply_capped_pct",
         "game_loops",
         "data_build",
-        "p2_target_perspective",  # <- WYCIEK DANYCH
+        "p2_target_perspective",
         "map_size_x",
-        "map_size_y",  # Wyrzucamy bo mamy już map_area
-        'tournament_name', 'map_name'  #
+        "map_size_y",
+        "tournament_name",
+        "map_name",
     ]
-    features_df = df.drop(columns=cols_to_drop)
+    features_df = df.drop(columns=cols_to_drop, errors="ignore")
 
     for col in features_df.select_dtypes(include=["bool"]).columns:
         features_df[col] = features_df[col].astype(int)
 
     logger.info(
-        f"Feature Engineering zakończony. Zbudowano {features_df.shape[1]} czystych cech."
+        f"Feature Engineering zakończony. Zbudowano {features_df.shape[1]} czystych cech (zawiera ID i nazwy dla GNN)."
     )
     return features_df
 
@@ -158,10 +156,16 @@ def temporal_train_test_split(df, test_size=0.2):
     split_index = int(len(df) * (1 - test_size))
     train_df, test_df = df.iloc[:split_index], df.iloc[split_index:]
 
-    X_train = train_df.drop(columns=["target", "match_time"])
+    # Tutaj ostatecznie odcinamy tekstowe zmienne przed wpuszczeniem do XGBoost / RF
+    cols_to_drop_for_ml = ["target", "match_time", "match_id", "p1_name", "p2_name"]
+
+    # Bezpieczne usuwanie (tylko tych kolumn, które faktycznie istnieją w DF)
+    drop_cols = [c for c in cols_to_drop_for_ml if c in train_df.columns]
+
+    X_train = train_df.drop(columns=drop_cols)
     y_train = train_df["target"]
 
-    X_test = test_df.drop(columns=["target", "match_time"])
+    X_test = test_df.drop(columns=drop_cols)
     y_test = test_df["target"]
 
     return X_train, X_test, y_train, y_test
