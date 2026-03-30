@@ -7,7 +7,7 @@ from gnn_model import SC2EdgeClassifier
 logger = logging.getLogger(__name__)
 
 
-def train_and_evaluate_gnn(graph_data, epochs=200):
+def train_and_evaluate_gnn(graph_data, epochs=200, test_size=0.2):
     logger.info("Rozpoczynam przygotowania do treningu End-to-End GNN (GraphSAGE)...")
 
     # 1. Zabezpieczenie urządzenia (Używamy CPU, by uniknąć problemów MPS ze sparse tensorami PyG)
@@ -17,7 +17,7 @@ def train_and_evaluate_gnn(graph_data, epochs=200):
     # 2. Chronologiczny podział grafu (80% Train, 20% Test)
     # Grafy nie działają jak Pandas. Musimy przeciąć krawędzie (mecze) na indeksach.
     num_edges = graph_data.num_edges
-    split_idx = int(num_edges * 0.8)
+    split_idx = int(num_edges * (1 - test_size)) # Elastyczny punkt cięcia
 
     # Maski logiczne określające, które mecze należą do którego zbioru
     train_mask = torch.arange(num_edges) < split_idx
