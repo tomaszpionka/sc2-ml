@@ -47,7 +47,7 @@ from node2vec_embedder import train_and_get_embeddings, append_embeddings_to_df
 from gnn_visualizer import visualize_player_embeddings
 
 MODELS_TO_RUN = ["GNN"] # Opcje: "CLASSIC", "NODE2VEC", "GNN"
-EVALUATE_PER_PATCH = True  # True
+EVALUATE_PER_PATCH = False  # True
 GLOBAL_TEST_SIZE = 0.05
 
 # def main():
