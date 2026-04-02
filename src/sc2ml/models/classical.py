@@ -4,7 +4,6 @@ import pandas as pd
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
@@ -19,31 +18,14 @@ from sc2ml.config import (
     RF_N_ESTIMATORS,
     VETERAN_MIN_GAMES,
 )
+from sc2ml.models.evaluation import ModelResults, evaluate_model
 
 logger = logging.getLogger(__name__)
 
 
-def train_and_evaluate_models(
-    X_train: pd.DataFrame,
-    X_test: pd.DataFrame,
-    y_train: pd.Series,
-    y_test: pd.Series,
-    X_val: pd.DataFrame | None = None,
-    y_val: pd.Series | None = None,
-) -> dict[str, Pipeline]:
-    """Train all classical ML models and report accuracy on full and veteran-only test sets.
-
-    Veterans are matches where both players have at least VETERAN_MIN_GAMES of
-    recorded history — this subset is expected to be more predictable and serves
-    as a secondary benchmark alongside the full test set accuracy.
-
-    Parameters
-    ----------
-    X_val, y_val : optional
-        Validation set.  When provided, XGBoost and LightGBM use it for early
-        stopping and validation accuracy is reported for all models.
-    """
-    models: dict[str, Pipeline] = {
+def _build_model_pipelines() -> dict[str, Pipeline]:
+    """Create unfitted model pipelines."""
+    return {
         "Logistic Regression": Pipeline(
             [
                 ("scaler", StandardScaler()),
@@ -109,14 +91,44 @@ def train_and_evaluate_models(
         ),
     }
 
-    trained_models: dict[str, Pipeline] = {}
 
-    # Veteran subset: matches where both players have enough prior history
-    veterans_mask = (X_test["p1_total_games_played"] >= VETERAN_MIN_GAMES) & (
-        X_test["p2_total_games_played"] >= VETERAN_MIN_GAMES
-    )
-    X_test_veterans = X_test[veterans_mask]
-    y_test_veterans = y_test[veterans_mask]
+def train_and_evaluate_models(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+    X_val: pd.DataFrame | None = None,
+    y_val: pd.Series | None = None,
+    matchup_col: pd.Series | None = None,
+    compute_ci: bool = True,
+) -> tuple[dict[str, Pipeline], list[ModelResults]]:
+    """Train all classical ML models and evaluate with full metrics.
+
+    Parameters
+    ----------
+    X_val, y_val : optional
+        Validation set.  When provided, XGBoost and LightGBM use it for early
+        stopping and validation accuracy is reported for all models.
+    matchup_col : optional
+        Series of matchup types (e.g. "PvT") aligned with X_test index for
+        per-matchup breakdown.
+    compute_ci : bool
+        Whether to compute bootstrap confidence intervals (slow).
+
+    Returns
+    -------
+    (trained_models dict, list of ModelResults)
+    """
+    models = _build_model_pipelines()
+
+    trained_models: dict[str, Pipeline] = {}
+    all_results: list[ModelResults] = []
+
+    # Veterans mask
+    veterans_mask = (
+        (X_test["p1_total_games_played"] >= VETERAN_MIN_GAMES)
+        & (X_test["p2_total_games_played"] >= VETERAN_MIN_GAMES)
+    ) if "p1_total_games_played" in X_test.columns else None
 
     # Prepare scaled validation data for early stopping (XGBoost, LightGBM)
     has_val = X_val is not None and y_val is not None
@@ -137,45 +149,24 @@ def train_and_evaluate_models(
         else:
             pipeline.fit(X_train, y_train)
 
-        # Full test set accuracy
-        y_pred_all = pipeline.predict(X_test)
-        acc_all = accuracy_score(y_test, y_pred_all)
-
-        # Validation accuracy
-        if has_val:
-            y_pred_val = pipeline.predict(X_val)
-            acc_val = accuracy_score(y_val, y_pred_val)
-
-        # Veterans-only accuracy
-        acc_vet = 0.0
-        if not X_test_veterans.empty:
-            y_pred_vet = pipeline.predict(X_test_veterans)
-            acc_vet = accuracy_score(y_test_veterans, y_pred_vet)
-
-        logger.info(f"\n{'=' * 55}")
-        logger.info(f"Results: {name}")
-        if has_val:
-            assert X_val is not None  # for mypy; guarded by has_val
-            logger.info(f"-> Accuracy (val, N={len(X_val)}): {acc_val:.4f}")
-        logger.info(f"-> Accuracy (all test, N={len(X_test)}): {acc_all:.4f}")
-        logger.info(f"\nConfusion Matrix:\n{confusion_matrix(y_test, y_pred_all)}")
-        logger.info(
-            f"\nClassification Report:\n"
-            f"{classification_report(y_test, y_pred_all, target_names=['P2 wins', 'P1 wins'])}"
-        )
-        if not X_test_veterans.empty:
-            logger.info(
-                f"-> Accuracy (veterans only, N={len(X_test_veterans)}): {acc_vet:.4f}"
-            )
-            logger.info(
-                f"\nVeterans Classification Report:\n"
-                f"{classification_report(y_test_veterans, y_pred_vet, target_names=['P2 wins', 'P1 wins'])}"  # noqa: E501
-            )
-        else:
-            logger.info("-> No veterans in test set at current threshold (N=0).")
-        logger.info(f"{'=' * 55}")
-
         trained_models[name] = pipeline
+
+        # Full evaluation via evaluation module
+        result = evaluate_model(
+            pipeline, X_test, y_test, name,
+            matchup_col=matchup_col,
+            veterans_mask=veterans_mask,
+            compute_ci=compute_ci,
+        )
+        all_results.append(result)
+
+        # Validation accuracy (logged only, not stored in ModelResults)
+        if has_val:
+            assert X_val is not None  # for mypy
+            y_pred_val = pipeline.predict(X_val)
+            from sklearn.metrics import accuracy_score
+            acc_val = accuracy_score(y_val, y_pred_val)
+            logger.info(f"  val accuracy (N={len(X_val)}): {acc_val:.4f}")
 
     # Log feature importances from the Random Forest
     rf_pipeline = trained_models.get("Random Forest")
@@ -187,4 +178,4 @@ def train_and_evaluate_models(
         logger.info("\n--- Top 10 features (Random Forest) ---")
         logger.info(fi_df.to_string(index=False))
 
-    return trained_models
+    return trained_models, all_results

@@ -27,8 +27,8 @@ def classical_repro_worker(model_name: str, result_queue) -> None:
     X_train = X_train.drop(columns=str_cols)
     X_test = X_test.drop(columns=str_cols)
 
-    models1 = train_and_evaluate_models(X_train, X_test, y_train, y_test)
-    models2 = train_and_evaluate_models(X_train, X_test, y_train, y_test)
+    models1, _ = train_and_evaluate_models(X_train, X_test, y_train, y_test, compute_ci=False)
+    models2, _ = train_and_evaluate_models(X_train, X_test, y_train, y_test, compute_ci=False)
 
     preds1 = models1[model_name].predict(X_test)
     preds2 = models2[model_name].predict(X_test)

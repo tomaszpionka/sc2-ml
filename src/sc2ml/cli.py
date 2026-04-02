@@ -118,7 +118,7 @@ def run_pipeline() -> None:
                 X_test = X_test.select_dtypes(include="number")
                 X_val, y_val = None, None
 
-            train_and_evaluate_models(
+            _trained, _results = train_and_evaluate_models(
                 X_train, X_test, y_train, y_test, X_val=X_val, y_val=y_val
             )
 
@@ -183,6 +183,18 @@ def main() -> None:
     # run subcommand
     subparsers.add_parser("run", help="Run the ML training pipeline")
 
+    # ablation subcommand
+    subparsers.add_parser("ablation", help="Run feature group ablation study")
+
+    # tune subcommand
+    tune_parser = subparsers.add_parser("tune", help="Optuna tuning for top models")
+    tune_parser.add_argument(
+        "--trials", type=int, default=200, help="Number of Optuna trials"
+    )
+
+    # evaluate subcommand
+    subparsers.add_parser("evaluate", help="Full evaluation with all metrics")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -196,9 +208,148 @@ def main() -> None:
     elif args.command == "run":
         run_pipeline()
 
+    elif args.command == "ablation":
+        _run_ablation_command()
+
+    elif args.command == "tune":
+        _run_tune_command(n_trials=args.trials)
+
+    elif args.command == "evaluate":
+        _run_evaluate_command()
+
     else:
         # Default: run pipeline (backward-compatible)
         run_pipeline()
+
+
+def _load_data_and_features():
+    """Common data loading for subcommands."""
+    con = duckdb.connect(str(DB_FILE))
+    try:
+        row = con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'match_series'"
+        ).fetchone()
+        has_series = row is not None and row[0] > 0
+        series_df = (
+            con.execute("SELECT match_id, series_id FROM match_series").df()
+            if has_series
+            else None
+        )
+        raw_df = get_matches_dataframe(con)
+        return raw_df, series_df
+    finally:
+        con.close()
+
+
+def _run_ablation_command() -> None:
+    """Run the feature group ablation study."""
+    from sc2ml.models.evaluation import run_feature_ablation
+    from sc2ml.models.reporting import ExperimentReport
+
+    raw_df, series_df = _load_data_and_features()
+    results = run_feature_ablation(raw_df, series_df=series_df)
+
+    report = ExperimentReport(ablation_results=results)
+    report.to_markdown(Path("reports") / "ablation_results.md")
+    report.to_json()
+    logger.info("Ablation study complete.")
+
+
+def _run_tune_command(n_trials: int = 200) -> None:
+    """Run Optuna tuning for top models."""
+    from sc2ml.data.cv import ExpandingWindowCV
+    from sc2ml.models.evaluation import evaluate_model
+    from sc2ml.models.tuning import tune_lgbm_optuna, tune_lr_grid, tune_xgb_optuna
+
+    raw_df, series_df = _load_data_and_features()
+    features_df = build_features(raw_df, series_df=series_df)
+    X_train, X_val, X_test, y_train, y_val, y_test = split_for_ml(features_df)
+
+    # Combine train+val for CV
+    X_cv = pd.concat([X_train, X_val])
+    y_cv = pd.concat([y_train, y_val])
+
+    cv = ExpandingWindowCV(n_splits=5, min_train_frac=0.3)
+
+    logger.info("Tuning LightGBM...")
+    lgbm_pipeline = tune_lgbm_optuna(X_cv, y_cv, cv, n_trials=n_trials)
+    lgbm_result = evaluate_model(lgbm_pipeline, X_test, y_test, "LightGBM (tuned)")
+
+    logger.info("Tuning XGBoost...")
+    xgb_pipeline = tune_xgb_optuna(X_cv, y_cv, cv, n_trials=n_trials)
+    xgb_result = evaluate_model(xgb_pipeline, X_test, y_test, "XGBoost (tuned)")
+
+    logger.info("Tuning Logistic Regression...")
+    lr_pipeline = tune_lr_grid(X_cv, y_cv, cv)
+    lr_result = evaluate_model(lr_pipeline, X_test, y_test, "LR (tuned)")
+
+    from sc2ml.models.reporting import ExperimentReport
+    report = ExperimentReport(model_results=[lgbm_result, xgb_result, lr_result])
+    report.to_markdown(Path("reports") / "tuning_results.md")
+    report.to_json()
+    logger.info("Tuning complete.")
+
+
+def _run_evaluate_command() -> None:
+    """Full evaluation with all models, baselines, and analysis."""
+    from sc2ml.models.baselines import build_baselines
+    from sc2ml.models.evaluation import compare_models, evaluate_model
+
+    raw_df, series_df = _load_data_and_features()
+    features_df = build_features(raw_df, series_df=series_df)
+
+    # Preserve metadata before splitting
+    matchup_col = features_df.get("matchup_type")
+
+    X_train, X_val, X_test, y_train, y_val, y_test = split_for_ml(features_df)
+
+    # Align matchup_col with test set
+    if matchup_col is not None:
+        test_mask = features_df["split"] == "test"
+        matchup_test = matchup_col[test_mask].reset_index(drop=True)
+    else:
+        matchup_test = None
+
+    from sc2ml.config import VETERAN_MIN_GAMES
+    veterans_mask = None
+    if "p1_total_games_played" in X_test.columns:
+        veterans_mask = (
+            (X_test["p1_total_games_played"] >= VETERAN_MIN_GAMES)
+            & (X_test["p2_total_games_played"] >= VETERAN_MIN_GAMES)
+        )
+
+    all_results = []
+
+    # Train and evaluate baselines
+    baselines = build_baselines()
+    for name, baseline in baselines.items():
+        baseline.fit(X_train, y_train)
+        result = evaluate_model(
+            baseline, X_test, y_test, name,
+            matchup_col=matchup_test, veterans_mask=veterans_mask,
+        )
+        all_results.append(result)
+
+    # Train and evaluate classical models
+    _trained, classical_results = train_and_evaluate_models(
+        X_train, X_test, y_train, y_test,
+        X_val=X_val, y_val=y_val,
+        matchup_col=matchup_test,
+    )
+    all_results.extend(classical_results)
+
+    # Pairwise comparisons
+    comparisons = compare_models(all_results)
+
+    from sc2ml.models.reporting import ExperimentReport
+    report = ExperimentReport(
+        model_results=all_results,
+        comparisons=comparisons,
+    )
+    report.to_markdown(Path("reports") / "full_evaluation.md")
+    report.to_json()
+    logger.info("Full evaluation complete.")
 
 
 if __name__ == "__main__":
