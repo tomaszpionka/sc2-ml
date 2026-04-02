@@ -43,6 +43,12 @@ VETERAN_MIN_GAMES: int = 3   # Minimum historical games for the "veterans only" 
 BAYESIAN_C: float = 5.0      # Bayesian smoothing confidence weight
 BAYESIAN_PRIOR_WR: float = 0.5  # Prior win rate for Bayesian smoothing
 
+# ── Feature engineering — Group D (Form & momentum) ───────────────────────
+EMA_ALPHA: float = 0.3         # Decay factor for recency-weighted exponential moving average
+ACTIVITY_WINDOW_SHORT: int = 7   # Days for short-term activity count
+ACTIVITY_WINDOW_LONG: int = 30   # Days for long-term activity count
+H2H_BAYESIAN_C: float = 3.0     # Smoothing weight for sparse head-to-head data
+
 # ── GNN architecture ───────────────────────────────────────────────────────────
 GNN_HIDDEN_DIM: int = 64
 GNN_HEADS_CONV1: int = 4
@@ -85,6 +91,15 @@ LR_MAX_ITER: int = 1000
 # ── Hyperparameter tuning ──────────────────────────────────────────────────────
 TUNING_N_ITER: int = 50
 TUNING_CV_FOLDS: int = 5
+
+# ── DuckDB resource limits ────────────────────────────────────────────────────
+DUCKDB_MEMORY_LIMIT: str = "24GB"  # Safe on 36 GB M4 Max; leaves headroom for OS
+DUCKDB_MAX_TEMP_DIR_SIZE: str = "150GB"
+DUCKDB_THREADS: int = 4
+DUCKDB_MAX_OBJECT_SIZE: int = 536_870_912  # 512 MB — max JSON object size for read_json
+
+# ── Pipeline logging ──────────────────────────────────────────────────────────
+EXTRACTION_LOG_INTERVAL: int = 200  # Log progress every N files during extraction
 
 # ── Patch analysis ─────────────────────────────────────────────────────────────
 PATCH_MIN_MATCHES: int = 100  # Minimum matches for a patch to be included in per-patch analysis

@@ -7,8 +7,7 @@ import pandas as pd
 
 from sc2ml.config import DB_FILE, PATCH_MIN_MATCHES
 from sc2ml.data.processing import get_matches_dataframe, validate_data_split_sql
-from sc2ml.features.elo import add_elo_features
-from sc2ml.features.engineering import perform_feature_engineering, temporal_train_test_split
+from sc2ml.features import build_features, split_for_ml
 from sc2ml.gnn.embedder import append_embeddings_to_df, train_and_get_embeddings
 from sc2ml.gnn.pipeline import build_starcraft_graph
 from sc2ml.gnn.trainer import train_and_evaluate_gnn
@@ -52,12 +51,19 @@ def main() -> None:
         # Stage 0: data validation
         validate_data_split_sql(con, split_ratio=(1 - GLOBAL_TEST_SIZE))
 
-        raw_df = get_matches_dataframe(con)
-        df_with_elo = add_elo_features(raw_df)
-        df_with_elo["target"] = (df_with_elo["p1_result"] == "Win").astype(int)
+        # Load series data if available (for Group E context features)
+        has_series = con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'match_series'"
+        ).fetchone()[0] > 0
+        series_df = (
+            con.execute("SELECT match_id, series_id FROM match_series").df()
+            if has_series
+            else None
+        )
 
-        # Feature engineering (date column is preserved for temporal splitting)
-        features_df = perform_feature_engineering(df_with_elo)
+        raw_df = get_matches_dataframe(con)
+        features_df = build_features(raw_df, series_df=series_df)
 
         # Stage 1: classical / Node2Vec path
         if "CLASSIC" in MODELS_TO_RUN or "NODE2VEC" in MODELS_TO_RUN:
@@ -66,9 +72,18 @@ def main() -> None:
                 embs = train_and_get_embeddings(graph_data, player_to_id)
                 features_df = append_embeddings_to_df(features_df, embs)
 
-            X_train, X_test, y_train, y_test = temporal_train_test_split(
-                features_df, test_size=GLOBAL_TEST_SIZE
-            )
+            if "split" in features_df.columns:
+                X_train, X_val, X_test, y_train, y_val, y_test = split_for_ml(
+                    features_df
+                )
+            else:
+                # Fallback: simple chronological split when no split table exists
+                from sc2ml.features.compat import temporal_train_test_split
+
+                X_train, X_test, y_train, y_test = temporal_train_test_split(
+                    features_df, test_size=GLOBAL_TEST_SIZE
+                )
+
             train_and_evaluate_models(X_train, X_test, y_train, y_test)
 
         # Stage 2: GNN path
