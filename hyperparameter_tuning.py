@@ -1,45 +1,45 @@
 import logging
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import randint
+from config import RANDOM_SEED, TUNING_N_ITER, TUNING_CV_FOLDS
 
 logger = logging.getLogger(__name__)
 
 
-def tune_random_forest(X_train, y_train):
-    logger.info(
-        "Rozpoczynam strojenie hiperparametrów dla Random Forest (Wariant A)..."
-    )
+def tune_random_forest(X_train: pd.DataFrame, y_train: pd.Series) -> RandomForestClassifier:
+    """Run RandomizedSearchCV to find optimal Random Forest hyperparameters.
 
-    # Definiujemy przestrzeń poszukiwań (Grid)
+    Searches TUNING_N_ITER random combinations over the defined parameter space
+    using TUNING_CV_FOLDS-fold cross-validation. Returns the best fitted estimator.
+    """
+    logger.info("Starting Random Forest hyperparameter tuning...")
+
     param_dist = {
-        "n_estimators": randint(100, 500),  # Liczba drzew
-        "max_depth": [5, 8, 12, 15, None],  # Maksymalna głębokość drzewa
-        "min_samples_split": randint(2, 20),  # Minimalna liczba próbek do podziału
-        "min_samples_leaf": randint(
-            1, 10
-        ),  # Minimalna liczba próbek w liściu (chroni przed overfittingiem)
-        "max_features": ["sqrt", "log2"],  # Liczba cech brana pod uwagę przy podziale
+        "n_estimators": randint(100, 500),         # Number of trees
+        "max_depth": [5, 8, 12, 15, None],          # Maximum tree depth
+        "min_samples_split": randint(2, 20),         # Minimum samples required to split a node
+        "min_samples_leaf": randint(1, 10),          # Minimum samples in leaf (regularisation)
+        "max_features": ["sqrt", "log2"],            # Features considered per split
     }
 
-    rf = RandomForestClassifier(random_state=42)
+    rf = RandomForestClassifier(random_state=RANDOM_SEED)
 
-    # RandomizedSearchCV wylosuje 50 kombinacji i przetestuje je za pomocą 5-krotnej walidacji krzyżowej
     random_search = RandomizedSearchCV(
         estimator=rf,
         param_distributions=param_dist,
-        n_iter=50,
-        cv=5,
+        n_iter=TUNING_N_ITER,
+        cv=TUNING_CV_FOLDS,
         scoring="accuracy",
-        n_jobs=-1,  # Używa wszystkich rdzeni procesora
-        random_state=42,
+        n_jobs=-1,
+        random_state=RANDOM_SEED,
         verbose=1,
     )
 
     random_search.fit(X_train, y_train)
 
-    logger.info(f"Najlepsze parametry: {random_search.best_params_}")
-    logger.info(f"Najlepsze CV Accuracy: {random_search.best_score_:.4f}")
+    logger.info(f"Best parameters: {random_search.best_params_}")
+    logger.info(f"Best CV accuracy: {random_search.best_score_:.4f}")
 
-    # Zwracamy model z najlepszymi znalezionymi ustawieniami
     return random_search.best_estimator_

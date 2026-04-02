@@ -4,19 +4,40 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from config import (
+    RANDOM_SEED,
+    VETERAN_MIN_GAMES,
+    RF_N_ESTIMATORS,
+    RF_MAX_DEPTH,
+    RF_MIN_SAMPLES_SPLIT,
+    HGB_MAX_ITER,
+    HGB_LEARNING_RATE,
+    LR_MAX_ITER,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def train_and_evaluate_models(X_train, X_test, y_train, y_test):
-    models = {
+def train_and_evaluate_models(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+) -> dict[str, Pipeline]:
+    """Train all classical ML models and report accuracy on full and veteran-only test sets.
+
+    Veterans are matches where both players have at least VETERAN_MIN_GAMES of
+    recorded history — this subset is expected to be more predictable and serves
+    as a secondary benchmark alongside the full test set accuracy.
+    """
+    models: dict[str, Pipeline] = {
         "Logistic Regression": Pipeline(
             [
                 ("scaler", StandardScaler()),
-                ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
+                ("classifier", LogisticRegression(max_iter=LR_MAX_ITER, random_state=RANDOM_SEED)),
             ]
         ),
         "Random Forest": Pipeline(
@@ -25,10 +46,10 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
                 (
                     "classifier",
                     RandomForestClassifier(
-                        n_estimators=200,
-                        max_depth=8,
-                        min_samples_split=5,
-                        random_state=42,
+                        n_estimators=RF_N_ESTIMATORS,
+                        max_depth=RF_MAX_DEPTH,
+                        min_samples_split=RF_MIN_SAMPLES_SPLIT,
+                        random_state=RANDOM_SEED,
                     ),
                 ),
             ]
@@ -39,7 +60,9 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
                 (
                     "classifier",
                     HistGradientBoostingClassifier(
-                        max_iter=200, learning_rate=0.05, random_state=42
+                        max_iter=HGB_MAX_ITER,
+                        learning_rate=HGB_LEARNING_RATE,
+                        random_state=RANDOM_SEED,
                     ),
                 ),
             ]
@@ -50,10 +73,10 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
                 (
                     "classifier",
                     XGBClassifier(
-                        n_estimators=200,
+                        n_estimators=RF_N_ESTIMATORS,
                         max_depth=6,
-                        learning_rate=0.05,
-                        random_state=42,
+                        learning_rate=HGB_LEARNING_RATE,
+                        random_state=RANDOM_SEED,
                         eval_metric="logloss",
                     ),
                 ),
@@ -65,10 +88,10 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
                 (
                     "classifier",
                     LGBMClassifier(
-                        n_estimators=200,
+                        n_estimators=RF_N_ESTIMATORS,
                         max_depth=6,
-                        learning_rate=0.05,
-                        random_state=42,
+                        learning_rate=HGB_LEARNING_RATE,
+                        random_state=RANDOM_SEED,
                         verbose=-1,
                     ),
                 ),
@@ -76,57 +99,59 @@ def train_and_evaluate_models(X_train, X_test, y_train, y_test):
         ),
     }
 
-    trained_models = {}
+    trained_models: dict[str, Pipeline] = {}
 
-    # Filtrujemy zbiór testowy, aby wyciągnąć mecze, w których obaj gracze mają już historię.
-    # Ustawiamy próg: minimum 3 rozegrane mecze w historii przed obecnym starciem.
-    veterans_mask = (X_test["p1_total_games_played"] >= 3) & (
-        X_test["p2_total_games_played"] >= 3
+    # Veteran subset: matches where both players have enough prior history
+    veterans_mask = (X_test["p1_total_games_played"] >= VETERAN_MIN_GAMES) & (
+        X_test["p2_total_games_played"] >= VETERAN_MIN_GAMES
     )
-
     X_test_veterans = X_test[veterans_mask]
     y_test_veterans = y_test[veterans_mask]
 
     for name, pipeline in models.items():
-        logger.info(f"Trenowanie modelu: {name}...")
-
-        # Uczymy model na pełnym zbiorze treningowym
+        logger.info(f"Training model: {name}...")
         pipeline.fit(X_train, y_train)
 
-        # 1. Predykcja na CAŁYM zbiorze testowym (zawiera "Nieznajomych")
+        # Full test set accuracy
         y_pred_all = pipeline.predict(X_test)
         acc_all = accuracy_score(y_test, y_pred_all)
 
-        # 2. Predykcja TYLKO na zbiorze "Weteranów"
+        # Veterans-only accuracy
         acc_vet = 0.0
         if not X_test_veterans.empty:
             y_pred_vet = pipeline.predict(X_test_veterans)
             acc_vet = accuracy_score(y_test_veterans, y_pred_vet)
 
-        logger.info(f"\n{'='*55}")
-        logger.info(f"Wyniki: {name}")
-        logger.info(f"-> Accuracy (Cały zbiór testowy, N={len(X_test)}): {acc_all:.4f}")
+        logger.info(f"\n{'=' * 55}")
+        logger.info(f"Results: {name}")
+        logger.info(f"-> Accuracy (all test, N={len(X_test)}): {acc_all:.4f}")
+        logger.info(f"\nConfusion Matrix:\n{confusion_matrix(y_test, y_pred_all)}")
+        logger.info(
+            f"\nClassification Report:\n"
+            f"{classification_report(y_test, y_pred_all, target_names=['P2 wins', 'P1 wins'])}"
+        )
         if not X_test_veterans.empty:
             logger.info(
-                f"-> Accuracy (Tylko Weterani, N={len(X_test_veterans)}):   {acc_vet:.4f}"
+                f"-> Accuracy (veterans only, N={len(X_test_veterans)}): {acc_vet:.4f}"
+            )
+            logger.info(
+                f"\nVeterans Classification Report:\n"
+                f"{classification_report(y_test_veterans, y_pred_vet, target_names=['P2 wins', 'P1 wins'])}"
             )
         else:
-            logger.info(
-                "-> Brak weteranów w zbiorze testowym przy obecnych kryteriach (N=0)."
-            )
-        logger.info(f"{'='*55}")
+            logger.info("-> No veterans in test set at current threshold (N=0).")
+        logger.info(f"{'=' * 55}")
 
         trained_models[name] = pipeline
 
-    # Wypisujemy Feature Importance z Random Forest
+    # Log feature importances from the Random Forest
     rf_pipeline = trained_models.get("Random Forest")
     if rf_pipeline:
         rf_model = rf_pipeline.named_steps["classifier"]
         importances = rf_model.feature_importances_
         fi_df = pd.DataFrame({"Feature": X_train.columns, "Importance": importances})
         fi_df = fi_df.sort_values(by="Importance", ascending=False).head(10)
-
-        logger.info(f"\n--- Top 10 najważniejszych cech (Random Forest) ---")
+        logger.info(f"\n--- Top 10 features (Random Forest) ---")
         logger.info(fi_df.to_string(index=False))
 
     return trained_models
