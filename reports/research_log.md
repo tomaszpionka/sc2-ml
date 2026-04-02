@@ -6,6 +6,40 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-02 — Path B: In-game event extraction pipeline and temporal split management
+
+**Objective:** Build the data extraction layer for accessing raw in-game events (tracker events, game events) from SC2 replay files, and implement proper temporal train/val/test splitting with series-aware boundaries.
+
+**Approach:** Designed a two-phase extraction pipeline: (1) multiprocessing-based raw event extraction from replay JSON to Parquet intermediate storage, and (2) DuckDB loading with typed views (player_stats with 39 stat columns, match_player_map for game event correlation). Temporal splitting uses a 80/15/5 ratio with a 2-hour gap heuristic to group best-of series and prevent series from being split across partitions.
+
+**Issues encountered:**
+- `slim_down_sc2_with_manifest()` was destructive (modifies files in-place with no undo) — added `dry_run=True` default to prevent accidental data loss.
+- Best-of series detection requires a time-gap heuristic since replays don't explicitly mark series membership. Chose 2 hours as a conservative threshold.
+- Pre-existing MPS segfault in `test_model_reproducibility` (unrelated to this work).
+
+**Resolution/Outcome:** All 70 tests pass (28 existing + 42 new). Pipeline architecture separates extraction (CPU-bound, parallelized) from loading (DuckDB bulk inserts). Parquet intermediate format enables inspection and re-loading without re-extraction.
+
+**Thesis notes:** The series-aware temporal split is methodologically important — naive time-based splits can leak information when consecutive games in a best-of series land in different partitions. The 80/15/5 split with validation set supports proper hyperparameter tuning without test set contamination. The 39-field player_stats view provides the foundation for in-game feature engineering (Chapter 4).
+
+---
+
+## 2026-04-02 — Repository restructured into proper Python package
+
+**Objective:** Reorganize flat 13-module codebase into a proper `src/sc2ml/` package layout to support maintainability, testability, and future AoE2 integration.
+
+**Approach:** Adopted PyPA-recommended src layout with four subpackages (`data/`, `features/`, `models/`, `gnn/`). Renamed modules to avoid namespace redundancy. Updated all imports, fixed test infrastructure (removed `sys.path` hacks, created proper `conftest.py`), configured Poetry for package mode with CLI entry point. Archived legacy execution reports to `reports/archive/`.
+
+**Issues encountered:**
+- `conftest.py` is auto-loaded by pytest but not directly importable — required moving shared test utilities to `tests/helpers.py` instead.
+- Pre-existing LightGBM segfault on Apple M4 Max during `test_model_reproducibility` (known MPS issue, unrelated to refactoring).
+- Ruff identified pre-existing F821 errors from string type annotations — fixed with proper `TYPE_CHECKING` imports.
+
+**Resolution/Outcome:** All 28 non-MPS tests pass. Ruff clean (1 pre-existing E501 in `test_mps.py`). Package installs correctly via `poetry install`. CLI entry point registered. Legacy reports preserved in `reports/archive/`.
+
+**Thesis notes:** The src layout establishes the foundation for shared abstractions when AoE2 integration begins. The package structure makes it clear which components are game-specific (data ingestion, graph construction) vs. reusable (model evaluation, feature engineering patterns).
+
+---
+
 ## 2026-04-02 — Project infrastructure setup for Claude Code collaboration
 
 **Objective:** Establish structured development workflow with rich guidelines, git conventions, and documentation trail for thesis work.
@@ -31,6 +65,6 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 - Data leakage risk from using current-match statistics (APM, SQ, supply_capped_pct) as features. Resolution: feature engineering uses only pre-match historical aggregates.
 - `matches_flat` view produces 2 rows per match (both player perspectives) — intentional augmentation but requires careful handling in ELO computation (deduplicate via `processed_matches` set).
 
-**Resolution/Outcome:** Classical ML models achieve ~63-65% accuracy (Gradient Boosting best). Top features: historical win rate, experience differential, SQ differential. GNN pipeline functional with GATv2 edge classification. See `reports/09_run_mac.md` for detailed metrics.
+**Resolution/Outcome:** Classical ML models achieve ~63-65% accuracy (Gradient Boosting best). Top features: historical win rate, experience differential, SQ differential. GNN pipeline functional with GATv2 edge classification. See `reports/archive/09_run.md` for detailed metrics.
 
 **Thesis notes:** The ~63-65% accuracy on temporal splits provides a solid baseline for comparative analysis. The feature importance ranking (win rate > experience > mechanical skill) aligns with domain knowledge about RTS skill factors. MPS compatibility issues should be documented in the thesis as a practical consideration for reproducibility on Apple Silicon.

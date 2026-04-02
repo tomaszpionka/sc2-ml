@@ -1,9 +1,11 @@
 import logging
+
 import pandas as pd
+from scipy.stats import randint
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import randint
-from config import RANDOM_SEED, TUNING_N_ITER, TUNING_CV_FOLDS
+
+from sc2ml.config import RANDOM_SEED, TUNING_CV_FOLDS, TUNING_N_ITER
 
 logger = logging.getLogger(__name__)
 

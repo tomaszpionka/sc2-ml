@@ -212,7 +212,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Local project files
-data/
 .continue
 
 # SC2-ML project artifacts

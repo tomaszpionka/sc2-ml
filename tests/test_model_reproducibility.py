@@ -5,19 +5,14 @@ Covers:
 - GNN training produces identical best accuracy across two runs with seed=42
 """
 import numpy as np
-import pandas as pd
 import pytest
-import sys
-import os
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from ml_pipeline import perform_feature_engineering, temporal_train_test_split
-from model_training import train_and_evaluate_models
-from gnn_pipeline import build_starcraft_graph
-from gnn_trainer import train_and_evaluate_gnn
-from tests.fixtures import make_matches_df
+from sc2ml.features.engineering import perform_feature_engineering, temporal_train_test_split
+from sc2ml.gnn.pipeline import build_starcraft_graph
+from sc2ml.gnn.trainer import train_and_evaluate_gnn
+from sc2ml.models.classical import train_and_evaluate_models
+from tests.helpers import make_matches_df
 
 
 @pytest.fixture(scope="module")
@@ -39,7 +34,9 @@ def test_logistic_regression_is_deterministic(train_test_data) -> None:
     models2 = train_and_evaluate_models(X_train, X_test, y_train, y_test)
     preds1 = models1["Logistic Regression"].predict(X_test)
     preds2 = models2["Logistic Regression"].predict(X_test)
-    np.testing.assert_array_equal(preds1, preds2, err_msg="Logistic Regression predictions are not deterministic")
+    np.testing.assert_array_equal(
+        preds1, preds2, err_msg="Logistic Regression predictions are not deterministic"
+    )
 
 
 def test_random_forest_is_deterministic(train_test_data) -> None:
@@ -48,7 +45,9 @@ def test_random_forest_is_deterministic(train_test_data) -> None:
     models2 = train_and_evaluate_models(X_train, X_test, y_train, y_test)
     preds1 = models1["Random Forest"].predict(X_test)
     preds2 = models2["Random Forest"].predict(X_test)
-    np.testing.assert_array_equal(preds1, preds2, err_msg="Random Forest predictions are not deterministic")
+    np.testing.assert_array_equal(
+        preds1, preds2, err_msg="Random Forest predictions are not deterministic"
+    )
 
 
 def test_gnn_training_is_deterministic() -> None:

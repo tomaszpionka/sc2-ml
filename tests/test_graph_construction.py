@@ -7,18 +7,13 @@ Covers:
 - Veteran mask correct shape and type
 - Node features computed only from training data (leakage guard)
 """
-import numpy as np
 import pandas as pd
 import pytest
-import sys
-import os
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from ml_pipeline import perform_feature_engineering
-from gnn_pipeline import build_starcraft_graph
-from tests.fixtures import make_matches_df
+from sc2ml.features.engineering import perform_feature_engineering
+from sc2ml.gnn.pipeline import build_starcraft_graph
+from tests.helpers import make_matches_df
 
 TEST_SIZE = 0.05
 EDGE_FEATURE_COLS = [
@@ -101,7 +96,8 @@ def test_no_nan_in_edge_features(graph) -> None:
 def test_node_features_use_only_train_portion(features_df: pd.DataFrame) -> None:
     """Node stats when built from train-only vs all data should differ for test-set players."""
     full_graph, _ = build_starcraft_graph(features_df, test_size=0.3)
-    train_graph, _ = build_starcraft_graph(features_df, test_size=0.0)  # test_size=0 uses all data as train
+    # test_size=0 uses all data as train
+    train_graph, _ = build_starcraft_graph(features_df, test_size=0.0)
     # With test_size=0.3 some players' test-match stats are excluded → node features differ
     # They should NOT be identical (unless data is trivially tiny)
     if len(features_df) > 50:

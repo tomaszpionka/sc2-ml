@@ -11,15 +11,10 @@ Covers:
 - ELO columns present after elo stage
 """
 import pandas as pd
-import numpy as np
 import pytest
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from ml_pipeline import perform_feature_engineering, temporal_train_test_split
-from tests.fixtures import make_matches_df
+from sc2ml.features.engineering import perform_feature_engineering, temporal_train_test_split
+from tests.helpers import make_matches_df
 
 REQUIRED_OUTPUT_COLS = [
     "match_id",
@@ -89,8 +84,12 @@ def test_player_names_not_null(features_df: pd.DataFrame) -> None:
 
 
 def test_games_played_non_negative(features_df: pd.DataFrame) -> None:
-    assert (features_df["p1_total_games_played"] >= 0).all(), "p1_total_games_played has negative values"
-    assert (features_df["p2_total_games_played"] >= 0).all(), "p2_total_games_played has negative values"
+    assert (features_df["p1_total_games_played"] >= 0).all(), (
+        "p1_total_games_played has negative values"
+    )
+    assert (features_df["p2_total_games_played"] >= 0).all(), (
+        "p2_total_games_played has negative values"
+    )
 
 
 def test_temporal_split_produces_nonempty_sets(features_df: pd.DataFrame) -> None:

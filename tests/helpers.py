@@ -1,7 +1,6 @@
-"""Shared test fixtures for the SC2 ML pipeline test suite."""
+"""Shared test utilities for the SC2 ML pipeline test suite."""
 import numpy as np
 import pandas as pd
-import pytest
 
 
 def make_matches_df(n: int = 200, seed: int = 42) -> pd.DataFrame:
