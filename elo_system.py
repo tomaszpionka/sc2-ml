@@ -1,19 +1,32 @@
 import logging
 import pandas as pd
+from config import ELO_K_NEW, ELO_K_VETERAN, ELO_K_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
 
-def add_elo_features(df):
-    logger.info("Generowanie autorskiego systemu ELO (Wariant B)...")
+def add_elo_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute pre-match ELO ratings with a dynamic K-factor and add them to the dataframe.
+
+    Uses a two-pass approach:
+      Phase 1 — Record each player's ELO at the time of every match they played
+                 (before any updates for that match).
+      Phase 2 — Update ELO ratings in chronological order, processing each unique
+                 match_id exactly once (the paired-row layout of matches_flat would
+                 cause double-updates without this guard).
+
+    ELO starts at 1500. K-factor is ELO_K_NEW for new players (< ELO_K_THRESHOLD games)
+    and ELO_K_VETERAN for veterans.
+    """
+    logger.info("Computing custom ELO ratings (dynamic K-factor)...")
 
     df = df.sort_values("match_time").reset_index(drop=True)
 
-    elo_dict = {}
-    games_played_dict = {}
-    pre_match_elos = {}
+    elo_dict: dict[str, float] = {}
+    games_played_dict: dict[str, int] = {}
+    pre_match_elos: dict[str, dict[str, float]] = {}
 
-    # FAZA 1: Bezpieczna inicjalizacja (rejestrujemy WSZYSTKICH graczy z danego meczu)
+    # Phase 1: snapshot each player's ELO before their match is processed
     for row in df.itertuples():
         match_id = row.match_id
         p1 = row.p1_name
@@ -29,12 +42,11 @@ def add_elo_features(df):
             if p not in pre_match_elos[match_id]:
                 pre_match_elos[match_id][p] = elo_dict[p]
 
-    # FAZA 2: Bezpieczne liczenie ELO (tylko RAZ na unikalny mecz)
-    processed_matches = set()
+    # Phase 2: update ELO ratings once per unique match
+    processed_matches: set[str] = set()
     for row in df.itertuples():
         match_id = row.match_id
 
-        # Jeśli mecz już zaktualizował ELO, pomiń
         if match_id in processed_matches:
             continue
 
@@ -42,14 +54,12 @@ def add_elo_features(df):
         p2 = row.p2_name
         target = 1 if row.p1_result == "Win" else 0
 
-        # Obliczenie oczekiwanego wyniku dla P1
+        # Expected win probability for p1 using the standard ELO formula
         e1 = 1 / (1 + 10 ** ((elo_dict[p2] - elo_dict[p1]) / 400))
 
-        # Dynamiczny K-Factor dla nowych graczy
-        k1 = 64 if games_played_dict[p1] < 10 else 32
-        k2 = 64 if games_played_dict[p2] < 10 else 32
+        k1 = ELO_K_NEW if games_played_dict[p1] < ELO_K_THRESHOLD else ELO_K_VETERAN
+        k2 = ELO_K_NEW if games_played_dict[p2] < ELO_K_THRESHOLD else ELO_K_VETERAN
 
-        # Aktualizacja rankingów
         elo_dict[p1] += k1 * (target - e1)
         elo_dict[p2] += k2 * ((1 - target) - (1 - e1))
 
@@ -58,7 +68,7 @@ def add_elo_features(df):
 
         processed_matches.add(match_id)
 
-    logger.info("Mapowanie ELO z powrotem do głównego zbioru...")
+    logger.info("Mapping pre-match ELO scores back to the main dataset...")
 
     df["p1_pre_match_elo"] = df.apply(
         lambda x: pre_match_elos[x["match_id"]][x["p1_name"]], axis=1
