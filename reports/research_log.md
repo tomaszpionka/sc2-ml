@@ -6,6 +6,29 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-02 — Feature engineering rewrite: methodology Groups A–E with ablation support
+
+**Objective:** Decompose the monolithic `features/engineering.py` into composable feature groups matching methodology Section 3.1 (Groups A–E), add missing features (form/momentum, context), eliminate duplicate split logic, and fix a long-standing segfault in `test_model_reproducibility`.
+
+**Approach:** Created one module per methodology group (`group_a_elo.py` through `group_e_context.py`) with shared primitives in `common.py` and a registry/enum system for ablation. `build_features(df, groups=FeatureGroup.C)` computes A+B+C and returns a clean DataFrame. `split_for_ml()` replaces the old `temporal_train_test_split()` by consuming the series-aware split from `data/processing.py` rather than reimplementing it.
+
+**New features added:**
+- Group B: `hist_std_apm`, `hist_std_sq` (expanding-window variance)
+- Group C: `hist_winrate_map_race_smooth` (map×race interaction winrate)
+- Group D (entirely new): win/loss streaks (iterative forward pass), EMA of APM/SQ/winrate, activity windows (7d/30d rolling counts), head-to-head cumulative record with Bayesian smoothing
+- Group E (entirely new): patch version as sortable integer, tournament match position, series game number from `match_series` table
+
+**Issues encountered:**
+- **Dual-OpenMP segfault**: `test_model_reproducibility` segfaulted because LightGBM (Homebrew `libomp.dylib` at `/opt/homebrew/*/libomp.dylib`) and PyTorch (bundled `libomp.dylib` at `.venv/*/libomp.dylib`) load two separate OpenMP runtimes. At shutdown, OpenMP thread pool teardown in one runtime corrupts the other. The crash trace shows Thread 3 in `__kmp_suspend_initialize_thread` while Thread 0 is in LightGBM's `_pthread_create`. Fix: classical model tests run in a `multiprocessing.spawn` child process (`tests/helpers_classical.py` which never imports torch), isolating the runtimes. This is the same isolation pattern used in `test_mps.py` for Metal/MPS issues.
+- Rolling time-window activity counts required a dummy column (`_one`) because pandas `groupby().rolling()[col]` can't use the groupby column as the aggregation target.
+- `pd.get_dummies` creates bool columns — needed explicit cast to int for model compatibility.
+
+**Resolution/Outcome:** 168 tests pass (73 new feature tests + 64 data tests + 31 existing), 99% coverage on `features/`, 93% overall. The segfault in `test_model_reproducibility` is fixed. Feature column count grows monotonically: A→14, A+B→37, A+B+C→45, A+B+C+D→62, all→66.
+
+**Thesis notes:** The feature group structure directly maps to the ablation protocol in Section 7.1: run LightGBM on {A}, {A,B}, ..., {A,B,C,D,E} and report marginal lift per group. Group D (form/momentum) and Group E (context) fill gaps identified in the methodology — streaks, recency weighting, head-to-head records, and series position were previously missing. The dual-OpenMP issue should be noted in the thesis reproducibility section: on macOS with Homebrew LightGBM and pip-installed PyTorch, classical and GNN model evaluations must run in separate processes to avoid OpenMP shutdown conflicts.
+
+---
+
 ## 2026-04-02 — Path B: In-game event extraction pipeline and temporal split management
 
 **Objective:** Build the data extraction layer for accessing raw in-game events (tracker events, game events) from SC2 replay files, and implement proper temporal train/val/test splitting with series-aware boundaries.
