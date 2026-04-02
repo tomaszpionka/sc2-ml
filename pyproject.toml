@@ -54,6 +54,9 @@ select = ["E", "F", "W", "I"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "gnn: GNN-specific tests (deselect with '-m not gnn')",
+]
 
 [tool.mypy]
 python_version = "3.12"
