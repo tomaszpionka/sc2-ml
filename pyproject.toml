@@ -59,7 +59,15 @@ testpaths = ["tests"]
 markers = [
     "gnn: GNN-specific tests (deselect with '-m not gnn')",
     "slow: slow tests requiring subprocess isolation (deselect with '-m not slow')",
+    "sanity: Phase 0 data & model sanity validation (ROADMAP §3)",
 ]
+
+[tool.coverage.run]
+source = ["src/sc2ml"]
+omit = ["**/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = ["if TYPE_CHECKING:"]
 
 [tool.mypy]
 python_version = "3.12"
