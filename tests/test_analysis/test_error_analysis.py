@@ -121,3 +121,12 @@ class TestErrorSubgroupReport:
         np.testing.assert_allclose(
             report["accuracy"] + report["error_rate"], 1.0
         )
+
+    def test_error_subgroup_report_single_class_auc_nan(self):
+        """When all y_true are the same class, auc_roc should be NaN."""
+        y_true = np.ones(10, dtype=int)
+        y_pred = np.ones(10, dtype=int)
+        y_prob = np.full(10, 0.9)
+        subgroups = classify_error_subgroups(y_true, y_pred, y_prob)
+        report = error_subgroup_report(subgroups)
+        assert np.isnan(report.loc[report["subgroup"] == "all", "auc_roc"].iloc[0])

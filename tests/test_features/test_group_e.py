@@ -65,3 +65,19 @@ class TestComputeContextFeatures:
         for col in ["patch_version_numeric", "tournament_match_position",
                      "series_game_number", "series_length_so_far"]:
             assert result[col].isna().sum() == 0
+
+    def test_context_uses_game_version_column(self, sorted_df: pd.DataFrame) -> None:
+        """When game_version is present but data_build is absent, patch_version_numeric
+        should be derived from game_version."""
+        df = sorted_df.copy()
+        df = df.drop(columns=["data_build"], errors="ignore")
+        df["game_version"] = "5.0.11.50011"
+        result = compute_context_features(df)
+        assert (result["patch_version_numeric"] == 50011).all()
+
+    def test_context_no_tournament_name_fallback(self, sorted_df: pd.DataFrame) -> None:
+        """When tournament_name column is absent, tournament_match_position defaults to 0."""
+        df = sorted_df.copy()
+        df = df.drop(columns=["tournament_name"], errors="ignore")
+        result = compute_context_features(df)
+        assert (result["tournament_match_position"] == 0).all()
