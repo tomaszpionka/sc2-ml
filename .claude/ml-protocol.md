@@ -19,9 +19,11 @@
 ## Documentation Artifacts
 
 ### CHANGELOG.md (code versioning)
-- [Keep a Changelog](https://keepachangelog.com/) format with `[Unreleased]` section at top
+- [Keep a Changelog](https://keepachangelog.com/) format
+- Each merged branch gets its own semver section (e.g. `[0.7.0] — 2026-04-02 (PR #8: feat/classical-eval)`)
+- `[Unreleased]` tracks only the current working branch's uncommitted/unmerged changes
+- On merge, move `[Unreleased]` content into a new versioned section and bump `__version__` in `__init__.py`
 - Concise one-liners grouped by: `Added`, `Changed`, `Fixed`, `Removed`
-- Maps directly to commits and feature branches
 - Updated every session that changes code
 
 ### reports/research_log.md (thesis material)

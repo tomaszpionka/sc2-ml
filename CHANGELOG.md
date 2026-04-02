@@ -5,12 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Conventional Commits](https://www.conventionalcommits.org/).
 
+Each feature branch merges as a semver bump. The `[Unreleased]` section
+tracks only changes on the current working branch that have not yet been
+merged to `master`.
+
 ## [Unreleased]
 
-### Added — 2026-04-02 21:30:00
-- **GNN diagnostic test suite** (`tests/test_gnn_diagnostics.py`): 14 tests across 6 groups confirming GATv2 majority-class collapse root causes — no `pos_weight` in BCE loss, edge feature scaler leak (fit on full dataset), hard 0.5 threshold. Tests reproduce the bug, verify `pos_weight` fix, and serve as regression guards for appendix GNN work.
+### Added
+- **Evaluation infrastructure** (`models/evaluation.py`): `compute_metrics` (accuracy, AUC-ROC, Brier, log loss), `bootstrap_ci` (95% CI via 1000 bootstrap iterations), `calibration_curve_data`, `mcnemar_test` (exact binomial + chi-squared), `delong_test` (fast DeLong AUC comparison), `evaluate_model` (full eval with CIs + per-matchup + veterans), `compare_models` (pairwise statistical tests), `run_permutation_importance`
+- **Baseline classifiers** (`models/baselines.py`): `MajorityClassBaseline`, `EloOnlyBaseline`, `EloLRBaseline` — all with `predict_proba` for probability-based metrics
+- **Feature ablation runner** (`evaluation.py:run_feature_ablation`): trains LightGBM per group subset (A, A+B, ..., A+B+C+D+E), reports marginal lift per step
+- **Expanding-window temporal CV** (`data/cv.py`): `ExpandingWindowCV` with series-aware boundary snapping, sklearn `BaseCrossValidator` compatible
+- **Optuna tuning** (`models/tuning.py`): `tune_lgbm_optuna`, `tune_xgb_optuna` (Bayesian optimization, 200 trials), `tune_lr_grid` (grid search over C + penalty)
+- **SHAP analysis** (`analysis/shap_analysis.py`): `compute_shap_values` (TreeExplainer/LinearExplainer), `plot_shap_beeswarm`, `plot_shap_per_matchup` (6 matchup types), `shap_feature_importance_table`
+- **Error analysis** (`analysis/error_analysis.py`): `classify_error_subgroups` (mirrors, upsets, close Elo, short/long games), `error_subgroup_report`
+- **Patch drift experiment** (`evaluation.py:run_patch_drift_experiment`): train on old patches, test on new, per-patch accuracy breakdown
+- **Reporting** (`models/reporting.py`): `ExperimentReport` with `.to_json()` and `.to_markdown()` for thesis-ready reports
+- **CLI subcommands**: `sc2ml ablation`, `sc2ml tune`, `sc2ml evaluate`
+- `matchup_type` column preserved through feature engineering for per-matchup analysis
+- `p1_race`/`p2_race` added to `_METADATA_COLUMNS` for safe ablation without Group C
+- Config constants: `BOOTSTRAP_N_ITER`, `BOOTSTRAP_CI_LEVEL`, `CALIBRATION_N_BINS`, `RESULTS_DIR`, `EXPANDING_CV_N_SPLITS`, `EXPANDING_CV_MIN_TRAIN_FRAC`, `OPTUNA_N_TRIALS_LGBM`, `OPTUNA_N_TRIALS_XGB`, `LR_GRID_C`, `LR_GRID_PENALTY`
+- `@pytest.mark.slow` marker registered in `pyproject.toml`
+- `optuna` and `shap` dependencies
+- 75 new tests: `test_evaluation.py` (22), `test_baselines.py` (18), `test_cv.py` (13), `test_ablation.py` (6), `test_analysis/test_error_analysis.py` (9), `test_analysis/test_shap_analysis.py` (7)
+
+### Changed
+- `train_and_evaluate_models()` now returns `(dict[str, Pipeline], list[ModelResults])` instead of just pipelines
+- `classical.py` refactored: model definitions extracted to `_build_model_pipelines()`, evaluation delegated to `evaluation.py`
+
+## [0.6.0] — 2026-04-02 (PR #7: test/gnn-diagnostics)
+
+### Added
+- **GNN diagnostic test suite** (`tests/test_gnn_diagnostics.py`): 14 tests across 6 groups confirming GATv2 majority-class collapse root causes — no `pos_weight` in BCE loss, edge feature scaler leak (fit on full dataset), hard 0.5 threshold
 - `@pytest.mark.gnn` marker registered in `pyproject.toml` (skip with `-m "not gnn"`)
 - `setup_logging()` now called in `run_pipeline()` for reliable file logging when invoked outside `main()`
+
+## [0.5.0] — 2026-04-02 (PR #6: fix/pipeline-coherence)
 
 ### Added
 - `init_database()` function and CLI `init` subcommand for one-step database setup from raw replays
@@ -29,6 +59,8 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 ### Changed
 - `cli.py` refactored: pipeline logic extracted to `run_pipeline()`, `init_database()` added, imports now include ingestion/processing functions
 
+## [0.4.0] — 2026-04-01 (PR #5: refactor/feature-groups-ablation)
+
 ### Added
 - **Feature groups A–E** implementing methodology Section 3.1 for incremental ablation:
   - Group A (`group_a_elo.py`): Dynamic K-factor Elo ratings (refactored from `elo.py`)
@@ -46,19 +78,6 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 - `tests/helpers.py`: `make_series_df()` for Group E testing; deterministic win streaks for Player_0
 - `tests/helpers_classical.py`: isolated worker for classical model reproducibility (no torch import)
 - `pytest-cov` and `coverage` dev dependencies
-
-### Changed
-- `cli.py` now uses `build_features()` + `split_for_ml()` instead of monolithic `perform_feature_engineering()` + `temporal_train_test_split()`
-- `temporal_train_test_split()` now emits `DeprecationWarning` (use `split_for_ml()` instead)
-- Test imports updated: `from sc2ml.features import ...` replaces `from sc2ml.features.engineering import ...`
-
-### Fixed
-- **Dual-OpenMP segfault on macOS (LightGBM + PyTorch)**: LightGBM ships Homebrew `libomp.dylib`, PyTorch bundles its own `libomp.dylib`. Loading both in the same process causes a segfault at shutdown during OpenMP thread pool teardown. Fix: classical model reproducibility tests now run in a `multiprocessing.spawn` child process via `helpers_classical.py` (which never imports torch), fully isolating the two runtimes. GNN test adds `gc.collect()` + `torch.mps.empty_cache()` cleanup per `test_mps.py` pattern.
-
-### Removed
-- `features/elo.py` and `features/engineering.py` (replaced by group modules + compat wrappers)
-
-### Added
 - **Path B in-game event extraction pipeline** in `ingestion.py`: `audit_raw_data_availability()`, `extract_raw_events_from_file()`, `save_raw_events_to_parquet()`, `run_in_game_extraction()`, DuckDB loaders with `player_stats` view and `match_player_map` table
 - `PLAYER_STATS_FIELD_MAP` — 39 `scoreValue*` → snake_case field mappings for tracker events
 - Temporal split management in `processing.py`: `assign_series_ids()`, `create_temporal_split()`, `validate_temporal_split()`
@@ -70,11 +89,26 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 - Data pipeline documentation: `src/sc2ml/data/README.md`, methodology notes
 
 ### Changed
+- `cli.py` now uses `build_features()` + `split_for_ml()` instead of monolithic `perform_feature_engineering()` + `temporal_train_test_split()`
+- `temporal_train_test_split()` now emits `DeprecationWarning` (use `split_for_ml()` instead)
+- Test imports updated: `from sc2ml.features import ...` replaces `from sc2ml.features.engineering import ...`
 - `slim_down_sc2_with_manifest()` now defaults to `dry_run=True` for safety
 
+### Fixed
+- **Dual-OpenMP segfault on macOS (LightGBM + PyTorch)**: LightGBM ships Homebrew `libomp.dylib`, PyTorch bundles its own `libomp.dylib`. Loading both in the same process causes a segfault at shutdown during OpenMP thread pool teardown. Fix: classical model reproducibility tests now run in a `multiprocessing.spawn` child process via `helpers_classical.py` (which never imports torch), fully isolating the two runtimes. GNN test adds `gc.collect()` + `torch.mps.empty_cache()` cleanup per `test_mps.py` pattern.
+
+### Removed
+- `features/elo.py` and `features/engineering.py` (replaced by group modules + compat wrappers)
+
+## [0.3.0] — 2026-03-31 (PR #4: refactor/break-down-claude-md)
+
+### Added
+- `.claude/` sub-files: `python-workflow.md`, `testing-standards.md`, `coding-standards.md`, `git-workflow.md`, `ml-protocol.md`, `project-architecture.md`
+
+## [0.2.0] — 2026-03-30 (PR #3: refactor/package-structure)
+
 ### Changed
-- **Reorganized into `src/sc2ml/` package** with four subpackages: `data/`, `features/`,
-  `models/`, `gnn/` — proper Python src layout replacing flat root-level modules
+- **Reorganized into `src/sc2ml/` package** with four subpackages: `data/`, `features/`, `models/`, `gnn/` — proper Python src layout replacing flat root-level modules
 - Renamed modules to avoid namespace redundancy (e.g. `data_ingestion.py` → `sc2ml.data.ingestion`)
 - Updated `pyproject.toml` to src layout (`packages = [{include = "sc2ml", from = "src"}]`)
 - Replaced hardcoded `ROOT_PROJECTS_DIR` path with `Path(__file__)` derivation in `config.py`
@@ -94,8 +128,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 - `[tool.pytest.ini_options]` in `pyproject.toml`
 - `pyproject.toml` with Poetry dependency management
 - `config.py` with all centralized constants
-- `tests/` directory with test suite (data validation, feature engineering,
-  graph construction, model reproducibility)
+- `tests/` directory with test suite (data validation, feature engineering, graph construction, model reproducibility)
 - CLAUDE.md, CHANGELOG.md, and research log
 
 ### Removed
