@@ -11,8 +11,10 @@ from sc2ml.models.evaluation import (
     compare_models,
     compute_metrics,
     delong_test,
+    evaluate_all_models,
     evaluate_model,
     mcnemar_test,
+    run_permutation_importance,
 )
 
 # ---------------------------------------------------------------------------
@@ -286,3 +288,243 @@ class TestCompareModels:
             ))
         df = compare_models(results)
         assert len(df) == 3  # C(3,2) = 3 pairs
+
+
+# ---------------------------------------------------------------------------
+# delong_test — scalar covariance edge case (lines 284-287)
+# ---------------------------------------------------------------------------
+
+class TestDeLongScalarCovariance:
+    def test_delong_m1_does_not_crash(self):
+        """m=1 positive sample → function returns without crashing."""
+        y_true = np.array([1, 0, 0, 0, 0])
+        y_prob_a = np.array([0.9, 0.3, 0.2, 0.4, 0.1])
+        y_prob_b = np.array([0.8, 0.2, 0.3, 0.5, 0.15])
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = delong_test(y_true, y_prob_a, y_prob_b)
+        assert "p_value" in result
+        assert "auc_a" in result
+
+    def test_delong_n1_does_not_crash(self):
+        """n=1 negative sample → function returns without crashing."""
+        y_true = np.array([1, 1, 1, 1, 0])
+        y_prob_a = np.array([0.9, 0.8, 0.7, 0.6, 0.2])
+        y_prob_b = np.array([0.85, 0.75, 0.65, 0.55, 0.3])
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = delong_test(y_true, y_prob_a, y_prob_b)
+        assert "p_value" in result
+        assert "auc_a" in result
+
+    def test_delong_var_diff_zero(self):
+        """Identical predictions → var_diff <= 0 → p_value=1.0 (line 294-301)."""
+        y_true = np.array([0, 0, 1, 1, 0, 1, 0, 1, 1, 0])
+        y_prob = np.array([0.3, 0.2, 0.8, 0.9, 0.1, 0.7, 0.4, 0.6, 0.85, 0.15])
+        result = delong_test(y_true, y_prob, y_prob)
+        assert result["p_value"] >= 0.99
+        assert result["auc_diff"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# evaluate_model — additional coverage (lines 370, 379-402)
+# ---------------------------------------------------------------------------
+
+class TestEvaluateModelExtended:
+    def test_evaluate_model_1d_prob(self):
+        """Model returning 1D predict_proba triggers the ndim!=2 path."""
+        rng = np.random.default_rng(42)
+        n = 100
+        y_true = rng.integers(0, 2, n)
+        y_prob = y_true * 0.6 + (1 - y_true) * 0.4 + rng.normal(0, 0.1, n)
+        y_prob = np.clip(y_prob, 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+
+        class _Model1D:
+            def predict_proba(self, X):
+                return y_prob  # 1D, not 2D
+
+        result = evaluate_model(
+            _Model1D(), X_test, pd.Series(y_true), "1D",
+            compute_ci=False,
+        )
+        assert isinstance(result, ModelResults)
+        assert 0 < result.accuracy <= 1
+
+    def test_evaluate_model_bootstrap_ci(self):
+        """compute_ci=True exercises the bootstrap CI paths."""
+        rng = np.random.default_rng(42)
+        n = 200
+        y_true = rng.integers(0, 2, n)
+        # Add enough noise so accuracy is not perfect
+        y_prob = y_true * 0.6 + (1 - y_true) * 0.4 + rng.normal(0, 0.2, n)
+        y_prob = np.clip(y_prob, 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+
+        class _Dummy:
+            def predict_proba(self, X):
+                return np.column_stack([1 - y_prob, y_prob])
+
+        result = evaluate_model(
+            _Dummy(), X_test, pd.Series(y_true), "CI",
+            compute_ci=True,
+        )
+        assert result.accuracy_ci[0] < result.accuracy_ci[1]
+        assert result.auc_roc_ci[0] < result.auc_roc_ci[1]
+
+    def test_evaluate_model_veterans_metrics(self):
+        """Pass veterans_mask with True values → veterans dict populated."""
+        rng = np.random.default_rng(42)
+        n = 100
+        y_true = rng.integers(0, 2, n)
+        y_prob = y_true * 0.7 + (1 - y_true) * 0.3 + rng.normal(0, 0.1, n)
+        y_prob = np.clip(y_prob, 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+        # Half are veterans
+        vet_mask = pd.Series([i < 50 for i in range(n)])
+
+        class _Dummy:
+            def predict_proba(self, X):
+                return np.column_stack([1 - y_prob, y_prob])
+
+        result = evaluate_model(
+            _Dummy(), X_test, pd.Series(y_true), "Vets",
+            veterans_mask=vet_mask, compute_ci=False,
+        )
+        assert "accuracy" in result.veterans
+        assert result.veterans["n_samples"] == 50
+
+    def test_evaluate_model_veterans_empty(self):
+        """All-False veterans mask → empty dict."""
+        rng = np.random.default_rng(42)
+        n = 50
+        y_true = rng.integers(0, 2, n)
+        y_prob = np.clip(y_true * 0.7 + rng.normal(0, 0.1, n), 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+        vet_mask = pd.Series([False] * n)
+
+        class _Dummy:
+            def predict_proba(self, X):
+                return np.column_stack([1 - y_prob, y_prob])
+
+        result = evaluate_model(
+            _Dummy(), X_test, pd.Series(y_true), "NoVets",
+            veterans_mask=vet_mask, compute_ci=False,
+        )
+        assert result.veterans == {}
+
+
+# ---------------------------------------------------------------------------
+# evaluate_all_models (lines 481-492)
+# ---------------------------------------------------------------------------
+
+class TestEvaluateAllModels:
+    def test_evaluate_all_models(self):
+        """2 fitted models → list of results + comparison DataFrame."""
+        rng = np.random.default_rng(42)
+        n = 100
+        y_true = rng.integers(0, 2, n)
+        y_prob = np.clip(y_true * 0.7 + rng.normal(0, 0.1, n), 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+
+        class _DummyA:
+            def predict_proba(self, X):
+                return np.column_stack([1 - y_prob, y_prob])
+
+        class _DummyB:
+            def predict_proba(self, X):
+                noise = rng.normal(0, 0.05, len(X))
+                p = np.clip(y_prob + noise, 0.01, 0.99)
+                return np.column_stack([1 - p, p])
+
+        results, comparisons = evaluate_all_models(
+            {"ModelA": _DummyA(), "ModelB": _DummyB()},
+            X_test, pd.Series(y_true), compute_ci=False,
+        )
+        assert len(results) == 2
+        assert isinstance(comparisons, pd.DataFrame)
+        assert len(comparisons) == 1  # C(2,2)=1 pair
+
+    def test_evaluate_all_models_comparison_count(self):
+        """3 models → n*(n-1)/2 = 3 comparison rows."""
+        rng = np.random.default_rng(42)
+        n = 50
+        y_true = rng.integers(0, 2, n)
+        y_prob = np.clip(y_true * 0.7 + rng.normal(0, 0.1, n), 0.01, 0.99)
+        X_test = pd.DataFrame({"f1": rng.normal(0, 1, n)})
+
+        class _Dummy:
+            def predict_proba(self, X):
+                return np.column_stack([1 - y_prob, y_prob])
+
+        models = {f"M{i}": _Dummy() for i in range(3)}
+        results, comparisons = evaluate_all_models(
+            models, X_test, pd.Series(y_true), compute_ci=False,
+        )
+        assert len(comparisons) == 3
+
+
+# ---------------------------------------------------------------------------
+# run_permutation_importance (lines 625-640)
+# ---------------------------------------------------------------------------
+
+class TestPermutationImportance:
+    def test_run_permutation_importance(self):
+        """Fitted LR + test data → DataFrame with feature importance."""
+        from sklearn.linear_model import LogisticRegression
+
+        rng = np.random.default_rng(42)
+        n = 100
+        X = pd.DataFrame({
+            "f1": rng.normal(0, 1, n),
+            "f2": rng.normal(0, 1, n),
+            "f3": rng.normal(0, 1, n),
+        })
+        y = pd.Series((X["f1"] > 0).astype(int))
+
+        model = LogisticRegression(max_iter=200, random_state=42)
+        model.fit(X, y)
+
+        result = run_permutation_importance(model, X, y, n_repeats=5)
+        assert isinstance(result, pd.DataFrame)
+        assert "feature" in result.columns
+        assert "importance_mean" in result.columns
+        assert len(result) == 3
+
+    def test_run_permutation_importance_sorted(self):
+        """Result should be sorted descending by importance_mean."""
+        from sklearn.linear_model import LogisticRegression
+
+        rng = np.random.default_rng(42)
+        n = 100
+        X = pd.DataFrame({
+            "strong": rng.normal(0, 1, n),
+            "noise": rng.normal(0, 0.01, n),
+        })
+        y = pd.Series((X["strong"] > 0).astype(int))
+
+        model = LogisticRegression(max_iter=200, random_state=42)
+        model.fit(X, y)
+
+        result = run_permutation_importance(model, X, y, n_repeats=5)
+        vals = result["importance_mean"].values
+        assert all(vals[i] >= vals[i + 1] for i in range(len(vals) - 1))
+
+
+# ---------------------------------------------------------------------------
+# compare_models — single model edge case
+# ---------------------------------------------------------------------------
+
+class TestCompareModelsSingle:
+    def test_compare_models_single(self):
+        """1 model → empty comparisons DataFrame."""
+        y = np.array([0, 1, 0, 1])
+        r1 = ModelResults(
+            model_name="Only", accuracy=0.75, auc_roc=0.8,
+            brier_score=0.15, log_loss_val=0.4,
+            y_true=y, y_pred=y, y_prob=np.array([0.1, 0.9, 0.2, 0.8]),
+        )
+        df = compare_models([r1])
+        assert len(df) == 0

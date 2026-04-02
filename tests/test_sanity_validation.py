@@ -481,6 +481,147 @@ def _full_sanity_worker(
     })
 
 
+# ===================================================================
+# Phase 3.3: Failure path tests for individual checks
+# ===================================================================
+
+
+class TestCheckNullRateFindsNulls:
+    """check_null_rate should fail when critical columns have NULLs."""
+
+    def test_null_match_time_detected(self):
+        con = duckdb.connect(":memory:")
+        # Create minimal tables with NULL match_time
+        con.execute("""
+            CREATE TABLE flat_players AS SELECT * FROM (VALUES
+                ('m1', TIMESTAMP '2023-01-01', 'alice', 'Terran', 'Win'),
+                ('m1', TIMESTAMP '2023-01-01', 'bob', 'Zerg', 'Loss'),
+                ('m2', NULL, 'alice', 'Protoss', 'Win'),
+                ('m2', NULL, 'bob', 'Terran', 'Loss')
+            ) AS t(match_id, match_time, player_name, race, result)
+        """)
+        con.execute("""
+            CREATE TABLE matches_flat AS SELECT * FROM (VALUES
+                ('m1', TIMESTAMP '2023-01-01', 'alice', 'bob', 'Terran', 'Win'),
+                ('m2', NULL, 'alice', 'bob', 'Protoss', 'Win')
+            ) AS t(match_id, match_time, p1_name, p2_name, p1_race, p1_result)
+        """)
+        result = check_null_rate(con)
+        assert not result.passed
+        con.close()
+
+
+class TestCheckMatchTimeRangeFailures:
+    def test_too_early(self):
+        """Year < 2010 → failure."""
+        con = duckdb.connect(":memory:")
+        con.execute("""
+            CREATE TABLE matches_flat AS SELECT * FROM (VALUES
+                (TIMESTAMP '2005-06-01'),
+                (TIMESTAMP '2023-01-01')
+            ) AS t(match_time)
+        """)
+        result = check_match_time_range(con)
+        assert not result.passed
+        assert "too early" in result.detail
+        con.close()
+
+    def test_future(self):
+        """Year > 2027 → failure."""
+        con = duckdb.connect(":memory:")
+        con.execute("""
+            CREATE TABLE matches_flat AS SELECT * FROM (VALUES
+                (TIMESTAMP '2023-01-01'),
+                (TIMESTAMP '2030-06-01')
+            ) AS t(match_time)
+        """)
+        result = check_match_time_range(con)
+        assert not result.passed
+        assert "future" in result.detail
+        con.close()
+
+
+class TestCheckRaceDistributionUnexpected:
+    def test_unexpected_race(self):
+        """A 'Random' race should cause failure."""
+        con = duckdb.connect(":memory:")
+        con.execute("""
+            CREATE TABLE flat_players AS SELECT * FROM (VALUES
+                ('Terran'), ('Protoss'), ('Zerg'), ('Random')
+            ) AS t(race)
+        """)
+        result = check_race_distribution(con)
+        assert not result.passed
+        assert "Random" in result.detail
+        con.close()
+
+
+class TestCheckDuplicateMatchIdsBad:
+    def test_three_rows_per_match(self):
+        """3 rows per match_id → failure."""
+        con = duckdb.connect(":memory:")
+        con.execute("""
+            CREATE TABLE flat_players AS SELECT * FROM (VALUES
+                ('m1', 'alice'), ('m1', 'bob'), ('m1', 'charlie')
+            ) AS t(match_id, player_name)
+        """)
+        result = check_duplicate_match_ids(con)
+        assert not result.passed
+        con.close()
+
+
+class TestCheckTargetBalanceSkewed:
+    def test_skewed_90_percent(self):
+        """90% win rate → failure."""
+        n = 100
+        df = pd.DataFrame({
+            "split": ["train"] * n,
+            "target": [1] * 90 + [0] * 10,
+        })
+        result = check_target_balance(df)
+        assert not result.passed
+
+
+class TestCheckSplitRatiosOff:
+    def test_wrong_ratios(self):
+        """50/25/25 ratios should fail (expected 80/15/5)."""
+        con = duckdb.connect(":memory:")
+        ids = [f"m{i}" for i in range(100)]
+        splits = ["train"] * 50 + ["val"] * 25 + ["test"] * 25
+        df = pd.DataFrame({"match_id": ids, "split": splits})  # noqa: F841
+        con.execute("CREATE TABLE match_split AS SELECT * FROM df")
+        result = check_split_ratios(con)
+        assert not result.passed
+        con.close()
+
+
+class TestSanityReportSummary:
+    def test_summary_formatting(self):
+        """SanityReport.summary should show pass/fail counts and details."""
+        from sc2ml.validation import SanityCheck, SanityReport
+
+        report = SanityReport(checks=[
+            SanityCheck("check_a", True, "all good"),
+            SanityCheck("check_b", False, "something wrong"),
+            SanityCheck("check_c", True, "ok"),
+        ])
+        summary = report.summary
+        assert "2/3 checks passed" in summary
+        assert "[PASS] check_a" in summary
+        assert "[FAIL] check_b" in summary
+        assert not report.all_passed
+
+    def test_all_passed_true(self):
+        """SanityReport.all_passed returns True when all checks pass."""
+        from sc2ml.validation import SanityCheck, SanityReport
+
+        report = SanityReport(checks=[
+            SanityCheck("a", True, "ok"),
+            SanityCheck("b", True, "ok"),
+        ])
+        assert report.all_passed
+
+
 class TestFullSanityReport:
     """Run the complete sanity report and verify the aggregate result.
 

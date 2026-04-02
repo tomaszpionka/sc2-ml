@@ -305,3 +305,76 @@ class TestGetMatchesDataframe:
         df = get_matches_dataframe(fresh_con)
         assert "split" not in df.columns
         fresh_con.close()
+
+    def test_no_split_table_warns_on_split_arg(self, caplog) -> None:
+        """No match_split table + split arg → warning logged (lines 146-151)."""
+        import logging
+
+        fresh_con = duckdb.connect(":memory:")
+        fresh_con.execute(
+            "CREATE TABLE matches_flat AS SELECT 'mid' AS match_id, "
+            "TIMESTAMP '2023-01-01' AS match_time, 'a' AS p1_name"
+        )
+        with caplog.at_level(logging.WARNING, logger="sc2ml.data.processing"):
+            df = get_matches_dataframe(fresh_con, split="train")
+        assert any("match_split table does not exist" in m for m in caplog.messages)
+        assert "split" not in df.columns
+        fresh_con.close()
+
+
+class TestValidateDataSplitSql:
+    """Tests for validate_data_split_sql (lines 166-207)."""
+
+    def test_runs_without_error(
+        self, matches_flat_con: duckdb.DuckDBPyConnection
+    ) -> None:
+        """Should run successfully on synthetic data without crashing."""
+        from sc2ml.data.processing import validate_data_split_sql
+        validate_data_split_sql(matches_flat_con)
+
+    def test_logs_distribution(
+        self, matches_flat_con: duckdb.DuckDBPyConnection, caplog
+    ) -> None:
+        """Should log year distribution and chronological validation."""
+        import logging
+
+        from sc2ml.data.processing import validate_data_split_sql
+        with caplog.at_level(logging.INFO, logger="sc2ml.data.processing"):
+            validate_data_split_sql(matches_flat_con)
+        messages = " ".join(caplog.messages)
+        assert "Annual match distribution" in messages
+        assert "Chronological validation" in messages
+
+
+class TestValidateTemporalSplitDetailed:
+    """Detailed tests for validate_temporal_split (lines 403-476)."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_split(self, matches_flat_con: duckdb.DuckDBPyConnection) -> None:
+        assign_series_ids(matches_flat_con)
+        create_temporal_split(matches_flat_con)
+        self.con = matches_flat_con
+
+    def test_logs_boundaries(self, caplog) -> None:
+        """Should log split boundary info."""
+        import logging
+        with caplog.at_level(logging.INFO, logger="sc2ml.data.processing"):
+            validate_temporal_split(self.con)
+        messages = " ".join(caplog.messages)
+        assert "Split boundaries" in messages
+
+    def test_logs_series_integrity(self, caplog) -> None:
+        """Should log series integrity result."""
+        import logging
+        with caplog.at_level(logging.INFO, logger="sc2ml.data.processing"):
+            validate_temporal_split(self.con)
+        messages = " ".join(caplog.messages)
+        assert "Series integrity" in messages
+
+    def test_logs_year_distribution(self, caplog) -> None:
+        """Should log year distribution per split."""
+        import logging
+        with caplog.at_level(logging.INFO, logger="sc2ml.data.processing"):
+            validate_temporal_split(self.con)
+        messages = " ".join(caplog.messages)
+        assert "Year distribution per split" in messages
