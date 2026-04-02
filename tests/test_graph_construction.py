@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 import torch
 
-from sc2ml.features.engineering import perform_feature_engineering
+from sc2ml.features import perform_feature_engineering
 from sc2ml.gnn.pipeline import build_starcraft_graph
 from tests.helpers import make_matches_df
 

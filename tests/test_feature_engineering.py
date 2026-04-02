@@ -9,7 +9,7 @@ Covers:
 import pandas as pd
 import pytest
 
-from sc2ml.features.engineering import perform_feature_engineering, temporal_train_test_split
+from sc2ml.features import perform_feature_engineering, temporal_train_test_split
 from tests.helpers import make_matches_df
 
 LEAKAGE_COLS = [
