@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 from pathlib import Path
@@ -6,7 +7,15 @@ import duckdb
 import pandas as pd
 
 from sc2ml.config import DB_FILE, PATCH_MIN_MATCHES
-from sc2ml.data.processing import get_matches_dataframe, validate_data_split_sql
+from sc2ml.data.ingestion import load_map_translations, move_data_to_duck_db
+from sc2ml.data.processing import (
+    assign_series_ids,
+    create_ml_views,
+    create_temporal_split,
+    get_matches_dataframe,
+    validate_data_split_sql,
+    validate_temporal_split,
+)
 from sc2ml.features import build_features, split_for_ml
 from sc2ml.gnn.embedder import append_embeddings_to_df, train_and_get_embeddings
 from sc2ml.gnn.pipeline import build_starcraft_graph
@@ -38,9 +47,28 @@ def setup_logging() -> None:
     )
 
 
-def main() -> None:
-    setup_logging()
+def init_database(con: duckdb.DuckDBPyConnection, *, should_drop: bool = False) -> None:
+    """Run the full Path A data pipeline: ingest → views → series → split.
 
+    Parameters
+    ----------
+    con : duckdb.DuckDBPyConnection
+        Open connection to the target DuckDB database.
+    should_drop : bool
+        If True, drop and recreate the raw table from scratch.
+    """
+    logger.info("=== Initializing database (Path A) ===")
+    move_data_to_duck_db(con, should_drop=should_drop)
+    load_map_translations(con)
+    create_ml_views(con)
+    assign_series_ids(con)
+    create_temporal_split(con)
+    validate_temporal_split(con)
+    logger.info("=== Database initialization complete ===")
+
+
+def run_pipeline() -> None:
+    """Run the ML training pipeline (assumes database is already initialized)."""
     logger.info(
         f"Pipeline start. Active models: {MODELS_TO_RUN}. "
         f"Test size={GLOBAL_TEST_SIZE}, per-patch evaluation={EVALUATE_PER_PATCH}"
@@ -52,10 +80,11 @@ def main() -> None:
         validate_data_split_sql(con, split_ratio=(1 - GLOBAL_TEST_SIZE))
 
         # Load series data if available (for Group E context features)
-        has_series = con.execute(
+        row = con.execute(
             "SELECT count(*) FROM information_schema.tables "
             "WHERE table_name = 'match_series'"
-        ).fetchone()[0] > 0
+        ).fetchone()
+        has_series = row is not None and row[0] > 0
         series_df = (
             con.execute("SELECT match_id, series_id FROM match_series").df()
             if has_series
@@ -83,8 +112,14 @@ def main() -> None:
                 X_train, X_test, y_train, y_test = temporal_train_test_split(
                     features_df, test_size=GLOBAL_TEST_SIZE
                 )
+                # Drop string columns that would crash sklearn
+                X_train = X_train.select_dtypes(include="number")
+                X_test = X_test.select_dtypes(include="number")
+                X_val, y_val = None, None
 
-            train_and_evaluate_models(X_train, X_test, y_train, y_test)
+            train_and_evaluate_models(
+                X_train, X_test, y_train, y_test, X_val=X_val, y_val=y_val
+            )
 
         # Stage 2: GNN path
         if "GNN" in MODELS_TO_RUN:
@@ -128,6 +163,41 @@ def main() -> None:
     finally:
         con.close()
         logger.info("DuckDB connection closed.")
+
+
+def main() -> None:
+    setup_logging()
+
+    parser = argparse.ArgumentParser(description="SC2-ML pipeline")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # init subcommand
+    init_parser = subparsers.add_parser(
+        "init", help="Initialize DuckDB from raw replay JSON files"
+    )
+    init_parser.add_argument(
+        "--force", action="store_true", help="Drop and recreate the raw table"
+    )
+
+    # run subcommand
+    subparsers.add_parser("run", help="Run the ML training pipeline")
+
+    args = parser.parse_args()
+
+    if args.command == "init":
+        con = duckdb.connect(str(DB_FILE))
+        try:
+            init_database(con, should_drop=args.force)
+        finally:
+            con.close()
+            logger.info("DuckDB connection closed.")
+
+    elif args.command == "run":
+        run_pipeline()
+
+    else:
+        # Default: run pipeline (backward-compatible)
+        run_pipeline()
 
 
 if __name__ == "__main__":

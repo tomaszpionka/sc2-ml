@@ -32,11 +32,16 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
         (initData->>'$.gameDescription.mapSizeX')::INTEGER AS map_size_x,
         (initData->>'$.gameDescription.mapSizeY')::INTEGER AS map_size_y,
         metadata->>'$.dataBuild' AS data_build,
+        metadata->>'$.gameVersion' AS game_version,
         COALESCE(mt.english_name, metadata->>'$.mapName') AS map_name,
 
         (entry.value->>'$.playerID')::TINYINT AS player_id,
         LOWER(entry.value->>'$.nickname') AS player_name,
-        entry.value->>'$.race' AS race,
+        CASE entry.value->>'$.race'
+            WHEN 'Terr' THEN 'Terran'
+            WHEN 'Prot' THEN 'Protoss'
+            ELSE entry.value->>'$.race'
+        END AS race,
         (entry.value->>'$.startLocX')::INTEGER AS startLocX,
         (entry.value->>'$.startLocY')::INTEGER AS startLocY,
         (entry.value->>'$.APM')::INTEGER AS apm,
@@ -64,6 +69,7 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
         p1.map_size_x,
         p1.map_size_y,
         p1.data_build,
+        p1.game_version,
         p1.map_name,
 
         p1.player_id AS p1_player_id,
@@ -119,9 +125,15 @@ def get_matches_dataframe(
         "WHERE table_name = 'match_split'"
     ).fetchone()[0] > 0
 
+    _VALID_SPLITS = {"train", "val", "test"}
+
     if has_split_table:
         where_clause = "WHERE m.match_time IS NOT NULL"
         if split is not None:
+            if split not in _VALID_SPLITS:
+                raise ValueError(
+                    f"Invalid split '{split}', must be one of {sorted(_VALID_SPLITS)}"
+                )
             where_clause += f" AND ms.split = '{split}'"
         query = f"""
             SELECT m.*, ms.split

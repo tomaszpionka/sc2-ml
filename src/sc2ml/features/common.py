@@ -107,7 +107,7 @@ _METADATA_COLUMNS: list[str] = [
     "target",
     "match_id", "match_time",
     "p1_name", "p2_name",
-    "data_build", "map_name", "tournament_name",
+    "data_build", "game_version", "map_name", "tournament_name",
     "split",
 ]
 

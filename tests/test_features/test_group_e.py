@@ -16,8 +16,16 @@ class TestParsePatchVersion:
     def test_major_version_change(self) -> None:
         assert _parse_patch_version("4.7.0") == 40700
 
+    def test_game_version_with_build_suffix(self) -> None:
+        """Real gameVersion format: '3.1.1.39948' — build suffix is ignored."""
+        assert _parse_patch_version("3.1.1.39948") == 30101
+
     def test_malformed_returns_zero(self) -> None:
         assert _parse_patch_version("bad") == 0
+
+    def test_numeric_build_id_returns_zero(self) -> None:
+        """Plain dataBuild like '39948' doesn't match X.Y.Z format."""
+        assert _parse_patch_version("39948") == 0
 
     def test_none_returns_zero(self) -> None:
         assert _parse_patch_version(None) == 0  # type: ignore[arg-type]

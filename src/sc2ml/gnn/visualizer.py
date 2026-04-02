@@ -79,7 +79,7 @@ def visualize_gnn_space(
     tsne = TSNE(
         n_components=TSNE_N_COMPONENTS,
         perplexity=TSNE_PERPLEXITY,
-        n_iter=TSNE_N_ITER,
+        max_iter=TSNE_N_ITER,
         random_state=RANDOM_SEED,
         init="pca",
     )

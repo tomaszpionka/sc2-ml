@@ -28,12 +28,20 @@ def train_and_evaluate_models(
     X_test: pd.DataFrame,
     y_train: pd.Series,
     y_test: pd.Series,
+    X_val: pd.DataFrame | None = None,
+    y_val: pd.Series | None = None,
 ) -> dict[str, Pipeline]:
     """Train all classical ML models and report accuracy on full and veteran-only test sets.
 
     Veterans are matches where both players have at least VETERAN_MIN_GAMES of
     recorded history — this subset is expected to be more predictable and serves
     as a secondary benchmark alongside the full test set accuracy.
+
+    Parameters
+    ----------
+    X_val, y_val : optional
+        Validation set.  When provided, XGBoost and LightGBM use it for early
+        stopping and validation accuracy is reported for all models.
     """
     models: dict[str, Pipeline] = {
         "Logistic Regression": Pipeline(
@@ -110,13 +118,33 @@ def train_and_evaluate_models(
     X_test_veterans = X_test[veterans_mask]
     y_test_veterans = y_test[veterans_mask]
 
+    # Prepare scaled validation data for early stopping (XGBoost, LightGBM)
+    has_val = X_val is not None and y_val is not None
+
     for name, pipeline in models.items():
         logger.info(f"Training model: {name}...")
-        pipeline.fit(X_train, y_train)
+
+        # Early stopping for boosting models that support eval_set
+        if has_val and name in ("XGBoost", "LightGBM"):
+            scaler = pipeline.named_steps["scaler"]
+            clf = pipeline.named_steps["classifier"]
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_val_scaled = scaler.transform(X_val)
+            clf.fit(
+                X_train_scaled, y_train,
+                eval_set=[(X_val_scaled, y_val)],
+            )
+        else:
+            pipeline.fit(X_train, y_train)
 
         # Full test set accuracy
         y_pred_all = pipeline.predict(X_test)
         acc_all = accuracy_score(y_test, y_pred_all)
+
+        # Validation accuracy
+        if has_val:
+            y_pred_val = pipeline.predict(X_val)
+            acc_val = accuracy_score(y_val, y_pred_val)
 
         # Veterans-only accuracy
         acc_vet = 0.0
@@ -126,6 +154,9 @@ def train_and_evaluate_models(
 
         logger.info(f"\n{'=' * 55}")
         logger.info(f"Results: {name}")
+        if has_val:
+            assert X_val is not None  # for mypy; guarded by has_val
+            logger.info(f"-> Accuracy (val, N={len(X_val)}): {acc_val:.4f}")
         logger.info(f"-> Accuracy (all test, N={len(X_test)}): {acc_all:.4f}")
         logger.info(f"\nConfusion Matrix:\n{confusion_matrix(y_test, y_pred_all)}")
         logger.info(
