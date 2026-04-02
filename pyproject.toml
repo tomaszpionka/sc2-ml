@@ -1,0 +1,51 @@
+[project]
+name = "sc2-ml"
+version = "0.1.0"
+description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
+authors = [{name = "Tomasz Pionka"}]
+requires-python = ">=3.12,<3.13"
+dynamic = ["dependencies"]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+duckdb = "^1.5.1"
+pandas = "^3.0.1"
+numpy = "^1.26.4"
+scipy = "^1.17.1"
+scikit-learn = "^1.8.0"
+xgboost = "^3.2.0"
+lightgbm = "^4.6.0"
+matplotlib = "^3.10.8"
+networkx = "^3.6.1"
+gensim = "^4.4.0"
+node2vec = "^0.5.0"
+torch = "^2.11.0"
+torchvision = "^0.26.0"
+torchaudio = "^2.11.0"
+torch-geometric = "^2.7.0"
+# torch-cluster, torch-scatter, torch-sparse require manual installation on ARM64:
+#   pip install torch-cluster torch-scatter torch-sparse --no-build-isolation
+# Also requires: brew install libomp
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.2"
+ruff = "^0.9.0"
+mypy = "^1.14.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true

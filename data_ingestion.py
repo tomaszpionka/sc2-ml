@@ -7,7 +7,12 @@ from config import MANIFEST_PATH, REPLAYS_SOURCE_DIR, DUCKDB_TEMP_DIR
 logger = logging.getLogger(__name__)
 
 
-def slim_down_sc2_with_manifest():
+def slim_down_sc2_with_manifest() -> None:
+    """Strip heavy event arrays from SC2Replay JSON files to reduce disk usage.
+
+    Processes only files not already recorded in the manifest. Skips
+    messageEvents, gameEvents, and trackerEvents — none are used by the ML pipeline.
+    """
     keys_to_remove = {"messageEvents", "gameEvents", "trackerEvents"}
 
     if MANIFEST_PATH.exists() and MANIFEST_PATH.stat().st_size > 0:
@@ -26,10 +31,9 @@ def slim_down_sc2_with_manifest():
     total_bytes_saved = 0
 
     try:
-        # Skanujemy folder w Downloads, celując tylko w pliki SC2Replay.json wewnątrz folderów 'data'
+        # Scan only SC2Replay JSON files nested under 'data/' subdirectories
         for json_file in REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"):
-
-            # Klucz w manifeście to teraz ścieżka relatywna do folderu Downloads
+            # Manifest key is the path relative to the replays root directory
             file_key = str(json_file.relative_to(REPLAYS_SOURCE_DIR))
             if manifest.get(file_key) is True:
                 continue
@@ -70,35 +74,38 @@ def slim_down_sc2_with_manifest():
     )
 
 
-def move_data_to_duck_db(con, should_drop: bool = False):
-    logger.info("Setting up DuckDB optimizations (Anti-OOM configuration)...")
+def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = False) -> None:
+    """Load all SC2Replay JSON files into the DuckDB 'raw' table.
+
+    Configures DuckDB for high-memory operation (24 GB limit, 4 threads) before
+    ingesting. Scans only files under REPLAYS_SOURCE_DIR/**/data/*.
+    """
+    logger.info("Setting up DuckDB optimizations (anti-OOM configuration)...")
     con.execute(f"SET temp_directory='{DUCKDB_TEMP_DIR}'")
     con.execute("SET max_temp_directory_size='150GB'")
 
-    # 1. Zwiększamy limit RAM (skoro masz 32 GB, 24 GB jest bezpieczne, zostawia 8 GB dla Ubuntu)
+    # 24 GB is safe on 36 GB M4 Max; leaves headroom for OS and other processes
     con.execute("SET memory_limit='24GB'")
-
-    # 2. Zmniejszamy liczbę wątków. Mniejsza równoległość przy parsowaniu = mniejsze zużycie RAM.
     con.execute("SET threads = 4")
 
-    # 3. KLUCZOWE: Wyłączamy zachowanie kolejności.
-    # Pozwala DuckDB natychmiast wrzucać przetworzone wiersze na dysk, zwalniając RAM.
+    # Disable insertion-order preservation so processed rows are flushed to disk
+    # immediately rather than held in memory until the full scan completes
     con.execute("SET preserve_insertion_order=false")
 
-    # Wymuszamy czytanie TYLKO z podfolderów /data/
+    # Restrict reads to the expected subdirectory structure
     json_glob = f"{str(REPLAYS_SOURCE_DIR)}/**/data/*.SC2Replay.json"
 
     if should_drop:
         con.execute("DROP TABLE IF EXISTS raw")
         logger.info("Dropped existing 'raw' table.")
 
-    # Usunąłem format='auto', podanie samych columns wystarczy i często przyspiesza proces
+    # Omitting format='auto' is intentional — explicit column types are faster
     query = f"""
         CREATE TABLE IF NOT EXISTS raw AS
         SELECT * FROM read_json(
             '{json_glob}',
-            union_by_name = true, 
-            maximum_object_size = 536870912, 
+            union_by_name = true,
+            maximum_object_size = 536870912,
             filename = true,
             columns = {{
                 'header': 'JSON', 'initData': 'JSON', 'details': 'JSON', 'metadata': 'JSON',
@@ -110,13 +117,18 @@ def move_data_to_duck_db(con, should_drop: bool = False):
     logger.info(f"Scanning JSONs into DuckDB: {json_glob}")
     con.execute(query)
     row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
-    logger.info(f"DuckDB Ingestion complete. Total replays in 'raw': {row_count}")
+    logger.info(f"DuckDB ingestion complete. Total replays in 'raw': {row_count}")
 
 
-def load_map_translations(con):
-    """Skanuje i scala wszystkie pliki map_foreign_to_english_mapping.json w jedną tabelę DuckDB"""
-    logger.info("Szukam słowników tłumaczeń map...")
-    global_mapping = {}
+def load_map_translations(con: duckdb.DuckDBPyConnection) -> None:
+    """Scan and merge all map_foreign_to_english_mapping.json files into DuckDB.
+
+    Finds all translation dictionaries under REPLAYS_SOURCE_DIR, merges them into
+    a single mapping, and loads it as the 'map_translation' table.
+    DuckDB can ingest a Pandas DataFrame directly from memory.
+    """
+    logger.info("Searching for map translation dictionaries...")
+    global_mapping: dict[str, str] = {}
 
     for map_file in REPLAYS_SOURCE_DIR.rglob("*map_foreign_to_english_mapping.json"):
         try:
@@ -131,10 +143,7 @@ def load_map_translations(con):
             list(global_mapping.items()), columns=["foreign_name", "english_name"]
         )
         con.execute("DROP TABLE IF EXISTS map_translation")
-        # DuckDB potrafi zaciągnąć DataFrame Pandas bezpośrednio z pamięci!
         con.execute("CREATE TABLE map_translation AS SELECT * FROM mapping_df")
-        logger.info(
-            f"Załadowano {len(global_mapping)} unikalnych tłumaczeń map do bazy DuckDB."
-        )
+        logger.info(f"Loaded {len(global_mapping)} unique map translations into DuckDB.")
     else:
-        logger.warning("Nie znaleziono żadnych plików słownika map.")
+        logger.warning("No map translation dictionaries found.")
