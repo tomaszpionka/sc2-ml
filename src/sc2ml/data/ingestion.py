@@ -9,7 +9,12 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from sc2ml.config import (
+    DUCKDB_MAX_OBJECT_SIZE,
+    DUCKDB_MAX_TEMP_DIR_SIZE,
+    DUCKDB_MEMORY_LIMIT,
     DUCKDB_TEMP_DIR,
+    DUCKDB_THREADS,
+    EXTRACTION_LOG_INTERVAL,
     IN_GAME_BATCH_SIZE,
     IN_GAME_MANIFEST_PATH,
     IN_GAME_PARQUET_DIR,
@@ -111,18 +116,16 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
     """
     logger.info("Setting up DuckDB optimizations (anti-OOM configuration)...")
     con.execute(f"SET temp_directory='{DUCKDB_TEMP_DIR}'")
-    con.execute("SET max_temp_directory_size='150GB'")
-
-    # 24 GB is safe on 36 GB M4 Max; leaves headroom for OS and other processes
-    con.execute("SET memory_limit='24GB'")
-    con.execute("SET threads = 4")
+    con.execute(f"SET max_temp_directory_size='{DUCKDB_MAX_TEMP_DIR_SIZE}'")
+    con.execute(f"SET memory_limit='{DUCKDB_MEMORY_LIMIT}'")
+    con.execute(f"SET threads = {DUCKDB_THREADS}")
 
     # Disable insertion-order preservation so processed rows are flushed to disk
     # immediately rather than held in memory until the full scan completes
     con.execute("SET preserve_insertion_order=false")
 
     # Restrict reads to the expected subdirectory structure
-    json_glob = f"{str(REPLAYS_SOURCE_DIR)}/**/data/*.SC2Replay.json"
+    json_glob = f"{str(REPLAYS_SOURCE_DIR)}/**/*.SC2Replay.json"
 
     if should_drop:
         con.execute("DROP TABLE IF EXISTS raw")
@@ -134,7 +137,7 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
         SELECT * FROM read_json(
             '{json_glob}',
             union_by_name = true,
-            maximum_object_size = 536870912,
+            maximum_object_size = {DUCKDB_MAX_OBJECT_SIZE},
             filename = true,
             columns = {{
                 'header': 'JSON', 'initData': 'JSON', 'details': 'JSON', 'metadata': 'JSON',
@@ -473,6 +476,63 @@ def save_raw_events_to_parquet(
     )
 
 
+def _load_manifest(manifest_path: Path) -> dict[str, bool]:
+    """Load an extraction manifest from disk, or return an empty dict.
+
+    Args:
+        manifest_path: Path to the JSON manifest file.
+
+    Returns:
+        A dict mapping file keys to processing status.
+    """
+    if manifest_path.exists() and manifest_path.stat().st_size > 0:
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest: dict[str, bool] = json.load(f)
+            logger.info(f"Loaded in-game manifest: {len(manifest)} files tracked.")
+            return manifest
+        except json.JSONDecodeError:
+            logger.warning("In-game manifest corrupted. Starting fresh.")
+            return {}
+    logger.info("No in-game manifest found. Starting fresh.")
+    return {}
+
+
+def _save_manifest(manifest: dict[str, bool], manifest_path: Path) -> None:
+    """Persist the extraction manifest to disk.
+
+    Args:
+        manifest: Current manifest state.
+        manifest_path: Path to write the JSON manifest file.
+    """
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f)
+
+
+def _collect_pending_files(
+    manifest: dict[str, bool],
+) -> list[Path]:
+    """Collect replay files not yet recorded in the manifest.
+
+    Args:
+        manifest: Current manifest state.
+
+    Returns:
+        List of Paths to replay files still needing extraction.
+    """
+    all_files = sorted(REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"))
+    pending = [
+        f
+        for f in all_files
+        if manifest.get(str(f.relative_to(REPLAYS_SOURCE_DIR))) is not True
+    ]
+    logger.info(
+        f"In-game extraction: {len(pending)} files to process "
+        f"({len(all_files) - len(pending)} already done)."
+    )
+    return pending
+
+
 def run_in_game_extraction(
     parquet_dir: Path = IN_GAME_PARQUET_DIR,
     max_workers: int = IN_GAME_WORKERS,
@@ -489,57 +549,20 @@ def run_in_game_extraction(
         max_workers: Number of parallel worker processes.
         batch_size: Number of files to accumulate before flushing a Parquet batch.
     """
-    # Load or create manifest
-    if IN_GAME_MANIFEST_PATH.exists() and IN_GAME_MANIFEST_PATH.stat().st_size > 0:
-        try:
-            with open(IN_GAME_MANIFEST_PATH, "r", encoding="utf-8") as f:
-                manifest: dict[str, bool] = json.load(f)
-            logger.info(f"Loaded in-game manifest: {len(manifest)} files tracked.")
-        except json.JSONDecodeError:
-            logger.warning("In-game manifest corrupted. Starting fresh.")
-            manifest = {}
-    else:
-        manifest = {}
-        logger.info("No in-game manifest found. Starting fresh.")
-
-    # Collect files to process
-    all_files = sorted(REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"))
-    pending_files = [
-        f
-        for f in all_files
-        if manifest.get(str(f.relative_to(REPLAYS_SOURCE_DIR))) is not True
-    ]
-    logger.info(
-        f"In-game extraction: {len(pending_files)} files to process "
-        f"({len(all_files) - len(pending_files)} already done)."
-    )
+    manifest = _load_manifest(IN_GAME_MANIFEST_PATH)
+    pending_files = _collect_pending_files(manifest)
 
     if not pending_files:
         logger.info("Nothing to extract — all files already processed.")
         return
 
     parquet_dir.mkdir(parents=True, exist_ok=True)
-
-    # Determine starting batch number from existing parquet files
     existing_batches = sorted(parquet_dir.glob("tracker_events_batch_*.parquet"))
     batch_number = len(existing_batches)
 
     total_processed = 0
     total_skipped = 0
-    total_errors = 0
     buffer: list[dict] = []
-
-    def _flush_batch() -> None:
-        nonlocal batch_number, buffer
-        if not buffer:
-            return
-        save_raw_events_to_parquet(buffer, parquet_dir, batch_number)
-        batch_number += 1
-        buffer = []
-
-    def _save_manifest() -> None:
-        with open(IN_GAME_MANIFEST_PATH, "w", encoding="utf-8") as f:
-            json.dump(manifest, f)
 
     with multiprocessing.Pool(max_workers) as pool:
         for result in pool.imap_unordered(extract_raw_events_from_file, pending_files):
@@ -547,31 +570,30 @@ def run_in_game_extraction(
                 total_skipped += 1
                 continue
 
-            file_key = result["match_id"]
-
-            # Check for extraction errors (extract function returns None on missing data,
-            # but pool may also propagate exceptions as results via error_callback)
             buffer.append(result)
-            manifest[file_key] = True
+            manifest[result["match_id"]] = True
             total_processed += 1
 
             if len(buffer) >= batch_size:
-                _flush_batch()
-                _save_manifest()
+                save_raw_events_to_parquet(buffer, parquet_dir, batch_number)
+                batch_number += 1
+                buffer = []
+                _save_manifest(manifest, IN_GAME_MANIFEST_PATH)
 
-            if total_processed % 200 == 0:
+            if total_processed % EXTRACTION_LOG_INTERVAL == 0:
                 logger.info(
                     f"Progress: {total_processed} extracted, "
-                    f"{total_skipped} skipped (no events), {total_errors} errors"
+                    f"{total_skipped} skipped (no events)"
                 )
 
-    # Flush remaining buffer
-    _flush_batch()
-    _save_manifest()
+    if buffer:
+        save_raw_events_to_parquet(buffer, parquet_dir, batch_number)
+        batch_number += 1
+    _save_manifest(manifest, IN_GAME_MANIFEST_PATH)
 
     logger.info(
         f"In-game extraction complete: {total_processed} files extracted, "
-        f"{total_skipped} skipped, {total_errors} errors, "
+        f"{total_skipped} skipped, "
         f"{batch_number} Parquet batches written to {parquet_dir}"
     )
 

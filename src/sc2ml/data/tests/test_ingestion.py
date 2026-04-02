@@ -5,9 +5,12 @@ Uses the sample replay file (sOs vs ByuN) shipped in samples/raw/ to verify:
 - Parquet round-trip preserves data
 - DuckDB loading creates expected tables and views
 - PlayerStats view returns typed columns for all 39 fields
+- slim_down_sc2_with_manifest strips event keys correctly
+- move_data_to_duck_db loads JSON replays into DuckDB
 """
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 import duckdb
 import pytest
@@ -17,9 +20,13 @@ from sc2ml.data.ingestion import (
     _build_game_event_rows,
     _build_metadata_rows,
     _build_tracker_rows,
+    _load_manifest,
+    _save_manifest,
     extract_raw_events_from_file,
     load_in_game_data_to_duckdb,
+    move_data_to_duck_db,
     save_raw_events_to_parquet,
+    slim_down_sc2_with_manifest,
 )
 
 
@@ -274,3 +281,215 @@ class TestPlayerStatsFieldMap:
                 return
 
         pytest.fail("No PlayerStats event found in sample replay")
+
+
+class TestManifestHelpers:
+    """Test _load_manifest, _save_manifest, and _collect_pending_files."""
+
+    def test_load_manifest_empty_path(self, tmp_path: Path) -> None:
+        manifest = _load_manifest(tmp_path / "nonexistent.json")
+        assert manifest == {}
+
+    def test_load_manifest_valid(self, tmp_path: Path) -> None:
+        path = tmp_path / "manifest.json"
+        path.write_text(json.dumps({"file_a": True, "file_b": False}))
+        manifest = _load_manifest(path)
+        assert manifest == {"file_a": True, "file_b": False}
+
+    def test_load_manifest_corrupted(self, tmp_path: Path) -> None:
+        path = tmp_path / "manifest.json"
+        path.write_text("not valid json{{{")
+        manifest = _load_manifest(path)
+        assert manifest == {}
+
+    def test_save_manifest_roundtrip(self, tmp_path: Path) -> None:
+        path = tmp_path / "manifest.json"
+        data = {"file_x": True}
+        _save_manifest(data, path)
+        loaded = json.loads(path.read_text())
+        assert loaded == data
+
+
+class TestSlimDownSc2WithManifest:
+    """Test slim_down_sc2_with_manifest with synthetic replay files."""
+
+    def _create_replay_dir(self, tmp_path: Path) -> Path:
+        """Create a minimal replay directory structure with 2 files."""
+        replay_dir = tmp_path / "replays" / "tournament" / "data"
+        replay_dir.mkdir(parents=True)
+        for i in range(2):
+            replay = {
+                "header": {"elapsedGameLoops": 5000},
+                "ToonPlayerDescMap": {},
+                "trackerEvents": [{"evtTypeName": "test"}] * 100,
+                "gameEvents": [{"evtTypeName": "test"}] * 200,
+                "messageEvents": [{"text": "glhf"}],
+            }
+            (replay_dir / f"match_{i}.SC2Replay.json").write_text(json.dumps(replay))
+        return tmp_path / "replays"
+
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("sc2ml.data.ingestion.MANIFEST_PATH")
+    def test_dry_run_does_not_modify_files(
+        self, mock_manifest: Path, mock_source: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        mock_source.__class__ = type(source)
+        mock_manifest.__class__ = type(tmp_path / "manifest.json")
+
+        # Patch the actual Path values
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.MANIFEST_PATH", tmp_path / "manifest.json"):
+            slim_down_sc2_with_manifest(dry_run=True)
+
+        # Files should still contain all keys
+        data_dir = source / "tournament" / "data"
+        for f in data_dir.glob("*.SC2Replay.json"):
+            data = json.loads(f.read_text())
+            assert "trackerEvents" in data
+            assert "gameEvents" in data
+            assert "messageEvents" in data
+
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("sc2ml.data.ingestion.MANIFEST_PATH")
+    def test_actual_run_strips_events(
+        self, mock_manifest: Path, mock_source: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.MANIFEST_PATH", tmp_path / "manifest.json"):
+            slim_down_sc2_with_manifest(dry_run=False)
+
+        data_dir = source / "tournament" / "data"
+        for f in data_dir.glob("*.SC2Replay.json"):
+            data = json.loads(f.read_text())
+            assert "trackerEvents" not in data
+            assert "gameEvents" not in data
+            assert "messageEvents" not in data
+            assert "header" in data
+            assert "ToonPlayerDescMap" in data
+
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("sc2ml.data.ingestion.MANIFEST_PATH")
+    def test_manifest_tracks_processed_files(
+        self, mock_manifest: Path, mock_source: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        manifest_path = tmp_path / "manifest.json"
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.MANIFEST_PATH", manifest_path):
+            slim_down_sc2_with_manifest(dry_run=False)
+
+        manifest = json.loads(manifest_path.read_text())
+        assert len(manifest) == 2
+        assert all(v is True for v in manifest.values())
+
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("sc2ml.data.ingestion.MANIFEST_PATH")
+    def test_skips_already_processed_files(
+        self, mock_manifest: Path, mock_source: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        manifest_path = tmp_path / "manifest.json"
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.MANIFEST_PATH", manifest_path):
+            slim_down_sc2_with_manifest(dry_run=False)
+            # Run again — should skip all files
+            slim_down_sc2_with_manifest(dry_run=False)
+
+        manifest = json.loads(manifest_path.read_text())
+        assert len(manifest) == 2
+
+
+class TestMoveDataToDuckDb:
+    """Test move_data_to_duck_db with synthetic replay files."""
+
+    def _create_replay_dir(self, tmp_path: Path) -> Path:
+        """Create minimal stripped replay files for DuckDB ingestion."""
+        replay_dir = tmp_path / "replays" / "tournament" / "data"
+        replay_dir.mkdir(parents=True)
+
+        for i in range(3):
+            replay = {
+                "header": {"elapsedGameLoops": 5000 + i * 100},
+                "initData": {"gameDescription": {"mapSizeX": 200, "mapSizeY": 200}},
+                "details": {"timeUTC": f"2023-0{i + 1}-01T12:00:00"},
+                "metadata": {"dataBuild": "5.0.12", "mapName": "Altitude LE"},
+                "ToonPlayerDescMap": {
+                    "toon-1": {
+                        "nickname": f"Player{i}A",
+                        "playerID": 1,
+                        "result": "Win",
+                    },
+                    "toon-2": {
+                        "nickname": f"Player{i}B",
+                        "playerID": 2,
+                        "result": "Loss",
+                    },
+                },
+            }
+            (replay_dir / f"match_{i}.SC2Replay.json").write_text(json.dumps(replay))
+        return tmp_path / "replays"
+
+    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    def test_loads_replays_into_raw_table(
+        self, mock_source: Path, mock_temp: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        temp_dir = tmp_path / "duckdb_tmp"
+        temp_dir.mkdir()
+
+        con = duckdb.connect(":memory:")
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+            move_data_to_duck_db(con, should_drop=True)
+
+        row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
+        assert row_count == 3
+        con.close()
+
+    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    def test_raw_table_has_expected_columns(
+        self, mock_source: Path, mock_temp: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        temp_dir = tmp_path / "duckdb_tmp"
+        temp_dir.mkdir()
+
+        con = duckdb.connect(":memory:")
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+            move_data_to_duck_db(con, should_drop=True)
+
+        columns = con.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name = 'raw'"
+        ).fetchall()
+        col_names = {c[0] for c in columns}
+        expected = {"header", "initData", "details", "metadata", "ToonPlayerDescMap"}
+        assert expected.issubset(col_names)
+        con.close()
+
+    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    def test_should_drop_recreates_table(
+        self, mock_source: Path, mock_temp: Path, tmp_path: Path
+    ) -> None:
+        source = self._create_replay_dir(tmp_path)
+        temp_dir = tmp_path / "duckdb_tmp"
+        temp_dir.mkdir()
+
+        con = duckdb.connect(":memory:")
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+            move_data_to_duck_db(con, should_drop=True)
+            move_data_to_duck_db(con, should_drop=True)
+
+        row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
+        assert row_count == 3  # Not doubled
+        con.close()
