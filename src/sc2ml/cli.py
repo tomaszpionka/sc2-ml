@@ -69,6 +69,7 @@ def init_database(con: duckdb.DuckDBPyConnection, *, should_drop: bool = False) 
 
 def run_pipeline() -> None:
     """Run the ML training pipeline (assumes database is already initialized)."""
+    setup_logging()
     logger.info(
         f"Pipeline start. Active models: {MODELS_TO_RUN}. "
         f"Test size={GLOBAL_TEST_SIZE}, per-patch evaluation={EVALUATE_PER_PATCH}"
