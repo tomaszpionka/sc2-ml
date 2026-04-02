@@ -1,18 +1,27 @@
-import torch
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-import numpy as np
-import pandas as pd
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from config import (
-    TSNE_N_COMPONENTS,
-    TSNE_PERPLEXITY,
-    TSNE_N_ITER,
-    RANDOM_SEED,
-    VIZ_DPI,
+from typing import TYPE_CHECKING
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import torch
+import torch.nn.functional as F
+from sklearn.manifold import TSNE
+
+if TYPE_CHECKING:
+    from torch_geometric.data import Data
+
+    from sc2ml.gnn.model import SC2EdgeClassifier
+
+from sc2ml.config import (
     GNN_VIZ_OUTPUT_PATH,
+    RANDOM_SEED,
+    TSNE_N_COMPONENTS,
+    TSNE_N_ITER,
+    TSNE_PERPLEXITY,
+    VIZ_DPI,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,8 +40,8 @@ RACE_COLORS = {
 
 
 def visualize_gnn_space(
-    model: "SC2EdgeClassifier",  # type: ignore[name-defined]
-    graph_data: "torch_geometric.data.Data",  # type: ignore[name-defined]
+    model: SC2EdgeClassifier,
+    graph_data: Data,
     player_to_id: dict[str, int],
     features_df: pd.DataFrame,
     test_size: float = 0.05,

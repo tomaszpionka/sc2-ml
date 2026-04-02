@@ -1,7 +1,9 @@
 import logging
-import pandas as pd
+
 import numpy as np
-from config import BAYESIAN_C, BAYESIAN_PRIOR_WR
+import pandas as pd
+
+from sc2ml.config import BAYESIAN_C, BAYESIAN_PRIOR_WR
 
 logger = logging.getLogger(__name__)
 

@@ -99,7 +99,7 @@ def threaded_stress(device: torch.device, workers: int = 4, iters: int = 20):
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
         results = list(ex.map(worker, range(100, 100 + workers)))
-    
+
     # ADDED: Synchronize only ONCE on the main thread after all workers are done submitting
     torch.mps.synchronize()
     assert all(results)
@@ -141,13 +141,13 @@ def main():
 
     print("[5] threaded stress with sync (targets crash-on-exit class)")
     threaded_stress_with_sync(device)
-    
+
     print("\nAll tests passed; cleaning up to prevent shutdown segfault...")
-    
+
     # 1. Force Python to delete lingering thread-local tensors
     import gc
     gc.collect()
-    
+
     # 2. Safely flush and release the Metal command queues before Python shuts down
     torch.mps.empty_cache()
 

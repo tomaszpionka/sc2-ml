@@ -1,7 +1,8 @@
 from pathlib import Path
 
 # ── Project paths ──────────────────────────────────────────────────────────────
-ROOT_PROJECTS_DIR: Path = Path("~/Projects/sc2-ml").expanduser().resolve()
+# Derived from file location: src/sc2ml/config.py → repo root
+ROOT_PROJECTS_DIR: Path = Path(__file__).resolve().parent.parent.parent
 DB_FILE: Path = Path("~/duckdb_work/test_sc2.duckdb").expanduser().resolve()
 MANIFEST_PATH: Path = ROOT_PROJECTS_DIR / "processing_manifest.json"
 

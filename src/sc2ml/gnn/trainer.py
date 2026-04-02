@@ -1,21 +1,29 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
+
 import torch
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from gnn_model import SC2EdgeClassifier
-from config import (
+
+if TYPE_CHECKING:
+    from torch_geometric.data import Data
+
+from sc2ml.config import (
+    GNN_CHECKPOINT_PATH,
     GNN_HIDDEN_DIM,
     GNN_LEARNING_RATE,
-    GNN_WEIGHT_DECAY,
-    GNN_PATIENCE,
     GNN_LOG_EVERY,
-    GNN_CHECKPOINT_PATH,
+    GNN_PATIENCE,
+    GNN_WEIGHT_DECAY,
 )
+from sc2ml.gnn.model import SC2EdgeClassifier
 
 logger = logging.getLogger(__name__)
 
 
 def train_and_evaluate_gnn(
-    graph_data: "torch_geometric.data.Data",  # type: ignore[name-defined]
+    graph_data: Data,
     epochs: int = 300,
     test_size: float = 0.1,
 ) -> tuple[SC2EdgeClassifier, float]:
@@ -110,7 +118,7 @@ def train_and_evaluate_gnn(
     y_true = test_y.numpy()
     y_pred = preds_final.numpy()
 
-    logger.info(f"\n=== GNN Final Evaluation (All Test) ===")
+    logger.info("\n=== GNN Final Evaluation (All Test) ===")
     logger.info(f"Accuracy: {best_test_acc:.4f}")
     logger.info(f"\nConfusion Matrix:\n{confusion_matrix(y_true, y_pred)}")
     logger.info(
@@ -129,7 +137,7 @@ def train_and_evaluate_gnn(
             logger.info(f"Accuracy: {vet_acc:.4f}")
             logger.info(
                 f"\nClassification Report:\n"
-                f"{classification_report(y_true[vet_test_mask], y_pred[vet_test_mask], target_names=['P2 wins', 'P1 wins'])}"
+                f"{classification_report(y_true[vet_test_mask], y_pred[vet_test_mask], target_names=['P2 wins', 'P1 wins'])}"  # noqa: E501
             )
         else:
             logger.warning("Veterans mask produced 0 test matches — skipping veterans evaluation.")

@@ -6,16 +6,11 @@ Covers:
 - Bayesian smoothing bounds
 - Temporal train/test split correctness
 """
-import numpy as np
 import pandas as pd
 import pytest
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from ml_pipeline import perform_feature_engineering, temporal_train_test_split
-from tests.fixtures import make_matches_df
+from sc2ml.features.engineering import perform_feature_engineering, temporal_train_test_split
+from tests.helpers import make_matches_df
 
 LEAKAGE_COLS = [
     "p1_apm", "p2_apm",

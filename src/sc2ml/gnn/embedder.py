@@ -1,20 +1,28 @@
+from __future__ import annotations
+
 import logging
-import pandas as pd
+from typing import TYPE_CHECKING
+
 import networkx as nx
+import pandas as pd
 from node2vec import Node2Vec
-from config import (
-    NODE2VEC_WALK_LENGTH,
-    NODE2VEC_NUM_WALKS,
-    NODE2VEC_WORKERS,
-    NODE2VEC_WINDOW,
+
+if TYPE_CHECKING:
+    from torch_geometric.data import Data
+
+from sc2ml.config import (
     NODE2VEC_EMBEDDING_DIM,
+    NODE2VEC_NUM_WALKS,
+    NODE2VEC_WALK_LENGTH,
+    NODE2VEC_WINDOW,
+    NODE2VEC_WORKERS,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def train_and_get_embeddings(
-    graph_data: "torch_geometric.data.Data",  # type: ignore[name-defined]
+    graph_data: Data,
     player_to_id: dict[str, int],
     embedding_dim: int = NODE2VEC_EMBEDDING_DIM,
 ) -> dict[str, list[float]]:

@@ -1,6 +1,8 @@
 import logging
+
 import pandas as pd
-from config import ELO_K_NEW, ELO_K_VETERAN, ELO_K_THRESHOLD
+
+from sc2ml.config import ELO_K_NEW, ELO_K_THRESHOLD, ELO_K_VETERAN
 
 logger = logging.getLogger(__name__)
 

@@ -1,21 +1,23 @@
 import logging
+
 import pandas as pd
-from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from config import (
+from sklearn.preprocessing import StandardScaler
+from xgboost import XGBClassifier
+
+from sc2ml.config import (
+    HGB_LEARNING_RATE,
+    HGB_MAX_ITER,
+    LR_MAX_ITER,
     RANDOM_SEED,
-    VETERAN_MIN_GAMES,
-    RF_N_ESTIMATORS,
     RF_MAX_DEPTH,
     RF_MIN_SAMPLES_SPLIT,
-    HGB_MAX_ITER,
-    HGB_LEARNING_RATE,
-    LR_MAX_ITER,
+    RF_N_ESTIMATORS,
+    VETERAN_MIN_GAMES,
 )
 
 logger = logging.getLogger(__name__)
@@ -136,7 +138,7 @@ def train_and_evaluate_models(
             )
             logger.info(
                 f"\nVeterans Classification Report:\n"
-                f"{classification_report(y_test_veterans, y_pred_vet, target_names=['P2 wins', 'P1 wins'])}"
+                f"{classification_report(y_test_veterans, y_pred_vet, target_names=['P2 wins', 'P1 wins'])}"  # noqa: E501
             )
         else:
             logger.info("-> No veterans in test set at current threshold (N=0).")
@@ -151,7 +153,7 @@ def train_and_evaluate_models(
         importances = rf_model.feature_importances_
         fi_df = pd.DataFrame({"Feature": X_train.columns, "Importance": importances})
         fi_df = fi_df.sort_values(by="Importance", ascending=False).head(10)
-        logger.info(f"\n--- Top 10 features (Random Forest) ---")
+        logger.info("\n--- Top 10 features (Random Forest) ---")
         logger.info(fi_df.to_string(index=False))
 
     return trained_models

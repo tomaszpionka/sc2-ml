@@ -1,15 +1,17 @@
 import logging
-import torch
+
 import numpy as np
 import pandas as pd
-from torch_geometric.data import Data
+import torch
 from sklearn.preprocessing import StandardScaler
-from config import (
-    VETERAN_MIN_GAMES,
+from torch_geometric.data import Data
+
+from sc2ml.config import (
     NODE_FALLBACK_APM,
+    NODE_FALLBACK_GAMES,
     NODE_FALLBACK_SQ,
     NODE_FALLBACK_WINRATE,
-    NODE_FALLBACK_GAMES,
+    VETERAN_MIN_GAMES,
 )
 
 logger = logging.getLogger(__name__)

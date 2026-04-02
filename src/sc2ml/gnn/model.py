@@ -1,9 +1,10 @@
 import torch
 import torch.nn.functional as F
 from torch import Tensor
-from torch.nn import Linear, Sequential, ReLU, Dropout
+from torch.nn import Dropout, Linear, ReLU, Sequential
 from torch_geometric.nn import GATv2Conv
-from config import GNN_HIDDEN_DIM, GNN_HEADS_CONV1, GNN_HEADS_CONV2, GNN_DROPOUT
+
+from sc2ml.config import GNN_DROPOUT, GNN_HEADS_CONV1, GNN_HEADS_CONV2, GNN_HIDDEN_DIM
 
 
 class SC2EdgeClassifier(torch.nn.Module):

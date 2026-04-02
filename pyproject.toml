@@ -1,13 +1,16 @@
 [project]
 name = "sc2-ml"
-version = "0.1.0"
+version = "0.2.0"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
 dynamic = ["dependencies"]
 
+[project.scripts]
+sc2ml = "sc2ml.cli:main"
+
 [tool.poetry]
-package-mode = false
+packages = [{include = "sc2ml", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
@@ -45,6 +48,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.12"

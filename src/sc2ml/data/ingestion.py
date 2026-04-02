@@ -2,7 +2,7 @@ import json
 import logging
 import duckdb
 import pandas as pd
-from config import MANIFEST_PATH, REPLAYS_SOURCE_DIR, DUCKDB_TEMP_DIR
+from sc2ml.config import MANIFEST_PATH, REPLAYS_SOURCE_DIR, DUCKDB_TEMP_DIR
 
 logger = logging.getLogger(__name__)
 
