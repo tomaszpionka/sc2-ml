@@ -92,6 +92,16 @@ LR_MAX_ITER: int = 1000
 TUNING_N_ITER: int = 50
 TUNING_CV_FOLDS: int = 5
 
+# ── Expanding-window CV ──────────────────────────────────────────────────────
+EXPANDING_CV_N_SPLITS: int = 5         # Number of temporal CV folds
+EXPANDING_CV_MIN_TRAIN_FRAC: float = 0.3  # Minimum initial training window fraction
+
+# ── Optuna tuning ────────────────────────────────────────────────────────────
+OPTUNA_N_TRIALS_LGBM: int = 200
+OPTUNA_N_TRIALS_XGB: int = 200
+LR_GRID_C: list[float] = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+LR_GRID_PENALTY: list[str] = ["l1", "l2"]
+
 # ── DuckDB resource limits ────────────────────────────────────────────────────
 DUCKDB_MEMORY_LIMIT: str = "24GB"  # Safe on 36 GB M4 Max; leaves headroom for OS
 DUCKDB_MAX_TEMP_DIR_SIZE: str = "150GB"
@@ -103,3 +113,9 @@ EXTRACTION_LOG_INTERVAL: int = 200  # Log progress every N files during extracti
 
 # ── Patch analysis ─────────────────────────────────────────────────────────────
 PATCH_MIN_MATCHES: int = 100  # Minimum matches for a patch to be included in per-patch analysis
+
+# ── Evaluation ────────────────────────────────────────────────────────────
+BOOTSTRAP_N_ITER: int = 1000       # Bootstrap resampling iterations for 95% CI
+BOOTSTRAP_CI_LEVEL: float = 0.95   # Confidence level for bootstrap intervals
+CALIBRATION_N_BINS: int = 10       # Number of bins for calibration curve
+RESULTS_DIR: Path = ROOT_PROJECTS_DIR / "models" / "results"

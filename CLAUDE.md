@@ -61,7 +61,7 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 
 1. All tests pass with coverage report
 2. Ruff and mypy clean
-3. `CHANGELOG.md` updated with code changes
+3. `CHANGELOG.md` updated — work in progress under `[Unreleased]`; on merge, promote to versioned section
 4. `reports/research_log.md` updated if session involved experimentation, methodology decisions, issues, or breakthroughs
 5. Proposed commit messages for all uncommitted work
 6. Summary of what's ready to merge and what's still in progress

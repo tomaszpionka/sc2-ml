@@ -50,6 +50,14 @@ def compute_matchup_features(df: pd.DataFrame) -> pd.DataFrame:
             wins, games, BAYESIAN_C, BAYESIAN_PRIOR_WR
         )
 
+    # --- matchup type (preserved as metadata for per-matchup analysis) ---
+    _RACE_ABBREV = {"Protoss": "P", "Terran": "T", "Zerg": "Z"}
+    r1 = df["p1_race"].map(_RACE_ABBREV).fillna("?")
+    r2 = df["p2_race"].map(_RACE_ABBREV).fillna("?")
+    df["matchup_type"] = [
+        "v".join(sorted([a, b])) for a, b in zip(r1, r2)
+    ]
+
     # --- one-hot race encoding ---
     df = pd.get_dummies(df, columns=["p1_race", "p2_race"], drop_first=False)
 
