@@ -77,26 +77,27 @@ Before wrapping up a work session, ensure:
 
 ## Project Structure
 
-### Python modules (root level)
-- `main.py` — pipeline orchestrator, configurable model selection (`CLASSIC`, `NODE2VEC`, `GNN`)
-- `config.py` — path constants (DB_FILE, REPLAYS_SOURCE_DIR, MANIFEST_PATH, DUCKDB_TEMP_DIR)
-- `data_ingestion.py` — replay JSON parsing, DuckDB loading, map translations
-- `data_processing.py` — SQL view creation (`flat_players`, `matches_flat`), data validation
-- `ml_pipeline.py` — feature engineering (45+ features, Bayesian smoothing), temporal train/test split
-- `elo_system.py` — custom ELO rating with dynamic K-factor (K=64 new, K=32 veteran)
-- `model_training.py` — classical ML training/evaluation (LR, RF, GB, XGB, LGBM)
-- `hyperparameter_tuning.py` — RandomizedSearchCV for Random Forest
-- `gnn_model.py` — SC2EdgeClassifier (GATv2Conv-based edge classifier)
-- `gnn_pipeline.py` — graph construction from player features (node + edge features)
-- `gnn_trainer.py` — GNN training loop with early stopping
-- `gnn_visualizer.py` — t-SNE visualization of learned GNN embeddings
-- `node2vec_embedder.py` — Node2Vec embeddings via NetworkX/Gensim
+### Package layout (`src/sc2ml/`)
+- `cli.py` — pipeline orchestrator, configurable model selection (`CLASSIC`, `NODE2VEC`, `GNN`)
+- `config.py` — path constants, ML hyperparameters, reproducibility settings
+- `data/ingestion.py` — replay JSON parsing, DuckDB loading, map translations
+- `data/processing.py` — SQL view creation (`flat_players`, `matches_flat`), data validation
+- `features/engineering.py` — feature engineering (45+ features, Bayesian smoothing), temporal train/test split
+- `features/elo.py` — custom ELO rating with dynamic K-factor (K=64 new, K=32 veteran)
+- `models/classical.py` — classical ML training/evaluation (LR, RF, GB, XGB, LGBM)
+- `models/tuning.py` — RandomizedSearchCV for Random Forest
+- `gnn/model.py` — SC2EdgeClassifier (GATv2Conv-based edge classifier)
+- `gnn/pipeline.py` — graph construction from player features (node + edge features)
+- `gnn/trainer.py` — GNN training loop with early stopping
+- `gnn/visualizer.py` — t-SNE visualization of learned GNN embeddings
+- `gnn/embedder.py` — Node2Vec embeddings via NetworkX/Gensim
 
 ### Directories
 - `models/` — serialized model artifacts (`.joblib`, `.pt`)
-- `reports/` — run logs as markdown (`01_run.md` through `09_run_mac.md`)
+- `reports/` — research log and visualization outputs
+- `reports/archive/` — legacy pipeline execution logs (`01_run.md` through `09_run.md`)
 - `logs/` — pipeline log file (`sc2_pipeline.log`)
-- `tests/` — pytest test suite (to be created)
+- `tests/` — pytest test suite
 
 ### External data paths (from `config.py`)
 - `~/duckdb_work/test_sc2.duckdb` — main DuckDB database
@@ -132,7 +133,8 @@ The pipeline runs in 5 stages (orchestrated by `main.py`):
 - **SQL:** parameterized queries for DuckDB; SQL views documented with their purpose
 - **Logging:** use `logging.getLogger(__name__)`; INFO for pipeline progress, DEBUG for diagnostics
 - **Constants:** named and placed in `config.py` or at the top of the relevant module; no magic numbers
-- **Language:** variable names and code in English; existing Polish comments maintained unless told to switch
+- **Language:** variable names, comments, and code in English
+- **Package layout:** `src/sc2ml/` with subpackages (`data`, `features`, `models`, `gnn`); imports use `from sc2ml.* import ...`
 
 ---
 
@@ -184,12 +186,13 @@ Three documentation artifacts serve different purposes:
 ### reports/research_log.md (thesis material)
 - Reverse chronological, date-stamped entries
 - Each entry uses structured fields: **Objective**, **Approach**, **Issues encountered**, **Resolution/Outcome**, **Thesis notes**
-- References execution reports (`reports/XX_run.md`) and specific commits where relevant
+- References execution reports (`reports/archive/XX_run.md`) and specific commits where relevant
 - Directly usable as source material when writing thesis chapters
 - Updated every session involving experimentation, methodology decisions, issues, or breakthroughs
 
-### reports/XX_run.md (pipeline execution output)
-- Existing convention — raw pipeline execution results and metrics
+### reports/archive/XX_run.md (pipeline execution output)
+- Legacy pipeline execution results and metrics (ChatGPT/Gemini era)
+- Archived for reference — reports 07-09 contain primary baseline metrics (~64.5% accuracy)
 - Referenced from research log entries, not replaced by them
 
 ---

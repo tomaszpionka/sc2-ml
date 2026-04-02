@@ -8,32 +8,41 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 ## [Unreleased]
 
 ### Changed
+- **Reorganized into `src/sc2ml/` package** with four subpackages: `data/`, `features/`,
+  `models/`, `gnn/` — proper Python src layout replacing flat root-level modules
+- Renamed modules to avoid namespace redundancy (e.g. `data_ingestion.py` → `sc2ml.data.ingestion`)
+- Updated `pyproject.toml` to src layout (`packages = [{include = "sc2ml", from = "src"}]`)
+- Replaced hardcoded `ROOT_PROJECTS_DIR` path with `Path(__file__)` derivation in `config.py`
+- Moved logging setup from module-level side effect to `setup_logging()` function in `cli.py`
+- Fixed duplicate `perform_feature_engineering()` call in pipeline orchestrator
+- Replaced string type annotations with proper `TYPE_CHECKING` imports in GNN modules
+- Archived legacy run reports (`01_run.md`–`09_run.md`) to `reports/archive/`
 - Translated all Polish comments and log strings to English across all 13 Python modules
 - Added type hints to all function signatures (parameters and return types) in all modules
-- Extracted 60+ magic numbers into named constants in `config.py` (ELO K-factors, Bayesian
-  smoothing params, GNN architecture, Node2Vec walk config, t-SNE params, classical model
-  hyperparameters, tuning settings, patch analysis threshold)
-- Moved hardcoded model checkpoint path and visualization output path to `config.py`
+- Extracted 60+ magic numbers into named constants in `config.py`
 
 ### Added
+- `src/sc2ml/__init__.py` with package version `0.2.0`
+- `[project.scripts]` entry point: `sc2ml = "sc2ml.cli:main"`
+- `tests/conftest.py` for pytest configuration
+- `tests/helpers.py` for shared test utilities (replaces `tests/fixtures.py`)
+- `[tool.pytest.ini_options]` in `pyproject.toml`
 - `pyproject.toml` with Poetry dependency management
-- Project-specific `.gitignore` entries for model artifacts, logs, and scratch files
-- `config.py`: `RANDOM_SEED`, `MODELS_DIR`, `GNN_CHECKPOINT_PATH`, `GNN_VIZ_OUTPUT_PATH`,
-  `ELO_K_NEW/VETERAN/THRESHOLD`, `VETERAN_MIN_GAMES`, `BAYESIAN_C/PRIOR_WR`,
-  `GNN_HIDDEN_DIM`, `GNN_HEADS_CONV1/CONV2`, `GNN_DROPOUT`, `GNN_LEARNING_RATE/WEIGHT_DECAY/
-  PATIENCE/LOG_EVERY`, `NODE2VEC_*`, `NODE_FALLBACK_*`, `TSNE_*`, `VIZ_DPI`,
-  `RF_*`, `HGB_*`, `LR_MAX_ITER`, `TUNING_N_ITER/CV_FOLDS`, `PATCH_MIN_MATCHES`
-- `tests/` directory with initial test suite (data validation, feature engineering,
+- `config.py` with all centralized constants
+- `tests/` directory with test suite (data validation, feature engineering,
   graph construction, model reproducibility)
-- Rich CLAUDE.md guidelines for Claude Code collaboration
-- CHANGELOG.md for structured version tracking
-- Research log (`reports/research_log.md`) for thesis documentation trail
+- CLAUDE.md, CHANGELOG.md, and research log
 
 ### Removed
-- Dead commented-out legacy `main()` function block from `main.py` (~100 lines)
+- Root-level `__init__.py` (incorrect — root is not a package)
+- `tests/fixtures.py` (absorbed into `tests/helpers.py`)
+- `sys.path.insert()` hack from all test files
+- Unused imports in `cli.py` (data ingestion functions not called in current pipeline)
+- Dead commented-out legacy `main()` function block (~100 lines)
 
 ### Fixed
 - Test fixture now drops non-numeric columns (e.g. `data_build`) before passing to sklearn
+- Ruff import sorting and unused import warnings resolved across all modules
 
 ## [0.1.0] — 2026-03-30 (Baseline)
 
