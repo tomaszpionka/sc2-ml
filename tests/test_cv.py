@@ -102,6 +102,24 @@ class TestExpandingWindowCVValidation:
             list(cv.split(X))
 
 
+class TestExpandingWindowCVDegenerateFolds:
+    def test_expanding_window_skips_degenerate_fold(self):
+        """When series snapping causes train_end >= val_end, that fold is skipped."""
+        n = 20
+        X = np.arange(n).reshape(-1, 1)
+        # All samples in the same series — snapping always pushes to end
+        series_ids = np.zeros(n, dtype=int)
+
+        cv = ExpandingWindowCV(
+            n_splits=5, min_train_frac=0.5,
+            series_ids=series_ids,
+        )
+        splits = list(cv.split(X))
+        # With all samples in one series, snapping pushes boundaries to n-1,
+        # so some folds become degenerate and are skipped
+        assert len(splits) < 5
+
+
 class TestExpandingWindowCVSklearnCompat:
     def test_works_with_cross_val_score(self):
         from sklearn.datasets import make_classification

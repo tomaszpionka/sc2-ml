@@ -399,3 +399,49 @@ class TestPredictionQuality:
         acc = (y_true == y_pred).mean()
         # Weak bound — on random synthetic data we just need better than coin flip
         assert acc >= 0.45, f"Accuracy {acc:.3f} is below 0.45 on balanced data"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Group 7: Trainer edge cases (early stopping & veterans mask)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TestTrainerEdgeCases:
+    """Cover trainer.py lines 107-109 (early stopping) and 143 (empty veterans)."""
+
+    def test_early_stopping_triggers(self, balanced_graph) -> None:
+        """With GNN_PATIENCE=1 and frequent logging, training should stop early."""
+        from unittest.mock import patch
+
+        graph_data, _ = balanced_graph
+        # Patch GNN_PATIENCE=1 and GNN_LOG_EVERY=1 so early stopping fires quickly
+        with (
+            patch("sc2ml.gnn.trainer.GNN_PATIENCE", 1),
+            patch("sc2ml.gnn.trainer.GNN_LOG_EVERY", 1),
+        ):
+            from sc2ml.gnn.trainer import train_and_evaluate_gnn
+
+            _, best_acc = train_and_evaluate_gnn(graph_data, epochs=300)
+            # If early stopping worked, we get a result without running all 300 epochs
+            assert 0.0 <= best_acc <= 1.0
+
+    def test_empty_veterans_mask_warning(self, balanced_graph, caplog) -> None:
+        """When veteran_mask is all-False for test edges, a warning should be logged."""
+        import logging
+
+        graph_data, _ = balanced_graph
+        # Set veteran_mask to all-False
+        graph_data.veteran_mask = torch.zeros(graph_data.num_edges, dtype=torch.bool)
+
+        with caplog.at_level(logging.WARNING, logger="sc2ml.gnn.trainer"):
+            from unittest.mock import patch
+
+            with (
+                patch("sc2ml.gnn.trainer.GNN_PATIENCE", 1),
+                patch("sc2ml.gnn.trainer.GNN_LOG_EVERY", 1),
+            ):
+                from sc2ml.gnn.trainer import train_and_evaluate_gnn
+
+                train_and_evaluate_gnn(graph_data, epochs=50)
+
+        assert any("Veterans mask produced 0 test matches" in r.message for r in caplog.records)

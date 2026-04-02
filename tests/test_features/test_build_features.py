@@ -79,3 +79,9 @@ class TestBuildFeatures:
             raw_df.copy(), groups=[FeatureGroup.C, FeatureGroup.A]
         )
         assert set(result_fwd.columns) == set(result_rev.columns)
+
+    def test_build_features_casts_bool_to_int(self, raw_df: pd.DataFrame) -> None:
+        """build_features should cast all bool columns to int."""
+        result = build_features(raw_df)
+        bool_cols = result.select_dtypes(include=["bool"]).columns.tolist()
+        assert bool_cols == [], f"Bool columns remain after build_features: {bool_cols}"
