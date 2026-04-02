@@ -46,7 +46,11 @@ def compute_context_features(
     logger.info("Computing Group E: context features...")
 
     # --- patch version as a sortable integer ---
-    if "data_build" in df.columns:
+    # Prefer game_version ("3.1.1.39948") which has X.Y.Z format;
+    # fall back to data_build ("39948") which is a plain build number.
+    if "game_version" in df.columns:
+        df["patch_version_numeric"] = df["game_version"].apply(_parse_patch_version)
+    elif "data_build" in df.columns:
         df["patch_version_numeric"] = df["data_build"].apply(_parse_patch_version)
     else:
         df["patch_version_numeric"] = 0

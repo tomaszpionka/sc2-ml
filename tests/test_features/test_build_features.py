@@ -60,7 +60,7 @@ class TestBuildFeatures:
         # Exclude metadata columns
         feature_cols = [c for c in result.columns if c not in [
             "match_id", "match_time", "p1_name", "p2_name",
-            "data_build", "map_name", "tournament_name", "split",
+            "data_build", "game_version", "map_name", "tournament_name", "split",
         ]]
         for col in feature_cols:
             assert result[col].isna().sum() == 0, f"NaN in {col}"

@@ -8,6 +8,23 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 ## [Unreleased]
 
 ### Added
+- `init_database()` function and CLI `init` subcommand for one-step database setup from raw replays
+- CLI argparse with `init [--force]` and `run` subcommands (backward-compatible: bare invocation still runs pipeline)
+- `game_version` column in `flat_players` and `matches_flat` SQL views (from `metadata.gameVersion`)
+- 12 integration smoke tests (`tests/test_integration.py`) verifying the full chain: ingestion → processing → features → model training
+- Race normalization and game version parsing tests in data and feature test suites
+
+### Fixed
+- **Race name mismatch**: SQL view now normalizes abbreviated race names (`Terr`→`Terran`, `Prot`→`Protoss`) so one-hot columns match GNN visualizer and test expectations
+- **Validation set discarded**: `train_and_evaluate_models()` now accepts optional `X_val`/`y_val`; XGBoost and LightGBM use it for early stopping; val accuracy reported for all models
+- **Patch version always zero on real data**: Group E now uses `game_version` (`"3.1.1.39948"`) for `patch_version_numeric` instead of plain `data_build` (`"39948"`)
+- **Compat fallback crash**: `cli.py` fallback path now drops string columns via `select_dtypes(include='number')` before passing to sklearn
+- **t-SNE `n_iter` deprecation**: Updated to `max_iter` for scikit-learn 1.6+
+
+### Changed
+- `cli.py` refactored: pipeline logic extracted to `run_pipeline()`, `init_database()` added, imports now include ingestion/processing functions
+
+### Added
 - **Feature groups A–E** implementing methodology Section 3.1 for incremental ablation:
   - Group A (`group_a_elo.py`): Dynamic K-factor Elo ratings (refactored from `elo.py`)
   - Group B (`group_b_historical.py`): Historical aggregates + new variance features (`hist_std_apm`, `hist_std_sq`)
