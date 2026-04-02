@@ -61,7 +61,7 @@ Before wrapping up a work session, ensure:
 ## Tech Stack & Environment
 
 - **Runtime:** Python 3.12 (venv at `.venv/`)
-- **Hardware:** Apple M4 Max (ARM64, MPS-capable GPU)
+- **Hardware:** Apple M4 Max (36GB RAM, ARM64, MPS-capable GPU)
 - **Dependency management:** Poetry with `pyproject.toml`
 - **Core libraries:**
   - PyTorch + PyTorch Geometric (GATv2Conv, Node2Vec)
