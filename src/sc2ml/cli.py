@@ -195,6 +195,9 @@ def main() -> None:
     # evaluate subcommand
     subparsers.add_parser("evaluate", help="Full evaluation with all metrics")
 
+    # sanity subcommand
+    subparsers.add_parser("sanity", help="Phase 0: data & model sanity validation")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -216,6 +219,9 @@ def main() -> None:
 
     elif args.command == "evaluate":
         _run_evaluate_command()
+
+    elif args.command == "sanity":
+        _run_sanity_command()
 
     else:
         # Default: run pipeline (backward-compatible)
@@ -350,6 +356,58 @@ def _run_evaluate_command() -> None:
     report.to_markdown(Path("reports") / "full_evaluation.md")
     report.to_json()
     logger.info("Full evaluation complete.")
+
+
+def _run_sanity_command() -> None:
+    """Phase 0: Data & Model Sanity Validation (ROADMAP §3)."""
+    from sc2ml.validation import run_full_sanity
+
+    con = duckdb.connect(str(DB_FILE))
+    try:
+        row = con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'match_series'"
+        ).fetchone()
+        has_series = row is not None and row[0] > 0
+        series_df = (
+            con.execute("SELECT match_id, series_id FROM match_series").df()
+            if has_series
+            else None
+        )
+
+        raw_df = get_matches_dataframe(con)
+        features_df = build_features(raw_df, series_df=series_df)
+
+        # Preserve matchup info before splitting
+        matchup_col = None
+        if "matchup_type" in features_df.columns:
+            test_mask = features_df["split"] == "test"
+            matchup_col = features_df.loc[test_mask, "matchup_type"].reset_index(
+                drop=True
+            )
+
+        X_train, X_val, X_test, y_train, y_val, y_test = split_for_ml(features_df)
+
+        report = run_full_sanity(
+            con, features_df,
+            X_train, X_test, y_train, y_test,
+            matchup_col=matchup_col,
+        )
+
+        # Write report to file
+        report_path = Path("reports") / "sanity_validation.md"
+        report_path.parent.mkdir(exist_ok=True)
+        report_path.write_text(report.summary + "\n")
+        logger.info(f"Sanity report written to {report_path}")
+
+        if not report.all_passed:
+            failures = [c for c in report.checks if not c.passed]
+            logger.warning(
+                f"{len(failures)} sanity checks FAILED — "
+                "investigate before running experiments."
+            )
+    finally:
+        con.close()
 
 
 if __name__ == "__main__":

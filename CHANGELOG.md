@@ -28,6 +28,12 @@ merged to `master`.
 - `@pytest.mark.slow` marker registered in `pyproject.toml`
 - `optuna` and `shap` dependencies
 - 75 new tests: `test_evaluation.py` (22), `test_baselines.py` (18), `test_cv.py` (13), `test_ablation.py` (6), `test_analysis/test_error_analysis.py` (9), `test_analysis/test_shap_analysis.py` (7)
+- **Phase 0 sanity validation** (`validation.py`): 28 automated checks across 5 sections — DuckDB view sanity (§3.1), temporal split integrity (§3.2), feature distribution checks (§3.3), leakage & baseline smoke tests (§3.4), known issues verification (§3.5)
+- `SanityCheck`/`SanityReport` result containers with `.summary` property
+- `run_full_sanity()` aggregator running all Phase 0 checks
+- `sc2ml sanity` CLI subcommand for real-data validation (writes `reports/sanity_validation.md`)
+- `@pytest.mark.sanity` marker registered in `pyproject.toml`
+- 29 new tests in `test_sanity_validation.py` (25 passing, 4 skipped on synthetic data)
 
 ### Changed
 - `train_and_evaluate_models()` now returns `(dict[str, Pipeline], list[ModelResults])` instead of just pipelines
