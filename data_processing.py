@@ -87,3 +87,57 @@ def get_matches_dataframe(con):
     logger.info("Pobieranie danych do Pandas...")
     query = "SELECT * FROM matches_flat WHERE match_time IS NOT NULL ORDER BY match_time ASC"
     return con.execute(query).df()
+
+
+def validate_data_split_sql(con, split_ratio=0.8):
+    logger.info(f"====== WALIDACJA STRUKTURY DANYCH (Split {int(split_ratio*100)}/{int((1-split_ratio)*100)}) ======")    
+    # 1. Rozkład czasowy meczów
+    query_dist = """
+    SELECT 
+        EXTRACT(year FROM match_time) as year,
+        COUNT(*) as total_matches,
+        ROUND(COUNT(*) * 100.0 / (SUM(COUNT(*)) OVER()), 2) as pct_of_total
+    FROM matches_flat
+    GROUP BY year ORDER BY year;
+    """
+    dist_df = con.execute(query_dist).df()
+    logger.info(f"\nRozkład roczny danych:\n{dist_df.to_string(index=False)}")
+
+    # 2. Walidacja Time-Leakage
+    query_leakage = f"""
+    WITH split_point AS (
+        SELECT match_time FROM matches_flat 
+        ORDER BY match_time ASC 
+        LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * {split_ratio} AS INT) FROM matches_flat)
+    )
+    SELECT 
+        (SELECT COUNT(*) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point)) as train_count,
+        (SELECT COUNT(*) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) as test_count,
+        (SELECT MIN(match_time) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) as min_test_time,
+        (SELECT MAX(match_time) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point)) as max_train_time,
+        ((SELECT MIN(match_time) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) >
+         (SELECT MAX(match_time) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point))) as is_chronological_valid;
+    """
+    leakage_res = con.execute(query_leakage).df()
+    
+    valid = leakage_res['is_chronological_valid'].iloc[0]
+    logger.info(f"Podział rzeczywisty: Train={leakage_res['train_count'].iloc[0]}, Test={leakage_res['test_count'].iloc[0]}")
+    logger.info(f"Walidacja chronologii: {'ZALICZONA' if valid else 'BŁĄD!'}")
+    logger.info(f"Ostatni mecz treningowy: {leakage_res['max_train_time'].iloc[0]}")
+    logger.info(f"Pierwszy mecz testowy: {leakage_res['min_test_time'].iloc[0]}")
+    
+    # 3. Rozkład wersji gry
+    # query_data_build = """
+    #     SELECT 
+    #         data_build as patch,
+    #         COUNT(*) as num_matches,
+    #         MIN(match_time) as patch_start,
+    #         MAX(match_time) as patch_end,
+    #         ROUND(COUNT(*) * 100.0 / (SUM(COUNT(*)) OVER()), 2) as pct_of_total
+    #     FROM matches_flat
+    #     GROUP BY data_build
+    #     ORDER BY patch_start;
+    # """
+    # data_build_res = con.execute(query_data_build).df()
+    # logger.info(f"\nRozkład danych według patcha:\n{data_build_res.to_string(index=False)}")
+    logger.info("======================================================")

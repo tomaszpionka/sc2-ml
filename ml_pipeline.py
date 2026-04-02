@@ -134,7 +134,7 @@ def perform_feature_engineering(df):
         "p1_supply_capped_pct",
         "p2_supply_capped_pct",
         "game_loops",
-        "data_build",
+        # "data_build",
         "p2_target_perspective",
         "map_size_x",
         "map_size_y",
