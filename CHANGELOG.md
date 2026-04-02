@@ -7,6 +7,11 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 ## [Unreleased]
 
+### Added — 2026-04-02 21:30:00
+- **GNN diagnostic test suite** (`tests/test_gnn_diagnostics.py`): 14 tests across 6 groups confirming GATv2 majority-class collapse root causes — no `pos_weight` in BCE loss, edge feature scaler leak (fit on full dataset), hard 0.5 threshold. Tests reproduce the bug, verify `pos_weight` fix, and serve as regression guards for appendix GNN work.
+- `@pytest.mark.gnn` marker registered in `pyproject.toml` (skip with `-m "not gnn"`)
+- `setup_logging()` now called in `run_pipeline()` for reliable file logging when invoked outside `main()`
+
 ### Added
 - `init_database()` function and CLI `init` subcommand for one-step database setup from raw replays
 - CLI argparse with `init [--force]` and `run` subcommands (backward-compatible: bare invocation still runs pipeline)
