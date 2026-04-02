@@ -60,7 +60,8 @@ def make_matches_df(n: int = 200, seed: int = 42) -> pd.DataFrame:
             "map_size_y": rng.integers(100, 200, n).astype(float),
             "map_name": rng.choice(["Altitude", "Berlingrad", "Equilibrium"], n),
             "tournament_name": rng.choice(["GSL", "ESL", "IEM"], n),
-            "data_build": rng.choice(["5.0.11", "5.0.12", "5.0.13"], n),
+            "data_build": rng.choice(["50011", "50012", "50013"], n),
+            "game_version": rng.choice(["5.0.11.50011", "5.0.12.50012", "5.0.13.50013"], n),
             "elo_diff": rng.uniform(-300, 300, n).astype(float),
             "expected_win_prob": rng.uniform(0.3, 0.7, n).astype(float),
         }

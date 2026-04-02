@@ -46,7 +46,7 @@ Flat JSON dictionary mapping **1,488 localized SC2 map names** to **215 canonica
 Full replay file as exported by SC2Replay parser. ~3 MB per file.
 Raw data is going to be available in Downloads dir under paths as:
 ```
-~Downloads/sc2/2016_IEM_10_Taipei  > tree .           
+~Downloads/SC2_Replays/2016_IEM_10_Taipei  > tree .           
 .
 ├── 2016_IEM_10_Taipei_data
 │   ├── 095724b86cbca0e6da2fb8baad0d7baf.SC2Replay.json
@@ -175,7 +175,7 @@ One row per player per match. Created by `create_ml_views()` in `processing.py`.
 | `data_build` | VARCHAR | `metadata.dataBuild` |
 | `map_name` | VARCHAR | `metadata.mapName` (translated to English via `map_translation` table) |
 | `player_name` | VARCHAR | `ToonPlayerDescMap[*].nickname` (lowercased) |
-| `race` | VARCHAR | `ToonPlayerDescMap[*].race` (`Terr`, `Prot`, `Zerg`) |
+| `race` | VARCHAR | `ToonPlayerDescMap[*].race` (normalized: `Terran`, `Protoss`, `Zerg`) |
 | `startLocX` | INTEGER | `ToonPlayerDescMap[*].startLocX` |
 | `startLocY` | INTEGER | `ToonPlayerDescMap[*].startLocY` |
 | `apm` | INTEGER | `ToonPlayerDescMap[*].APM` |

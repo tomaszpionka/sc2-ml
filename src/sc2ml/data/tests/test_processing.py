@@ -7,10 +7,123 @@ import pytest
 
 from sc2ml.data.processing import (
     assign_series_ids,
+    create_ml_views,
     create_temporal_split,
     get_matches_dataframe,
     validate_temporal_split,
 )
+
+
+class TestCreateMlViews:
+    """Test the flat_players and matches_flat view creation."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_views(self, raw_table_con: duckdb.DuckDBPyConnection) -> None:
+        create_ml_views(raw_table_con)
+        self.con = raw_table_con
+
+    def test_flat_players_view_exists(self) -> None:
+        count = self.con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'flat_players'"
+        ).fetchone()[0]
+        assert count > 0
+
+    def test_matches_flat_view_exists(self) -> None:
+        count = self.con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'matches_flat'"
+        ).fetchone()[0]
+        assert count > 0
+
+    def test_flat_players_row_count(self) -> None:
+        """5 matches x 2 players = 10 player rows."""
+        count = self.con.execute("SELECT count(*) FROM flat_players").fetchone()[0]
+        assert count == 10
+
+    def test_matches_flat_row_count(self) -> None:
+        """5 matches x 2 perspectives = 10 rows."""
+        count = self.con.execute("SELECT count(*) FROM matches_flat").fetchone()[0]
+        assert count == 10
+
+    def test_flat_players_excludes_casters(self) -> None:
+        """Only Win/Loss results should appear — no observers or casters."""
+        results = self.con.execute(
+            "SELECT DISTINCT result FROM flat_players"
+        ).fetchall()
+        result_set = {r[0] for r in results}
+        assert result_set == {"Win", "Loss"}
+
+    def test_player_names_are_lowercased(self) -> None:
+        names = self.con.execute(
+            "SELECT DISTINCT player_name FROM flat_players"
+        ).fetchall()
+        for (name,) in names:
+            assert name == name.lower()
+
+    def test_map_translation_applied(self) -> None:
+        """The Korean map name should be translated to English."""
+        map_names = self.con.execute(
+            "SELECT DISTINCT map_name FROM flat_players"
+        ).fetchall()
+        name_set = {r[0] for r in map_names}
+        assert "Map English LE" in name_set
+        assert "MapKorean" not in name_set
+
+    def test_match_time_is_timestamp(self) -> None:
+        row = self.con.execute(
+            "SELECT match_time FROM flat_players LIMIT 1"
+        ).fetchone()
+        assert row is not None
+        assert row[0] is not None
+
+    def test_matches_flat_has_expected_columns(self) -> None:
+        columns = self.con.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name = 'matches_flat'"
+        ).fetchall()
+        col_names = {c[0] for c in columns}
+        expected = {
+            "match_id", "match_time", "tournament_name", "game_loops",
+            "data_build", "game_version", "map_name",
+            "p1_name", "p2_name", "p1_race", "p2_race",
+            "p1_apm", "p1_sq", "p2_apm", "p2_sq", "p1_result",
+        }
+        assert expected.issubset(col_names)
+
+    def test_race_names_are_normalized(self) -> None:
+        """Abbreviated race names (Terr, Prot) should be expanded to full names."""
+        races = self.con.execute(
+            "SELECT DISTINCT race FROM flat_players"
+        ).fetchall()
+        race_set = {r[0] for r in races}
+        assert race_set.issubset({"Terran", "Protoss", "Zerg"})
+        assert "Terr" not in race_set
+        assert "Prot" not in race_set
+
+    def test_game_version_column_present(self) -> None:
+        """The game_version column should be available in flat_players."""
+        row = self.con.execute(
+            "SELECT game_version FROM flat_players LIMIT 1"
+        ).fetchone()
+        assert row is not None
+        assert row[0] is not None
+
+    def test_matches_flat_both_perspectives(self) -> None:
+        """Each unique match should appear twice (once per player perspective)."""
+        perspectives = self.con.execute("""
+            SELECT match_id, count(*) AS cnt
+            FROM matches_flat
+            GROUP BY match_id
+        """).df()
+        assert (perspectives["cnt"] == 2).all()
+
+    def test_get_matches_dataframe_invalid_split_raises(self) -> None:
+        """Passing an invalid split name should raise ValueError."""
+        assign_series_ids(self.con)
+        create_temporal_split(self.con)
+        with pytest.raises(ValueError, match="Invalid split"):
+            get_matches_dataframe(self.con, split="invalid")
 
 
 class TestAssignSeriesIds:
