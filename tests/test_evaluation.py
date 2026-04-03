@@ -1,5 +1,7 @@
 """Tests for the evaluation module: metrics, bootstrap CI, McNemar, DeLong."""
 
+import multiprocessing
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -528,3 +530,59 @@ class TestCompareModelsSingle:
         )
         df = compare_models([r1])
         assert len(df) == 0
+
+
+# ---------------------------------------------------------------------------
+# Feature ablation — subprocess-isolated (lines 499-606)
+# ---------------------------------------------------------------------------
+
+_SUBPROCESS_TIMEOUT = 180
+
+
+def _run_worker(worker_fn):
+    """Run a worker function in a spawned subprocess and return its result."""
+    ctx = multiprocessing.get_context("spawn")
+    q = ctx.Queue()
+    p = ctx.Process(target=worker_fn, args=(q,))
+    p.start()
+    p.join(timeout=_SUBPROCESS_TIMEOUT)
+    assert p.exitcode == 0, f"Subprocess exited with code {p.exitcode}"
+    assert not q.empty(), "Worker produced no result"
+    return q.get(timeout=5)
+
+
+@pytest.mark.slow
+class TestFeatureAblationSubprocess:
+    def test_run_feature_ablation_subprocess(self):
+        """Feature ablation returns one step per FeatureGroup."""
+        from tests.helpers_evaluation import worker_feature_ablation
+
+        result = _run_worker(worker_feature_ablation)
+        assert result["n_steps"] == 5  # Groups A through E
+        assert result["has_metrics"] is True
+        assert result["has_lift"] is True
+        assert result["first_lift_empty"] is True  # First group has no previous
+
+
+@pytest.mark.slow
+class TestPatchDriftSubprocess:
+    def test_run_patch_drift_subprocess(self):
+        """Patch drift returns old→new and mixed model results."""
+        from tests.helpers_evaluation import worker_patch_drift
+
+        result = _run_worker(worker_patch_drift)
+        assert result["has_old_to_new"] is True
+        assert result["has_mixed"] is True
+        assert result["has_per_patch"] is True
+        assert 0.0 <= result["old_to_new_acc"] <= 1.0
+        assert 0.0 <= result["mixed_acc"] <= 1.0
+        assert result["n_old_patches"] > 0
+        assert result["n_new_patches"] > 0
+
+    def test_run_patch_drift_no_column_raises(self):
+        """ValueError raised when no patch column in features DataFrame."""
+        from tests.helpers_evaluation import worker_patch_drift_no_column
+
+        result = _run_worker(worker_patch_drift_no_column)
+        assert result["raised"] is True
+        assert "patch column" in result["error"].lower()
