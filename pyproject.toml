@@ -1,6 +1,6 @@
 [project]
 name = "sc2-ml"
-version = "0.7.0"
+version = "0.8.0"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -55,7 +55,7 @@ target-version = "py312"
 select = ["E", "F", "W", "I"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "src"]
 markers = [
     "gnn: GNN-specific tests (deselect with '-m not gnn')",
     "slow: slow tests requiring subprocess isolation (deselect with '-m not slow')",

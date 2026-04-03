@@ -6,6 +6,45 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-03 — Methodology restart: data exploration before modelling
+
+**Objective:** Establish correct execution order. Data exploration (corpus inventory,
+player identity resolution, temporal structure, in-game statistics profiling, map
+and meta-game analysis) must complete before any feature engineering or modelling
+decisions are made.
+
+**What happened:** The pipeline was built in the wrong order. Feature groups A–E were
+defined, Elo was implemented, and model training was run before the dataset was
+explored. The sanity validation (`reports/archive/sanity_validation.md`) revealed
+the consequences:
+- Elo is flat (std = 0.0) — Elo was computed but never validated against the raw data
+- BW race codes (`BWPr`, `BWTe`, `BWZe`) are leaking through — the `flat_players`
+  view filter is not working correctly on the full corpus
+- `h2h_p1_winrate_smooth` has 0.62 correlation with target — likely a leakage bug
+  in head-to-head computation
+- GNN predicts P2 wins on every single test example (majority-class collapse)
+- 13 match_ids have unexpected row counts — data anomalies not yet investigated
+
+None of these are fixable by patching individual modules. They are symptoms of
+building features before understanding the data.
+
+**Decision:** Archive the prior roadmap and methodology draft. Begin from Phase 0
+of `reports/SC2ML_THESIS_ROADMAP.md`. Existing code is treated as a draft to audit
+and revise as exploration findings arrive, not as correct implementations to extend.
+
+**Archived:**
+- `reports/archive/ROADMAP_v1.md` (old ROADMAP.md — caused premature GNN execution)
+- `reports/archive/methodology_v1.md` (old methodology.md — assumed unvalidated decisions)
+- `reports/archive/sanity_validation.md` (evidence of pre-restart state)
+
+**Thesis notes:** This restart is itself thesis-relevant. The sanity validation
+failures demonstrate precisely why the data exploration → cleaning → feature
+engineering → modelling order is not optional. The BW race leakage, the flat Elo,
+and the H2H correlation will all appear in the thesis as motivating examples for the
+methodology chapter's argument that feature design requires prior data characterisation.
+
+---
+
 ## 2026-04-02 — Feature engineering rewrite: methodology Groups A–E with ablation support
 
 **Objective:** Decompose the monolithic `features/engineering.py` into composable feature groups matching methodology Section 3.1 (Groups A–E), add missing features (form/momentum, context), eliminate duplicate split logic, and fix a long-standing segfault in `test_model_reproducibility`.

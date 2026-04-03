@@ -1,26 +1,41 @@
-# SC2-ML: StarCraft II Match Prediction
+# SC2-ML: RTS Game Result Prediction
 
-Master's thesis project: "A comparative analysis of methods for predicting game results in real-time strategy games, based on the examples of StarCraft II and Age of Empires II."
+Master's thesis: "A comparative analysis of methods for predicting game results in
+real-time strategy games, based on the examples of StarCraft II and Age of Empires II."
 
-Predicts professional SC2 match outcomes from replay data using classical ML (LightGBM, XGBoost, Logistic Regression), with planned extensions to in-game temporal models (LSTM, TCN) and a dual-stream fusion architecture.
+Predicts professional match outcomes from replay data using classical ML, graph
+embeddings, and Graph Neural Networks. SC2 is the primary dataset; AoE2 integration
+is planned after SC2 work is complete.
 
 ## Quick Start
-
 ```bash
 poetry install
 poetry run sc2ml --help
-poetry run pytest tests/ -v --cov=sc2ml
+poetry run pytest tests/ src/ -v --cov=sc2ml
 ```
 
-## Documentation
+## Key Documents
 
 | Document | Purpose |
 |----------|---------|
-| `CLAUDE.md` | AI assistant instructions and project rules |
-| `reports/methodology.md` | Full thesis methodology specification (RQs, features, models, evaluation) |
-| `reports/ROADMAP.md` | Progress tracking with checkboxes — single source of truth for project state |
+| `CLAUDE.md` | AI assistant instructions and project rules — read first |
+| `.claude/scientific-invariants.md` | Thesis methodology constraints — non-negotiable |
+| `reports/SC2ML_THESIS_ROADMAP.md` | **Authoritative phase-by-phase execution plan** |
 | `reports/research_log.md` | Reverse-chronological thesis narrative |
-| `reports/test_plan.md` | Test coverage augmentation plan |
 | `CHANGELOG.md` | Code version history |
 | `.claude/` | Coding, workflow, and ML experiment standards |
-| `src/sc2ml/data/README.md` | Data schema reference (raw JSON → DuckDB views → features) |
+
+## Prior Drafts (reference only — not authoritative)
+
+| Document | Status |
+|----------|--------|
+| `reports/archive/ROADMAP_v1.md` | Superseded — caused premature jump to modelling before data exploration |
+| `reports/archive/methodology_v1.md` | Superseded — assumed feature decisions not yet validated by exploration |
+| `reports/archive/sanity_validation.md` | Evidence log of known issues pre-restart |
+
+## Project State
+
+The SC2 pipeline has a working ingestion layer and draft feature/model code, but data
+exploration (Phases 1–6 of `SC2ML_THESIS_ROADMAP.md`) has not been completed.
+All feature and model code is a draft to be audited and revised as exploration findings
+arrive. Do not treat existing module outputs as validated results.

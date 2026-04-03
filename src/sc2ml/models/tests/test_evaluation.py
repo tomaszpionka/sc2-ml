@@ -555,7 +555,7 @@ def _run_worker(worker_fn):
 class TestFeatureAblationSubprocess:
     def test_run_feature_ablation_subprocess(self):
         """Feature ablation returns one step per FeatureGroup."""
-        from tests.helpers_evaluation import worker_feature_ablation
+        from sc2ml.models.tests.helpers_evaluation import worker_feature_ablation
 
         result = _run_worker(worker_feature_ablation)
         assert result["n_steps"] == 5  # Groups A through E
@@ -568,7 +568,7 @@ class TestFeatureAblationSubprocess:
 class TestPatchDriftSubprocess:
     def test_run_patch_drift_subprocess(self):
         """Patch drift returns old→new and mixed model results."""
-        from tests.helpers_evaluation import worker_patch_drift
+        from sc2ml.models.tests.helpers_evaluation import worker_patch_drift
 
         result = _run_worker(worker_patch_drift)
         assert result["has_old_to_new"] is True
@@ -581,7 +581,7 @@ class TestPatchDriftSubprocess:
 
     def test_run_patch_drift_no_column_raises(self):
         """ValueError raised when no patch column in features DataFrame."""
-        from tests.helpers_evaluation import worker_patch_drift_no_column
+        from sc2ml.models.tests.helpers_evaluation import worker_patch_drift_no_column
 
         result = _run_worker(worker_patch_drift_no_column)
         assert result["raised"] is True

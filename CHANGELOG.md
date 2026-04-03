@@ -12,6 +12,16 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.8.0] — 2026-04-03 (PR: pending, chore/consolidate-base)
+
+### Added
 - **Evaluation infrastructure** (`models/evaluation.py`): `compute_metrics` (accuracy, AUC-ROC, Brier, log loss), `bootstrap_ci` (95% CI via 1000 bootstrap iterations), `calibration_curve_data`, `mcnemar_test` (exact binomial + chi-squared), `delong_test` (fast DeLong AUC comparison), `evaluate_model` (full eval with CIs + per-matchup + veterans), `compare_models` (pairwise statistical tests), `run_permutation_importance`
 - **Baseline classifiers** (`models/baselines.py`): `MajorityClassBaseline`, `EloOnlyBaseline`, `EloLRBaseline` — all with `predict_proba` for probability-based metrics
 - **Feature ablation runner** (`evaluation.py:run_feature_ablation`): trains LightGBM per group subset (A, A+B, ..., A+B+C+D+E), reports marginal lift per step
@@ -34,10 +44,28 @@ merged to `master`.
 - `sc2ml sanity` CLI subcommand for real-data validation (writes `reports/sanity_validation.md`)
 - `@pytest.mark.sanity` marker registered in `pyproject.toml`
 - 29 new tests in `test_sanity_validation.py` (25 passing, 4 skipped on synthetic data)
+- **Scientific invariants** (`.claude/scientific-invariants.md`): thesis methodology constraints read-before-any-work
+- **Thesis roadmap** (`reports/SC2ML_THESIS_ROADMAP.md`): authoritative phase-by-phase execution plan
+- **Co-located tests**: all package tests moved next to source (`src/sc2ml/*/tests/`)
+- `tests/integration/` directory for cross-package integration tests
+- Data samples: `SC2EGSet_datasheet.pdf`, `README.md`, shell extraction scripts
 
 ### Changed
 - `train_and_evaluate_models()` now returns `(dict[str, Pipeline], list[ModelResults])` instead of just pipelines
 - `classical.py` refactored: model definitions extracted to `_build_model_pipelines()`, evaluation delegated to `evaluation.py`
+- `.claude/` configuration files rewritten: `project-architecture.md`, `ml-protocol.md`, `testing-standards.md`, `git-workflow.md`, `coding-standards.md`
+- `CLAUDE.md` restructured with scientific invariants mandate, progress tracking, end-of-session checklist
+- `README.md` rewritten with project overview and documentation index
+
+### Removed
+- Duplicate root-level tests (`tests/test_*.py`) — replaced by co-located versions under `src/`
+- Superseded reports: `reports/ROADMAP.md`, `reports/methodology.md`, `reports/test_plan.md`
+- Root-level test helpers (`tests/helpers_*.py`)
+
+### Known Issues
+- 16 test errors + 1 failure in `test_processing.py` temporal split tests — fixture missing `flat_players` table; will be rewritten in Phase 0
+- 1 GNN prediction quality test failure — expected, GNN is deprioritized
+- 41 mypy errors — pre-existing `fetchone()` return type issues in DuckDB code
 
 ## [0.7.0] — 2026-04-03 (docs/data-pipeline-integrity)
 

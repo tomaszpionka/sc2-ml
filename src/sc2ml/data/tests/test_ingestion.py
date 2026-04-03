@@ -39,33 +39,63 @@ class TestExtractRawEvents:
     """Test extract_raw_events_from_file with the sample replay."""
 
     def test_returns_dict_for_valid_file(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Valid replay file produces a non-None dict result.
+        Preconditions: Sample sOs vs ByuN replay with full event data.
+        Assertions: Result is a non-None dict.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         assert isinstance(result, dict)
 
     def test_returns_none_for_stripped_file(self, tmp_path: Path) -> None:
+        """
+        Scenario: Stripped replay (no event arrays) returns None.
+        Preconditions: JSON file with only header and ToonPlayerDescMap keys.
+        Assertions: Result is None.
+        """
         stripped = tmp_path / "stripped.SC2Replay.json"
         stripped.write_text(json.dumps({"header": {}, "ToonPlayerDescMap": {}}))
         result = extract_raw_events_from_file(stripped)
         assert result is None
 
     def test_tracker_events_count(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Tracker events extracted with correct count from sample replay.
+        Preconditions: Sample sOs vs ByuN replay.
+        Assertions: Exactly 528 tracker events extracted.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         assert len(result["tracker_events"]) == 528
 
     def test_game_events_count(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Game events extracted with correct count from sample replay.
+        Preconditions: Sample sOs vs ByuN replay.
+        Assertions: Exactly 9038 game events extracted.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         assert len(result["game_events"]) == 9038
 
     def test_player_map_has_two_players(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Player map contains exactly two entries for a 1v1 match.
+        Preconditions: Sample sOs vs ByuN replay.
+        Assertions: player_map has 2 entries.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         pmap = result["player_map"]
         assert len(pmap) == 2
 
     def test_player_map_userid_to_playerid(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Player map correctly maps userId to playerID and nickname.
+        Preconditions: Sample replay with ByuN (userId=2) and sOs (userId=5).
+        Assertions: userId 2 maps to playerID 1 / ByuN, userId 5 maps to playerID 2 / sOs.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         pmap = result["player_map"]
@@ -76,11 +106,21 @@ class TestExtractRawEvents:
         assert pmap[5]["nickname"] == "sOs"
 
     def test_total_game_loops(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Total game loops is a positive integer.
+        Preconditions: Sample sOs vs ByuN replay.
+        Assertions: total_game_loops > 0.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         assert result["total_game_loops"] > 0
 
     def test_match_id_is_string(self, sample_replay_path: Path) -> None:
+        """
+        Scenario: Match ID is a string ending with the replay file extension.
+        Preconditions: Sample sOs vs ByuN replay.
+        Assertions: match_id is str and ends with ".SC2Replay.json".
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         assert result["match_id"].endswith(".SC2Replay.json")
@@ -97,21 +137,41 @@ class TestBuildRows:
         return result
 
     def test_tracker_rows_count(self, extracted: dict) -> None:
+        """
+        Scenario: Tracker row builder produces one row per tracker event.
+        Preconditions: Extracted result from sample replay (528 tracker events).
+        Assertions: 528 rows returned.
+        """
         rows = _build_tracker_rows(extracted["match_id"], extracted["tracker_events"])
         assert len(rows) == 528
 
     def test_tracker_row_keys(self, extracted: dict) -> None:
+        """
+        Scenario: Each tracker row has the expected schema keys.
+        Preconditions: Extracted result from sample replay.
+        Assertions: Row keys match {match_id, event_type, game_loop, player_id, event_data}.
+        """
         rows = _build_tracker_rows(extracted["match_id"], extracted["tracker_events"])
         expected_keys = {"match_id", "event_type", "game_loop", "player_id", "event_data"}
         assert set(rows[0].keys()) == expected_keys
 
     def test_game_event_rows_count(self, extracted: dict) -> None:
+        """
+        Scenario: Game event row builder produces one row per game event.
+        Preconditions: Extracted result from sample replay (9038 game events).
+        Assertions: 9038 rows returned.
+        """
         rows = _build_game_event_rows(
             extracted["match_id"], extracted["game_events"], extracted["player_map"]
         )
         assert len(rows) == 9038
 
     def test_game_event_row_has_player_id(self, extracted: dict) -> None:
+        """
+        Scenario: Game event rows have userId mapped to playerID via player_map.
+        Preconditions: Extracted result with player_map mapping userIds to playerIDs.
+        Assertions: At least some rows have player_id in {1, 2}.
+        """
         rows = _build_game_event_rows(
             extracted["match_id"], extracted["game_events"], extracted["player_map"]
         )
@@ -120,6 +180,11 @@ class TestBuildRows:
         assert len(mapped) > 0
 
     def test_metadata_rows(self, extracted: dict) -> None:
+        """
+        Scenario: Metadata builder produces one row per player.
+        Preconditions: Extracted result with 2-player map.
+        Assertions: 2 rows returned with player_ids {1, 2}.
+        """
         rows = _build_metadata_rows(
             extracted["match_id"], extracted["player_map"], extracted["total_game_loops"]
         )
@@ -134,6 +199,11 @@ class TestParquetRoundTrip:
     def test_write_and_read_parquet(
         self, sample_replay_path: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Parquet write/read round-trip preserves event counts.
+        Preconditions: Extracted events from sample replay, written to tmp_path as batch 0.
+        Assertions: 3 Parquet files created; tracker has 528 rows, game has 9038 rows.
+        """
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
 
@@ -180,6 +250,11 @@ class TestDuckDBLoading:
     def test_tracker_events_raw_table_exists(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: DuckDB loading creates tracker_events_raw table.
+        Preconditions: Parquet files loaded into in-memory DuckDB via load_in_game_data_to_duckdb.
+        Assertions: tracker_events_raw table exists in information_schema.
+        """
         tables = loaded_con.execute(
             "SELECT table_name FROM information_schema.tables"
         ).fetchall()
@@ -189,6 +264,11 @@ class TestDuckDBLoading:
     def test_game_events_raw_table_exists(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: DuckDB loading creates game_events_raw table.
+        Preconditions: Parquet files loaded into in-memory DuckDB.
+        Assertions: game_events_raw table exists.
+        """
         tables = loaded_con.execute(
             "SELECT table_name FROM information_schema.tables"
         ).fetchall()
@@ -198,6 +278,11 @@ class TestDuckDBLoading:
     def test_match_player_map_table_exists(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: DuckDB loading creates match_player_map table.
+        Preconditions: Parquet files loaded into in-memory DuckDB.
+        Assertions: match_player_map table exists.
+        """
         tables = loaded_con.execute(
             "SELECT table_name FROM information_schema.tables"
         ).fetchall()
@@ -207,6 +292,11 @@ class TestDuckDBLoading:
     def test_player_stats_view_exists(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: DuckDB loading creates the player_stats view.
+        Preconditions: Parquet files loaded into in-memory DuckDB.
+        Assertions: player_stats view exists in information_schema.
+        """
         # Views show up in information_schema.tables with type VIEW
         result = loaded_con.execute(
             "SELECT count(*) FROM information_schema.tables "
@@ -217,6 +307,11 @@ class TestDuckDBLoading:
     def test_player_stats_row_count(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: player_stats view has correct row count from sample replay.
+        Preconditions: Sample replay loaded (48 game loops x 2 players, +1 extra snapshot).
+        Assertions: 97 rows in player_stats.
+        """
         # 48 unique game loops × 2 players, but player 1 has one extra snapshot
         # at the first loop → 97 total PlayerStats events
         count = loaded_con.execute("SELECT count(*) FROM player_stats").fetchone()[0]
@@ -225,6 +320,11 @@ class TestDuckDBLoading:
     def test_player_stats_has_all_39_fields(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: player_stats view exposes all 39 stat columns plus key columns.
+        Preconditions: Sample replay loaded into DuckDB.
+        Assertions: Key columns and all 39 PLAYER_STATS_FIELD_MAP values present.
+        """
         columns = loaded_con.execute(
             "SELECT column_name FROM information_schema.columns "
             "WHERE table_name = 'player_stats' ORDER BY ordinal_position"
@@ -241,6 +341,11 @@ class TestDuckDBLoading:
     def test_player_stats_values_are_numeric(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: Player stats values are typed as numeric (int or float).
+        Preconditions: Sample replay loaded into DuckDB.
+        Assertions: minerals_current, vespene_current, workers_active_count are int or float.
+        """
         row = loaded_con.execute(
             "SELECT minerals_current, vespene_current, workers_active_count "
             "FROM player_stats LIMIT 1"
@@ -252,6 +357,11 @@ class TestDuckDBLoading:
     def test_match_player_map_has_two_players(
         self, loaded_con: duckdb.DuckDBPyConnection
     ) -> None:
+        """
+        Scenario: match_player_map contains exactly 2 distinct players for a 1v1 replay.
+        Preconditions: Sample sOs vs ByuN replay loaded.
+        Assertions: 2 distinct player_id values.
+        """
         count = loaded_con.execute(
             "SELECT count(DISTINCT player_id) FROM match_player_map"
         ).fetchone()[0]
@@ -262,15 +372,29 @@ class TestPlayerStatsFieldMap:
     """Verify the PLAYER_STATS_FIELD_MAP constant."""
 
     def test_has_39_fields(self) -> None:
+        """
+        Scenario: Field map has exactly 39 entries (one per PlayerStats score field).
+        Preconditions: PLAYER_STATS_FIELD_MAP constant.
+        Assertions: len == 39.
+        """
         assert len(PLAYER_STATS_FIELD_MAP) == 39
 
     def test_all_values_are_snake_case(self) -> None:
+        """
+        Scenario: All mapped column names follow snake_case convention.
+        Preconditions: PLAYER_STATS_FIELD_MAP constant.
+        Assertions: Every value is lowercase with no spaces.
+        """
         for src, dst in PLAYER_STATS_FIELD_MAP.items():
             assert dst == dst.lower(), f"{dst} is not lowercase"
             assert " " not in dst, f"{dst} contains spaces"
 
     def test_source_keys_match_sample(self, sample_replay_path: Path) -> None:
-        """Verify field map keys match actual PlayerStats event data."""
+        """
+        Scenario: Field map keys match the actual PlayerStats event keys in sample replay.
+        Preconditions: Sample sOs vs ByuN replay with trackerEvents.
+        Assertions: Mapped keys exactly equal the stats keys from first PlayerStats event.
+        """
         with open(sample_replay_path) as f:
             data = json.load(f)
 
@@ -292,22 +416,42 @@ class TestManifestHelpers:
     """Test _load_manifest, _save_manifest, and _collect_pending_files."""
 
     def test_load_manifest_empty_path(self, tmp_path: Path) -> None:
+        """
+        Scenario: Loading a nonexistent manifest returns empty dict.
+        Preconditions: Path points to a file that does not exist.
+        Assertions: Returns {}.
+        """
         manifest = _load_manifest(tmp_path / "nonexistent.json")
         assert manifest == {}
 
     def test_load_manifest_valid(self, tmp_path: Path) -> None:
+        """
+        Scenario: Loading a valid manifest returns its contents.
+        Preconditions: JSON file with {"file_a": True, "file_b": False}.
+        Assertions: Loaded dict matches written content.
+        """
         path = tmp_path / "manifest.json"
         path.write_text(json.dumps({"file_a": True, "file_b": False}))
         manifest = _load_manifest(path)
         assert manifest == {"file_a": True, "file_b": False}
 
     def test_load_manifest_corrupted(self, tmp_path: Path) -> None:
+        """
+        Scenario: Corrupted manifest file gracefully returns empty dict.
+        Preconditions: File contains invalid JSON.
+        Assertions: Returns {} instead of raising.
+        """
         path = tmp_path / "manifest.json"
         path.write_text("not valid json{{{")
         manifest = _load_manifest(path)
         assert manifest == {}
 
     def test_save_manifest_roundtrip(self, tmp_path: Path) -> None:
+        """
+        Scenario: Saved manifest can be read back identically.
+        Preconditions: Dict {"file_x": True} saved to tmp_path.
+        Assertions: JSON.loads of written file matches original dict.
+        """
         path = tmp_path / "manifest.json"
         data = {"file_x": True}
         _save_manifest(data, path)
@@ -338,6 +482,11 @@ class TestSlimDownSc2WithManifest:
     def test_dry_run_does_not_modify_files(
         self, mock_manifest: Path, mock_source: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Dry run reports what would be stripped without modifying files.
+        Preconditions: 2 synthetic replay files with trackerEvents, gameEvents, messageEvents.
+        Assertions: All event keys still present in files after dry_run=True.
+        """
         source = self._create_replay_dir(tmp_path)
         mock_source.__class__ = type(source)
         mock_manifest.__class__ = type(tmp_path / "manifest.json")
@@ -360,6 +509,11 @@ class TestSlimDownSc2WithManifest:
     def test_actual_run_strips_events(
         self, mock_manifest: Path, mock_source: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Actual run removes trackerEvents, gameEvents, messageEvents from files.
+        Preconditions: 2 synthetic replay files with all event keys.
+        Assertions: Event keys removed; header and ToonPlayerDescMap preserved.
+        """
         source = self._create_replay_dir(tmp_path)
 
         with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
@@ -380,6 +534,11 @@ class TestSlimDownSc2WithManifest:
     def test_manifest_tracks_processed_files(
         self, mock_manifest: Path, mock_source: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Manifest records all processed files after stripping.
+        Preconditions: 2 synthetic replay files, manifest starts empty.
+        Assertions: Manifest has 2 entries, all marked True.
+        """
         source = self._create_replay_dir(tmp_path)
         manifest_path = tmp_path / "manifest.json"
 
@@ -396,6 +555,11 @@ class TestSlimDownSc2WithManifest:
     def test_skips_already_processed_files(
         self, mock_manifest: Path, mock_source: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Re-running slim_down skips files already in manifest.
+        Preconditions: 2 files processed once, then slim_down called again.
+        Assertions: Manifest still has exactly 2 entries (no duplicates or re-processing).
+        """
         source = self._create_replay_dir(tmp_path)
         manifest_path = tmp_path / "manifest.json"
 
@@ -444,6 +608,11 @@ class TestMoveDataToDuckDb:
     def test_loads_replays_into_raw_table(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: move_data_to_duck_db loads JSON replays into the raw table.
+        Preconditions: 3 synthetic stripped replay files in tmp_path.
+        Assertions: raw table has 3 rows.
+        """
         source = self._create_replay_dir(tmp_path)
         temp_dir = tmp_path / "duckdb_tmp"
         temp_dir.mkdir()
@@ -462,6 +631,11 @@ class TestMoveDataToDuckDb:
     def test_raw_table_has_expected_columns(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: raw table schema includes all expected JSON top-level keys.
+        Preconditions: 3 synthetic replays loaded into DuckDB.
+        Assertions: Columns include header, initData, details, metadata, ToonPlayerDescMap.
+        """
         source = self._create_replay_dir(tmp_path)
         temp_dir = tmp_path / "duckdb_tmp"
         temp_dir.mkdir()
@@ -485,6 +659,11 @@ class TestMoveDataToDuckDb:
     def test_should_drop_recreates_table(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
+        """
+        Scenario: should_drop=True recreates table instead of appending.
+        Preconditions: move_data_to_duck_db called twice with should_drop=True.
+        Assertions: raw table has 3 rows (not 6).
+        """
         source = self._create_replay_dir(tmp_path)
         temp_dir = tmp_path / "duckdb_tmp"
         temp_dir.mkdir()
@@ -504,6 +683,11 @@ class TestAuditRawDataAvailability:
     """Test audit_raw_data_availability with synthetic replay directories."""
 
     def test_empty_dir_returns_zero_counts(self, tmp_path: Path) -> None:
+        """
+        Scenario: Empty replay directory returns all-zero audit counts.
+        Preconditions: Empty replays directory.
+        Assertions: All count fields are 0.
+        """
         source = tmp_path / "replays"
         source.mkdir()
 
@@ -517,6 +701,11 @@ class TestAuditRawDataAvailability:
         assert counts["stripped"] == 0
 
     def test_mixed_files(self, tmp_path: Path) -> None:
+        """
+        Scenario: Audit correctly categorizes files with different event combinations.
+        Preconditions: 3 files — one with both events, one tracker-only, one stripped.
+        Assertions: total=3, has_both=1, has_tracker=2, has_game=1, stripped=1.
+        """
         data_dir = tmp_path / "replays" / "tournament" / "data"
         data_dir.mkdir(parents=True)
 
@@ -547,6 +736,11 @@ class TestLoadMapTranslations:
     """Test load_map_translations with synthetic mapping files."""
 
     def test_with_translation_files(self, tmp_path: Path) -> None:
+        """
+        Scenario: Map translations loaded into DuckDB from JSON mapping files.
+        Preconditions: One mapping file with 2 translations in tournament data dir.
+        Assertions: map_translation table has 2 rows.
+        """
         source = tmp_path / "replays" / "tourn" / "data"
         source.mkdir(parents=True)
         mapping = {"MapKorean": "Map English LE", "AltitudeKR": "Altitude LE"}
@@ -561,6 +755,11 @@ class TestLoadMapTranslations:
         con.close()
 
     def test_no_translation_files_warns(self, tmp_path: Path, caplog) -> None:
+        """
+        Scenario: Missing translation files logs a warning and creates no table.
+        Preconditions: Empty replays directory with no mapping JSON files.
+        Assertions: Warning logged; map_translation table does not exist.
+        """
         source = tmp_path / "replays"
         source.mkdir()
 
@@ -583,6 +782,11 @@ class TestCollectPendingFiles:
     """Test _collect_pending_files with manifest filtering."""
 
     def test_filters_already_done(self, tmp_path: Path) -> None:
+        """
+        Scenario: Files already in manifest are excluded from pending list.
+        Preconditions: 2 files on disk, 1 already in manifest.
+        Assertions: Only 1 pending file returned (pending.SC2Replay.json).
+        """
         data_dir = tmp_path / "replays" / "tourn" / "data"
         data_dir.mkdir(parents=True)
         (data_dir / "done.SC2Replay.json").write_text("{}")
@@ -607,6 +811,11 @@ class TestRunInGameExtraction:
     def test_mock_pool_batches(
         self, m_load, m_collect, m_save_manifest, m_save_parquet, tmp_path: Path
     ) -> None:
+        """
+        Scenario: Multiprocessing extraction batches results correctly.
+        Preconditions: 3 fake pending files, batch_size=2, mocked Pool.
+        Assertions: save_raw_events_to_parquet called twice (batch of 2, then 1).
+        """
         # Simulate 3 pending files that each produce a result
         fake_paths = [tmp_path / f"f{i}.json" for i in range(3)]
         m_collect.return_value = fake_paths
@@ -633,6 +842,11 @@ class TestRunInGameExtraction:
     @patch("sc2ml.data.ingestion._collect_pending_files", return_value=[])
     @patch("sc2ml.data.ingestion._load_manifest", return_value={})
     def test_empty_pending_returns_early(self, m_load, m_collect, tmp_path: Path) -> None:
+        """
+        Scenario: No pending files means Pool is never created.
+        Preconditions: _collect_pending_files returns empty list.
+        Assertions: multiprocessing.Pool not called.
+        """
         with patch("sc2ml.data.ingestion.multiprocessing.Pool") as m_pool, \
              patch("sc2ml.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
             run_in_game_extraction(parquet_dir=tmp_path / "parquet")

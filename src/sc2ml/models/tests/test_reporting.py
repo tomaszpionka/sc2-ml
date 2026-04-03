@@ -12,7 +12,6 @@ import pytest
 from sc2ml.models.evaluation import ModelResults
 from sc2ml.models.reporting import ExperimentReport
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

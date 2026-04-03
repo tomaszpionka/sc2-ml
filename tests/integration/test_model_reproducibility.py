@@ -10,8 +10,8 @@ shutdown.  Classical model tests therefore run in a child process via
 ``multiprocessing`` to isolate the two runtimes — the same approach used
 in ``test_mps.py`` for Metal/MPS isolation.
 
-The worker function lives in ``tests/helpers_classical.py`` (which does
-NOT import torch) so that the spawned child never loads PyTorch's libomp.
+The worker function lives in ``sc2ml/models/tests/helpers_classical.py`` (which
+does NOT import torch) so that the spawned child never loads PyTorch's libomp.
 """
 
 import gc
@@ -33,7 +33,7 @@ from tests.helpers import make_matches_df
 
 def _run_classical_repro_check(model_name: str) -> None:
     """Spawn a child process for *model_name* and assert determinism."""
-    from tests.helpers_classical import classical_repro_worker
+    from sc2ml.models.tests.helpers_classical import classical_repro_worker
 
     ctx = multiprocessing.get_context("spawn")
     q = ctx.Queue()

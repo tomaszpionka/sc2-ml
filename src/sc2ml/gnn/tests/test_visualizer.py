@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 import torch
-import torch.nn.functional as F
 from torch_geometric.data import Data
 
 from sc2ml.gnn.visualizer import visualize_gnn_space

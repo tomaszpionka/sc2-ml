@@ -100,7 +100,7 @@ def matches_flat_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyCo
                 "p1_result": perspective[4],
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows)  # noqa: F841 — referenced by DuckDB SQL below
 
     # Register as a view so processing functions can query it
     duckdb_con.execute("CREATE TABLE matches_flat AS SELECT * FROM df")

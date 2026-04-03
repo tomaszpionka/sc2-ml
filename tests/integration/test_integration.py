@@ -25,7 +25,7 @@ from sc2ml.features import build_features, split_for_ml
 from sc2ml.features.group_e_context import _parse_patch_version
 
 SAMPLE_REPLAY_PATH = (
-    Path(__file__).resolve().parent.parent
+    Path(__file__).resolve().parent.parent.parent
     / "src" / "sc2ml" / "data" / "samples" / "raw"
     / "0e0b1a550447f0b0a616e48224b31bd9.SC2Replay.json"
 )
