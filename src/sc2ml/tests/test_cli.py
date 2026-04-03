@@ -5,13 +5,11 @@ function call ordering, and error handling in the CLI layer.
 """
 from __future__ import annotations
 
-import argparse
 import logging
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers

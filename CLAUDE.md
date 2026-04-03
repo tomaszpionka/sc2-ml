@@ -6,6 +6,31 @@ This project builds ML models (classical baselines, graph embeddings, and Graph 
 
 ---
 
+## ⚠️ Read First: Scientific Invariants
+
+**Before doing any work in this repository — data exploration, feature engineering,
+modelling, evaluation, or even reading other files — read `.claude/scientific-invariants.md`.**
+
+It contains the non-negotiable thesis methodology constraints. They take precedence over
+any implementation convenience described elsewhere. Violating them produces results that
+cannot be defended at examination.
+
+---
+
+## Project Status: Starting from Correct Foundations
+
+The repository contains existing code written before proper data exploration was conducted.
+**Treat all existing modules as legacy drafts, not as correct implementations.**
+
+The authoritative execution plan is `reports/SC2ML_THESIS_ROADMAP.md`. Every session
+must begin by reading it to understand which phase is current and what the gate condition
+is for advancing. Do not implement features, models, or splits until the phase that
+motivates them is complete and its artifacts exist.
+
+The old `reports/ROADMAP.md` is superseded. Do not use it to determine what to work on.
+
+---
+
 ## Permissions & Safety Boundaries
 
 ### Autonomous (no confirmation needed)
@@ -31,7 +56,8 @@ This project builds ML models (classical baselines, graph embeddings, and Graph 
 - **ALWAYS** use `poetry run <command>` or activate `.venv/` first
 - **NEVER** use bare `python3`, `python3 -c`, or `pip install`
 - Run scripts: `poetry run python -m sc2ml.cli`
-- Run tests: `poetry run pytest tests/ -v --cov=sc2ml --cov-report=term-missing`
+- Run tests: `poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing`
+- **Test location:** Tests are co-located with source — `x/y/z/module.py` → `x/y/z/tests/test_module.py`. Package-internal `tests/` = unit/component tests only. Root `tests/integration/` = cross-package integration tests. Root `tests/` also holds general infra tests and shared helpers. Package-root tests (cli, validation) go in `src/sc2ml/tests/`.
 - Lint before commits: `poetry run ruff check src/ tests/`
 - Type check: `poetry run mypy src/sc2ml/`
 
@@ -43,37 +69,45 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 
 ---
 
-## Detailed Guidelines (sub-files in `.claude/`)
+## Reference Files (sub-files in `.claude/`)
 
 | File | Contents |
 |------|----------|
+| `.claude/scientific-invariants.md` | **Thesis methodology constraints — read before any work** |
+| `.claude/project-architecture.md` | Structural guidance: package layout, patterns, identifier design, legacy code warnings |
+| `.claude/ml-protocol.md` | Experiment methodology, leakage rules, documentation artifacts |
 | `.claude/python-workflow.md` | Venv, Poetry, execution rules, MPS/GPU, build deps |
 | `.claude/testing-standards.md` | Coverage, test patterns, edge cases, commit gates |
 | `.claude/coding-standards.md` | Style, type hints, linting, docstrings, pre-commit checks |
 | `.claude/git-workflow.md` | Branches, commits, end-of-session checklist |
-| `.claude/ml-protocol.md` | Experiment methodology, leakage rules, documentation artifacts |
-| `.claude/project-architecture.md` | Package layout, data pipeline, design decisions |
 | `.claude/aoe2-plan.md` | AoE2 integration notes (upcoming) |
+| `reports/SC2ML_THESIS_ROADMAP.md` | **The authoritative phase-by-phase execution plan** |
 | `reports/methodology.md` | Full thesis specification (RQs, features, models, evaluation) |
-| `reports/ROADMAP.md` | Progress tracking — check before starting work |
-| `reports/test_plan.md` | Test coverage plan (detailed per-module specs) |
 
 ---
 
 ## Progress Tracking (MANDATORY)
 
-- **Before starting work:** Read `reports/ROADMAP.md` to understand current project state and what's done vs. pending.
-- **After completing a task:** Update the relevant checkboxes in `reports/ROADMAP.md` (mark `[x]`) and update the `Last updated` date.
+- **Before starting any work:** Read `.claude/scientific-invariants.md`, then read `reports/SC2ML_THESIS_ROADMAP.md` to identify the current phase and its gate condition.
+- **Do not begin a phase** until all artifacts from the previous phase exist on disk.
+- **After completing a step:** Update `reports/research_log.md` with findings, decisions, and any deviations from the roadmap.
 - **After code changes:** Follow `.claude/git-workflow.md` — conventional branch names, atomic commits, conventional commit messages. Every session must end with the checklist below.
 
 ## End-of-Session Checklist
 
 > See `.claude/git-workflow.md` for full details on branches, commits, and conventions.
 
+**If wrapping up into a PR:** follow the full PR creation flow in `.claude/git-workflow.md`
+— this includes autonomous version bump in `pyproject.toml`, `CHANGELOG.md`, and
+`src/sc2ml/__init__.py` before proposing the push.
+
+**If not wrapping up into a PR:**
+
 1. All tests pass with coverage report
 2. Ruff and mypy clean
-3. `CHANGELOG.md` updated — work in progress under `[Unreleased]`; on merge, promote to versioned section
-4. `reports/ROADMAP.md` checkboxes updated to reflect completed work
-5. `reports/research_log.md` updated if session involved experimentation, methodology decisions, issues, or breakthroughs
+3. `CHANGELOG.md` updated — current work documented under `[Unreleased]`; version is
+   not bumped until PR creation
+4. Phase artifacts from `reports/SC2ML_THESIS_ROADMAP.md` verified to exist on disk
+5. `reports/research_log.md` updated with findings, decisions, and any issues encountered
 6. Proposed commit messages for all uncommitted work
 7. Summary of what's ready to merge and what's still in progress

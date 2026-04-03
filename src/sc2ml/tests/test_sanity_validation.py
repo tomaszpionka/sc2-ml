@@ -322,7 +322,7 @@ def _run_lgbm_check_in_subprocess(
 
     Returns dict with 'passed', 'detail', 'name' keys.
     """
-    from tests.helpers_sanity import lgbm_sanity_worker
+    from sc2ml.tests.helpers_sanity import lgbm_sanity_worker
 
     _, _, X_train, X_test, y_train, y_test, matchup_col = pipeline_data
 

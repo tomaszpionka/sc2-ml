@@ -116,7 +116,9 @@ def threaded_stress_with_sync(device: torch.device, workers: int = 4, iters: int
             out = (a @ b).sum()
             torch.mps.synchronize()
             _ = float(out.detach().cpu())
-            assert torch.isfinite(out).item(), f"non-finite result in threaded stress with sync for seed {seed}"
+            assert torch.isfinite(out).item(), (
+                f"non-finite result in threaded stress with sync for seed {seed}"
+            )
 
 
 def main():

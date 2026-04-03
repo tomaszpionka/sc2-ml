@@ -779,7 +779,7 @@ def _lgbm_subprocess_worker(
     # 4. Train/test accuracy gap
     train_acc = float((model.predict(X_train) == y_train.values).mean())
     gap = train_acc - acc
-    results.append((f"train/test accuracy gap <5%", gap < 0.05,
+    results.append(("train/test accuracy gap <5%", gap < 0.05,
                      f"train_acc={train_acc:.4f}, test_acc={acc:.4f}, gap={gap:.4f}", gap))
 
     result_queue.put(results)

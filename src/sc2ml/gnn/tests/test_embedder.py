@@ -7,7 +7,6 @@ import pytest
 import torch
 from torch_geometric.data import Data
 
-from sc2ml.config import NODE2VEC_EMBEDDING_DIM
 from sc2ml.gnn.embedder import append_embeddings_to_df, train_and_get_embeddings
 
 pytestmark = pytest.mark.gnn

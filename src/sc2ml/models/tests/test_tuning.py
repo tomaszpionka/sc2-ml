@@ -27,14 +27,14 @@ def _run_worker(worker_fn):
 class TestTuning:
     def test_tune_random_forest(self):
         """tune_random_forest returns a fitted RandomForestClassifier."""
-        from tests.helpers_tuning import worker_tune_random_forest
+        from sc2ml.models.tests.helpers_tuning import worker_tune_random_forest
 
         result = _run_worker(worker_tune_random_forest)
         assert result["is_rf"] is True
 
     def test_tune_lgbm_optuna(self):
         """tune_lgbm_optuna returns a fitted Pipeline with n_trials=2."""
-        from tests.helpers_tuning import worker_tune_lgbm_optuna
+        from sc2ml.models.tests.helpers_tuning import worker_tune_lgbm_optuna
 
         result = _run_worker(worker_tune_lgbm_optuna)
         assert result["is_pipeline"] is True
@@ -43,7 +43,7 @@ class TestTuning:
 
     def test_tune_xgb_optuna(self):
         """tune_xgb_optuna returns a fitted Pipeline with n_trials=2."""
-        from tests.helpers_tuning import worker_tune_xgb_optuna
+        from sc2ml.models.tests.helpers_tuning import worker_tune_xgb_optuna
 
         result = _run_worker(worker_tune_xgb_optuna)
         assert result["is_pipeline"] is True
@@ -52,7 +52,7 @@ class TestTuning:
 
     def test_tune_lr_grid(self):
         """tune_lr_grid returns a fitted Pipeline."""
-        from tests.helpers_tuning import worker_tune_lr_grid
+        from sc2ml.models.tests.helpers_tuning import worker_tune_lr_grid
 
         result = _run_worker(worker_tune_lr_grid)
         assert result["is_pipeline"] is True

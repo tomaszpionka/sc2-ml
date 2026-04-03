@@ -29,14 +29,14 @@ def _run_worker(worker_fn):
 class TestBuildPipelines:
     def test_build_pipelines_returns_five(self):
         """_build_model_pipelines returns 5 model pipelines."""
-        from tests.helpers_classical_unit import worker_build_pipelines
+        from sc2ml.models.tests.helpers_classical_unit import worker_build_pipelines
 
         result = _run_worker(worker_build_pipelines)
         assert result["n_pipelines"] == 5
 
     def test_pipeline_step_names(self):
         """Each pipeline has scaler + classifier steps."""
-        from tests.helpers_classical_unit import worker_build_pipelines
+        from sc2ml.models.tests.helpers_classical_unit import worker_build_pipelines
 
         result = _run_worker(worker_build_pipelines)
         for name, steps in result["step_names"].items():
@@ -48,7 +48,7 @@ class TestBuildPipelines:
 class TestTrainAndEvaluate:
     def test_train_evaluate_returns_tuple(self):
         """train_and_evaluate_models returns (dict, list)."""
-        from tests.helpers_classical_unit import worker_train_evaluate
+        from sc2ml.models.tests.helpers_classical_unit import worker_train_evaluate
 
         result = _run_worker(worker_train_evaluate)
         assert result["type_trained"] == "dict"
@@ -56,7 +56,7 @@ class TestTrainAndEvaluate:
 
     def test_all_models_valid_accuracy(self):
         """Every model achieves 0 <= accuracy <= 1."""
-        from tests.helpers_classical_unit import worker_train_evaluate
+        from sc2ml.models.tests.helpers_classical_unit import worker_train_evaluate
 
         result = _run_worker(worker_train_evaluate)
         for name, acc in result["accuracies"].items():
@@ -64,7 +64,7 @@ class TestTrainAndEvaluate:
 
     def test_with_val_set(self):
         """X_val/y_val triggers early stopping for XGBoost and LightGBM."""
-        from tests.helpers_classical_unit import worker_train_with_val
+        from sc2ml.models.tests.helpers_classical_unit import worker_train_with_val
 
         result = _run_worker(worker_train_with_val)
         assert result["n_models"] == 5
@@ -74,7 +74,7 @@ class TestTrainAndEvaluate:
 
     def test_with_matchup_col(self):
         """matchup_col populates per_matchup breakdown."""
-        from tests.helpers_classical_unit import worker_train_with_matchup
+        from sc2ml.models.tests.helpers_classical_unit import worker_train_with_matchup
 
         result = _run_worker(worker_train_with_matchup)
         assert result["n_models"] == 5

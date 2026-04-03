@@ -182,8 +182,11 @@ def _compute_h2h(df: pd.DataFrame) -> pd.DataFrame:
     dedup = df.loc[dedup_mask].copy()
 
     # H2H target from canonical perspective: did the alphabetically-first player win?
-    dedup["_h2h_target"] = (dedup["p1_name"] < dedup["p2_name"]).astype(int) * dedup["target"] + \
-                           (dedup["p1_name"] >= dedup["p2_name"]).astype(int) * (1 - dedup["target"])
+    is_first_alpha = (dedup["p1_name"] < dedup["p2_name"]).astype(int)
+    dedup["_h2h_target"] = (
+        is_first_alpha * dedup["target"]
+        + (1 - is_first_alpha) * (1 - dedup["target"])
+    )
 
     h2h_total = expanding_count(dedup, "_h2h_pair")
     h2h_first_wins = expanding_sum(dedup, "_h2h_pair", "_h2h_target")
@@ -197,7 +200,9 @@ def _compute_h2h(df: pd.DataFrame) -> pd.DataFrame:
     # Convert canonical H2H to per-perspective: if p1 is the alphabetically-first
     # player, their wins are _h2h_first_wins; otherwise, it's total - first_wins.
     is_first = df["p1_name"] < df["p2_name"]
-    df["h2h_p1_wins"] = df["_h2h_first_wins"].where(is_first, df["_h2h_total"] - df["_h2h_first_wins"])
+    df["h2h_p1_wins"] = df["_h2h_first_wins"].where(
+        is_first, df["_h2h_total"] - df["_h2h_first_wins"]
+    )
     df["h2h_p2_wins"] = df["_h2h_total"] - df["h2h_p1_wins"]
     df["h2h_p1_winrate_smooth"] = bayesian_smooth(
         df["h2h_p1_wins"], df["_h2h_total"], H2H_BAYESIAN_C, BAYESIAN_PRIOR_WR

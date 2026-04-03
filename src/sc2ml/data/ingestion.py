@@ -1,3 +1,19 @@
+"""Replay data ingestion into DuckDB via two independent paths.
+
+Path A — Pre-match features (header, player stats, map metadata):
+    ``slim_down_sc2_with_manifest`` strips heavy event arrays from raw JSON to
+    reduce disk footprint, then ``move_data_to_duck_db`` bulk-loads the slimmed
+    files into a DuckDB ``raw`` table. Both steps use a JSON manifest for
+    resumable, idempotent processing.
+
+Path B — In-game events (tracker events, game events, player metadata):
+    ``run_in_game_extraction`` reads full replay JSON via multiprocessing,
+    extracts structured events, and writes them to Parquet in batches.
+    ``load_in_game_data_to_duckdb`` then imports those Parquet files into
+    DuckDB tables and creates a typed ``player_stats`` view over the 39
+    PlayerStats score fields.
+"""
+
 import json
 import logging
 import multiprocessing
@@ -171,7 +187,7 @@ def load_map_translations(con: duckdb.DuckDBPyConnection) -> None:
             logger.error(f"Error reading {map_file}: {e}")
 
     if global_mapping:
-        mapping_df = pd.DataFrame(
+        mapping_df = pd.DataFrame(  # noqa: F841 — referenced by DuckDB SQL below
             list(global_mapping.items()), columns=["foreign_name", "english_name"]
         )
         con.execute("DROP TABLE IF EXISTS map_translation")

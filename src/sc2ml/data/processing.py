@@ -1,3 +1,17 @@
+"""DuckDB view orchestration for the SC2 ML feature pipeline.
+
+Transforms raw replay JSON (loaded by ``ingestion``) into ML-ready tables:
+
+1. ``flat_players`` — One row per player per match, with map name translations
+   applied and non-player rows (casters/observers) excluded.
+2. ``matches_flat`` — One row per player-pair perspective (2 rows per match),
+   the primary input table for feature engineering.
+3. ``match_series`` — Best-of series grouping via a time-gap heuristic, ensuring
+   no series is split across temporal folds.
+4. ``match_split`` — Temporal train/val/test assignment with tournament-level
+   boundaries and series integrity constraints.
+"""
+
 import logging
 
 import duckdb
@@ -56,7 +70,7 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
     WHERE player_name IS NOT NULL AND player_name != ''
       AND (entry.value->>'$.result') IN ('Win', 'Loss')  -- excludes casters and observers
       AND (entry.value->>'$.race') NOT LIKE 'BW%'        -- excludes Brood War exhibition replays
-      AND filename IN (                                   -- 1v1 matches only (exactly 2 Win/Loss players)
+      AND filename IN (  -- 1v1 matches only (exactly 2 Win/Loss players)
           SELECT filename FROM raw,
                  LATERAL json_each(ToonPlayerDescMap) AS e2
           WHERE (e2.value->>'$.result') IN ('Win', 'Loss')
@@ -174,7 +188,8 @@ def validate_data_split_sql(con: duckdb.DuckDBPyConnection, split_ratio: float =
     boundary is strictly chronological (no future data leaks into training).
     """
     logger.info(
-        f"====== DATA VALIDATION (Split {int(split_ratio * 100)}/{int((1 - split_ratio) * 100)}) ======"
+        "====== DATA VALIDATION "
+        f"(Split {int(split_ratio * 100)}/{int((1 - split_ratio) * 100)}) ======"
     )
 
     # Year distribution
@@ -197,12 +212,23 @@ def validate_data_split_sql(con: duckdb.DuckDBPyConnection, split_ratio: float =
         LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * {split_ratio} AS INT) FROM matches_flat)
     )
     SELECT
-        (SELECT COUNT(*) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point)) as train_count,
-        (SELECT COUNT(*) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) as test_count,
-        (SELECT MIN(match_time) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) as min_test_time,
-        (SELECT MAX(match_time) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point)) as max_train_time,
-        ((SELECT MIN(match_time) FROM matches_flat WHERE match_time >= (SELECT match_time FROM split_point)) >
-         (SELECT MAX(match_time) FROM matches_flat WHERE match_time < (SELECT match_time FROM split_point))) as is_chronological_valid;
+        (SELECT COUNT(*) FROM matches_flat
+         WHERE match_time < (SELECT match_time FROM split_point)
+        ) as train_count,
+        (SELECT COUNT(*) FROM matches_flat
+         WHERE match_time >= (SELECT match_time FROM split_point)
+        ) as test_count,
+        (SELECT MIN(match_time) FROM matches_flat
+         WHERE match_time >= (SELECT match_time FROM split_point)
+        ) as min_test_time,
+        (SELECT MAX(match_time) FROM matches_flat
+         WHERE match_time < (SELECT match_time FROM split_point)
+        ) as max_train_time,
+        ((SELECT MIN(match_time) FROM matches_flat
+          WHERE match_time >= (SELECT match_time FROM split_point)) >
+         (SELECT MAX(match_time) FROM matches_flat
+          WHERE match_time < (SELECT match_time FROM split_point))
+        ) as is_chronological_valid;
     """
     leakage_res = con.execute(query_leakage).df()
 
@@ -375,7 +401,7 @@ def create_temporal_split(
         cumulative += count
 
     # Build the match_split table via tournament → match_id mapping
-    split_df = pd.DataFrame(split_assignments, columns=["tournament_name", "split"])
+    split_df = pd.DataFrame(split_assignments, columns=["tournament_name", "split"])  # noqa: F841 — referenced by DuckDB SQL below
 
     con.execute("DROP TABLE IF EXISTS match_split")
     con.execute("""
