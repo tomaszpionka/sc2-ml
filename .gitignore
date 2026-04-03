@@ -214,6 +214,7 @@ __marimo__/
 # Local project files
 .continue
 _current_plan.md
+in_game_processing_manifest.json
 
 # SC2-ML project artifacts
 models/*.joblib
