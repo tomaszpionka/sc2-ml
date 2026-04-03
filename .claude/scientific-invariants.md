@@ -24,3 +24,9 @@ Violating them produces results that cannot be defended at examination.
 5. **APM and MMR from ToonPlayerDescMap are suspected to be zero across the corpus.**
    Do not build features from these fields before verifying the zero-rate in
    Phase 1. If confirmed, document them as dead fields.
+
+6. **All analytical results must be reported alongside the query or code that produced them.**
+   Any distribution, count, rate, or validation result written to a report artifact
+   must include the exact SQL query or Python code used to compute it — not a
+   description of it, the literal code. This applies to every artifact generated
+   in Phases 0 through 6 in SC2ML_THESIS_ROADMAP.md. A finding without its derivation cannot be audited, reproduced, or cited in the thesis.

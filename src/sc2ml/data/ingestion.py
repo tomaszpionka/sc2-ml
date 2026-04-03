@@ -153,8 +153,8 @@ def slim_down_sc2_with_manifest(dry_run: bool = True) -> None:
     total_bytes_saved = 0
 
     try:
-        # Scan only SC2Replay JSON files nested under 'data/' subdirectories
-        for json_file in REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"):
+        # Scan all SC2Replay JSON files under the replays directory
+        for json_file in REPLAYS_SOURCE_DIR.rglob("*.SC2Replay.json"):
             # Manifest key is the path relative to the replays root directory
             file_key = str(json_file.relative_to(REPLAYS_SOURCE_DIR))
             if manifest.get(file_key) is True:
@@ -204,7 +204,7 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
     """Load all SC2Replay JSON files into the DuckDB 'raw' table.
 
     Configures DuckDB for high-memory operation (24 GB limit, 4 threads) before
-    ingesting. Scans only files under REPLAYS_SOURCE_DIR/**/data/*.
+    ingesting. Scans all ``*.SC2Replay.json`` files under REPLAYS_SOURCE_DIR.
     """
     logger.info("Setting up DuckDB optimizations (anti-OOM configuration)...")
     for q in _DUCKDB_SET_QUERIES:
@@ -274,7 +274,7 @@ def audit_raw_data_availability() -> dict[str, int]:
     """
     counts = {"total": 0, "has_tracker": 0, "has_game": 0, "has_both": 0, "stripped": 0}
 
-    for json_file in REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"):
+    for json_file in REPLAYS_SOURCE_DIR.rglob("*.SC2Replay.json"):
         counts["total"] += 1
         try:
             with open(json_file, "r", encoding="utf-8") as f:
@@ -519,7 +519,7 @@ def _collect_pending_files(
     Returns:
         List of Paths to replay files still needing extraction.
     """
-    all_files = sorted(REPLAYS_SOURCE_DIR.rglob("*/data/*.SC2Replay.json"))
+    all_files = sorted(REPLAYS_SOURCE_DIR.rglob("*.SC2Replay.json"))
     pending = [
         f
         for f in all_files
