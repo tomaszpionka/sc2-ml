@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [0.11.0] — 2026-04-03 (PR: pending, docs/invariant-6-research-log)
+
+### Added
+- **Scientific invariant #6** (`.claude/scientific-invariants.md`): all analytical results must be reported alongside the literal SQL/Python code that produced them
+- Phase 0 audit artifacts (Steps 0.1–0.9): all 8 report files in `reports/00_*`
+
+### Changed
+- **Research log Phase 0 entry rewritten** (`reports/research_log.md`): every finding now includes the exact SQL query or Python code per invariant #6; APM/MMR analysis expanded with per-year and per-league breakdown tables; map count corrected from 189 → 188
+- `ingestion.py` glob patterns unified to `*.SC2Replay.json` (was `*/data/*.SC2Replay.json` in `audit_raw_data_availability`, `slim_down_sc2_with_manifest`, `_collect_pending_files`)
+
 ## [0.10.0] — 2026-04-03 (PR: pending, feat/phase-0-ingestion-audit)
 
 ### Added
