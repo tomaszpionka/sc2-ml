@@ -17,6 +17,7 @@ Path B — In-game events (tracker events, game events, player metadata):
 import json
 import logging
 import multiprocessing
+import warnings
 from pathlib import Path
 
 import duckdb
@@ -38,8 +39,73 @@ from sc2ml.config import (
     MANIFEST_PATH,
     REPLAYS_SOURCE_DIR,
 )
+from sc2ml.data.schemas import (
+    GAME_EVENT_SCHEMA,
+    METADATA_SCHEMA,
+    PLAYER_STATS_FIELD_MAP,
+    TRACKER_SCHEMA,
+)
 
 logger = logging.getLogger(__name__)
+
+# ── SQL query constants ───────────────────────────────────────────────────────
+
+_DUCKDB_SET_QUERIES: list[str] = [
+    f"SET temp_directory='{DUCKDB_TEMP_DIR}'",
+    f"SET max_temp_directory_size='{DUCKDB_MAX_TEMP_DIR_SIZE}'",
+    f"SET memory_limit='{DUCKDB_MEMORY_LIMIT}'",
+    f"SET threads = {DUCKDB_THREADS}",
+    "SET preserve_insertion_order=false",
+]
+
+_RAW_TABLE_CREATE_QUERY = """
+    CREATE TABLE IF NOT EXISTS raw AS
+    SELECT * FROM read_json(
+        '{json_glob}',
+        union_by_name = true,
+        maximum_object_size = {max_object_size},
+        filename = true,
+        columns = {{
+            'header': 'JSON', 'initData': 'JSON', 'details': 'JSON', 'metadata': 'JSON',
+            'ToonPlayerDescMap': 'JSON'
+        }}
+    )
+"""
+
+_TRACKER_EVENTS_TABLE_QUERY = (
+    "CREATE TABLE IF NOT EXISTS tracker_events_raw AS"
+    " SELECT * FROM read_parquet('{glob_pattern}')"
+)
+
+_GAME_EVENTS_TABLE_QUERY = (
+    "CREATE TABLE IF NOT EXISTS game_events_raw AS"
+    " SELECT * FROM read_parquet('{glob_pattern}')"
+)
+
+_MATCH_PLAYER_MAP_TABLE_QUERY = (
+    "CREATE TABLE IF NOT EXISTS match_player_map AS"
+    " SELECT DISTINCT * FROM read_parquet('{glob_pattern}')"
+)
+
+
+def _build_player_stats_view_query() -> str:
+    field_extracts = ",\n        ".join(
+        f"CAST(json_extract(event_data, '$.stats.{src}') AS FLOAT) AS {dst}"
+        for src, dst in PLAYER_STATS_FIELD_MAP.items()
+    )
+    return f"""
+        CREATE OR REPLACE VIEW player_stats AS
+        SELECT
+            match_id,
+            game_loop,
+            player_id,
+            {field_extracts}
+        FROM tracker_events_raw
+        WHERE event_type = 'PlayerStats'
+    """
+
+
+_PLAYER_STATS_VIEW_QUERY = _build_player_stats_view_query()
 
 
 def slim_down_sc2_with_manifest(dry_run: bool = True) -> None:
@@ -50,9 +116,19 @@ def slim_down_sc2_with_manifest(dry_run: bool = True) -> None:
     pre-match ML pipeline (Path A). In-game models (Path B) need these
     events, so use dry_run=True (default) to preview without modifying files.
 
+    .. deprecated::
+        This function destructively modifies raw replay files. Use
+        ``run_in_game_extraction()`` for Path B (in-game features) instead.
+
     Args:
         dry_run: If True, log what would be stripped but do not modify files.
     """
+    warnings.warn(
+        "slim_down_sc2_with_manifest() is deprecated and will be removed in a future "
+        "release. Use run_in_game_extraction() for Path B (in-game features) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     keys_to_remove = {"messageEvents", "gameEvents", "trackerEvents"}
 
     if dry_run:
@@ -131,14 +207,8 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
     ingesting. Scans only files under REPLAYS_SOURCE_DIR/**/data/*.
     """
     logger.info("Setting up DuckDB optimizations (anti-OOM configuration)...")
-    con.execute(f"SET temp_directory='{DUCKDB_TEMP_DIR}'")
-    con.execute(f"SET max_temp_directory_size='{DUCKDB_MAX_TEMP_DIR_SIZE}'")
-    con.execute(f"SET memory_limit='{DUCKDB_MEMORY_LIMIT}'")
-    con.execute(f"SET threads = {DUCKDB_THREADS}")
-
-    # Disable insertion-order preservation so processed rows are flushed to disk
-    # immediately rather than held in memory until the full scan completes
-    con.execute("SET preserve_insertion_order=false")
+    for q in _DUCKDB_SET_QUERIES:
+        con.execute(q)
 
     # Restrict reads to the expected subdirectory structure
     json_glob = f"{str(REPLAYS_SOURCE_DIR)}/**/*.SC2Replay.json"
@@ -148,22 +218,12 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
         logger.info("Dropped existing 'raw' table.")
 
     # Omitting format='auto' is intentional — explicit column types are faster
-    query = f"""
-        CREATE TABLE IF NOT EXISTS raw AS
-        SELECT * FROM read_json(
-            '{json_glob}',
-            union_by_name = true,
-            maximum_object_size = {DUCKDB_MAX_OBJECT_SIZE},
-            filename = true,
-            columns = {{
-                'header': 'JSON', 'initData': 'JSON', 'details': 'JSON', 'metadata': 'JSON',
-                'ToonPlayerDescMap': 'JSON'
-            }}
-        )
-    """
-
     logger.info(f"Scanning JSONs into DuckDB: {json_glob}")
-    con.execute(query)
+    con.execute(
+        _RAW_TABLE_CREATE_QUERY.format(
+            json_glob=json_glob, max_object_size=DUCKDB_MAX_OBJECT_SIZE
+        )
+    )
     row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
     logger.info(f"DuckDB ingestion complete. Total replays in 'raw': {row_count}")
 
@@ -198,50 +258,6 @@ def load_map_translations(con: duckdb.DuckDBPyConnection) -> None:
 
 
 # ── Path B: In-game event extraction ─────────────────────────────────────────
-
-# All 39 PlayerStats score fields mapped to snake_case column names.
-# Source: trackerEvents where evtTypeName == "PlayerStats", nested under "stats".
-PLAYER_STATS_FIELD_MAP: dict[str, str] = {
-    "scoreValueFoodMade": "food_made",
-    "scoreValueFoodUsed": "food_used",
-    "scoreValueMineralsCollectionRate": "minerals_collection_rate",
-    "scoreValueMineralsCurrent": "minerals_current",
-    "scoreValueMineralsFriendlyFireArmy": "minerals_friendly_fire_army",
-    "scoreValueMineralsFriendlyFireEconomy": "minerals_friendly_fire_economy",
-    "scoreValueMineralsFriendlyFireTechnology": "minerals_friendly_fire_technology",
-    "scoreValueMineralsKilledArmy": "minerals_killed_army",
-    "scoreValueMineralsKilledEconomy": "minerals_killed_economy",
-    "scoreValueMineralsKilledTechnology": "minerals_killed_technology",
-    "scoreValueMineralsLostArmy": "minerals_lost_army",
-    "scoreValueMineralsLostEconomy": "minerals_lost_economy",
-    "scoreValueMineralsLostTechnology": "minerals_lost_technology",
-    "scoreValueMineralsUsedActiveForces": "minerals_used_active_forces",
-    "scoreValueMineralsUsedCurrentArmy": "minerals_used_current_army",
-    "scoreValueMineralsUsedCurrentEconomy": "minerals_used_current_economy",
-    "scoreValueMineralsUsedCurrentTechnology": "minerals_used_current_technology",
-    "scoreValueMineralsUsedInProgressArmy": "minerals_used_in_progress_army",
-    "scoreValueMineralsUsedInProgressEconomy": "minerals_used_in_progress_economy",
-    "scoreValueMineralsUsedInProgressTechnology": "minerals_used_in_progress_technology",
-    "scoreValueVespeneCollectionRate": "vespene_collection_rate",
-    "scoreValueVespeneCurrent": "vespene_current",
-    "scoreValueVespeneFriendlyFireArmy": "vespene_friendly_fire_army",
-    "scoreValueVespeneFriendlyFireEconomy": "vespene_friendly_fire_economy",
-    "scoreValueVespeneFriendlyFireTechnology": "vespene_friendly_fire_technology",
-    "scoreValueVespeneKilledArmy": "vespene_killed_army",
-    "scoreValueVespeneKilledEconomy": "vespene_killed_economy",
-    "scoreValueVespeneKilledTechnology": "vespene_killed_technology",
-    "scoreValueVespeneLostArmy": "vespene_lost_army",
-    "scoreValueVespeneLostEconomy": "vespene_lost_economy",
-    "scoreValueVespeneLostTechnology": "vespene_lost_technology",
-    "scoreValueVespeneUsedActiveForces": "vespene_used_active_forces",
-    "scoreValueVespeneUsedCurrentArmy": "vespene_used_current_army",
-    "scoreValueVespeneUsedCurrentEconomy": "vespene_used_current_economy",
-    "scoreValueVespeneUsedCurrentTechnology": "vespene_used_current_technology",
-    "scoreValueVespeneUsedInProgressArmy": "vespene_used_in_progress_army",
-    "scoreValueVespeneUsedInProgressEconomy": "vespene_used_in_progress_economy",
-    "scoreValueVespeneUsedInProgressTechnology": "vespene_used_in_progress_technology",
-    "scoreValueWorkersActiveCount": "workers_active_count",
-}
 
 
 def audit_raw_data_availability() -> dict[str, int]:
@@ -406,39 +422,6 @@ def _build_metadata_rows(
     return rows
 
 
-_TRACKER_SCHEMA = pa.schema(
-    [
-        pa.field("match_id", pa.string()),
-        pa.field("event_type", pa.string()),
-        pa.field("game_loop", pa.int32()),
-        pa.field("player_id", pa.int8()),
-        pa.field("event_data", pa.string()),
-    ]
-)
-
-_GAME_EVENT_SCHEMA = pa.schema(
-    [
-        pa.field("match_id", pa.string()),
-        pa.field("event_type", pa.string()),
-        pa.field("game_loop", pa.int32()),
-        pa.field("user_id", pa.int32()),
-        pa.field("player_id", pa.int8()),
-        pa.field("event_data", pa.string()),
-    ]
-)
-
-_METADATA_SCHEMA = pa.schema(
-    [
-        pa.field("match_id", pa.string()),
-        pa.field("player_id", pa.int8()),
-        pa.field("user_id", pa.int32()),
-        pa.field("nickname", pa.string()),
-        pa.field("race", pa.string()),
-        pa.field("total_game_loops", pa.int32()),
-    ]
-)
-
-
 def save_raw_events_to_parquet(
     events_batch: list[dict],
     output_dir: Path,
@@ -475,15 +458,15 @@ def save_raw_events_to_parquet(
     suffix = f"batch_{batch_number:05d}"
 
     if tracker_rows:
-        table = pa.Table.from_pylist(tracker_rows, schema=_TRACKER_SCHEMA)
+        table = pa.Table.from_pylist(tracker_rows, schema=TRACKER_SCHEMA)
         pq.write_table(table, output_dir / f"tracker_events_{suffix}.parquet")
 
     if game_rows:
-        table = pa.Table.from_pylist(game_rows, schema=_GAME_EVENT_SCHEMA)
+        table = pa.Table.from_pylist(game_rows, schema=GAME_EVENT_SCHEMA)
         pq.write_table(table, output_dir / f"game_events_{suffix}.parquet")
 
     if meta_rows:
-        table = pa.Table.from_pylist(meta_rows, schema=_METADATA_SCHEMA)
+        table = pa.Table.from_pylist(meta_rows, schema=METADATA_SCHEMA)
         pq.write_table(table, output_dir / f"match_metadata_{suffix}.parquet")
 
     logger.debug(
@@ -638,30 +621,12 @@ def load_tracker_events_to_duckdb(
         con.execute("DROP TABLE IF EXISTS tracker_events_raw")
         logger.info("Dropped existing tracker_events_raw table and player_stats view.")
 
-    con.execute(f"""
-        CREATE TABLE IF NOT EXISTS tracker_events_raw AS
-        SELECT * FROM read_parquet('{glob_pattern}')
-    """)
+    con.execute(_TRACKER_EVENTS_TABLE_QUERY.format(glob_pattern=glob_pattern))
 
     row_count = con.execute("SELECT count(*) FROM tracker_events_raw").fetchone()[0]
     logger.info(f"Loaded {row_count} tracker events into tracker_events_raw.")
 
-    # Build the player_stats view with all 39 typed columns
-    field_extracts = ",\n        ".join(
-        f"CAST(json_extract(event_data, '$.stats.{src}') AS FLOAT) AS {dst}"
-        for src, dst in PLAYER_STATS_FIELD_MAP.items()
-    )
-
-    con.execute(f"""
-        CREATE OR REPLACE VIEW player_stats AS
-        SELECT
-            match_id,
-            game_loop,
-            player_id,
-            {field_extracts}
-        FROM tracker_events_raw
-        WHERE event_type = 'PlayerStats'
-    """)
+    con.execute(_PLAYER_STATS_VIEW_QUERY)
     logger.info("Created player_stats view with 39 typed economic fields.")
 
 
@@ -689,17 +654,11 @@ def load_game_events_to_duckdb(
         con.execute("DROP TABLE IF EXISTS match_player_map")
         logger.info("Dropped existing game_events_raw and match_player_map tables.")
 
-    con.execute(f"""
-        CREATE TABLE IF NOT EXISTS game_events_raw AS
-        SELECT * FROM read_parquet('{game_glob}')
-    """)
+    con.execute(_GAME_EVENTS_TABLE_QUERY.format(glob_pattern=game_glob))
     game_count = con.execute("SELECT count(*) FROM game_events_raw").fetchone()[0]
     logger.info(f"Loaded {game_count} game events into game_events_raw.")
 
-    con.execute(f"""
-        CREATE TABLE IF NOT EXISTS match_player_map AS
-        SELECT DISTINCT * FROM read_parquet('{meta_glob}')
-    """)
+    con.execute(_MATCH_PLAYER_MAP_TABLE_QUERY.format(glob_pattern=meta_glob))
     meta_count = con.execute("SELECT count(*) FROM match_player_map").fetchone()[0]
     logger.info(f"Loaded {meta_count} player mappings into match_player_map.")
 

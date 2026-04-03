@@ -459,6 +459,7 @@ class TestManifestHelpers:
         assert loaded == data
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestSlimDownSc2WithManifest:
     """Test slim_down_sc2_with_manifest with synthetic replay files."""
 

@@ -17,6 +17,128 @@ cannot be defended at examination.
 
 ---
 
+## Plan / Execute Workflow (MANDATORY)
+
+All non-trivial work follows a two-session pattern to preserve context quality.
+Planning and execution always happen in separate sessions. `_current_plan.md` is
+the handoff artifact between them.
+
+### Session type 1: Planning
+
+Triggered when you ask Claude to "plan", "think through", or "design" something.
+
+1. Identify the work category (see table below) — this determines which context
+   files to read and what the plan template looks like.
+2. Think through the approach. Ask clarifying questions if needed.
+3. Write the finalised plan to `_current_plan.md`, overwriting any previous content.
+   The plan must be self-contained — the execution session reads only this file
+   and the codebase, not this conversation.
+4. Do not write any code or modify any source files during a planning session.
+5. End by asking: "Does this plan look correct? I will wait for your approval
+   before writing anything to `_current_plan.md`."
+
+### Session type 2: Execution
+
+Triggered when you open a new session and say "execute the current plan" or
+"implement `_current_plan.md`".
+
+1. Read `_current_plan.md` in full before doing anything else.
+2. Read `.claude/scientific-invariants.md`.
+3. Execute exactly what the plan specifies — no design decisions, no additions,
+   no improvements beyond what is written. If something is ambiguous or impossible,
+   stop and report the specific issue rather than improvising.
+4. Follow `.claude/coding-standards.md` when writing code.
+5. Run tests after each logical unit of work, not only at the end.
+6. When execution is complete, report which gate condition from the plan is now met.
+
+---
+
+### Work categories and what each plan must contain
+
+#### Category A — Phase work (SC2 or AoE2 data pipeline, features, models)
+
+Read before planning:
+- `.claude/scientific-invariants.md`
+- The relevant phase of `reports/SC2ML_THESIS_ROADMAP.md`
+
+Plan must include:
+- Phase and step reference from the roadmap
+- Branch name
+- Every file to create or modify, with exact paths
+- Every function to write, with full signature, docstring, and implementation
+  detail sufficient to write without further design decisions
+- Every query, with full SQL
+- Test cases to write
+- The gate condition that defines this plan as complete
+
+#### Category B — Refactoring
+
+Read before planning:
+- `.claude/coding-standards.md`
+- `.claude/testing-standards.md`
+
+Plan must include:
+- Branch name (`refactor/...`)
+- What is being restructured and why
+- Which files change and what specifically changes in each
+- Confirmation that external behaviour is preserved (what tests prove this)
+- Any new tests needed to cover previously untested paths exposed by the refactor
+- Explicit statement: no new features, no bug fixes — behaviour is unchanged
+
+#### Category C — Chore / maintenance
+
+Read before planning:
+- `.claude/coding-standards.md`
+
+Plan must include:
+- Branch name (`chore/...`)
+- Exact changes (dependency versions, config updates, directory moves, etc.)
+- Any test or lint commands needed to verify the change is safe
+- Confirmation of scope: what this does NOT touch
+
+#### Category D — Bug fix
+
+Read before planning:
+- `.claude/coding-standards.md`
+- `.claude/testing-standards.md`
+- `.claude/scientific-invariants.md` if the bug is in data or feature code
+
+Plan must include:
+- Branch name (`fix/...`)
+- Root cause statement
+- Exact change to make
+- A regression test that fails before the fix and passes after
+- Confirmation that the fix does not affect any other behaviour
+
+#### Category E — Documentation only
+
+No mandatory pre-reads beyond understanding the current state of the relevant doc.
+
+Plan must include:
+- Branch name (`docs/...`)
+- Which files change and what changes in each
+- Confirmation that no source code changes
+
+---
+
+### Session type trigger words
+
+| You say | Claude does |
+|---------|-------------|
+| "Plan ...", "Think through ...", "Design ..." | Planning session — identifies category, then plans |
+| "Execute the plan", "Implement `_current_plan.md`" | Execution session |
+| "Wrap up into a PR" | PR creation flow from `.claude/git-workflow.md` |
+| Anything else | Read `_current_plan.md` first — if it exists and is relevant to the request, treat this as an execution session. If it does not exist or is not relevant, ask whether this is a planning or execution session before starting. |
+
+### Why this separation exists
+
+Planning consumes context with exploration and reasoning. Execution needs that
+context budget for reading source files. Mixing them in one session means execution
+happens with a partially displaced plan and reduced file-reading capacity.
+`_current_plan.md` is the handoff artifact that lets each session start clean.
+
+---
+
 ## Project Status: Starting from Correct Foundations
 
 The repository contains existing code written before proper data exploration was conducted.
@@ -27,7 +149,12 @@ must begin by reading it to understand which phase is current and what the gate 
 is for advancing. Do not implement features, models, or splits until the phase that
 motivates them is complete and its artifacts exist.
 
-The old `reports/ROADMAP.md` is superseded. Do not use it to determine what to work on.
+The old `reports/ROADMAP.md` is superseded. Do not use it to determine what to work on. Special subdir `reports/archive/` has been created to store no longer valid plans that only might be helpful in future when some legacy code or specific decision understanding is needed.
+
+AoE2 integration is planned after SC2 exploration and modelling is complete.
+Do not create any `src/aoe2ml/` structure or AoE2-related files until explicitly
+instructed. When AoE2 work begins, a separate roadmap and updated `.claude/` files
+will be provided.
 
 ---
 
@@ -82,16 +209,20 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 | `.claude/git-workflow.md` | Branches, commits, end-of-session checklist |
 | `.claude/aoe2-plan.md` | AoE2 integration notes (upcoming) |
 | `reports/SC2ML_THESIS_ROADMAP.md` | **The authoritative phase-by-phase execution plan** |
-| `reports/methodology.md` | Full thesis specification (RQs, features, models, evaluation) |
 
 ---
 
 ## Progress Tracking (MANDATORY)
 
-- **Before starting any work:** Read `.claude/scientific-invariants.md`, then read `reports/SC2ML_THESIS_ROADMAP.md` to identify the current phase and its gate condition.
-- **Do not begin a phase** until all artifacts from the previous phase exist on disk.
-- **After completing a step:** Update `reports/research_log.md` with findings, decisions, and any deviations from the roadmap.
-- **After code changes:** Follow `.claude/git-workflow.md` — conventional branch names, atomic commits, conventional commit messages. Every session must end with the checklist below.
+- **Before starting any work:** Read `.claude/scientific-invariants.md`. For
+  Category A (phase work), also read `reports/SC2ML_THESIS_ROADMAP.md` to
+  identify the current phase and its gate condition before planning anything.
+- **Do not begin a new phase** until all artifacts from the previous phase
+  exist on disk.
+- **After completing any step:** Update `reports/research_log.md` with findings,
+  decisions, and any deviations — for Category A work this is mandatory, for
+  other categories only if something non-obvious was decided.
+- **After code changes:** Follow `.claude/git-workflow.md`.
 
 ## End-of-Session Checklist
 

@@ -21,21 +21,9 @@ from sc2ml.config import SERIES_GAP_SECONDS, TEST_RATIO, TRAIN_RATIO, VAL_RATIO
 
 logger = logging.getLogger(__name__)
 
+# ── SQL query constants ───────────────────────────────────────────────────────
 
-def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
-    """Create the two DuckDB views used by the ML pipeline.
-
-    flat_players  — one row per player per match, with map translations applied
-                    and casters (no Win/Loss result) excluded.
-    matches_flat  — one row per player-pair perspective per match (2 rows per
-                    unique match_id), used as the primary ML input table.
-    """
-    logger.info(
-        "Creating ML views in DuckDB (map translations + player name unification)..."
-    )
-
-    # flat_players: LEFT JOIN to map_translation so foreign map names are normalised to English
-    query_flat_players = """
+_FLAT_PLAYERS_VIEW_QUERY = """
     CREATE OR REPLACE VIEW flat_players AS
     SELECT
         filename AS match_id,
@@ -79,11 +67,9 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
           GROUP BY filename
           HAVING COUNT(*) = 2
       )
-    """
-    con.execute(query_flat_players)
+"""
 
-    # matches_flat: pair players within the same match to produce one row per perspective
-    query_matches = """
+_MATCHES_FLAT_VIEW_QUERY = """
     CREATE OR REPLACE VIEW matches_flat AS
     SELECT
         p1.match_id,
@@ -124,8 +110,215 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
         p1.result AS p1_result
     FROM flat_players p1
     JOIN flat_players p2 ON p1.match_id = p2.match_id AND p1.player_name != p2.player_name
+"""
+
+_MATCHES_WITH_SPLIT_QUERY = """
+    SELECT m.*, ms.split
+    FROM matches_flat m
+    JOIN match_split ms ON m.match_id = ms.match_id
+    {where_clause}
+    ORDER BY m.match_time ASC
+"""
+
+_MATCHES_WITHOUT_SPLIT_QUERY = (
+    "SELECT * FROM matches_flat WHERE match_time IS NOT NULL ORDER BY match_time ASC"
+)
+
+_YEAR_DISTRIBUTION_QUERY = """
+    SELECT
+        EXTRACT(year FROM match_time) as year,
+        COUNT(*) as total_matches,
+        ROUND(COUNT(*) * 100.0 / (SUM(COUNT(*)) OVER()), 2) as pct_of_total
+    FROM matches_flat
+    GROUP BY year ORDER BY year;
+"""
+
+_CHRONOLOGICAL_SPLIT_QUERY = """
+    WITH split_point AS (
+        SELECT match_time FROM matches_flat
+        ORDER BY match_time ASC
+        LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * {split_ratio} AS INT) FROM matches_flat)
+    )
+    SELECT
+        (SELECT COUNT(*) FROM matches_flat
+         WHERE match_time < (SELECT match_time FROM split_point)
+        ) as train_count,
+        (SELECT COUNT(*) FROM matches_flat
+         WHERE match_time >= (SELECT match_time FROM split_point)
+        ) as test_count,
+        (SELECT MIN(match_time) FROM matches_flat
+         WHERE match_time >= (SELECT match_time FROM split_point)
+        ) as min_test_time,
+        (SELECT MAX(match_time) FROM matches_flat
+         WHERE match_time < (SELECT match_time FROM split_point)
+        ) as max_train_time,
+        ((SELECT MIN(match_time) FROM matches_flat
+          WHERE match_time >= (SELECT match_time FROM split_point)) >
+         (SELECT MAX(match_time) FROM matches_flat
+          WHERE match_time < (SELECT match_time FROM split_point))
+        ) as is_chronological_valid;
+"""
+
+_SERIES_ASSIGNMENT_QUERY = """
+    CREATE TABLE match_series AS
+    WITH unique_matches AS (
+        SELECT DISTINCT
+            match_id,
+            tournament_name,
+            match_time,
+            LEAST(p1_name, p2_name) AS player_a,
+            GREATEST(p1_name, p2_name) AS player_b
+        FROM matches_flat
+        WHERE match_time IS NOT NULL
+          AND p1_name < p2_name
+    ),
+    with_pair AS (
+        SELECT
+            *,
+            player_a || '|' || player_b AS player_pair
+        FROM unique_matches
+    ),
+    with_lag AS (
+        SELECT
+            match_id,
+            tournament_name,
+            player_pair,
+            match_time,
+            LAG(match_time) OVER (
+                PARTITION BY tournament_name, player_pair
+                ORDER BY match_time
+            ) AS prev_match_time
+        FROM with_pair
+    ),
+    with_boundary AS (
+        SELECT
+            match_id,
+            tournament_name,
+            player_pair,
+            CASE
+                WHEN prev_match_time IS NULL
+                    OR DATEDIFF('second', prev_match_time, match_time) > {series_gap_seconds}
+                THEN 1
+                ELSE 0
+            END AS is_new_series
+        FROM with_lag
+    ),
+    with_series_group AS (
+        SELECT
+            match_id,
+            tournament_name,
+            player_pair,
+            SUM(is_new_series) OVER (
+                PARTITION BY tournament_name, player_pair
+                ORDER BY match_id
+                ROWS UNBOUNDED PRECEDING
+            ) AS series_group
+        FROM with_boundary
+    )
+    SELECT
+        match_id,
+        tournament_name || '|' || player_pair || '|' || series_group::VARCHAR
+            AS series_id
+    FROM with_series_group
+"""
+
+_SERIES_OTHER_PERSPECTIVE_QUERY = """
+    INSERT INTO match_series
+    SELECT DISTINCT m.match_id, ms.series_id
+    FROM matches_flat m
+    JOIN match_series ms ON m.match_id = ms.match_id
+    WHERE m.match_id NOT IN (SELECT match_id FROM match_series)
+"""
+
+_TOURNAMENT_GROUPING_QUERY = """
+    SELECT
+        tournament_name,
+        MIN(match_time) AS first_match_time,
+        COUNT(DISTINCT match_id) AS match_count
+    FROM flat_players
+    WHERE match_time IS NOT NULL
+      AND result IN ('Win', 'Loss')
+    GROUP BY tournament_name
+    ORDER BY first_match_time ASC
+"""
+
+_MATCH_SPLIT_CREATE_QUERY = """
+    CREATE TABLE match_split AS
+    SELECT DISTINCT fp.match_id, s.split
+    FROM flat_players fp
+    JOIN split_df s ON fp.tournament_name = s.tournament_name
+    WHERE fp.result IN ('Win', 'Loss')
+"""
+
+_SPLIT_STATS_QUERY = """
+    SELECT
+        ms.split,
+        COUNT(*) AS match_count,
+        MIN(m.match_time) AS earliest,
+        MAX(m.match_time) AS latest
+    FROM match_split ms
+    JOIN matches_flat m ON ms.match_id = m.match_id
+    WHERE m.p1_name < m.p2_name
+    GROUP BY ms.split
+    ORDER BY earliest
+"""
+
+_SPLIT_BOUNDARIES_QUERY = """
+    SELECT
+        ms.split,
+        MIN(m.match_time) AS min_time,
+        MAX(m.match_time) AS max_time,
+        COUNT(DISTINCT ms.match_id) AS match_count
+    FROM match_split ms
+    JOIN matches_flat m ON ms.match_id = m.match_id
+    WHERE m.p1_name < m.p2_name
+    GROUP BY ms.split
+    ORDER BY min_time
+"""
+
+_TOURNAMENT_CONTAINMENT_QUERY = """
+    SELECT fp.tournament_name, COUNT(DISTINCT ms.split) AS split_count
+    FROM match_split ms
+    JOIN flat_players fp ON ms.match_id = fp.match_id
+    WHERE fp.result IN ('Win', 'Loss')
+    GROUP BY fp.tournament_name
+    HAVING split_count > 1
+"""
+
+_SERIES_INTEGRITY_QUERY = """
+    SELECT ms2.series_id, COUNT(DISTINCT ms1.split) AS split_count
+    FROM match_split ms1
+    JOIN match_series ms2 ON ms1.match_id = ms2.match_id
+    GROUP BY ms2.series_id
+    HAVING split_count > 1
+"""
+
+_YEAR_DIST_PER_SPLIT_QUERY = """
+    SELECT
+        ms.split,
+        EXTRACT(year FROM m.match_time) AS year,
+        COUNT(*) AS matches
+    FROM match_split ms
+    JOIN matches_flat m ON ms.match_id = m.match_id
+    WHERE m.p1_name < m.p2_name
+    GROUP BY ms.split, year
+    ORDER BY year, ms.split
+"""
+
+
+def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
+    """Create the two DuckDB views used by the ML pipeline.
+
+    flat_players  — one row per player per match, with map translations applied
+                    and casters (no Win/Loss result) excluded.
+    matches_flat  — one row per player-pair perspective per match (2 rows per
+                    unique match_id), used as the primary ML input table.
     """
-    con.execute(query_matches)
+    logger.info(
+        "Creating ML views in DuckDB (map translations + player name unification)..."
+    )
+    con.execute(_FLAT_PLAYERS_VIEW_QUERY)
+    con.execute(_MATCHES_FLAT_VIEW_QUERY)
     logger.info("View 'matches_flat' ready.")
 
 
@@ -151,34 +344,28 @@ def get_matches_dataframe(
 
     _VALID_SPLITS = {"train", "val", "test"}
 
+    params: list[str] = []
     if has_split_table:
-        where_clause = "WHERE m.match_time IS NOT NULL"
         if split is not None:
             if split not in _VALID_SPLITS:
                 raise ValueError(
                     f"Invalid split '{split}', must be one of {sorted(_VALID_SPLITS)}"
                 )
-            where_clause += f" AND ms.split = '{split}'"
-        query = f"""
-            SELECT m.*, ms.split
-            FROM matches_flat m
-            JOIN match_split ms ON m.match_id = ms.match_id
-            {where_clause}
-            ORDER BY m.match_time ASC
-        """
+            where_clause = "WHERE m.match_time IS NOT NULL AND ms.split = ?"
+            params = [split]
+        else:
+            where_clause = "WHERE m.match_time IS NOT NULL"
+        query = _MATCHES_WITH_SPLIT_QUERY.format(where_clause=where_clause)
     else:
         if split is not None:
             logger.warning(
                 "match_split table does not exist — ignoring split filter. "
                 "Run create_temporal_split() first."
             )
-        query = (
-            "SELECT * FROM matches_flat "
-            "WHERE match_time IS NOT NULL ORDER BY match_time ASC"
-        )
+        query = _MATCHES_WITHOUT_SPLIT_QUERY
 
     logger.info(f"Loading matches_flat into Pandas (split={split})...")
-    return con.execute(query).df()
+    return con.execute(query, params).df()
 
 
 def validate_data_split_sql(con: duckdb.DuckDBPyConnection, split_ratio: float = 0.8) -> None:
@@ -192,45 +379,12 @@ def validate_data_split_sql(con: duckdb.DuckDBPyConnection, split_ratio: float =
         f"(Split {int(split_ratio * 100)}/{int((1 - split_ratio) * 100)}) ======"
     )
 
-    # Year distribution
-    query_dist = """
-    SELECT
-        EXTRACT(year FROM match_time) as year,
-        COUNT(*) as total_matches,
-        ROUND(COUNT(*) * 100.0 / (SUM(COUNT(*)) OVER()), 2) as pct_of_total
-    FROM matches_flat
-    GROUP BY year ORDER BY year;
-    """
-    dist_df = con.execute(query_dist).df()
+    dist_df = con.execute(_YEAR_DISTRIBUTION_QUERY).df()
     logger.info(f"\nAnnual match distribution:\n{dist_df.to_string(index=False)}")
 
-    # Chronological split validation
-    query_leakage = f"""
-    WITH split_point AS (
-        SELECT match_time FROM matches_flat
-        ORDER BY match_time ASC
-        LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * {split_ratio} AS INT) FROM matches_flat)
-    )
-    SELECT
-        (SELECT COUNT(*) FROM matches_flat
-         WHERE match_time < (SELECT match_time FROM split_point)
-        ) as train_count,
-        (SELECT COUNT(*) FROM matches_flat
-         WHERE match_time >= (SELECT match_time FROM split_point)
-        ) as test_count,
-        (SELECT MIN(match_time) FROM matches_flat
-         WHERE match_time >= (SELECT match_time FROM split_point)
-        ) as min_test_time,
-        (SELECT MAX(match_time) FROM matches_flat
-         WHERE match_time < (SELECT match_time FROM split_point)
-        ) as max_train_time,
-        ((SELECT MIN(match_time) FROM matches_flat
-          WHERE match_time >= (SELECT match_time FROM split_point)) >
-         (SELECT MAX(match_time) FROM matches_flat
-          WHERE match_time < (SELECT match_time FROM split_point))
-        ) as is_chronological_valid;
-    """
-    leakage_res = con.execute(query_leakage).df()
+    leakage_res = con.execute(
+        _CHRONOLOGICAL_SPLIT_QUERY.format(split_ratio=split_ratio)
+    ).df()
 
     valid = leakage_res["is_chronological_valid"].iloc[0]
     logger.info(
@@ -256,77 +410,8 @@ def assign_series_ids(con: duckdb.DuckDBPyConnection) -> None:
     logger.info("Assigning series IDs to matches...")
 
     con.execute("DROP TABLE IF EXISTS match_series")
-    con.execute(f"""
-        CREATE TABLE match_series AS
-        WITH unique_matches AS (
-            SELECT DISTINCT
-                match_id,
-                tournament_name,
-                match_time,
-                LEAST(p1_name, p2_name) AS player_a,
-                GREATEST(p1_name, p2_name) AS player_b
-            FROM matches_flat
-            WHERE match_time IS NOT NULL
-              AND p1_name < p2_name
-        ),
-        with_pair AS (
-            SELECT
-                *,
-                player_a || '|' || player_b AS player_pair
-            FROM unique_matches
-        ),
-        with_lag AS (
-            SELECT
-                match_id,
-                tournament_name,
-                player_pair,
-                match_time,
-                LAG(match_time) OVER (
-                    PARTITION BY tournament_name, player_pair
-                    ORDER BY match_time
-                ) AS prev_match_time
-            FROM with_pair
-        ),
-        with_boundary AS (
-            SELECT
-                match_id,
-                tournament_name,
-                player_pair,
-                CASE
-                    WHEN prev_match_time IS NULL
-                        OR DATEDIFF('second', prev_match_time, match_time) > {SERIES_GAP_SECONDS}
-                    THEN 1
-                    ELSE 0
-                END AS is_new_series
-            FROM with_lag
-        ),
-        with_series_group AS (
-            SELECT
-                match_id,
-                tournament_name,
-                player_pair,
-                SUM(is_new_series) OVER (
-                    PARTITION BY tournament_name, player_pair
-                    ORDER BY match_id
-                    ROWS UNBOUNDED PRECEDING
-                ) AS series_group
-            FROM with_boundary
-        )
-        SELECT
-            match_id,
-            tournament_name || '|' || player_pair || '|' || series_group::VARCHAR
-                AS series_id
-        FROM with_series_group
-    """)
-
-    # Also assign the "other perspective" rows (p2 < p1) to the same series
-    con.execute("""
-        INSERT INTO match_series
-        SELECT DISTINCT m.match_id, ms.series_id
-        FROM matches_flat m
-        JOIN match_series ms ON m.match_id = ms.match_id
-        WHERE m.match_id NOT IN (SELECT match_id FROM match_series)
-    """)
+    con.execute(_SERIES_ASSIGNMENT_QUERY.format(series_gap_seconds=SERIES_GAP_SECONDS))
+    con.execute(_SERIES_OTHER_PERSPECTIVE_QUERY)
 
     series_count = con.execute(
         "SELECT count(DISTINCT series_id) FROM match_series"
@@ -367,17 +452,7 @@ def create_temporal_split(
     )
 
     # Get tournaments sorted by earliest match time, with match counts
-    tourney_df = con.execute("""
-        SELECT
-            tournament_name,
-            MIN(match_time) AS first_match_time,
-            COUNT(DISTINCT match_id) AS match_count
-        FROM flat_players
-        WHERE match_time IS NOT NULL
-          AND result IN ('Win', 'Loss')
-        GROUP BY tournament_name
-        ORDER BY first_match_time ASC
-    """).df()
+    tourney_df = con.execute(_TOURNAMENT_GROUPING_QUERY).df()
 
     total_matches = int(tourney_df["match_count"].sum())
     train_target = int(total_matches * train_ratio)
@@ -404,27 +479,9 @@ def create_temporal_split(
     split_df = pd.DataFrame(split_assignments, columns=["tournament_name", "split"])  # noqa: F841 — referenced by DuckDB SQL below
 
     con.execute("DROP TABLE IF EXISTS match_split")
-    con.execute("""
-        CREATE TABLE match_split AS
-        SELECT DISTINCT fp.match_id, s.split
-        FROM flat_players fp
-        JOIN split_df s ON fp.tournament_name = s.tournament_name
-        WHERE fp.result IN ('Win', 'Loss')
-    """)
+    con.execute(_MATCH_SPLIT_CREATE_QUERY)
 
-    # Log split statistics
-    stats = con.execute("""
-        SELECT
-            ms.split,
-            COUNT(*) AS match_count,
-            MIN(m.match_time) AS earliest,
-            MAX(m.match_time) AS latest
-        FROM match_split ms
-        JOIN matches_flat m ON ms.match_id = m.match_id
-        WHERE m.p1_name < m.p2_name  -- deduplicate
-        GROUP BY ms.split
-        ORDER BY earliest
-    """).df()
+    stats = con.execute(_SPLIT_STATS_QUERY).df()
     logger.info(f"Temporal split created:\n{stats.to_string(index=False)}")
 
 
@@ -441,18 +498,7 @@ def validate_temporal_split(con: duckdb.DuckDBPyConnection) -> None:
     logger.info("====== TEMPORAL SPLIT VALIDATION ======")
 
     # 1. Chronological ordering — no overlap between splits
-    boundaries = con.execute("""
-        SELECT
-            ms.split,
-            MIN(m.match_time) AS min_time,
-            MAX(m.match_time) AS max_time,
-            COUNT(DISTINCT ms.match_id) AS match_count
-        FROM match_split ms
-        JOIN matches_flat m ON ms.match_id = m.match_id
-        WHERE m.p1_name < m.p2_name
-        GROUP BY ms.split
-        ORDER BY min_time
-    """).df()
+    boundaries = con.execute(_SPLIT_BOUNDARIES_QUERY).df()
 
     logger.info(f"Split boundaries:\n{boundaries.to_string(index=False)}")
 
@@ -475,14 +521,7 @@ def validate_temporal_split(con: duckdb.DuckDBPyConnection) -> None:
         )
 
     # 2. Tournament containment — no tournament spans multiple splits
-    split_tourney_check = con.execute("""
-        SELECT fp.tournament_name, COUNT(DISTINCT ms.split) AS split_count
-        FROM match_split ms
-        JOIN flat_players fp ON ms.match_id = fp.match_id
-        WHERE fp.result IN ('Win', 'Loss')
-        GROUP BY fp.tournament_name
-        HAVING split_count > 1
-    """).df()
+    split_tourney_check = con.execute(_TOURNAMENT_CONTAINMENT_QUERY).df()
 
     if len(split_tourney_check) == 0:
         logger.info(
@@ -496,13 +535,7 @@ def validate_temporal_split(con: duckdb.DuckDBPyConnection) -> None:
         )
 
     # 3. Series integrity — no series spans multiple splits
-    split_series_check = con.execute("""
-        SELECT ms2.series_id, COUNT(DISTINCT ms1.split) AS split_count
-        FROM match_split ms1
-        JOIN match_series ms2 ON ms1.match_id = ms2.match_id
-        GROUP BY ms2.series_id
-        HAVING split_count > 1
-    """).df()
+    split_series_check = con.execute(_SERIES_INTEGRITY_QUERY).df()
 
     if len(split_series_check) == 0:
         logger.info("Series integrity: PASSED (no series spans multiple splits)")
@@ -513,17 +546,7 @@ def validate_temporal_split(con: duckdb.DuckDBPyConnection) -> None:
         )
 
     # 4. Year distribution per split
-    year_dist = con.execute("""
-        SELECT
-            ms.split,
-            EXTRACT(year FROM m.match_time) AS year,
-            COUNT(*) AS matches
-        FROM match_split ms
-        JOIN matches_flat m ON ms.match_id = m.match_id
-        WHERE m.p1_name < m.p2_name
-        GROUP BY ms.split, year
-        ORDER BY year, ms.split
-    """).df()
+    year_dist = con.execute(_YEAR_DIST_PER_SPLIT_QUERY).df()
     logger.info(f"Year distribution per split:\n{year_dist.to_string(index=False)}")
 
     # 5. Split size percentages
