@@ -119,6 +119,23 @@ Plan must include:
 - Which files change and what changes in each
 - Confirmation that no source code changes
 
+#### Category F — Thesis writing
+
+Read before planning:
+- `.claude/thesis-writing.md`
+- `thesis/THESIS_STRUCTURE.md`
+- `thesis/WRITING_STATUS.md`
+- The relevant phase entry in `reports/research_log.md`
+
+Plan must include:
+- Branch name (`docs/thesis-...`)
+- Section(s) to draft or revise, with exact file paths in `thesis/chapters/`
+- Which research log entries and report artifacts feed the section
+- Whether this is a first draft or a revision
+- Any new figures, tables, or BibTeX entries to create
+- The WRITING_STATUS.md update that marks this plan as complete
+- Confirmation that no source code changes are included
+
 ---
 
 ### Session type trigger words
@@ -129,6 +146,7 @@ Plan must include:
 | "Execute the plan", "Implement `_current_plan.md`" | Execution session |
 | "Wrap up into a PR" | PR creation flow from `.claude/git-workflow.md` |
 | Anything else | Read `_current_plan.md` first — if it exists and is relevant to the request, treat this as an execution session. If it does not exist or is not relevant, ask whether this is a planning or execution session before starting. |
+| "Draft §...", "Write the ... section", "Update thesis" | Planning session — Category F (thesis writing) |
 
 ### Why this separation exists
 
@@ -155,6 +173,11 @@ AoE2 integration is planned after SC2 exploration and modelling is complete.
 Do not create any `src/aoe2ml/` structure or AoE2-related files until explicitly
 instructed. When AoE2 work begins, a separate roadmap and updated `.claude/` files
 will be provided.
+
+Thesis chapters are drafted incrementally as phases complete. The writing
+workflow is defined in `.claude/thesis-writing.md`. Chapter status is tracked
+in `thesis/WRITING_STATUS.md`. Do not treat thesis writing as a post-hoc
+activity — draft each section while context from its feeding phase is fresh.
 
 ---
 
@@ -209,6 +232,7 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 | `.claude/git-workflow.md` | Branches, commits, end-of-session checklist |
 | `.claude/aoe2-plan.md` | AoE2 integration notes (upcoming) |
 | `reports/SC2ML_THESIS_ROADMAP.md` | **The authoritative phase-by-phase execution plan** |
+| `.claude/thesis-writing.md` | Thesis chapter writing workflow, quality standards, section-to-phase mapping |
 
 ---
 
@@ -222,6 +246,7 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 - **After completing any step:** Update `reports/research_log.md` with findings,
   decisions, and any deviations — for Category A work this is mandatory, for
   other categories only if something non-obvious was decided.
+- **After completing a phase gate:** Check `thesis/WRITING_STATUS.md` for sections that have moved to DRAFTABLE. Inform the user which thesis sections can now be drafted (Category F). Do not auto-draft without a planning session.
 - **After code changes:** Follow `.claude/git-workflow.md`.
 
 ## End-of-Session Checklist

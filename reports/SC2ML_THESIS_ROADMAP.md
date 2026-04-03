@@ -1,9 +1,10 @@
-# SC2ML Thesis — Data Pipeline & Exploration Roadmap
+# SC2ML Thesis — Data Pipeline & Exploration Roadmap (v2)
 
-**Goal:** Win/loss prediction in professional StarCraft II using game-state time-series data  
-**Dataset:** SC2EGSet — 70+ tournaments, ~20 000 replays, 2016–2024  
+**Goal:** Win/loss prediction in professional StarCraft II 1v1 matches using pre-game context and (optionally) in-game time-series data  
+**Dataset:** SC2EGSet v2.1.0 — 70+ tournaments, ~22 000 replays, 2016–2024  
+**Citation:** Białecki, A. et al. (2023). *SC2EGSet: StarCraft II Esport Replay and Game-state Dataset.* Scientific Data 10(1), 600. https://doi.org/10.1038/s41597-023-02510-7 — version 2.1.0 from Zenodo: https://zenodo.org/records/17829625  
 **Stack:** DuckDB · Python · pandas · PyArrow · scikit-learn · PyTorch (later phases)  
-**Rule:** Every phase ends with mandatory artifacts. Claude Code must not advance to the next phase until all artifacts exist and the gate condition is explicitly met. Each phase maps to a thesis chapter section.
+**Rule:** Every phase ends with mandatory artifacts. Claude Code must not advance to the next phase until all artifacts exist and the gate condition is explicitly met. Each phase maps to a thesis chapter section (see `THESIS_STRUCTURE.md`).
 
 ---
 
@@ -20,145 +21,54 @@ Hand Claude Code **one phase at a time**. Each phase specifies:
 
 Do not skip phases. Do not let Claude Code jump to feature engineering before data exploration is complete.
 
+**Cross-references:** This roadmap covers the SC2 leg of the thesis. The AoE2 leg will have a parallel roadmap. Both feed into the unified thesis structure in `THESIS_STRUCTURE.md`. The scientific invariants in `scientific-invariants.md` apply at all times.
+
 ---
 
-## Phase 0 — Ingestion audit and raw table design
+## Reference: SC2 game loop timing
 
-**Context:** An ingestion pipeline exists (`ingestion.py`). It has two paths: Path A loads slimmed JSON into a DuckDB `raw` table (header, initData, details, metadata, ToonPlayerDescMap); Path B extracts tracker/game events to Parquet. Before running anything, audit both paths for correctness, missing fields, and schema problems. Fix issues before any data is loaded.
+All duration conversions in this roadmap use the following formula, derived from
+Blizzard's s2client-proto documentation, Vinyals et al. (2017, arXiv:1708.04782),
+and Liquipedia's Game Speed article:
 
-**Critical known issues to verify and fix:**
+- The SC2 engine runs at **16 game loops per game-second** (Normal speed).
+- All competitive play uses **Faster** speed with a **1.4× multiplier**.
+- Therefore: **22.4 game loops = 1 real-time second** at competitive speed.
+- Conversion: `real_time_seconds = game_loops / 22.4`
+- Conversion: `real_time_minutes = game_loops / 22.4 / 60`
+- The field `elapsedGameLoops` in replay metadata counts loops at the engine rate.
 
-1. **`tournament_dir` is missing from the raw table.** `move_data_to_duck_db` uses `filename` (the full filesystem path) but does not extract the parent tournament directory name (e.g. `2016_IEM_10_Taipei`) as a standalone column. The `flat_players` view in `processing.py` derives `tournament_name` via `split_part(filename, '/', -3)` — this is fragile and depends on the exact directory depth. It must be validated against real paths and potentially replaced with a more robust extraction.
+The older formula `game_loops / 16.0 / 60.0` produces **game-minutes** (internal
+engine time), not real-time minutes. Both representations are valid but must be
+clearly labelled. This roadmap uses **real-time minutes** unless explicitly noted.
 
-2. **`slim_down_sc2_with_manifest` irreversibly destroys `trackerEvents`, `gameEvents`, and `messageEvents` from the source JSON files.** This must NEVER be run with `dry_run=False` before Path B extraction is complete. Audit the manifest to determine if any files have already been stripped.
+| Landmark | Game loops | Real-time |
+|----------|-----------|-----------|
+| 1 minute | 1,344 | 60s |
+| 3 minutes | 4,032 | 180s |
+| 5 minutes | 6,720 | 300s |
+| 7 minutes | 9,408 | 420s |
+| 10 minutes | 13,440 | 600s |
+| 20 minutes | 26,880 | 1200s |
 
-3. **`match_id` in Path B is the full relative path string**, e.g. `2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/0e0b1a...SC2Replay.json`. In Path A it is the full absolute filesystem path from DuckDB's `filename` column. These two identifiers are different formats and must be reconciled into a single canonical `replay_id` (the MD5 hash prefix, e.g. `0e0b1a550447f0b0a616e48224b31bd9`) before any join between Path A and Path B tables is possible.
+---
 
-4. **`APM` and `MMR` in `ToonPlayerDescMap` are likely all zeros** across the full corpus (confirmed in sample file). Verify this before building any feature that references these fields.
+## Phase 0 — Ingestion audit and raw table design ✅ COMPLETE
 
-5. **`create_temporal_split` in `processing.py` uses a naïve global time-based split** — it assigns whole tournaments to train/val/test by chronological order of earliest match. This is a reasonable starting point for ingestion validation, but it does NOT implement the correct per-player sliding-window framing discussed in the thesis design. It will need to be replaced in Phase 6.
+**Status:** All gate conditions met (see `research_log.md`, entry 2026-04-03).
 
-**Inputs:** Source JSON files on disk at `REPLAYS_SOURCE_DIR`. Existing `ingestion.py`, `processing.py`, `cli.py`.
+**Summary of results:**
+- 22,390 source files, 0 stripped
+- `raw` table: 22,390 rows
+- `tracker_events_raw`: 62M rows, joins cleanly (0 orphans)
+- `game_events_raw`: 609M rows
+- `match_player_map`: 44,815 rows
+- `raw_enriched` view with `tournament_dir` and `replay_id`
+- 188 maps, 100% translation coverage
+- APM: 97.5% non-zero (usable from 2017+; all 2016 = zero)
+- MMR: 83.6% zero (systematically missing, unusable as direct feature)
 
-### Steps
-
-**0.1 — Audit source file availability**
-
-Run `audit_raw_data_availability()` from `ingestion.py`. Record:
-- Total `.SC2Replay.json` files on disk
-- Files with `trackerEvents` present (`has_tracker`)
-- Files with `gameEvents` present (`has_game`)
-- Files with both present (`has_both`)
-- Files already stripped (`stripped`)
-
-If `stripped > 0`, stop. Do not proceed until it is confirmed which files were stripped and whether the original data can be recovered from the SC2EGSet ZIPs.
-
-Output: `reports/00_source_audit.json`
-
-**0.2 — Validate the `tournament_name` extraction logic**
-
-Before loading any data, write a standalone Python script that:
-- Scans 10 random `.SC2Replay.json` paths from each of 5 different tournament directories
-- Applies `split_part(filename, '/', -3)` (simulated in Python as `path.parts[-3]`)
-- Compares the result to the known tournament directory name
-- Reports whether the extraction is correct for all sampled paths
-
-If it fails for any path, fix the extraction logic in `processing.py` before proceeding.
-
-Output: `reports/00_tournament_name_validation.txt`
-
-**0.3 — Design and document the canonical `replay_id`**
-
-Write a specification (a short markdown file) that defines:
-- `replay_id` = the MD5 hash portion of the filename (the 32-character hex prefix before `.SC2Replay.json`)
-- How to extract it from Path A's `filename` column (regex or string split)
-- How to extract it from Path B's `match_id` column (the path string)
-- Confirm both extractions produce identical values for the same file
-
-This spec will be referenced by all downstream join logic.
-
-Output: `reports/00_replay_id_spec.md`
-
-**0.4 — Run Path A ingestion on a single tournament**
-
-Run `move_data_to_duck_db` on a single tournament directory (e.g. `2016_IEM_10_Taipei`) as a smoke test. Then:
-- Run `DESCRIBE raw` and record all column names and types
-- Run `SELECT COUNT(*) FROM raw` and compare to the file count on disk for that tournament
-- Verify `filename`, `header`, `initData`, `details`, `metadata`, `ToonPlayerDescMap` are all present and non-null
-- Extract `tournament_name` using the validated logic from 0.2
-- Extract `replay_id` using the spec from 0.3
-- Spot-check 3 rows manually against the source JSON files
-
-Output: `reports/00_path_a_smoke_test.md`
-
-**0.5 — Run Path A ingestion on the full corpus**
-
-Run `move_data_to_duck_db` with `should_drop=True` on the full `REPLAYS_SOURCE_DIR`. Record:
-- Total rows loaded into `raw`
-- Time taken
-- Any errors logged
-
-Output: `reports/00_full_ingestion_log.txt` (the pipeline log)
-
-**0.6 — Add `tournament_dir` and `replay_id` as persistent columns**
-
-After ingestion, add two derived columns to the `raw` table (or create a `raw_enriched` view that all downstream queries use):
-- `tournament_dir` — extracted from `filename` using the validated logic
-- `replay_id` — the MD5 hash extracted from `filename`
-
-These two columns are the primary keys for all downstream work. Never rely on the raw `filename` string again after this point.
-
-**0.7 — Run Path B extraction**
-
-Run `run_in_game_extraction()` on the full corpus. This is the slow step (multiprocessing over ~17 930 files). Record:
-- Total files extracted
-- Total skipped (no `trackerEvents`)
-- Number of Parquet batch files written
-- Time taken
-
-Then run `load_in_game_data_to_duckdb()` to load Parquet into DuckDB.
-
-Output: `reports/00_path_b_extraction_log.txt`
-
-**0.8 — Validate the Path A / Path B join**
-
-Write a query that joins `raw` (Path A) to `tracker_events_raw` (Path B) on the canonical `replay_id`. Verify:
-- Every `replay_id` in `tracker_events_raw` exists in `raw`
-- Every `replay_id` in `raw` that has `trackerEvents` (from the audit in 0.1) has a corresponding row in `tracker_events_raw`
-- Report any orphan `replay_id` values in either direction
-
-Output: `reports/00_join_validation.md`
-
-**0.9 — Run `load_map_translations` and verify**
-
-Run `load_map_translations()`. Then:
-- Count rows in `map_translation`
-- Count distinct `metadata->>'$.mapName'` values in `raw`
-- Count how many map names from `raw` have no translation (null join)
-- List the untranslated map names
-
-Output: `reports/00_map_translation_coverage.csv`
-
-### Artifacts
-
-- `reports/00_source_audit.json`
-- `reports/00_tournament_name_validation.txt`
-- `reports/00_replay_id_spec.md`
-- `reports/00_path_a_smoke_test.md`
-- `reports/00_full_ingestion_log.txt`
-- `reports/00_path_b_extraction_log.txt`
-- `reports/00_join_validation.md`
-- `reports/00_map_translation_coverage.csv`
-
-### Gate
-
-- `raw` table exists with correct row count
-- `tracker_events_raw` table exists and joins cleanly to `raw` via `replay_id`
-- `tournament_dir` and `replay_id` are reliably extractable from all rows
-- Zero stripped source files (or a documented recovery plan)
-- `APM`/`MMR` zero-rate verified
-
-**Thesis mapping:** Appendix — Data acquisition and preprocessing infrastructure
+**Thesis mapping:** Appendix A — Data acquisition and preprocessing infrastructure
 
 ---
 
@@ -177,9 +87,10 @@ Write a DuckDB query producing a single summary row:
 - Total tournaments (distinct `tournament_dir`)
 - Date range: `MIN` and `MAX` of `(details->>'$.timeUTC')::TIMESTAMP`
 - Replays with null `match_time`
-- Replays with `elapsed_loops < 1120` (under ~70 real seconds — likely disconnect/surrender)
 - Replays with `tracker_events_raw` entries (`has_events`)
 - Replays without any tracker events (`missing_events`)
+
+**Note on short games:** Do NOT apply any hardcoded duration filter at this stage. Step 1.3 will produce the empirical duration distribution, from which a data-driven threshold will be derived in Phase 6. Counting games below arbitrary cutoffs is premature and introduces unjustified magic numbers.
 
 Output: `reports/01_corpus_summary.json`
 
@@ -189,7 +100,6 @@ For each tournament (grouped by `tournament_dir`), compute:
 - `total_replays` — rows in `raw`
 - `has_events` — count with at least one row in `tracker_events_raw`
 - `missing_events` — count without any tracker events
-- `short_games` — count with `elapsed_loops < 1120`
 - `null_timestamp` — count with null `match_time`
 - `event_coverage_pct` — `has_events / total_replays * 100`
 
@@ -197,30 +107,58 @@ Cross-reference with `*_processed_failed.log` counts per tournament if accessibl
 
 Sort by `event_coverage_pct` ascending — worst coverage first.
 
-Output: `reports/01_parse_quality_by_tournament.csv`  
+Output: `reports/01_parse_quality_by_tournament.csv`
 Output: `reports/01_parse_quality_summary.md` (narrative: which tournaments have >20% missing events, which to potentially exclude)
 
 **1.3 — Game duration distribution**
 
-Convert `elapsed_loops` to minutes: `elapsed_loops / 16.0 / 60.0`.
+This step produces the empirical foundation for all duration-based decisions
+in later phases. Both time representations must be computed and clearly labelled.
+
+Convert `elapsedGameLoops` to both time scales:
+- **Real-time minutes:** `elapsedGameLoops / 22.4 / 60.0` (uses Faster speed: 22.4 loops/s; see Reference above)
+- **Game-time minutes:** `elapsedGameLoops / 16.0 / 60.0` (engine-internal time; 1.4× longer than real-time)
+
+Report which conversion is used in all downstream artefacts.
 
 Produce:
-- Histogram data: bin edges and counts, binned at 2-minute intervals from 0 to 60 minutes
-- Summary statistics: mean, median, p5, p25, p75, p95 overall
+- Histogram data: bin edges and counts, binned at 1-minute real-time intervals from 0 to 60 minutes
+- Summary statistics: mean, median, p1, p5, p10, p25, p75, p90, p95, p99 overall
 - The same statistics grouped by year (extracted from `match_time`)
+- **Left-tail focus:** a zoomed histogram of games under 10 real-time minutes,
+  binned at 30-second intervals, to reveal the structure of the short-game tail.
+  Annotate known SC2 game-play landmarks in the plot:
+  - ~2 min: earliest possible worker rush resolution
+  - ~3–5 min: typical cheese/cannon rush resolution (cite: Liquipedia Cheese article)
+  - ~7 min: MSC dataset minimum threshold (Wu et al. 2017, arXiv:1710.03131)
+  - ~9 min: SC2EGSet experimental minimum (Białecki et al. 2023, §4)
 
-Save histogram data as CSV and render as a matplotlib PNG.
+This histogram will be used in Phase 6 to choose a data-driven minimum duration
+threshold. The threshold is NOT chosen here — only the distribution is observed.
 
-Output: `reports/01_duration_distribution.csv`  
-Output: `reports/01_duration_distribution.png`
+Save histogram data as CSV and render as matplotlib PNGs (full range + zoomed).
 
-**1.4 — APM and MMR zero-rate verification**
+Output: `reports/01_duration_distribution.csv`
+Output: `reports/01_duration_distribution_full.png`
+Output: `reports/01_duration_distribution_short_tail.png`
 
-From the `raw` table, extract `APM` and `MMR` from `ToonPlayerDescMap` for every player slot. Compute:
-- Fraction of player slots where `APM = 0`
-- Fraction of player slots where `MMR = 0`
-- If APM zero-rate > 95%: document as unusable, add to known dead fields list
-- If MMR zero-rate > 95%: same
+**1.4 — APM and MMR audit (confirmation of Phase 0 findings)**
+
+Phase 0 already established:
+- APM: 97.5% non-zero overall; all 2016 zeros, near-complete from 2017+
+- MMR: 83.6% zero; systematically missing (tournament/lobby replays)
+
+This step produces the formal report with year-by-year and league-by-league
+breakdowns, suitable for thesis citation. Use the exact queries from
+`research_log.md` Phase 0 entry.
+
+Write `reports/01_apm_mmr_audit.md` with:
+- The full year-by-year APM table
+- The full year-by-year MMR table
+- The MMR-by-highestLeague table
+- Conclusion: APM is usable from 2017+ (with 2016 imputation needed);
+  MMR is NOT usable as a direct feature — player skill must be derived
+  from match history (Elo, Glicko-2, or rolling win rate)
 
 Output: `reports/01_apm_mmr_audit.md`
 
@@ -233,14 +171,22 @@ Produce a table with:
 - Count of replays per version
 - Date range (min/max `match_time`) per version
 
-Group versions by year and identify broad patch eras (e.g. 2016–2017 = Heart of the Swarm→early LotV era, etc.).
+Group versions by year and identify broad patch eras. SC2 timeline reference:
+- 2015-11: Legacy of the Void launch (patch 3.0)
+- 2016-11: Patch 3.8 (design revamp)
+- 2017-11: Patch 4.0 (free-to-play transition)
+- 2019-11: Patch 4.11 (major balance update)
+- 2020-10: Final major balance patch
+- 2021+: Maintenance mode (no major balance changes)
+
+These eras may serve as a control feature (Phase 5 decision).
 
 Output: `reports/01_patch_landscape.csv`
 
 **1.6 — Tracker event type inventory**
 
 From `tracker_events_raw`, count rows by `event_type` across the full corpus:
-- `PlayerStats` — the economy time series
+- `PlayerStats` — economy time series (expected: most frequent)
 - `UnitBorn` — unit production
 - `UnitDied` — combat losses
 - `UnitInit` / `UnitDone` — units under construction
@@ -258,22 +204,25 @@ Output: `reports/01_event_type_inventory.csv`
 - `reports/01_parse_quality_by_tournament.csv`
 - `reports/01_parse_quality_summary.md`
 - `reports/01_duration_distribution.csv`
-- `reports/01_duration_distribution.png`
+- `reports/01_duration_distribution_full.png`
+- `reports/01_duration_distribution_short_tail.png`
 - `reports/01_apm_mmr_audit.md`
 - `reports/01_patch_landscape.csv`
 - `reports/01_event_type_inventory.csv`
 
 ### Gate
 
-You can state precisely: (a) how many replays are in the corpus, (b) which tournaments have critical event data, (c) the game duration distribution including the short-game tail, (d) whether APM/MMR are usable features (almost certainly not). No cleaning has been applied yet.
+You can state precisely: (a) how many replays are in the corpus, (b) which tournaments have critical event data, (c) the full game duration distribution including percentiles and the short-game tail structure, (d) APM is usable from 2017+, MMR is not usable. No cleaning has been applied yet — no duration threshold has been chosen.
 
-**Thesis mapping:** Chapter 3 — Dataset, section: Corpus composition and quality
+**Thesis mapping:** §4.1.1 — SC2EGSet description (corpus composition and quality)
 
 ---
 
 ## Phase 2 — Player universe and identity resolution
 
-**Context:** SC2 player identity is fragmented. A player's "toon" (e.g. `3-S2-1-4842177`) is unique only per Battle.net server. Korean pros playing on EU or NA servers for international tournaments get different toons. The player's **nickname** is the practical global identifier, but it has edge cases: shared nicknames, renames mid-career, encoding inconsistencies (the `flat_players` view already applies `LOWER()` — important to note). This phase builds the canonical player table that all downstream feature engineering depends on.
+**Context:** SC2 player identity is fragmented. A player's "toon" (e.g. `3-S2-1-4842177`) is unique only per Battle.net server. Korean pros playing on EU or NA servers for international tournaments get different toons. The player's **lowercase nickname** is the practical canonical identifier (Scientific Invariant #2), but it has edge cases: shared nicknames, renames mid-career, encoding inconsistencies.
+
+This phase builds the canonical player table that all downstream feature engineering depends on. Both players in every game must be treated symmetrically — the same identity resolution, the same feature computation pipeline (Scientific Invariant #8).
 
 **Inputs:** `raw` table with `ToonPlayerDescMap` JSON column.
 
@@ -290,6 +239,8 @@ highest_league | is_in_clan | clan_tag | apm | mmr
 ```
 
 Note: `player_id_in_game` is the `playerID` field (1 or 2 — the in-game slot), not a canonical player identifier. Do not confuse these.
+
+`nickname` must be lowercased at extraction time (consistent with `flat_players` LOWER transform and Scientific Invariant #2).
 
 Store as DuckDB table `player_appearances`. This is the foundation for all player-level analysis.
 
@@ -334,7 +285,7 @@ For each nickname with `n_toons > 1`, classify as:
 - **Rename (requires investigation):** Toons from the same region but different time periods (one toon ends, another begins). Could be a player rename or coincidental nickname collision.
 - **Ambiguous (flag):** Cannot be determined automatically. List manually.
 
-Output: `reports/02_multi_toon_cases.csv` with a `classification` column  
+Output: `reports/02_multi_toon_cases.csv` with a `classification` column
 Output: `reports/02_ambiguous_nicknames.md` — manual review list
 
 **2.5 — Build `canonical_players` table**
@@ -344,7 +295,7 @@ Create a DuckDB table with one row per unique professional player:
 | column | description |
 |--------|-------------|
 | `player_canonical_id` | integer surrogate key (auto-increment) |
-| `canonical_nickname` | lowercase nickname (consistent with `flat_players` LOWER transform) |
+| `canonical_nickname` | lowercase nickname (Scientific Invariant #2) |
 | `known_toons` | list of all associated toons |
 | `primary_region` | most frequent `region_name` across appearances |
 | `career_first_game` | earliest `match_time` |
@@ -365,8 +316,8 @@ Using `canonical_players` and `player_appearances`:
 - Top 30 players by total game count
 - Gini coefficient of the games-per-player distribution (quantify inequality)
 
-Output: `reports/02_player_coverage.md`  
-Output: `reports/02_games_per_player_histogram.png`  
+Output: `reports/02_player_coverage.md`
+Output: `reports/02_games_per_player_histogram.png`
 Output: `reports/02_top_players.csv`
 
 **2.7 — Race consistency per player**
@@ -394,13 +345,15 @@ Output: `reports/02_player_race_consistency.csv`
 
 `canonical_players` table exists. Every toon in `player_appearances` is assigned a `player_canonical_id`. The ambiguous nickname list is reviewed — even if the decision is "flag as uncertain and keep." You can state precisely how many unique professionals are in the dataset and what the game count distribution looks like.
 
-**Thesis mapping:** Chapter 3 — Dataset, section: Player identity and coverage
+**Thesis mapping:** §4.2.2 — Player identity resolution
 
 ---
 
 ## Phase 3 — Games table construction and temporal structure
 
-**Context:** The `matches_flat` view in `processing.py` already pairs players within the same game. However, it produces **two rows per game** (one per perspective — p1 vs p2, then p2 vs p1). This is intentional for some feature engineering approaches but must be clearly understood. This phase constructs the canonical `games` table (one row per unique match), establishes correct temporal ordering per player, and validates that the data supports the sliding-window prediction framing.
+**Context:** The `matches_flat` view in `processing.py` already pairs players within the same game. However, it produces **two rows per game** (one per perspective — p1 vs p2, then p2 vs p1). This phase constructs the canonical `games` table (one row per unique match), establishes correct temporal ordering per player, and validates that the data supports the sliding-window prediction framing.
+
+**Critical design decision — symmetric player ordering:** In the `games` table, players are assigned to slots `player_a` and `player_b` using lexicographic ordering of canonical nicknames (LEAST/GREATEST). This is an arbitrary but consistent convention. At prediction time, the model receives features for a **focal player** and an **opponent** — the same feature computation pipeline runs for both perspectives. Neither player slot is privileged (Scientific Invariant #8).
 
 **Inputs:** `raw` table, `player_appearances`, `canonical_players`, `map_translation`.
 
@@ -410,9 +363,9 @@ Output: `reports/02_player_race_consistency.csv`
 
 Run `create_ml_views(con)`. Then immediately validate the output:
 - Count rows in `flat_players` (should be exactly 2× the number of valid 1v1 replays)
-- Count rows in `matches_flat` (should be exactly 4× — two perspectives × two players — wait: re-read the JOIN. It joins p1 to p2 where `p1.player_name != p2.player_name`, producing 2 rows per match. Verify this.)
+- Count rows in `matches_flat` — determine exact multiplicity and document it
 - Count distinct `match_id` values in `matches_flat`
-- Check for any `match_id` with more or fewer than 2 rows — these are data anomalies
+- Check for any `match_id` with unexpected row count — these are data anomalies
 
 Document the actual multiplicity explicitly so there is no ambiguity when building features.
 
@@ -428,13 +381,15 @@ SELECT
     tournament_dir,
     match_time,
     game_loops,
-    ROUND(game_loops / 16.0 / 60.0, 2) AS game_duration_minutes,
+    -- Both time representations, clearly labelled
+    ROUND(game_loops / 22.4 / 60.0, 2) AS duration_real_minutes,
+    ROUND(game_loops / 16.0 / 60.0, 2) AS duration_game_minutes,
     map_name,
     map_size_x,
     map_size_y,
     data_build,
     game_version,
-    -- Player 1 is always the lexicographically smaller name (consistent ordering)
+    -- Player A is always the lexicographically smaller name (consistent ordering)
     LEAST(p1_name, p2_name) AS player_a_name,
     GREATEST(p1_name, p2_name) AS player_b_name,
     -- Race assignment follows the same ordering
@@ -446,14 +401,14 @@ SELECT
         WHEN p1_result = 'Win' AND p1_name > p2_name THEN p2_name
         ELSE -- p1 lost
             CASE WHEN p1_name < p2_name THEN p2_name ELSE p1_name END
-    END AS winner_name,
-    -- is_valid: flag games meeting minimum quality criteria
-    (game_loops >= 1120) AS is_valid
+    END AS winner_name
 FROM matches_flat
 WHERE p1_name < p2_name  -- deduplicate: take only one perspective
 ```
 
-Join to `canonical_players` to add `player_a_canonical_id` and `player_b_canonical_id` and `winner_canonical_id`.
+Join to `canonical_players` to add `player_a_canonical_id`, `player_b_canonical_id`, and `winner_canonical_id`.
+
+**Do NOT add an `is_valid` flag here.** Duration thresholds are determined in Phase 6 based on empirical evidence from Phase 1. Premature filtering violates the data-driven analysis principle.
 
 **3.3 — Tournament timeline**
 
@@ -496,10 +451,9 @@ Output: `reports/03_timestamp_collision_report.csv` — list any sub-1-minute wi
 This is the most important step in this phase. For each canonical player, enumerate all valid `(history_window, target_game)` pairs where:
 - Target game = game N in the player's career sequence
 - History window = games 1 through N-1 (all prior games)
-- The target game is the player's **last game within a given tournament** at some point in their career
 
 For each player, count:
-- Total number of valid prediction targets (last game per tournament appearance)
+- Total number of games (potential prediction targets)
 - Number of targets where prior career games < 3 (cold-start: very little history)
 - Number of targets where prior career games >= 3 (usable)
 - Number of targets where the player also has ≥ 1 prior game **within the same tournament** (within-tournament conditioning available)
@@ -507,7 +461,7 @@ For each player, count:
 
 Aggregate across all players. This tells you: how many total training examples exist, how many are cold-start, and how often within-tournament context is available.
 
-Output: `reports/03_sliding_window_feasibility.csv` (per player)  
+Output: `reports/03_sliding_window_feasibility.csv` (per player)
 Output: `reports/03_sliding_window_summary.md` (aggregate stats — total examples, cold-start fraction, within-tournament context availability)
 
 **3.7 — Head-to-head history analysis**
@@ -535,7 +489,7 @@ Output: `reports/03_head_to_head_coverage.csv`
 
 `games` table exists with exactly one row per replay and `player_a_canonical_id`, `player_b_canonical_id`, `winner_canonical_id` populated. The sliding-window feasibility report exists and you can state: (a) total prediction examples available, (b) cold-start proportion, (c) how often within-tournament context is available.
 
-**Thesis mapping:** Chapter 3 — Dataset, section: Temporal structure and prediction framing
+**Thesis mapping:** §4.2, §4.4.1 — Temporal structure and prediction framing
 
 ---
 
@@ -554,7 +508,7 @@ The `player_stats` view filters `tracker_events_raw` to `event_type = 'PlayerSta
 Validate:
 - Total rows in `player_stats`
 - Distinct `match_id` values — should match `games` count
-- Rows per match per player — should be approximately `elapsed_loops / 160` per player (one snapshot every ~160 loops)
+- Rows per match per player — should be approximately `game_loops / 160` per player (one snapshot every ~160 loops ≈ 7.14 real-time seconds at Faster speed)
 - Distribution of row counts per match (min, median, max, p5, p95)
 - Null rate per column — any of the 39 fields that are systematically null are dead
 
@@ -567,6 +521,8 @@ For 200 randomly sampled games, check that `PlayerStats` events are sampled at r
 - Distribution of diffs — should cluster tightly at 160
 - Flag any game where mean diff deviates > 20% from 160 (irregular sampling)
 - Flag any game with gaps > 500 loops (missed snapshots)
+
+Note: 160 loops ÷ 22.4 loops/s = 7.14 real-time seconds per snapshot.
 
 Output: `reports/04_sampling_regularity.csv`
 
@@ -587,15 +543,27 @@ This is the key statistical analysis for feature selection.
 
 Join `player_stats` to `games` to label each player's snapshots as winner or loser.
 
-At three canonical timepoints — loop 1120 (~70s), loop 2240 (~140s), loop 4480 (~280s) — and at the final snapshot (last `game_loop` per game per player), compute for each of the surviving (non-dead) 39 fields:
-- Mean for winners
-- Mean for losers
+Select canonical timepoints using the real-time conversion table from the
+Reference section above. The timepoints should reflect meaningful game stages:
+
+| Timepoint name | Real-time | Game loops | Rationale |
+|---|---|---|---|
+| `early_game` | ~3 min | ~4,032 | Post-opening, pre-expansion |
+| `mid_game_1` | ~7 min | ~9,408 | First significant economic divergence |
+| `mid_game_2` | ~12 min | ~16,128 | Mid-game army composition set |
+| `late_game` | ~20 min | ~26,880 | Late-game macro differences |
+| `final` | last snapshot | varies | End-of-game state |
+
+For each timepoint: find the closest `PlayerStats` snapshot (nearest `game_loop`).
+
+For each surviving (non-dead) field, compute:
+- Mean for winners, mean for losers
 - Cohen's d = (mean_winner - mean_loser) / pooled_std
-- Two-sided t-test p-value (Bonferroni-corrected for 39 comparisons)
+- Two-sided t-test p-value (Bonferroni-corrected for number of fields tested)
 
 Sort by Cohen's d descending. Fields with |Cohen's d| < 0.1 at all timepoints are weak and should be deprioritised.
 
-Output: `reports/04_winner_loser_separability.csv`  
+Output: `reports/04_winner_loser_separability.csv`
 Output: `reports/04_separability_heatmap.png` — heatmap: fields × timepoints, colour = Cohen's d
 
 **4.5 — Extract and profile `UnitBorn` and `UnitDied` events**
@@ -614,12 +582,12 @@ Build a table `unit_events` in DuckDB.
 Then build a unit type taxonomy CSV `data/unit_type_taxonomy.csv`:
 - List all distinct `unit_type_name` values across a sample of 500 games
 - Classify each as: `worker`, `army_ground`, `army_air`, `building`, `neutral_destructible`, `other`
-- Note which race produces each unit type
+- Note which race produces each unit type (source: Liquipedia unit pages)
 
-This taxonomy is used in Phase 5 feature engineering.
+This taxonomy is used in Phase 7 feature engineering.
 
-Output: DuckDB table `unit_events`  
-Output: `data/unit_type_taxonomy.csv`  
+Output: DuckDB table `unit_events`
+Output: `data/unit_type_taxonomy.csv`
 Output: `reports/04_unit_type_profile.csv` — counts of each unit type born/died across the sample
 
 **4.6 — Extract and profile `Upgrade` events**
@@ -628,10 +596,10 @@ From `tracker_events_raw`, filter to `event_type = 'Upgrade'`. Extract `upgrade_
 
 Build DuckDB table `upgrade_events`. Then compute:
 - Top 50 most frequent upgrades overall
-- Median `game_loop` timing for each upgrade (converted to minutes)
+- Median `game_loop` timing for each upgrade (converted to real-time minutes)
 - Per-race breakdown: which upgrades are exclusively Terran/Protoss/Zerg?
 
-Output: DuckDB table `upgrade_events`  
+Output: DuckDB table `upgrade_events`
 Output: `reports/04_upgrade_timings.csv`
 
 **4.7 — Build order fingerprinting (exploratory)**
@@ -660,9 +628,9 @@ Output: `reports/04_build_order_analysis.md`
 
 ### Gate
 
-You have a ranked list of which of the 39 PlayerStats fields show the strongest winner/loser separation at which timepoints. You have a unit type taxonomy. You know which fields are dead (all zeros). These findings directly determine which features to engineer in Phase 5.
+You have a ranked list of which of the 39 PlayerStats fields show the strongest winner/loser separation at which timepoints. You have a unit type taxonomy. You know which fields are dead (all zeros). These findings directly determine which features to engineer in Phase 7.
 
-**Thesis mapping:** Chapter 4 — Features, section: In-game economic and military indicators
+**Thesis mapping:** §4.3.2 — SC2-specific in-game features
 
 ---
 
@@ -676,15 +644,15 @@ You have a ranked list of which of the 39 PlayerStats fields show the strongest 
 
 **5.1 — Map pool by year**
 
-For each calendar year, list the distinct `map_name` values that appear in `games` and their game counts. SC2 map pools rotate each season.
+For each calendar year, list the distinct `map_name` values that appear in `games` and their game counts. SC2 map pools rotate each competitive season.
 
 Output: `reports/05_map_pool_by_year.csv`
 
 **5.2 — Win rate by map and matchup**
 
-For each (map_name, player_a_race, player_b_race) combination where player_a < player_b alphabetically (canonical matchup ordering):
+For each (map_name, player_a_race, player_b_race) combination where we use canonical matchup ordering (alphabetically smaller race first, e.g. PvT not TvP):
 - Total games
-- Win rate for player_a's race
+- Win rate for the first-listed race
 - 95% Wilson confidence interval
 
 Filter to combinations with ≥ 20 games. Flag combinations where win rate is outside [0.40, 0.60].
@@ -704,13 +672,13 @@ Output: `reports/05_matchup_balance_by_era.csv`
 
 **5.4 — Map size vs. game duration correlation**
 
-Compute `map_area = map_size_x * map_size_y` for each game. Scatter plot and Pearson correlation between map_area and `game_duration_minutes`.
+Compute `map_area = map_size_x * map_size_y` for each game. Scatter plot and Pearson correlation between map_area and `duration_real_minutes`.
 
 Output: `reports/05_map_size_duration_correlation.png`
 
 **5.5 — Race representation by tournament type**
 
-Some tournaments (WCS Korea, IEM) skew toward Korean pros and thus Terran/Zerg. Others (WCS Global) have more Protoss. Compute race proportion per tournament.
+Some tournaments (WCS Korea, GSL) skew toward Korean pros and thus Terran/Zerg. Others (WCS Global) have more diverse representation. Compute race proportion per tournament.
 
 Output: `reports/05_race_representation_by_tournament.csv`
 
@@ -736,13 +704,15 @@ Output: `reports/05_control_feature_decisions.md`
 
 `reports/05_control_feature_decisions.md` exists and contains explicit yes/no decisions with supporting evidence. These decisions are locked in before feature engineering begins.
 
-**Thesis mapping:** Chapter 3 — Dataset, section: Meta-game confounds; Chapter 4 — Features, section: Control variables
+**Thesis mapping:** §4.1.1 context (meta-game confounds), §4.3.1 (control features)
 
 ---
 
 ## Phase 6 — Data cleaning and valid game corpus
 
-**Context:** Based on all findings from Phases 1–5, this phase applies explicit, documented cleaning rules to produce the clean game corpus. Every exclusion is logged with its reason. No data is deleted — all exclusions are implemented as filters (a `is_valid` flag or a `games_clean` view). This is a thesis-auditable step.
+**Context:** Based on all findings from Phases 1–5, this phase applies explicit, documented cleaning rules to produce the clean game corpus. Every exclusion is logged with its reason. No data is deleted — all exclusions are implemented as filters (a `games_clean` view). This is a thesis-auditable step.
+
+**Critical principle:** Every threshold must be justified by either (a) empirical evidence from earlier phases, or (b) a cited precedent from the literature. No magic numbers.
 
 **Inputs:** All tables and reports from Phases 1–5.
 
@@ -754,24 +724,24 @@ Before touching any data, write `reports/06_cleaning_rules.md`. Each rule must r
 
 | Rule ID | Condition | Action | Motivation |
 |---------|-----------|--------|------------|
-| R1 | `game_loops < 1120` | exclude | Phase 1.3: games < 70s are disconnects/surrenders |
+| R1 | `duration_real_minutes < T_min` (threshold T_min derived from Phase 1.3 distribution) | exclude | Phase 1.3: short-game tail analysis. T_min should be chosen based on the observed distribution, annotated game-play landmarks, and precedent (Wu et al. 2017 used 7 min; Białecki et al. 2023 used 9 min). Document the exact choice and its justification. |
 | R2 | No rows in `tracker_events_raw` for this `replay_id` | exclude | Phase 1.1: no event data, cannot compute in-game features |
-| R3 | Player count per game ≠ 2 (after observer/caster exclusion) | exclude | Phase 0.4: not a valid 1v1 game |
-| R4 | Either player's `result` not in {Win, Loss} | exclude | no ground truth label |
-| R5 | Race is `BW%` (Brood War exhibition) | exclude | Phase 0: `flat_players` view already filters this |
-| R6 | Tournament `event_coverage_pct < 20%` (from Phase 1.2) | flag whole tournament | insufficient data quality |
-| R7 | Player appears only with ambiguous identity (unresolved from Phase 2.4) | flag game | degraded player identity confidence |
+| R3 | Player count per game ≠ 2 (after observer/caster exclusion) | exclude | Not a valid 1v1 game |
+| R4 | Either player's `result` not in {Win, Loss} | exclude | No ground truth label |
+| R5 | Race is not in {Terr, Prot, Zerg} (e.g. BW exhibition, Random) | exclude | Non-standard race |
+| R6 | Tournament `event_coverage_pct < 20%` (from Phase 1.2) | flag whole tournament | Insufficient data quality |
+| R7 | Player appears only with ambiguous identity (unresolved from Phase 2.4) | flag game | Degraded player identity confidence |
 
 Add any additional rules discovered during exploration.
 
 **6.2 — Apply rules and create `games_clean` view**
 
-Create a DuckDB view (not a copy) `games_clean` that filters `games` using all R1–R7 rules. Add an `exclusion_reason` column to the base `games` table explaining why each excluded game was removed.
+Create a DuckDB view (not a copy) `games_clean` that filters `games` using all rules. Add an `exclusion_reason` column to the base `games` table explaining why each excluded game was removed.
 
 **6.3 — Cleaning impact report**
 
 For each rule, report:
-- Games excluded by this rule (and this rule alone — not already excluded)
+- Games excluded by this rule (and this rule alone — not already excluded by a higher-priority rule)
 - Tournaments affected
 - Players who lose the most games due to each rule
 
@@ -785,7 +755,7 @@ On `games_clean`:
 - Total tournaments
 - Date range
 - Games per year
-- Overall win rate (sanity check: should be 0.500 exactly, since every game has one winner)
+- Overall win rate (sanity check: should be exactly 0.500, since every game has one winner and one loser)
 - Matchup distribution (ZvT, ZvP, TvP, ZvZ, TvT, PvP counts and percentages)
 
 Output: `reports/06_clean_corpus_summary.md`
@@ -799,15 +769,22 @@ Output: `reports/06_clean_corpus_summary.md`
 
 ### Gate
 
-`games_clean` view exists. Overall win rate is exactly 0.500. Cleaning impact is documented. Every exclusion has a documented rule ID.
+`games_clean` view exists. Overall win rate is exactly 0.500. Cleaning impact is documented. Every exclusion has a documented rule ID with a traceable justification (Phase finding or literature reference).
 
-**Thesis mapping:** Chapter 3 — Dataset, section: Preprocessing and quality filtering
+**Thesis mapping:** §4.2.3 — Preprocessing and quality filtering
 
 ---
 
 ## Phase 7 — Feature engineering
 
-**Context:** With the data exploration complete and the clean corpus established, feature engineering can begin. Features fall into three groups: (A) pre-game context features (available before the match starts — player history, opponent history, head-to-head); (B) in-game snapshot features (from `PlayerStats` at canonical timepoints — ONLY usable for in-game prediction, not pre-game); (C) control features (map, matchup, patch era — decided in Phase 5). Do not mix groups A and B in the same model without understanding the temporal position they represent.
+**Context:** With the data exploration complete and the clean corpus established, feature engineering can begin. Features fall into two groups:
+
+- **Group A — Pre-game features:** Available before the match starts — player history, opponent history, head-to-head, derived skill rating, map, matchup. These are the **common feature set** that can also be computed for AoE2 (using civilisation instead of race, Elo instead of derived Glicko, etc.). This is the primary model.
+- **Group B — In-game snapshot features:** From `PlayerStats` at canonical timepoints. SC2-only (AoE2 has no equivalent). Secondary experiment.
+
+Do not mix groups A and B in the same model without understanding the temporal position they represent.
+
+**Symmetric player treatment (Scientific Invariant #8):** Every feature must be computed identically for both players. The model input for a given game is structured as (focal_player_features, opponent_features, context_features), where the same function produces features for both perspectives.
 
 **Inputs:** `games_clean`, `player_career_sequence`, `player_stats` view, `unit_events`, `upgrade_events`, `canonical_players`, all reports from Phases 1–5.
 
@@ -818,72 +795,104 @@ Output: `reports/06_clean_corpus_summary.md`
 Write `reports/07_feature_specification.md` before writing any feature code:
 
 **Group A — Pre-game features (predict before the game begins)**
-- Player A and B: games played in last 30 days, last 90 days, last 1 year (career window)
-- Player A and B: win rate in last N games (rolling window — use results from `player_career_sequence`)
-- Player A and B: win rate vs. the specific opponent's race
-- Player A and B: win rate on this map (historical)
-- Player A and B: win rate in this tournament type (IEM vs. HomeStory etc.)
-- Head-to-head record between A and B (all prior games)
-- Within-tournament context: player's win/loss record so far in the current tournament (games 1 to M-1)
-- Within-tournament context: opponent's win/loss record so far in the current tournament
-- Career-level summary: total career games, career win rate, career span in days
-- Race matchup encoding (one-hot or ordinal)
-- Map features: map_name (one-hot or embedding), map_size_x, map_size_y
-- Patch era encoding
 
-**Group B — In-game snapshot features (predict during/after game — requires game to have started)**
-- From `player_stats` at loop 1120, 2240, 4480: all surviving non-dead fields (from Phase 4 separability analysis, filtered to |Cohen's d| > 0.2 at any timepoint)
-- Differential features: winner_stat - loser_stat at each timepoint (note: these are only computable for training, not inference without knowing who won)
+Per-player features (computed for both focal and opponent):
+- Derived skill rating: Elo or Glicko-2, computed from the player's match history
+  strictly before the target game (Scientific Invariant #3). Starting rating, K-factor
+  or RD parameters should be documented and tuned.
+  [Reference: Glickman 2001; EsportsBench shows Glicko-2 at 80.13% for SC2]
+- Games played in last 30 days, last 90 days, last 365 days
+- Overall career win rate (all prior games)
+- Win rate in last 10 / 20 / 50 games (rolling window)
+- Win rate vs. the specific opponent's race (all prior games vs. that race)
+- Win rate on this specific map (historical)
+- Head-to-head record against this specific opponent (all prior games)
+- Within-tournament momentum: win/loss record in current tournament so far (games 1..M)
+- Career summary: total career games, career span in days
+- APM: mean APM from last 10 games (available from 2017+; imputed for 2016)
 
-**Note:** Group B features are only valid for a post-hoc or "in-game prediction" model variant. The primary thesis model should use only Group A features. Group B can be a comparison experiment.
+Context features (per-game, not per-player):
+- Race matchup encoding (one-hot for the 6 matchup types)
+- Map features: map_name (one-hot or hashed), map_size_x, map_size_y
+- Patch era encoding (from Phase 5 decision)
+- Rating differential: focal_rating - opponent_rating
 
-**7.2 — Implement Group A feature computation**
+**Group B — In-game snapshot features (SC2 only)**
+- From `player_stats` at the canonical timepoints from Phase 4.4:
+  all surviving non-dead fields with |Cohen's d| > 0.2
+- Differential features: focal_player_stat - opponent_stat at each timepoint
+- Note: both players' stats are computed from the same game state —
+  neither perspective is privileged
 
-All Group A features must be computed with **strict temporal discipline**: for any target game at time T, only information from games before time T (strictly `match_time < T`) may be used.
+**7.2 — Implement derived skill ratings**
 
-Implement as a Python function `compute_pre_game_features(games_clean, player_career_sequence, target_game_id)` that returns a feature vector for a given target game. Then vectorise over all prediction targets identified in Phase 3 (Step 3.6).
+Before computing other features, implement an Elo or Glicko-2 rating system
+that processes the full `games_clean` corpus chronologically:
+
+- For each game in chronological order, update both players' ratings
+- The rating **before** the game is the feature value (strict temporal discipline)
+- Store the full rating history as a table: `player_rating_history`
+  (columns: player_canonical_id, game_id, rating_before, rating_after, ...)
+- Validate: the implied prediction accuracy from ratings alone (P(higher-rated wins))
+  should approximate the ~80% reported by EsportsBench for Glicko-2 on SC2
+
+Output: DuckDB table `player_rating_history`
+Output: `reports/07_rating_system_validation.md`
+
+**7.3 — Implement Group A feature computation**
+
+All Group A features must be computed with **strict temporal discipline**: for any target game at time T, only information from games where `match_time < T` may be used (Scientific Invariant #3).
+
+Implement as a Python function `compute_pre_game_features(games_clean, player_career_sequence, player_rating_history, target_game_id, focal_player_id)` that returns a feature vector for a given target game and focal player. Then vectorise over all games in `games_clean`, computing features for **both** players in each game (two rows per game — one per perspective).
 
 Key implementation constraint: use `player_career_sequence` with `career_game_seq < target_seq` filters — never a naïve `.shift()` on a DataFrame that could leak future information.
 
-Output: `data/features_group_a.parquet` — one row per prediction target
+Output: `data/features_group_a.parquet` — two rows per game (one per player perspective)
 
-**7.3 — Implement Group B feature computation (optional experiment)**
+**7.4 — Implement Group B feature computation (SC2-only experiment)**
 
 For the in-game model variant, compute PlayerStats features at each canonical timepoint per game.
 
-Apply the surviving fields list from Phase 4 (|Cohen's d| > 0.2). Compute differential columns (player_a_stat - player_b_stat).
+Apply the surviving fields list from Phase 4 (|Cohen's d| > 0.2). Compute differential columns (focal_player_stat - opponent_stat).
 
 Output: `data/features_group_b.parquet`
 
-**7.4 — Feature validation**
+**7.5 — Feature validation**
 
 For the Group A features:
 - Null rate per feature column — document and handle (impute with career-prior mean, or use 0 for cold-start players with no prior games)
-- Distribution checks: any features with extreme skew (> 10 std from mean) should be log-transformed or clipped
-- Temporal leakage check: for a sample of 20 target games, manually verify that no feature value for that game depends on any event at or after `match_time` of the target game
+- Distribution checks: any features with extreme skew should be documented; consider log-transform or clipping if needed
+- **Temporal leakage check:** for a random sample of 20 target games, manually verify that no feature value for that game depends on any event at or after `match_time` of the target game. Print the feature values alongside the data that produced them.
+- **Symmetry check:** verify that for a sample of games, swapping focal and opponent player produces the expected mirror of feature values (e.g., focal_win_rate for player A = opponent_win_rate when player B is focal)
 
 Output: `reports/07_feature_validation.md`
 
-**7.5 — Build the prediction target table**
+**7.6 — Build the prediction target table**
 
 Create the final ML-ready table combining features and labels:
 
 | column | description |
 |--------|-------------|
-| `target_game_id` | the game being predicted |
-| `player_focal_id` | the canonical player we are predicting for |
-| `player_opponent_id` | the opponent |
-| `within_tournament_context_games` | how many prior games this player has in this tournament |
+| `game_id` | the game being predicted |
+| `focal_player_id` | the canonical player we are predicting for |
+| `opponent_player_id` | the opponent |
+| `focal_player_name` | for human readability |
+| `opponent_player_name` | for human readability |
+| `within_tournament_context_games` | prior games by focal player in this tournament |
 | `career_prior_games` | total prior career games for focal player |
-| [all Group A feature columns] | |
+| [all Group A feature columns] | prefixed `focal_` and `opp_` for per-player features |
 | `label` | 1 if focal player won, 0 if lost |
 | `split` | train / val / test (assigned in Phase 8) |
+
+**Note on class balance:** Since each game produces two rows (one per perspective), the overall label distribution is exactly 50/50 by construction. This is intentional and correct.
 
 Output: `data/ml_dataset.parquet`
 
 ### Artifacts
 
 - `reports/07_feature_specification.md`
+- DuckDB table: `player_rating_history`
+- `reports/07_rating_system_validation.md`
 - `data/features_group_a.parquet`
 - `data/features_group_b.parquet` (if implemented)
 - `reports/07_feature_validation.md`
@@ -891,15 +900,15 @@ Output: `data/ml_dataset.parquet`
 
 ### Gate
 
-`ml_dataset.parquet` exists. Temporal leakage check passed for sampled games. Null rates documented and handled. `reports/07_feature_specification.md` explicitly distinguishes Group A (pre-game) from Group B (in-game) features.
+`ml_dataset.parquet` exists. Temporal leakage check passed for sampled games. Symmetry check passed. Null rates documented and handled. Rating system validated. `reports/07_feature_specification.md` explicitly distinguishes Group A (pre-game) from Group B (in-game) features.
 
-**Thesis mapping:** Chapter 4 — Features
+**Thesis mapping:** §4.3 — Feature engineering
 
 ---
 
 ## Phase 8 — Train/val/test split construction
 
-**Context:** This is where the correct splitting strategy from the thesis design is implemented. The naïve global temporal split in `processing.py` is replaced with a per-player leave-last-tournament-out strategy combined with within-tournament prediction framing. This is the most thesis-critical implementation step.
+**Context:** This is where the correct splitting strategy from the thesis design is implemented. The naïve global temporal split in `processing.py` is replaced with a per-player temporal split (Scientific Invariant #1).
 
 **Inputs:** `data/ml_dataset.parquet`, `games_clean`, `player_career_sequence`.
 
@@ -909,12 +918,12 @@ Output: `data/ml_dataset.parquet`
 
 The split logic is:
 
-- **Test set:** For each canonical player, their last tournament appearance. The prediction target within that tournament is their last game (game M+1 given games 1 to M within that tournament). This is the prediction target from the sliding window.
+- **Test set:** For each canonical player, their last tournament appearance. All games in that tournament where the player is the focal player go to test.
 - **Validation set:** For each canonical player, their second-to-last tournament appearance (same logic).
 - **Training set:** All remaining games.
 
 Implementation notes:
-- A game can appear in both player A's training and player B's test set (if they played at different points in their respective careers). This is correct behaviour — the split is per-player, not per-game.
+- A game can appear in both player A's training and player B's test set (if they played at different points in their respective careers). This is correct behaviour — the split is per-player, not per-game (Scientific Invariant #1).
 - Players with fewer than 3 tournament appearances cannot have separate train/val/test — flag them as cold-start and exclude from validation/test, keep in training only.
 
 **8.2 — Validate the split**
@@ -922,7 +931,7 @@ Implementation notes:
 For the new split:
 - No player's test target is temporally before their training data
 - No player's validation target is temporally before their training data
-- Class balance (win rate) in train, val, test — should each be ~0.500
+- Class balance (win rate) in train, val, test — should each be ~0.500 (guaranteed by symmetric two-row design)
 - Distribution of `within_tournament_context_games` in test: how often does the model have 0, 1, 2, 3+ prior games in the target tournament?
 - Size of each split: number of examples
 
@@ -930,7 +939,7 @@ Output: `reports/08_split_validation.md`
 
 **8.3 — Baseline win rate by split**
 
-For each split, compute win rate by matchup (ZvT, TvP, etc.). If any matchup in test has win rate significantly different from 0.5, it is a potential confound in the test evaluation.
+For each split, compute win rate by matchup (ZvT, TvP, etc.). If any matchup in test has win rate significantly different from 0.5, it is a potential confound.
 
 Output: `reports/08_split_matchup_balance.csv`
 
@@ -953,7 +962,7 @@ Output: `reports/08_split_comparison.md`
 
 Split is validated. No temporal leakage. Class balance ~0.500 in each split. The split comparison document exists.
 
-**Thesis mapping:** Chapter 4 — Methods, section: Experimental setup and evaluation protocol
+**Thesis mapping:** §4.4.1 — Train/validation/test split strategy
 
 ---
 
@@ -969,20 +978,23 @@ Split is validated. No temporal leakage. Class balance ~0.500 in each split. The
 
 - **Random baseline:** Predicts win probability = 0.5 always. Accuracy = 50%.
 - **Race-matchup baseline:** Predicts the historically more winning race for each matchup. Uses only training set matchup win rates.
+- **Elo/Glicko-2 rating baseline:** Predicts the higher-rated player wins.
+  This is the primary strength-of-schedule baseline.
+  [Reference: EsportsBench reports 80.13% for Glicko-2 on Aligulac SC2 data]
 - **Recent form baseline:** Predicts the player with the higher win rate in their last 10 career games wins.
 - **Head-to-head baseline:** Predicts based on prior head-to-head record. Falls back to recent form if no prior H2H exists.
 
-Evaluate each baseline on the test set: accuracy, log-loss, ROC-AUC, per-matchup accuracy.
+Evaluate each baseline on the test set: accuracy, log-loss, ROC-AUC, per-matchup accuracy, calibration (Brier score).
 
 Output: `reports/09_baseline_results.md`
 
 **9.2 — Sanity check: permutation test**
 
-Shuffle the `label` column randomly (keeping all features intact). Train a logistic regression on shuffled labels. Confirm it achieves ~50% accuracy (no worse than random). This verifies the training pipeline is not broken.
+Shuffle the `label` column randomly (keeping all features intact). Train a logistic regression on shuffled labels. Confirm it achieves ~50% accuracy. This verifies the training pipeline is not broken.
 
 **9.3 — Sanity check: perfect feature leakage test**
 
-Create a "cheat" feature: the actual in-game outcome stat from the final `PlayerStats` snapshot (e.g. `minerals_killed_army` differential at game end). Train a model on this. It should achieve near-100% accuracy. This verifies that the pipeline can distinguish signal from noise and that the join between features and labels is correct.
+Create a "cheat" feature: the actual in-game outcome stat from the final `PlayerStats` snapshot (e.g. `mineralsCurrent` differential at game end). Train a model on this. It should achieve near-100% accuracy. This verifies that the pipeline can distinguish signal from noise and that the join between features and labels is correct.
 
 Output: `reports/09_sanity_checks.md`
 
@@ -993,9 +1005,9 @@ Output: `reports/09_sanity_checks.md`
 
 ### Gate
 
-At least one baseline beats random (otherwise the features contain no signal). Permutation test achieves ~50%. Leakage test achieves near-100%. All sanity checks documented.
+At least one baseline beats random (otherwise the features contain no signal). The Glicko-2 baseline should be in the 75–82% range (consistent with EsportsBench). Permutation test achieves ~50%. Leakage test achieves near-100%. All sanity checks documented.
 
-**Thesis mapping:** Chapter 5 — Experiments, section: Baselines and sanity validation
+**Thesis mapping:** §5.1.1 — SC2 baselines and sanity validation
 
 ---
 
@@ -1009,40 +1021,52 @@ At least one baseline beats random (otherwise the features contain no signal). P
 
 **10.1 — Logistic Regression (interpretable baseline)**
 
-Train with Group A features, evaluate on val set. Record: accuracy, log-loss, ROC-AUC, per-matchup accuracy, calibration curve. Inspect top feature weights — do they make domain sense?
+Train with Group A features, evaluate on val set. Record: accuracy, log-loss, ROC-AUC, per-matchup accuracy, calibration curve. Inspect top feature weights — do they make domain sense? (e.g., rating differential should be the strongest predictor)
 
-**10.2 — Gradient Boosted Trees (LightGBM or XGBoost)**
+**10.2 — Random Forest**
 
-Train with Group A features, tune on val set (learning rate, depth, regularisation). Evaluate on test set only after hyperparameter selection is finalised. Record same metrics plus feature importances.
+Train with Group A features, tune on val set. Record same metrics plus feature importances. This tests whether non-linear interactions improve over LR.
 
-**10.3 — Feature ablation study**
+**10.3 — Gradient Boosted Trees (LightGBM or XGBoost)**
 
-Train LightGBM with each feature group removed in turn:
+Train with Group A features, tune on val set (learning rate, depth, regularisation). Evaluate on test set only after hyperparameter selection is finalised. Record same metrics plus feature importances via SHAP.
+
+**10.4 — Feature ablation study**
+
+Train best-performing model with each feature group removed in turn:
+- Without derived skill ratings (Elo/Glicko)
 - Without within-tournament context features
 - Without head-to-head history
-- Without career-level stats
+- Without career-level stats (win rate, activity)
 - Without control features (map, matchup)
 
 Report accuracy drop for each ablation. This answers which feature groups matter most.
 
 Output: `reports/10_ablation_results.md`
 
-**10.4 — Per-matchup evaluation**
+**10.5 — Per-matchup evaluation**
 
 For the best model, evaluate separately on ZvT, ZvP, TvP, ZvZ, TvT, PvP subsets of the test set. Are some matchups harder to predict than others?
 
-**10.5 — Cold-start analysis**
+**10.6 — Cold-start analysis**
 
-Stratify test set by `career_prior_games` (0–5, 6–20, 21–50, 51+). How does model accuracy vary with career history length? This directly addresses the cold-start problem.
+Stratify test set by `career_prior_games` (0–5, 6–20, 21–50, 51+). How does model accuracy vary with career history length? This directly addresses the cold-start problem (Research Question RQ4).
 
-**10.6 — Optional: GNN experiment**
+**10.7 — In-game prediction experiment (Group B features, SC2 only)**
+
+Using Group B features (PlayerStats at canonical timepoints), train LightGBM at each timepoint. Plot accuracy as a function of real-time game elapsed. Compare to the pre-game model. This produces the "accuracy over time" curve common in the esports prediction literature.
+
+[Reference: Hodge et al. 2021 showed 85% at 5 min for Dota 2; SC2 literature shows accuracy increasing monotonically with game time]
+
+**10.8 — Optional: GNN experiment**
 
 If time permits, implement the GNN model from the existing `sc2/gnn` code. Compare to the tabular models. The key thesis question is: does modelling the player interaction graph add anything beyond the tabular features?
 
-Output: `reports/10_model_results.md`  
-Output: `reports/10_ablation_results.md`  
-Output: `reports/10_per_matchup_results.csv`  
+Output: `reports/10_model_results.md`
+Output: `reports/10_ablation_results.md`
+Output: `reports/10_per_matchup_results.csv`
 Output: `reports/10_cold_start_analysis.csv`
+Output: `reports/10_ingame_accuracy_curve.png` (if 10.7 done)
 
 ### Artifacts
 
@@ -1050,12 +1074,13 @@ Output: `reports/10_cold_start_analysis.csv`
 - `reports/10_ablation_results.md`
 - `reports/10_per_matchup_results.csv`
 - `reports/10_cold_start_analysis.csv`
+- `reports/10_ingame_accuracy_curve.png`
 
 ### Gate
 
-Best model accuracy > best baseline accuracy (otherwise the ML is not adding value). Ablation results document which features drive performance.
+Best model accuracy > best baseline accuracy (otherwise the ML is not adding value). Ablation results document which features drive performance. Results are ready for the thesis Chapter 5.
 
-**Thesis mapping:** Chapter 5 — Experiments, sections: Primary results, Ablation study, Analysis
+**Thesis mapping:** §5.1.2–5.1.4 — SC2 experimental results
 
 ---
 
@@ -1077,7 +1102,8 @@ reports/
   01_parse_quality_by_tournament.csv
   01_parse_quality_summary.md
   01_duration_distribution.csv
-  01_duration_distribution.png
+  01_duration_distribution_full.png
+  01_duration_distribution_short_tail.png
   01_apm_mmr_audit.md
   01_patch_landscape.csv
   01_event_type_inventory.csv
@@ -1111,6 +1137,7 @@ reports/
   06_cleaning_impact.md
   06_clean_corpus_summary.md
   07_feature_specification.md
+  07_rating_system_validation.md
   07_feature_validation.md
   08_split_validation.md
   08_split_matchup_balance.csv
@@ -1121,6 +1148,7 @@ reports/
   10_ablation_results.md
   10_per_matchup_results.csv
   10_cold_start_analysis.csv
+  10_ingame_accuracy_curve.png
 
 data/
   unit_type_taxonomy.csv
@@ -1144,3 +1172,21 @@ The following function in `processing.py` is superseded by Phase 8:
 The following in `cli.py` runs the old pipeline end-to-end including the wrong split:
 
 - `run_pipeline()` — do not use until Phase 8 is complete and the split column in `ml_dataset.parquet` is correct.
+
+---
+
+## Appendix — Key references
+
+| Short cite | Full reference | Used for |
+|---|---|---|
+| Białecki et al. 2023 | Białecki, A. et al. SC2EGSet: SC2 Esport Replay and Game-state Dataset. *Scientific Data* 10(1), 600. | Dataset |
+| Vinyals et al. 2017 | Vinyals, O. et al. StarCraft II: A New Challenge for RL. *arXiv:1708.04782*. | Game loop timing, SC2LE |
+| Wu et al. 2017 | Wu, H. et al. MSC: A Dataset for Macro-Management in SC2. *arXiv:1710.03131*. | Duration threshold (7 min), GRU baseline |
+| Baek & Kim 2022 | Baek, J. & Kim, J. 3D-CNNs for SC2 prediction. *PLOS ONE*. | 90% accuracy benchmark |
+| Khan et al. 2021 | Khan, A. et al. Transformers on SC2 MSC. *IEEE ICMLA*. | Transformer baseline |
+| Glickman 2001 | Glickman, M. The Glicko-2 System. | Rating system |
+| Thorrez 2024 | Thorrez, L. EsportsBench. | Glicko-2 at 80.13% for SC2 |
+| Demšar 2006 | Demšar, J. Statistical Comparisons of Classifiers. *JMLR* 7. | Cross-game statistical comparison |
+| Hodge et al. 2021 | Hodge, V. et al. Dota 2 Win Prediction. *IEEE Trans. Games*. | In-game accuracy curve precedent |
+| Liquipedia | Game Speed article, Cheese strategies | Game loop conversion, short game landmarks |
+| s2client-proto | Blizzard/s2client-proto protocol.md | 22.4 loops/s at Faster speed |
