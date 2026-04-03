@@ -1,0 +1,105 @@
+Tournament Name Extraction Validation
+========================================
+
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/76d34c9c9649d8e170e8f27753f1ec27.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/4dbf94995d4f546974048de68a5f0749.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/c066d99eb8ce851e61e466719548d54a.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/2ecb2426948d7ce92f84047d430fd508.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/5bdc0a40eb15dd15a447f479aee2b3d3.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/ccd8b44e1db3beac28172903089193c7.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/a33e578be6825406c554be56e534fef0.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/8cddf81a9c7c0560a54d505648178984.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/a2c4c0a6e815a71740d5e82d53d73dfa.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2022_HomeStory_Cup_XXI/2022_HomeStory_Cup_XXI_data/e703f17a6f71b10f17cd6ac02b05f56b.SC2Replay.json
+  extracted: 2022_HomeStory_Cup_XXI  expected: 2022_HomeStory_Cup_XXI
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/9c4913929f75db216419756cbdac37b8.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/188d12172bf4eeaa7fbf6fdddd774a51.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/748c63b424f78245726dec05518d9076.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/80f95cd0e5b195663b9a91808ce7d066.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/b7779eb97fafad183b65e40135696e69.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/3ada79359ea5491bb8ea5c9e6dddf0ec.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/5e9d96abb2a026d23d373010a18f1e22.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/d90ec6ec56de65f7ce6d04eb7855dad4.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/5d137b0103c69fa80af36132935f90b1.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_2/2020_StayAtHome_Story_Cup_2_data/509ce013770283291171c55099f2c6b2.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_2  expected: 2020_StayAtHome_Story_Cup_2
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/1f336e0e2fad4da24b199f3fcc915a43.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/19dba9f97dbea6f271ba6ab9c11b033c.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/5926aa2020edcca27e989238698d612f.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/6dbe5b2a56508a55a267fc07ae5aef70.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/45523f5e863dcc3d3a266cbefd490c20.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/0ca70853fb1a9236f09a2e2525fb7dc6.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/10880af4b9a5cf1857aca7453382bc22.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/e6762cbecf49f74e95258db1c1f53f30.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/2a32c6f521fcac9d934eb969425be74d.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2020_StayAtHome_Story_Cup_1/2020_StayAtHome_Story_Cup_1_data/8a8302b605b728a562803ff4b0f3aefe.SC2Replay.json
+  extracted: 2020_StayAtHome_Story_Cup_1  expected: 2020_StayAtHome_Story_Cup_1
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/0a8604fbc6a2763572d7367d4a4ac2b5.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/7ccd17f5951ced7264990de21df6af15.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/e8cb8a600ade171c0a3e25176ba3768f.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/c182a22e3119fc06214c16876b4ea3cf.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/6db485a2fd2623203de5a9b9b0ebc315.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/d52f8eec12aa9f5d8cf6a91e4195e210.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/975fc1daf036edf5d59d8a0070cc8503.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/846c894ead3f5a1cd3dceeb91037ac16.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/1265046d736ebb004fc264e2c6b8ded1.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2017_WESG_Haikou/2017_WESG_Haikou_data/06423b55691dae90487eb9594572f994.SC2Replay.json
+  extracted: 2017_WESG_Haikou  expected: 2017_WESG_Haikou
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/15ad08e3ed7fc167bf455dbe3f1f7d91.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/45add59eb97b5ac01eac21c3749ce037.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/b9411b10de82684c5a2025078373153d.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/74a6039ae628fda57f94e4a7d47a0acc.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/a1f0f8d3104439f506cc69fcf7397995.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/ea69286365b59bd476aa8b7c3dc004a2.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/421a88ce218e57005a8c78f1823c8cd3.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/407c8d1441b9d43ae3211b3b5b9664af.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/f07816f9b5fb1463d96848f44ac1865e.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+[OK] 2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/1a9aeda55b1c48e503b94aca122f41a5.SC2Replay.json
+  extracted: 2016_IEM_10_Taipei  expected: 2016_IEM_10_Taipei
+
+50/50 correct

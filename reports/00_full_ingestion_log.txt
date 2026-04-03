@@ -1,0 +1,10 @@
+Full Path A Ingestion Log
+Elapsed: 92.4s
+Row count: 22390
+Audit total: 22390
+Match: True
+
+APM/MMR zero-rate:
+  total_player_slots: 44817.0
+  apm_zero_or_null: 1132.0
+  mmr_zero_or_null: 37489.0
