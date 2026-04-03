@@ -213,6 +213,7 @@ __marimo__/
 
 # Local project files
 .continue
+_current_plan.md
 
 # SC2-ML project artifacts
 models/*.joblib
