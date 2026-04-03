@@ -19,6 +19,22 @@ merged to `master`.
 
 ### Removed
 
+## [0.10.0] — 2026-04-03 (PR: pending, feat/phase-0-ingestion-audit)
+
+### Added
+- **Phase 0 ingestion audit module** (`src/sc2ml/data/audit.py`): 9 audit functions mapping to roadmap steps 0.1–0.9 — source file audit, tournament name validation, replay_id spec, Path A smoke test (in-memory DuckDB), full Path A ingestion, Path B extraction, Path A↔B join validation, map translation coverage
+- **`raw_enriched` view** in `processing.py`: adds `tournament_dir` and `replay_id` computed columns to `raw` table via `CREATE OR REPLACE VIEW`; `flat_players` now reads from `raw_enriched` instead of `raw`
+- **`create_raw_enriched_view()`** function in `processing.py`, called during `init_database` pipeline
+- **`audit` CLI subcommand**: `poetry run python -m sc2ml.cli audit [--steps 0.1 0.2 ...]` runs Phase 0 audit steps against real data
+- **`run_phase_0_audit()` orchestrator** accepting optional step list for selective execution
+- 14 new tests: `test_audit.py` (10 tests covering all public audit functions), `TestCreateRawEnrichedView` in `test_processing.py` (4 tests)
+
+### Changed
+- `_FLAT_PLAYERS_VIEW_QUERY` now reads from `raw_enriched` instead of `raw`; `tournament_name` derived from `tournament_dir` column instead of inline `split_part()`
+- `init_database()` in `cli.py` now calls `create_raw_enriched_view(con)` between `move_data_to_duck_db` and `load_map_translations`
+- `conftest.py` synthetic filenames updated to use 32-char hex prefixes (`SYNTHETIC_REPLAY_IDS`) matching real replay naming; APM/MMR set to 0 (dead fields)
+- Integration test fixtures and sanity validation fixtures updated to call `create_raw_enriched_view` before `create_ml_views`
+
 ## [0.9.0] — 2026-04-03 (PR: pending, refactor/data-schemas-sql-extraction)
 
 ### Changed

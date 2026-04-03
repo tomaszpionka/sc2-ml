@@ -8,10 +8,60 @@ import pytest
 from sc2ml.data.processing import (
     assign_series_ids,
     create_ml_views,
+    create_raw_enriched_view,
     create_temporal_split,
     get_matches_dataframe,
     validate_temporal_split,
 )
+
+
+class TestCreateRawEnrichedView:
+    """Test the raw_enriched view creation."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_view(self, raw_table_con: duckdb.DuckDBPyConnection) -> None:
+        create_raw_enriched_view(raw_table_con)
+        self.con = raw_table_con
+
+    def test_view_exists(self) -> None:
+        """Scenario: create_raw_enriched_view creates the raw_enriched view."""
+        count = self.con.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_name = 'raw_enriched'"
+        ).fetchone()[0]
+        assert count > 0
+
+    def test_tournament_dir_extracted(self) -> None:
+        """Scenario: All rows have non-null tournament_dir."""
+        nulls = self.con.execute(
+            "SELECT count(*) FROM raw_enriched WHERE tournament_dir IS NULL"
+        ).fetchone()[0]
+        assert nulls == 0
+
+    def test_replay_id_is_32_char_hex(self) -> None:
+        """Scenario: All replay_ids are valid 32-char hex strings."""
+        import re
+
+        rows = self.con.execute("SELECT replay_id FROM raw_enriched").fetchall()
+        for (rid,) in rows:
+            assert re.fullmatch(r"[0-9a-f]{32}", rid), f"Invalid replay_id: {rid}"
+
+    def test_preserves_all_raw_columns(self) -> None:
+        """Scenario: raw_enriched has all original raw columns plus two new ones."""
+        raw_cols = {
+            c[0] for c in self.con.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'raw'"
+            ).fetchall()
+        }
+        enriched_cols = {
+            c[0] for c in self.con.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'raw_enriched'"
+            ).fetchall()
+        }
+        assert raw_cols.issubset(enriched_cols)
+        assert {"tournament_dir", "replay_id"}.issubset(enriched_cols)
 
 
 class TestCreateMlViews:
@@ -19,6 +69,7 @@ class TestCreateMlViews:
 
     @pytest.fixture(autouse=True)
     def _setup_views(self, raw_table_con: duckdb.DuckDBPyConnection) -> None:
+        create_raw_enriched_view(raw_table_con)
         create_ml_views(raw_table_con)
         self.con = raw_table_con
 

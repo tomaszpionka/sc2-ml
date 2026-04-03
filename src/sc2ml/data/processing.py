@@ -23,11 +23,20 @@ logger = logging.getLogger(__name__)
 
 # ── SQL query constants ───────────────────────────────────────────────────────
 
+_RAW_ENRICHED_VIEW_QUERY = """
+    CREATE OR REPLACE VIEW raw_enriched AS
+    SELECT
+        *,
+        split_part(filename, '/', -3) AS tournament_dir,
+        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id
+    FROM raw
+"""
+
 _FLAT_PLAYERS_VIEW_QUERY = """
     CREATE OR REPLACE VIEW flat_players AS
     SELECT
         filename AS match_id,
-        split_part(filename, '/', -3) AS tournament_name,
+        tournament_dir AS tournament_name,
         (details->>'$.timeUTC')::TIMESTAMP AS match_time,
 
         (header->>'$.elapsedGameLoops')::INTEGER AS game_loops,
@@ -52,14 +61,14 @@ _FLAT_PLAYERS_VIEW_QUERY = """
         (entry.value->>'$.isInClan')::BOOLEAN AS is_in_clan,
 
         entry.value->>'$.result' AS result
-    FROM raw
+    FROM raw_enriched
     LEFT JOIN map_translation mt ON mt.foreign_name = (metadata->>'$.mapName'),
          LATERAL json_each(ToonPlayerDescMap) AS entry
     WHERE player_name IS NOT NULL AND player_name != ''
       AND (entry.value->>'$.result') IN ('Win', 'Loss')  -- excludes casters and observers
       AND (entry.value->>'$.race') NOT LIKE 'BW%'        -- excludes Brood War exhibition replays
       AND filename IN (  -- 1v1 matches only (exactly 2 Win/Loss players)
-          SELECT filename FROM raw,
+          SELECT filename FROM raw_enriched,
                  LATERAL json_each(ToonPlayerDescMap) AS e2
           WHERE (e2.value->>'$.result') IN ('Win', 'Loss')
             AND (e2.value->>'$.nickname') IS NOT NULL
@@ -306,6 +315,12 @@ _YEAR_DIST_PER_SPLIT_QUERY = """
 """
 
 
+def create_raw_enriched_view(con: duckdb.DuckDBPyConnection) -> None:
+    """Create the raw_enriched view with tournament_dir and replay_id columns."""
+    con.execute(_RAW_ENRICHED_VIEW_QUERY)
+    logger.info("Created raw_enriched view.")
+
+
 def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
     """Create the two DuckDB views used by the ML pipeline.
 
@@ -313,6 +328,9 @@ def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
                     and casters (no Win/Loss result) excluded.
     matches_flat  — one row per player-pair perspective per match (2 rows per
                     unique match_id), used as the primary ML input table.
+
+    Requires the ``raw_enriched`` view to exist (call
+    ``create_raw_enriched_view`` first).
     """
     logger.info(
         "Creating ML views in DuckDB (map translations + player name unification)..."

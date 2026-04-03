@@ -25,6 +25,7 @@ import pytest
 from sc2ml.data.processing import (
     assign_series_ids,
     create_ml_views,
+    create_raw_enriched_view,
     create_temporal_split,
     get_matches_dataframe,
 )
@@ -145,6 +146,7 @@ def synthetic_con() -> duckdb.DuckDBPyConnection:
         "CREATE TABLE map_translation (foreign_name VARCHAR, english_name VARCHAR)"
     )
 
+    create_raw_enriched_view(con)
     create_ml_views(con)
     assign_series_ids(con)
     create_temporal_split(con)

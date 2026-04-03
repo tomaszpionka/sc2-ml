@@ -7,6 +7,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
+SYNTHETIC_REPLAY_IDS = [
+    "aabbccdd11223344556677889900aa00",
+    "aabbccdd11223344556677889900aa01",
+    "aabbccdd11223344556677889900aa02",
+    "aabbccdd11223344556677889900aa03",
+    "aabbccdd11223344556677889900aa04",
+]
+
 # Sample replay file shipped with the repository
 SAMPLE_REPLAY_PATH = (
     Path(__file__).resolve().parent.parent / "samples" / "raw"
@@ -126,8 +134,8 @@ def _build_toon_player_desc_map(
             "startLocX": 40,
             "startLocY": 20,
             "race": p1_race,
-            "APM": 200,
-            "MMR": 5000,
+            "APM": 0,
+            "MMR": 0,
             "result": p1_result,
             "isInClan": False,
         },
@@ -140,8 +148,8 @@ def _build_toon_player_desc_map(
             "startLocX": 130,
             "startLocY": 150,
             "race": p2_race,
-            "APM": 180,
-            "MMR": 4800,
+            "APM": 0,
+            "MMR": 0,
             "result": p2_result,
             "isInClan": False,
         },
@@ -170,7 +178,7 @@ def raw_table_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConne
         ts = base_ts + pd.Timedelta(days=i * 7)
         tpdm = _build_toon_player_desc_map(p1, p2, r1, r2, result)
         rows.append({
-            "filename": f"{tourn}/data/match_{i:04d}.SC2Replay.json",
+            "filename": f"{tourn}/{tourn}_data/{SYNTHETIC_REPLAY_IDS[i]}.SC2Replay.json",
             "header": json.dumps({"elapsedGameLoops": 8000 + i * 500}),
             "initData": json.dumps({
                 "gameDescription": {"mapSizeX": 200, "mapSizeY": 200},

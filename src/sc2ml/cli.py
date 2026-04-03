@@ -11,6 +11,7 @@ from sc2ml.data.ingestion import load_map_translations, move_data_to_duck_db
 from sc2ml.data.processing import (
     assign_series_ids,
     create_ml_views,
+    create_raw_enriched_view,
     create_temporal_split,
     get_matches_dataframe,
     validate_data_split_sql,
@@ -59,6 +60,7 @@ def init_database(con: duckdb.DuckDBPyConnection, *, should_drop: bool = False) 
     """
     logger.info("=== Initializing database (Path A) ===")
     move_data_to_duck_db(con, should_drop=should_drop)
+    create_raw_enriched_view(con)
     load_map_translations(con)
     create_ml_views(con)
     assign_series_ids(con)
@@ -198,6 +200,13 @@ def main() -> None:
     # sanity subcommand
     subparsers.add_parser("sanity", help="Phase 0: data & model sanity validation")
 
+    # audit subcommand
+    audit_parser = subparsers.add_parser("audit", help="Phase 0: ingestion audit")
+    audit_parser.add_argument(
+        "--steps", nargs="*", default=None,
+        help="Steps to run (e.g. 0.1 0.2). Omit for all.",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -222,6 +231,9 @@ def main() -> None:
 
     elif args.command == "sanity":
         _run_sanity_command()
+
+    elif args.command == "audit":
+        _run_audit_command(args.steps)
 
     else:
         # Default: run pipeline (backward-compatible)
@@ -408,6 +420,19 @@ def _run_sanity_command() -> None:
             )
     finally:
         con.close()
+
+
+def _run_audit_command(steps: list[str] | None) -> None:
+    """Run Phase 0 ingestion audit."""
+    from sc2ml.data.audit import run_phase_0_audit
+
+    con = duckdb.connect(str(DB_FILE))
+    try:
+        results = run_phase_0_audit(con, steps=steps)
+        logger.info(f"Audit complete. Steps run: {list(results.keys())}")
+    finally:
+        con.close()
+        logger.info("DuckDB connection closed.")
 
 
 if __name__ == "__main__":

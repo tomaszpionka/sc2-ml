@@ -18,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sc2ml.data.processing import (
     assign_series_ids,
     create_ml_views,
+    create_raw_enriched_view,
     create_temporal_split,
     get_matches_dataframe,
 )
@@ -66,6 +67,8 @@ def raw_con() -> duckdb.DuckDBPyConnection:
     con.execute(
         "CREATE TABLE map_translation (foreign_name VARCHAR, english_name VARCHAR)"
     )
+
+    create_raw_enriched_view(con)
 
     yield con
     con.close()
@@ -154,6 +157,7 @@ def synthetic_pipeline_con() -> duckdb.DuckDBPyConnection:
     )
 
     # Run full processing chain
+    create_raw_enriched_view(con)
     create_ml_views(con)
     assign_series_ids(con)
     create_temporal_split(con)
