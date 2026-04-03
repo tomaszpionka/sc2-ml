@@ -1,6 +1,7 @@
 """Data ingestion, processing, and temporal splitting for the SC2 ML pipeline.
 
 Submodules:
+    schemas     — PyArrow schemas and PLAYER_STATS_FIELD_MAP for Parquet event files.
     ingestion   — Raw replay loading (JSON to DuckDB) and in-game event extraction
                   (replay to Parquet to DuckDB).
     processing  — DuckDB view creation, series grouping, and temporal train/val/test

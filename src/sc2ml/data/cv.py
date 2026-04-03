@@ -34,15 +34,11 @@ class ExpandingWindowCV:
     (train, val) index pairs where the training window grows monotonically
     and the validation window slides forward.
 
-    Parameters
-    ----------
-    n_splits : int
-        Number of CV folds.
-    min_train_frac : float
-        Minimum fraction of data used for the first training window.
-    series_ids : array-like or None
-        If provided, fold boundaries are snapped so that no series is
-        split across train and validation.
+    Args:
+        n_splits: Number of CV folds.
+        min_train_frac: Minimum fraction of data used for the first training window.
+        series_ids: If provided, fold boundaries are snapped so that no series is
+            split across train and validation.
     """
 
     def __init__(
@@ -81,11 +77,10 @@ class ExpandingWindowCV:
     ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
         """Yield (train_indices, val_indices) tuples.
 
-        Parameters
-        ----------
-        X : array-like with shape (n_samples, ...)
-            Used only to determine ``n_samples``.
-        y, groups : ignored (present for sklearn compatibility)
+        Args:
+            X: Used only to determine ``n_samples``.
+            y: Ignored (present for sklearn compatibility).
+            groups: Ignored (present for sklearn compatibility).
         """
         if X is None:
             raise ValueError("X must be provided to determine n_samples")

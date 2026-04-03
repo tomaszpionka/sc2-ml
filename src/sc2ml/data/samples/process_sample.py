@@ -1,10 +1,15 @@
 """Strip heavy event arrays from sample SC2Replay JSON files.
 
+.. deprecated::
+    This script mirrors the now-deprecated Path A trimming logic.
+    Use ``run_in_game_extraction()`` for Path B (in-game features) instead.
+
 Mirrors the trimming logic in sc2ml.data.ingestion.slim_down_sc2_with_manifest(),
 but operates on local sample files without the manifest system.
 """
 
 import json
+import warnings
 from pathlib import Path
 
 SAMPLES_DIR = Path(__file__).resolve().parent
@@ -15,6 +20,12 @@ KEYS_TO_REMOVE = {"messageEvents", "gameEvents", "trackerEvents"}
 
 
 def main() -> None:
+    warnings.warn(
+        "process_sample is deprecated. Use run_in_game_extraction() "
+        "for Path B (in-game features) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     PROCESSED_DIR.mkdir(exist_ok=True)
 
     for raw_file in RAW_DIR.glob("*.SC2Replay.json"):
