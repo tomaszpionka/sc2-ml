@@ -9,8 +9,9 @@ Uses the sample replay file (sOs vs ByuN) shipped in samples/raw/ to verify:
 - move_data_to_duck_db loads JSON replays into DuckDB
 """
 import json
+import logging
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import duckdb
 import pytest
@@ -20,11 +21,15 @@ from sc2ml.data.ingestion import (
     _build_game_event_rows,
     _build_metadata_rows,
     _build_tracker_rows,
+    _collect_pending_files,
     _load_manifest,
     _save_manifest,
+    audit_raw_data_availability,
     extract_raw_events_from_file,
     load_in_game_data_to_duckdb,
+    load_map_translations,
     move_data_to_duck_db,
+    run_in_game_extraction,
     save_raw_events_to_parquet,
     slim_down_sc2_with_manifest,
 )
@@ -493,3 +498,143 @@ class TestMoveDataToDuckDb:
         row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
         assert row_count == 3  # Not doubled
         con.close()
+
+
+class TestAuditRawDataAvailability:
+    """Test audit_raw_data_availability with synthetic replay directories."""
+
+    def test_empty_dir_returns_zero_counts(self, tmp_path: Path) -> None:
+        source = tmp_path / "replays"
+        source.mkdir()
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source):
+            counts = audit_raw_data_availability()
+
+        assert counts["total"] == 0
+        assert counts["has_tracker"] == 0
+        assert counts["has_game"] == 0
+        assert counts["has_both"] == 0
+        assert counts["stripped"] == 0
+
+    def test_mixed_files(self, tmp_path: Path) -> None:
+        data_dir = tmp_path / "replays" / "tournament" / "data"
+        data_dir.mkdir(parents=True)
+
+        # File with both events
+        (data_dir / "both.SC2Replay.json").write_text(
+            json.dumps({"trackerEvents": [{}], "gameEvents": [{}]})
+        )
+        # File with tracker only
+        (data_dir / "tracker.SC2Replay.json").write_text(
+            json.dumps({"trackerEvents": [{}]})
+        )
+        # Stripped file
+        (data_dir / "stripped.SC2Replay.json").write_text(
+            json.dumps({"header": {}})
+        )
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+            counts = audit_raw_data_availability()
+
+        assert counts["total"] == 3
+        assert counts["has_both"] == 1
+        assert counts["has_tracker"] == 2
+        assert counts["has_game"] == 1
+        assert counts["stripped"] == 1
+
+
+class TestLoadMapTranslations:
+    """Test load_map_translations with synthetic mapping files."""
+
+    def test_with_translation_files(self, tmp_path: Path) -> None:
+        source = tmp_path / "replays" / "tourn" / "data"
+        source.mkdir(parents=True)
+        mapping = {"MapKorean": "Map English LE", "AltitudeKR": "Altitude LE"}
+        (source / "map_foreign_to_english_mapping.json").write_text(json.dumps(mapping))
+
+        con = duckdb.connect(":memory:")
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+            load_map_translations(con)
+
+        count = con.execute("SELECT count(*) FROM map_translation").fetchone()[0]
+        assert count == 2
+        con.close()
+
+    def test_no_translation_files_warns(self, tmp_path: Path, caplog) -> None:
+        source = tmp_path / "replays"
+        source.mkdir()
+
+        con = duckdb.connect(":memory:")
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             caplog.at_level(logging.WARNING):
+            load_map_translations(con)
+
+        assert "No map translation dictionaries found" in caplog.text
+        # Table should NOT exist
+        tables = con.execute(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_name = 'map_translation'"
+        ).fetchall()
+        assert len(tables) == 0
+        con.close()
+
+
+class TestCollectPendingFiles:
+    """Test _collect_pending_files with manifest filtering."""
+
+    def test_filters_already_done(self, tmp_path: Path) -> None:
+        data_dir = tmp_path / "replays" / "tourn" / "data"
+        data_dir.mkdir(parents=True)
+        (data_dir / "done.SC2Replay.json").write_text("{}")
+        (data_dir / "pending.SC2Replay.json").write_text("{}")
+
+        manifest = {"tourn/data/done.SC2Replay.json": True}
+
+        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+            pending = _collect_pending_files(manifest)
+
+        assert len(pending) == 1
+        assert pending[0].name == "pending.SC2Replay.json"
+
+
+class TestRunInGameExtraction:
+    """Test run_in_game_extraction with mocked Pool."""
+
+    @patch("sc2ml.data.ingestion.save_raw_events_to_parquet")
+    @patch("sc2ml.data.ingestion._save_manifest")
+    @patch("sc2ml.data.ingestion._collect_pending_files")
+    @patch("sc2ml.data.ingestion._load_manifest", return_value={})
+    def test_mock_pool_batches(
+        self, m_load, m_collect, m_save_manifest, m_save_parquet, tmp_path: Path
+    ) -> None:
+        # Simulate 3 pending files that each produce a result
+        fake_paths = [tmp_path / f"f{i}.json" for i in range(3)]
+        m_collect.return_value = fake_paths
+
+        fake_results = [
+            {"match_id": f"m{i}", "tracker_events": [], "game_events": [], "player_map": {}}
+            for i in range(3)
+        ]
+
+        mock_pool = MagicMock()
+        mock_pool.__enter__ = MagicMock(return_value=mock_pool)
+        mock_pool.__exit__ = MagicMock(return_value=False)
+        mock_pool.imap_unordered.return_value = iter(fake_results)
+
+        with patch("sc2ml.data.ingestion.multiprocessing.Pool", return_value=mock_pool), \
+             patch("sc2ml.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+            run_in_game_extraction(
+                parquet_dir=tmp_path / "parquet", max_workers=1, batch_size=2,
+            )
+
+        # 3 results with batch_size=2 → 2 calls to save_parquet (batch of 2, then 1)
+        assert m_save_parquet.call_count == 2
+
+    @patch("sc2ml.data.ingestion._collect_pending_files", return_value=[])
+    @patch("sc2ml.data.ingestion._load_manifest", return_value={})
+    def test_empty_pending_returns_early(self, m_load, m_collect, tmp_path: Path) -> None:
+        with patch("sc2ml.data.ingestion.multiprocessing.Pool") as m_pool, \
+             patch("sc2ml.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+            run_in_game_extraction(parquet_dir=tmp_path / "parquet")
+
+        m_pool.assert_not_called()
