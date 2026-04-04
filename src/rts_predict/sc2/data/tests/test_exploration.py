@@ -220,7 +220,7 @@ def exploration_con() -> duckdb.DuckDBPyConnection:
 
 class TestCorpusSummary:
     def test_corpus_dimensions(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         dims = result["dimensions"]
@@ -228,7 +228,7 @@ class TestCorpusSummary:
         assert dims["total_tournaments"] == 2
 
     def test_event_coverage(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         ec = result["event_coverage"]
@@ -238,14 +238,14 @@ class TestCorpusSummary:
         assert ec["missing_events"] == 0
 
     def test_player_count_anomalies_csv(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         assert result["player_count_anomalies"] > 0
         assert (tmp_path / "01_player_count_anomalies.csv").exists()
 
     def test_result_audit_contains_sql(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         run_corpus_summary(exploration_con, output_dir=tmp_path)
         md = (tmp_path / "01_result_field_audit.md").read_text()
@@ -253,14 +253,14 @@ class TestCorpusSummary:
         assert "entry.value->>'$.result'" in md
 
     def test_result_anomalies_detected(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         anomalous = result["result_anomalous"]
         assert anomalous["multiple_winner_replays"] >= 1
 
     def test_duplicate_detected(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_corpus_summary
+        from rts_predict.sc2.data.exploration import run_corpus_summary
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         assert len(result["duplicate_list"]) > 0
@@ -271,7 +271,7 @@ class TestCorpusSummary:
 
 class TestParseQuality:
     def test_parse_quality_csv_columns(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_parse_quality_by_tournament
+        from rts_predict.sc2.data.exploration import run_parse_quality_by_tournament
 
         run_parse_quality_by_tournament(exploration_con, output_dir=tmp_path)
         df = pd.read_csv(tmp_path / "01_parse_quality_by_tournament.csv")
@@ -283,7 +283,7 @@ class TestParseQuality:
         assert expected_cols.issubset(set(df.columns))
 
     def test_parse_quality_sorted_by_coverage(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_parse_quality_by_tournament
+        from rts_predict.sc2.data.exploration import run_parse_quality_by_tournament
 
         run_parse_quality_by_tournament(exploration_con, output_dir=tmp_path)
         df = pd.read_csv(tmp_path / "01_parse_quality_by_tournament.csv")
@@ -296,13 +296,13 @@ class TestParseQuality:
 
 class TestDurationDistribution:
     def test_duration_csv_created(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_duration_distribution
+        from rts_predict.sc2.data.exploration import run_duration_distribution
 
         run_duration_distribution(exploration_con, output_dir=tmp_path)
         assert (tmp_path / "01_duration_distribution.csv").exists()
 
     def test_duration_png_created(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_duration_distribution
+        from rts_predict.sc2.data.exploration import run_duration_distribution
 
         run_duration_distribution(exploration_con, output_dir=tmp_path)
         full_png = tmp_path / "01_duration_distribution_full.png"
@@ -311,7 +311,7 @@ class TestDurationDistribution:
         assert short_png.exists() and short_png.stat().st_size > 0
 
     def test_duration_percentile_ordering(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_duration_distribution
+        from rts_predict.sc2.data.exploration import run_duration_distribution
 
         result = run_duration_distribution(exploration_con, output_dir=tmp_path)
         p = result["percentiles"]
@@ -320,7 +320,7 @@ class TestDurationDistribution:
         assert p["p75"] <= p["p90"] <= p["p95"] <= p["p99"]
 
     def test_conversion_correctness(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_duration_distribution
+        from rts_predict.sc2.data.exploration import run_duration_distribution
 
         result = run_duration_distribution(exploration_con, output_dir=tmp_path)
         # 13440 loops / 22.4 / 60 = 10.0 min exactly
@@ -336,7 +336,7 @@ class TestDurationDistribution:
 
 class TestApmMmrAudit:
     def test_apm_mmr_md_contains_sql(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_apm_mmr_audit
+        from rts_predict.sc2.data.exploration import run_apm_mmr_audit
 
         run_apm_mmr_audit(exploration_con, output_dir=tmp_path)
         md = (tmp_path / "01_apm_mmr_audit.md").read_text()
@@ -349,7 +349,7 @@ class TestApmMmrAudit:
 
 class TestPatchLandscape:
     def test_patch_landscape_csv(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_patch_landscape
+        from rts_predict.sc2.data.exploration import run_patch_landscape
 
         run_patch_landscape(exploration_con, output_dir=tmp_path)
         df = pd.read_csv(tmp_path / "01_patch_landscape.csv")
@@ -364,7 +364,7 @@ class TestPatchLandscape:
 
 class TestEventTypeInventory:
     def test_event_inventory_csv(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_event_type_inventory
+        from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         result = run_event_type_inventory(exploration_con, output_dir=tmp_path)
         inventory = result["inventory"]
@@ -374,7 +374,7 @@ class TestEventTypeInventory:
         assert "UnitDied" in event_types
 
     def test_zero_playerstats_detected(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_event_type_inventory
+        from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         result = run_event_type_inventory(exploration_con, output_dir=tmp_path)
         zps = result["zero_playerstats"]
@@ -382,7 +382,7 @@ class TestEventTypeInventory:
         assert zps["zero_playerstats_replays"] == 0
 
     def test_event_density_by_year(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_event_type_inventory
+        from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         run_event_type_inventory(exploration_con, output_dir=tmp_path)
         df = pd.read_csv(tmp_path / "01_event_density_by_year.csv")
@@ -393,7 +393,7 @@ class TestEventTypeInventory:
         assert 2021 in years or 2021.0 in years
 
     def test_outlier_flagging(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_event_type_inventory
+        from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         run_event_type_inventory(exploration_con, output_dir=tmp_path)
         df = pd.read_csv(tmp_path / "01_event_density_by_tournament.csv")
@@ -405,14 +405,14 @@ class TestEventTypeInventory:
 
 class TestPlayerStatsSampling:
     def test_sampling_deterministic(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_playerstats_sampling_check
+        from rts_predict.sc2.data.exploration import run_playerstats_sampling_check
 
         r1 = run_playerstats_sampling_check(exploration_con, output_dir=tmp_path)
         r2 = run_playerstats_sampling_check(exploration_con, output_dir=tmp_path)
         assert r1["per_game"] == r2["per_game"]
 
     def test_consistent_interval_no_flag(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_playerstats_sampling_check
+        from rts_predict.sc2.data.exploration import run_playerstats_sampling_check
 
         result = run_playerstats_sampling_check(exploration_con, output_dir=tmp_path)
         # 2020 games have 160-loop interval — should NOT be flagged
@@ -420,7 +420,7 @@ class TestPlayerStatsSampling:
         assert 2020 not in flagged
 
     def test_irregular_interval_flagged(self, exploration_con, tmp_path):
-        from sc2ml.data.exploration import run_playerstats_sampling_check
+        from rts_predict.sc2.data.exploration import run_playerstats_sampling_check
 
         result = run_playerstats_sampling_check(exploration_con, output_dir=tmp_path)
         # 2021 games have 240-loop interval — 50% deviation > 20% threshold
@@ -434,8 +434,8 @@ class TestPlayerStatsSampling:
 class TestOrchestrator:
     def test_orchestrator_all_steps(self, exploration_con, tmp_path):
         # Patch REPORTS_DIR for test isolation
-        import sc2ml.data.exploration as mod
-        from sc2ml.data.exploration import run_phase_1_exploration
+        import rts_predict.sc2.data.exploration as mod
+        from rts_predict.sc2.data.exploration import run_phase_1_exploration
         original = mod.REPORTS_DIR
         mod.REPORTS_DIR = tmp_path
         try:
@@ -445,8 +445,8 @@ class TestOrchestrator:
             mod.REPORTS_DIR = original
 
     def test_orchestrator_selective(self, exploration_con, tmp_path):
-        import sc2ml.data.exploration as mod
-        from sc2ml.data.exploration import run_phase_1_exploration
+        import rts_predict.sc2.data.exploration as mod
+        from rts_predict.sc2.data.exploration import run_phase_1_exploration
         original = mod.REPORTS_DIR
         mod.REPORTS_DIR = tmp_path
         try:

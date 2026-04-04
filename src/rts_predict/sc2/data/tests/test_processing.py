@@ -5,7 +5,7 @@ Uses an in-memory DuckDB with synthetic matches_flat data from conftest.py.
 import duckdb
 import pytest
 
-from sc2ml.data.processing import (
+from rts_predict.sc2.data.processing import (
     assign_series_ids,
     create_ml_views,
     create_raw_enriched_view,

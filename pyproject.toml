@@ -7,10 +7,10 @@ requires-python = ">=3.12,<3.13"
 dynamic = ["dependencies"]
 
 [project.scripts]
-sc2ml = "sc2ml.cli:main"
+sc2 = "rts_predict.sc2.cli:main"
 
 [tool.poetry]
-packages = [{include = "sc2ml", from = "src"}]
+packages = [{include = "rts_predict", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
@@ -64,7 +64,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/sc2ml"]
+source = ["src/rts_predict"]
 omit = ["**/tests/*"]
 
 [tool.coverage.report]

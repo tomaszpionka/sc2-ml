@@ -17,7 +17,7 @@ import logging
 import duckdb
 import pandas as pd
 
-from sc2ml.config import SERIES_GAP_SECONDS
+from rts_predict.sc2.config import SERIES_GAP_SECONDS
 
 logger = logging.getLogger(__name__)
 

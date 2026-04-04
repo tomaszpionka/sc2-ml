@@ -14,19 +14,22 @@ from pathlib import Path
 
 import duckdb
 
-from sc2ml.config import IN_GAME_MANIFEST_PATH, IN_GAME_PARQUET_DIR, REPLAYS_SOURCE_DIR
-from sc2ml.data.ingestion import (
+from rts_predict.sc2.config import (
+    IN_GAME_MANIFEST_PATH,
+    IN_GAME_PARQUET_DIR,
+    REPLAYS_SOURCE_DIR,
+    REPORTS_DIR,
+)
+from rts_predict.sc2.data.ingestion import (
     audit_raw_data_availability,
     load_in_game_data_to_duckdb,
     load_map_translations,
     move_data_to_duck_db,
     run_in_game_extraction,
 )
-from sc2ml.data.processing import create_raw_enriched_view
+from rts_predict.sc2.data.processing import create_raw_enriched_view
 
 logger = logging.getLogger(__name__)
-
-REPORTS_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "reports"
 
 _REPLAY_ID_REGEX = r"([0-9a-f]{32})\.SC2Replay\.json$"
 

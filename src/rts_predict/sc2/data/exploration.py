@@ -17,13 +17,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from sc2ml.config import RANDOM_SEED
+from rts_predict.sc2.config import RANDOM_SEED, REPORTS_DIR
 
 matplotlib.use("Agg")
 
 logger = logging.getLogger(__name__)
-
-REPORTS_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "reports"
 
 # ── Domain constants (Scientific Invariant #6) ──────────────────────────────
 # Source: Blizzard s2client-proto protocol.md — "22.4 gameloops per second"
