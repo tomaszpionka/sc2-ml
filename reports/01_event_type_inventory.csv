@@ -1,0 +1,11 @@
+event_type,total_rows,replays_with_type,avg_per_replay,median_per_replay
+UnitBorn,22372489.0,22390,999.2,682
+UnitDied,16053834.0,22361,717.9,390
+UnitTypeChange,10999108.0,22281,493.7,309
+PlayerStats,4558736.0,22390,203.6,185
+UnitInit,3151270.0,22366,140.9,118
+UnitDone,3018764.0,22358,135.0,113
+UnitPositions,941249.0,22345,42.1,36
+Upgrade,797987.0,22385,35.6,32
+UnitOwnerChange,65157.0,5684,11.5,4
+PlayerSetup,44817.0,22390,2.0,2
