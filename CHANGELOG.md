@@ -19,6 +19,17 @@ merged to `master`.
 
 ### Removed
 
+## [0.13.1] — 2026-04-04 (PR: pending, chore/housekeeping-workflow-and-roadmap)
+
+### Changed
+- **Workflow guard**: skip pytest/ruff/mypy on commits with no `.py` files staged
+- **mypy scope**: broadened from `src/sc2ml/` to `src/` to cover future packages
+- **Roadmap Phase 0**: restored full plan content (context, known issues, steps 0.1–0.9, artifacts, gate) above the "Status: complete" line
+- **Roadmap Phase 1**: expanded context paragraph (references Phase 0 findings, adds `game_events_raw` and `match_player_map` as inputs); step 1.1 split into sub-sections A and B
+
+### Added
+- `src/aoe2/.gitkeep` — placeholder directory reserves the package slot for future AoE2 integration
+
 ## [0.13.0] — 2026-04-04 (PR: pending, feature/phase-1-corpus-inventory)
 
 ### Added
