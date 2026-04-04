@@ -32,10 +32,11 @@ When asked to wrap up changes into a PR, Claude must complete all of the followi
 steps autonomously in order before handing off:
 
 ### Step 1 — Verify all checks pass
+Skip if there is no .py file in the staged files, otherwise:
 ```bash
 poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing
 poetry run ruff check src/ tests/
-poetry run mypy src/sc2ml/
+poetry run mypy src/
 ```
 
 All three must be clean. Do not proceed if any fail.
