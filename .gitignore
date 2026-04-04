@@ -101,8 +101,8 @@ ipython_config.py
 # uv.lock
 
 # poetry
-#   poetry.lock is committed for reproducibility (see CLAUDE.md)
-# poetry.toml
+#   poetry.lock is ignored, requirements.txt will be generated for reproducibility.
+poetry.lock
 
 # pdm
 #   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
@@ -215,6 +215,9 @@ __marimo__/
 .continue
 in_game_processing_manifest.json
 tmp/
+**/data/samples/raw/*
+!**/data/samples/raw/
+!**/data/samples/raw/.gitkeep
 
 # SC2-ML project artifacts
 models/*.joblib
@@ -226,3 +229,6 @@ logs/
 # DuckDB temp files
 *.duckdb-wal
 *.duckdb-shm
+
+# Other files to ignore
+**/.DS_Store
