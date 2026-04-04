@@ -4,7 +4,7 @@
 
 Before proposing any commit, run and resolve all issues:
 1. `poetry run ruff check src/ tests/`
-2. `poetry run mypy src/sc2ml/`
+2. `poetry run mypy src/rts_predict/`
 3. `poetry run pytest tests/ -v`
 
 ## Type Hints
@@ -39,8 +39,8 @@ strings. Separate `.sql` files are not used.
 
 ## Package Layout
 
-- `src/sc2ml/` with subpackages (`data`, `features`, `models`, `gnn`)
-- Imports use `from sc2ml.* import ...`
+- `src/rts_predict/sc2/` with subpackages (`data`, `features`, `models`, `gnn`)
+- Imports use `from rts_predict.sc2.* import ...`
 
 ## Linting Configuration (in `pyproject.toml`)
 
