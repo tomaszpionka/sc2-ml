@@ -16,6 +16,17 @@ merged to `master`.
 - **Step 1**: Moved `src/aoe2/` → `src/rts_predict/aoe2/` via `git mv`
 - **Step 1**: Created `src/rts_predict/__init__.py` with `__version__ = "0.14.0"` (single version source)
 - **Step 1**: Created `src/rts_predict/common/` placeholder directory
+- **Step 2**: Moved SC2 phase artifacts (`reports/00_*`, `reports/01_*`, `sanity_validation.md`, `archive/`) → `src/rts_predict/sc2/reports/` via `git mv`
+- **Step 2**: Renamed `SC2ML_THESIS_ROADMAP.md` → `SC2_THESIS_ROADMAP.md` during move
+- **Step 2**: `reports/` now contains only cross-cutting `research_log.md`
+
+### Added
+- **Step 2.5**: `src/rts_predict/sc2/PHASE_STATUS.yaml` — machine-readable SC2 phase progress
+- **Step 2.5**: `src/rts_predict/aoe2/PHASE_STATUS.yaml` — AoE2 placeholder
+- **Step 2.6**: `src/rts_predict/common/CONTRACT.md` — shared vs game-specific boundary rules
+- **Step 2.6**: `src/rts_predict/common/__init__.py`, `src/rts_predict/aoe2/__init__.py` — placeholder modules
+- **Step 2.7**: `thesis/chapters/REVIEW_QUEUE.md` — Pass 1 → Pass 2 thesis handoff tracker
+- **Step 2.7**: `.claude/chat-handoff.md` — Claude Code → Claude Chat handoff protocol
 
 *Part of repo reorganization (`chore/repo-reorganization`). Imports and references not yet updated — package will not resolve until subsequent steps complete the migration.*
 

@@ -1,0 +1,50 @@
+# SC2 phase progress — machine-readable status for Claude Code session start
+# Updated after each phase gate is met. Claude Code reads this FIRST to know
+# where the project stands without parsing the full roadmap.
+#
+# Statuses: not_started | in_progress | complete
+# gate_date: ISO date when the gate condition was verified
+# notes: brief context for the current state
+
+game: sc2
+roadmap: src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md
+current_phase: 1  # The phase currently being worked on (highest non-complete)
+
+phases:
+  0:
+    name: "Ingestion audit and raw table design"
+    status: complete
+    gate_date: "2026-04-03"
+    notes: "22,390 replays, 62M tracker rows, 609M game events, 188 maps. All 5 gate conditions met."
+  1:
+    name: "Corpus inventory and data exploration"
+    status: in_progress
+    started: "2026-04-04"
+    notes: "Steps 1.1–1.7 complete (16 report artifacts produced). Step 1.8 (game settings and field completeness audit) pending."
+  2:
+    name: "Player identity resolution"
+    status: not_started
+  3:
+    name: "Games table construction"
+    status: not_started
+  4:
+    name: "In-game statistics profiling"
+    status: not_started
+  5:
+    name: "Meta-game analysis"
+    status: not_started
+  6:
+    name: "Data cleaning"
+    status: not_started
+  7:
+    name: "Feature engineering"
+    status: not_started
+  8:
+    name: "Train/val/test split"
+    status: not_started
+  9:
+    name: "Baselines"
+    status: not_started
+  10:
+    name: "Model training and evaluation"
+    status: not_started
