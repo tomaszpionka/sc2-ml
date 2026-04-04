@@ -53,7 +53,7 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | Thesis | `thesis/` | Chapters, figures, tables, bibliography |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` | Pass 1→2 handoff for thesis writing |
 | Scientific invariants | `.claude/scientific-invariants.md` | Methodology constraints (apply to all games) |
-| Chat handoff | `.claude/chat-handoff.md` | Claude Code → Claude Chat protocol |
+| Thesis writing | `.claude/rules/thesis-writing.md` | Writing workflow + Chat handoff (loads on thesis/ touch) |
 
 ## Progress tracking
 
@@ -75,11 +75,11 @@ The changelog (`CHANGELOG.md`) tracks code changes per version. The research log
 
 ## Thesis writing workflow (two-pass)
 
-See `.claude/thesis-writing.md` for full details. Summary:
+See `.claude/rules/thesis-writing.md` for full details. Summary:
 
 - **Pass 1 (Claude Code):** Draft section, run critical review checklist,
   plant `[REVIEW: ...]` flags, update `REVIEW_QUEUE.md`
 - **Pass 2 (Claude Chat):** External validation against literature, resolve
   flags, check methodology alignment with field norms
 
-The handoff protocol is defined in `.claude/chat-handoff.md`.
+The handoff protocol is defined in `.claude/rules/thesis-writing.md`.

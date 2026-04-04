@@ -1,3 +1,6 @@
+> **Phase activation:** Active from Phase 9 (baselines) onward. Before Phase 9,
+> Claude Code does not need to read this file.
+
 Before reading this file, read `.claude/scientific-invariants.md`.
 The invariants there take precedence over any implementation convenience
 described here.
