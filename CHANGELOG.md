@@ -19,6 +19,18 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.0] — 2026-04-04 (PR #30: refactor/mypy-and-test-cleanup)
+
+### Added
+- `tests/test_mps.py` rewritten as proper pytest: 5 test functions with `@pytest.mark.mps`, `skipif` guard, and session cleanup fixture (replaces standalone script)
+- `mps` pytest marker registered in `pyproject.toml`
+
+### Changed
+- Fixed 37 mypy type errors across 8 files: `fetchone()` None guards on all DuckDB queries, `Generator` return types on yielding fixtures, explicit `rows` annotation in conftest
+
+### Removed
+- `tests/helpers.py` — unused `make_matches_df()` / `make_series_df()` (never imported)
+
 ## [0.15.1] — 2026-04-04 (PR: pending, chore/archive-cleanup)
 
 ### Removed

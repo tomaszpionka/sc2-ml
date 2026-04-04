@@ -265,7 +265,9 @@ def run_path_a_smoke_test(
         result["schema"] = schema.to_dict()
 
         # Row count
-        row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
+        row = con.execute("SELECT count(*) FROM raw").fetchone()
+        assert row is not None
+        row_count = row[0]
         result["row_count"] = row_count
         result["row_count_matches_files"] = row_count == file_count
 
@@ -357,7 +359,9 @@ def run_full_path_a_ingestion(
     move_data_to_duck_db(con, should_drop=True)
     elapsed = time.time() - start
 
-    row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM raw").fetchone()
+    assert row is not None
+    row_count = row[0]
 
     # Compare to step 0.1 audit total if available
     audit_path = REPORTS_DIR / "00_source_audit.json"
@@ -427,9 +431,15 @@ def run_path_b_extraction(
     load_elapsed = time.time() - start_load
 
     # Row counts
-    tracker_count = con.execute("SELECT count(*) FROM tracker_events_raw").fetchone()[0]
-    game_count = con.execute("SELECT count(*) FROM game_events_raw").fetchone()[0]
-    player_map_count = con.execute("SELECT count(*) FROM match_player_map").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM tracker_events_raw").fetchone()
+    assert row is not None
+    tracker_count = row[0]
+    row = con.execute("SELECT count(*) FROM game_events_raw").fetchone()
+    assert row is not None
+    game_count = row[0]
+    row = con.execute("SELECT count(*) FROM match_player_map").fetchone()
+    assert row is not None
+    player_map_count = row[0]
 
     # Manifest stats
     extracted = 0
@@ -544,10 +554,14 @@ def validate_map_translation_coverage(
     """Step 0.9 — Check how many distinct map names have translations."""
     load_map_translations(con)
 
-    translation_count = con.execute("SELECT count(*) FROM map_translation").fetchone()[0]
-    distinct_maps = con.execute(
+    row = con.execute("SELECT count(*) FROM map_translation").fetchone()
+    assert row is not None
+    translation_count = row[0]
+    row = con.execute(
         "SELECT count(DISTINCT metadata->>'$.mapName') FROM raw"
-    ).fetchone()[0]
+    ).fetchone()
+    assert row is not None
+    distinct_maps = row[0]
 
     untranslated = con.execute("""
         SELECT DISTINCT metadata->>'$.mapName' AS map_name

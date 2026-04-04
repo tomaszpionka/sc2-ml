@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.15.1"
+version = "0.16.0"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -59,6 +59,7 @@ select = ["E", "F", "W", "I"]
 testpaths = ["tests", "src"]
 markers = [
     "gnn: GNN-specific tests (deselect with '-m not gnn')",
+    "mps: Apple MPS GPU tests (deselect with '-m not mps')",
     "slow: slow tests requiring subprocess isolation (deselect with '-m not slow')",
     "sanity: Phase 0 data & model sanity validation (ROADMAP §3)",
 ]

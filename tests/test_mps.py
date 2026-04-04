@@ -1,23 +1,40 @@
-# test_mps.py
-import platform
-import sys
+"""MPS (Apple Silicon GPU) smoke tests.
+
+All tests are skipped when MPS is not available. Use ``pytest -m mps`` to
+select only these tests, or ``-m 'not mps'`` to exclude them.
+"""
+import gc
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-def print_env():
-    print("Python:", sys.version)
-    print("Platform:", platform.platform())
-    print("Machine:", platform.machine())
-    print("Torch:", torch.__version__)
-    print("MPS built:", torch.backends.mps.is_built())
-    print("MPS available:", torch.backends.mps.is_available())
+_mps_available = torch.backends.mps.is_available()
+pytestmark = [
+    pytest.mark.mps,
+    pytest.mark.skipif(not _mps_available, reason="MPS not available"),
+]
 
 
-def smoke_matmul_and_sync(device: torch.device):
+@pytest.fixture(autouse=True)
+def _mps_cleanup() -> Generator[None, None, None]:
+    """Flush MPS caches after each test to prevent shutdown segfaults."""
+    yield
+    gc.collect()
+    if _mps_available:
+        torch.mps.empty_cache()
+
+
+@pytest.fixture()
+def device() -> torch.device:
+    return torch.device("mps")
+
+
+def test_mps_smoke_matmul(device: torch.device) -> None:
+    """Matmul + synchronize — targets crash-on-exit class."""
     a = torch.randn(512, 512, device=device)
     b = torch.randn(512, 512, device=device)
     c = a @ b
@@ -25,16 +42,19 @@ def smoke_matmul_and_sync(device: torch.device):
     assert torch.isfinite(c).all().item()
 
 
-def autograd_cpu_vs_mps(device: torch.device):
+def test_mps_autograd_cpu_vs_mps(device: torch.device) -> None:
+    """Gradient comparison between CPU and MPS backends."""
     torch.manual_seed(0)
     x_cpu = torch.randn(128, 64, requires_grad=True)
     w_cpu = torch.randn(64, 32, requires_grad=True)
 
-    def f(x, w):
+    def f(x: torch.Tensor, w: torch.Tensor) -> torch.Tensor:
         return ((x @ w).tanh() ** 2).mean()
 
     loss_cpu = f(x_cpu, w_cpu)
     loss_cpu.backward()
+    assert x_cpu.grad is not None
+    assert w_cpu.grad is not None
     gx_cpu = x_cpu.grad.detach().clone()
     gw_cpu = w_cpu.grad.detach().clone()
 
@@ -44,6 +64,8 @@ def autograd_cpu_vs_mps(device: torch.device):
     loss_mps.backward()
     torch.mps.synchronize()
 
+    assert x_mps.grad is not None
+    assert w_mps.grad is not None
     gx_mps = x_mps.grad.detach().cpu()
     gw_mps = w_mps.grad.detach().cpu()
 
@@ -51,16 +73,17 @@ def autograd_cpu_vs_mps(device: torch.device):
     assert torch.allclose(gw_cpu, gw_mps, rtol=1e-3, atol=1e-4), "grad w mismatch"
 
 
-def tiny_training_loop(device: torch.device, steps: int = 300):
+def test_mps_tiny_training_loop(device: torch.device) -> None:
+    """Training converges — loss decreases over 300 steps."""
     torch.manual_seed(0)
 
     class TinyMLP(nn.Module):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__()
             self.l1 = nn.Linear(64, 128)
             self.l2 = nn.Linear(128, 10)
 
-        def forward(self, x):
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
             return self.l2(F.gelu(self.l1(x)))
 
     model = TinyMLP().to(device)
@@ -69,7 +92,10 @@ def tiny_training_loop(device: torch.device, steps: int = 300):
     x = torch.randn(256, 64, device=device)
     y = torch.randint(0, 10, (256,), device=device)
 
-    prev_loss = None
+    first_loss = None
+    final_loss = None
+    steps = 300
+
     for i in range(steps):
         opt.zero_grad(set_to_none=True)
         logits = model(x)
@@ -78,36 +104,42 @@ def tiny_training_loop(device: torch.device, steps: int = 300):
         loss.backward()
         opt.step()
 
-        if i % 100 == 0:
-            torch.mps.synchronize()
-            print(f"step={i}, loss={float(loss.detach().cpu()):.6f}")
+        current = float(loss.detach().cpu())
+        if i == 0:
+            first_loss = current
+        final_loss = current
 
-        prev_loss = float(loss.detach().cpu())
+    assert first_loss is not None and final_loss is not None
+    assert final_loss < first_loss, (
+        f"Training did not converge: first={first_loss:.4f}, final={final_loss:.4f}"
+    )
 
-    return prev_loss
 
+def test_mps_threaded_stress(device: torch.device) -> None:
+    """Concurrent matmul stability across threads."""
+    workers = 4
+    iters = 20
 
-def threaded_stress(device: torch.device, workers: int = 4, iters: int = 20):
-    def worker(seed: int):
+    def worker(seed: int) -> bool:
         torch.manual_seed(seed)
         for _ in range(iters):
             a = torch.randn(256, 256, device=device)
             b = torch.randn(256, 256, device=device)
             _ = (a @ b).sum()
-        # REMOVED: torch.mps.synchronize() from inside the thread
         return True
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
         results = list(ex.map(worker, range(100, 100 + workers)))
 
-    # ADDED: Synchronize only ONCE on the main thread after all workers are done submitting
     torch.mps.synchronize()
     assert all(results)
 
 
-def threaded_stress_with_sync(device: torch.device, workers: int = 4, iters: int = 20):
-    # MPS on current macOS/PyTorch stacks appears unsafe for concurrent Python-threaded execution.
-    # Run sequentially to avoid Metal/MPS command-buffer crashes.
+def test_mps_threaded_stress_with_sync(device: torch.device) -> None:
+    """Sequential matmul with per-op sync — targets crash-on-exit class."""
+    workers = 4
+    iters = 20
+
     for seed in range(100, 100 + workers):
         torch.manual_seed(seed)
         for _ in range(iters):
@@ -119,39 +151,3 @@ def threaded_stress_with_sync(device: torch.device, workers: int = 4, iters: int
             assert torch.isfinite(out).item(), (
                 f"non-finite result in threaded stress with sync for seed {seed}"
             )
-
-
-def main():
-    print_env()
-    if not torch.backends.mps.is_available():
-        print("MPS not available; stopping.")
-        return
-
-    device = torch.device("mps")
-
-    print("\n[1] matmul + synchronize (targets crash-on-exit class)")
-    smoke_matmul_and_sync(device)
-
-    print("[2] autograd CPU vs MPS check")
-    autograd_cpu_vs_mps(device)
-
-    print("[3] tiny training loop")
-    tiny_training_loop(device)
-
-    print("[4] threaded stress")
-    threaded_stress(device)
-
-    print("[5] threaded stress with sync (targets crash-on-exit class)")
-    threaded_stress_with_sync(device)
-
-    print("\nAll tests passed; cleaning up to prevent shutdown segfault...")
-
-    # 1. Force Python to delete lingering thread-local tensors
-    import gc
-    gc.collect()
-
-    # 2. Safely flush and release the Metal command queues before Python shuts down
-    torch.mps.empty_cache()
-
-if __name__ == "__main__":
-    main()

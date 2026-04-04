@@ -3,6 +3,7 @@
 All tests use synthetic data, in-memory DuckDB, and tmp_path fixtures.
 """
 import json
+from collections.abc import Generator
 from pathlib import Path
 
 import duckdb
@@ -225,7 +226,7 @@ class TestValidatePathAbJoin:
     """Test validate_path_a_b_join (Step 0.8)."""
 
     @pytest.fixture()
-    def _join_con(self) -> duckdb.DuckDBPyConnection:
+    def _join_con(self) -> Generator[duckdb.DuckDBPyConnection, None, None]:
         """DuckDB with synthetic raw and tracker_events_raw tables."""
         con = duckdb.connect(":memory:")
 
@@ -287,7 +288,7 @@ class TestValidateMapTranslationCoverage:
     """Test validate_map_translation_coverage (Step 0.9)."""
 
     @pytest.fixture()
-    def _map_con(self, tmp_path: Path) -> duckdb.DuckDBPyConnection:
+    def _map_con(self, tmp_path: Path) -> Generator[duckdb.DuckDBPyConnection, None, None]:
         """DuckDB with raw table containing map names."""
         con = duckdb.connect(":memory:")
 

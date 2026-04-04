@@ -128,7 +128,9 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
             json_glob=json_glob, max_object_size=DUCKDB_MAX_OBJECT_SIZE
         )
     )
-    row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM raw").fetchone()
+    assert row is not None
+    row_count = row[0]
     logger.info(f"DuckDB ingestion complete. Total replays in 'raw': {row_count}")
 
 
@@ -527,7 +529,9 @@ def load_tracker_events_to_duckdb(
 
     con.execute(_TRACKER_EVENTS_TABLE_QUERY.format(glob_pattern=glob_pattern))
 
-    row_count = con.execute("SELECT count(*) FROM tracker_events_raw").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM tracker_events_raw").fetchone()
+    assert row is not None
+    row_count = row[0]
     logger.info(f"Loaded {row_count} tracker events into tracker_events_raw.")
 
     con.execute(_PLAYER_STATS_VIEW_QUERY)
@@ -559,11 +563,15 @@ def load_game_events_to_duckdb(
         logger.info("Dropped existing game_events_raw and match_player_map tables.")
 
     con.execute(_GAME_EVENTS_TABLE_QUERY.format(glob_pattern=game_glob))
-    game_count = con.execute("SELECT count(*) FROM game_events_raw").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM game_events_raw").fetchone()
+    assert row is not None
+    game_count = row[0]
     logger.info(f"Loaded {game_count} game events into game_events_raw.")
 
     con.execute(_MATCH_PLAYER_MAP_TABLE_QUERY.format(glob_pattern=meta_glob))
-    meta_count = con.execute("SELECT count(*) FROM match_player_map").fetchone()[0]
+    row = con.execute("SELECT count(*) FROM match_player_map").fetchone()
+    assert row is not None
+    meta_count = row[0]
     logger.info(f"Loaded {meta_count} player mappings into match_player_map.")
 
 
