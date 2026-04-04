@@ -22,18 +22,20 @@ class TestCreateRawEnrichedView:
 
     def test_view_exists(self) -> None:
         """Scenario: create_raw_enriched_view creates the raw_enriched view."""
-        count = self.con.execute(
+        row = self.con.execute(
             "SELECT count(*) FROM information_schema.tables "
             "WHERE table_name = 'raw_enriched'"
-        ).fetchone()[0]
-        assert count > 0
+        ).fetchone()
+        assert row is not None
+        assert row[0] > 0
 
     def test_tournament_dir_extracted(self) -> None:
         """Scenario: All rows have non-null tournament_dir."""
-        nulls = self.con.execute(
+        row = self.con.execute(
             "SELECT count(*) FROM raw_enriched WHERE tournament_dir IS NULL"
-        ).fetchone()[0]
-        assert nulls == 0
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 0
 
     def test_replay_id_is_32_char_hex(self) -> None:
         """Scenario: All replay_ids are valid 32-char hex strings."""
@@ -76,11 +78,12 @@ class TestCreateMlViews:
         Preconditions: raw table with 5 matches, map_translation table, create_ml_views() called.
         Assertions: flat_players exists in information_schema.
         """
-        count = self.con.execute(
+        row = self.con.execute(
             "SELECT count(*) FROM information_schema.tables "
             "WHERE table_name = 'flat_players'"
-        ).fetchone()[0]
-        assert count > 0
+        ).fetchone()
+        assert row is not None
+        assert row[0] > 0
 
     def test_matches_flat_view_exists(self) -> None:
         """
@@ -88,11 +91,12 @@ class TestCreateMlViews:
         Preconditions: raw table with 5 matches, create_ml_views() called.
         Assertions: matches_flat exists in information_schema.
         """
-        count = self.con.execute(
+        row = self.con.execute(
             "SELECT count(*) FROM information_schema.tables "
             "WHERE table_name = 'matches_flat'"
-        ).fetchone()[0]
-        assert count > 0
+        ).fetchone()
+        assert row is not None
+        assert row[0] > 0
 
     def test_flat_players_row_count(self) -> None:
         """
@@ -100,8 +104,9 @@ class TestCreateMlViews:
         Preconditions: raw table with 5 matches, create_ml_views() called.
         Assertions: flat_players has 10 rows (5 matches x 2 players).
         """
-        count = self.con.execute("SELECT count(*) FROM flat_players").fetchone()[0]
-        assert count == 10
+        row = self.con.execute("SELECT count(*) FROM flat_players").fetchone()
+        assert row is not None
+        assert row[0] == 10
 
     def test_matches_flat_row_count(self) -> None:
         """
@@ -109,8 +114,9 @@ class TestCreateMlViews:
         Preconditions: raw table with 5 matches, create_ml_views() called.
         Assertions: matches_flat has 10 rows (5 matches x 2 perspectives).
         """
-        count = self.con.execute("SELECT count(*) FROM matches_flat").fetchone()[0]
-        assert count == 10
+        row = self.con.execute("SELECT count(*) FROM matches_flat").fetchone()
+        assert row is not None
+        assert row[0] == 10
 
     def test_flat_players_excludes_casters(self) -> None:
         """
@@ -248,13 +254,14 @@ class TestAssignSeriesIds:
         """
         assign_series_ids(matches_flat_con)
         # Every unique match_id from matches_flat should be in match_series
-        unassigned = matches_flat_con.execute("""
+        row = matches_flat_con.execute("""
             SELECT count(DISTINCT m.match_id)
             FROM matches_flat m
             LEFT JOIN match_series ms ON m.match_id = ms.match_id
             WHERE ms.match_id IS NULL
-        """).fetchone()[0]
-        assert unassigned == 0
+        """).fetchone()
+        assert row is not None
+        assert row[0] == 0
 
     def test_series_sizes_reasonable(
         self, matches_flat_con: duckdb.DuckDBPyConnection
@@ -265,15 +272,16 @@ class TestAssignSeriesIds:
         Assertions: Largest series has <= 10 matches.
         """
         assign_series_ids(matches_flat_con)
-        max_size = matches_flat_con.execute("""
+        row = matches_flat_con.execute("""
             SELECT MAX(cnt) FROM (
                 SELECT series_id, COUNT(*) AS cnt
                 FROM match_series
                 GROUP BY series_id
             )
-        """).fetchone()[0]
+        """).fetchone()
+        assert row is not None
         # Series should not be unreasonably large (max Bo7 = 7 games)
-        assert max_size <= 10
+        assert row[0] <= 10
 
     def test_series_have_some_multi_game(
         self, matches_flat_con: duckdb.DuckDBPyConnection
@@ -284,14 +292,15 @@ class TestAssignSeriesIds:
         Assertions: At least one series has count > 1.
         """
         assign_series_ids(matches_flat_con)
-        multi = matches_flat_con.execute("""
+        row = matches_flat_con.execute("""
             SELECT count(*) FROM (
                 SELECT series_id, COUNT(*) AS cnt
                 FROM match_series
                 GROUP BY series_id
                 HAVING cnt > 1
             )
-        """).fetchone()[0]
-        assert multi > 0
+        """).fetchone()
+        assert row is not None
+        assert row[0] > 0
 
 

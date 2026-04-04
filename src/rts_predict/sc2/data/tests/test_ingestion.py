@@ -9,6 +9,7 @@ Uses the sample replay file (sOs vs ByuN) shipped in samples/raw/ to verify:
 """
 import json
 import logging
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -217,15 +218,17 @@ class TestParquetRoundTrip:
 
         # Verify row counts via DuckDB
         con = duckdb.connect(":memory:")
-        tracker_count = con.execute(
+        row = con.execute(
             f"SELECT count(*) FROM read_parquet('{tracker_files[0]}')"
-        ).fetchone()[0]
-        assert tracker_count == 528
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 528
 
-        game_count = con.execute(
+        row = con.execute(
             f"SELECT count(*) FROM read_parquet('{game_files[0]}')"
-        ).fetchone()[0]
-        assert game_count == 9038
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 9038
         con.close()
 
 
@@ -235,7 +238,7 @@ class TestDuckDBLoading:
     @pytest.fixture()
     def loaded_con(
         self, sample_replay_path: Path, tmp_path: Path
-    ) -> duckdb.DuckDBPyConnection:
+    ) -> Generator[duckdb.DuckDBPyConnection, None, None]:
         result = extract_raw_events_from_file(sample_replay_path)
         assert result is not None
         save_raw_events_to_parquet([result], tmp_path, batch_number=0)
@@ -296,11 +299,12 @@ class TestDuckDBLoading:
         Assertions: player_stats view exists in information_schema.
         """
         # Views show up in information_schema.tables with type VIEW
-        result = loaded_con.execute(
+        row = loaded_con.execute(
             "SELECT count(*) FROM information_schema.tables "
             "WHERE table_name = 'player_stats'"
-        ).fetchone()[0]
-        assert result > 0
+        ).fetchone()
+        assert row is not None
+        assert row[0] > 0
 
     def test_player_stats_row_count(
         self, loaded_con: duckdb.DuckDBPyConnection
@@ -312,8 +316,9 @@ class TestDuckDBLoading:
         """
         # 48 unique game loops × 2 players, but player 1 has one extra snapshot
         # at the first loop → 97 total PlayerStats events
-        count = loaded_con.execute("SELECT count(*) FROM player_stats").fetchone()[0]
-        assert count == 97
+        row = loaded_con.execute("SELECT count(*) FROM player_stats").fetchone()
+        assert row is not None
+        assert row[0] == 97
 
     def test_player_stats_has_all_39_fields(
         self, loaded_con: duckdb.DuckDBPyConnection
@@ -360,10 +365,11 @@ class TestDuckDBLoading:
         Preconditions: Sample sOs vs ByuN replay loaded.
         Assertions: 2 distinct player_id values.
         """
-        count = loaded_con.execute(
+        row = loaded_con.execute(
             "SELECT count(DISTINCT player_id) FROM match_player_map"
-        ).fetchone()[0]
-        assert count == 2
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 2
 
 
 class TestPlayerStatsFieldMap:
@@ -506,8 +512,9 @@ class TestMoveDataToDuckDb:
              patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
             move_data_to_duck_db(con, should_drop=True)
 
-        row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
-        assert row_count == 3
+        row = con.execute("SELECT count(*) FROM raw").fetchone()
+        assert row is not None
+        assert row[0] == 3
         con.close()
 
     @patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR")
@@ -558,8 +565,9 @@ class TestMoveDataToDuckDb:
             move_data_to_duck_db(con, should_drop=True)
             move_data_to_duck_db(con, should_drop=True)
 
-        row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
-        assert row_count == 3  # Not doubled
+        row = con.execute("SELECT count(*) FROM raw").fetchone()
+        assert row is not None
+        assert row[0] == 3  # Not doubled
         con.close()
 
 
@@ -634,8 +642,9 @@ class TestLoadMapTranslations:
         with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
             load_map_translations(con)
 
-        count = con.execute("SELECT count(*) FROM map_translation").fetchone()[0]
-        assert count == 2
+        row = con.execute("SELECT count(*) FROM map_translation").fetchone()
+        assert row is not None
+        assert row[0] == 2
         con.close()
 
     def test_no_translation_files_warns(self, tmp_path: Path, caplog) -> None:

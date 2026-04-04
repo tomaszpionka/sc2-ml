@@ -266,10 +266,12 @@ def get_matches_dataframe(
         split: Optional split filter (``'train'``, ``'val'``, or ``'test'``).
     """
     # Check whether the match_split table exists
-    has_split_table = con.execute(
+    row = con.execute(
         "SELECT count(*) FROM information_schema.tables "
         "WHERE table_name = 'match_split'"
-    ).fetchone()[0] > 0
+    ).fetchone()
+    assert row is not None
+    has_split_table = row[0] > 0
 
     _VALID_SPLITS = {"train", "val", "test"}
 
@@ -313,10 +315,14 @@ def assign_series_ids(con: duckdb.DuckDBPyConnection) -> None:
     con.execute(_SERIES_ASSIGNMENT_QUERY.format(series_gap_seconds=SERIES_GAP_SECONDS))
     con.execute(_SERIES_OTHER_PERSPECTIVE_QUERY)
 
-    series_count = con.execute(
+    row = con.execute(
         "SELECT count(DISTINCT series_id) FROM match_series"
-    ).fetchone()[0]
-    match_count = con.execute("SELECT count(*) FROM match_series").fetchone()[0]
+    ).fetchone()
+    assert row is not None
+    series_count = row[0]
+    row = con.execute("SELECT count(*) FROM match_series").fetchone()
+    assert row is not None
+    match_count = row[0]
     logger.info(
         f"Series assignment complete: {match_count} matches in {series_count} series."
     )

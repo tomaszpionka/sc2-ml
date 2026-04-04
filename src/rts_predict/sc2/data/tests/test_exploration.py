@@ -4,6 +4,7 @@ Uses synthetic in-memory DuckDB fixtures to validate each step function.
 """
 
 import json
+from collections.abc import Generator
 
 import duckdb
 import pandas as pd
@@ -48,7 +49,7 @@ def _build_tpdm(
 
 
 @pytest.fixture()
-def exploration_con() -> duckdb.DuckDBPyConnection:
+def exploration_con() -> Generator[duckdb.DuckDBPyConnection, None, None]:
     """In-memory DuckDB with synthetic data for Phase 1 exploration tests.
 
     Creates:

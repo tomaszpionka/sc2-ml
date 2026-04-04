@@ -1,6 +1,8 @@
 """Shared fixtures for rts_predict.sc2.data tests."""
 import json
+from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import duckdb
 import numpy as np
@@ -30,7 +32,7 @@ def sample_replay_path() -> Path:
 
 
 @pytest.fixture()
-def duckdb_con() -> duckdb.DuckDBPyConnection:
+def duckdb_con() -> Generator[duckdb.DuckDBPyConnection, None, None]:
     """In-memory DuckDB connection for testing."""
     con = duckdb.connect(":memory:")
     yield con
@@ -51,7 +53,7 @@ def matches_flat_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyCo
     maps = ["Altitude LE", "Berlingrad LE", "Equilibrium LE"]
 
     n = 100
-    rows = []
+    rows: list[dict[str, Any]] = []
     base_time = pd.Timestamp("2023-01-01 10:00:00")
 
     for i in range(n):
