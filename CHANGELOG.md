@@ -19,6 +19,20 @@ merged to `master`.
 
 ### Removed
 
+## [0.13.2] — 2026-04-04 (PR: pending, chore/remove-pre-roadmap-legacy-code)
+
+### Removed
+- Deleted `src/sc2ml/features/`, `src/sc2ml/gnn/`, `src/sc2ml/models/`, `src/sc2ml/analysis/` — pre-roadmap feature engineering, GNN, classical ML, and analysis modules (recoverable via git history; tagged `pre-roadmap-cleanup`)
+- Deleted `tests/integration/` — integration tests for the removed modules
+- Deleted `src/sc2ml/data/cv.py`, `src/sc2ml/validation.py`, and their associated test/helper files
+- Deleted stale `src/sc2ml/logs/sc2_pipeline.log` and `processing_manifest.json`
+
+### Changed
+- `src/sc2ml/cli.py`: stripped to Phase 0–1 subcommands only (`init`, `audit`, `explore`); removed `run`, `ablation`, `tune`, `evaluate`, `sanity` subcommands and all associated pipeline functions
+- `src/sc2ml/data/processing.py`: removed `create_temporal_split`, `validate_temporal_split`, `validate_data_split_sql` and their SQL constants
+- `src/sc2ml/data/ingestion.py`: removed deprecated `slim_down_sc2_with_manifest`
+- `src/sc2ml/config.py`: removed orphaned constants (`MANIFEST_PATH`, `TRAIN_RATIO`, `VAL_RATIO`, `TEST_RATIO`, `VETERAN_MIN_GAMES`, `PATCH_MIN_MATCHES`, `EXPANDING_CV_N_SPLITS`, `EXPANDING_CV_MIN_TRAIN_FRAC`)
+
 ## [0.13.1] — 2026-04-04 (PR: pending, chore/housekeeping-workflow-and-roadmap)
 
 ### Changed

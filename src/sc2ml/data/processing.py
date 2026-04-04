@@ -17,7 +17,7 @@ import logging
 import duckdb
 import pandas as pd
 
-from sc2ml.config import SERIES_GAP_SECONDS, TEST_RATIO, TRAIN_RATIO, VAL_RATIO
+from sc2ml.config import SERIES_GAP_SECONDS
 
 logger = logging.getLogger(__name__)
 
@@ -142,31 +142,6 @@ _YEAR_DISTRIBUTION_QUERY = """
     GROUP BY year ORDER BY year;
 """
 
-_CHRONOLOGICAL_SPLIT_QUERY = """
-    WITH split_point AS (
-        SELECT match_time FROM matches_flat
-        ORDER BY match_time ASC
-        LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * {split_ratio} AS INT) FROM matches_flat)
-    )
-    SELECT
-        (SELECT COUNT(*) FROM matches_flat
-         WHERE match_time < (SELECT match_time FROM split_point)
-        ) as train_count,
-        (SELECT COUNT(*) FROM matches_flat
-         WHERE match_time >= (SELECT match_time FROM split_point)
-        ) as test_count,
-        (SELECT MIN(match_time) FROM matches_flat
-         WHERE match_time >= (SELECT match_time FROM split_point)
-        ) as min_test_time,
-        (SELECT MAX(match_time) FROM matches_flat
-         WHERE match_time < (SELECT match_time FROM split_point)
-        ) as max_train_time,
-        ((SELECT MIN(match_time) FROM matches_flat
-          WHERE match_time >= (SELECT match_time FROM split_point)) >
-         (SELECT MAX(match_time) FROM matches_flat
-          WHERE match_time < (SELECT match_time FROM split_point))
-        ) as is_chronological_valid;
-"""
 
 _SERIES_ASSIGNMENT_QUERY = """
     CREATE TABLE match_series AS
@@ -251,70 +226,6 @@ _TOURNAMENT_GROUPING_QUERY = """
     ORDER BY first_match_time ASC
 """
 
-_MATCH_SPLIT_CREATE_QUERY = """
-    CREATE TABLE match_split AS
-    SELECT DISTINCT fp.match_id, s.split
-    FROM flat_players fp
-    JOIN split_df s ON fp.tournament_name = s.tournament_name
-    WHERE fp.result IN ('Win', 'Loss')
-"""
-
-_SPLIT_STATS_QUERY = """
-    SELECT
-        ms.split,
-        COUNT(*) AS match_count,
-        MIN(m.match_time) AS earliest,
-        MAX(m.match_time) AS latest
-    FROM match_split ms
-    JOIN matches_flat m ON ms.match_id = m.match_id
-    WHERE m.p1_name < m.p2_name
-    GROUP BY ms.split
-    ORDER BY earliest
-"""
-
-_SPLIT_BOUNDARIES_QUERY = """
-    SELECT
-        ms.split,
-        MIN(m.match_time) AS min_time,
-        MAX(m.match_time) AS max_time,
-        COUNT(DISTINCT ms.match_id) AS match_count
-    FROM match_split ms
-    JOIN matches_flat m ON ms.match_id = m.match_id
-    WHERE m.p1_name < m.p2_name
-    GROUP BY ms.split
-    ORDER BY min_time
-"""
-
-_TOURNAMENT_CONTAINMENT_QUERY = """
-    SELECT fp.tournament_name, COUNT(DISTINCT ms.split) AS split_count
-    FROM match_split ms
-    JOIN flat_players fp ON ms.match_id = fp.match_id
-    WHERE fp.result IN ('Win', 'Loss')
-    GROUP BY fp.tournament_name
-    HAVING split_count > 1
-"""
-
-_SERIES_INTEGRITY_QUERY = """
-    SELECT ms2.series_id, COUNT(DISTINCT ms1.split) AS split_count
-    FROM match_split ms1
-    JOIN match_series ms2 ON ms1.match_id = ms2.match_id
-    GROUP BY ms2.series_id
-    HAVING split_count > 1
-"""
-
-_YEAR_DIST_PER_SPLIT_QUERY = """
-    SELECT
-        ms.split,
-        EXTRACT(year FROM m.match_time) AS year,
-        COUNT(*) AS matches
-    FROM match_split ms
-    JOIN matches_flat m ON ms.match_id = m.match_id
-    WHERE m.p1_name < m.p2_name
-    GROUP BY ms.split, year
-    ORDER BY year, ms.split
-"""
-
-
 def create_raw_enriched_view(con: duckdb.DuckDBPyConnection) -> None:
     """Create the raw_enriched view with tournament_dir and replay_id columns."""
     con.execute(_RAW_ENRICHED_VIEW_QUERY)
@@ -386,35 +297,6 @@ def get_matches_dataframe(
     return con.execute(query, params).df()
 
 
-def validate_data_split_sql(con: duckdb.DuckDBPyConnection, split_ratio: float = 0.8) -> None:
-    """Log temporal split statistics and validate chronological ordering.
-
-    Prints the year distribution of matches and confirms that the train/test
-    boundary is strictly chronological (no future data leaks into training).
-    """
-    logger.info(
-        "====== DATA VALIDATION "
-        f"(Split {int(split_ratio * 100)}/{int((1 - split_ratio) * 100)}) ======"
-    )
-
-    dist_df = con.execute(_YEAR_DISTRIBUTION_QUERY).df()
-    logger.info(f"\nAnnual match distribution:\n{dist_df.to_string(index=False)}")
-
-    leakage_res = con.execute(
-        _CHRONOLOGICAL_SPLIT_QUERY.format(split_ratio=split_ratio)
-    ).df()
-
-    valid = leakage_res["is_chronological_valid"].iloc[0]
-    logger.info(
-        f"Actual split: Train={leakage_res['train_count'].iloc[0]}, "
-        f"Test={leakage_res['test_count'].iloc[0]}"
-    )
-    logger.info(f"Chronological validation: {'PASSED' if valid else 'FAILED!'}")
-    logger.info(f"Last training match:  {leakage_res['max_train_time'].iloc[0]}")
-    logger.info(f"First test match:     {leakage_res['min_test_time'].iloc[0]}")
-    logger.info("======================================================")
-
-
 def assign_series_ids(con: duckdb.DuckDBPyConnection) -> None:
     """Create a ``match_series`` table assigning each match to a best-of series.
 
@@ -440,137 +322,3 @@ def assign_series_ids(con: duckdb.DuckDBPyConnection) -> None:
     )
 
 
-def create_temporal_split(
-    con: duckdb.DuckDBPyConnection,
-    train_ratio: float = TRAIN_RATIO,
-    val_ratio: float = VAL_RATIO,
-    test_ratio: float = TEST_RATIO,
-) -> None:
-    """Create a ``match_split`` table assigning each match to train/val/test.
-
-    The split is temporal (by ``match_time``) with **tournament-level boundary
-    snapping**: all matches from the same tournament are guaranteed to be in
-    the same split.  This also preserves series containment (all series are
-    within a single tournament).  Tournament identity is derived from the
-    source directory name captured during ingestion.
-
-    Args:
-        con: DuckDB connection.
-        train_ratio: Fraction of matches for training.
-        val_ratio: Fraction of matches for validation.
-        test_ratio: Fraction of matches for testing.
-    """
-    if abs(train_ratio + val_ratio + test_ratio - 1.0) > 1e-6:
-        raise ValueError(
-            f"Split ratios must sum to 1.0, got {train_ratio + val_ratio + test_ratio}"
-        )
-
-    logger.info(
-        f"Creating temporal split: train={train_ratio}, val={val_ratio}, test={test_ratio}"
-    )
-
-    # Get tournaments sorted by earliest match time, with match counts
-    tourney_df = con.execute(_TOURNAMENT_GROUPING_QUERY).df()
-
-    total_matches = int(tourney_df["match_count"].sum())
-    train_target = int(total_matches * train_ratio)
-    val_target = int(total_matches * (train_ratio + val_ratio))
-
-    # Assign splits at tournament boundaries
-    cumulative = 0
-    split_assignments: list[tuple[str, str]] = []
-    for _, row in tourney_df.iterrows():
-        tournament = row["tournament_name"]
-        count = int(row["match_count"])
-
-        if cumulative < train_target:
-            assigned_split = "train"
-        elif cumulative < val_target:
-            assigned_split = "val"
-        else:
-            assigned_split = "test"
-
-        split_assignments.append((tournament, assigned_split))
-        cumulative += count
-
-    # Build the match_split table via tournament → match_id mapping
-    split_df = pd.DataFrame(split_assignments, columns=["tournament_name", "split"])  # noqa: F841 — referenced by DuckDB SQL below
-
-    con.execute("DROP TABLE IF EXISTS match_split")
-    con.execute(_MATCH_SPLIT_CREATE_QUERY)
-
-    stats = con.execute(_SPLIT_STATS_QUERY).df()
-    logger.info(f"Temporal split created:\n{stats.to_string(index=False)}")
-
-
-def validate_temporal_split(con: duckdb.DuckDBPyConnection) -> None:
-    """Validate the ``match_split`` table for temporal ordering and leakage.
-
-    Checks:
-    1. No ``match_time`` overlap between train/val/test.
-    2. Tournament containment — no tournament spans multiple splits.
-    3. Series containment — no series spans multiple splits.
-    4. Year distribution per split.
-    5. Split size percentages.
-    """
-    logger.info("====== TEMPORAL SPLIT VALIDATION ======")
-
-    # 1. Chronological ordering — no overlap between splits
-    boundaries = con.execute(_SPLIT_BOUNDARIES_QUERY).df()
-
-    logger.info(f"Split boundaries:\n{boundaries.to_string(index=False)}")
-
-    splits = boundaries.set_index("split")
-    if "train" in splits.index and "val" in splits.index:
-        train_max = splits.loc["train", "max_time"]
-        val_min = splits.loc["val", "min_time"]
-        train_val_ok = train_max < val_min
-        logger.info(
-            f"Train/Val boundary: train_max={train_max}, val_min={val_min} "
-            f"→ {'PASSED' if train_val_ok else 'FAILED!'}"
-        )
-    if "val" in splits.index and "test" in splits.index:
-        val_max = splits.loc["val", "max_time"]
-        test_min = splits.loc["test", "min_time"]
-        val_test_ok = val_max < test_min
-        logger.info(
-            f"Val/Test boundary: val_max={val_max}, test_min={test_min} "
-            f"→ {'PASSED' if val_test_ok else 'FAILED!'}"
-        )
-
-    # 2. Tournament containment — no tournament spans multiple splits
-    split_tourney_check = con.execute(_TOURNAMENT_CONTAINMENT_QUERY).df()
-
-    if len(split_tourney_check) == 0:
-        logger.info(
-            "Tournament containment: PASSED (no tournament spans multiple splits)"
-        )
-    else:
-        logger.warning(
-            f"Tournament containment: FAILED! {len(split_tourney_check)} tournaments "
-            f"span multiple splits:\n"
-            f"{split_tourney_check.to_string(index=False)}"
-        )
-
-    # 3. Series integrity — no series spans multiple splits
-    split_series_check = con.execute(_SERIES_INTEGRITY_QUERY).df()
-
-    if len(split_series_check) == 0:
-        logger.info("Series integrity: PASSED (no series spans multiple splits)")
-    else:
-        logger.warning(
-            f"Series integrity: FAILED! {len(split_series_check)} series span "
-            f"multiple splits:\n{split_series_check.head(10).to_string(index=False)}"
-        )
-
-    # 4. Year distribution per split
-    year_dist = con.execute(_YEAR_DIST_PER_SPLIT_QUERY).df()
-    logger.info(f"Year distribution per split:\n{year_dist.to_string(index=False)}")
-
-    # 5. Split size percentages
-    total = boundaries["match_count"].sum()
-    for _, row in boundaries.iterrows():
-        pct = row["match_count"] / total * 100
-        logger.info(f"  {row['split']}: {row['match_count']} matches ({pct:.1f}%)")
-
-    logger.info("====== END VALIDATION ======")

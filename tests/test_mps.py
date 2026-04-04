@@ -1,4 +1,4 @@
-# mps_probe.py
+# test_mps.py
 import platform
 import sys
 from concurrent.futures import ThreadPoolExecutor

@@ -4,7 +4,6 @@ from pathlib import Path
 # Derived from file location: src/sc2ml/config.py → repo root
 ROOT_PROJECTS_DIR: Path = Path(__file__).resolve().parent.parent.parent
 DB_FILE: Path = Path("~/duckdb_work/test_sc2.duckdb").expanduser().resolve()
-MANIFEST_PATH: Path = ROOT_PROJECTS_DIR / "processing_manifest.json"
 
 # DuckDB configuration
 DUCKDB_TEMP_DIR: Path = Path("~/duckdb_work/tmp").expanduser().resolve()
@@ -20,9 +19,6 @@ IN_GAME_WORKERS: int = 8
 IN_GAME_BATCH_SIZE: int = 50  # Files accumulated before Parquet flush
 
 # ── Data splitting ────────────────────────────────────────────────────────────
-TRAIN_RATIO: float = 0.80
-VAL_RATIO: float = 0.15
-TEST_RATIO: float = 0.05
 SERIES_GAP_SECONDS: int = 7200  # 2h max gap between games in same best-of series
 
 # ── Model artifact paths ───────────────────────────────────────────────────────
@@ -39,7 +35,6 @@ ELO_K_VETERAN: int = 32   # K-factor for veteran players
 ELO_K_THRESHOLD: int = 10  # Games played threshold separating new vs. veteran players
 
 # ── Feature engineering ────────────────────────────────────────────────────────
-VETERAN_MIN_GAMES: int = 3   # Minimum historical games for the "veterans only" evaluation set
 BAYESIAN_C: float = 5.0      # Bayesian smoothing confidence weight
 BAYESIAN_PRIOR_WR: float = 0.5  # Prior win rate for Bayesian smoothing
 
@@ -92,10 +87,6 @@ LR_MAX_ITER: int = 1000
 TUNING_N_ITER: int = 50
 TUNING_CV_FOLDS: int = 5
 
-# ── Expanding-window CV ──────────────────────────────────────────────────────
-EXPANDING_CV_N_SPLITS: int = 5         # Number of temporal CV folds
-EXPANDING_CV_MIN_TRAIN_FRAC: float = 0.3  # Minimum initial training window fraction
-
 # ── Optuna tuning ────────────────────────────────────────────────────────────
 OPTUNA_N_TRIALS_LGBM: int = 200
 OPTUNA_N_TRIALS_XGB: int = 200
@@ -110,9 +101,6 @@ DUCKDB_MAX_OBJECT_SIZE: int = 536_870_912  # 512 MB — max JSON object size for
 
 # ── Pipeline logging ──────────────────────────────────────────────────────────
 EXTRACTION_LOG_INTERVAL: int = 200  # Log progress every N files during extraction
-
-# ── Patch analysis ─────────────────────────────────────────────────────────────
-PATCH_MIN_MATCHES: int = 100  # Minimum matches for a patch to be included in per-patch analysis
 
 # ── Evaluation ────────────────────────────────────────────────────────────
 BOOTSTRAP_N_ITER: int = 1000       # Bootstrap resampling iterations for 95% CI
