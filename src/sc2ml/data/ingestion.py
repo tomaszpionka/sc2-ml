@@ -1,10 +1,8 @@
-"""Replay data ingestion into DuckDB via two independent paths.
+"""Replay data ingestion into DuckDB.
 
 Path A — Pre-match features (header, player stats, map metadata):
-    ``slim_down_sc2_with_manifest`` strips heavy event arrays from raw JSON to
-    reduce disk footprint, then ``move_data_to_duck_db`` bulk-loads the slimmed
-    files into a DuckDB ``raw`` table. Both steps use a JSON manifest for
-    resumable, idempotent processing.
+    ``move_data_to_duck_db`` bulk-loads SC2Replay JSON files into a DuckDB
+    ``raw`` table.
 
 Path B — In-game events (tracker events, game events, player metadata):
     ``run_in_game_extraction`` reads full replay JSON via multiprocessing,
@@ -17,7 +15,6 @@ Path B — In-game events (tracker events, game events, player metadata):
 import json
 import logging
 import multiprocessing
-import warnings
 from pathlib import Path
 
 import duckdb
@@ -36,7 +33,6 @@ from sc2ml.config import (
     IN_GAME_MANIFEST_PATH,
     IN_GAME_PARQUET_DIR,
     IN_GAME_WORKERS,
-    MANIFEST_PATH,
     REPLAYS_SOURCE_DIR,
 )
 from sc2ml.data.schemas import (
@@ -106,98 +102,6 @@ def _build_player_stats_view_query() -> str:
 
 
 _PLAYER_STATS_VIEW_QUERY = _build_player_stats_view_query()
-
-
-def slim_down_sc2_with_manifest(dry_run: bool = True) -> None:
-    """Strip heavy event arrays from SC2Replay JSON files to reduce disk usage.
-
-    Processes only files not already recorded in the manifest. Skips
-    messageEvents, gameEvents, and trackerEvents — none are used by the
-    pre-match ML pipeline (Path A). In-game models (Path B) need these
-    events, so use dry_run=True (default) to preview without modifying files.
-
-    .. deprecated::
-        This function destructively modifies raw replay files. Use
-        ``run_in_game_extraction()`` for Path B (in-game features) instead.
-
-    Args:
-        dry_run: If True, log what would be stripped but do not modify files.
-    """
-    warnings.warn(
-        "slim_down_sc2_with_manifest() is deprecated and will be removed in a future "
-        "release. Use run_in_game_extraction() for Path B (in-game features) instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    keys_to_remove = {"messageEvents", "gameEvents", "trackerEvents"}
-
-    if dry_run:
-        logger.warning(
-            "dry_run=True — files will NOT be modified. "
-            "Pass dry_run=False to actually strip events."
-        )
-
-    if MANIFEST_PATH.exists() and MANIFEST_PATH.stat().st_size > 0:
-        try:
-            with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
-                manifest = json.load(f)
-            logger.info(f"Loaded manifest: {len(manifest)} files tracked.")
-        except json.JSONDecodeError:
-            logger.warning("Manifest was corrupted or empty. Starting fresh.")
-            manifest = {}
-    else:
-        manifest = {}
-        logger.info("No manifest found. Starting fresh.")
-
-    total_files_processed = 0
-    total_bytes_saved = 0
-
-    try:
-        # Scan all SC2Replay JSON files under the replays directory
-        for json_file in REPLAYS_SOURCE_DIR.rglob("*.SC2Replay.json"):
-            # Manifest key is the path relative to the replays root directory
-            file_key = str(json_file.relative_to(REPLAYS_SOURCE_DIR))
-            if manifest.get(file_key) is True:
-                continue
-
-            try:
-                original_size = json_file.stat().st_size
-                with open(json_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-
-                found_keys = keys_to_remove.intersection(data.keys())
-                if found_keys:
-                    if dry_run:
-                        logger.debug(f"Would strip {found_keys} from {file_key}")
-                    else:
-                        for key in found_keys:
-                            data.pop(key)
-                        with open(json_file, "w", encoding="utf-8") as f:
-                            json.dump(data, f, separators=(",", ":"))
-
-                        new_size = json_file.stat().st_size
-                        total_bytes_saved += original_size - new_size
-
-                if not dry_run:
-                    manifest[file_key] = True
-                total_files_processed += 1
-
-                if total_files_processed % 100 == 0:
-                    logger.info(f"Processed {total_files_processed} files...")
-
-            except Exception as e:
-                logger.error(f"Error processing {file_key}: {e}")
-                manifest[file_key] = False
-
-    finally:
-        with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
-            json.dump(manifest, f, indent=4)
-        logger.info("Manifest updated and saved.")
-
-    gb_saved = total_bytes_saved / (1024**3)
-    logger.info(
-        f"New files processed: {total_files_processed}. Disk space saved: {gb_saved:.4f} GB"
-    )
 
 
 def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = False) -> None:
