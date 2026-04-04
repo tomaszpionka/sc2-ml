@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-03
+Last updated: 2026-04-03 (Phase 1 Steps 1.1–1.7 done; Step 1.8 pending)
 
 ---
 
@@ -32,7 +32,7 @@ Last updated: 2026-04-03
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
 | §2.1 RTS game characteristics | `SKELETON` | — | Literature |
-| §2.2 StarCraft II | `SKELETON` | Phase 0–1 (timing, mechanics) | Game loop derivation sourced |
+| §2.2 StarCraft II | `SKELETON` | Phase 0–1 (timing, mechanics) | Game loop derivation sourced; Phase 1 confirmed 22.4 loops/sec consistent across all years |
 | §2.3 Age of Empires II | `BLOCKED` | AoE2 roadmap | Future |
 | §2.4 ML methods for classification | `SKELETON` | — | Literature |
 | §2.5 Player skill rating systems | `SKELETON` | — | Literature; Glicko-2 refs ready |
@@ -52,7 +52,7 @@ Last updated: 2026-04-03
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §4.1.1 SC2EGSet description | `DRAFTABLE` | Phase 0, Phase 1 | Phase 0 complete; draft after Phase 1 for full stats |
+| §4.1.1 SC2EGSet description | `BLOCKED` | Phase 0, Phase 1 | Phase 0 done, Phase 1 Steps 1.1–1.7 done; awaiting Step 1.8 (game settings + field completeness audit) before draftable |
 | §4.1.2 AoE2 match data | `BLOCKED` | AoE2 roadmap | Future |
 | §4.1.3 Data asymmetry | `BLOCKED` | Both datasets | Future |
 | §4.2.1 Ingestion and validation | `DRAFTABLE` | Phase 0 | Phase 0 complete |
