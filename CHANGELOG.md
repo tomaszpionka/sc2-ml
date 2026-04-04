@@ -19,6 +19,24 @@ merged to `master`.
 
 ### Removed
 
+## [0.13.0] — 2026-04-04 (PR: pending, feature/phase-1-corpus-inventory)
+
+### Added
+- **Phase 1 corpus exploration** (`src/sc2ml/data/exploration.py`): 7-step exploration
+  pipeline (Steps 1.1–1.7) producing 16 report artifacts — corpus summary, parse quality,
+  duration distribution with plots, APM/MMR audit, patch landscape, event type inventory,
+  and PlayerStats sampling regularity check
+- **Exploration tests** (`src/sc2ml/data/tests/test_exploration.py`): 23 tests with
+  synthetic DuckDB fixtures covering all steps and orchestrator (98% coverage)
+- **CLI `explore` subcommand**: `sc2ml explore [--steps 1.1 1.3]` for selective step execution
+- **tabulate dependency**: Required for DataFrame-to-markdown in report generation
+
+### Changed
+
+### Fixed
+
+### Removed
+
 ## [0.12.0] — 2026-04-03 (PR: pending, docs/thesis-infrastructure-invariants-v2)
 
 ### Added

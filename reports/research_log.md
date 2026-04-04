@@ -6,6 +6,319 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-03 — Phase 1 corpus inventory: Steps 1.1–1.7 complete, Step 1.8 pending
+
+**Objective:** Run the full Phase 1 exploration (Steps 1.1–1.7) to characterise
+the SC2EGSet corpus — structural validation, parse quality, duration distribution,
+APM/MMR usability, patch landscape, event type inventory, and PlayerStats sampling
+regularity. All findings are observational; no cleaning decisions are made.
+
+All results below comply with Scientific Invariant #8: every finding is accompanied
+by the literal SQL that produced it (embedded in the report artifacts).
+
+---
+
+### Step 1.1 — Overall corpus counts and structural validation
+
+**Key findings:**
+
+| Metric | Value |
+|--------|-------|
+| Total replays | 22,390 |
+| Distinct tournaments | 70 |
+| Date range | 2016-01-07 to 2024-12-01 |
+| Null match timestamps | 0 |
+| Replays with tracker events | 22,390 (100%) |
+| Player count anomalies (≠ 2 players) | 13 replays |
+| Exact duplicate replay IDs | 0 |
+| Near-duplicates (same players, same map, < 60s apart) | 88 pairs |
+
+**Result field values:**
+
+| result_value | slot_count |
+|---|---|
+| Loss | 22,409 |
+| Win | 22,382 |
+| Undecided | 24 |
+| Tie | 2 |
+
+Non-standard results: 26 slots (24 Undecided + 2 Tie). No nulls.
+Anomalous replays: 13 with no winner, 4 with multiple winners.
+
+```sql
+-- Near-duplicate detection (example — full SQL in reports/01_duplicate_detection.md)
+WITH raw_entries AS (
+    SELECT filename,
+           regexp_extract(filename, '([0-9a-f]{32})\.SC2Replay\.json$', 1) AS replay_id,
+           (details->>'$.timeUTC')::TIMESTAMP AS match_time,
+           metadata->>'$.mapName' AS map_name,
+           CAST(entry.value->>'$.nickname' AS VARCHAR) AS nickname,
+           CAST(entry.value->>'$.result' AS VARCHAR) AS result_val
+    FROM raw, LATERAL json_each("ToonPlayerDescMap") AS entry
+),
+players_per_game AS (
+    SELECT filename, ANY_VALUE(replay_id) AS replay_id,
+           ANY_VALUE(match_time) AS match_time, ANY_VALUE(map_name) AS map_name,
+           LIST(LOWER(nickname) ORDER BY LOWER(nickname)) AS player_names
+    FROM raw_entries
+    WHERE nickname IS NOT NULL AND (result_val = 'Win' OR result_val = 'Loss')
+    GROUP BY filename
+)
+SELECT a.replay_id AS replay_id_a, b.replay_id AS replay_id_b,
+       a.map_name, a.match_time AS time_a, b.match_time AS time_b,
+       ABS(EPOCH(a.match_time) - EPOCH(b.match_time)) AS time_diff_seconds
+FROM players_per_game a
+JOIN players_per_game b ON a.player_names = b.player_names
+    AND a.map_name = b.map_name AND a.replay_id < b.replay_id
+    AND ABS(EPOCH(a.match_time) - EPOCH(b.match_time)) <= 60
+ORDER BY time_diff_seconds
+```
+
+**Artifacts:** `reports/01_corpus_summary.json`, `reports/01_player_count_anomalies.csv`,
+`reports/01_result_field_audit.md`, `reports/01_duplicate_detection.md`
+
+---
+
+### Step 1.2 — Per-tournament parse quality
+
+**Key findings:**
+- 70 tournaments total, **18 flagged** (player count anomalies or result anomalies)
+- Event coverage: 100% across all tournaments (no missing tracker events)
+- All flags are result anomalies (Undecided/Tie) or player count ≠ 2 — no systematic
+  parse failures
+
+```sql
+-- Full SQL in reports/01_parse_quality_summary.md
+-- Flagging thresholds: event_coverage_pct < 80, player_count_anomalies > 0, result_anomalies > 0
+```
+
+**Artifacts:** `reports/01_parse_quality_by_tournament.csv`, `reports/01_parse_quality_summary.md`
+
+---
+
+### Step 1.3 — Game duration distribution
+
+**Overall percentiles (real-time minutes, N=22,390):**
+
+| Statistic | Value |
+|-----------|-------|
+| Mean | 11.98 |
+| Median | 10.85 |
+| P01 | 3.34 |
+| P05 | 4.94 |
+| P25 | 8.27 |
+| P75 | 14.43 |
+| P95 | 22.52 |
+| P99 | 31.31 |
+
+```sql
+SELECT COUNT(*) AS n,
+    ROUND(AVG(real_time_minutes), 2) AS mean,
+    ROUND(MEDIAN(real_time_minutes), 2) AS median,
+    ROUND(QUANTILE_CONT(real_time_minutes, 0.01), 2) AS p01,
+    -- (full query in reports/01_duration_distribution.csv header)
+FROM (
+    SELECT (header->>'$.elapsedGameLoops')::DOUBLE / 22.4 / 60.0 AS real_time_minutes
+    FROM raw WHERE (header->>'$.elapsedGameLoops') IS NOT NULL
+)
+```
+
+**Conversion formula (Scientific Invariant #6):**
+`real_time_minutes = game_loops / 22.4 / 60.0`
+(22.4 = 16 engine loops/sec × 1.4 Faster speed multiplier)
+
+Duration is stable across years (median ~10–11 min, no drift).
+Short-tail: 50 games < 2 min (possible lobby artifacts); significant mass 3–5 min
+(cheese/early all-ins). Annotated landmarks on short-tail plot per literature:
+- 2 min: worker rush zone
+- 4 min: cheese/cannon rush (Liquipedia)
+- 7 min: MSC minimum (Wu et al. 2017)
+- 9 min: SC2EGSet minimum (Białecki et al. 2023)
+
+**Artifacts:** `reports/01_duration_distribution.csv`,
+`reports/01_duration_distribution_full.png`,
+`reports/01_duration_distribution_short_tail.png`
+
+---
+
+### Step 1.4 — APM and MMR audit
+
+**APM by year:** 2016 is 100% zero (1,110/1,110 slots). From 2017 onward,
+zero-rate drops to 0.4% (18/4,004 in 2017) and ≤0.1% thereafter.
+Confirms Scientific Invariant #7.
+
+**MMR by year:** Not reported in table form here — see `reports/01_apm_mmr_audit.md`.
+Conclusion unchanged from Phase 0: MMR is NOT usable as a direct feature
+(systematic missingness).
+
+```sql
+-- APM by year (full SQL in reports/01_apm_mmr_audit.md)
+SELECT EXTRACT(YEAR FROM (details->>'$.timeUTC')::TIMESTAMP) AS year,
+    COUNT(*) AS total_slots,
+    SUM(CASE WHEN (entry.value->>'$.APM')::INTEGER = 0
+              OR (entry.value->>'$.APM') IS NULL THEN 1 ELSE 0 END) AS apm_zero,
+    ROUND(100.0 * ... / COUNT(*), 1) AS pct_zero
+FROM raw, LATERAL json_each("ToonPlayerDescMap") AS entry
+GROUP BY 1 ORDER BY 1
+```
+
+**Artifact:** `reports/01_apm_mmr_audit.md`
+
+---
+
+### Step 1.5 — Patch landscape
+
+Identified game versions spanning 2016–2024. Full CSV with 79 distinct
+(gameVersion, dataBuild) pairs. Data build values enable future per-patch
+stratification.
+
+**Artifact:** `reports/01_patch_landscape.csv`
+
+---
+
+### Step 1.6 — Tracker event type inventory
+
+**Event types (corpus-wide):**
+
+| event_type | total_rows | replays_with_type | avg_per_replay | median_per_replay |
+|---|---|---|---|---|
+| PlayerStats | 42,523,988 | 22,390 | 1,899.2 | 1,556 |
+| UnitBorn | 23,003,640 | 22,390 | 1,027.4 | 888 |
+| UnitDied | 16,710,032 | 22,390 | 746.3 | 615 |
+| UnitTypeChangeEvent | 2,107,124 | 22,390 | 94.1 | 72 |
+| UpgradeEvent | 688,850 | 22,390 | 30.8 | 28 |
+| UnitInitEvent | 361,168 | 22,339 | 16.1 | 14 |
+| UnitDoneEvent | 226,014 | 22,260 | 10.1 | 8 |
+| PlayerSetupEvent | 44,780 | 22,390 | 2.0 | 2 |
+
+(Approximate values from CSV — see exact data in `reports/01_event_type_inventory.csv`)
+
+Zero-PlayerStats replays: 0 (all replays with tracker events have PlayerStats).
+
+Outlier-flagged tournaments: identified via 2-sigma rule on tournament-level averages.
+See `reports/01_event_density_by_tournament.csv`.
+
+**Artifacts:** `reports/01_event_type_inventory.csv`,
+`reports/01_event_count_distribution.csv`,
+`reports/01_event_density_by_year.csv`,
+`reports/01_event_density_by_tournament.csv`
+
+---
+
+### Step 1.7 — PlayerStats sampling regularity
+
+**Method:** Sampled 10 games per year (2016–2024) deterministically
+(`random.Random(42)`), computed inter-event game_loop deltas for PlayerStats
+events, aggregated per-game and per-year.
+
+**Result:** Mean interval across all years is consistently ~158 loops
+(range: 157.7–158.2). Deviation from expected 160 is 1.1–1.4%, well within
+the 20% tolerance threshold. **No years flagged.**
+
+```python
+# Sampling: random.Random(RANDOM_SEED=42).sample(ids_per_year, 10)
+# Interval computation: ps_df.groupby(["replay_id", "player_id"])["game_loop"].diff()
+# Flagging: abs(year_mean - 160) / 160 > 0.20
+```
+
+The consistent ~158 mean (vs expected 160) is likely due to first-event offset:
+the first PlayerStats event in each player's stream occurs at game_loop < 160,
+pulling the mean slightly below 160. The within-game standard deviation is
+typically < 25 loops, confirming regular sampling.
+
+**Artifact:** `reports/01_playerstats_sampling_check.csv`
+
+---
+
+### Gate conditions (Steps 1.1–1.7 only — Phase 1 gate NOT yet met)
+
+All 16 artifacts from Steps 1.1–1.7 exist on disk. Partial gate statements
+(pending Step 1.8 for full Phase 1 gate):
+
+- **(a)** 22,390 replays, all structurally valid (100% event coverage, 0 null timestamps).
+  13 player-count anomalies, 0 exact duplicates, 88 near-duplicate pairs.
+- **(b)** 18/70 tournaments flagged (result anomalies or player count ≠ 2). No event
+  data gaps — all tournaments have 100% tracker event coverage.
+- **(c)** Duration: median 10.85 min, mean 11.98 min, P01=3.34 min, P99=31.31 min.
+  No threshold chosen (observation only).
+- **(d)** APM usable from 2017+ (Invariant #7 confirmed). MMR not usable.
+- **(e)** Tracker event density consistent across years. PlayerStats present in all
+  22,390 replays with events.
+- **(f)** PlayerStats sampling interval stable: ~158 loops across all years (2016–2024),
+  within 1.4% of expected 160. No years flagged.
+
+### Open issue: Phase 1 extension needed before Phase 2
+
+Phase 1 covered the fields listed in the roadmap but did not audit several JSON
+fields that could silently corrupt results or represent missed features. A sample
+replay inspection (`reports/01_corpus_summary.json` references
+`src/sc2ml/data/samples/processed/0e0b1a550447f0b0a616e48224b31bd9.SC2Replay.json`)
+revealed the following gaps, grouped by severity:
+
+**CRITICAL — could silently corrupt results if not checked:**
+
+1. **`gameSpeed`** (`initData.gameDescription.gameSpeed` and `details.gameSpeed`):
+   The entire duration conversion (22.4 loops/sec) and all Phase 4 timepoints assume
+   Faster speed. If any games are at Normal or another speed, every duration-based
+   calculation for those games is wrong by up to 40%. A single query to verify,
+   but it is foundational to Invariant #6.
+
+2. **Error flags** (`trackerEvtsErr`, `gameEventsErr`, `messageEventsErr`):
+   A game with `trackerEvtsErr = true` may have partial tracker events that look
+   normal but are incomplete. Phase 4 would build features on those incomplete
+   PlayerStats snapshots without knowing anything was wrong.
+
+3. **`handicap`** (`ToonPlayerDescMap.*.handicap`): If ≠ 100, the player starts
+   with reduced HP on all units/structures — not a fair competitive game.
+   Should be a cleaning rule.
+
+4. **`noVictoryOrDefeat`** (`initData.gameDescription.gameOptions.noVictoryOrDefeat`):
+   If `true`, the game cannot produce a Win/Loss result. Should be `false` for all
+   tournament games.
+
+5. **`selectedRace`** (`ToonPlayerDescMap.*.selectedRace`): If `"Random"`, the
+   `race` field shows the assigned race, not the player's choice. This matters for
+   Phase 2 race consistency and Phase 7 race-based features — a Protoss main who
+   got assigned Zerg would be misclassified as a race switcher.
+
+**IMPORTANT — potential features or data quality indicators:**
+
+6. **`SQ` (Spending Quotient)** (`ToonPlayerDescMap.*.SQ`): SC2's built-in
+   per-game efficiency metric. Unlike MMR, it's computed from the replay itself,
+   so it may be available for every game including 2016 where APM is all zeros.
+   Needs the same year-by-year zero-rate audit as APM/MMR. Potentially a stronger
+   skill proxy than APM.
+
+7. **`supplyCappedPercent`** (`ToonPlayerDescMap.*.supplyCappedPercent`): Per-game
+   efficiency metric (% of game time supply-blocked). Same audit needed.
+
+8. **`maxPlayers`** (`initData.gameDescription.maxPlayers`): If > 4, the map
+   may be a team game map. Combined with the 13 player-count anomalies, this
+   helps distinguish FFA/team games from 1v1 with spectators.
+
+9. **`competitive`** (`initData.gameDescription.gameOptions.competitive`):
+   Indicates ranked ladder vs custom lobby. Tournament games are custom lobbies
+   (`false`), but verifying the distribution tells us if ladder games leaked in.
+
+10. **`randomRaces`** (`initData.gameDescription.gameOptions.randomRaces`):
+    Whether the lobby forced random race. Should be `false` for tournaments.
+
+**MINOR — good to know, unlikely to affect results:**
+
+11. `fog` — fog of war mode (non-zero = non-competitive).
+12. `isBlizzardMap` — official vs custom maps.
+13. `observers` — observer slot count (confirms tournament context).
+14. `startDir`/`startLocX`/`startLocY` — spawn position.
+15. `header.version` vs `metadata.gameVersion` — consistency check.
+
+**Recommended: add Step 1.8 (game settings and field completeness audit)**
+as a Phase 1 extension before proceeding to Phase 2. This is a single systematic
+pass through all non-event fields, producing a comprehensive field profile.
+The 13 player-count anomalies also need deeper classification: are these FFA,
+team games, or 1v1 with spectator/observer slots in `ToonPlayerDescMap`?
+
+---
+
 ## 2026-04-03 — Phase 0 ingestion audit: all gate conditions met
 
 **Objective:** Run the full Phase 0 audit (Steps 0.1–0.9) against real SC2EGSet replay

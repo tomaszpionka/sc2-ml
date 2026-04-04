@@ -207,6 +207,13 @@ def main() -> None:
         help="Steps to run (e.g. 0.1 0.2). Omit for all.",
     )
 
+    # explore subcommand
+    explore_parser = subparsers.add_parser("explore", help="Phase 1: corpus exploration")
+    explore_parser.add_argument(
+        "--steps", nargs="*", default=None,
+        help="Steps to run (e.g. 1.1 1.3). Omit for all.",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -234,6 +241,9 @@ def main() -> None:
 
     elif args.command == "audit":
         _run_audit_command(args.steps)
+
+    elif args.command == "explore":
+        _run_explore_command(args.steps)
 
     else:
         # Default: run pipeline (backward-compatible)
@@ -420,6 +430,19 @@ def _run_sanity_command() -> None:
             )
     finally:
         con.close()
+
+
+def _run_explore_command(steps: list[str] | None) -> None:
+    """Run Phase 1 corpus exploration."""
+    from sc2ml.data.exploration import run_phase_1_exploration
+
+    con = duckdb.connect(str(DB_FILE))
+    try:
+        results = run_phase_1_exploration(con, steps=steps)
+        logger.info(f"Exploration complete. Steps run: {list(results.keys())}")
+    finally:
+        con.close()
+        logger.info("DuckDB connection closed.")
 
 
 def _run_audit_command(steps: list[str] | None) -> None:

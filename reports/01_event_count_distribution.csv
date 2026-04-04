@@ -1,0 +1,16 @@
+# Per-replay event count distribution
+event_type,min_count,p05,p25,median_count,p75,p95,max_count
+PlayerSetup,1,2,2,2,2,2,9
+PlayerStats,2,85,141,185,245,379,2454
+UnitBorn,135,297,438,682,1096,2623,29742
+UnitDied,1,51,173,390,775,2354,29738
+UnitDone,1,19,59,113,180,332,1076
+UnitInit,1,21,63,118,187,343,1133
+UnitOwnerChange,1,1,2,4,10,44,646
+UnitPositions,1,11,24,36,53,92,383
+UnitTypeChange,1,13,72,309,742,1594,5551
+Upgrade,1,11,21,32,45,74,299
+
+# Zero-PlayerStats replays
+total_replays_with_events,zero_playerstats_replays
+22390,0.0
