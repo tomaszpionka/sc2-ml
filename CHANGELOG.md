@@ -19,6 +19,25 @@ merged to `master`.
 
 ### Removed
 
+## [0.14.2] — 2026-04-04 (PR: pending, chore/sc2-data-compression-scripts)
+
+### Added
+- `src/rts_predict/sc2/data/sc2_rezip_data.sh` — re-zips each `*_data/` tournament
+  directory back into a `*_data.zip` archive. Idempotent: skips tournaments where the
+  zip already exists. Critical for local storage: 22 390 individual JSON files (~209 GB
+  uncompressed) cause sustained Spotlight indexing and Defender real-time scanning on
+  every file access, generating unnecessary IO load. Re-zipping compresses to ~12 GB
+  and makes archives opaque to indexers. If data is ever moved to object storage
+  (S3/GCS) this step is unnecessary as cloud storage is not subject to local IO overhead.
+- `src/rts_predict/sc2/data/sc2_remove_data_dirs.sh` — removes `*_data/` source
+  directories after re-zipping. Three guards required before any delete: (1) matching
+  `.zip` exists, (2) zip is non-zero bytes, (3) real JSON file count in zip (excluding
+  `._*` ditto resource-fork stubs) equals count in directory. Must be run after
+  `sc2_rezip_data.sh` reports zero failures.
+- `src/rts_predict/sc2/data/sc2_validate_map_name_mappings.sh` — validates that
+  `map_foreign_to_english_mapping.json` is byte-identical across all tournament
+  directories.
+
 ## [0.14.1] — 2026-04-04 (PR: pending, chore/repo-reorganization)
 
 > Note: Entries before v0.14.0 reference the old `sc2ml` package name and
