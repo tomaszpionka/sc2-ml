@@ -24,7 +24,7 @@ its result) is contamination that makes results unreproducible in real inference
 ## Experiment Protocol
 
 1. **Hypothesis first** — before modifying any model or feature, document what you're changing and why it should help
-2. **Run and log** — after every experiment, log results in `reports/` following the `XX_run.md` naming convention
+2. **Run and log** — after every experiment, log results in the game-specific reports directory (e.g. `src/rts_predict/sc2/reports/`) following the `XX_run.md` naming convention
 3. **Compare baselines** — always compare against established results (~63-65% accuracy for classical models)
 4. **Temporal splits only** — no random shuffling. The correct split strategy is
 per-player leave-last-tournament-out (see reports/ROADMAP.md Phase 8). The
@@ -40,7 +40,7 @@ not be used for any thesis experiment.
 - [Keep a Changelog](https://keepachangelog.com/) format
 - Each merged branch gets its own semver section (e.g. `[0.7.0] — 2026-04-02 (PR #8: feat/classical-eval)`)
 - `[Unreleased]` tracks only the current working branch's uncommitted/unmerged changes
-- On merge, move `[Unreleased]` content into a new versioned section and bump `__version__` in `__init__.py`
+- On merge, move `[Unreleased]` content into a new versioned section and bump the version in `pyproject.toml`
 - Concise one-liners grouped by: `Added`, `Changed`, `Fixed`, `Removed`
 - Updated every session that changes code
 
@@ -51,7 +51,7 @@ not be used for any thesis experiment.
 - Directly usable as source material when writing thesis chapters
 - Updated every session involving experimentation, methodology decisions, issues, or breakthroughs
 
-### reports/archive/XX_run.md (pipeline execution output)
+### src/rts_predict/sc2/reports/archive/XX_run.md (pipeline execution output)
 - Legacy pipeline execution results and metrics (ChatGPT/Gemini era)
 - Archived for reference — reports 07-09 contain primary baseline metrics (~64.5% accuracy)
 - Referenced from research log entries, not replaced by them

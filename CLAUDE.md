@@ -59,7 +59,7 @@ Triggered when you open a new session and say "execute the current plan" or
 
 Read before planning:
 - `.claude/scientific-invariants.md`
-- The relevant phase of `reports/SC2ML_THESIS_ROADMAP.md`
+- The relevant phase of `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md`
 
 Plan must include:
 - Phase and step reference from the roadmap
@@ -162,15 +162,15 @@ happens with a partially displaced plan and reduced file-reading capacity.
 The repository contains existing code written before proper data exploration was conducted.
 **Treat all existing modules as legacy drafts, not as correct implementations.**
 
-The authoritative execution plan is `reports/SC2ML_THESIS_ROADMAP.md`. Every session
+The authoritative execution plan is `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md`. Every session
 must begin by reading it to understand which phase is current and what the gate condition
 is for advancing. Do not implement features, models, or splits until the phase that
 motivates them is complete and its artifacts exist.
 
-The old `reports/ROADMAP.md` is superseded. Do not use it to determine what to work on. Special subdir `reports/archive/` has been created to store no longer valid plans that only might be helpful in future when some legacy code or specific decision understanding is needed.
+The old `reports/ROADMAP.md` is superseded. Do not use it to determine what to work on. Special subdir `src/rts_predict/sc2/reports/archive/` has been created to store no longer valid plans that only might be helpful in future when some legacy code or specific decision understanding is needed.
 
 AoE2 integration is planned after SC2 exploration and modelling is complete.
-Do not create any `src/aoe2ml/` structure or AoE2-related files until explicitly
+Do not create any `src/rts_predict/aoe2/` structure or AoE2-related files until explicitly
 instructed. When AoE2 work begins, a separate roadmap and updated `.claude/` files
 will be provided.
 
@@ -205,11 +205,11 @@ activity — draft each section while context from its feeding phase is fresh.
 
 - **ALWAYS** use `poetry run <command>` or activate `.venv/` first
 - **NEVER** use bare `python3`, `python3 -c`, or `pip install`
-- Run scripts: `poetry run python -m sc2ml.cli`
-- Run tests: `poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing`
-- **Test location:** Tests are co-located with source — `x/y/z/module.py` → `x/y/z/tests/test_module.py`. Package-internal `tests/` = unit/component tests only. Root `tests/integration/` = cross-package integration tests. Root `tests/` also holds general infra tests and shared helpers. Package-root tests (cli, validation) go in `src/sc2ml/tests/`.
+- Run scripts: `poetry run python -m rts_predict.sc2.cli`
+- Run tests: `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing`
+- **Test location:** Tests are co-located with source — `x/y/z/module.py` → `x/y/z/tests/test_module.py`. Package-internal `tests/` = unit/component tests only. Root `tests/integration/` = cross-package integration tests. Root `tests/` also holds general infra tests and shared helpers. Package-root tests (cli, validation) go in `src/rts_predict/sc2/tests/`.
 - Lint before commits: `poetry run ruff check src/ tests/`
-- Type check: `poetry run mypy src/sc2ml/`
+- Type check: `poetry run mypy src/rts_predict/`
 
 ---
 
@@ -231,22 +231,31 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 | `.claude/coding-standards.md` | Style, type hints, linting, docstrings, pre-commit checks |
 | `.claude/git-workflow.md` | Branches, commits, end-of-session checklist |
 | `.claude/aoe2-plan.md` | AoE2 integration notes (upcoming) |
-| `reports/SC2ML_THESIS_ROADMAP.md` | **The authoritative phase-by-phase execution plan** |
+| `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` | **The authoritative phase-by-phase execution plan** |
 | `.claude/thesis-writing.md` | Thesis chapter writing workflow, quality standards, section-to-phase mapping |
+| `ARCHITECTURE.md` | Package layout, game contract, how to add a new game |
+| `.claude/chat-handoff.md` | Pass 1→2 handoff protocol for thesis writing |
+| `src/rts_predict/sc2/PHASE_STATUS.yaml` | SC2 phase progress (machine-readable) |
+| `thesis/chapters/REVIEW_QUEUE.md` | Thesis sections pending Claude Chat review |
 
 ---
 
 ## Progress Tracking (MANDATORY)
 
+- **At session start:** Read the relevant `PHASE_STATUS.yaml` (e.g.
+  `src/rts_predict/sc2/PHASE_STATUS.yaml`) to determine the current phase.
+  This is faster and more reliable than parsing the full roadmap. Read the
+  full roadmap only when you need step-level detail for the current phase.
 - **Before starting any work:** Read `.claude/scientific-invariants.md`. For
-  Category A (phase work), also read `reports/SC2ML_THESIS_ROADMAP.md` to
+  Category A (phase work), also read `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` to
   identify the current phase and its gate condition before planning anything.
 - **Do not begin a new phase** until all artifacts from the previous phase
   exist on disk.
 - **After completing any step:** Update `reports/research_log.md` with findings,
   decisions, and any deviations — for Category A work this is mandatory, for
   other categories only if something non-obvious was decided.
-- **After completing a phase gate:** Check `thesis/WRITING_STATUS.md` for sections that have moved to DRAFTABLE. Inform the user which thesis sections can now be drafted (Category F). Do not auto-draft without a planning session.
+- **After completing a phase gate:** Check `thesis/WRITING_STATUS.md` for sections that have moved to DRAFTABLE. Inform the user which thesis sections can now be drafted (Category F). Do not auto-draft without a planning session. Update the relevant `PHASE_STATUS.yaml`: set the completed phase to `status: complete` with `gate_date`, advance `current_phase` to the next phase number.
+- **After Category F work:** Update `thesis/chapters/REVIEW_QUEUE.md` and produce a Chat Handoff Summary (see `.claude/chat-handoff.md`).
 - **After code changes:** Follow `.claude/git-workflow.md`.
 
 ## End-of-Session Checklist
@@ -254,8 +263,7 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 > See `.claude/git-workflow.md` for full details on branches, commits, and conventions.
 
 **If wrapping up into a PR:** follow the full PR creation flow in `.claude/git-workflow.md`
-— this includes autonomous version bump in `pyproject.toml`, `CHANGELOG.md`, and
-`src/sc2ml/__init__.py` before proposing the push.
+— this includes autonomous version bump in `pyproject.toml` and `CHANGELOG.md` before proposing the push.
 
 **If not wrapping up into a PR:**
 
@@ -263,7 +271,7 @@ Python 3.12 | Poetry | PyTorch + PyG | DuckDB | scikit-learn, XGBoost, LightGBM 
 2. Ruff and mypy clean
 3. `CHANGELOG.md` updated — current work documented under `[Unreleased]`; version is
    not bumped until PR creation
-4. Phase artifacts from `reports/SC2ML_THESIS_ROADMAP.md` verified to exist on disk
+4. Phase artifacts from `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` verified to exist on disk
 5. `reports/research_log.md` updated with findings, decisions, and any issues encountered
 6. Proposed commit messages for all uncommitted work
 7. Summary of what's ready to merge and what's still in progress

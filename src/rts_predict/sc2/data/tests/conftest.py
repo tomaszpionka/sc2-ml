@@ -1,4 +1,4 @@
-"""Shared fixtures for sc2ml.data tests."""
+"""Shared fixtures for rts_predict.sc2.data tests."""
 import json
 from pathlib import Path
 

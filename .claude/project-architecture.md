@@ -12,28 +12,47 @@ When any existing module conflicts with guidance in this document or with
 
 ---
 
-## Package Layout (`src/sc2ml/`)
+## Package Layout (`src/rts_predict/`)
+
+See `ARCHITECTURE.md` at the repo root for the canonical structural guide and
+the game extension protocol. This section gives the ordering constraints and
+legacy code warnings needed for daily development.
 
 ### Intended structure
 ```
-src/sc2ml/
-├── cli.py                   # pipeline orchestrator and CLI subcommands
-├── config.py                # path constants, reproducibility settings
-├── data/
-│   ├── ingestion.py         # replay JSON → DuckDB raw table (Path A + Path B)
-│   ├── processing.py        # SQL views: flat_players, matches_flat
-│   ├── exploration.py       # data exploration functions, one per roadmap step
-│   └── tests/
-├── features/
-│   ├── init.py          # build_features() composable API
-│   └── tests/
-├── models/
-│   ├── baselines.py         # rule-based baselines (matchup win rate, recent form, H2H)
-│   ├── classical.py         # LR, LightGBM, XGBoost training and evaluation
-│   └── tests/
-├── analysis/
-│   └── tests/
-└── gnn/                     # deprioritized — appendix only
+src/rts_predict/
+├── __init__.py              # package docstring — version is in pyproject.toml only
+├── sc2/                     # StarCraft II game package
+│   ├── __init__.py          # game docstring only — NO __version__
+│   ├── cli.py               # pipeline orchestrator and CLI subcommands
+│   ├── config.py            # GAME_DIR, ROOT_DIR, REPORTS_DIR, path constants
+│   ├── PHASE_STATUS.yaml    # machine-readable phase progress (read at session start)
+│   ├── data/
+│   │   ├── ingestion.py     # replay JSON → DuckDB raw table (Path A + Path B)
+│   │   ├── processing.py    # SQL views: flat_players, matches_flat
+│   │   ├── exploration.py   # data exploration functions, one per roadmap step
+│   │   └── tests/
+│   ├── features/
+│   │   ├── __init__.py      # build_features() composable API
+│   │   └── tests/
+│   ├── models/
+│   │   ├── baselines.py     # rule-based baselines (matchup win rate, recent form, H2H)
+│   │   ├── classical.py     # LR, LightGBM, XGBoost training and evaluation
+│   │   └── tests/
+│   ├── analysis/
+│   │   └── tests/
+│   ├── gnn/                 # deprioritized — appendix only
+│   ├── reports/             # SC2-specific phase artifacts (tracked in git)
+│   │   └── SC2_THESIS_ROADMAP.md
+│   ├── models/              # SC2 model artifacts (gitignored)
+│   ├── logs/                # SC2 pipeline logs (gitignored)
+│   └── tests/               # package-root tests (cli, validation)
+├── aoe2/                    # AoE2 game package (placeholder)
+│   ├── __init__.py
+│   └── PHASE_STATUS.yaml
+└── common/                  # Shared evaluation framework (future)
+    ├── __init__.py
+    └── CONTRACT.md
 ```
 
 ### Ordering constraint
@@ -42,12 +61,12 @@ Modules must only be written after the phase that justifies them is complete:
 
 | Module | May be written after |
 |--------|---------------------|
-| `data/exploration.py` | Phase 0 gate (ingestion validated) |
-| `data/processing.py` views | Phase 2 gate (canonical_players exists) |
-| `features/` | Phase 7 (feature spec document exists) |
-| `models/baselines.py` | Phase 9 |
-| `models/classical.py` | Phase 9 gate (baselines evaluated) |
-| `gnn/` | Phase 10, only if time permits |
+| `sc2/data/exploration.py` | Phase 0 gate (ingestion validated) |
+| `sc2/data/processing.py` views | Phase 2 gate (canonical_players exists) |
+| `sc2/features/` | Phase 7 (feature spec document exists) |
+| `sc2/models/baselines.py` | Phase 9 |
+| `sc2/models/classical.py` | Phase 9 gate (baselines evaluated) |
+| `sc2/gnn/` | Phase 10, only if time permits |
 
 ---
 
@@ -168,7 +187,7 @@ unique games, always `COUNT(DISTINCT replay_id)` or filter to `WHERE p1_name < p
 
 ## Feature Engineering Principles
 
-Feature code may not be written until `reports/07_feature_specification.md` exists
+Feature code may not be written until `src/rts_predict/sc2/reports/07_feature_specification.md` exists
 (produced in Phase 7 of the roadmap). That document defines which features are in
 Group A (pre-game) and Group B (in-game) and which fields are confirmed dead.
 
@@ -194,11 +213,11 @@ contain incorrect assumptions, wrong split logic, or features derived from dead 
 
 | Module | Known issue |
 |--------|-------------|
-| `data/processing.py` → `create_temporal_split()` | Wrong split strategy. Superseded by Phase 8 per-player leave-last-tournament-out. Do not use for any thesis experiment. |
-| `cli.py` → `run_pipeline()` | Calls the wrong split. Do not use until Phase 8 is complete. |
-| `features/group_*.py` | Built without winner/loser separability analysis. Field selection unvalidated. Treat as a starting point, not ground truth. |
-| `gnn/` | Known majority-class collapse. Deprioritized to appendix. Do not invest time until Phases 1–9 are complete. |
-| `config.py` → `GLOBAL_TEST_SIZE` | Part of the old naive split. Not valid for thesis evaluation. |
+| `sc2/data/processing.py` → `create_temporal_split()` | Wrong split strategy. Superseded by Phase 8 per-player leave-last-tournament-out. Do not use for any thesis experiment. |
+| `sc2/cli.py` → `run_pipeline()` | Calls the wrong split. Do not use until Phase 8 is complete. |
+| `sc2/features/group_*.py` | Built without winner/loser separability analysis. Field selection unvalidated. Treat as a starting point, not ground truth. |
+| `sc2/gnn/` | Known majority-class collapse. Deprioritized to appendix. Do not invest time until Phases 1–9 are complete. |
+| `sc2/config.py` → `GLOBAL_TEST_SIZE` | Part of the old naive split. Not valid for thesis evaluation. |
 
 **What this means in practice:** When the roadmap asks you to build a feature or a
 view, write it from scratch guided by the roadmap specification and the exploration
@@ -209,12 +228,13 @@ against the specification — do not extend it blindly.
 
 ## Directories
 
-- `reports/` — thesis artifacts: roadmap, research log, per-phase exploration outputs
-- `reports/SC2ML_THESIS_ROADMAP.md` — authoritative execution plan
-- `reports/archive/` — legacy pipeline execution logs (reference only)
-- `logs/` — pipeline log file (`sc2_pipeline.log`)
-- `data/` — parquet outputs, feature files, ML dataset
-- `models/` — serialised model artifacts (written only in Phase 10)
+- `reports/` — cross-cutting research artifacts: `research_log.md` (tagged `[SC2]`/`[AoE2]`/`[CROSS]`)
+- `src/rts_predict/sc2/reports/` — SC2-specific phase artifacts: roadmap, exploration outputs
+- `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` — authoritative SC2 execution plan
+- `src/rts_predict/sc2/reports/archive/` — legacy pipeline execution logs (reference only)
+- `src/rts_predict/sc2/logs/` — pipeline log file (`sc2_pipeline.log`, gitignored)
+- `src/rts_predict/sc2/models/` — serialised model artifacts (written only in Phase 10, gitignored)
+- `ARCHITECTURE.md` — canonical package layout, game extension guide (repo root)
 
 ---
 

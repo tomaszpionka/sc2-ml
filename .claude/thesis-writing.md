@@ -88,7 +88,7 @@ Every substantial section should follow this pattern:
 
 ### Figures and tables
 - Every figure and table in the thesis must have a caption and a number
-- Reference figures/tables from report artifacts: `reports/01_duration_distribution_full.png`
+- Reference figures/tables from report artifacts: `src/rts_predict/sc2/reports/01_duration_distribution_full.png`
   → `thesis/figures/fig_4_1_duration_distribution.png` (renamed for thesis numbering)
 - Do not recreate analyses — reformat existing report artifacts for print quality
 - All figures must be reproducible from the code in the repository
@@ -111,7 +111,7 @@ Every substantial section should follow this pattern:
 ## How to draft a section (step by step)
 
 1. Read the relevant phase entry in `reports/research_log.md`
-2. Read the report artifacts that feed this section (CSVs, PNGs, MDs in `reports/`)
+2. Read the report artifacts that feed this section (CSVs, PNGs, MDs in `src/rts_predict/sc2/reports/`)
 3. Read the section description in `thesis/THESIS_STRUCTURE.md`
 4. Write the section in the appropriate `thesis/chapters/XX_*.md` file
 5. Add any new figures to `thesis/figures/` (renamed with thesis numbering)
@@ -205,6 +205,10 @@ Thesis section writing follows a mandatory two-pass process:
 3. Insert `[REVIEW: ...]` flags for anything requiring external validation
 4. Mark section as `DRAFTED` in WRITING_STATUS.md
 5. List all `[REVIEW: ...]` flags in the session summary
+
+After completing Pass 1, Claude Code must also:
+- Update `thesis/chapters/REVIEW_QUEUE.md` with a new Pending entry
+- Produce a Chat Handoff Summary block (see `.claude/chat-handoff.md`)
  
 ### Pass 2 — External validation (Claude Chat, with web search)
  
@@ -262,7 +266,7 @@ flags cannot move to `FINAL` status.
 - §4.1.1 first draft: corpus size, pipeline architecture, APM/MMR findings
 
 ### After Phase 1 (corpus inventory)
-- §4.1.1 revision: duration distribution, parse quality, patch landscape
+- §4.1.1 revision: duration distribution, parse quality, patch landscape (source: `src/rts_predict/sc2/reports/01_*.{png,csv,md}`)
 - §2.2 skeleton: SC2 mechanics, game loop timing (now sourced)
 
 ### After Phase 2 (player identity)

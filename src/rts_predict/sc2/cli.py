@@ -5,9 +5,9 @@ from pathlib import Path
 
 import duckdb
 
-from sc2ml.config import DB_FILE
-from sc2ml.data.ingestion import load_map_translations, move_data_to_duck_db
-from sc2ml.data.processing import (
+from rts_predict.sc2.config import DB_FILE
+from rts_predict.sc2.data.ingestion import load_map_translations, move_data_to_duck_db
+from rts_predict.sc2.data.processing import (
     assign_series_ids,
     create_ml_views,
     create_raw_enriched_view,
@@ -101,7 +101,7 @@ def main() -> None:
 
 def _run_explore_command(steps: list[str] | None) -> None:
     """Run Phase 1 corpus exploration."""
-    from sc2ml.data.exploration import run_phase_1_exploration
+    from rts_predict.sc2.data.exploration import run_phase_1_exploration
 
     con = duckdb.connect(str(DB_FILE))
     try:
@@ -114,7 +114,7 @@ def _run_explore_command(steps: list[str] | None) -> None:
 
 def _run_audit_command(steps: list[str] | None) -> None:
     """Run Phase 0 ingestion audit."""
-    from sc2ml.data.audit import run_phase_0_audit
+    from rts_predict.sc2.data.audit import run_phase_0_audit
 
     con = duckdb.connect(str(DB_FILE))
     try:

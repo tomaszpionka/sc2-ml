@@ -9,7 +9,7 @@ import duckdb
 import pandas as pd
 import pytest
 
-from sc2ml.data.audit import (
+from rts_predict.sc2.data.audit import (
     _REPLAY_ID_REGEX,
     run_source_audit,
     validate_map_translation_coverage,
@@ -107,7 +107,7 @@ class TestRunSourceAudit:
     def test_writes_json_report(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Scenario: Creates JSON report with correct keys."""
         replays_dir = _build_synthetic_replays_dir(tmp_path, use_data_subdir=True)
-        monkeypatch.setattr("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
 
         output = tmp_path / "audit.json"
         result = run_source_audit(replays_dir=replays_dir, output_path=output)
@@ -200,7 +200,7 @@ class TestRunPathASmokeTest:
 
     def test_smoke_test_with_synthetic_data(self, tmp_path: Path) -> None:
         """Scenario: Smoke test runs on a synthetic tournament directory."""
-        from sc2ml.data.audit import run_path_a_smoke_test
+        from rts_predict.sc2.data.audit import run_path_a_smoke_test
 
         replays_dir = _build_synthetic_replays_dir(tmp_path)
         tourn = "2023_GSL_S1"
@@ -313,7 +313,7 @@ class TestValidateMapTranslationCoverage:
     ) -> None:
         """Scenario: All maps translated → untranslated_count=0."""
         # Provide translations for all maps
-        monkeypatch.setattr("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
         map_file = tmp_path / "map_foreign_to_english_mapping.json"
         map_file.write_text(json.dumps({
             "MapA": "Map A English",
@@ -331,7 +331,7 @@ class TestValidateMapTranslationCoverage:
         self, _map_con: duckdb.DuckDBPyConnection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Scenario: Some maps untranslated → correct count and list."""
-        monkeypatch.setattr("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
         map_file = tmp_path / "map_foreign_to_english_mapping.json"
         map_file.write_text(json.dumps({"MapA": "Map A English"}))
 

@@ -1,0 +1,8 @@
+# AoE2 phase progress — placeholder
+# Will be populated when AoE2 roadmap is created after SC2 pipeline is complete.
+
+game: aoe2
+roadmap: null  # Not yet created
+current_phase: null
+
+phases: {}

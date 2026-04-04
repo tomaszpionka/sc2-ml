@@ -4,7 +4,7 @@
 
 - **Framework:** pytest
 - **Co-located tests:** tests live next to the code they test, under a `tests/` subdirectory. For `x/y/z/module.py`, tests go in `x/y/z/tests/test_module.py`.
-- **Run command:** `poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing`
+- **Run command:** `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing`
 
 ### Target structure
 
@@ -17,25 +17,25 @@ tests/                              # cross-cutting only
 ├── test_mps.py
 └── test_sanity_validation.py
 
-src/sc2ml/
-├── data/tests/                     # tests for src/sc2ml/data/
-├── features/tests/                 # tests for src/sc2ml/features/
-├── models/tests/                   # tests for src/sc2ml/models/
-├── gnn/tests/                      # tests for src/sc2ml/gnn/
-├── analysis/tests/                 # tests for src/sc2ml/analysis/
+src/rts_predict/sc2/
+├── data/tests/                     # tests for src/rts_predict/sc2/data/
+├── features/tests/                 # tests for src/rts_predict/sc2/features/
+├── models/tests/                   # tests for src/rts_predict/sc2/models/
+├── gnn/tests/                      # tests for src/rts_predict/sc2/gnn/
+├── analysis/tests/                 # tests for src/rts_predict/sc2/analysis/
 └── tests/                          # package-root level tests (cli, validation)
 ```
 
 - **Root `tests/`:** general infra tests (e.g. MPS probes) and shared helpers
 - **Root `tests/integration/`:** integration tests that wire multiple packages together
-- **`src/sc2ml/<subpkg>/tests/`:** unit/component tests for that subpackage only
-- **`src/sc2ml/tests/`:** tests for package-root modules (cli, validation)
+- **`src/rts_predict/sc2/<subpkg>/tests/`:** unit/component tests for that subpackage only
+- **`src/rts_predict/sc2/tests/`:** tests for package-root modules (cli, validation)
 
 ## Rules
 
 - **Every new or modified function must have a corresponding test** — no commit proposals without tests
 - **Tests must pass before proposing any commit**
-- Test file naming: `test_<module>.py` — placed in a `tests/` subdirectory alongside the module (e.g. `src/sc2ml/data/tests/test_processing.py` for `src/sc2ml/data/processing.py`)
+- Test file naming: `test_<module>.py` — placed in a `tests/` subdirectory alongside the module (e.g. `src/rts_predict/sc2/data/tests/test_processing.py` for `src/rts_predict/sc2/data/processing.py`)
 - Shared test utilities go in `tests/helpers.py`
 
 ## Test Categories

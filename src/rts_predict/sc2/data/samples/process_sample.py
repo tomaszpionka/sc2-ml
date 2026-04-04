@@ -4,7 +4,7 @@
     This script mirrors the now-deprecated Path A trimming logic.
     Use ``run_in_game_extraction()`` for Path B (in-game features) instead.
 
-Mirrors the trimming logic in sc2ml.data.ingestion.slim_down_sc2_with_manifest(),
+Mirrors the trimming logic in rts_predict.sc2.data.ingestion.slim_down_sc2_with_manifest(),
 but operates on local sample files without the manifest system.
 """
 

@@ -10,10 +10,10 @@
 
 | Task | Command |
 |------|---------|
-| Run pipeline | `poetry run python -m sc2ml.cli` |
-| Run tests | `poetry run pytest tests/ -v --cov=sc2ml --cov-report=term-missing` |
+| Run pipeline | `poetry run python -m rts_predict.sc2.cli` |
+| Run tests | `poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing` |
 | Lint | `poetry run ruff check src/ tests/` |
-| Type check | `poetry run mypy src/sc2ml/` |
+| Type check | `poetry run mypy src/rts_predict/` |
 | Add dependency | `poetry add <package>` |
 | Add dev dependency | `poetry add --group dev <package>` |
 

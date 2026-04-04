@@ -34,7 +34,7 @@ steps autonomously in order before handing off:
 ### Step 1 — Verify all checks pass
 Skip if there is no .py file in the staged files, otherwise:
 ```bash
-poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing
+poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing
 poetry run ruff check src/ tests/
 poetry run mypy src/
 ```
@@ -84,19 +84,16 @@ Leave the `[Unreleased]` section empty and ready for the next branch:
 ### Removed
 ```
 
-### Step 5 — Bump `__version__` in `src/sc2ml/__init__.py`
+### Step 5 — Bump version in `pyproject.toml`
 
-Update the `__version__` string to match the new version. If the file does not yet
-have a `__version__` field, add one.
-> `pyproject.toml` is the source of truth. Read the version from there, not from
-> `__init__.py` — the two may be out of sync in legacy state.
+Update the `version` field in `pyproject.toml`. This is the **single** version
+location — do not add `__version__` to any `__init__.py`.
 
 ### Step 6 — Commit the version bump
 ```
 chore(release): bump version to X.Y.Z
 ```
-This commit contains only the `pyproject.toml`, `CHANGELOG.md`, and
-`src/sc2ml/__init__.py` changes. Nothing else.
+This commit contains only the `pyproject.toml` and `CHANGELOG.md` changes. Nothing else.
 
 ### Step 7 — Propose the push and PR commands
 
@@ -119,9 +116,9 @@ Or, if `gh` is not available, provide the GitHub URL to open the PR manually.
 
 For sessions that do not end in a PR, run before wrapping up:
 
-1. All tests pass: `poetry run pytest tests/ src/ -v --cov=sc2ml --cov-report=term-missing`
+1. All tests pass: `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing`
 2. Ruff clean: `poetry run ruff check src/ tests/`
-3. Mypy clean: `poetry run mypy src/sc2ml/`
+3. Mypy clean: `poetry run mypy src/rts_predict/`
 4. `CHANGELOG.md` updated — current work documented under `[Unreleased]`
 5. `reports/research_log.md` updated if the session involved experimentation,
    methodology decisions, issues, or breakthroughs

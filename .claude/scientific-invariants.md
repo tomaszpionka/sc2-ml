@@ -84,7 +84,7 @@ Violating them produces results that cannot be defended at examination.
    written to a report artifact must include the exact SQL query or Python
    code used to compute it — not a description of it, the literal code.
    This applies to every artifact generated in Phases 0 through 6 in
-   `SC2ML_THESIS_ROADMAP.md`. A finding without its derivation cannot be
+   `SC2_THESIS_ROADMAP.md`. A finding without its derivation cannot be
    audited, reproduced, or cited in the thesis.
 
 9. **No magic numbers.** Every threshold used in data cleaning, feature

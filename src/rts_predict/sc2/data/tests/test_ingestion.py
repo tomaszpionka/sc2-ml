@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import duckdb
 import pytest
 
-from sc2ml.data.ingestion import (
+from rts_predict.sc2.data.ingestion import (
     PLAYER_STATS_FIELD_MAP,
     _build_game_event_rows,
     _build_metadata_rows,
@@ -487,8 +487,8 @@ class TestMoveDataToDuckDb:
             (replay_dir / f"match_{i}.SC2Replay.json").write_text(json.dumps(replay))
         return tmp_path / "replays"
 
-    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
-    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR")
     def test_loads_replays_into_raw_table(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
@@ -502,16 +502,16 @@ class TestMoveDataToDuckDb:
         temp_dir.mkdir()
 
         con = duckdb.connect(":memory:")
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
-             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
             move_data_to_duck_db(con, should_drop=True)
 
         row_count = con.execute("SELECT count(*) FROM raw").fetchone()[0]
         assert row_count == 3
         con.close()
 
-    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
-    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR")
     def test_raw_table_has_expected_columns(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
@@ -525,8 +525,8 @@ class TestMoveDataToDuckDb:
         temp_dir.mkdir()
 
         con = duckdb.connect(":memory:")
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
-             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
             move_data_to_duck_db(con, should_drop=True)
 
         columns = con.execute(
@@ -538,8 +538,8 @@ class TestMoveDataToDuckDb:
         assert expected.issubset(col_names)
         con.close()
 
-    @patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR")
-    @patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR")
+    @patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR")
+    @patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR")
     def test_should_drop_recreates_table(
         self, mock_source: Path, mock_temp: Path, tmp_path: Path
     ) -> None:
@@ -553,8 +553,8 @@ class TestMoveDataToDuckDb:
         temp_dir.mkdir()
 
         con = duckdb.connect(":memory:")
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
-             patch("sc2ml.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+             patch("rts_predict.sc2.data.ingestion.DUCKDB_TEMP_DIR", temp_dir):
             move_data_to_duck_db(con, should_drop=True)
             move_data_to_duck_db(con, should_drop=True)
 
@@ -575,7 +575,7 @@ class TestAuditRawDataAvailability:
         source = tmp_path / "replays"
         source.mkdir()
 
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source):
             counts = audit_raw_data_availability()
 
         assert counts["total"] == 0
@@ -606,7 +606,7 @@ class TestAuditRawDataAvailability:
             json.dumps({"header": {}})
         )
 
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
             counts = audit_raw_data_availability()
 
         assert counts["total"] == 3
@@ -631,7 +631,7 @@ class TestLoadMapTranslations:
         (source / "map_foreign_to_english_mapping.json").write_text(json.dumps(mapping))
 
         con = duckdb.connect(":memory:")
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
             load_map_translations(con)
 
         count = con.execute("SELECT count(*) FROM map_translation").fetchone()[0]
@@ -648,7 +648,7 @@ class TestLoadMapTranslations:
         source.mkdir()
 
         con = duckdb.connect(":memory:")
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", source), \
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source), \
              caplog.at_level(logging.WARNING):
             load_map_translations(con)
 
@@ -678,7 +678,7 @@ class TestCollectPendingFiles:
 
         manifest = {"tourn/data/done.SC2Replay.json": True}
 
-        with patch("sc2ml.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
+        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
             pending = _collect_pending_files(manifest)
 
         assert len(pending) == 1
@@ -688,10 +688,10 @@ class TestCollectPendingFiles:
 class TestRunInGameExtraction:
     """Test run_in_game_extraction with mocked Pool."""
 
-    @patch("sc2ml.data.ingestion.save_raw_events_to_parquet")
-    @patch("sc2ml.data.ingestion._save_manifest")
-    @patch("sc2ml.data.ingestion._collect_pending_files")
-    @patch("sc2ml.data.ingestion._load_manifest", return_value={})
+    @patch("rts_predict.sc2.data.ingestion.save_raw_events_to_parquet")
+    @patch("rts_predict.sc2.data.ingestion._save_manifest")
+    @patch("rts_predict.sc2.data.ingestion._collect_pending_files")
+    @patch("rts_predict.sc2.data.ingestion._load_manifest", return_value={})
     def test_mock_pool_batches(
         self, m_load, m_collect, m_save_manifest, m_save_parquet, tmp_path: Path
     ) -> None:
@@ -714,8 +714,11 @@ class TestRunInGameExtraction:
         mock_pool.__exit__ = MagicMock(return_value=False)
         mock_pool.imap_unordered.return_value = iter(fake_results)
 
-        with patch("sc2ml.data.ingestion.multiprocessing.Pool", return_value=mock_pool), \
-             patch("sc2ml.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool", return_value=mock_pool),
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+        ):
             run_in_game_extraction(
                 parquet_dir=tmp_path / "parquet", max_workers=1, batch_size=2,
             )
@@ -723,16 +726,19 @@ class TestRunInGameExtraction:
         # 3 results with batch_size=2 → 2 calls to save_parquet (batch of 2, then 1)
         assert m_save_parquet.call_count == 2
 
-    @patch("sc2ml.data.ingestion._collect_pending_files", return_value=[])
-    @patch("sc2ml.data.ingestion._load_manifest", return_value={})
+    @patch("rts_predict.sc2.data.ingestion._collect_pending_files", return_value=[])
+    @patch("rts_predict.sc2.data.ingestion._load_manifest", return_value={})
     def test_empty_pending_returns_early(self, m_load, m_collect, tmp_path: Path) -> None:
         """
         Scenario: No pending files means Pool is never created.
         Preconditions: _collect_pending_files returns empty list.
         Assertions: multiprocessing.Pool not called.
         """
-        with patch("sc2ml.data.ingestion.multiprocessing.Pool") as m_pool, \
-             patch("sc2ml.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool") as m_pool,
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+        ):
             run_in_game_extraction(parquet_dir=tmp_path / "parquet")
 
         m_pool.assert_not_called()

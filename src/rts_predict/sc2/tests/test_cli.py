@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 # Helpers
 # ---------------------------------------------------------------------------
 
-_CLI = "sc2ml.cli"
+_CLI = "rts_predict.sc2.cli"
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ _CLI = "sc2ml.cli"
 class TestSetupLogging:
     def test_setup_logging_creates_handlers(self, tmp_path: Path) -> None:
         with patch(f"{_CLI}.Path", return_value=tmp_path / "logs"):
-            from sc2ml.cli import setup_logging
+            from rts_predict.sc2.cli import setup_logging
 
             setup_logging()
 
@@ -49,7 +49,7 @@ class TestInitDatabase:
     def test_calls_five_steps_in_order(
         self, m_move, m_enrich, m_maps, m_views, m_series
     ) -> None:
-        from sc2ml.cli import init_database
+        from rts_predict.sc2.cli import init_database
 
         con = MagicMock()
         init_database(con)
@@ -68,7 +68,7 @@ class TestInitDatabase:
     def test_should_drop_forwarded(
         self, m_move, m_enrich, m_maps, m_views, m_series
     ) -> None:
-        from sc2ml.cli import init_database
+        from rts_predict.sc2.cli import init_database
 
         con = MagicMock()
         init_database(con, should_drop=True)
@@ -88,12 +88,12 @@ class TestMainRouting:
     @patch(f"{_CLI}.duckdb")
     @patch(f"{_CLI}.init_database")
     def test_main_init(self, m_init, m_duckdb, m_log) -> None:
-        from sc2ml.cli import main
+        from rts_predict.sc2.cli import main
 
         m_con = MagicMock()
         m_duckdb.connect.return_value = m_con
 
-        with patch("sys.argv", ["sc2ml", "init"]):
+        with patch("sys.argv", ["sc2", "init"]):
             main()
 
         m_init.assert_called_once_with(m_con, should_drop=False)
@@ -103,12 +103,12 @@ class TestMainRouting:
     @patch(f"{_CLI}.duckdb")
     @patch(f"{_CLI}.init_database")
     def test_main_init_force(self, m_init, m_duckdb, m_log) -> None:
-        from sc2ml.cli import main
+        from rts_predict.sc2.cli import main
 
         m_con = MagicMock()
         m_duckdb.connect.return_value = m_con
 
-        with patch("sys.argv", ["sc2ml", "init", "--force"]):
+        with patch("sys.argv", ["sc2", "init", "--force"]):
             main()
 
         m_init.assert_called_once_with(m_con, should_drop=True)

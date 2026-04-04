@@ -22,7 +22,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from sc2ml.config import (
+from rts_predict.sc2.config import (
     DUCKDB_MAX_OBJECT_SIZE,
     DUCKDB_MAX_TEMP_DIR_SIZE,
     DUCKDB_MEMORY_LIMIT,
@@ -35,7 +35,7 @@ from sc2ml.config import (
     IN_GAME_WORKERS,
     REPLAYS_SOURCE_DIR,
 )
-from sc2ml.data.schemas import (
+from rts_predict.sc2.data.schemas import (
     GAME_EVENT_SCHEMA,
     METADATA_SCHEMA,
     PLAYER_STATS_FIELD_MAP,
