@@ -9,16 +9,10 @@ Each feature branch merges as a semver bump. The `[Unreleased]` section
 tracks only changes on the current working branch that have not yet been
 merged to `master`.
 
-## [Unreleased]
+## [Unreleased] — v0.14.0
 
-### Changed
-- **Step 1**: Moved Python package `src/sc2ml/` → `src/rts_predict/sc2/` via `git mv` (history preserved)
-- **Step 1**: Moved `src/aoe2/` → `src/rts_predict/aoe2/` via `git mv`
-- **Step 1**: Created `src/rts_predict/__init__.py` (namespace package docstring)
-- **Step 1**: Created `src/rts_predict/common/` placeholder directory
-- **Step 2**: Moved SC2 phase artifacts (`reports/00_*`, `reports/01_*`, `sanity_validation.md`, `archive/`) → `src/rts_predict/sc2/reports/` via `git mv`
-- **Step 2**: Renamed `SC2ML_THESIS_ROADMAP.md` → `SC2_THESIS_ROADMAP.md` during move
-- **Step 2**: `reports/` now contains only cross-cutting `research_log.md`
+> Note: Entries before v0.14.0 reference the old `sc2ml` package name and
+> root-level `reports/` paths. See the repo reorganization in v0.14.0.
 
 ### Added
 - **Step 2.5**: `src/rts_predict/sc2/PHASE_STATUS.yaml` — machine-readable SC2 phase progress
@@ -28,7 +22,24 @@ merged to `master`.
 - **Step 2.7**: `thesis/chapters/REVIEW_QUEUE.md` — Pass 1 → Pass 2 thesis handoff tracker
 - **Step 2.7**: `.claude/chat-handoff.md` — Claude Code → Claude Chat handoff protocol
 
-*Part of repo reorganization (`chore/repo-reorganization`). Imports and references not yet updated — package will not resolve until subsequent steps complete the migration.*
+### Changed
+- **Step 1**: Moved Python package `src/sc2ml/` → `src/rts_predict/sc2/` via `git mv` (history preserved)
+- **Step 1**: Moved `src/aoe2/` → `src/rts_predict/aoe2/` via `git mv`
+- **Step 1**: Created `src/rts_predict/__init__.py` (namespace package docstring; `__version__` lives in `pyproject.toml` only per step 9 fixup)
+- **Step 1**: Created `src/rts_predict/common/` placeholder directory
+- **Step 2**: Moved SC2 phase artifacts (`reports/00_*`, `reports/01_*`, `sanity_validation.md`, `archive/`) → `src/rts_predict/sc2/reports/` via `git mv`
+- **Step 2**: Renamed `SC2ML_THESIS_ROADMAP.md` → `SC2_THESIS_ROADMAP.md` during move
+- **Step 2**: `reports/` now contains only cross-cutting `research_log.md`
+- **Step 4**: Centralized `GAME_DIR`, `ROOT_DIR`, `REPORTS_DIR` in `config.py`; removed duplicate `REPORTS_DIR` definitions from `audit.py` and `exploration.py`
+- **Step 5**: Renamed all `sc2ml` imports to `rts_predict.sc2` across all Python source and test files
+- **Step 6**: `pyproject.toml` — package renamed to `rts_predict`, CLI entry point renamed from `sc2ml` to `sc2`, coverage source updated to `src/rts_predict`, version bumped to `0.14.0`
+- **Step 7**: `.gitignore` — artifact patterns updated to game-scoped `src/rts_predict/*/` wildcards
+- **Step 8**: All `.claude/*.md` documentation — paths, commands, and references updated to `rts_predict` namespace
+- **Step 9**: `CLAUDE.md` — major rewrite; all paths, commands, layout, and progress tracking updated
+- **Step 10**: `README.md` — commands, roadmap reference, `ARCHITECTURE.md` mention
+- **Step 11**: `CHANGELOG.md` — this entry
+- **Step 12**: `reports/research_log.md` — reorganization entry, `[SC2]` tags, path updates
+- **Step 13**: `thesis/THESIS_STRUCTURE.md` — `SC2ML` → `SC2`, `reports/` path references updated
 
 ## [0.13.3] — 2026-04-04 (PR: pending, chore/rename-repo-rts-outcome-prediction)
 

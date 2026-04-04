@@ -6,7 +6,34 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
-## 2026-04-03 — Phase 1 corpus inventory: Steps 1.1–1.7 complete, Step 1.8 pending
+## 2026-04-04 — [CHORE] Repository reorganization: `sc2ml` → `rts_predict` namespace
+
+**Objective:** Structural standardization to support the planned SC2 + AoE2 comparative
+study. The `sc2ml` package name was SC2-specific and did not scale. All SC2 artifacts
+have been moved under a unified `rts_predict` namespace.
+
+**Changes made:**
+- Python package renamed: `sc2ml` → `rts_predict.sc2` (all imports updated)
+- SC2 phase artifacts moved: `reports/00_*`, `reports/01_*`, `sanity_validation.md`,
+  `archive/` → `src/rts_predict/sc2/reports/` (history preserved via `git mv`)
+- Roadmap renamed: `SC2ML_THESIS_ROADMAP.md` → `SC2_THESIS_ROADMAP.md`
+- CLI entry point renamed: `sc2ml` → `sc2`
+- `reports/` at repo root now contains only the cross-cutting `research_log.md`
+- New placeholder packages: `rts_predict.aoe2`, `rts_predict.common`
+- New infrastructure: `ARCHITECTURE.md`, `PHASE_STATUS.yaml` (per game), `REVIEW_QUEUE.md`,
+  `.claude/chat-handoff.md`, `common/CONTRACT.md`
+- Version bumped to `0.14.0`
+
+**Motivation:** AoE2 integration begins after SC2 pipeline is complete. Having SC2
+artifacts mixed at the repo root would complicate the mirrored AoE2 structure. This
+reorganization creates the structural foundation for a clean side-by-side comparison.
+
+**No analytical changes:** Business logic, SQL queries, and test assertions are
+unchanged. This is a pure structural/naming chore.
+
+---
+
+## 2026-04-03 — [SC2] Phase 1 corpus inventory: Steps 1.1–1.7 complete, Step 1.8 pending
 
 **Objective:** Run the full Phase 1 exploration (Steps 1.1–1.7) to characterise
 the SC2EGSet corpus — structural validation, parse quality, duration distribution,
@@ -46,7 +73,7 @@ Non-standard results: 26 slots (24 Undecided + 2 Tie). No nulls.
 Anomalous replays: 13 with no winner, 4 with multiple winners.
 
 ```sql
--- Near-duplicate detection (example — full SQL in reports/01_duplicate_detection.md)
+-- Near-duplicate detection (example — full SQL in src/rts_predict/sc2/reports/01_duplicate_detection.md)
 WITH raw_entries AS (
     SELECT filename,
            regexp_extract(filename, '([0-9a-f]{32})\.SC2Replay\.json$', 1) AS replay_id,
@@ -74,8 +101,8 @@ JOIN players_per_game b ON a.player_names = b.player_names
 ORDER BY time_diff_seconds
 ```
 
-**Artifacts:** `reports/01_corpus_summary.json`, `reports/01_player_count_anomalies.csv`,
-`reports/01_result_field_audit.md`, `reports/01_duplicate_detection.md`
+**Artifacts:** `src/rts_predict/sc2/reports/01_corpus_summary.json`, `src/rts_predict/sc2/reports/01_player_count_anomalies.csv`,
+`src/rts_predict/sc2/reports/01_result_field_audit.md`, `src/rts_predict/sc2/reports/01_duplicate_detection.md`
 
 ---
 
@@ -88,11 +115,11 @@ ORDER BY time_diff_seconds
   parse failures
 
 ```sql
--- Full SQL in reports/01_parse_quality_summary.md
+-- Full SQL in src/rts_predict/sc2/reports/01_parse_quality_summary.md
 -- Flagging thresholds: event_coverage_pct < 80, player_count_anomalies > 0, result_anomalies > 0
 ```
 
-**Artifacts:** `reports/01_parse_quality_by_tournament.csv`, `reports/01_parse_quality_summary.md`
+**Artifacts:** `src/rts_predict/sc2/reports/01_parse_quality_by_tournament.csv`, `src/rts_predict/sc2/reports/01_parse_quality_summary.md`
 
 ---
 
@@ -116,7 +143,7 @@ SELECT COUNT(*) AS n,
     ROUND(AVG(real_time_minutes), 2) AS mean,
     ROUND(MEDIAN(real_time_minutes), 2) AS median,
     ROUND(QUANTILE_CONT(real_time_minutes, 0.01), 2) AS p01,
-    -- (full query in reports/01_duration_distribution.csv header)
+    -- (full query in src/rts_predict/sc2/reports/01_duration_distribution.csv header)
 FROM (
     SELECT (header->>'$.elapsedGameLoops')::DOUBLE / 22.4 / 60.0 AS real_time_minutes
     FROM raw WHERE (header->>'$.elapsedGameLoops') IS NOT NULL
@@ -135,9 +162,9 @@ Short-tail: 50 games < 2 min (possible lobby artifacts); significant mass 3–5 
 - 7 min: MSC minimum (Wu et al. 2017)
 - 9 min: SC2EGSet minimum (Białecki et al. 2023)
 
-**Artifacts:** `reports/01_duration_distribution.csv`,
-`reports/01_duration_distribution_full.png`,
-`reports/01_duration_distribution_short_tail.png`
+**Artifacts:** `src/rts_predict/sc2/reports/01_duration_distribution.csv`,
+`src/rts_predict/sc2/reports/01_duration_distribution_full.png`,
+`src/rts_predict/sc2/reports/01_duration_distribution_short_tail.png`
 
 ---
 
@@ -147,7 +174,7 @@ Short-tail: 50 games < 2 min (possible lobby artifacts); significant mass 3–5 
 zero-rate drops to 0.4% (18/4,004 in 2017) and ≤0.1% thereafter.
 Confirms Scientific Invariant #7.
 
-**MMR by year:** Not reported in table form here — see `reports/01_apm_mmr_audit.md`.
+**MMR by year:** Not reported in table form here — see `src/rts_predict/sc2/reports/01_apm_mmr_audit.md`.
 Conclusion unchanged from Phase 0: MMR is NOT usable as a direct feature
 (systematic missingness).
 
@@ -162,7 +189,7 @@ FROM raw, LATERAL json_each("ToonPlayerDescMap") AS entry
 GROUP BY 1 ORDER BY 1
 ```
 
-**Artifact:** `reports/01_apm_mmr_audit.md`
+**Artifact:** `src/rts_predict/sc2/reports/01_apm_mmr_audit.md`
 
 ---
 
@@ -172,7 +199,7 @@ Identified game versions spanning 2016–2024. Full CSV with 79 distinct
 (gameVersion, dataBuild) pairs. Data build values enable future per-patch
 stratification.
 
-**Artifact:** `reports/01_patch_landscape.csv`
+**Artifact:** `src/rts_predict/sc2/reports/01_patch_landscape.csv`
 
 ---
 
@@ -191,17 +218,17 @@ stratification.
 | UnitDoneEvent | 226,014 | 22,260 | 10.1 | 8 |
 | PlayerSetupEvent | 44,780 | 22,390 | 2.0 | 2 |
 
-(Approximate values from CSV — see exact data in `reports/01_event_type_inventory.csv`)
+(Approximate values from CSV — see exact data in `src/rts_predict/sc2/reports/01_event_type_inventory.csv`)
 
 Zero-PlayerStats replays: 0 (all replays with tracker events have PlayerStats).
 
 Outlier-flagged tournaments: identified via 2-sigma rule on tournament-level averages.
-See `reports/01_event_density_by_tournament.csv`.
+See `src/rts_predict/sc2/reports/01_event_density_by_tournament.csv`.
 
-**Artifacts:** `reports/01_event_type_inventory.csv`,
-`reports/01_event_count_distribution.csv`,
-`reports/01_event_density_by_year.csv`,
-`reports/01_event_density_by_tournament.csv`
+**Artifacts:** `src/rts_predict/sc2/reports/01_event_type_inventory.csv`,
+`src/rts_predict/sc2/reports/01_event_count_distribution.csv`,
+`src/rts_predict/sc2/reports/01_event_density_by_year.csv`,
+`src/rts_predict/sc2/reports/01_event_density_by_tournament.csv`
 
 ---
 
@@ -226,7 +253,7 @@ the first PlayerStats event in each player's stream occurs at game_loop < 160,
 pulling the mean slightly below 160. The within-game standard deviation is
 typically < 25 loops, confirming regular sampling.
 
-**Artifact:** `reports/01_playerstats_sampling_check.csv`
+**Artifact:** `src/rts_predict/sc2/reports/01_playerstats_sampling_check.csv`
 
 ---
 
@@ -251,7 +278,7 @@ All 16 artifacts from Steps 1.1–1.7 exist on disk. Partial gate statements
 
 Phase 1 covered the fields listed in the roadmap but did not audit several JSON
 fields that could silently corrupt results or represent missed features. A sample
-replay inspection (`reports/01_corpus_summary.json` references
+replay inspection (`src/rts_predict/sc2/reports/01_corpus_summary.json` references
 `src/sc2ml/data/samples/processed/0e0b1a550447f0b0a616e48224b31bd9.SC2Replay.json`)
 revealed the following gaps, grouped by severity:
 
@@ -319,7 +346,7 @@ team games, or 1v1 with spectator/observer slots in `ToonPlayerDescMap`?
 
 ---
 
-## 2026-04-03 — Phase 0 ingestion audit: all gate conditions met
+## 2026-04-03 — [SC2] Phase 0 ingestion audit: all gate conditions met
 
 **Objective:** Run the full Phase 0 audit (Steps 0.1–0.9) against real SC2EGSet replay
 data to verify data integrity before proceeding to Phase 1 (data exploration).
@@ -346,7 +373,7 @@ for json_file in REPLAYS_SOURCE_DIR.rglob("*.SC2Replay.json"):
     if not has_tracker and not has_game: counts["stripped"] += 1
 ```
 
-**Result** (`reports/00_source_audit.json`):
+**Result** (`src/rts_predict/sc2/reports/00_source_audit.json`):
 ```json
 {"total": 22390, "has_tracker": 22390, "has_game": 22390, "has_both": 22390, "stripped": 0}
 ```
@@ -365,7 +392,7 @@ expected = tournament_dir.name
 match = (extracted == expected)
 ```
 
-**Result** (`reports/00_tournament_name_validation.txt`): 50/50 correct across 5 sampled
+**Result** (`src/rts_predict/sc2/reports/00_tournament_name_validation.txt`): 50/50 correct across 5 sampled
 tournaments (2022_HomeStory_Cup_XXI, 2020_StayAtHome_Story_Cup_2,
 2020_StayAtHome_Story_Cup_1, 2017_WESG_Haikou, 2016_IEM_10_Taipei), all `match == True`.
 
@@ -385,7 +412,7 @@ regexp_extract(filename, '([0-9a-f]{32})\.SC2Replay\.json$', 1)
 re.search(r'([0-9a-f]{32})\.SC2Replay\.json$', path).group(1)
 ```
 
-**Result** (`reports/00_replay_id_spec.md`): Three worked examples confirmed Path A
+**Result** (`src/rts_predict/sc2/reports/00_replay_id_spec.md`): Three worked examples confirmed Path A
 and Path B produce identical 32-char hex values for the same file.
 
 **Gate:** Path A ≡ Path B IDs — PASS.
@@ -463,7 +490,7 @@ SELECT * FROM read_json(
 SELECT count(*) FROM raw
 ```
 
-**Result** (`reports/00_full_ingestion_log.txt`):
+**Result** (`src/rts_predict/sc2/reports/00_full_ingestion_log.txt`):
 - Row count: 22,390
 - Audit total from Step 0.1: 22,390
 - Match: True
@@ -513,7 +540,7 @@ SELECT count(*) FROM game_events_raw      -- 608,618,823
 SELECT count(*) FROM match_player_map     -- 44,815
 ```
 
-**Result** (`reports/00_path_b_extraction_log.txt`):
+**Result** (`src/rts_predict/sc2/reports/00_path_b_extraction_log.txt`):
 - 22,390 files processed, 0 skipped, 448 Parquet batches
 - Extraction: ~2,871s (~48 min), loading: ~77s
 
@@ -553,7 +580,7 @@ SELECT r.replay_id FROM (
 WHERE t.replay_id IS NULL
 ```
 
-**Result** (`reports/00_join_validation.md`):
+**Result** (`src/rts_predict/sc2/reports/00_join_validation.md`):
 - Orphans in tracker_events_raw not in raw: 0
 - Orphans in raw not in tracker_events_raw: 0
 - `join_clean == True`
@@ -580,7 +607,7 @@ WHERE (metadata->>'$.mapName') NOT IN (
 ```
 Result: 0 untranslated maps.
 
-**Coverage CSV query** (`reports/00_map_translation_coverage.csv`):
+**Coverage CSV query** (`src/rts_predict/sc2/reports/00_map_translation_coverage.csv`):
 ```sql
 SELECT DISTINCT
     r.map_name,
