@@ -12,6 +12,16 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.13.0] — 2026-04-04 (PR: pending, feature/phase-1-corpus-inventory)
+
+### Added
 - **Phase 1 corpus exploration** (`src/sc2ml/data/exploration.py`): 7-step exploration
   pipeline (Steps 1.1–1.7) producing 16 report artifacts — corpus summary, parse quality,
   duration distribution with plots, APM/MMR audit, patch landscape, event type inventory,
