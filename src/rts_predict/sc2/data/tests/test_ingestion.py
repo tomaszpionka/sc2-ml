@@ -714,8 +714,11 @@ class TestRunInGameExtraction:
         mock_pool.__exit__ = MagicMock(return_value=False)
         mock_pool.imap_unordered.return_value = iter(fake_results)
 
-        with patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool", return_value=mock_pool), \
-             patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool", return_value=mock_pool),
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+        ):
             run_in_game_extraction(
                 parquet_dir=tmp_path / "parquet", max_workers=1, batch_size=2,
             )
@@ -731,8 +734,11 @@ class TestRunInGameExtraction:
         Preconditions: _collect_pending_files returns empty list.
         Assertions: multiprocessing.Pool not called.
         """
-        with patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool") as m_pool, \
-             patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", tmp_path / "manifest.json"):
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool") as m_pool,
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+        ):
             run_in_game_extraction(parquet_dir=tmp_path / "parquet")
 
         m_pool.assert_not_called()
