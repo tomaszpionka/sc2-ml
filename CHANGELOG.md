@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.15.1] — 2026-04-04 (PR: pending, chore/archive-cleanup)
+
+### Removed
+- 16 archive files (run logs 01-09, ROADMAP_v1, methodology_v1, data_analysis_notes, gnn_collapse_log, sanity_validation, research_log, gnn_space_map) replaced by single `ARCHIVE_SUMMARY.md`
+
 ## [0.15.0] — 2026-04-04 (PR: pending, docs/claude-config-restructure)
 
 ### Changed
