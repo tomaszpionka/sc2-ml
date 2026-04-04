@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.13.3] — 2026-04-04 (PR: pending, chore/rename-repo-rts-outcome-prediction)
+
+### Changed
+- Renamed repository from `sc2-ml` to `rts-outcome-prediction` for game-agnostic naming
+
 ## [0.13.2] — 2026-04-04 (PR: pending, chore/remove-pre-roadmap-legacy-code)
 
 ### Removed
