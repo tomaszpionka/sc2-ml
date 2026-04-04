@@ -57,7 +57,7 @@
 
 ## Documentation Checklist
 
-- [ ] `CHANGELOG.md` updated: `[Unreleased]` content moved to new versioned section (e.g. `[0.X.0]`), `__version__` bumped in `__init__.py`
+- [ ] `CHANGELOG.md` updated: `[Unreleased]` content moved to new versioned section (e.g. `[0.X.0]`), version bumped in `pyproject.toml`
 - [ ] `reports/research_log.md` updated (required if experiment / methodology / issues involved)
 - [ ] Tests added or updated in `tests/` for new logic
 - [ ] Docstrings / comments updated for changed functions

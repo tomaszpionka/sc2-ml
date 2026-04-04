@@ -40,7 +40,7 @@ not be used for any thesis experiment.
 - [Keep a Changelog](https://keepachangelog.com/) format
 - Each merged branch gets its own semver section (e.g. `[0.7.0] — 2026-04-02 (PR #8: feat/classical-eval)`)
 - `[Unreleased]` tracks only the current working branch's uncommitted/unmerged changes
-- On merge, move `[Unreleased]` content into a new versioned section and bump `__version__` in `__init__.py`
+- On merge, move `[Unreleased]` content into a new versioned section and bump the version in `pyproject.toml`
 - Concise one-liners grouped by: `Added`, `Changed`, `Fixed`, `Removed`
 - Updated every session that changes code
 

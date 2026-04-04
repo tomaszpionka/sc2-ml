@@ -14,7 +14,7 @@ merged to `master`.
 ### Changed
 - **Step 1**: Moved Python package `src/sc2ml/` → `src/rts_predict/sc2/` via `git mv` (history preserved)
 - **Step 1**: Moved `src/aoe2/` → `src/rts_predict/aoe2/` via `git mv`
-- **Step 1**: Created `src/rts_predict/__init__.py` with `__version__ = "0.14.0"` (single version source)
+- **Step 1**: Created `src/rts_predict/__init__.py` (namespace package docstring)
 - **Step 1**: Created `src/rts_predict/common/` placeholder directory
 - **Step 2**: Moved SC2 phase artifacts (`reports/00_*`, `reports/01_*`, `sanity_validation.md`, `archive/`) → `src/rts_predict/sc2/reports/` via `git mv`
 - **Step 2**: Renamed `SC2ML_THESIS_ROADMAP.md` → `SC2_THESIS_ROADMAP.md` during move

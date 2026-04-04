@@ -21,7 +21,7 @@ legacy code warnings needed for daily development.
 ### Intended structure
 ```
 src/rts_predict/
-├── __init__.py              # __version__ = "X.Y.Z" — single version location
+├── __init__.py              # package docstring — version is in pyproject.toml only
 ├── sc2/                     # StarCraft II game package
 │   ├── __init__.py          # game docstring only — NO __version__
 │   ├── cli.py               # pipeline orchestrator and CLI subcommands

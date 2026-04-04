@@ -84,19 +84,16 @@ Leave the `[Unreleased]` section empty and ready for the next branch:
 ### Removed
 ```
 
-### Step 5 — Bump `__version__` in `src/rts_predict/__init__.py`
+### Step 5 — Bump version in `pyproject.toml`
 
-Update the `__version__` string to match the new version.
-`src/rts_predict/__init__.py` is the **single** version location — `sc2/__init__.py`
-does NOT carry a version. Do not add `__version__` to any game sub-package.
-> `pyproject.toml` is the source of truth. Read the version from there.
+Update the `version` field in `pyproject.toml`. This is the **single** version
+location — do not add `__version__` to any `__init__.py`.
 
 ### Step 6 — Commit the version bump
 ```
 chore(release): bump version to X.Y.Z
 ```
-This commit contains only the `pyproject.toml`, `CHANGELOG.md`, and
-`src/rts_predict/__init__.py` changes. Nothing else.
+This commit contains only the `pyproject.toml` and `CHANGELOG.md` changes. Nothing else.
 
 ### Step 7 — Propose the push and PR commands
 
