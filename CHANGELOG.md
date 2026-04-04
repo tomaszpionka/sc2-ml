@@ -12,6 +12,14 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- **Phase 1 corpus exploration** (`src/sc2ml/data/exploration.py`): 7-step exploration
+  pipeline (Steps 1.1–1.7) producing 16 report artifacts — corpus summary, parse quality,
+  duration distribution with plots, APM/MMR audit, patch landscape, event type inventory,
+  and PlayerStats sampling regularity check
+- **Exploration tests** (`src/sc2ml/data/tests/test_exploration.py`): 23 tests with
+  synthetic DuckDB fixtures covering all steps and orchestrator (98% coverage)
+- **CLI `explore` subcommand**: `sc2ml explore [--steps 1.1 1.3]` for selective step execution
+- **tabulate dependency**: Required for DataFrame-to-markdown in report generation
 
 ### Changed
 
