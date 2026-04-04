@@ -1,8 +1,10 @@
 from pathlib import Path
 
 # ── Project paths ──────────────────────────────────────────────────────────────
-# Derived from file location: src/sc2ml/config.py → repo root
-ROOT_PROJECTS_DIR: Path = Path(__file__).resolve().parent.parent.parent
+# Game-scoped directories (derived from this file's location)
+GAME_DIR: Path = Path(__file__).resolve().parent                # src/rts_predict/sc2/
+ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
+REPORTS_DIR: Path = GAME_DIR / "reports"
 DB_FILE: Path = Path("~/duckdb_work/test_sc2.duckdb").expanduser().resolve()
 
 # DuckDB configuration
@@ -14,7 +16,7 @@ REPLAYS_SOURCE_DIR: Path = Path("~/Downloads/SC2_Replays").expanduser().resolve(
 # ── In-game data (Path B) ─────────────────────────────────────────────────────
 IN_GAME_DB_PATH: Path = Path("~/duckdb_work/sc2_in_game.duckdb").expanduser().resolve()
 IN_GAME_PARQUET_DIR: Path = Path("~/duckdb_work/in_game_parquet").expanduser().resolve()
-IN_GAME_MANIFEST_PATH: Path = ROOT_PROJECTS_DIR / "in_game_processing_manifest.json"
+IN_GAME_MANIFEST_PATH: Path = GAME_DIR / "in_game_processing_manifest.json"
 IN_GAME_WORKERS: int = 8
 IN_GAME_BATCH_SIZE: int = 50  # Files accumulated before Parquet flush
 
@@ -22,9 +24,9 @@ IN_GAME_BATCH_SIZE: int = 50  # Files accumulated before Parquet flush
 SERIES_GAP_SECONDS: int = 7200  # 2h max gap between games in same best-of series
 
 # ── Model artifact paths ───────────────────────────────────────────────────────
-MODELS_DIR: Path = ROOT_PROJECTS_DIR / "models"
+MODELS_DIR: Path = GAME_DIR / "models"
 GNN_CHECKPOINT_PATH: Path = MODELS_DIR / "best_gnn_checkpoint.pt"
-GNN_VIZ_OUTPUT_PATH: Path = ROOT_PROJECTS_DIR / "reports" / "gnn_space_map.png"
+GNN_VIZ_OUTPUT_PATH: Path = REPORTS_DIR / "gnn_space_map.png"
 
 # ── Reproducibility ────────────────────────────────────────────────────────────
 RANDOM_SEED: int = 42
@@ -106,4 +108,4 @@ EXTRACTION_LOG_INTERVAL: int = 200  # Log progress every N files during extracti
 BOOTSTRAP_N_ITER: int = 1000       # Bootstrap resampling iterations for 95% CI
 BOOTSTRAP_CI_LEVEL: float = 0.95   # Confidence level for bootstrap intervals
 CALIBRATION_N_BINS: int = 10       # Number of bins for calibration curve
-RESULTS_DIR: Path = ROOT_PROJECTS_DIR / "models" / "results"
+RESULTS_DIR: Path = MODELS_DIR / "results"
