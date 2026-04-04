@@ -11,13 +11,13 @@ merged to `master`.
 
 ## [Unreleased]
 
-### Added
-
 ### Changed
+- **Step 1**: Moved Python package `src/sc2ml/` → `src/rts_predict/sc2/` via `git mv` (history preserved)
+- **Step 1**: Moved `src/aoe2/` → `src/rts_predict/aoe2/` via `git mv`
+- **Step 1**: Created `src/rts_predict/__init__.py` with `__version__ = "0.14.0"` (single version source)
+- **Step 1**: Created `src/rts_predict/common/` placeholder directory
 
-### Fixed
-
-### Removed
+*Part of repo reorganization (`chore/repo-reorganization`). Imports and references not yet updated — package will not resolve until subsequent steps complete the migration.*
 
 ## [0.13.3] — 2026-04-04 (PR: pending, chore/rename-repo-rts-outcome-prediction)
 
