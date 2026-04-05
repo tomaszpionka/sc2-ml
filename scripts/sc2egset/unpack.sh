@@ -1,8 +1,10 @@
 #!/bin/bash
+# Extracts top-level tournament ZIPs from ~/Downloads/ into sc2egset/raw/.
+# Run once per new batch of downloaded ZIPs.
 
-# No need to mess with Homebrew PATH for ditto as it's a native macOS tool
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SOURCE="$HOME/Downloads"
-TARGET="$HOME/Downloads/SC2_Replays"
+TARGET="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
 
 mkdir -p "$TARGET"
 
@@ -24,15 +26,15 @@ for zip_file in "$SOURCE"/20[0-9][0-9]_*.zip; do
 
     echo ">>> Extracting: $base_name"
     mkdir -p "$extract_dir"
-    
-    # Using ditto instead of unzip. 
+
+    # Using ditto instead of unzip.
     # -x: extract, -k: treat as archive, -V: verbose (optional)
     if ditto -x -k "$zip_file" "$extract_dir"; then
         echo "    Done: $base_name"
     else
         echo "    ERROR: Failed to extract $base_name"
         # Clean up the empty folder so it tries again next time
-        rmdir "$extract_dir" 2>/dev/null 
+        rmdir "$extract_dir" 2>/dev/null
     fi
     echo ""
 done

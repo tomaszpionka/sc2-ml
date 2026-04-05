@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# sc2_rezip_data.sh
-#
 # Re-zips each *_data/ subdirectory back into a *_data.zip file placed beside it.
-# Uses ditto (macOS native), consistent with sc2_extract_nested.sh.
-# Files land at zip root (no --keepParent), so sc2_extract_nested.sh can unpack
+# Uses ditto (macOS native), consistent with extract_nested.sh.
+# Files land at zip root (no --keepParent), so extract_nested.sh can unpack
 # them again if needed.
 #
 # Safe to re-run: skips any tournament where *_data.zip already exists.
-# Run this BEFORE sc2_remove_data_dirs.sh.
+# Run this BEFORE remove_data_dirs.sh.
 
-TARGET="$HOME/Downloads/SC2_Replays"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TARGET="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
 
 if [[ ! -d "$TARGET" ]]; then
     echo "Error: $TARGET not found."
@@ -60,7 +59,7 @@ echo ""
 echo "Rezipped: $total  |  Skipped (already exist): $skipped  |  Failed: $failed"
 echo ""
 if [[ "$failed" -eq 0 ]]; then
-    echo "All done. Review the zips, then run sc2_remove_data_dirs.sh to free disk space."
+    echo "All done. Review the zips, then run remove_data_dirs.sh to free disk space."
 else
-    echo "WARNING: $failed tournament(s) failed. Do not run sc2_remove_data_dirs.sh until resolved."
+    echo "WARNING: $failed tournament(s) failed. Do not run remove_data_dirs.sh until resolved."
 fi

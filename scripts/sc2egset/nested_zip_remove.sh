@@ -1,7 +1,9 @@
 #!/bin/bash
+# Removes nested *_data.zip files after successful extraction.
+# Run after extract_nested.sh.
 
-# Define the location where your folders already are
-TARGET="$HOME/Downloads/SC2_Replays"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TARGET="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
 
 # Check if directory exists
 if [ ! -d "$TARGET" ]; then
@@ -15,7 +17,7 @@ shopt -s globstar
 total_size=0
 # Loop through every _data.zip found inside the subdirectories
 for nested_zip in "$TARGET"/**/*_data.zip; do
-    
+
     # Get the directory where the zip is located
     parent_dir=$(dirname "$nested_zip")
     # Get the filename without the .zip extension for the new folder
