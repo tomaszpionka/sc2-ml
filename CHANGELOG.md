@@ -19,6 +19,27 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.4] — 2026-04-05 (PR #35: chore/agent-observability)
+
+### Added
+
+- SubagentStart/Stop hooks (`scripts/hooks/log-subagent.sh`) logging agent events
+  to `/tmp/rts-agent-log.txt` with session ID, agent ID, type, and transcript path
+- `scripts/debug/find-session.sh` — finds session directories and correlates
+  subagent transcript paths
+- `color` and `permissionMode` fields in all 5 agent frontmatter files
+- New Bash allow patterns in `settings.json`: `python3 -c *`, `echo *`, `date *`,
+  `jq *`, `du *`, `sort *`, `python3 -m pytest*`
+
+### Changed
+
+- `scripts/debug/find-session.sh` updated to search `<session_id>/subagents/`
+  for agent transcripts (correct Claude Code layout)
+- `scripts/hooks/log-subagent.sh` hardened: single jq call, `// "unknown"`
+  fallbacks on all fields
+- `docs/AGENT_MANUAL.md` Troubleshooting section expanded with transcript paths,
+  lint latency note, and write-guard CWD caveat
+
 ## [0.16.3] — 2026-04-05 (PR #34: chore/agent-infrastructure)
 
 ### Added
