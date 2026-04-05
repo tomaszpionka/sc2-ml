@@ -19,6 +19,26 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.4] — 2026-04-05 (PR #TBD: chore/init-aoe2-structure)
+
+### Added
+
+- AoE2 package directory tree under `src/rts_predict/aoe2/` mirroring the SC2 layout: `data/`, `data/tests/`, `reports/`, `tests/`, and per-source subdirs (`aoe2companion/`, `aoestats/`) each with `raw/`, `db/`, and `tmp/` directories
+- `config.py` for the AoE2 package with path constants for both data sources (`AOE2COMPANION_*` and `AOESTATS_*`)
+- `data/README.md` documenting the full data acquisition plan: source overview, per-source download tables (file patterns, counts, sizes, target directories), URL patterns, deferred/skip rationale, and download script requirements
+- Per-source `raw/README.md` files describing subdir layout and data provenance for `aoe2companion/raw/` and `aoestats/raw/`
+- `data/__init__.py`, `data/tests/__init__.py`, `tests/__init__.py` to make new subdirectories proper Python packages
+- `AOE2_THESIS_ROADMAP.md` placeholder in `reports/` noting roadmap will be authored after SC2 pipeline reaches Phase 3
+- Updated `PHASE_STATUS.yaml` `roadmap` field to reference `reports/AOE2_THESIS_ROADMAP.md`
+
+### Changed
+
+### Fixed
+
+### Removed
+
+- `src/rts_predict/aoe2/.gitkeep` placeholder (superseded by real content)
+
 ## [0.16.3] — 2026-04-05 (PR #34: chore/agent-infrastructure)
 
 ### Added
