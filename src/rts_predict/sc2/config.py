@@ -1,22 +1,22 @@
 from pathlib import Path
 
 # ── Project paths ──────────────────────────────────────────────────────────────
-# Game-scoped directories (derived from this file's location)
 GAME_DIR: Path = Path(__file__).resolve().parent                # src/rts_predict/sc2/
 ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
+DATA_DIR: Path = GAME_DIR / "data"                              # src/rts_predict/sc2/data/
+DATASET_DIR: Path = DATA_DIR / "sc2egset"                       # src/rts_predict/sc2/data/sc2egset/
 REPORTS_DIR: Path = GAME_DIR / "reports"
-DB_FILE: Path = Path("~/duckdb_work/test_sc2.duckdb").expanduser().resolve()
+DB_FILE: Path = DATASET_DIR / "db" / "db.duckdb"
 
 # DuckDB configuration
-DUCKDB_TEMP_DIR: Path = Path("~/duckdb_work/tmp").expanduser().resolve()
+DUCKDB_TEMP_DIR: Path = DATASET_DIR / "tmp"
 
 # Raw replay files location
-REPLAYS_SOURCE_DIR: Path = Path("~/Downloads/SC2_Replays").expanduser().resolve()
+REPLAYS_SOURCE_DIR: Path = DATASET_DIR / "raw"
 
 # ── In-game data (Path B) ─────────────────────────────────────────────────────
-IN_GAME_DB_PATH: Path = Path("~/duckdb_work/sc2_in_game.duckdb").expanduser().resolve()
-IN_GAME_PARQUET_DIR: Path = Path("~/duckdb_work/in_game_parquet").expanduser().resolve()
-IN_GAME_MANIFEST_PATH: Path = GAME_DIR / "in_game_processing_manifest.json"
+IN_GAME_PARQUET_DIR: Path = DATASET_DIR / "staging" / "in_game_events"
+IN_GAME_MANIFEST_PATH: Path = DATASET_DIR / "staging" / "in_game_processing_manifest.json"
 IN_GAME_WORKERS: int = 8
 IN_GAME_BATCH_SIZE: int = 50  # Files accumulated before Parquet flush
 

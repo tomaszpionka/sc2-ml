@@ -44,9 +44,9 @@ Flat JSON dictionary mapping **1,488 localized SC2 map names** to **215 canonica
 ## Stage 1: Raw JSON (pre-ingestion)
 
 Full replay file as exported by SC2Replay parser. ~3 MB per file.
-Raw data is going to be available in Downloads dir under paths as:
+Raw data lives under `src/rts_predict/sc2/data/sc2egset/raw/` (gitignored contents, README tracked):
 ```
-~Downloads/SC2_Replays/2016_IEM_10_Taipei  > tree .           
+src/rts_predict/sc2/data/sc2egset/raw/2016_IEM_10_Taipei  > tree .           
 .
 ├── 2016_IEM_10_Taipei_data
 │   ├── 095724b86cbca0e6da2fb8baad0d7baf.SC2Replay.json

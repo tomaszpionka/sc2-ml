@@ -17,10 +17,12 @@ This file has constraints not obvious from code structure.
 All other legacy (features/, gnn/, models/, analysis/) deleted v0.13.2,
 tag `pre-roadmap-cleanup`.
 
-## External Data
-- `~/duckdb_work/test_sc2.duckdb` — main DuckDB
-- `~/duckdb_work/tmp/` — DuckDB temp dir
-- `~/Downloads/SC2_Replays/` — raw JSON replays (NEVER modify)
+## Data Layout
+All pipeline data lives under `data/<dataset>/` within each game's subpackage (gitignored contents, tracked skeleton):
+- `src/rts_predict/sc2/data/sc2egset/raw/` — raw JSON replays (NEVER modify)
+- `src/rts_predict/sc2/data/sc2egset/staging/in_game_events/` — in-game event Parquet files (reproducible)
+- `src/rts_predict/sc2/data/sc2egset/db/db.duckdb` — main DuckDB database (reproducible)
+- `src/rts_predict/sc2/data/sc2egset/tmp/` — DuckDB spill-to-disk temp directory
 
 ## Platform
 - DuckDB: 24GB RAM, 4 threads (Apple M4 Max)

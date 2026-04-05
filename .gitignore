@@ -228,5 +228,27 @@ src/rts_predict/*/in_game_processing_manifest.json
 *.duckdb-wal
 *.duckdb-shm
 
+# ── Game-scoped data directories ──────────────────────────────────────────────
+# Layout: data/<dataset>/{raw,staging,db,tmp}/
+# Contents gitignored; only skeleton (.gitkeep, README.md) is tracked.
+*.duckdb
+
+# Un-ignore data/*/tmp/ (overrides the global tmp/ rule at line 216)
+!**/data/*/tmp/
+**/data/*/tmp/*
+!**/data/*/tmp/.gitkeep
+
+**/data/*/raw/**/*
+!**/data/*/raw/README.md
+
+**/data/*/staging/*
+!**/data/*/staging/README.md
+!**/data/*/staging/*/
+**/data/*/staging/*/*
+!**/data/*/staging/*/.gitkeep
+
+**/data/*/db/*
+!**/data/*/db/.gitkeep
+
 # Other files to ignore
 **/.DS_Store

@@ -110,6 +110,7 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
     Configures DuckDB for high-memory operation (24 GB limit, 4 threads) before
     ingesting. Scans all ``*.SC2Replay.json`` files under REPLAYS_SOURCE_DIR.
     """
+    DUCKDB_TEMP_DIR.mkdir(parents=True, exist_ok=True)
     logger.info("Setting up DuckDB optimizations (anti-OOM configuration)...")
     for q in _DUCKDB_SET_QUERIES:
         con.execute(q)

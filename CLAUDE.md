@@ -61,7 +61,7 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 ## Permissions
 
 **Autonomous:** Read/write within repo, poetry/pytest commands, read-only git ops
-**Ask first:** Reading outside repo (~/duckdb_work/, ~/Downloads/SC2_Replays/)
+**Ask first:** Reading outside repo
 **User executes:** All git write ops, system installs, DuckDB modifications
 
 ## Project Status

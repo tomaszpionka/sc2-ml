@@ -28,6 +28,10 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `config.py` | `GAME_DIR`, `ROOT_DIR`, `REPORTS_DIR`, DB paths, constants | Yes |
 | `PHASE_STATUS.yaml` | Machine-readable phase progress | Yes |
 | `data/` | Ingestion, processing, exploration, audit modules | Yes |
+| `data/<dataset>/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
+| `data/<dataset>/staging/` | Intermediate artifacts by type (gitignored, README tracked) | When extraction exists |
+| `data/<dataset>/db/` | DuckDB database file (gitignored, `.gitkeep` tracked) | Yes |
+| `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
 | `data/tests/` | Co-located unit tests for data modules | Yes |
 | `reports/` | Phase artifacts (tracked in git) | Yes |
 | `reports/<GAME>_THESIS_ROADMAP.md` | Authoritative execution plan | Yes |

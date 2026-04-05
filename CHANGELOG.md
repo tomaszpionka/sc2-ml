@@ -19,6 +19,24 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.1] — 2026-04-05 (PR #31: chore/consolidate-data-dirs)
+
+### Added
+- Dataset-scoped data directory scaffold: `data/sc2egset/{raw,staging,db,tmp}/`
+- `_connect_db()` helper in `cli.py` with `mkdir` safety net for DB parent dirs
+- `DUCKDB_TEMP_DIR.mkdir()` safety net in `ingestion.py` before DuckDB SET queries
+- README.md files in `sc2egset/raw/` and `sc2egset/staging/` describing directory contents
+
+### Changed
+- All data paths in `config.py` routed through new `DATASET_DIR` constant (no more `~/duckdb_work/` or `~/Downloads/` hardcoded paths)
+- `.gitignore` rewritten with dataset-aware patterns (`**/data/*/...`) for raw, staging, db, tmp
+- `IN_GAME_MANIFEST_PATH` relocated from game root to `DATASET_DIR/staging/`
+- Documentation updated: `dev-constraints.md`, `ARCHITECTURE.md`, `data/README.md`, `CLAUDE.md`
+
+### Removed
+- `IN_GAME_DB_PATH` constant (dead code, never imported)
+- Hardcoded external paths (`~/duckdb_work/`, `~/Downloads/SC2_Replays/`) from config and docs
+
 ## [0.16.0] — 2026-04-04 (PR #30: refactor/mypy-and-test-cleanup)
 
 ### Added

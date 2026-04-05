@@ -16,6 +16,12 @@ from rts_predict.sc2.data.processing import (
 logger = logging.getLogger("SC2_Pipeline")
 
 
+def _connect_db() -> duckdb.DuckDBPyConnection:
+    """Open a connection to the SC2 DuckDB, creating parent dirs if needed."""
+    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+    return duckdb.connect(str(DB_FILE))
+
+
 def setup_logging() -> None:
     """Configure root logger with file and console handlers."""
     log_dir = Path("logs")
@@ -82,7 +88,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "init":
-        con = duckdb.connect(str(DB_FILE))
+        con = _connect_db()
         try:
             init_database(con, should_drop=args.force)
         finally:
@@ -103,7 +109,7 @@ def _run_explore_command(steps: list[str] | None) -> None:
     """Run Phase 1 corpus exploration."""
     from rts_predict.sc2.data.exploration import run_phase_1_exploration
 
-    con = duckdb.connect(str(DB_FILE))
+    con = _connect_db()
     try:
         results = run_phase_1_exploration(con, steps=steps)
         logger.info(f"Exploration complete. Steps run: {list(results.keys())}")
@@ -116,7 +122,7 @@ def _run_audit_command(steps: list[str] | None) -> None:
     """Run Phase 0 ingestion audit."""
     from rts_predict.sc2.data.audit import run_phase_0_audit
 
-    con = duckdb.connect(str(DB_FILE))
+    con = _connect_db()
     try:
         results = run_phase_0_audit(con, steps=steps)
         logger.info(f"Audit complete. Steps run: {list(results.keys())}")

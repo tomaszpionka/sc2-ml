@@ -1,100 +1,237 @@
-# Plan: Fix mypy errors + clean up tests/ directory
+# Plan: Consolidate Data Into Game-Specific Source Packages
 
 ## Context
 
-All 97 tests pass but `mypy` reports 37 type errors. Additionally, the root `tests/` directory has unused files and a standalone MPS test script that isn't integrated with pytest. This plan fixes all mypy errors and cleans up `tests/`.
+All data currently lives outside the repo (`~/duckdb_work/`, `~/Downloads/SC2_Replays/`), creating permission complexity and fragile hardcoded paths. Instead of a top-level `data/` directory (which duplicates the per-game namespace), place raw, staging, db, and tmp directories directly under each game's existing `data/` subpackage, scoped by dataset name. Simpler, no new top-level dir, Occam's razor.
 
-**Category:** B — Refactor  
-**Branch:** `refactor/mypy-and-test-cleanup`
+## Target Structure
 
----
+```
+src/rts_predict/sc2/data/
+├── sc2egset/                     # dataset-scoped directory
+│   ├── raw/
+│   │   ├── README.md             # describes contents (tracked)
+│   │   └── <tournament_dirs>/    # gitignored bulk data
+│   ├── staging/
+│   │   ├── README.md             # describes contents (tracked)
+│   │   ├── in_game_events/       # Path B parquet batches
+│   │   │   └── .gitkeep
+│   │   └── in_game_processing_manifest.json  # gitignored
+│   ├── db/
+│   │   ├── .gitkeep
+│   │   └── db.duckdb             # gitignored
+│   └── tmp/
+│       └── .gitkeep
+├── samples/          # existing development reference (unchanged)
+├── tests/            # existing (unchanged)
+├── README.md         # existing (update path refs)
+├── __init__.py       # existing
+├── ingestion.py      # existing (paths from config)
+├── ...               # other existing modules
+```
 
-## Part 1: Fix 37 mypy errors
+No top-level `data/` directory at repo root. `samples/` stays at `data/samples/` — it's a committed development reference (slimmed JSON fixture + script), not a dataset artifact.
 
-### Issue 1: `fetchone()` indexing without None guard (30 errors)
+## Implementation Steps
 
-DuckDB's `fetchone()` returns `tuple[Any, ...] | None`. Code indexes directly without guarding.
+### Step 1: Create directory scaffold
 
-**Fix:** Add `assert row is not None` before indexing, or inline with a local variable.
+**Create empty files:**
+- `src/rts_predict/sc2/data/sc2egset/staging/in_game_events/.gitkeep`
+- `src/rts_predict/sc2/data/sc2egset/db/.gitkeep`
+- `src/rts_predict/sc2/data/sc2egset/tmp/.gitkeep`
 
-**Source files (4 errors + 7 errors + 7 errors = 11 total):**
-- [ingestion.py:131,530,562,566](src/rts_predict/sc2/data/ingestion.py)
-- [processing.py:269,316,319](src/rts_predict/sc2/data/processing.py)
-- [audit.py:268,360,430-432,547-548](src/rts_predict/sc2/data/audit.py)
+**Create with content:**
 
-**Test files (19 total):**
-- [test_processing.py](src/rts_predict/sc2/data/tests/test_processing.py) — 9 sites
-- [test_ingestion.py](src/rts_predict/sc2/data/tests/test_ingestion.py) — 8 sites + 2 from fetchone indexing
+`src/rts_predict/sc2/data/sc2egset/raw/README.md`:
+```markdown
+# SC2EGSet — Raw Replays
 
-### Issue 2: Generator fixture return types (5 errors)
+SC2EGSet tournament replay files as JSON. Each subdirectory is a tournament:
 
-Pytest fixtures using `yield` annotated as `-> T` instead of `-> Generator[T, None, None]`.
+    raw/
+    ├── 2016_IEM_10_Taipei/
+    │   ├── 2016_IEM_10_Taipei_data/
+    │   │   ├── <hash>.SC2Replay.json
+    │   │   └── ...
+    │   └── map_foreign_to_english_mapping.json
+    └── ...
 
-**Fix:** Change return annotations and add `from collections.abc import Generator`.
+~22K files across 50 tournaments. **NEVER modify** — treat as immutable source.
+```
 
-- [conftest.py:33](src/rts_predict/sc2/data/tests/conftest.py)
-- [test_ingestion.py:236](src/rts_predict/sc2/data/tests/test_ingestion.py)
-- [test_audit.py:228,290](src/rts_predict/sc2/data/tests/test_audit.py)
-- [test_exploration.py:51](src/rts_predict/sc2/data/tests/test_exploration.py)
+`src/rts_predict/sc2/data/sc2egset/staging/README.md`:
+```markdown
+# SC2EGSet — Staging
 
-### Issue 3: Missing type annotation (1 error)
+Intermediate artifacts extracted from raw replays. Each subdirectory groups
+a pipeline output:
 
-- [conftest.py:54](src/rts_predict/sc2/data/tests/conftest.py) — add `rows: list[dict[str, Any]] = []`
+| Directory | Source | Format |
+|-----------|--------|--------|
+| `in_game_events/` | Path B extraction (`run_in_game_extraction`) | Parquet batches |
 
----
+All contents are reproducible from raw data. Safe to delete and re-extract.
+```
 
-## Part 2: Clean up tests/ directory
+### Step 2: Update `.gitignore`
 
-### 2a: Delete `tests/helpers.py`
+After the existing DuckDB temp files section, add:
 
-- Contains `make_matches_df()` and `make_series_df()` — **never imported anywhere**
-- Only referenced in CHANGELOG.md and research_log.md (historical)
-- Will be rebuilt when actually needed (Phase 7+)
+```gitignore
+# ── Game-scoped data directories ──────────────────────────────────────────────
+# Layout: data/<dataset>/{raw,staging,db,tmp}/
+# Contents gitignored; only skeleton (.gitkeep, README.md) is tracked.
+*.duckdb
 
-### 2b: Clean up `tests/conftest.py`
+# Un-ignore data/*/tmp/ (overrides the global tmp/ rule at line 216)
+!**/data/*/tmp/
+**/data/*/tmp/*
+!**/data/*/tmp/.gitkeep
 
-- Currently just a docstring, no fixtures — keep the file but leave it minimal (empty conftest is fine for pytest discovery)
+**/data/*/raw/**/*
+!**/data/*/raw/README.md
 
-### 2c: Convert `tests/test_mps.py` to proper pytest
+**/data/*/staging/**/*
+!**/data/*/staging/README.md
+!**/data/*/staging/**/.gitkeep
 
-Current state: standalone script with `main()` and `print()` calls, not discoverable by pytest.
+**/data/*/db/*
+!**/data/*/db/.gitkeep
+```
 
-**Conversion plan:**
-- Convert each function to a `test_*` pytest function
-- Add `@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="MPS not available")` to all tests
-- Remove `print()` calls — pytest captures output; use assertions only
-- Remove `main()` and `if __name__` block
-- Keep `gc.collect()` / `torch.mps.empty_cache()` as a session-scoped fixture or in a finalizer
-- The `tiny_training_loop` test: assert final loss decreased (already has `prev_loss` tracking)
-- The `threaded_stress` tests: keep as-is logic, just wrap in test functions
+Key details:
+- `**/data/*/` matches any dataset directory under any game's `data/`
+- `raw/**/*` and `staging/**/*` use recursive glob to handle nested subdirectories
+- README.md tracked in `raw/` and `staging/` (replaces .gitkeep role)
+- `.gitkeep` tracked in `staging/*/` subdirs, `db/`, and `tmp/`
+- Manifest at `staging/in_game_processing_manifest.json` is gitignored by the `staging/**/*` rule
+- `*.duckdb` is intentionally global — DuckDB binaries should never be committed (tests use `:memory:`)
+- The `tmp/` rule at line 216 ignores all `tmp/` dirs. The `!**/data/*/tmp/` negation un-ignores the directory, `**/data/*/tmp/*` re-ignores contents, `!**/data/*/tmp/.gitkeep` exempts the skeleton file
+- Must verify with `git check-ignore -v` after writing
 
-**Resulting test functions:**
-1. `test_mps_smoke_matmul` — matmul + sync + finite check
-2. `test_mps_autograd_cpu_vs_mps` — gradient comparison
-3. `test_mps_tiny_training_loop` — training converges (loss decreases)
-4. `test_mps_threaded_stress` — concurrent matmul stability
-5. `test_mps_threaded_stress_with_sync` — sequential matmul with per-op sync
+### Step 3: Update `config.py`
 
-All marked with a custom `mps` pytest marker (already registered in pyproject.toml).
+**File:** [config.py](src/rts_predict/sc2/config.py) (lines 3–18)
 
-### 2d: Keep `tests/__init__.py`
+Replace with:
+```python
+# ── Project paths ──────────────────────────────────────────────────────────────
+GAME_DIR: Path = Path(__file__).resolve().parent                # src/rts_predict/sc2/
+ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
+DATA_DIR: Path = GAME_DIR / "data"                              # src/rts_predict/sc2/data/
+DATASET_DIR: Path = DATA_DIR / "sc2egset"                       # src/rts_predict/sc2/data/sc2egset/
+REPORTS_DIR: Path = GAME_DIR / "reports"
+DB_FILE: Path = DATASET_DIR / "db" / "db.duckdb"
 
-Needed for pytest discovery — leave as empty file.
+# DuckDB configuration
+DUCKDB_TEMP_DIR: Path = DATASET_DIR / "tmp"
 
----
+# Raw replay files location
+REPLAYS_SOURCE_DIR: Path = DATASET_DIR / "raw"
 
-## Execution Order
+# ── In-game data (Path B) ─────────────────────────────────────────────────────
+IN_GAME_PARQUET_DIR: Path = DATASET_DIR / "staging" / "in_game_events"
+IN_GAME_MANIFEST_PATH: Path = DATASET_DIR / "staging" / "in_game_processing_manifest.json"
+```
 
-1. Fix source files: `ingestion.py`, `processing.py`, `audit.py`
-2. Fix test type annotations: `conftest.py`, `test_ingestion.py`, `test_processing.py`, `test_audit.py`, `test_exploration.py`
-3. Delete `tests/helpers.py`
-4. Rewrite `tests/test_mps.py` as proper pytest
-5. Verify: `mypy` → 0 errors, `pytest` → all pass, `ruff` → clean
+Changes:
+- **Add `DATASET_DIR`** — scopes all data to the SC2EGSet dataset
+- **Add `DATA_DIR`** — single base path for the data subtree
+- `DB_FILE`: `~/duckdb_work/test_sc2.duckdb` → `DATASET_DIR / "db" / "db.duckdb"`
+- `DUCKDB_TEMP_DIR`: `~/duckdb_work/tmp` → `DATASET_DIR / "tmp"`
+- `REPLAYS_SOURCE_DIR`: `~/Downloads/SC2_Replays` → `DATASET_DIR / "raw"`
+- `IN_GAME_PARQUET_DIR`: `~/duckdb_work/in_game_parquet` → `DATASET_DIR / "staging" / "in_game_events"`
+- `IN_GAME_MANIFEST_PATH`: `GAME_DIR / "in_game_processing_manifest.json"` → `DATASET_DIR / "staging" / "in_game_processing_manifest.json"`
+- **Remove `IN_GAME_DB_PATH`** — dead code, never imported anywhere (confirmed via grep)
 
-## Verification
+### Step 4: Add `mkdir` safety nets
+
+**4a. [ingestion.py](src/rts_predict/sc2/data/ingestion.py)** — Add `DUCKDB_TEMP_DIR.mkdir(parents=True, exist_ok=True)` at top of `move_data_to_duck_db()` (before the SET queries loop).
+
+**4b. [cli.py](src/rts_predict/sc2/cli.py)** — Add helper to replace three bare `duckdb.connect(str(DB_FILE))` calls:
+
+```python
+def _connect_db() -> duckdb.DuckDBPyConnection:
+    """Open a connection to the SC2 DuckDB, creating parent dirs if needed."""
+    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+    return duckdb.connect(str(DB_FILE))
+```
+
+### Step 5: Update documentation
+
+**5a. [dev-constraints.md](.claude/dev-constraints.md)** — Replace "External Data" section:
+```markdown
+## Data Layout
+All pipeline data lives under `data/<dataset>/` within each game's subpackage (gitignored contents, tracked skeleton):
+- `src/rts_predict/sc2/data/sc2egset/raw/` — raw JSON replays (NEVER modify)
+- `src/rts_predict/sc2/data/sc2egset/staging/in_game_events/` — in-game event Parquet files (reproducible)
+- `src/rts_predict/sc2/data/sc2egset/db/db.duckdb` — main DuckDB database (reproducible)
+- `src/rts_predict/sc2/data/sc2egset/tmp/` — DuckDB spill-to-disk temp directory
+```
+
+**5b. [CLAUDE.md](CLAUDE.md)** — Simplify permissions:
+```markdown
+**Ask first:** Reading outside repo
+```
+Remove the specific `~/duckdb_work/` and `~/Downloads/SC2_Replays/` references.
+
+**5c. [data/README.md](src/rts_predict/sc2/data/README.md)** — Update path references to `src/rts_predict/sc2/data/sc2egset/raw/...`.
+
+**5d. [ARCHITECTURE.md](ARCHITECTURE.md)** — Replace data subdirectory rows in game package contract table:
+```markdown
+| `data/<dataset>/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
+| `data/<dataset>/staging/` | Intermediate artifacts by type (gitignored, README tracked) | When extraction exists |
+| `data/<dataset>/db/` | DuckDB database file (gitignored, `.gitkeep` tracked) | Yes |
+| `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
+```
+
+### Step 6: Run verification
 
 ```bash
-poetry run mypy src/rts_predict/          # 0 errors
-poetry run pytest tests/ src/ -v          # all tests pass (MPS tests skip on non-MPS)
-poetry run ruff check src/ tests/         # clean
+source .venv/bin/activate && poetry run ruff check src/ tests/
+source .venv/bin/activate && poetry run mypy src/rts_predict/
+source .venv/bin/activate && poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing
 ```
+
+Then verify gitignore rules:
+```bash
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/tmp/.gitkeep        # NOT ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/raw/README.md       # NOT ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/staging/README.md   # NOT ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/staging/in_game_events/.gitkeep  # NOT ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/db/.gitkeep         # NOT ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/db/db.duckdb        # SHOULD be ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/raw/test.json       # SHOULD be ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/tmp/somefile        # SHOULD be ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/staging/in_game_events/batch.parquet  # SHOULD be ignored
+git check-ignore -v src/rts_predict/sc2/data/sc2egset/staging/in_game_processing_manifest.json  # SHOULD be ignored
+```
+
+### Step 7: User performs data migration (manual, post-merge)
+
+```bash
+cp -r ~/Downloads/SC2_Replays/* src/rts_predict/sc2/data/sc2egset/raw/
+cp -r ~/duckdb_work/in_game_parquet/* src/rts_predict/sc2/data/sc2egset/staging/in_game_events/
+cp ~/duckdb_work/test_sc2.duckdb src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+```
+
+Verify: `poetry run sc2 explore --steps 1.1`
+
+## What Does NOT Change
+
+- **Tests**: All mock config constants via `@patch` / `monkeypatch.setattr` with `tmp_path`. Zero test changes.
+- **`audit.py`, `exploration.py`, `processing.py`**: Import constants from config — values change transparently.
+- **`samples/` directory**: Stays as-is — committed development reference (slimmed JSON fixture + script), not a dataset artifact.
+- **`cli.py` / `ingestion.py`**: `_connect_db()` and `DUCKDB_TEMP_DIR.mkdir()` safety nets already handle arbitrary depth.
+
+## Branch
+
+`chore/consolidate-data-dirs` (Category C per CLAUDE.md workflow)
+
+## Risk Notes
+
+- **`tmp/` gitignore conflict**: Global `tmp/` (line 216) vs per-dataset negation. Verified via `git check-ignore` in Step 6.
+- **`*.duckdb` global**: Also catches any DuckDB file in `src/` or `tests/`. Correct — tests use `:memory:`.
+- **Disk space**: 22K JSON replays ~66GB. Symlinks are a viable alternative for raw data.
+- **Manifest relocation**: `IN_GAME_MANIFEST_PATH` moves from `GAME_DIR` to `DATASET_DIR / "staging"`. Existing manifest file at old location becomes orphaned — user should delete or move it after migration.
