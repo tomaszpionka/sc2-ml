@@ -615,7 +615,7 @@ def run_corpus_summary(
     pc_anomalies = con.execute(_PLAYER_COUNT_ANOMALIES_QUERY).df()
     result["player_count_anomalies"] = len(pc_anomalies)
     if len(pc_anomalies) > 0:
-        pc_anomalies.to_csv(out / "01_player_count_anomalies.csv", index=False)
+        pc_anomalies.to_csv(out / "01_01_player_count_anomalies.csv", index=False)
         logger.info(f"Wrote {len(pc_anomalies)} player count anomalies to CSV")
 
     # Result field audit
@@ -649,7 +649,7 @@ def run_corpus_summary(
     summary_json["player_count_anomalies"] = result["player_count_anomalies"]
     summary_json["exact_duplicates"] = len(dup_list)
     summary_json["near_duplicates"] = len(near_dups)
-    (out / "01_corpus_summary.json").write_text(json.dumps(summary_json, indent=2, default=str))
+    (out / "01_01_corpus_summary.json").write_text(json.dumps(summary_json, indent=2, default=str))
 
     # Write result field audit MD
     _write_result_field_audit_md(out, result_distinct, result_nulls, result_anomalous)
@@ -711,7 +711,7 @@ def _write_result_field_audit_md(
         result_anomalous.to_markdown(index=False),
         "",
     ]
-    (out / "01_result_field_audit.md").write_text("\n".join(lines))
+    (out / "01_01_result_field_audit.md").write_text("\n".join(lines))
 
 
 def _write_duplicate_detection_md(
@@ -760,7 +760,7 @@ def _write_duplicate_detection_md(
     else:
         lines.append("No near-duplicates found.")
     lines.append("")
-    (out / "01_duplicate_detection.md").write_text("\n".join(lines))
+    (out / "01_01_duplicate_detection.md").write_text("\n".join(lines))
 
 
 # ── Step 1.2 ────────────────────────────────────────────────────────────────
@@ -774,7 +774,7 @@ def run_parse_quality_by_tournament(
     out.mkdir(parents=True, exist_ok=True)
 
     df = con.execute(_PARSE_QUALITY_BY_TOURNAMENT_QUERY).df()
-    df.to_csv(out / "01_parse_quality_by_tournament.csv", index=False)
+    df.to_csv(out / "01_02_parse_quality_by_tournament.csv", index=False)
 
     # Identify flagged tournaments
     flagged = df[
@@ -807,7 +807,7 @@ def run_parse_quality_by_tournament(
             flagged.to_markdown(index=False),
             "",
         ])
-    (out / "01_parse_quality_summary.md").write_text("\n".join(lines))
+    (out / "01_02_parse_quality_summary.md").write_text("\n".join(lines))
 
     logger.info("Step 1.2 complete")
     return {"dataframe": df, "flagged": flagged.to_dict(orient="records")}
@@ -829,7 +829,7 @@ def run_duration_distribution(
     short_tail = con.execute(_DURATION_SHORT_TAIL_HISTOGRAM_QUERY).df()
 
     # Write combined CSV with sections
-    csv_path = out / "01_duration_distribution.csv"
+    csv_path = out / "01_03_duration_distribution.csv"
     with open(csv_path, "w") as f:
         f.write("# Overall percentiles\n")
         percentiles.to_csv(f, index=False)
@@ -845,9 +845,9 @@ def run_duration_distribution(
 
     # Plots
     if len(histogram) > 0:
-        _plot_duration_full(histogram, stats, out / "01_duration_distribution_full.png")
+        _plot_duration_full(histogram, stats, out / "01_03_duration_distribution_full.png")
     if len(short_tail) > 0:
-        _plot_duration_short_tail(short_tail, out / "01_duration_distribution_short_tail.png")
+        _plot_duration_short_tail(short_tail, out / "01_03_duration_distribution_short_tail.png")
 
     logger.info("Step 1.3 complete")
     return {"percentiles": stats, "by_year": by_year.to_dict(orient="records")}
@@ -913,7 +913,7 @@ def run_apm_mmr_audit(
         "  Player skill must be derived from match history.",
         "",
     ]
-    (out / "01_apm_mmr_audit.md").write_text("\n".join(lines))
+    (out / "01_04_apm_mmr_audit.md").write_text("\n".join(lines))
 
     logger.info("Step 1.4 complete")
     return {
@@ -934,7 +934,7 @@ def run_patch_landscape(
     out.mkdir(parents=True, exist_ok=True)
 
     df = con.execute(_PATCH_LANDSCAPE_QUERY).df()
-    df.to_csv(out / "01_patch_landscape.csv", index=False)
+    df.to_csv(out / "01_05_patch_landscape.csv", index=False)
 
     logger.info("Step 1.5 complete")
     return {"dataframe": df, "patch_count": len(df)}
@@ -952,13 +952,13 @@ def run_event_type_inventory(
 
     # 1.6A — Corpus-wide
     inventory = con.execute(_EVENT_TYPE_INVENTORY_QUERY).df()
-    inventory.to_csv(out / "01_event_type_inventory.csv", index=False)
+    inventory.to_csv(out / "01_06_event_type_inventory.csv", index=False)
 
     # 1.6B — Per-replay distribution + zero PlayerStats
     distribution = con.execute(_EVENT_COUNT_DISTRIBUTION_QUERY).df()
     zero_ps = con.execute(_ZERO_PLAYERSTATS_REPLAYS_QUERY).df()
     # Combine into one CSV
-    csv_path = out / "01_event_count_distribution.csv"
+    csv_path = out / "01_06_event_count_distribution.csv"
     with open(csv_path, "w") as f:
         f.write("# Per-replay event count distribution\n")
         distribution.to_csv(f, index=False)
@@ -967,11 +967,11 @@ def run_event_type_inventory(
 
     # 1.6C — By-year
     by_year = con.execute(_EVENT_DENSITY_BY_YEAR_QUERY).df()
-    by_year.to_csv(out / "01_event_density_by_year.csv", index=False)
+    by_year.to_csv(out / "01_06_event_density_by_year.csv", index=False)
 
     # 1.6D — By-tournament with outlier flagging
     by_tournament = con.execute(_EVENT_DENSITY_BY_TOURNAMENT_QUERY).df()
-    by_tournament.to_csv(out / "01_event_density_by_tournament.csv", index=False)
+    by_tournament.to_csv(out / "01_06_event_density_by_tournament.csv", index=False)
 
     outliers = by_tournament[by_tournament["is_outlier"] == True]  # noqa: E712
 
@@ -1052,7 +1052,7 @@ def run_playerstats_sampling_check(
     flagged_years = by_year[by_year["flagged"]]["year"].tolist()
 
     # Write CSV
-    csv_path = out / "01_playerstats_sampling_check.csv"
+    csv_path = out / "01_07_playerstats_sampling_check.csv"
     with open(csv_path, "w") as f:
         f.write("# Per-game PlayerStats interval stats\n")
         per_game.to_csv(f, index=False)

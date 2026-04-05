@@ -84,7 +84,7 @@ Run `audit_raw_data_availability()` from `ingestion.py`. Record:
 
 If `stripped > 0`, stop. Do not proceed until it is confirmed which files were stripped and whether the original data can be recovered from the SC2EGSet ZIPs.
 
-Output: `reports/00_source_audit.json`
+Output: `reports/00_01_source_audit.json`
 
 **0.2 — Validate the `tournament_name` extraction logic**
 
@@ -96,7 +96,7 @@ Before loading any data, write a standalone Python script that:
 
 If it fails for any path, fix the extraction logic in `processing.py` before proceeding.
 
-Output: `reports/00_tournament_name_validation.txt`
+Output: `reports/00_02_tournament_name_validation.txt`
 
 **0.3 — Design and document the canonical `replay_id`**
 
@@ -108,7 +108,7 @@ Write a specification (a short markdown file) that defines:
 
 This spec will be referenced by all downstream join logic.
 
-Output: `reports/00_replay_id_spec.md`
+Output: `reports/00_03_replay_id_spec.md`
 
 **0.4 — Run Path A ingestion on a single tournament**
 
@@ -120,7 +120,7 @@ Run `move_data_to_duck_db` on a single tournament directory (e.g. `2016_IEM_10_T
 - Extract `replay_id` using the spec from 0.3
 - Spot-check 3 rows manually against the source JSON files
 
-Output: `reports/00_path_a_smoke_test.md`
+Output: `reports/00_04_path_a_smoke_test.md`
 
 **0.5 — Run Path A ingestion on the full corpus**
 
@@ -129,7 +129,7 @@ Run `move_data_to_duck_db` with `should_drop=True` on the full `REPLAYS_SOURCE_D
 - Time taken
 - Any errors logged
 
-Output: `reports/00_full_ingestion_log.txt` (the pipeline log)
+Output: `reports/00_05_full_ingestion_log.txt` (the pipeline log)
 
 **0.6 — Add `tournament_dir` and `replay_id` as persistent columns**
 
@@ -149,7 +149,7 @@ Run `run_in_game_extraction()` on the full corpus. This is the slow step (multip
 
 Then run `load_in_game_data_to_duckdb()` to load Parquet into DuckDB.
 
-Output: `reports/00_path_b_extraction_log.txt`
+Output: `reports/00_07_path_b_extraction_log.txt`
 
 **0.8 — Validate the Path A / Path B join**
 
@@ -158,7 +158,7 @@ Write a query that joins `raw` (Path A) to `tracker_events_raw` (Path B) on the 
 - Every `replay_id` in `raw` that has `trackerEvents` (from the audit in 0.1) has a corresponding row in `tracker_events_raw`
 - Report any orphan `replay_id` values in either direction
 
-Output: `reports/00_join_validation.md`
+Output: `reports/00_08_join_validation.md`
 
 **0.9 — Run `load_map_translations` and verify**
 
@@ -168,18 +168,18 @@ Run `load_map_translations()`. Then:
 - Count how many map names from `raw` have no translation (null join)
 - List the untranslated map names
 
-Output: `reports/00_map_translation_coverage.csv`
+Output: `reports/00_09_map_translation_coverage.csv`
 
 ### Artifacts
 
-- `reports/00_source_audit.json`
-- `reports/00_tournament_name_validation.txt`
-- `reports/00_replay_id_spec.md`
-- `reports/00_path_a_smoke_test.md`
-- `reports/00_full_ingestion_log.txt`
-- `reports/00_path_b_extraction_log.txt`
-- `reports/00_join_validation.md`
-- `reports/00_map_translation_coverage.csv`
+- `reports/00_01_source_audit.json`
+- `reports/00_02_tournament_name_validation.txt`
+- `reports/00_03_replay_id_spec.md`
+- `reports/00_04_path_a_smoke_test.md`
+- `reports/00_05_full_ingestion_log.txt`
+- `reports/00_07_path_b_extraction_log.txt`
+- `reports/00_08_join_validation.md`
+- `reports/00_09_map_translation_coverage.csv`
 
 ### Gate
 
@@ -263,10 +263,10 @@ Step 1.3 will produce the empirical duration distribution, from which a data-dri
 threshold will be derived in Phase 6. Counting games below arbitrary cutoffs is
 premature and introduces unjustified magic numbers.
  
-Output: `reports/01_corpus_summary.json`
-Output: `reports/01_player_count_anomalies.csv` (if any anomalies found)
-Output: `reports/01_result_field_audit.md`
-Output: `reports/01_duplicate_detection.md`
+Output: `reports/01_01_corpus_summary.json`
+Output: `reports/01_01_player_count_anomalies.csv` (if any anomalies found)
+Output: `reports/01_01_result_field_audit.md`
+Output: `reports/01_01_duplicate_detection.md`
  
 **1.2 — Per-tournament parse quality table**
  
@@ -283,8 +283,8 @@ Cross-reference with `*_processed_failed.log` counts per tournament if accessibl
  
 Sort by `event_coverage_pct` ascending — worst coverage first.
  
-Output: `reports/01_parse_quality_by_tournament.csv`
-Output: `reports/01_parse_quality_summary.md` (narrative: which tournaments have >20%
+Output: `reports/01_02_parse_quality_by_tournament.csv`
+Output: `reports/01_02_parse_quality_summary.md` (narrative: which tournaments have >20%
 missing events, which have structural anomalies, which to potentially flag for exclusion)
  
 **1.3 — Game duration distribution**
@@ -317,9 +317,9 @@ threshold. The threshold is NOT chosen here — only the distribution is observe
  
 Save histogram data as CSV and render as matplotlib PNGs (full range + zoomed).
  
-Output: `reports/01_duration_distribution.csv`
-Output: `reports/01_duration_distribution_full.png`
-Output: `reports/01_duration_distribution_short_tail.png`
+Output: `reports/01_03_duration_distribution.csv`
+Output: `reports/01_03_duration_distribution_full.png`
+Output: `reports/01_03_duration_distribution_short_tail.png`
  
 **1.4 — APM and MMR audit (confirmation of Phase 0 findings)**
  
@@ -331,7 +331,7 @@ This step produces the formal report with year-by-year and league-by-league
 breakdowns, suitable for thesis citation. Use the exact queries from
 `research_log.md` Phase 0 entry.
  
-Write `reports/01_apm_mmr_audit.md` with:
+Write `reports/01_04_apm_mmr_audit.md` with:
 - The full year-by-year APM table
 - The full year-by-year MMR table
 - The MMR-by-highestLeague table
@@ -339,7 +339,7 @@ Write `reports/01_apm_mmr_audit.md` with:
   MMR is NOT usable as a direct feature — player skill must be derived
   from match history (Elo, Glicko-2, or rolling win rate)
  
-Output: `reports/01_apm_mmr_audit.md`
+Output: `reports/01_04_apm_mmr_audit.md`
  
 **1.5 — Game version and patch landscape**
  
@@ -360,7 +360,7 @@ Group versions by year and identify broad patch eras. SC2 timeline reference:
  
 These eras may serve as a control feature (Phase 5 decision).
  
-Output: `reports/01_patch_landscape.csv`
+Output: `reports/01_05_patch_landscape.csv`
  
 **1.6 — Tracker event type inventory (stratified)**
  
@@ -403,10 +403,10 @@ For each tournament, compute:
   the corpus-wide mean — these may have data quality issues not visible in the
   binary presence/absence check of Step 1.2
  
-Output: `reports/01_event_type_inventory.csv` (corpus-wide)
-Output: `reports/01_event_count_distribution.csv` (per-replay distribution stats)
-Output: `reports/01_event_density_by_year.csv`
-Output: `reports/01_event_density_by_tournament.csv`
+Output: `reports/01_06_event_type_inventory.csv` (corpus-wide)
+Output: `reports/01_06_event_count_distribution.csv` (per-replay distribution stats)
+Output: `reports/01_06_event_density_by_year.csv`
+Output: `reports/01_06_event_density_by_tournament.csv`
  
 **1.7 — Lightweight PlayerStats sampling regularity check**
  
@@ -425,7 +425,7 @@ For a stratified sample of 10 games per year (2016–2024, ~90 games total):
 If all years are consistent (~160 ± 20%), note this and move on. If any year
 diverges, document which year and by how much — Phase 4 will investigate further.
  
-Output: `reports/01_playerstats_sampling_check.csv`
+Output: `reports/01_07_playerstats_sampling_check.csv`
  
 **1.8 — Game settings and replay field completeness audit**
  
@@ -672,22 +672,22 @@ Output: `reports/01_error_flags_audit.csv` (list of replays with any error flag 
 
 ### Artifacts
  
-- `reports/01_corpus_summary.json`
-- `reports/01_player_count_anomalies.csv` (if anomalies exist)
-- `reports/01_result_field_audit.md`
-- `reports/01_duplicate_detection.md`
-- `reports/01_parse_quality_by_tournament.csv`
-- `reports/01_parse_quality_summary.md`
-- `reports/01_duration_distribution.csv`
-- `reports/01_duration_distribution_full.png`
-- `reports/01_duration_distribution_short_tail.png`
-- `reports/01_apm_mmr_audit.md`
-- `reports/01_patch_landscape.csv`
-- `reports/01_event_type_inventory.csv`
-- `reports/01_event_count_distribution.csv`
-- `reports/01_event_density_by_year.csv`
-- `reports/01_event_density_by_tournament.csv`
-- `reports/01_playerstats_sampling_check.csv`
+- `reports/01_01_corpus_summary.json`
+- `reports/01_01_player_count_anomalies.csv` (if anomalies exist)
+- `reports/01_01_result_field_audit.md`
+- `reports/01_01_duplicate_detection.md`
+- `reports/01_02_parse_quality_by_tournament.csv`
+- `reports/01_02_parse_quality_summary.md`
+- `reports/01_03_duration_distribution.csv`
+- `reports/01_03_duration_distribution_full.png`
+- `reports/01_03_duration_distribution_short_tail.png`
+- `reports/01_04_apm_mmr_audit.md`
+- `reports/01_05_patch_landscape.csv`
+- `reports/01_06_event_type_inventory.csv`
+- `reports/01_06_event_count_distribution.csv`
+- `reports/01_06_event_density_by_year.csv`
+- `reports/01_06_event_density_by_tournament.csv`
+- `reports/01_07_playerstats_sampling_check.csv`
 - `reports/01_game_settings_audit.md`
 - `reports/01_field_completeness_summary.csv`
 - `reports/01_error_flags_audit.csv`

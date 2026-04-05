@@ -243,13 +243,13 @@ class TestCorpusSummary:
 
         result = run_corpus_summary(exploration_con, output_dir=tmp_path)
         assert result["player_count_anomalies"] > 0
-        assert (tmp_path / "01_player_count_anomalies.csv").exists()
+        assert (tmp_path / "01_01_player_count_anomalies.csv").exists()
 
     def test_result_audit_contains_sql(self, exploration_con, tmp_path):
         from rts_predict.sc2.data.exploration import run_corpus_summary
 
         run_corpus_summary(exploration_con, output_dir=tmp_path)
-        md = (tmp_path / "01_result_field_audit.md").read_text()
+        md = (tmp_path / "01_01_result_field_audit.md").read_text()
         assert "```sql" in md
         assert "entry.value->>'$.result'" in md
 
@@ -275,7 +275,7 @@ class TestParseQuality:
         from rts_predict.sc2.data.exploration import run_parse_quality_by_tournament
 
         run_parse_quality_by_tournament(exploration_con, output_dir=tmp_path)
-        df = pd.read_csv(tmp_path / "01_parse_quality_by_tournament.csv")
+        df = pd.read_csv(tmp_path / "01_02_parse_quality_by_tournament.csv")
         expected_cols = {
             "tournament_dir", "total_replays", "has_events", "missing_events",
             "null_timestamp", "event_coverage_pct", "player_count_anomalies",
@@ -287,7 +287,7 @@ class TestParseQuality:
         from rts_predict.sc2.data.exploration import run_parse_quality_by_tournament
 
         run_parse_quality_by_tournament(exploration_con, output_dir=tmp_path)
-        df = pd.read_csv(tmp_path / "01_parse_quality_by_tournament.csv")
+        df = pd.read_csv(tmp_path / "01_02_parse_quality_by_tournament.csv")
         coverages = df["event_coverage_pct"].tolist()
         assert coverages == sorted(coverages)
 
@@ -300,14 +300,14 @@ class TestDurationDistribution:
         from rts_predict.sc2.data.exploration import run_duration_distribution
 
         run_duration_distribution(exploration_con, output_dir=tmp_path)
-        assert (tmp_path / "01_duration_distribution.csv").exists()
+        assert (tmp_path / "01_03_duration_distribution.csv").exists()
 
     def test_duration_png_created(self, exploration_con, tmp_path):
         from rts_predict.sc2.data.exploration import run_duration_distribution
 
         run_duration_distribution(exploration_con, output_dir=tmp_path)
-        full_png = tmp_path / "01_duration_distribution_full.png"
-        short_png = tmp_path / "01_duration_distribution_short_tail.png"
+        full_png = tmp_path / "01_03_duration_distribution_full.png"
+        short_png = tmp_path / "01_03_duration_distribution_short_tail.png"
         assert full_png.exists() and full_png.stat().st_size > 0
         assert short_png.exists() and short_png.stat().st_size > 0
 
@@ -340,7 +340,7 @@ class TestApmMmrAudit:
         from rts_predict.sc2.data.exploration import run_apm_mmr_audit
 
         run_apm_mmr_audit(exploration_con, output_dir=tmp_path)
-        md = (tmp_path / "01_apm_mmr_audit.md").read_text()
+        md = (tmp_path / "01_04_apm_mmr_audit.md").read_text()
         assert "```sql" in md
         assert "APM" in md
 
@@ -353,7 +353,7 @@ class TestPatchLandscape:
         from rts_predict.sc2.data.exploration import run_patch_landscape
 
         run_patch_landscape(exploration_con, output_dir=tmp_path)
-        df = pd.read_csv(tmp_path / "01_patch_landscape.csv")
+        df = pd.read_csv(tmp_path / "01_05_patch_landscape.csv")
         expected_cols = {"game_version", "data_build", "replay_count", "date_min", "date_max"}
         assert expected_cols.issubset(set(df.columns))
         # 2 distinct game versions in synthetic data
@@ -386,7 +386,7 @@ class TestEventTypeInventory:
         from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         run_event_type_inventory(exploration_con, output_dir=tmp_path)
-        df = pd.read_csv(tmp_path / "01_event_density_by_year.csv")
+        df = pd.read_csv(tmp_path / "01_06_event_density_by_year.csv")
         expected_cols = {"year", "event_type", "avg_per_replay", "median_per_replay"}
         assert expected_cols.issubset(set(df.columns))
         years = set(df["year"].unique())
@@ -397,7 +397,7 @@ class TestEventTypeInventory:
         from rts_predict.sc2.data.exploration import run_event_type_inventory
 
         run_event_type_inventory(exploration_con, output_dir=tmp_path)
-        df = pd.read_csv(tmp_path / "01_event_density_by_tournament.csv")
+        df = pd.read_csv(tmp_path / "01_06_event_density_by_tournament.csv")
         assert "is_outlier" in df.columns
 
 

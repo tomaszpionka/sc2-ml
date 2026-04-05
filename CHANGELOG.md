@@ -19,6 +19,13 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.2] — 2026-04-05 (PR #33: chore/report-step-prefix)
+
+### Changed
+
+- Renamed all Phase 0 and Phase 1 report files to include step numbers: `{PHASE:02d}_{STEP:02d}_{name}.{ext}` (e.g. `00_source_audit.json` → `00_01_source_audit.json`, `01_apm_mmr_audit.md` → `01_04_apm_mmr_audit.md`)
+- Updated `audit.py`, `exploration.py`, `test_exploration.py`, `SC2_THESIS_ROADMAP.md`, `research_log.md` to reference the new filenames
+
 ## [0.16.1] — 2026-04-05 (PR #31: chore/consolidate-data-dirs)
 
 ### Added
