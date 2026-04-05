@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# sc2_remove_data_dirs.sh
-#
 # Removes *_data/ subdirectories ONLY when ALL three guards pass:
 #   1. A corresponding *_data.zip exists beside the directory.
 #   2. The zip is non-empty (>0 bytes).
 #   3. The JSON file count in the zip matches the JSON file count in the directory.
 #
-# Run AFTER sc2_rezip_data.sh. Any directory that fails a guard is left untouched.
+# Run AFTER rezip_data.sh. Any directory that fails a guard is left untouched.
 
-TARGET="$HOME/Downloads/SC2_Replays"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TARGET="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
 
 if [[ ! -d "$TARGET" ]]; then
     echo "Error: $TARGET not found."

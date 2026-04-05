@@ -4,7 +4,7 @@ SC2EGSet tournament replay files as JSON. Each subdirectory is a tournament:
 
     raw/
     ├── 2016_IEM_10_Taipei/
-    │   ├── 2016_IEM_10_Taipei_data/
+    │   ├── 2016_IEM_10_Taipei_data.zip/
     │   │   ├── <hash>.SC2Replay.json
     │   │   └── ...
     │   └── map_foreign_to_english_mapping.json
