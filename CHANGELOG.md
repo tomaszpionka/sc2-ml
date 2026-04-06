@@ -28,6 +28,9 @@ merged to `master`.
 - `THESIS_WRITING_MANUAL.md` References: 10 new reference link definitions (Benavoli 2016/2017, García & Herrera 2008, García 2010, baycomp, Corani 2017, KU Leuven GenAI, APA ChatGPT, Elsevier AI, UW AI guidelines)
 - `DATA_EXPLORATION_MANUAL.md` §7: eighth pitfall "Not documenting AI-assisted exploration" with KU Leuven GenAI framework citation
 - `DATA_EXPLORATION_MANUAL.md` References: `[kuleuven-genai]` reference link definition
+- `FEATURE_ENGINEERING_MANUAL.md` §10: new "AI-assisted feature engineering disclosure" subsection on documenting AI tool usage and feature origin traceability
+- `FEATURE_ENGINEERING_MANUAL.md` §7: new "A note on Bayesian model comparison and feature importance" subsection recommending `baycomp` for feature ablation evaluation
+- `FEATURE_ENGINEERING_MANUAL.md` References: 4 new reference link definitions (Benavoli 2017, baycomp, KU Leuven GenAI, APA ChatGPT)
 
 ### Fixed
 
