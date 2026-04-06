@@ -5,6 +5,7 @@ All tests use synthetic data, in-memory DuckDB, and tmp_path fixtures.
 import json
 from collections.abc import Generator
 from pathlib import Path
+from unittest.mock import patch
 
 import duckdb
 import pandas as pd
@@ -655,3 +656,284 @@ class TestJoinValidationOrphanRaw:
         assert result["orphans_in_raw_not_tracker"] == 1
         md = output.read_text()
         assert "Raw orphan IDs" in md
+
+
+# ── Helpers for new test classes ─────────────────────────────────────────────
+
+
+def _build_raw_with_tpdm(con: duckdb.DuckDBPyConnection) -> None:
+    """Pre-populate an in-memory raw table with one row and JSON ToonPlayerDescMap."""
+    tpdm = json.dumps({
+        "toon-1": {"APM": 0, "MMR": 0},
+        "toon-2": {"APM": 120, "MMR": 2800},
+    })
+    df = pd.DataFrame([{  # noqa: F841
+        "filename": "T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json",
+        "ToonPlayerDescMap": tpdm,
+    }])
+    con.execute(
+        'CREATE TABLE raw AS '
+        'SELECT filename, "ToonPlayerDescMap"::JSON AS "ToonPlayerDescMap" FROM df'
+    )
+
+
+# ── TestRunFullPathAIngestion ─────────────────────────────────────────────────
+
+
+class TestRunFullPathAIngestion:
+    """Test run_full_path_a_ingestion (Step 0.5, lines 358-410)."""
+
+    def test_without_audit_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """No audit JSON → audit_total is None, row_count_matches_audit is None."""
+        from rts_predict.sc2.data.audit import run_full_path_a_ingestion
+
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+        )
+
+        con = duckdb.connect(":memory:")
+        _build_raw_with_tpdm(con)
+
+        output = tmp_path / "log.txt"
+        with patch("rts_predict.sc2.data.audit.move_data_to_duck_db"):
+            result = run_full_path_a_ingestion(con, output_path=output)
+        con.close()
+
+        assert result["audit_total"] is None
+        assert result["row_count_matches_audit"] is None
+        assert result["row_count"] == 1
+        assert output.exists()
+
+    def test_with_matching_audit_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Audit JSON total matches raw row count → row_count_matches_audit is True."""
+        from rts_predict.sc2.data.audit import run_full_path_a_ingestion
+
+        reports_dir = tmp_path / "reports"
+        reports_dir.mkdir(parents=True)
+        (reports_dir / "00_01_source_audit.json").write_text(json.dumps({"total": 1}))
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+
+        con = duckdb.connect(":memory:")
+        _build_raw_with_tpdm(con)
+
+        with patch("rts_predict.sc2.data.audit.move_data_to_duck_db"):
+            result = run_full_path_a_ingestion(con, output_path=tmp_path / "log.txt")
+        con.close()
+
+        assert result["audit_total"] == 1
+        assert result["row_count_matches_audit"] is True
+
+    def test_with_mismatched_audit_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Audit JSON total does not match raw row count → False + WARNING in output."""
+        from rts_predict.sc2.data.audit import run_full_path_a_ingestion
+
+        reports_dir = tmp_path / "reports"
+        reports_dir.mkdir(parents=True)
+        (reports_dir / "00_01_source_audit.json").write_text(json.dumps({"total": 99}))
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+
+        con = duckdb.connect(":memory:")
+        _build_raw_with_tpdm(con)
+
+        output = tmp_path / "log.txt"
+        with patch("rts_predict.sc2.data.audit.move_data_to_duck_db"):
+            result = run_full_path_a_ingestion(con, output_path=output)
+        con.close()
+
+        assert result["row_count_matches_audit"] is False
+        assert "WARNING" in output.read_text()
+
+    def test_default_output_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """No output_path arg → file written at REPORTS_DIR/00_05_full_ingestion_log.txt."""
+        from rts_predict.sc2.data.audit import run_full_path_a_ingestion
+
+        reports_dir = tmp_path / "reports"
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+
+        con = duckdb.connect(":memory:")
+        _build_raw_with_tpdm(con)
+
+        with patch("rts_predict.sc2.data.audit.move_data_to_duck_db"):
+            run_full_path_a_ingestion(con)
+        con.close()
+
+        assert (reports_dir / "00_05_full_ingestion_log.txt").exists()
+
+
+# ── TestRunPathBExtraction ────────────────────────────────────────────────────
+
+
+class TestRunPathBExtraction:
+    """Test run_path_b_extraction (Step 0.7, lines 422-480)."""
+
+    def _setup_in_game_tables(self, con: duckdb.DuckDBPyConnection) -> None:
+        """Create empty tracker/game/map tables so row-count queries succeed."""
+        con.execute("CREATE TABLE tracker_events_raw (match_id VARCHAR)")
+        con.execute("CREATE TABLE game_events_raw (match_id VARCHAR)")
+        con.execute("CREATE TABLE match_player_map (match_id VARCHAR)")
+
+    def test_without_manifest(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """No manifest file → extracted=0, skipped=0; batch_count matches parquet files."""
+        from rts_predict.sc2.data.audit import run_path_b_extraction
+
+        parquet_dir = tmp_path / "parquet"
+        parquet_dir.mkdir()
+        (parquet_dir / "tracker_events_batch_0.parquet").write_text("")
+        (parquet_dir / "tracker_events_batch_1.parquet").write_text("")
+
+        # Point IN_GAME_MANIFEST_PATH at a path that does not exist
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.IN_GAME_MANIFEST_PATH",
+            tmp_path / "nonexistent_manifest.json",
+        )
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+        )
+
+        con = duckdb.connect(":memory:")
+        self._setup_in_game_tables(con)
+
+        output = tmp_path / "log.txt"
+        with (
+            patch("rts_predict.sc2.data.audit.run_in_game_extraction"),
+            patch("rts_predict.sc2.data.audit.load_in_game_data_to_duckdb"),
+        ):
+            result = run_path_b_extraction(con, parquet_dir=parquet_dir, output_path=output)
+        con.close()
+
+        assert result["batch_count"] == 2
+        assert result["manifest_extracted"] == 0
+        assert result["manifest_skipped"] == 0
+        assert output.exists()
+
+    def test_with_manifest(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Manifest JSON with 2 True + 1 error → extracted=2, skipped=1."""
+        from rts_predict.sc2.data.audit import run_path_b_extraction
+
+        parquet_dir = tmp_path / "parquet"
+        parquet_dir.mkdir()
+
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(json.dumps({"r1": True, "r2": True, "r3": "error"}))
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.IN_GAME_MANIFEST_PATH", manifest_path
+        )
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+        )
+
+        con = duckdb.connect(":memory:")
+        self._setup_in_game_tables(con)
+
+        with (
+            patch("rts_predict.sc2.data.audit.run_in_game_extraction"),
+            patch("rts_predict.sc2.data.audit.load_in_game_data_to_duckdb"),
+        ):
+            result = run_path_b_extraction(
+                con, parquet_dir=parquet_dir, output_path=tmp_path / "log.txt"
+            )
+        con.close()
+
+        assert result["manifest_extracted"] == 2
+        assert result["manifest_skipped"] == 1
+
+    def test_default_output_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """No output_path arg → file written at REPORTS_DIR/00_07_path_b_extraction_log.txt."""
+        from rts_predict.sc2.data.audit import run_path_b_extraction
+
+        parquet_dir = tmp_path / "parquet"
+        parquet_dir.mkdir()
+
+        reports_dir = tmp_path / "reports"
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr(
+            "rts_predict.sc2.data.audit.IN_GAME_MANIFEST_PATH",
+            tmp_path / "nonexistent_manifest.json",
+        )
+
+        con = duckdb.connect(":memory:")
+        self._setup_in_game_tables(con)
+
+        with (
+            patch("rts_predict.sc2.data.audit.run_in_game_extraction"),
+            patch("rts_predict.sc2.data.audit.load_in_game_data_to_duckdb"),
+        ):
+            run_path_b_extraction(con, parquet_dir=parquet_dir)
+        con.close()
+
+        assert (reports_dir / "00_07_path_b_extraction_log.txt").exists()
+
+
+# ── TestJoinValidationWithAuditFile ──────────────────────────────────────────
+
+
+class TestJoinValidationWithAuditFile:
+    """Test validate_path_a_b_join when step 0.1 audit JSON exists (lines 503-504 + 528)."""
+
+    @pytest.fixture()
+    def _join_con_with_data(self) -> Generator[duckdb.DuckDBPyConnection, None, None]:
+        """DuckDB with minimal raw and tracker_events_raw tables (one matching row)."""
+        con = duckdb.connect(":memory:")
+        raw_df = pd.DataFrame({  # noqa: F841
+            "filename": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        tracker_df = pd.DataFrame({  # noqa: F841
+            "match_id": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE tracker_events_raw AS SELECT * FROM tracker_df")
+        yield con
+        con.close()
+
+    def test_stripped_count_read_from_audit(
+        self,
+        _join_con_with_data: duckdb.DuckDBPyConnection,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Audit JSON with stripped key → result contains stripped_count_from_audit=3."""
+        reports_dir = tmp_path / "reports"
+        reports_dir.mkdir(parents=True)
+        (reports_dir / "00_01_source_audit.json").write_text(
+            json.dumps({"stripped": 3, "total": 10})
+        )
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+
+        result = validate_path_a_b_join(
+            _join_con_with_data, output_path=tmp_path / "join.md"
+        )
+
+        assert result["stripped_count_from_audit"] == 3
+
+    def test_stripped_count_appears_in_markdown(
+        self,
+        _join_con_with_data: duckdb.DuckDBPyConnection,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Output markdown must include the 'Stripped files from audit' line."""
+        reports_dir = tmp_path / "reports"
+        reports_dir.mkdir(parents=True)
+        (reports_dir / "00_01_source_audit.json").write_text(
+            json.dumps({"stripped": 3, "total": 10})
+        )
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+
+        output = tmp_path / "join.md"
+        validate_path_a_b_join(_join_con_with_data, output_path=output)
+
+        assert "Stripped files from audit: 3" in output.read_text()

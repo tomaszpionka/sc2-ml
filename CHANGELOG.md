@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [0.18.3] — 2026-04-06 (PR #N: chore/per-dataset-reports)
+
+### Added
+- `src/rts_predict/sc2/data/tests/test_audit.py` — 9 new tests covering `run_full_path_a_ingestion`, `run_path_b_extraction`, and the `validate_path_a_b_join` audit-file cross-reference branch; `audit.py` now at 100% coverage
+
+### Changed
+- Migrated SC2 Phase 0–1 report artifacts into `src/rts_predict/sc2/reports/sc2egset/` per-dataset subdirectory (25 files moved via `git mv`)
+
 ## [0.18.2] — 2026-04-06 (PR #43: refactor/sc2-use-db-client)
 
 ### Added
