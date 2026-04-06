@@ -19,6 +19,20 @@ merged to `master`.
 
 ### Removed
 
+## [0.17.0] — 2026-04-06 (PR #38: docs/manual-patch)
+
+### Added
+
+- `THESIS_WRITING_MANUAL.md` §3.2: expanded statistical testing guidance explaining Nemenyi pool-dependence flaw, recommending Wilcoxon+Holm as frequentist best practice and Bayesian signed-rank (via `baycomp`) as complementary analysis
+- `THESIS_WRITING_MANUAL.md` §8: new GenAI Transparency and Attribution section covering disclosure requirements, citation formats, Polish university context, and practical recommendations
+- `THESIS_WRITING_MANUAL.md` References: 10 new reference link definitions (Benavoli 2016/2017, García & Herrera 2008, García 2010, baycomp, Corani 2017, KU Leuven GenAI, APA ChatGPT, Elsevier AI, UW AI guidelines)
+- `DATA_EXPLORATION_MANUAL.md` §7: eighth pitfall "Not documenting AI-assisted exploration" with KU Leuven GenAI framework citation
+- `DATA_EXPLORATION_MANUAL.md` References: `[kuleuven-genai]` reference link definition
+
+### Fixed
+
+- `THESIS_WRITING_MANUAL.md` §9: replaced stale "Friedman + Nemenyi" bullet with updated "Friedman + Wilcoxon/Holm for multi-method comparison, with Bayesian signed-rank as complement"
+
 ## [0.16.6] — 2026-04-06 (PR #37: chore/aoe2-cli-shared-db)
 
 ### Added
