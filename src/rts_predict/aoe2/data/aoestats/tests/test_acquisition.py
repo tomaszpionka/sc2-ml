@@ -197,7 +197,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
-        monkeypatch.setattr(mod, "AOESTATS_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
 
@@ -214,7 +214,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
-        monkeypatch.setattr(mod, "AOESTATS_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
 
@@ -249,7 +249,7 @@ class TestRunDownload:
         players_file.write_bytes(content)
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
-        monkeypatch.setattr(mod, "AOESTATS_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", matches_dir)
         monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", players_dir)
 
@@ -274,7 +274,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
-        monkeypatch.setattr(mod, "AOESTATS_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
 
@@ -293,7 +293,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
-        monkeypatch.setattr(mod, "AOESTATS_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
 

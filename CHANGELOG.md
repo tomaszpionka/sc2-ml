@@ -40,6 +40,16 @@ merged to `master`.
 - `download` CLI subcommand in `aoe2/cli.py` with `source` positional arg (`aoe2companion`/`aoestats`), `--dry-run`, `--force`, `--log-interval` flags
 - `src/rts_predict/aoe2/data/aoe2companion/__init__.py` and `aoestats/__init__.py` — make dataset dirs importable Python packages
 - Co-located tests: `data/aoe2companion/tests/test_acquisition.py` (24 tests) and `data/aoestats/tests/test_acquisition.py` (20 tests), plus per-dataset `conftest.py` fixtures; CLI tests extended in `aoe2/tests/test_cli.py` (+7 tests)
+- `src/rts_predict/aoe2/reports/aoe2companion/aoe2companion_download_report.md` — download run report: failure analysis, size-check fix rationale, retry results, final inventory
+- `.gitkeep` files tracked in `raw/` subdirs and `api/` dirs for both datasets
+
+### Fixed
+- `aoe2companion/acquisition.py` — `_HTTP_HEADERS` User-Agent header added to bypass Cloudflare 403 blocking on CDN requests
+- `aoe2companion/acquisition.py` — size check relaxed: accepts files where `actual >= expected` (CDN updates); `leaderboard`/`profile` categories bypass size check entirely (`expected_size=None`) since these are live files updated independently of the manifest
+- `aoestats/acquisition.py` — same `_HTTP_HEADERS` User-Agent fix
+- `aoestats/acquisition.py` — `_write_download_log` writes to `AOESTATS_RAW_DIR` (was `AOESTATS_DIR`)
+- `aoe2companion/acquisition.py` — `_write_download_log` writes to `AOE2COMPANION_RAW_DIR` (was `AOE2COMPANION_DIR`)
+- `.gitignore` — `raw/` subdirs: subdirectories un-ignored so `.gitkeep` negation works; `api/` dirs: all contents ignored except `.gitkeep`
 
 ## [0.18.4] — 2026-04-06 (PR #N: chore/per-dataset-reports)
 

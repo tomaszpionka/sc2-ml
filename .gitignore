@@ -239,6 +239,9 @@ src/rts_predict/*/in_game_processing_manifest.json
 !**/data/*/tmp/.gitkeep
 
 **/data/*/raw/**/*
+!**/data/*/raw/*/
+!**/data/*/raw/.gitkeep
+!**/data/*/raw/**/.gitkeep
 !**/data/*/raw/README.md
 
 **/data/*/staging/*
@@ -257,5 +260,6 @@ src/rts_predict/*/in_game_processing_manifest.json
 .github/tmp/*
 !.github/tmp/.gitkeep
 
-# AoE2/SC2 data source API manifests (large JSON files — not for version control)
-src/rts_predict/*/data/*/api/*.json
+# api dirs — ignore everything except .gitkeep
+**/data/*/api/*
+!**/data/*/api/.gitkeep

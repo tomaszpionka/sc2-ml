@@ -3,7 +3,13 @@
 Reads the on-disk manifest (api_dump_list.json), filters to download targets
 (match parquets, leaderboard parquet, profile parquet, rating CSVs), and
 streams each file to its target raw/ subdirectory. Idempotent: skips files
-whose on-disk size matches the manifest size field.
+whose on-disk size is at least as large as the manifest size field.
+
+Size check policy:
+- match / rating entries: reject if actual_size < expected_size (truncation guard).
+  Accept if actual_size >= expected_size (CDN may serve slightly updated files).
+- leaderboard / profile entries: no size check — these are live CDN files that
+  are updated regularly; the manifest size becomes stale within hours.
 """
 
 import json
@@ -16,8 +22,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rts_predict.aoe2.config import (
-    AOE2COMPANION_DIR,
     AOE2COMPANION_MANIFEST,
+    AOE2COMPANION_RAW_DIR,
     AOE2COMPANION_RAW_LEADERBOARDS_DIR,
     AOE2COMPANION_RAW_MATCHES_DIR,
     AOE2COMPANION_RAW_PROFILES_DIR,
@@ -31,6 +37,9 @@ _MATCH_PARQUET_PATTERN: re.Pattern[str] = re.compile(r"^match-\d{4}-\d{2}-\d{2}\
 _LEADERBOARD_PARQUET_KEY: str = "leaderboard.parquet"
 _PROFILE_PARQUET_KEY: str = "profile.parquet"
 _RATING_CSV_PATTERN: re.Pattern[str] = re.compile(r"^rating-\d{4}-\d{2}-\d{2}\.csv$")
+
+# HTTP headers to bypass Cloudflare User-Agent blocking
+_HTTP_HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 # Progress logging interval (every N files)
 LOG_INTERVAL: int = 100
@@ -146,21 +155,28 @@ def resolve_target_path(entry: dict) -> Path:
     raise ValueError(f"Unrecognised _category: {category!r}")
 
 
-def is_already_downloaded(target_path: Path, expected_size: int) -> bool:
-    """Check whether a file is already downloaded with the correct size.
+def is_already_downloaded(target_path: Path, expected_size: int | None) -> bool:
+    """Check whether a file is already downloaded and acceptable.
 
-    Idempotency check: the file exists AND its on-disk size matches the
-    manifest's size field. The eTag is a multipart upload hash and is
-    NOT suitable as an MD5 check.
+    Idempotency check. The eTag is a multipart upload hash and is NOT
+    suitable as an MD5 check, so size is used instead.
 
     Args:
         target_path: Path where the file should exist.
-        expected_size: Expected file size in bytes from the manifest.
+        expected_size: Expected minimum file size in bytes from the manifest,
+            or None for live files (leaderboard/profile) where any non-empty
+            file is accepted.
 
     Returns:
-        True if the file exists and its size matches expected_size.
+        True if the file exists and its on-disk size >= expected_size
+        (or any non-zero size when expected_size is None).
     """
-    return target_path.exists() and target_path.stat().st_size == expected_size
+    if not target_path.exists():
+        return False
+    actual = target_path.stat().st_size
+    if expected_size is None:
+        return actual > 0
+    return actual >= expected_size
 
 
 def download_file(
@@ -188,7 +204,8 @@ def download_file(
     tmp_path = target_path.with_suffix(target_path.suffix + ".tmp")
 
     try:
-        with urllib.request.urlopen(url) as response:
+        req = urllib.request.Request(url, headers=_HTTP_HEADERS)
+        with urllib.request.urlopen(req) as response:
             with open(tmp_path, "wb") as out_file:
                 while True:
                     chunk = response.read(_DOWNLOAD_CHUNK_SIZE)
@@ -201,10 +218,18 @@ def download_file(
         raise
 
     actual_size = tmp_path.stat().st_size
-    if expected_size is not None and actual_size != expected_size:
+    if expected_size is not None and actual_size < expected_size:
         tmp_path.unlink()
         raise ValueError(
-            f"Size mismatch for {url}: expected {expected_size}, got {actual_size}"
+            f"Truncated download for {url}: expected >={expected_size}, got {actual_size}"
+        )
+    if expected_size is not None and actual_size > expected_size:
+        logger.warning(
+            "CDN served updated file for %s: manifest=%d, actual=%d (+%d bytes)",
+            url,
+            expected_size,
+            actual_size,
+            actual_size - expected_size,
         )
 
     shutil.move(str(tmp_path), target_path)
@@ -247,7 +272,7 @@ def _write_download_log(log_entries: list[dict]) -> Path:
     Returns:
         Path to the written log file.
     """
-    log_path = AOE2COMPANION_DIR / _DOWNLOAD_LOG_FILENAME
+    log_path = AOE2COMPANION_RAW_DIR / _DOWNLOAD_LOG_FILENAME
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8") as f:
         json.dump(log_entries, f, indent=2)
@@ -283,10 +308,16 @@ def run_download(
     failed = 0
     log_entries: list[dict] = []
 
+    # leaderboard/profile are live CDN files — manifest size becomes stale quickly
+    _LIVE_CATEGORIES: frozenset[str] = frozenset({"leaderboard", "profile"})
+
     for idx, entry in enumerate(targets):
         target_path = resolve_target_path(entry)
+        size_hint: int | None = (
+            None if entry["_category"] in _LIVE_CATEGORIES else entry["size"]
+        )
 
-        if is_already_downloaded(target_path, entry["size"]):
+        if is_already_downloaded(target_path, size_hint):
             skipped += 1
             log_entries.append(_build_download_log_entry(entry, target_path, "skipped"))
         elif dry_run:
@@ -294,7 +325,7 @@ def run_download(
             log_entries.append(_build_download_log_entry(entry, target_path, "dry_run"))
         else:
             try:
-                download_file(entry["url"], target_path, entry["size"])
+                download_file(entry["url"], target_path, size_hint)
                 downloaded += 1
                 log_entries.append(
                     _build_download_log_entry(entry, target_path, "downloaded")

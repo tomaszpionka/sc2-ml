@@ -19,8 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rts_predict.aoe2.config import (
-    AOESTATS_DIR,
     AOESTATS_MANIFEST,
+    AOESTATS_RAW_DIR,
     AOESTATS_RAW_MATCHES_DIR,
     AOESTATS_RAW_PLAYERS_DIR,
 )
@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 # Base URL for aoestats file downloads (manifest provides relative paths)
 _AOESTATS_BASE_URL: str = "https://aoestats.io"
+
+# HTTP headers to bypass Cloudflare User-Agent blocking
+_HTTP_HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 # Progress logging interval (every N entries processed)
 LOG_INTERVAL: int = 20
@@ -167,7 +170,8 @@ def download_file(
     tmp_path = target_path.with_suffix(target_path.suffix + ".tmp")
 
     try:
-        with urllib.request.urlopen(url) as response:
+        req = urllib.request.Request(url, headers=_HTTP_HEADERS)
+        with urllib.request.urlopen(req) as response:
             with open(tmp_path, "wb") as out_file:
                 while True:
                     chunk = response.read(_DOWNLOAD_CHUNK_SIZE)
@@ -238,7 +242,7 @@ def _write_download_log(log_entries: list[dict]) -> Path:
     Returns:
         Path to the written log file.
     """
-    log_path = AOESTATS_DIR / _DOWNLOAD_LOG_FILENAME
+    log_path = AOESTATS_RAW_DIR / _DOWNLOAD_LOG_FILENAME
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8") as f:
         json.dump(log_entries, f, indent=2)
