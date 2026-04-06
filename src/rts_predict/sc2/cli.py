@@ -5,7 +5,8 @@ from pathlib import Path
 
 import duckdb
 
-from rts_predict.sc2.config import DB_FILE
+from rts_predict.common.db_cli import add_db_subparser, handle_db_command
+from rts_predict.sc2.config import DATASETS, DB_FILE, DEFAULT_DATASET
 from rts_predict.sc2.data.ingestion import load_map_translations, move_data_to_duck_db
 from rts_predict.sc2.data.processing import (
     assign_series_ids,
@@ -85,6 +86,8 @@ def main() -> None:
         help="Steps to run (e.g. 1.1 1.3). Omit for all.",
     )
 
+    add_db_subparser(subparsers, DATASETS, DEFAULT_DATASET)
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -100,6 +103,9 @@ def main() -> None:
 
     elif args.command == "explore":
         _run_explore_command(args.steps)
+
+    elif args.command == "db":
+        handle_db_command(args, DATASETS)
 
     else:
         parser.print_help()

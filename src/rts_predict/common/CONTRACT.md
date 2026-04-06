@@ -17,6 +17,9 @@ game package.
   (shared evaluation protocol, identical metrics, matched experimental conditions).
 - **Base classes / interfaces**: abstract feature group, abstract data pipeline step,
   if these patterns emerge and prove useful. Do not create them speculatively.
+- `DuckDBClient` and `DatasetConfig` — game-agnostic DB infrastructure.
+  Zero game-domain content; exempt from the "build twice then extract" rule.
+- `db_cli.py` — shared argparse helpers for the `db` CLI subcommand group.
 
 ## What does NOT belong here
 

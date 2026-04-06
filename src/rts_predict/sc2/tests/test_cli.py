@@ -113,3 +113,20 @@ class TestMainRouting:
 
         m_init.assert_called_once_with(m_con, should_drop=True)
 
+    @patch(f"{_CLI}.setup_logging")
+    @patch(f"{_CLI}.handle_db_command")
+    def test_main_db_routes_to_handler(self, mock_handle, m_log) -> None:
+        """main() with 'db tables' must call handle_db_command once."""
+        from rts_predict.sc2.cli import main
+
+        with patch("sys.argv", ["sc2", "db", "tables"]):
+            main()
+
+        mock_handle.assert_called_once()
+
+    def test_db_default_dataset_is_sc2egset(self) -> None:
+        """The default dataset for the SC2 CLI must be 'sc2egset'."""
+        from rts_predict.sc2.config import DEFAULT_DATASET
+
+        assert DEFAULT_DATASET == "sc2egset"
+

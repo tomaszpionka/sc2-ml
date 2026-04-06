@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from rts_predict.common.db import DatasetConfig
+
 # ── Project paths ──────────────────────────────────────────────────────────────
 GAME_DIR: Path = Path(__file__).resolve().parent                # src/rts_predict/sc2/
 ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
@@ -109,3 +111,14 @@ BOOTSTRAP_N_ITER: int = 1000       # Bootstrap resampling iterations for 95% CI
 BOOTSTRAP_CI_LEVEL: float = 0.95   # Confidence level for bootstrap intervals
 CALIBRATION_N_BINS: int = 10       # Number of bins for calibration curve
 RESULTS_DIR: Path = MODELS_DIR / "results"
+
+# ── Dataset registry ──────────────────────────────────────────────────────────
+DATASETS: dict[str, DatasetConfig] = {
+    "sc2egset": DatasetConfig(
+        name="sc2egset",
+        db_file=DB_FILE,
+        temp_dir=DUCKDB_TEMP_DIR,
+        description="SC2EGSet tournament replays",
+    ),
+}
+DEFAULT_DATASET: str = "sc2egset"

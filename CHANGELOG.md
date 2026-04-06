@@ -19,6 +19,27 @@ merged to `master`.
 
 ### Removed
 
+## [0.16.6] — 2026-04-06 (PR #37: chore/aoe2-cli-shared-db)
+
+### Added
+
+- `DatasetConfig` frozen dataclass and `DuckDBClient` context manager in `common/db.py` — game-agnostic DuckDB connection with configurable resource pragmas
+- Shared `add_db_subparser` / `handle_db_command` helpers in `common/db_cli.py`
+- `sc2 db query <sql> [--format csv|json|table]` — ad-hoc DuckDB queries
+- `sc2 db tables` / `sc2 db schema <table>` subcommands
+- `aoe2` CLI entrypoint with same `db` subcommand group supporting `--dataset aoe2companion|aoestats`
+- `DATASETS` / `DEFAULT_DATASET` registry added to both `sc2/config.py` and `aoe2/config.py`
+- 20 new tests (9 + 6 + 3 + 2)
+
+### Changed
+
+- `common/CONTRACT.md` updated to include DB infrastructure as in-scope
+- **Follow-up required:** `refactor/sc2-use-db-client` — migrate `_connect_db()` callers in `sc2/cli.py` to use `DuckDBClient` directly (deferred to keep this chore focused)
+
+### Fixed
+
+### Removed
+
 ## [0.16.5] — 2026-04-05 (PR #36: chore/init-aoe2-structure)
 
 ### Added

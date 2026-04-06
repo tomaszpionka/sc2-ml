@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.16.5"
+version = "0.16.6"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -8,6 +8,7 @@ dynamic = ["dependencies"]
 
 [project.scripts]
 sc2 = "rts_predict.sc2.cli:main"
+aoe2 = "rts_predict.aoe2.cli:main"
 
 [tool.poetry]
 packages = [{include = "rts_predict", from = "src"}]

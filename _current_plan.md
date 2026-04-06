@@ -1,371 +1,511 @@
-# Initialize AoE2 Package Structure & Document Data Acquisition Plan
+# Shared DuckDB Client, DatasetConfig Registry, and AoE2 CLI
 
 **Category:** C (Chore)
-**Branch:** `chore/init-aoe2-structure` (current branch)
-**Invariants in scope:** #9 (reproducibility), #10 (cross-game comparability)
+**Branch:** `chore/aoe2-cli-shared-db`
+**Version bump:** patch
 
 ---
 
 ## Objective
 
-Two deliverables:
-
-1. Create the AoE2 subdirectory structure mirroring the SC2 layout, per
-   ARCHITECTURE.md "Adding a new game" checklist.
-2. Write a data acquisition README documenting what to download from each API
-   (aoestats, aoe2companion), from where, and into which directories — serving
-   as the specification for a future download script.
-
-No sample downloads. No schema profiling. No thesis paragraphs.
-
----
-
-## Key Facts from Manifests (reference only)
-
-These facts come from the two JSON manifests already on disk. They inform the
-acquisition README but are not the deliverable themselves.
-
-- **aoe2companion** (`data/aoe2companion/api/api_dump_list.json`): 2,073 daily
-  match parquet files (2020-08-01 to 2026-04-04), 6.94 GB total. Also provides
-  leaderboard.parquet (87 MB), profile.parquet (170 MB), rating CSVs (2,072
-  files, 2.64 GB total — 1,791 files before 2025-06-27 are sparse at 63-972
-  bytes each, 0.20 MB combined; 281 files from 2025-06-27 onward are
-  substantive at 2.64 GB combined), and CSV duplicates of match data (43 GB,
-  skip). Zero date gaps. URLs are direct CDN links in the `url` field.
-- **aoestats** (`data/aoestats/api/db_dump_list.json`): 188 weekly entries
-  (2022-08-28 to 2026-04-04), 172 non-zero. 30.7M matches, 108.3M player
-  records. 16 zero-count entries across 4 gap ranges. URLs are relative paths
-  under `https://aoestats.io`. No file sizes in manifest.
-- **Primary source recommendation:** aoe2companion (longer coverage, daily
-  granularity, zero gaps, known file sizes, direct URLs).
+1. Introduce a game-agnostic `DatasetConfig` dataclass + `DuckDBClient` in
+   `src/rts_predict/common/db.py`.
+2. Add shared CLI helpers (`add_db_subparser`, `handle_db_command`) in
+   `src/rts_predict/common/db_cli.py` so neither SC2 nor AoE2 duplicate the
+   argparse wiring.
+3. Wire the new `db` subcommand group into the existing SC2 CLI.
+4. Create a full AoE2 CLI (`src/rts_predict/aoe2/cli.py`) with the `db`
+   subcommand as its first functional command, plus register the `aoe2`
+   entrypoint in `pyproject.toml`.
+5. Update `common/CONTRACT.md` and `CHANGELOG.md`.
 
 ---
 
-## Step 1 — Create directory tree
+## Confirmed Decisions
 
-Mirror the SC2 layout. The SC2 tree (excluding data contents) is:
+1. **Output format:** `--format csv|json|table` (default `table`) from day one.
+2. **`_connect_db()` migration:** Deferred. Existing SC2 callers in `cli.py`
+   are untouched. CHANGELOG notes `refactor/sc2-use-db-client` as a required
+   follow-up.
+3. **DuckDB resource pragmas:** `DuckDBClient.__init__` accepts keyword args
+   with sensible defaults. Each game config can override at call sites.
+   `ingestion.py` pragmas are untouched in this PR.
+4. **`common/CONTRACT.md`:** Updated (not a new README).
 
-```
-src/rts_predict/sc2/
-├── __init__.py
-├── cli.py
-├── config.py
-├── PHASE_STATUS.yaml
-├── data/
-│   ├── __init__.py
-│   ├── README.md
-│   ├── sc2egset/
-│   │   ├── raw/         (gitignored contents, README tracked)
-│   │   ├── staging/     (gitignored, README tracked)
-│   │   │   └── in_game_events/  (.gitkeep)
-│   │   ├── db/          (.gitkeep)
-│   │   └── tmp/         (.gitkeep)
-│   └── tests/
-│       ├── __init__.py
-│       └── conftest.py  (empty or minimal — no tests yet)
-├── reports/
-│   └── SC2_THESIS_ROADMAP.md
-├── models/              (gitignored contents)
-├── logs/                (gitignored)
-└── tests/
-    ├── __init__.py
-    └── test_cli.py
-```
+---
 
-For AoE2, create this (items marked [EXISTS] are already on disk):
+## Design
 
-```
-src/rts_predict/aoe2/
-├── __init__.py                          [EXISTS]
-├── PHASE_STATUS.yaml                    [EXISTS]
-├── config.py                            [NEW]
-├── data/
-│   ├── __init__.py                      [NEW]
-│   ├── README.md                        [NEW — acquisition plan goes here]
-│   ├── aoe2companion/
-│   │   ├── api/
-│   │   │   ├── api_dump_list.json       [EXISTS]
-│   │   │   └── README.md               [EXISTS]
-│   │   ├── raw/
-│   │   │   ├── matches/                 [NEW — .gitkeep]
-│   │   │   ├── leaderboards/            [NEW — .gitkeep]
-│   │   │   ├── profiles/                [NEW — .gitkeep]
-│   │   │   ├── ratings/                 [NEW — .gitkeep]
-│   │   │   └── README.md               [NEW]
-│   │   ├── db/                          [NEW — .gitkeep]
-│   │   └── tmp/                         [NEW — .gitkeep]
-│   ├── aoestats/
-│   │   ├── api/
-│   │   │   ├── db_dump_list.json        [EXISTS]
-│   │   │   └── api_description_view.json [EXISTS]
-│   │   ├── raw/
-│   │   │   ├── matches/                 [NEW — .gitkeep]
-│   │   │   ├── players/                 [NEW — .gitkeep]
-│   │   │   └── README.md               [NEW]
-│   │   ├── db/                          [NEW — .gitkeep]
-│   │   └── tmp/                         [NEW — .gitkeep]
-│   └── tests/
-│       └── __init__.py                  [NEW]
-├── reports/                             [NEW]
-│   └── AOE2_THESIS_ROADMAP.md           [NEW — placeholder]
-└── tests/
-    └── __init__.py                      [NEW]
-```
+### `DatasetConfig` — frozen dataclass
 
-Note: `staging/` directories are omitted intentionally — per ARCHITECTURE.md
-they are created "when extraction exists," and no extraction pipeline exists
-yet. Similarly, `models/` and `logs/` are omitted until needed.
-
-Note: aoestats provides only `matches.parquet` and `players.parquet` per weekly
-dump, so its `raw/` has `matches/` and `players/` subdirs only.
-aoe2companion provides matches, leaderboards, profiles, and ratings, so its
-`raw/` has four subdirs.
-
-### 1.1 — Directories to create (mkdir -p)
-
-```bash
-AOE2=src/rts_predict/aoe2
-
-mkdir -p $AOE2/data/aoe2companion/raw/matches
-mkdir -p $AOE2/data/aoe2companion/raw/leaderboards
-mkdir -p $AOE2/data/aoe2companion/raw/profiles
-mkdir -p $AOE2/data/aoe2companion/raw/ratings
-mkdir -p $AOE2/data/aoe2companion/db
-mkdir -p $AOE2/data/aoe2companion/tmp
-mkdir -p $AOE2/data/aoestats/raw/matches
-mkdir -p $AOE2/data/aoestats/raw/players
-mkdir -p $AOE2/data/aoestats/db
-mkdir -p $AOE2/data/aoestats/tmp
-mkdir -p $AOE2/data/tests
-mkdir -p $AOE2/reports
-mkdir -p $AOE2/tests
-```
-
-### 1.2 — .gitkeep files
-
-```bash
-touch $AOE2/data/aoe2companion/raw/matches/.gitkeep
-touch $AOE2/data/aoe2companion/raw/leaderboards/.gitkeep
-touch $AOE2/data/aoe2companion/raw/profiles/.gitkeep
-touch $AOE2/data/aoe2companion/raw/ratings/.gitkeep
-touch $AOE2/data/aoe2companion/db/.gitkeep
-touch $AOE2/data/aoe2companion/tmp/.gitkeep
-touch $AOE2/data/aoestats/raw/matches/.gitkeep
-touch $AOE2/data/aoestats/raw/players/.gitkeep
-touch $AOE2/data/aoestats/db/.gitkeep
-touch $AOE2/data/aoestats/tmp/.gitkeep
-```
-
-### 1.3 — __init__.py files
-
-```bash
-# data package
-echo '"""AoE2 data ingestion, processing, and exploration modules."""' \
-  > $AOE2/data/__init__.py
-
-# data/tests package
-touch $AOE2/data/tests/__init__.py
-
-# tests package
-touch $AOE2/tests/__init__.py
-```
-
-### 1.4 — config.py
-
-Minimal config mirroring `sc2/config.py` structure. Only path constants and
-DuckDB settings — no feature engineering constants until those exist.
+Lives in `common/db.py`. Each game's `config.py` exports:
 
 ```python
-"""AoE2 game package configuration — paths and constants."""
-from pathlib import Path
-
-# -- Project paths --
-GAME_DIR: Path = Path(__file__).resolve().parent
-ROOT_DIR: Path = GAME_DIR.parent.parent.parent
-DATA_DIR: Path = GAME_DIR / "data"
-REPORTS_DIR: Path = GAME_DIR / "reports"
-
-# -- Dataset paths (two sources) --
-AOE2COMPANION_DIR: Path = DATA_DIR / "aoe2companion"
-AOE2COMPANION_RAW_DIR: Path = AOE2COMPANION_DIR / "raw"
-AOE2COMPANION_RAW_MATCHES_DIR: Path = AOE2COMPANION_RAW_DIR / "matches"
-AOE2COMPANION_RAW_LEADERBOARDS_DIR: Path = AOE2COMPANION_RAW_DIR / "leaderboards"
-AOE2COMPANION_RAW_PROFILES_DIR: Path = AOE2COMPANION_RAW_DIR / "profiles"
-AOE2COMPANION_RAW_RATINGS_DIR: Path = AOE2COMPANION_RAW_DIR / "ratings"
-AOE2COMPANION_DB_FILE: Path = AOE2COMPANION_DIR / "db" / "db.duckdb"
-AOE2COMPANION_TEMP_DIR: Path = AOE2COMPANION_DIR / "tmp"
-AOE2COMPANION_MANIFEST: Path = AOE2COMPANION_DIR / "api" / "api_dump_list.json"
-
-AOESTATS_DIR: Path = DATA_DIR / "aoestats"
-AOESTATS_RAW_DIR: Path = AOESTATS_DIR / "raw"
-AOESTATS_RAW_MATCHES_DIR: Path = AOESTATS_RAW_DIR / "matches"
-AOESTATS_RAW_PLAYERS_DIR: Path = AOESTATS_RAW_DIR / "players"
-AOESTATS_DB_FILE: Path = AOESTATS_DIR / "db" / "db.duckdb"
-AOESTATS_TEMP_DIR: Path = AOESTATS_DIR / "tmp"
-AOESTATS_MANIFEST: Path = AOESTATS_DIR / "api" / "db_dump_list.json"
-
-# -- Reproducibility --
-RANDOM_SEED: int = 42
+DATASETS: dict[str, DatasetConfig]
+DEFAULT_DATASET: str
 ```
 
-### 1.5 — PHASE_STATUS.yaml
+SC2 → one entry (`"sc2egset"`).
+AoE2 → two entries (`"aoe2companion"`, `"aoestats"`).
+Adding a third dataset requires zero structural change anywhere else.
 
-Already exists with `current_phase: null`. Update `roadmap` field only:
+### `DuckDBClient` — context manager
 
-```yaml
-roadmap: src/rts_predict/aoe2/reports/AOE2_THESIS_ROADMAP.md
+```python
+class DuckDBClient:
+    def __init__(
+        self,
+        dataset: DatasetConfig,
+        *,
+        memory_limit: str = "24GB",
+        threads: int = 4,
+        max_temp_dir_size: str = "150GB",
+        read_only: bool = False,
+    ) -> None: ...
+
+    def __enter__(self) -> "DuckDBClient": ...
+    def __exit__(self, *exc: object) -> None: ...
+
+    @property
+    def con(self) -> duckdb.DuckDBPyConnection: ...
+
+    def query(self, sql: str, params: list[object] | None = None) -> duckdb.DuckDBPyRelation: ...
+    def fetch_df(self, sql: str, params: list[object] | None = None) -> pd.DataFrame: ...
+    def tables(self) -> list[str]: ...
+    def schema(self, table_name: str) -> list[tuple[str, str]]: ...
+    def row_counts(self) -> dict[str, int]: ...
 ```
 
-### 1.6 — AOE2_THESIS_ROADMAP.md (placeholder)
+`read_only=True` is always used for `db query` CLI commands (no accidental
+mutations from ad-hoc queries).
 
-Short file stating the roadmap will be created after the SC2 pipeline reaches
-a sufficient phase. Reference ARCHITECTURE.md "Adding a new game" step 3.
+### `common/db_cli.py` — shared argparse helpers
 
-### 1.7 — Remove the top-level .gitkeep
+```python
+def add_db_subparser(
+    subparsers: argparse._SubParsersAction,
+    datasets: dict[str, DatasetConfig],
+    default_dataset: str,
+) -> None: ...
 
-`src/rts_predict/aoe2/.gitkeep` was a placeholder for the empty package. Now
-that real content exists, delete it.
+def handle_db_command(
+    args: argparse.Namespace,
+    datasets: dict[str, DatasetConfig],
+) -> None: ...
+```
 
-### 1.8 — pyproject.toml entry point (DO NOT add yet)
+`handle_db_command` dispatches:
+- `tables` — prints table list via tabulate
+- `schema TABLE` — prints column name/type pairs via tabulate
+- `query SQL [--format csv|json|table]` — runs SQL read-only, prints result
 
-Per ARCHITECTURE.md, a CLI entry point is required. However, there is no
-`cli.py` to register. Document this as a future action item in the roadmap
-placeholder. Do not add a broken entry point.
+Both game CLIs call these two functions; neither duplicates argparse wiring.
 
 ---
 
-## Step 2 — Data acquisition README
+## Steps
 
-Write `src/rts_predict/aoe2/data/README.md` documenting the acquisition plan.
+### Step 1 — Create `src/rts_predict/common/db.py`
 
-Content to include:
+**Files touched:**
+- `src/rts_predict/common/db.py` (NEW)
 
-### 2.1 — Source overview table
+**Content:**
+- `DatasetConfig` frozen dataclass (fields: `name`, `db_file`, `temp_dir`,
+  `description`)
+- `DuckDBClient` context manager with full API above
+- `_DEFAULT_MEMORY_LIMIT`, `_DEFAULT_THREADS`, `_DEFAULT_MAX_TEMP_DIR_SIZE`
+  module-level constants
 
-| Source | Manifest on disk | Granularity | Date range | Formats | Role |
-|--------|-----------------|-------------|------------|---------|------|
-| aoe2companion | `aoe2companion/api/api_dump_list.json` | Daily | 2020-08-01 to 2026-04-04 | Parquet, CSV | Primary |
-| aoestats | `aoestats/api/db_dump_list.json` | Weekly | 2022-08-28 to 2026-04-04 | Parquet | Validation |
+`common/db.py` imports only `duckdb`, `pandas`, `pathlib`, `dataclasses`,
+`logging` — no imports from any game package (import direction strictly:
+`common` ← `sc2` / `aoe2`).
 
-### 2.2 — aoe2companion: what to download
-
-List the file types from the manifest and which ones to download vs. skip:
-
-| File pattern | Count | Total size | Download? | Target directory |
-|-------------|-------|-----------|-----------|-----------------|
-| `match-{date}.parquet` | 2,073 | 6.94 GB | Yes | `aoe2companion/raw/matches/` |
-| `leaderboard.parquet` | 1 | 87 MB | Yes | `aoe2companion/raw/leaderboards/` |
-| `profile.parquet` | 1 | 170 MB | Yes | `aoe2companion/raw/profiles/` |
-| `rating-{date}.csv` | 2,072 | 2.64 GB | Yes | `aoe2companion/raw/ratings/` |
-| `match-{date}.csv` | 2,072 | 43.14 GB | No (parquet preferred) | -- |
-| `leaderboard.csv` | 1 | 749 MB | No (parquet preferred) | -- |
-| `profile.csv` | 1 | 663 MB | No (parquet preferred) | -- |
-| test files | 3 | ~5 MB | No | -- |
-
-URL pattern: each manifest entry has a `url` field with the full CDN URL
-(e.g., `https://dump.cdn.aoe2companion.com/match-2020-08-01.parquet`).
-
-Estimated download: ~9.8 GB for the "Yes" items (6.94 GB matches + 0.26 GB
-leaderboard+profile + 2.64 GB ratings).
-
-Format rationale: Parquet is preferred over CSV everywhere a parquet version
-exists (smaller, typed columns, faster to query). Rating CSVs are acquired
-because no parquet equivalent exists for this data.
-
-Note on rating CSVs: 1,791 files before 2025-06-27 are sparse (63-972 bytes
-each, 0.20 MB combined — likely header-only or near-empty). 281 files from
-2025-06-27 onward are substantive (2.64 GB combined). All files are acquired
-for completeness; the pre-2025 sparse files cost negligible storage and their
-presence/absence itself is a useful data point during profiling.
-
-### 2.3 — aoestats: what to download
-
-| File pattern | Count | Total size | Download? | Target directory |
-|-------------|-------|-----------|-----------|-----------------|
-| `matches.parquet` (weekly) | 172 (non-zero) | Unknown (no sizes in manifest) | Deferred | `aoestats/raw/matches/` |
-| `players.parquet` (weekly) | 172 (non-zero) | Unknown | Deferred | `aoestats/raw/players/` |
-
-URL pattern: manifest provides relative paths (e.g.,
-`/media/db_dumps/date_range%3D2022-08-28_2022-09-03/matches.parquet`).
-Base URL: `https://aoestats.io`.
-
-16 zero-count entries (4 gap ranges) to skip. The manifest `num_matches` field
-identifies these.
-
-Deferred because: aoe2companion is the primary source with known sizes and
-longer coverage. aoestats download will be planned after aoe2companion data
-is profiled in Phase 0.
-
-### 2.4 — Download script requirements (specification, not implementation)
-
-The future download script should:
-- Read the manifest JSON to enumerate files
-- Route each file to the correct `raw/` subdir based on filename pattern:
-  `match-*.parquet` to `raw/matches/`, `leaderboard.parquet` to
-  `raw/leaderboards/`, `profile.parquet` to `raw/profiles/`,
-  `rating-*.csv` to `raw/ratings/`
-- Skip entries with `num_matches == 0` (aoestats) or non-target files
-  (aoe2companion CSV duplicates, test files)
-- Verify checksums where available (aoestats provides `match_checksum` and
-  `player_checksum`; aoe2companion provides `eTag`)
-- Be idempotent: skip files already present with matching size/checksum
-- Log progress and write a download manifest for reproducibility
-
-### 2.5 — Per-source raw/ README.md
-
-Each `raw/` directory gets a short README stating what files will land there,
-the subdir layout, and where they came from:
-
-- `aoe2companion/raw/README.md`: Documents four subdirs (`matches/` for daily
-  match parquets, `leaderboards/` for leaderboard.parquet, `profiles/` for
-  profile.parquet, `ratings/` for daily rating CSVs). Source: aoe2companion
-  CDN. Manifest: `../api/api_dump_list.json`.
-- `aoestats/raw/README.md`: Documents two subdirs (`matches/` for weekly
-  matches.parquet, `players/` for weekly players.parquet). Source:
-  aoestats.io. Manifest: `../api/db_dump_list.json`.
+**Verification:**
+```bash
+poetry run python -c "from rts_predict.common.db import DuckDBClient, DatasetConfig; print('OK')"
+poetry run mypy src/rts_predict/common/
+```
+**Expected:** Import succeeds, mypy clean.
 
 ---
 
-## Step 3 — Verification
+### Step 2 — Create `src/rts_predict/common/db_cli.py`
 
-After execution, verify:
+**Files touched:**
+- `src/rts_predict/common/db_cli.py` (NEW)
+
+**Content:**
+- `add_db_subparser(subparsers, datasets, default_dataset)` — registers `db`
+  subparser with `--dataset` flag (choices = `datasets.keys()`), and three
+  sub-subparsers: `query <sql> [--format csv|json|table]`, `tables`, `schema
+  <table>`.
+- `handle_db_command(args, datasets)` — resolves `DatasetConfig` from
+  `args.dataset`, opens `DuckDBClient(dataset, read_only=True)` as context
+  manager, dispatches to `_handle_query`, `_handle_tables`, `_handle_schema`.
+- `_format_output(df, fmt)` — applies tabulate/csv/json formatting, prints to
+  stdout (pipe-friendly, no logger on query output).
+- `_handle_tables`, `_handle_schema`, `_handle_query` — private helpers.
+
+Uses `tabulate` (already a project dependency).
+
+**Verification:**
+```bash
+poetry run mypy src/rts_predict/common/
+poetry run ruff check src/rts_predict/common/
+```
+**Expected:** No errors.
+
+---
+
+### Step 3 — Add `DATASETS` / `DEFAULT_DATASET` to SC2 config
+
+**Files touched:**
+- `src/rts_predict/sc2/config.py` (MODIFIED — additive only)
+
+**Changes:**
+```python
+from rts_predict.common.db import DatasetConfig
+
+DATASETS: dict[str, DatasetConfig] = {
+    "sc2egset": DatasetConfig(
+        name="sc2egset",
+        db_file=DB_FILE,           # existing constant, kept for back-compat
+        temp_dir=DUCKDB_TEMP_DIR,  # existing constant, kept for back-compat
+        description="SC2EGSet tournament replays",
+    ),
+}
+DEFAULT_DATASET: str = "sc2egset"
+```
+
+Existing `DB_FILE`, `DUCKDB_TEMP_DIR`, `DUCKDB_MEMORY_LIMIT` etc. are kept
+unchanged — backward-compatible for existing callers.
+
+**Verification:**
+```bash
+poetry run pytest src/rts_predict/sc2/ -v --tb=short
+```
+**Expected:** All existing tests pass.
+
+---
+
+### Step 4 — Add `DATASETS` / `DEFAULT_DATASET` to AoE2 config
+
+**Files touched:**
+- `src/rts_predict/aoe2/config.py` (MODIFIED — additive only)
+
+**Changes:**
+```python
+from rts_predict.common.db import DatasetConfig
+
+DATASETS: dict[str, DatasetConfig] = {
+    "aoe2companion": DatasetConfig(
+        name="aoe2companion",
+        db_file=AOE2COMPANION_DB_FILE,   # existing constant
+        temp_dir=AOE2COMPANION_TEMP_DIR, # existing constant
+        description="aoe2companion.com daily API dumps",
+    ),
+    "aoestats": DatasetConfig(
+        name="aoestats",
+        db_file=AOESTATS_DB_FILE,        # existing constant
+        temp_dir=AOESTATS_TEMP_DIR,      # existing constant
+        description="aoestats.io weekly DB dumps",
+    ),
+}
+DEFAULT_DATASET: str = "aoe2companion"
+```
+
+All existing path constants kept unchanged.
+
+**Verification:**
+```bash
+poetry run mypy src/rts_predict/aoe2/
+```
+**Expected:** Mypy clean.
+
+---
+
+### Step 5 — Wire `db` subcommand into SC2 CLI
+
+**Files touched:**
+- `src/rts_predict/sc2/cli.py` (MODIFIED)
+
+**Changes:**
+1. Add imports:
+   ```python
+   from rts_predict.common.db_cli import add_db_subparser, handle_db_command
+   from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET
+   ```
+2. After the existing `explore` subparser registration, call:
+   ```python
+   add_db_subparser(subparsers, DATASETS, DEFAULT_DATASET)
+   ```
+3. Add `elif args.command == "db":` branch in `main()` calling
+   `handle_db_command(args, DATASETS)`.
+
+`_connect_db()` and all existing command handlers are **untouched**.
+
+**Verification:**
+```bash
+poetry run sc2 db --help
+poetry run ruff check src/rts_predict/sc2/cli.py
+poetry run mypy src/rts_predict/sc2/
+```
+**Expected:** `db` subcommand appears in help; no lint/type errors.
+
+---
+
+### Step 6 — Create AoE2 CLI
+
+**Files touched:**
+- `src/rts_predict/aoe2/cli.py` (NEW)
+- `src/rts_predict/aoe2/tests/__init__.py` (NEW — empty, creates test package)
+
+**Content of `cli.py`:**
+- `setup_logging()` — mirrors SC2 pattern, writes to `aoe2_pipeline.log`
+- `build_parser()` — returns `ArgumentParser` with `db` as the only subcommand
+  (via `add_db_subparser(subparsers, DATASETS, DEFAULT_DATASET)`)
+- `main()` — `setup_logging()`, `build_parser()`, dispatch
+- Top-of-file docstring: "AoE2 CLI — add `init`, `audit`, `explore` subcommands
+  as data acquisition phases complete."
+
+**Verification:**
+```bash
+poetry run mypy src/rts_predict/aoe2/
+poetry run ruff check src/rts_predict/aoe2/
+```
+**Expected:** No errors (before entrypoint registration).
+
+---
+
+### Step 7 — Register AoE2 entrypoint in `pyproject.toml`
+
+**Files touched:**
+- `pyproject.toml` (MODIFIED)
+
+**Diff:**
+```toml
+[project.scripts]
+sc2 = "rts_predict.sc2.cli:main"
+aoe2 = "rts_predict.aoe2.cli:main"
+```
+
+Then:
+```bash
+poetry install
+poetry run aoe2 --help
+```
+
+**Expected:** Top-level help lists `db` subcommand.
+
+---
+
+### Step 8 — Write tests for `DuckDBClient`
+
+**Files touched:**
+- `tests/test_common_db.py` (NEW)
+
+**Test cases (9 tests):**
+
+| Test | Fixture | Assert |
+|------|---------|--------|
+| `test_client_context_manager_closes` | `tmp_path` | `con` is closed after `__exit__` |
+| `test_client_creates_parent_dirs` | `tmp_path` | parent dirs created on `__enter__` |
+| `test_client_read_only_flag` | `tmp_path` | `read_only=True` raises on INSERT |
+| `test_client_applies_memory_pragma` | `tmp_path` | `PRAGMA memory_limit` returns set value |
+| `test_client_query_returns_relation` | `tmp_path` | result has expected columns/rows |
+| `test_client_fetch_df_returns_dataframe` | `tmp_path` | return type is `pd.DataFrame` |
+| `test_client_tables_lists_tables` | `tmp_path` | created table appears in `.tables()` |
+| `test_client_schema_returns_columns` | `tmp_path` | column names/types match DDL |
+| `test_dataset_config_is_frozen` | — | assignment raises `FrozenInstanceError` |
+
+**Verification:**
+```bash
+poetry run pytest tests/test_common_db.py -v
+```
+**Expected:** 9 tests pass.
+
+---
+
+### Step 9 — Write tests for `db_cli` helpers
+
+**Files touched:**
+- `tests/test_common_db_cli.py` (NEW)
+
+**Test cases (6 tests):**
+
+| Test | Mock | Assert |
+|------|------|--------|
+| `test_add_db_subparser_registers_subcommands` | — | `query`, `tables`, `schema` in subparser |
+| `test_handle_db_query_table_format` | `DuckDBClient` | tabulate output to stdout |
+| `test_handle_db_query_csv_format` | `DuckDBClient` | CSV output to stdout |
+| `test_handle_db_query_json_format` | `DuckDBClient` | JSON output to stdout |
+| `test_handle_db_tables_prints_list` | `DuckDBClient.tables` | table names printed |
+| `test_handle_db_dataset_flag_selects_config` | `DuckDBClient` | correct `DatasetConfig` passed |
+
+**Verification:**
+```bash
+poetry run pytest tests/test_common_db_cli.py -v
+```
+**Expected:** 6 tests pass.
+
+---
+
+### Step 10 — Write AoE2 CLI tests
+
+**Files touched:**
+- `src/rts_predict/aoe2/tests/test_cli.py` (NEW)
+
+**Test cases (3 tests):**
+
+| Test | Assert |
+|------|--------|
+| `test_main_no_command_exits_with_help` | SystemExit raised (argparse help) |
+| `test_main_db_routes_to_handler` | `handle_db_command` called once |
+| `test_db_default_dataset_is_aoe2companion` | default dataset name correct |
+
+**Verification:**
+```bash
+poetry run pytest src/rts_predict/aoe2/tests/ -v
+```
+**Expected:** 3 tests pass.
+
+---
+
+### Step 11 — Add `db` tests to SC2 CLI test file
+
+**Files touched:**
+- `src/rts_predict/sc2/tests/test_cli.py` (MODIFIED — additive only)
+
+**Test cases added (2 tests):**
+
+| Test | Assert |
+|------|--------|
+| `test_main_db_routes_to_handler` | `handle_db_command` called once |
+| `test_db_default_dataset_is_sc2egset` | default dataset name correct |
+
+**Verification:**
+```bash
+poetry run pytest src/rts_predict/sc2/tests/test_cli.py -v
+```
+**Expected:** All existing + 2 new tests pass.
+
+---
+
+### Step 12 — Update `common/CONTRACT.md`
+
+**Files touched:**
+- `src/rts_predict/common/CONTRACT.md` (MODIFIED)
+
+**Changes:**
+Add to "What belongs here":
+```markdown
+- `DuckDBClient` and `DatasetConfig` — game-agnostic DB infrastructure.
+  Zero game-domain content; exempt from the "build twice then extract" rule.
+- `db_cli.py` — shared argparse helpers for the `db` CLI subcommand group.
+```
+
+**Verification:** Visual review only.
+
+---
+
+### Step 13 — Update `CHANGELOG.md`
+
+**Files touched:**
+- `CHANGELOG.md` (MODIFIED)
+
+**Under `[Unreleased] → Added`:**
+- `DatasetConfig` frozen dataclass and `DuckDBClient` context manager in
+  `common/db.py` — game-agnostic DuckDB connection with configurable resource
+  pragmas
+- Shared `add_db_subparser` / `handle_db_command` helpers in `common/db_cli.py`
+- `sc2 db query <sql> [--format csv|json|table]` — ad-hoc DuckDB queries
+- `sc2 db tables` / `sc2 db schema <table>` subcommands
+- `aoe2` CLI entrypoint with same `db` subcommand group supporting
+  `--dataset aoe2companion|aoestats`
+- `DATASETS` / `DEFAULT_DATASET` registry added to both `sc2/config.py` and
+  `aoe2/config.py`
+- 20 new tests (9 + 6 + 3 + 2)
+
+**Under `[Unreleased] → Changed`:**
+- `common/CONTRACT.md` updated to include DB infrastructure as in-scope
+
+**Follow-up note (under Changed):**
+```
+- **Follow-up required:** `refactor/sc2-use-db-client` — migrate `_connect_db()`
+  callers in `sc2/cli.py` to use `DuckDBClient` directly (deferred to keep this
+  chore focused)
+```
+
+**Verification:**
+```bash
+head -50 CHANGELOG.md
+```
+
+---
+
+### Step 14 — Full verification
+
+**Files touched:** None (verification only)
 
 ```bash
-# Directory structure exists
-find src/rts_predict/aoe2 -type d | sort
-
-# .gitkeep files in place
-find src/rts_predict/aoe2 -name '.gitkeep' | sort
-
-# __init__.py files
-find src/rts_predict/aoe2 -name '__init__.py' | sort
-
-# config.py imports cleanly
-poetry run python -c "from rts_predict.aoe2.config import GAME_DIR; print(GAME_DIR)"
-
-# No test regressions
-poetry run pytest tests/ src/ -v --tb=short
+poetry run ruff check src/ tests/
+poetry run mypy src/rts_predict/
+poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing
 ```
 
-**Executor note:** Exploratory, non-destructive commands during verification
-(e.g., `python3 -c '...'` for quick import checks, `find`, `ls`) may be run
-without explicit user approval. These are read-only sanity checks, not paid
-API calls or data mutations.
+**Expected:**
+- Zero ruff violations
+- Zero mypy errors
+- All tests pass, coverage does not drop
+- No circular imports (`common` ← `sc2`/`aoe2`, never the reverse)
+
+---
+
+## Files-Changed Summary
+
+| File | Action | Step |
+|------|--------|------|
+| `src/rts_predict/common/db.py` | NEW | 1 |
+| `src/rts_predict/common/db_cli.py` | NEW | 2 |
+| `src/rts_predict/sc2/config.py` | MODIFIED (additive) | 3 |
+| `src/rts_predict/aoe2/config.py` | MODIFIED (additive) | 4 |
+| `src/rts_predict/sc2/cli.py` | MODIFIED | 5 |
+| `src/rts_predict/aoe2/cli.py` | NEW | 6 |
+| `src/rts_predict/aoe2/tests/__init__.py` | NEW (empty) | 6 |
+| `pyproject.toml` | MODIFIED | 7 |
+| `tests/test_common_db.py` | NEW | 8 |
+| `tests/test_common_db_cli.py` | NEW | 9 |
+| `src/rts_predict/aoe2/tests/test_cli.py` | NEW | 10 |
+| `src/rts_predict/sc2/tests/test_cli.py` | MODIFIED (additive) | 11 |
+| `src/rts_predict/common/CONTRACT.md` | MODIFIED | 12 |
+| `CHANGELOG.md` | MODIFIED | 13 |
+
+**Total: 14 files (6 new, 8 modified), 14 steps, 20 new tests.**
+
+---
+
+## Risks
+
+| Risk | Likelihood | Mitigation |
+|------|-----------|------------|
+| Import cycle `common` ↔ `sc2`/`aoe2` | Low | `common/db.py` imports zero game packages |
+| Breaking existing `_connect_db()` callers | None | `_connect_db()` untouched in this PR |
+| `poetry install` needed after entrypoint change | Certain | Step 7 includes `poetry install` |
+| AoE2 `db tables` returns `[]` (no DB yet) | Expected | `DuckDBClient` creates parent dirs; empty result is valid |
+| mypy strictness on `duckdb` types | Low | `ignore_missing_imports = true` already set |
 
 ---
 
 ## Gate Condition
 
-All of the following are true:
+All of the following must be true before opening the PR:
 
-1. AoE2 directory tree matches the layout in Step 1 (all [NEW] items exist),
-   including object-type subdirs under each `raw/` directory.
-2. `config.py` imports without error and path constants resolve correctly,
-   including the new `*_RAW_MATCHES_DIR`, `*_RAW_RATINGS_DIR`, etc.
-3. `data/README.md` documents what to download, from where, and into which
-   subdirectory for both sources, with numbers sourced from the manifest JSONs.
-   Rating CSVs are listed as "Yes" (not deferred).
-4. Each `raw/` subdirectory has a `.gitkeep`.
-5. Each `raw/` directory has a `README.md` describing its subdir layout.
-6. `PHASE_STATUS.yaml` references the roadmap path.
-7. Existing tests still pass.
+1. `poetry run sc2 db --help` lists `query`, `tables`, `schema`
+2. `poetry run aoe2 db --help` lists same with `--dataset aoe2companion|aoestats`
+3. `poetry run aoe2 --help` shows top-level help
+4. All existing SC2 tests pass unchanged
+5. 20 new tests pass (9 + 6 + 3 + 2)
+6. `poetry run ruff check src/ tests/` — zero violations
+7. `poetry run mypy src/rts_predict/` — zero errors
+8. No circular imports between `common/`, `sc2/`, `aoe2/`

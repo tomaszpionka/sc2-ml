@@ -1,6 +1,8 @@
 """AoE2 game package configuration — paths and constants."""
 from pathlib import Path
 
+from rts_predict.common.db import DatasetConfig
+
 # -- Project paths --
 GAME_DIR: Path = Path(__file__).resolve().parent
 ROOT_DIR: Path = GAME_DIR.parent.parent.parent
@@ -28,3 +30,20 @@ AOESTATS_MANIFEST: Path = AOESTATS_DIR / "api" / "db_dump_list.json"
 
 # -- Reproducibility --
 RANDOM_SEED: int = 42
+
+# -- Dataset registry --
+DATASETS: dict[str, DatasetConfig] = {
+    "aoe2companion": DatasetConfig(
+        name="aoe2companion",
+        db_file=AOE2COMPANION_DB_FILE,
+        temp_dir=AOE2COMPANION_TEMP_DIR,
+        description="aoe2companion.com daily API dumps",
+    ),
+    "aoestats": DatasetConfig(
+        name="aoestats",
+        db_file=AOESTATS_DB_FILE,
+        temp_dir=AOESTATS_TEMP_DIR,
+        description="aoestats.io weekly DB dumps",
+    ),
+}
+DEFAULT_DATASET: str = "aoe2companion"
