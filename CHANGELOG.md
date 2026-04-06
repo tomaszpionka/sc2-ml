@@ -19,6 +19,15 @@ merged to `master`.
 
 ### Removed
 
+## [0.19.0] — 2026-04-06 (PR #N: feat/aoe2-phase0-acquisition)
+
+### Added
+- `src/rts_predict/aoe2/data/aoe2companion/acquisition.py` — download module for aoe2companion CDN: parses `api_dump_list.json`, filters to 4,147 targets (match parquets, leaderboard, profile, rating CSVs), size-based idempotency, atomic temp-file-then-rename downloads, JSON download log
+- `src/rts_predict/aoe2/data/aoestats/acquisition.py` — download module for aoestats.io: parses `db_dump_list.json`, skips zero-match weeks (172 active weekly dumps → 344 files), MD5-based idempotency, deferred by default (requires `--force`), JSON download log
+- `download` CLI subcommand in `aoe2/cli.py` with `source` positional arg (`aoe2companion`/`aoestats`), `--dry-run`, `--force`, `--log-interval` flags
+- `src/rts_predict/aoe2/data/aoe2companion/__init__.py` and `aoestats/__init__.py` — make dataset dirs importable Python packages
+- Co-located tests: `data/aoe2companion/tests/test_acquisition.py` (24 tests) and `data/aoestats/tests/test_acquisition.py` (20 tests), plus per-dataset `conftest.py` fixtures; CLI tests extended in `aoe2/tests/test_cli.py` (+7 tests)
+
 ## [0.18.4] — 2026-04-06 (PR #N: chore/per-dataset-reports)
 
 ### Added
