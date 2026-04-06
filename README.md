@@ -27,7 +27,7 @@ poetry run pytest tests/ src/ -v --cov=rts_predict
 | `reports/research_log.md` | Reverse-chronological thesis narrative |
 | `CHANGELOG.md` | Code version history |
 | `.claude/` | Coding, workflow, and ML experiment standards |
-| `docs/PJAIT_THESIS_REQUIREMENTS.md` | Institutional requirements — formatting, defense, grading |
+| `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md` | Institutional requirements — formatting, defense, grading |
 | `.claude/thesis-formatting-rules.yaml` | Machine-readable PJAIT formatting thresholds |
 
 ## Prior Drafts (reference only — not authoritative)

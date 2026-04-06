@@ -65,6 +65,7 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 | SC2 game roadmap | `src/rts_predict/sc2/reports/ROADMAP.md` |
 | Scientific invariants | `.claude/scientific-invariants.md` |
 | Architecture | `ARCHITECTURE.md` |
+| Methodology manuals index | `docs/INDEX.md` |
 | Research log | `reports/research_log.md` |
 | Thesis status | `thesis/WRITING_STATUS.md` |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` |

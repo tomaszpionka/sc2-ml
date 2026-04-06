@@ -56,6 +56,7 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 
 | File | Location | Purpose |
 |------|----------|---------|
+| Methodology manuals | `docs/INDEX.md` → `docs/ml_experiment_lifecycle/` | ML experiment lifecycle reference (01–06) |
 | Research log | `reports/research_log.md` | Unified chronological narrative, tagged `[SC2]`/`[AoE2]`/`[CROSS]` |
 | Thesis | `thesis/` | Chapters, figures, tables, bibliography |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` | Pass 1→2 handoff for thesis writing |

@@ -19,6 +19,19 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.0] — 2026-04-06 (PR #48: docs/manual-index-and-path-fixes)
+
+### Added
+
+- `docs/INDEX.md` — authoritative entry point for all project documentation, maps ML experiment lifecycle phases (0–11) to methodology manuals 01–06
+
+### Changed
+
+- `docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md` — replaced stale 12-point lifecycle listing with concise paragraph pointing to `docs/INDEX.md`
+- `.claude/thesis-formatting-rules.yaml`, `thesis/WRITING_STATUS.md`, `README.md` — fixed stale `docs/PJAIT_THESIS_REQUIREMENTS.md` → `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`
+- `CLAUDE.md` — added `Methodology manuals index` row to Key File Locations table
+- `ARCHITECTURE.md` — added `Methodology manuals` row to Cross-cutting files table
+
 ## [0.19.0] — 2026-04-06 (PR #N: feat/aoe2-phase0-acquisition)
 
 ### Added
