@@ -751,3 +751,123 @@ class TestRunInGameExtraction:
             run_in_game_extraction(parquet_dir=tmp_path / "parquet")
 
         m_pool.assert_not_called()
+
+
+# ── Exception-path coverage ──────────────────────────────────────────────────
+
+
+class TestLoadMapTranslationsExceptionPath:
+    """Test the exception-handling branch in load_map_translations."""
+
+    def test_corrupt_json_file_logs_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """When a translation file contains invalid JSON, an error must be logged."""
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+
+        # Write a valid translation file and one corrupt file
+        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
+            json.dumps({"MapA": "Map A English"})
+        )
+        (tmp_path / "bad_map_foreign_to_english_mapping.json").write_text("NOT_JSON{{")
+
+        con = duckdb.connect(":memory:")
+        with caplog.at_level(logging.ERROR):
+            load_map_translations(con)
+        con.close()
+
+        assert any("Error reading" in msg for msg in caplog.messages)
+
+
+class TestAuditRawDataAvailabilityExceptionPath:
+    """Test the exception-handling branch in audit_raw_data_availability."""
+
+    def test_corrupt_replay_file_logs_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """When a replay JSON file is corrupt, an error must be logged."""
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+
+        # Write a corrupt SC2Replay JSON file
+        corrupt_file = tmp_path / "aabbccdd11223344556677889900aa00.SC2Replay.json"
+        corrupt_file.write_text("NOT_VALID_JSON{")
+
+        with caplog.at_level(logging.ERROR):
+            result = audit_raw_data_availability()
+
+        assert result["total"] == 1
+        assert any("Error reading" in msg for msg in caplog.messages)
+
+
+class TestRunInGameExtractionNoneResult:
+    """Test that None results from pool are handled (skipped file path)."""
+
+    @patch("rts_predict.sc2.data.ingestion.save_raw_events_to_parquet")
+    @patch("rts_predict.sc2.data.ingestion._save_manifest")
+    @patch("rts_predict.sc2.data.ingestion._collect_pending_files")
+    @patch("rts_predict.sc2.data.ingestion._load_manifest", return_value={})
+    def test_none_results_are_skipped(
+        self, m_load, m_collect, m_save_manifest, m_save_parquet, tmp_path: Path
+    ) -> None:
+        """None results from the extraction pool must increment skipped count."""
+        from rts_predict.sc2.data.ingestion import run_in_game_extraction
+
+        fake_paths = [tmp_path / f"f{i}.json" for i in range(2)]
+        m_collect.return_value = fake_paths
+
+        # One valid result, one None (stripped file)
+        fake_results = [
+            {"match_id": "m0", "tracker_events": [], "game_events": [], "player_map": {}},
+            None,
+        ]
+
+        mock_pool = MagicMock()
+        mock_pool.__enter__ = MagicMock(return_value=mock_pool)
+        mock_pool.__exit__ = MagicMock(return_value=False)
+        mock_pool.imap_unordered.return_value = iter(fake_results)
+
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool", return_value=mock_pool),
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+        ):
+            run_in_game_extraction(parquet_dir=tmp_path / "parquet", max_workers=1, batch_size=10)
+
+        # Only 1 real result, so save_parquet called once (leftover buffer at end)
+        assert m_save_parquet.call_count == 1
+
+    @patch("rts_predict.sc2.data.ingestion.save_raw_events_to_parquet")
+    @patch("rts_predict.sc2.data.ingestion._save_manifest")
+    @patch("rts_predict.sc2.data.ingestion._collect_pending_files")
+    @patch("rts_predict.sc2.data.ingestion._load_manifest", return_value={})
+    def test_progress_log_triggered(
+        self, m_load, m_collect, m_save_manifest, m_save_parquet, tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Progress log must appear when total_processed hits EXTRACTION_LOG_INTERVAL."""
+        from rts_predict.sc2.data.ingestion import run_in_game_extraction
+
+        fake_paths = [tmp_path / "f0.json"]
+        m_collect.return_value = fake_paths
+
+        fake_results = [
+            {"match_id": "m0", "tracker_events": [], "game_events": [], "player_map": {}}
+        ]
+
+        mock_pool = MagicMock()
+        mock_pool.__enter__ = MagicMock(return_value=mock_pool)
+        mock_pool.__exit__ = MagicMock(return_value=False)
+        mock_pool.imap_unordered.return_value = iter(fake_results)
+
+        manifest_path = tmp_path / "manifest.json"
+        with (
+            patch("rts_predict.sc2.data.ingestion.multiprocessing.Pool", return_value=mock_pool),
+            patch("rts_predict.sc2.data.ingestion.IN_GAME_MANIFEST_PATH", manifest_path),
+            patch("rts_predict.sc2.data.ingestion.EXTRACTION_LOG_INTERVAL", 1),
+            caplog.at_level(logging.INFO),
+        ):
+            run_in_game_extraction(
+                parquet_dir=tmp_path / "parquet", max_workers=1, batch_size=10,
+            )
+
+        assert any("Progress:" in msg for msg in caplog.messages)

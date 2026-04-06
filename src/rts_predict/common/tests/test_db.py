@@ -154,3 +154,24 @@ def test_client_schema_returns_columns(tmp_path: Path) -> None:
     for _, col_type in pairs:
         assert isinstance(col_type, str)
         assert col_type
+
+
+def test_client_con_raises_outside_context(tmp_path: Path) -> None:
+    """Accessing .con outside the context manager must raise RuntimeError."""
+    cfg = _make_config(tmp_path)
+    client = DuckDBClient(cfg)
+    with pytest.raises(RuntimeError, match="outside the context manager"):
+        _ = client.con
+
+
+def test_client_row_counts(tmp_path: Path) -> None:
+    """row_counts() must return a dict mapping each table name to its row count."""
+    cfg = _make_config(tmp_path)
+    with DuckDBClient(cfg) as client:
+        client.con.execute("CREATE TABLE alpha (x INTEGER)")
+        client.con.execute("INSERT INTO alpha VALUES (1), (2), (3)")
+        client.con.execute("CREATE TABLE beta (y VARCHAR)")
+        client.con.execute("INSERT INTO beta VALUES ('a')")
+        counts = client.row_counts()
+
+    assert counts == {"alpha": 3, "beta": 1}

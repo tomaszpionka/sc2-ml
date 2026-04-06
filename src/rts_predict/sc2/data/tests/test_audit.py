@@ -12,6 +12,7 @@ import pytest
 
 from rts_predict.sc2.data.audit import (
     _REPLAY_ID_REGEX,
+    run_phase_0_audit,
     run_source_audit,
     validate_map_translation_coverage,
     validate_path_a_b_join,
@@ -342,3 +343,315 @@ class TestValidateMapTranslationCoverage:
 
         assert result["untranslated_count"] == 2
         assert set(result["untranslated_names"]) == {"MapB", "MapC"}
+
+
+# ── TestDefaultOutputPaths ───────────────────────────────────────────────────
+
+
+class TestDefaultOutputPaths:
+    """Tests that exercise the default output_path=None branches in each step."""
+
+    def test_run_source_audit_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """run_source_audit() without output_path must write to REPORTS_DIR."""
+        replays_dir = _build_synthetic_replays_dir(tmp_path, use_data_subdir=True)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
+
+        result = run_source_audit(replays_dir=replays_dir)
+
+        assert (tmp_path / "reports" / "00_01_source_audit.json").exists()
+        assert "total" in result
+
+    def test_validate_tournament_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """validate_tournament_name_extraction() without output_path writes to REPORTS_DIR."""
+        replays_dir = _build_synthetic_replays_dir(tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        results = validate_tournament_name_extraction(replays_dir=replays_dir)
+
+        assert (tmp_path / "reports" / "00_02_tournament_name_validation.txt").exists()
+        assert isinstance(results, list)
+
+    def test_write_replay_id_spec_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """write_replay_id_spec() without output_path writes to REPORTS_DIR."""
+        replays_dir = _build_synthetic_replays_dir(tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        md = write_replay_id_spec(replays_dir=replays_dir)
+
+        assert (tmp_path / "reports" / "00_03_replay_id_spec.md").exists()
+        assert "replay_id" in md
+
+    def test_run_path_a_smoke_test_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """run_path_a_smoke_test() without output_path writes to REPORTS_DIR."""
+        from rts_predict.sc2.data.audit import run_path_a_smoke_test
+
+        replays_dir = _build_synthetic_replays_dir(tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        result = run_path_a_smoke_test(
+            tournament_name="2023_GSL_S1",
+            replays_dir=replays_dir,
+        )
+
+        assert (tmp_path / "reports" / "00_04_path_a_smoke_test.md").exists()
+        assert result["tournament"] == "2023_GSL_S1"
+
+    def test_validate_path_a_b_join_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """validate_path_a_b_join() without output_path writes to REPORTS_DIR."""
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        con = duckdb.connect(":memory:")
+        raw_df = pd.DataFrame({  # noqa: F841
+            "filename": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        tracker_df = pd.DataFrame({  # noqa: F841
+            "match_id": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE tracker_events_raw AS SELECT * FROM tracker_df")
+
+        result = validate_path_a_b_join(con)
+        con.close()
+
+        assert (tmp_path / "reports" / "00_08_join_validation.md").exists()
+        assert result["join_clean"] is True
+
+    def test_validate_map_translation_coverage_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """validate_map_translation_coverage() without output_path writes to REPORTS_DIR."""
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+
+        # Write a non-empty translation file so load_map_translations creates the table
+        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
+            json.dumps({"MapA": "Map A English"})
+        )
+
+        con = duckdb.connect(":memory:")
+        raw_df = pd.DataFrame({  # noqa: F841
+            "filename": ["a.json"],
+            "metadata": [json.dumps({"mapName": "MapA"})],
+        })
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        con.execute(
+            "CREATE OR REPLACE TABLE raw AS "
+            "SELECT filename, metadata::JSON AS metadata FROM raw"
+        )
+
+        result = validate_map_translation_coverage(con)
+        con.close()
+
+        assert (tmp_path / "reports" / "00_09_map_translation_coverage.csv").exists()
+        assert result["translation_count"] == 1
+        assert result["distinct_map_names"] == 1
+
+
+# ── TestRunPhase0Audit ────────────────────────────────────────────────────────
+
+
+class TestRunPhase0Audit:
+    """Test run_phase_0_audit orchestrator."""
+
+    def test_orchestrator_runs_selected_steps(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator with steps=['0.1'] must only run step 0.1."""
+        replays_dir = _build_synthetic_replays_dir(tmp_path, use_data_subdir=True)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
+
+        con = duckdb.connect(":memory:")
+        results = run_phase_0_audit(con, steps=["0.1"])
+        con.close()
+
+        assert "0.1" in results
+        assert "0.2" not in results
+
+    def test_orchestrator_steps_0_2_and_0_3(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator with steps=['0.2', '0.3'] must run both and return both keys."""
+        replays_dir = _build_synthetic_replays_dir(tmp_path)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPLAYS_SOURCE_DIR", replays_dir)
+
+        con = duckdb.connect(":memory:")
+        results = run_phase_0_audit(con, steps=["0.2", "0.3"])
+        con.close()
+
+        assert "0.2" in results
+        assert "0.3" in results
+        assert "0.1" not in results
+
+    def test_orchestrator_step_0_4(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator step 0.4 must run the smoke test and return tournament info."""
+        from unittest.mock import patch
+
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        con = duckdb.connect(":memory:")
+        with patch(
+            "rts_predict.sc2.data.audit.run_path_a_smoke_test",
+            return_value={"tournament": "2016_IEM_10_Taipei", "file_count": 5},
+        ):
+            results = run_phase_0_audit(con, steps=["0.4"])
+        con.close()
+
+        assert "0.4" in results
+        assert results["0.4"]["tournament"] == "2016_IEM_10_Taipei"
+
+    def test_orchestrator_step_0_6(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator step 0.6 must create the raw_enriched view."""
+        import json as _json
+
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        con = duckdb.connect(":memory:")
+        # Build minimal raw table that create_raw_enriched_view can work with
+        row = {
+            "filename": "T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json",
+            "header": _json.dumps({"elapsedGameLoops": 8000}),
+            "initData": _json.dumps({"gameDescription": {"mapSizeX": 200, "mapSizeY": 200}}),
+            "details": _json.dumps({"timeUTC": "2023-01-01T00:00:00"}),
+            "metadata": _json.dumps({
+                "dataBuild": "50012", "gameVersion": "5.0.12", "mapName": "MapA"
+            }),
+            "ToonPlayerDescMap": _json.dumps({}),
+        }
+        raw_df = pd.DataFrame([row])  # noqa: F841
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        con.execute("""
+            CREATE OR REPLACE TABLE raw AS
+            SELECT filename,
+                header::JSON AS header,
+                "initData"::JSON AS "initData",
+                details::JSON AS details,
+                metadata::JSON AS metadata,
+                "ToonPlayerDescMap"::JSON AS "ToonPlayerDescMap"
+            FROM raw
+        """)
+
+        results = run_phase_0_audit(con, steps=["0.6"])
+        con.close()
+
+        assert "0.6" in results
+        assert results["0.6"]["status"] == "raw_enriched view created"
+
+    def test_orchestrator_step_0_8_and_0_9(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator steps 0.8 and 0.9 must return result dicts."""
+        import json as _json
+
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
+        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
+            _json.dumps({"MapA": "Map A English"})
+        )
+
+        con = duckdb.connect(":memory:")
+        raw_df = pd.DataFrame({  # noqa: F841
+            "filename": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"],
+            "metadata": [_json.dumps({"mapName": "MapA"})],
+        })
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        con.execute(
+            "CREATE OR REPLACE TABLE raw AS "
+            "SELECT filename, metadata::JSON AS metadata FROM raw"
+        )
+        tracker_df = pd.DataFrame({  # noqa: F841
+            "match_id": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE tracker_events_raw AS SELECT * FROM tracker_df")
+
+        results = run_phase_0_audit(con, steps=["0.8", "0.9"])
+        con.close()
+
+        assert "0.8" in results
+        assert "0.9" in results
+
+    def test_orchestrator_step_0_5_mocked(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator step 0.5 must call run_full_path_a_ingestion."""
+        from unittest.mock import patch
+
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        con = duckdb.connect(":memory:")
+        with patch(
+            "rts_predict.sc2.data.audit.run_full_path_a_ingestion",
+            return_value={"row_count": 100, "elapsed_seconds": 1.0},
+        ):
+            results = run_phase_0_audit(con, steps=["0.5"])
+        con.close()
+
+        assert "0.5" in results
+        assert results["0.5"]["row_count"] == 100
+
+    def test_orchestrator_step_0_7_mocked(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Orchestrator step 0.7 must call run_path_b_extraction."""
+        from unittest.mock import patch
+
+        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+
+        con = duckdb.connect(":memory:")
+        with patch(
+            "rts_predict.sc2.data.audit.run_path_b_extraction",
+            return_value={"tracker_events_count": 1000},
+        ):
+            results = run_phase_0_audit(con, steps=["0.7"])
+        con.close()
+
+        assert "0.7" in results
+
+
+# ── TestJoinValidationOrphanRaw ───────────────────────────────────────────────
+
+
+class TestJoinValidationOrphanRaw:
+    """Test the orphan_raw_ids branch in validate_path_a_b_join."""
+
+    def test_orphan_in_raw_appears_in_report(
+        self, tmp_path: Path
+    ) -> None:
+        """When raw has a replay_id not in tracker, report must list it."""
+        con = duckdb.connect(":memory:")
+
+        raw_df = pd.DataFrame({  # noqa: F841
+            "filename": [
+                "T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json",
+                "T/T_data/deadbeef00112233445566778899aabb.SC2Replay.json",
+            ]
+        })
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        tracker_df = pd.DataFrame({  # noqa: F841
+            "match_id": ["T/T_data/aabbccdd11223344556677889900aa00.SC2Replay.json"]
+        })
+        con.execute("CREATE TABLE tracker_events_raw AS SELECT * FROM tracker_df")
+
+        output = tmp_path / "join.md"
+        result = validate_path_a_b_join(con, output_path=output)
+        con.close()
+
+        assert result["orphans_in_raw_not_tracker"] == 1
+        md = output.read_text()
+        assert "Raw orphan IDs" in md

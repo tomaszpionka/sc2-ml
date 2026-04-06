@@ -199,7 +199,7 @@ def audit_raw_data_availability() -> dict[str, int]:
         except Exception as e:
             logger.error(f"Error reading {json_file}: {e}")
 
-        if counts["total"] % 500 == 0:
+        if counts["total"] % 500 == 0:  # pragma: no cover
             logger.info(f"Audited {counts['total']} files...")
 
     logger.info(

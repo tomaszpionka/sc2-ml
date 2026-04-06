@@ -154,3 +154,58 @@ def test_handle_db_dataset_flag_selects_config(mock_client: MagicMock) -> None:
     # First positional argument to DuckDBClient constructor must be _DS_B
     call_args = mock_cls.call_args
     assert call_args[0][0] is _DS_B
+
+
+def test_handle_db_schema_prints_columns(
+    mock_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """schema subcommand must print column/type pairs returned by the client."""
+    mock_client.schema.return_value = [("id", "INTEGER"), ("name", "VARCHAR")]
+    parser = _build_parser()
+    args = parser.parse_args(["db", "schema", "my_table"])
+
+    with patch(f"{_DB_CLI}.DuckDBClient", return_value=mock_client):
+        handle_db_command(args, _DATASETS)
+
+    captured = capsys.readouterr()
+    assert "id" in captured.out
+    assert "name" in captured.out
+
+
+def test_handle_db_tables_no_tables(
+    mock_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """tables subcommand must print '(no tables)' when the database is empty."""
+    mock_client.tables.return_value = []
+    parser = _build_parser()
+    args = parser.parse_args(["db", "tables"])
+
+    with patch(f"{_DB_CLI}.DuckDBClient", return_value=mock_client):
+        handle_db_command(args, _DATASETS)
+
+    captured = capsys.readouterr()
+    assert "(no tables)" in captured.out
+
+
+def test_format_output_unknown_format_raises() -> None:
+    """_format_output must raise ValueError for an unrecognised format string."""
+    from rts_predict.common.db_cli import _format_output
+
+    df = pd.DataFrame({"x": [1]})
+    with pytest.raises(ValueError, match="Unknown output format"):
+        _format_output(df, "xml")
+
+
+def test_handle_db_schema_no_columns(
+    mock_client: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """schema subcommand must print '(no columns)' message when schema is empty."""
+    mock_client.schema.return_value = []
+    parser = _build_parser()
+    args = parser.parse_args(["db", "schema", "ghost_table"])
+
+    with patch(f"{_DB_CLI}.DuckDBClient", return_value=mock_client):
+        handle_db_command(args, _DATASETS)
+
+    captured = capsys.readouterr()
+    assert "ghost_table" in captured.out

@@ -5,8 +5,10 @@ Uses synthetic in-memory DuckDB fixtures to validate each step function.
 
 import json
 from collections.abc import Generator
+from pathlib import Path
 
 import duckdb
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -455,3 +457,129 @@ class TestOrchestrator:
             assert set(results.keys()) == {"1.1", "1.3"}
         finally:
             mod.REPORTS_DIR = original
+
+
+# ── Edge-case coverage ───────────────────────────────────────────────────────
+
+
+class TestSerializeValue:
+    def test_numpy_scalar_converted(self) -> None:
+        """_serialize_value must call .item() on numpy scalars."""
+        from rts_predict.sc2.data.exploration import _serialize_value
+
+        val = np.int64(42)
+        result = _serialize_value(val)
+        assert result == 42
+        assert isinstance(result, int)
+
+    def test_plain_python_passthrough(self) -> None:
+        """_serialize_value must pass plain Python values through unchanged."""
+        from rts_predict.sc2.data.exploration import _serialize_value
+
+        assert _serialize_value(7) == 7
+        assert _serialize_value("hello") == "hello"
+
+
+class TestNearDuplicateDetection:
+    def test_near_duplicates_included_in_md(self, tmp_path: Path) -> None:
+        """When near-duplicates exist, their markdown table must appear in the report."""
+        import json
+
+        from rts_predict.sc2.data.exploration import run_corpus_summary
+
+        con = duckdb.connect(":memory:")
+
+        # Two rows with same players, same map, within 30s — near-duplicates
+        rid_a = "aabbccdd11223344556677889900aa00"
+        rid_b = "aabbccdd11223344556677889900aa01"
+
+        raw_rows = []
+        for rid, ts in [(rid_a, "2020-03-15T12:00:00"), (rid_b, "2020-03-15T12:00:25")]:
+            raw_rows.append({
+                "filename": f"T/T_data/{rid}.SC2Replay.json",
+                "header": json.dumps({"elapsedGameLoops": 8000}),
+                "initData": json.dumps({"gameDescription": {"mapSizeX": 200, "mapSizeY": 200}}),
+                "details": json.dumps({"timeUTC": ts}),
+                "metadata": json.dumps({
+                    "dataBuild": "50012", "gameVersion": "5.0.12", "mapName": "Altitude LE"
+                }),
+                "ToonPlayerDescMap": _build_tpdm("Alpha", "Beta"),
+            })
+
+        raw_df = pd.DataFrame(raw_rows)  # noqa: F841
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        con.execute("""
+            CREATE OR REPLACE TABLE raw AS
+            SELECT filename,
+                header::JSON AS header,
+                "initData"::JSON AS "initData",
+                details::JSON AS details,
+                metadata::JSON AS metadata,
+                "ToonPlayerDescMap"::JSON AS "ToonPlayerDescMap"
+            FROM raw
+        """)
+
+        # tracker_events_raw must exist for the query to work
+        con.execute("""
+            CREATE TABLE tracker_events_raw (
+                match_id VARCHAR, event_type VARCHAR, player_id INTEGER, game_loop INTEGER
+            )
+        """)
+        # match_player_map must exist
+        con.execute("CREATE TABLE match_player_map (match_id VARCHAR, player_id INTEGER)")
+
+        result = run_corpus_summary(con, output_dir=tmp_path)
+        con.close()
+
+        assert len(result["near_duplicates"]) > 0
+        md = (tmp_path / "01_01_duplicate_detection.md").read_text()
+        assert "Altitude LE" in md or "Alpha" in md
+
+
+class TestPlayerStatsSamplingEmpty:
+    def test_empty_tracker_returns_early(self, tmp_path: Path) -> None:
+        """run_playerstats_sampling_check returns empty when no PlayerStats exist."""
+        import json
+
+        from rts_predict.sc2.data.exploration import run_playerstats_sampling_check
+
+        con = duckdb.connect(":memory:")
+
+        # raw with one replay
+        rid = "aabbccdd11223344556677889900aa00"
+        raw_df = pd.DataFrame([{  # noqa: F841
+            "filename": f"T/T_data/{rid}.SC2Replay.json",
+            "header": json.dumps({"elapsedGameLoops": 8000}),
+            "initData": json.dumps({"gameDescription": {"mapSizeX": 200, "mapSizeY": 200}}),
+            "details": json.dumps({"timeUTC": "2020-01-01T10:00:00"}),
+            "metadata": json.dumps({
+                "dataBuild": "50012", "gameVersion": "5.0.12", "mapName": "Map A"
+            }),
+            "ToonPlayerDescMap": json.dumps({}),
+        }])
+        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
+        con.execute("""
+            CREATE OR REPLACE TABLE raw AS
+            SELECT filename,
+                header::JSON AS header,
+                "initData"::JSON AS "initData",
+                details::JSON AS details,
+                metadata::JSON AS metadata,
+                "ToonPlayerDescMap"::JSON AS "ToonPlayerDescMap"
+            FROM raw
+        """)
+        # tracker_events_raw with no PlayerStats (only CameraUpdate)
+        con.execute("""
+            CREATE TABLE tracker_events_raw (
+                match_id VARCHAR, event_type VARCHAR, player_id INTEGER, game_loop INTEGER
+            )
+        """)
+        con.execute(
+            "INSERT INTO tracker_events_raw VALUES "
+            f"('{rid}.SC2Replay.json', 'CameraUpdate', 1, 100)"
+        )
+
+        result = run_playerstats_sampling_check(con, output_dir=tmp_path)
+        con.close()
+
+        assert result == {"per_game": [], "by_year": [], "flagged_years": []}
