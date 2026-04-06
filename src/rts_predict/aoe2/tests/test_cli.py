@@ -64,3 +64,68 @@ class TestAoE2CLI:
         captured = capsys.readouterr()
         # argparse prints to stdout or the test just shouldn't raise
         assert "usage" in captured.out.lower() or captured.out == ""
+
+
+class TestCLIDownload:
+    """Tests for CLI download subcommand parsing."""
+
+    def test_download_subcommand_exists(self) -> None:
+        """'download' is a recognised subcommand."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoe2companion", "--dry-run"])
+        assert args.command == "download"
+        assert args.source == "aoe2companion"
+        assert args.dry_run is True
+
+    def test_aoestats_force_flag(self) -> None:
+        """--force flag is parsed for aoestats source."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoestats", "--force"])
+        assert args.source == "aoestats"
+        assert args.force is True
+
+    def test_invalid_source_rejected(self) -> None:
+        """Unrecognised source name causes parser error."""
+        import pytest
+
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        with pytest.raises(SystemExit):
+            parser.parse_args(["download", "invalid_source"])
+
+    def test_dry_run_defaults_to_false(self) -> None:
+        """--dry-run defaults to False when not specified."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoe2companion"])
+        assert args.dry_run is False
+
+    def test_force_defaults_to_false(self) -> None:
+        """--force defaults to False when not specified."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoestats"])
+        assert args.force is False
+
+    def test_log_interval_parsed(self) -> None:
+        """--log-interval is parsed as int."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoe2companion", "--log-interval", "50"])
+        assert args.log_interval == 50
+
+    def test_log_interval_defaults_to_none(self) -> None:
+        """--log-interval defaults to None when not specified."""
+        from rts_predict.aoe2.cli import build_parser
+
+        parser = build_parser()
+        args = parser.parse_args(["download", "aoe2companion"])
+        assert args.log_interval is None
