@@ -355,9 +355,9 @@ class TestDefaultOutputPaths:
     def test_run_source_audit_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """run_source_audit() without output_path must write to REPORTS_DIR."""
+        """run_source_audit() without output_path must write to DATASET_REPORTS_DIR."""
         replays_dir = _build_synthetic_replays_dir(tmp_path, use_data_subdir=True)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
         monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
 
         result = run_source_audit(replays_dir=replays_dir)
@@ -368,9 +368,9 @@ class TestDefaultOutputPaths:
     def test_validate_tournament_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """validate_tournament_name_extraction() without output_path writes to REPORTS_DIR."""
+        """validate_tournament_name_extraction() without output_path writes to DATASET_REPORTS_DIR."""  # noqa: E501
         replays_dir = _build_synthetic_replays_dir(tmp_path)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         results = validate_tournament_name_extraction(replays_dir=replays_dir)
 
@@ -380,9 +380,9 @@ class TestDefaultOutputPaths:
     def test_write_replay_id_spec_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """write_replay_id_spec() without output_path writes to REPORTS_DIR."""
+        """write_replay_id_spec() without output_path writes to DATASET_REPORTS_DIR."""
         replays_dir = _build_synthetic_replays_dir(tmp_path)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         md = write_replay_id_spec(replays_dir=replays_dir)
 
@@ -392,11 +392,11 @@ class TestDefaultOutputPaths:
     def test_run_path_a_smoke_test_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """run_path_a_smoke_test() without output_path writes to REPORTS_DIR."""
+        """run_path_a_smoke_test() without output_path writes to DATASET_REPORTS_DIR."""
         from rts_predict.sc2.data.audit import run_path_a_smoke_test
 
         replays_dir = _build_synthetic_replays_dir(tmp_path)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         result = run_path_a_smoke_test(
             tournament_name="2023_GSL_S1",
@@ -409,8 +409,8 @@ class TestDefaultOutputPaths:
     def test_validate_path_a_b_join_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """validate_path_a_b_join() without output_path writes to REPORTS_DIR."""
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        """validate_path_a_b_join() without output_path writes to DATASET_REPORTS_DIR."""
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         con = duckdb.connect(":memory:")
         raw_df = pd.DataFrame({  # noqa: F841
@@ -431,8 +431,8 @@ class TestDefaultOutputPaths:
     def test_validate_map_translation_coverage_default_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """validate_map_translation_coverage() without output_path writes to REPORTS_DIR."""
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        """validate_map_translation_coverage() without output_path writes to DATASET_REPORTS_DIR."""
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
         monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
 
         # Write a non-empty translation file so load_map_translations creates the table
@@ -470,7 +470,7 @@ class TestRunPhase0Audit:
     ) -> None:
         """Orchestrator with steps=['0.1'] must only run step 0.1."""
         replays_dir = _build_synthetic_replays_dir(tmp_path, use_data_subdir=True)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
         monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", replays_dir)
 
         con = duckdb.connect(":memory:")
@@ -485,7 +485,7 @@ class TestRunPhase0Audit:
     ) -> None:
         """Orchestrator with steps=['0.2', '0.3'] must run both and return both keys."""
         replays_dir = _build_synthetic_replays_dir(tmp_path)
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
         monkeypatch.setattr("rts_predict.sc2.data.audit.REPLAYS_SOURCE_DIR", replays_dir)
 
         con = duckdb.connect(":memory:")
@@ -502,7 +502,7 @@ class TestRunPhase0Audit:
         """Orchestrator step 0.4 must run the smoke test and return tournament info."""
         from unittest.mock import patch
 
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         con = duckdb.connect(":memory:")
         with patch(
@@ -521,7 +521,7 @@ class TestRunPhase0Audit:
         """Orchestrator step 0.6 must create the raw_enriched view."""
         import json as _json
 
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         con = duckdb.connect(":memory:")
         # Build minimal raw table that create_raw_enriched_view can work with
@@ -560,7 +560,7 @@ class TestRunPhase0Audit:
         """Orchestrator steps 0.8 and 0.9 must return result dicts."""
         import json as _json
 
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
         monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
         (tmp_path / "map_foreign_to_english_mapping.json").write_text(
             _json.dumps({"MapA": "Map A English"})
@@ -593,7 +593,7 @@ class TestRunPhase0Audit:
         """Orchestrator step 0.5 must call run_full_path_a_ingestion."""
         from unittest.mock import patch
 
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         con = duckdb.connect(":memory:")
         with patch(
@@ -612,7 +612,7 @@ class TestRunPhase0Audit:
         """Orchestrator step 0.7 must call run_path_b_extraction."""
         from unittest.mock import patch
 
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports")
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports")
 
         con = duckdb.connect(":memory:")
         with patch(
@@ -690,7 +690,7 @@ class TestRunFullPathAIngestion:
         from rts_predict.sc2.data.audit import run_full_path_a_ingestion
 
         monkeypatch.setattr(
-            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+            "rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports"
         )
 
         con = duckdb.connect(":memory:")
@@ -715,7 +715,7 @@ class TestRunFullPathAIngestion:
         reports_dir = tmp_path / "reports"
         reports_dir.mkdir(parents=True)
         (reports_dir / "00_01_source_audit.json").write_text(json.dumps({"total": 1}))
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
 
         con = duckdb.connect(":memory:")
         _build_raw_with_tpdm(con)
@@ -736,7 +736,7 @@ class TestRunFullPathAIngestion:
         reports_dir = tmp_path / "reports"
         reports_dir.mkdir(parents=True)
         (reports_dir / "00_01_source_audit.json").write_text(json.dumps({"total": 99}))
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
 
         con = duckdb.connect(":memory:")
         _build_raw_with_tpdm(con)
@@ -752,11 +752,11 @@ class TestRunFullPathAIngestion:
     def test_default_output_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """No output_path arg → file written at REPORTS_DIR/00_05_full_ingestion_log.txt."""
+        """No output_path arg → file written at DATASET_REPORTS_DIR/00_05_full_ingestion_log.txt."""
         from rts_predict.sc2.data.audit import run_full_path_a_ingestion
 
         reports_dir = tmp_path / "reports"
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
 
         con = duckdb.connect(":memory:")
         _build_raw_with_tpdm(con)
@@ -797,7 +797,7 @@ class TestRunPathBExtraction:
             tmp_path / "nonexistent_manifest.json",
         )
         monkeypatch.setattr(
-            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+            "rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports"
         )
 
         con = duckdb.connect(":memory:")
@@ -831,7 +831,7 @@ class TestRunPathBExtraction:
             "rts_predict.sc2.data.audit.IN_GAME_MANIFEST_PATH", manifest_path
         )
         monkeypatch.setattr(
-            "rts_predict.sc2.data.audit.REPORTS_DIR", tmp_path / "reports"
+            "rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", tmp_path / "reports"
         )
 
         con = duckdb.connect(":memory:")
@@ -852,14 +852,14 @@ class TestRunPathBExtraction:
     def test_default_output_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """No output_path arg → file written at REPORTS_DIR/00_07_path_b_extraction_log.txt."""
+        """No output_path arg → file written at DATASET_REPORTS_DIR/00_07_path_b_extraction_log.txt."""  # noqa: E501
         from rts_predict.sc2.data.audit import run_path_b_extraction
 
         parquet_dir = tmp_path / "parquet"
         parquet_dir.mkdir()
 
         reports_dir = tmp_path / "reports"
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
         monkeypatch.setattr(
             "rts_predict.sc2.data.audit.IN_GAME_MANIFEST_PATH",
             tmp_path / "nonexistent_manifest.json",
@@ -911,7 +911,7 @@ class TestJoinValidationWithAuditFile:
         (reports_dir / "00_01_source_audit.json").write_text(
             json.dumps({"stripped": 3, "total": 10})
         )
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
 
         result = validate_path_a_b_join(
             _join_con_with_data, output_path=tmp_path / "join.md"
@@ -931,7 +931,7 @@ class TestJoinValidationWithAuditFile:
         (reports_dir / "00_01_source_audit.json").write_text(
             json.dumps({"stripped": 3, "total": 10})
         )
-        monkeypatch.setattr("rts_predict.sc2.data.audit.REPORTS_DIR", reports_dir)
+        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_REPORTS_DIR", reports_dir)
 
         output = tmp_path / "join.md"
         validate_path_a_b_join(_join_con_with_data, output_path=output)

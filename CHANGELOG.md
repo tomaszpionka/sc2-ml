@@ -19,6 +19,31 @@ merged to `master`.
 
 ### Removed
 
+## [0.18.4] — 2026-04-06 (PR #N: chore/per-dataset-reports)
+
+### Added
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` — dataset-level roadmap (Phases 0–2) split from the former monolithic `SC2_THESIS_ROADMAP.md`
+- `src/rts_predict/sc2/reports/ROADMAP.md` — game-level roadmap (Phases 3–10)
+- `src/rts_predict/aoe2/reports/ROADMAP.md` — AoE2 game-level placeholder roadmap
+- `src/rts_predict/aoe2/reports/aoe2companion/.gitkeep` and `aoestats/.gitkeep` — dataset report subdirectories
+- `DATASET_REPORTS_DIR` constant in `sc2/config.py` pointing to `reports/sc2egset/`
+- `AOE2COMPANION_REPORTS_DIR` and `AOESTATS_REPORTS_DIR` constants in `aoe2/config.py`
+
+### Changed
+- `audit.py` — artifact output defaults changed from `REPORTS_DIR` to `DATASET_REPORTS_DIR` (Phase 0 artifacts now written to `reports/sc2egset/`)
+- `exploration.py` — same: Phase 1 artifacts now written to `reports/sc2egset/`
+- `test_audit.py` and `test_exploration.py` — updated to monkeypatch `DATASET_REPORTS_DIR` instead of `REPORTS_DIR`
+- `sc2/PHASE_STATUS.yaml` — replaced `roadmap:` with `dataset_roadmap:`, `game_roadmap:`, and `current_dataset:` fields
+- `aoe2/PHASE_STATUS.yaml` — replaced `roadmap:` with split fields; `current_dataset: null`
+- `ARCHITECTURE.md` — game package contract table updated for per-dataset report structure; "Adding a new game" steps renumbered
+- `CLAUDE.md` — roadmap key file location split into `SC2 dataset roadmap` and `SC2 game roadmap`
+- `.claude/agents/planner-science.md` — Read first section updated to per-file roadmap paths
+- `thesis/THESIS_STRUCTURE.md` — roadmap reference updated to new split paths
+
+### Removed
+- `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` — split into `sc2egset/ROADMAP.md` (Phases 0–2) and `ROADMAP.md` (Phases 3–10)
+- `src/rts_predict/aoe2/reports/AOE2_THESIS_ROADMAP.md` — replaced by `ROADMAP.md` placeholder
+
 ## [0.18.3] — 2026-04-06 (PR #N: chore/per-dataset-reports)
 
 ### Added

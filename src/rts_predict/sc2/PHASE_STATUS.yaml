@@ -7,7 +7,9 @@
 # notes: brief context for the current state
 
 game: sc2
-roadmap: src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md
+dataset_roadmap: src/rts_predict/sc2/reports/sc2egset/ROADMAP.md
+game_roadmap: src/rts_predict/sc2/reports/ROADMAP.md
+current_dataset: sc2egset
 current_phase: 1  # The phase currently being worked on (highest non-complete)
 
 phases:

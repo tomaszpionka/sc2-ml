@@ -61,7 +61,8 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 | What | Where |
 |------|-------|
 | Phase status | `src/rts_predict/sc2/PHASE_STATUS.yaml` |
-| Roadmap | `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` |
+| SC2 dataset roadmap | `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` |
+| SC2 game roadmap | `src/rts_predict/sc2/reports/ROADMAP.md` |
 | Scientific invariants | `.claude/scientific-invariants.md` |
 | Architecture | `ARCHITECTURE.md` |
 | Research log | `reports/research_log.md` |

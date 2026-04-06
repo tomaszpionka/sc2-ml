@@ -15,10 +15,10 @@ from pathlib import Path
 import duckdb
 
 from rts_predict.sc2.config import (
+    DATASET_REPORTS_DIR,
     IN_GAME_MANIFEST_PATH,
     IN_GAME_PARQUET_DIR,
     REPLAYS_SOURCE_DIR,
-    REPORTS_DIR,
 )
 from rts_predict.sc2.data.ingestion import (
     audit_raw_data_availability,
@@ -87,7 +87,7 @@ def run_source_audit(
     counts = audit_raw_data_availability()
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_01_source_audit.json"
+        output_path = DATASET_REPORTS_DIR / "00_01_source_audit.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(counts, indent=2))
     logger.info(f"Source audit written to {output_path}")
@@ -139,7 +139,7 @@ def validate_tournament_name_extraction(
             })
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_02_tournament_name_validation.txt"
+        output_path = DATASET_REPORTS_DIR / "00_02_tournament_name_validation.txt"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines = ["Tournament Name Extraction Validation", "=" * 40, ""]
@@ -216,7 +216,7 @@ def write_replay_id_spec(
     md = "\n".join(lines)
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_03_replay_id_spec.md"
+        output_path = DATASET_REPORTS_DIR / "00_03_replay_id_spec.md"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(md)
     logger.info(f"Replay ID spec written to {output_path}")
@@ -321,7 +321,7 @@ def run_path_a_smoke_test(
 
     # Write report
     if output_path is None:
-        output_path = REPORTS_DIR / "00_04_path_a_smoke_test.md"
+        output_path = DATASET_REPORTS_DIR / "00_04_path_a_smoke_test.md"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines = [
@@ -364,7 +364,7 @@ def run_full_path_a_ingestion(
     row_count = row[0]
 
     # Compare to step 0.1 audit total if available
-    audit_path = REPORTS_DIR / "00_01_source_audit.json"
+    audit_path = DATASET_REPORTS_DIR / "00_01_source_audit.json"
     audit_total = None
     if audit_path.exists():
         audit_data = json.loads(audit_path.read_text())
@@ -382,7 +382,7 @@ def run_full_path_a_ingestion(
     }
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_05_full_ingestion_log.txt"
+        output_path = DATASET_REPORTS_DIR / "00_05_full_ingestion_log.txt"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines = [
@@ -461,7 +461,7 @@ def run_path_b_extraction(
     }
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_07_path_b_extraction_log.txt"
+        output_path = DATASET_REPORTS_DIR / "00_07_path_b_extraction_log.txt"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines = [
@@ -497,7 +497,7 @@ def validate_path_a_b_join(
     join_clean = len(orphan_tracker_ids) == 0
 
     # Cross-reference with step 0.1 audit
-    audit_path = REPORTS_DIR / "00_01_source_audit.json"
+    audit_path = DATASET_REPORTS_DIR / "00_01_source_audit.json"
     stripped_count = None
     if audit_path.exists():
         audit_data = json.loads(audit_path.read_text())
@@ -513,7 +513,7 @@ def validate_path_a_b_join(
     }
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_08_join_validation.md"
+        output_path = DATASET_REPORTS_DIR / "00_08_join_validation.md"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines = [
@@ -580,7 +580,7 @@ def validate_map_translation_coverage(
     }
 
     if output_path is None:
-        output_path = REPORTS_DIR / "00_09_map_translation_coverage.csv"
+        output_path = DATASET_REPORTS_DIR / "00_09_map_translation_coverage.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Build CSV: all distinct map names with translation status

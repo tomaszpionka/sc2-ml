@@ -8,6 +8,7 @@ ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
 DATA_DIR: Path = GAME_DIR / "data"                              # src/rts_predict/sc2/data/
 DATASET_DIR: Path = DATA_DIR / "sc2egset"                       # src/rts_predict/sc2/data/sc2egset/
 REPORTS_DIR: Path = GAME_DIR / "reports"
+DATASET_REPORTS_DIR: Path = REPORTS_DIR / "sc2egset"
 DB_FILE: Path = DATASET_DIR / "db" / "db.duckdb"
 
 # DuckDB configuration

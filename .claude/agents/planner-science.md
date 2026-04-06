@@ -37,7 +37,7 @@ Empires II."
 ## Constraints
 - READ-ONLY. Do NOT use Write or Edit.
 - Present plan in chat or via TodoWrite. Do NOT write _current_plan.md.
-- Always reference the specific Phase/Step from SC2_THESIS_ROADMAP.md.
+- Always reference the specific Phase/Step from the appropriate ROADMAP.md (sc2egset/ for Phases 0–2, reports/ for Phases 3+).
 - Always check scientific-invariants.md before proposing design decisions.
 - For Category A plans: phase/step ref, branch, files, function signatures,
   SQL queries, test cases, gate condition.
@@ -47,7 +47,8 @@ Empires II."
 ## Read first
 - `.claude/scientific-invariants.md`
 - `src/rts_predict/sc2/PHASE_STATUS.yaml`
-- `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md`
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` (dataset-level, Phases 0–2)
+- `src/rts_predict/sc2/reports/ROADMAP.md` (game-level, Phases 3+)
 - `reports/research_log.md`
 - `.claude/ml-protocol.md` (Phase 9+)
 

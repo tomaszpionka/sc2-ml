@@ -2,7 +2,9 @@
 # Will be populated when AoE2 roadmap is created after SC2 pipeline is complete.
 
 game: aoe2
-roadmap: src/rts_predict/aoe2/reports/AOE2_THESIS_ROADMAP.md
+dataset_roadmap: null  # Will be set when first dataset roadmap is created
+game_roadmap: src/rts_predict/aoe2/reports/ROADMAP.md
+current_dataset: null
 current_phase: null
 
 phases: {}

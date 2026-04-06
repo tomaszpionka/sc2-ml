@@ -6,6 +6,24 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-06 — [CHORE] Migrate to per-dataset report subdirectory structure
+
+**Objective:** Introduce `reports/<dataset>/` subdirectories to prevent Phase 0–2
+artifact filename collisions between datasets (critical for AoE2 support where two
+datasets — aoe2companion and aoestats — would both produce `00_01_*.json`).
+
+**Changes:**
+- `SC2_THESIS_ROADMAP.md` split into `sc2egset/ROADMAP.md` (Phases 0–2) and `ROADMAP.md` (Phases 3–10)
+- `AOE2_THESIS_ROADMAP.md` placeholder replaced by `ROADMAP.md` placeholder
+- `DATASET_REPORTS_DIR` constant added to `sc2/config.py`; `AOE2COMPANION_REPORTS_DIR` and `AOESTATS_REPORTS_DIR` added to `aoe2/config.py`
+- `audit.py` and `exploration.py` write to `DATASET_REPORTS_DIR` by default
+- `PHASE_STATUS.yaml` (SC2 and AoE2) updated to `dataset_roadmap`/`game_roadmap`/`current_dataset` fields
+- All documentation and agent prompts updated; zero `SC2_THESIS_ROADMAP` references remain outside CHANGELOG
+
+**Verification:** 172 tests pass, ruff clean, mypy clean, 100% coverage.
+
+---
+
 ## 2026-04-05 — [CHORE] Add step numbers to Phase 0 and Phase 1 report filenames
 
 **Objective:** Make report filenames self-documenting by encoding the step that produced them.
@@ -51,6 +69,8 @@ unchanged. This is a pure structural/naming chore.
 ---
 
 ## 2026-04-03 — [SC2] Phase 1 corpus inventory: Steps 1.1–1.7 complete, Step 1.8 pending
+
+> Path note: artifacts moved to `src/rts_predict/sc2/reports/sc2egset/` in v0.19.0.
 
 **Objective:** Run the full Phase 1 exploration (Steps 1.1–1.7) to characterise
 the SC2EGSet corpus — structural validation, parse quality, duration distribution,
@@ -364,6 +384,8 @@ team games, or 1v1 with spectator/observer slots in `ToonPlayerDescMap`?
 ---
 
 ## 2026-04-03 — [SC2] Phase 0 ingestion audit: all gate conditions met
+
+> Path note: artifacts moved to `src/rts_predict/sc2/reports/sc2egset/` in v0.19.0.
 
 **Objective:** Run the full Phase 0 audit (Steps 0.1–0.9) against real SC2EGSet replay
 data to verify data integrity before proceeding to Phase 1 (data exploration).

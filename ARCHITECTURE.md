@@ -34,7 +34,9 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
 | `data/tests/` | Co-located unit tests for data modules | Yes |
 | `reports/` | Phase artifacts (tracked in git) | Yes |
-| `reports/<GAME>_THESIS_ROADMAP.md` | Authoritative execution plan | Yes |
+| `reports/ROADMAP.md` | Game-level execution plan (Phases 3+) | Yes |
+| `reports/<dataset>/ROADMAP.md` | Dataset-level execution plan (Phases 0–2) | Per dataset |
+| `reports/<dataset>/` | Dataset-scoped phase artifacts | Per dataset |
 | `models/` | Serialised model artifacts (gitignored) | When modelling begins |
 | `logs/` | Pipeline logs (gitignored) | When pipeline exists |
 | `tests/` | Package-root tests (CLI, validation) | Yes |
@@ -43,10 +45,11 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 
 1. Create `src/rts_predict/<game>/` mirroring the `sc2/` structure above
 2. Create `PHASE_STATUS.yaml` with `current_phase: null`
-3. Create `<GAME>_THESIS_ROADMAP.md` in the reports directory
-4. Register the CLI entry point in `pyproject.toml`
-5. Update `.gitignore` patterns (already use `rts_predict/*/` wildcards)
-6. Do NOT create shared abstractions until the second game's implementation
+3. Create `reports/ROADMAP.md` (game-level placeholder)
+4. Create `reports/<dataset>/ROADMAP.md` per dataset
+5. Register the CLI entry point in `pyproject.toml`
+6. Update `.gitignore` patterns (already use `rts_predict/*/` wildcards)
+7. Do NOT create shared abstractions until the second game's implementation
    reveals genuine code overlap (see `common/CONTRACT.md`)
 
 ## Cross-cutting files (not game-specific)

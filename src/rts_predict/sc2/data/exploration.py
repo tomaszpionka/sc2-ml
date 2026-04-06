@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from rts_predict.sc2.config import RANDOM_SEED, REPORTS_DIR
+from rts_predict.sc2.config import DATASET_REPORTS_DIR, RANDOM_SEED
 
 matplotlib.use("Agg")
 
@@ -594,7 +594,7 @@ def run_corpus_summary(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.1 — Overall corpus counts and structural validation."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     result: dict = {}
@@ -770,7 +770,7 @@ def run_parse_quality_by_tournament(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.2 — Per-tournament parse quality table."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     df = con.execute(_PARSE_QUALITY_BY_TOURNAMENT_QUERY).df()
@@ -820,7 +820,7 @@ def run_duration_distribution(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.3 — Game duration distribution."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     percentiles = con.execute(_DURATION_PERCENTILES_QUERY).df()
@@ -860,7 +860,7 @@ def run_apm_mmr_audit(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.4 — APM and MMR audit."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     apm_by_year = con.execute(_APM_BY_YEAR_QUERY).df()
@@ -930,7 +930,7 @@ def run_patch_landscape(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.5 — Game version and patch landscape."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     df = con.execute(_PATCH_LANDSCAPE_QUERY).df()
@@ -947,7 +947,7 @@ def run_event_type_inventory(
     con: duckdb.DuckDBPyConnection, output_dir: Path | None = None
 ) -> dict:
     """Step 1.6 — Tracker event type inventory (stratified)."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     # 1.6A — Corpus-wide
@@ -992,7 +992,7 @@ def run_playerstats_sampling_check(
     games_per_year: int = 10,
 ) -> dict:
     """Step 1.7 — PlayerStats sampling regularity check."""
-    out = output_dir or REPORTS_DIR
+    out = output_dir or DATASET_REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
 
     # Get ranked games per year

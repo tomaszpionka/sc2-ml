@@ -436,27 +436,27 @@ class TestPlayerStatsSampling:
 
 class TestOrchestrator:
     def test_orchestrator_all_steps(self, exploration_con, tmp_path):
-        # Patch REPORTS_DIR for test isolation
+        # Patch DATASET_REPORTS_DIR for test isolation
         import rts_predict.sc2.data.exploration as mod
         from rts_predict.sc2.data.exploration import run_phase_1_exploration
-        original = mod.REPORTS_DIR
-        mod.REPORTS_DIR = tmp_path
+        original = mod.DATASET_REPORTS_DIR
+        mod.DATASET_REPORTS_DIR = tmp_path
         try:
             results = run_phase_1_exploration(exploration_con)
             assert set(results.keys()) == {"1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7"}
         finally:
-            mod.REPORTS_DIR = original
+            mod.DATASET_REPORTS_DIR = original
 
     def test_orchestrator_selective(self, exploration_con, tmp_path):
         import rts_predict.sc2.data.exploration as mod
         from rts_predict.sc2.data.exploration import run_phase_1_exploration
-        original = mod.REPORTS_DIR
-        mod.REPORTS_DIR = tmp_path
+        original = mod.DATASET_REPORTS_DIR
+        mod.DATASET_REPORTS_DIR = tmp_path
         try:
             results = run_phase_1_exploration(exploration_con, steps=["1.1", "1.3"])
             assert set(results.keys()) == {"1.1", "1.3"}
         finally:
-            mod.REPORTS_DIR = original
+            mod.DATASET_REPORTS_DIR = original
 
 
 # ── Edge-case coverage ───────────────────────────────────────────────────────

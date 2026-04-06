@@ -8,6 +8,8 @@ GAME_DIR: Path = Path(__file__).resolve().parent
 ROOT_DIR: Path = GAME_DIR.parent.parent.parent
 DATA_DIR: Path = GAME_DIR / "data"
 REPORTS_DIR: Path = GAME_DIR / "reports"
+AOE2COMPANION_REPORTS_DIR: Path = REPORTS_DIR / "aoe2companion"
+AOESTATS_REPORTS_DIR: Path = REPORTS_DIR / "aoestats"
 
 # -- Dataset paths (two sources) --
 AOE2COMPANION_DIR: Path = DATA_DIR / "aoe2companion"
