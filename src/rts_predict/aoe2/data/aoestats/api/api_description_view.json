@@ -1,9 +1,0 @@
-{
-  "patches": "https://aoestats.io/api/patches/",
-  "groupings": "https://aoestats.io/api/groupings/",
-  "changelog": "https://aoestats.io/api/changelog/",
-  "db_dumps": "https://aoestats.io/api/db_dumps/",
-  "overview": "https://aoestats.io/api/overview/",
-  "stats": "https://aoestats.io/api/stats/?patch=82587&grouping=random_map&elo_range=all&format=json",
-  "stats-breakdown": "https://aoestats.io/api/stats/breakdown/?patch=82587&grouping=random_map&elo_range=all"
-}

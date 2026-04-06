@@ -256,3 +256,6 @@ src/rts_predict/*/in_game_processing_manifest.json
 # PR body staging area
 .github/tmp/*
 !.github/tmp/.gitkeep
+
+# AoE2/SC2 data source API manifests (large JSON files — not for version control)
+src/rts_predict/*/data/*/api/*.json
