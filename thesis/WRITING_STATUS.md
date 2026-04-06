@@ -17,6 +17,15 @@ Last updated: 2026-04-03 (Phase 1 Steps 1.1–1.7 done; Step 1.8 pending)
 
 ---
 
+## Formatting targets
+
+Minimum length: **72,000 characters with spaces** (~40 normalized pages, typical 60–80).
+Abstract: 400–1500 characters. Keywords: 3–5.
+Full validation rules: `.claude/thesis-formatting-rules.yaml` → `content_thresholds`.
+Source: `docs/PJAIT_THESIS_REQUIREMENTS.md`.
+
+---
+
 ## Chapter 1 — Introduction
 
 | Section | Status | Feeds from | Notes |

@@ -13,9 +13,16 @@ merged to `master`.
 
 ### Added
 - `.claude/thesis-formatting-rules.yaml` — machine-readable PJAIT formatting thresholds and rules extracted from `PJAIT_THESIS_REQUIREMENTS.md` §1
+- `docs/PJAIT_THESIS_REQUIREMENTS.md` tracked in git; authoritative source for formatting and defense requirements
+- `README.md` PJAIT institution name, degree, and key document references
+- `thesis/WRITING_STATUS.md` formatting targets reference box
+- `thesis/THESIS_STRUCTURE.md` PJAIT institution line
 
 ### Changed
 - `.claude/rules/thesis-writing.md` — added cross-reference to formatting rules YAML
+- `.claude/scientific-invariants.md` invariant #10: Nemenyi → Wilcoxon/Holm + Bayesian signed-rank
+- `thesis/THESIS_STRUCTURE.md` §2.6 and §5.3.1: same Nemenyi → Wilcoxon/Holm + Bayesian update
+- `thesis/chapters/02_theoretical_background.md`, `04_data_and_methodology.md`, `05_experiments_and_results.md`: skeleton comments updated
 
 ### Fixed
 

@@ -3,6 +3,9 @@
 Master's thesis: "A comparative analysis of methods for predicting game results in
 real-time strategy games, based on the examples of StarCraft II and Age of Empires II."
 
+**Institution:** Polish-Japanese Academy of Information Technology (PJAIT), Warsaw
+**Degree:** Master of Science in Computer Science, Data Science specialisation
+
 Predicts professional match outcomes from replay data using classical ML, graph
 embeddings, and Graph Neural Networks. SC2 is the primary dataset; AoE2 integration
 is planned after SC2 work is complete.
@@ -24,6 +27,8 @@ poetry run pytest tests/ src/ -v --cov=rts_predict
 | `reports/research_log.md` | Reverse-chronological thesis narrative |
 | `CHANGELOG.md` | Code version history |
 | `.claude/` | Coding, workflow, and ML experiment standards |
+| `docs/PJAIT_THESIS_REQUIREMENTS.md` | Institutional requirements — formatting, defense, grading |
+| `.claude/thesis-formatting-rules.yaml` | Machine-readable PJAIT formatting thresholds |
 
 ## Prior Drafts (reference only — not authoritative)
 
