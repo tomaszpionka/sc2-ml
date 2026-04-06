@@ -132,13 +132,19 @@ class TestIsAlreadyDownloaded:
     """Tests for is_already_downloaded()."""
 
     def test_returns_true_when_size_matches(self, tmp_path: Path) -> None:
-        """File exists with correct size -> True."""
+        """File exists with exact manifest size -> True."""
         target = tmp_path / "test.parquet"
         target.write_bytes(b"x" * 100)
         assert is_already_downloaded(target, 100) is True
 
-    def test_returns_false_when_size_differs(self, tmp_path: Path) -> None:
-        """File exists but size differs -> False."""
+    def test_returns_true_when_file_larger_than_expected(self, tmp_path: Path) -> None:
+        """File on disk is larger than manifest size (CDN update) -> True."""
+        target = tmp_path / "test.parquet"
+        target.write_bytes(b"x" * 110)
+        assert is_already_downloaded(target, 100) is True
+
+    def test_returns_false_when_file_smaller_than_expected(self, tmp_path: Path) -> None:
+        """File exists but is smaller than manifest size (truncated) -> False."""
         target = tmp_path / "test.parquet"
         target.write_bytes(b"x" * 100)
         assert is_already_downloaded(target, 200) is False
@@ -146,6 +152,22 @@ class TestIsAlreadyDownloaded:
     def test_returns_false_when_file_missing(self, tmp_path: Path) -> None:
         """File does not exist -> False."""
         assert is_already_downloaded(tmp_path / "missing.parquet", 100) is False
+
+    def test_none_expected_size_accepts_nonempty_file(self, tmp_path: Path) -> None:
+        """expected_size=None (live file): any non-empty file is accepted."""
+        target = tmp_path / "leaderboard.parquet"
+        target.write_bytes(b"x" * 50)
+        assert is_already_downloaded(target, None) is True
+
+    def test_none_expected_size_rejects_empty_file(self, tmp_path: Path) -> None:
+        """expected_size=None: empty file is rejected."""
+        target = tmp_path / "leaderboard.parquet"
+        target.write_bytes(b"")
+        assert is_already_downloaded(target, None) is False
+
+    def test_none_expected_size_rejects_missing_file(self, tmp_path: Path) -> None:
+        """expected_size=None: missing file is rejected."""
+        assert is_already_downloaded(tmp_path / "missing.parquet", None) is False
 
 
 class TestDownloadFile:
@@ -180,8 +202,8 @@ class TestDownloadFile:
 
         assert target.exists()
 
-    def test_raises_on_size_mismatch(self, tmp_path: Path) -> None:
-        """ValueError raised when downloaded size != expected_size."""
+    def test_raises_on_truncated_download(self, tmp_path: Path) -> None:
+        """ValueError raised when downloaded size < expected_size (truncation)."""
         content = b"x" * 100
         target = tmp_path / "file.parquet"
         mock_response = MagicMock()
@@ -190,10 +212,25 @@ class TestDownloadFile:
         mock_response.read.side_effect = [content, b""]
 
         with patch("urllib.request.urlopen", return_value=mock_response):
-            with pytest.raises(ValueError, match="Size mismatch"):
+            with pytest.raises(ValueError, match="Truncated"):
                 download_file("https://example.com/file.parquet", target, 200)
 
         assert not target.exists()
+
+    def test_accepts_oversized_download(self, tmp_path: Path) -> None:
+        """No error when CDN serves more bytes than manifest recorded."""
+        content = b"x" * 110
+        target = tmp_path / "file.parquet"
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.side_effect = [content, b""]
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            download_file("https://example.com/file.parquet", target, 100)
+
+        assert target.exists()
+        assert len(target.read_bytes()) == 110
 
     def test_cleans_up_temp_file_on_network_failure(self, tmp_path: Path) -> None:
         """Temporary file is removed if download raises an exception."""
@@ -221,7 +258,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
-        monkeypatch.setattr(mod, "AOE2COMPANION_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
@@ -244,7 +281,7 @@ class TestRunDownload:
         (matches_dir / "match-2024-01-01.parquet").write_bytes(b"x" * 500000)
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
-        monkeypatch.setattr(mod, "AOE2COMPANION_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", matches_dir)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
@@ -261,7 +298,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
-        monkeypatch.setattr(mod, "AOE2COMPANION_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
@@ -286,7 +323,7 @@ class TestRunDownload:
         import rts_predict.aoe2.data.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
-        monkeypatch.setattr(mod, "AOE2COMPANION_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", tmp_path / "matches")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
