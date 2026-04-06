@@ -1,5 +1,5 @@
 # PJAIT Master's Thesis Formatting Rules
-# Source: docs/PJAIT_THESIS_REQUIREMENTS.md, Section 1 & 2
+# Source: docs/thesis/PJAIT_THESIS_REQUIREMENTS.md, Section 1 & 2
 # Purpose: Machine-readable thresholds and rules for thesis validation agents
 # Last updated: 2026-04-06
 #
@@ -7,7 +7,7 @@
 #   content_thresholds: active NOW — used to validate Markdown chapter drafts
 #   word_formatting_spec: DEFERRED — only relevant when producing the final Word/PDF document
 
-source_document: docs/PJAIT_THESIS_REQUIREMENTS.md
+source_document: docs/thesis/PJAIT_THESIS_REQUIREMENTS.md
 
 # =============================================================================
 # SECTION A: content_thresholds

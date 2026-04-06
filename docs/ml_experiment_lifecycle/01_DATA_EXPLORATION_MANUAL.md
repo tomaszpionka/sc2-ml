@@ -6,22 +6,12 @@ For a supervised binary classification task on observational game data with temp
 
 The intellectual lineage here runs through [Tukey's 1977 *Exploratory Data Analysis*][tukey-eda-wiki], [Gebru et al.'s *Datasheets for Datasets*][gebru-datasheets] (2021), [Gelman's Bayesian reformulation of EDA][gelman-eda-2004], the [CRISP-DM process model][crisp-dm], and recent work on [dataset shift][data-distribution-debugging] and [sports analytics methodology][davis-sports-2024]. What unites them is a single conviction: **you cannot responsibly model what you do not understand**.
 
-### Where this manual sits in the full experiment lifecycle
+### Where this manual sits
 
-This document covers phases 1–4 below. Subsequent manuals will address phases 5 onward.
-
-1. **Data Acquisition & Source Inventory** ← this manual
-2. **Data Profiling** ← this manual
-3. **Exploratory Data Analysis (EDA)** ← this manual
-4. **Data Cleaning & Validation** ← this manual
-5. Feature Engineering
-6. Train/Validation/Test Splitting
-7. Baseline Establishment
-8. Model Training & Hyperparameter Tuning
-9. Evaluation & Statistical Comparison
-10. Error Analysis & Ablation Studies
-11. Cross-Domain Transfer Experiments
-12. Results Synthesis & Thesis Integration
+This document covers the first four phases of the ML experiment lifecycle:
+Data Acquisition & Source Inventory, Data Profiling, Exploratory Data Analysis,
+and Data Cleaning & Validation. For the complete phase-to-manual mapping and
+navigation guide, see [`docs/INDEX.md`](../INDEX.md).
 
 ---
 
