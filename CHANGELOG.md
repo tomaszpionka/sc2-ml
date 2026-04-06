@@ -12,12 +12,15 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- `.claude/thesis-formatting-rules.yaml` — machine-readable PJAIT formatting thresholds and rules extracted from `PJAIT_THESIS_REQUIREMENTS.md` §1
 
 ### Changed
+- `.claude/rules/thesis-writing.md` — added cross-reference to formatting rules YAML
 
 ### Fixed
 
 ### Removed
+- `docs/THESIS_REQUIREMENTS.md` — empty placeholder, superseded by `PJAIT_THESIS_REQUIREMENTS.md` at repo root
 
 ## [0.17.0] — 2026-04-06 (PR #38: docs/manual-patch)
 

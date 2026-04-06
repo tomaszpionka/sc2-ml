@@ -75,3 +75,12 @@ After Phase 6 → §4.2.3 | After Phase 7 → §4.3 completion
 After Phase 8 → §4.4   | After Phase 9 → §5.1.1
 After Phase 10 → §5.1.2–5.1.4, §6, §7
 Cross-cutting: §1, §2, §3 — anytime
+
+## Formatting Reference
+
+For content validation thresholds (minimum character count, abstract bounds, keyword count,
+required sections) applicable during Markdown authoring, see
+`.claude/thesis-formatting-rules.yaml` → `content_thresholds`.
+
+The `word_formatting_spec` section of the same file (font, margins, binding) is deferred
+and only relevant when producing the final Word/PDF submission.

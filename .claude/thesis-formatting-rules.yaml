@@ -1,20 +1,3 @@
-# Plan: Extract PJAIT Formatting Rules (Category E — Docs only)
-
-**Branch:** `docs/thesis-formatting-rules`
-**Version bump:** patch
-**Files touched:** `.claude/thesis-formatting-rules.yaml` (new), `.claude/rules/thesis-writing.md` (edit), `docs/THESIS_REQUIREMENTS.md` (delete — empty placeholder), `CHANGELOG.md`, `pyproject.toml`
-
----
-
-## Step 1 — Create `.claude/thesis-formatting-rules.yaml`
-
-The file is split into two top-level sections:
-- **`content_thresholds`** — actionable NOW for Markdown chapter validation (character counts, section structure)
-- **`word_formatting_spec`** — deferred until Word/PDF conversion; agents should ignore this section during Markdown work
-
-Create the file with this exact content:
-
-```yaml
 # PJAIT Master's Thesis Formatting Rules
 # Source: PJAIT_THESIS_REQUIREMENTS.md, Section 1 & 2
 # Purpose: Machine-readable thresholds and rules for thesis validation agents
@@ -116,56 +99,3 @@ word_formatting_spec:
     latex_note: "No official LaTeX template; unofficial exists at https://gitlab.com/linoskoczek/szablon-pracy-dyplomowej-pjatk"
     final_submission_format: "PDF"
     pdf_max_size_mb: 45
-```
-
-**Verify:** `poetry run python3 -c "import yaml; yaml.safe_load(open('.claude/thesis-formatting-rules.yaml'))"` — must parse without error.
-
----
-
-## Step 2 — Add cross-reference to `.claude/rules/thesis-writing.md`
-
-Append at the bottom of the file:
-
-```markdown
-## Formatting Reference
-
-For content validation thresholds (minimum character count, abstract bounds, keyword count,
-required sections) applicable during Markdown authoring, see
-`.claude/thesis-formatting-rules.yaml` → `content_thresholds`.
-
-The `word_formatting_spec` section of the same file (font, margins, binding) is deferred
-and only relevant when producing the final Word/PDF submission.
-```
-
-**Verify:** `grep "thesis-formatting-rules" .claude/rules/thesis-writing.md` returns a match.
-
----
-
-## Step 3 — Remove empty `docs/THESIS_REQUIREMENTS.md`
-
-First grep for any references: `grep -r "THESIS_REQUIREMENTS" . --include="*.md" --include="*.yaml"` — confirm nothing references it, then delete the file.
-
-**Verify:** `ls docs/THESIS_REQUIREMENTS.md` returns not found.
-
----
-
-## Step 4 — CHANGELOG + version bump
-
-Bump patch version in `pyproject.toml`. Add to `CHANGELOG.md` under `[Unreleased]`:
-
-```markdown
-### Added
-- `.claude/thesis-formatting-rules.yaml` — machine-readable PJAIT formatting thresholds and rules extracted from `PJAIT_THESIS_REQUIREMENTS.md` §1
-
-### Changed
-- `.claude/rules/thesis-writing.md` — added cross-reference to formatting rules YAML
-
-### Removed
-- `docs/THESIS_REQUIREMENTS.md` — empty placeholder, superseded by `PJAIT_THESIS_REQUIREMENTS.md` at repo root
-```
-
----
-
-## Gate Condition
-
-`poetry run python3 -c "import yaml; yaml.safe_load(open('.claude/thesis-formatting-rules.yaml'))"` exits 0.
