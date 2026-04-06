@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.18.1"
+version = "0.18.2"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -70,7 +70,12 @@ source = ["src/rts_predict"]
 omit = ["**/tests/*"]
 
 [tool.coverage.report]
-exclude_lines = ["if TYPE_CHECKING:"]
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+]
+fail_under = 95
 
 [tool.mypy]
 python_version = "3.12"

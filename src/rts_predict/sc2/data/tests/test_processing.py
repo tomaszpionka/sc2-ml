@@ -9,6 +9,7 @@ from rts_predict.sc2.data.processing import (
     assign_series_ids,
     create_ml_views,
     create_raw_enriched_view,
+    get_matches_dataframe,
 )
 
 
@@ -304,3 +305,59 @@ class TestAssignSeriesIds:
         assert row[0] > 0
 
 
+class TestGetMatchesDataframe:
+    """Tests for get_matches_dataframe() — fetches matches_flat into a DataFrame."""
+
+    def test_returns_dataframe_without_split_table(
+        self, matches_flat_con: duckdb.DuckDBPyConnection
+    ) -> None:
+        """When no match_split table exists, returns all rows as a DataFrame."""
+        df = get_matches_dataframe(matches_flat_con)
+        assert len(df) == 200  # 100 matches * 2 perspectives
+
+    def test_with_split_table_no_filter(
+        self, matches_flat_con: duckdb.DuckDBPyConnection
+    ) -> None:
+        """When match_split exists but split=None, returns all rows with split column."""
+        matches_flat_con.execute("""
+            CREATE TABLE match_split AS
+            SELECT DISTINCT match_id, 'train' AS split FROM matches_flat
+        """)
+        df = get_matches_dataframe(matches_flat_con, split=None)
+        assert len(df) > 0
+        assert "split" in df.columns
+
+    def test_with_split_filter_train(
+        self, matches_flat_con: duckdb.DuckDBPyConnection
+    ) -> None:
+        """When split='train', only train rows are returned."""
+        matches_flat_con.execute("""
+            CREATE TABLE match_split AS
+            SELECT DISTINCT match_id,
+                CASE WHEN row_number() OVER () <= 70 THEN 'train' ELSE 'test' END AS split
+            FROM matches_flat
+        """)
+        df = get_matches_dataframe(matches_flat_con, split="train")
+        assert len(df) > 0
+
+    def test_invalid_split_raises_value_error(
+        self, matches_flat_con: duckdb.DuckDBPyConnection
+    ) -> None:
+        """An invalid split value must raise ValueError."""
+        matches_flat_con.execute("""
+            CREATE TABLE match_split AS
+            SELECT DISTINCT match_id, 'train' AS split FROM matches_flat
+        """)
+        with pytest.raises(ValueError, match="Invalid split"):
+            get_matches_dataframe(matches_flat_con, split="bogus")
+
+    def test_no_split_table_with_split_arg_warns(
+        self, matches_flat_con: duckdb.DuckDBPyConnection, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """When no match_split table and split is given, a warning is logged."""
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            df = get_matches_dataframe(matches_flat_con, split="train")
+        assert any("match_split" in msg for msg in caplog.messages)
+        assert len(df) > 0

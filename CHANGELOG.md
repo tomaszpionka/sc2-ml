@@ -19,6 +19,25 @@ merged to `master`.
 
 ### Removed
 
+## [0.18.2] — 2026-04-06 (PR #43: refactor/sc2-use-db-client)
+
+### Added
+- `src/rts_predict/common/tests/` — co-located test package for `common/` modules (`test_db.py`, `test_db_cli.py`), reaching 100% coverage on `db.py` and `db_cli.py`
+- `src/rts_predict/sc2/tests/test_cli.py` — comprehensive CLI tests covering init, explore, audit, and no-command paths
+- New tests across `data/tests/` to cover `audit.py` orchestrator, `exploration.py` helpers, `ingestion.py` exception paths, and `processing.py` DataFrame function
+- `.claude/rules/git-workflow.md` — PR creation flow now includes mandatory coverage gate (≥95%, enforced via `fail_under = 95` in `pyproject.toml`)
+
+### Changed
+- `sc2/cli.py` — removed `_connect_db()` helper; all DB connections now use `DuckDBClient` context manager from `common/db.py`
+- Root `tests/test_common_db.py` and `tests/test_common_db_cli.py` moved to co-located `common/tests/` (mirrors `sc2/` pattern)
+- `pyproject.toml` — `[tool.coverage.report]`: added `fail_under = 95` threshold; added `exclude_lines` for `TYPE_CHECKING`, `__main__`, and `pragma: no cover` blocks
+
+### Fixed
+
+### Removed
+- `_connect_db()` from `sc2/cli.py` (replaced by `DuckDBClient` context manager)
+- `tests/test_common_db.py` and `tests/test_common_db_cli.py` at repo root (moved to co-located packages)
+
 ## [0.18.1] — 2026-04-06 (PR #42: chore/changelog-audit)
 
 ### Changed

@@ -1,12 +1,17 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import duckdb
+if TYPE_CHECKING:
+    import duckdb
 
+from rts_predict.common.db import DuckDBClient
 from rts_predict.common.db_cli import add_db_subparser, handle_db_command
-from rts_predict.sc2.config import DATASETS, DB_FILE, DEFAULT_DATASET
+from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET
 from rts_predict.sc2.data.ingestion import load_map_translations, move_data_to_duck_db
 from rts_predict.sc2.data.processing import (
     assign_series_ids,
@@ -15,12 +20,6 @@ from rts_predict.sc2.data.processing import (
 )
 
 logger = logging.getLogger("SC2_Pipeline")
-
-
-def _connect_db() -> duckdb.DuckDBPyConnection:
-    """Open a connection to the SC2 DuckDB, creating parent dirs if needed."""
-    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
-    return duckdb.connect(str(DB_FILE))
 
 
 def setup_logging() -> None:
@@ -91,12 +90,8 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "init":
-        con = _connect_db()
-        try:
-            init_database(con, should_drop=args.force)
-        finally:
-            con.close()
-            logger.info("DuckDB connection closed.")
+        with DuckDBClient(DATASETS[DEFAULT_DATASET]) as client:
+            init_database(client.con, should_drop=args.force)
 
     elif args.command == "audit":
         _run_audit_command(args.steps)
@@ -115,27 +110,19 @@ def _run_explore_command(steps: list[str] | None) -> None:
     """Run Phase 1 corpus exploration."""
     from rts_predict.sc2.data.exploration import run_phase_1_exploration
 
-    con = _connect_db()
-    try:
-        results = run_phase_1_exploration(con, steps=steps)
+    with DuckDBClient(DATASETS[DEFAULT_DATASET]) as client:
+        results = run_phase_1_exploration(client.con, steps=steps)
         logger.info(f"Exploration complete. Steps run: {list(results.keys())}")
-    finally:
-        con.close()
-        logger.info("DuckDB connection closed.")
 
 
 def _run_audit_command(steps: list[str] | None) -> None:
     """Run Phase 0 ingestion audit."""
     from rts_predict.sc2.data.audit import run_phase_0_audit
 
-    con = _connect_db()
-    try:
-        results = run_phase_0_audit(con, steps=steps)
+    with DuckDBClient(DATASETS[DEFAULT_DATASET]) as client:
+        results = run_phase_0_audit(client.con, steps=steps)
         logger.info(f"Audit complete. Steps run: {list(results.keys())}")
-    finally:
-        con.close()
-        logger.info("DuckDB connection closed.")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

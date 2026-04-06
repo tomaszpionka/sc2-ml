@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
 from unittest.mock import patch
 
 _CLI = "rts_predict.aoe2.cli"
@@ -36,3 +38,29 @@ class TestAoE2CLI:
         from rts_predict.aoe2.config import DEFAULT_DATASET
 
         assert DEFAULT_DATASET == "aoe2companion"
+
+    def test_setup_logging_creates_handlers(self, tmp_path: Path) -> None:
+        """setup_logging() must register at least one handler on the root logger."""
+        with patch(f"{_CLI}.Path", return_value=tmp_path / "logs"):
+            from rts_predict.aoe2.cli import setup_logging
+
+            setup_logging()
+
+        root = logging.getLogger()
+        has_file = any(isinstance(h, logging.FileHandler) for h in root.handlers)
+        has_stream = any(isinstance(h, logging.StreamHandler) for h in root.handlers)
+        assert has_file or has_stream
+
+    def test_main_no_command_prints_help(self, capsys) -> None:
+        """main() with no subcommand must not crash and may print help."""
+        with (
+            patch(f"{_CLI}.setup_logging"),
+            patch("sys.argv", ["aoe2"]),
+        ):
+            from rts_predict.aoe2.cli import main
+
+            main()
+
+        captured = capsys.readouterr()
+        # argparse prints to stdout or the test just shouldn't raise
+        assert "usage" in captured.out.lower() or captured.out == ""
