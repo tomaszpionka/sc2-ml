@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.4] — 2026-04-07 (PR #52: chore/research-log-template)
+
+### Added
+- `reports/RESEARCH_LOG_TEMPLATE.md` — canonical template for research log entries, establishing structured format with mandatory fields (date, phase, step, actions, findings, next steps)
+
+### Changed
+- `reports/research_log.md` — Steps 1.6 and 1.7 rewritten into new template format; header note added pointing to `RESEARCH_LOG_TEMPLATE.md`
+
 ## [0.20.3] — 2026-04-07 (PR #51: chore/sc2-reports-roadmap-placeholder)
 
 ### Changed
