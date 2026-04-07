@@ -129,3 +129,42 @@ class TestCLIDownload:
         parser = build_parser()
         args = parser.parse_args(["download", "aoe2companion"])
         assert args.log_interval is None
+
+
+class TestCLIDownloadDispatch:
+    """Tests that main() dispatches the download command to the correct module."""
+
+    def test_download_dispatches_to_aoe2companion(self) -> None:
+        """main() with 'download aoe2companion --dry-run' calls aoe2companion run_download."""
+        with (
+            patch("sys.argv", ["aoe2", "download", "aoe2companion", "--dry-run"]),
+            patch(f"{_CLI}.setup_logging"),
+            patch(
+                "rts_predict.aoe2.data.aoe2companion.acquisition.run_download",
+                return_value={"downloaded": 0},
+            ) as mock_dl,
+        ):
+            from rts_predict.aoe2.cli import main
+
+            main()
+
+        mock_dl.assert_called_once_with(dry_run=True)
+
+    def test_download_dispatches_to_aoestats_with_force(self) -> None:
+        """main() with 'download aoestats --force --log-interval 10' calls aoestats run_download."""
+        with (
+            patch(
+                "sys.argv",
+                ["aoe2", "download", "aoestats", "--force", "--log-interval", "10"],
+            ),
+            patch(f"{_CLI}.setup_logging"),
+            patch(
+                "rts_predict.aoe2.data.aoestats.acquisition.run_download",
+                return_value={"downloaded": 0},
+            ) as mock_dl,
+        ):
+            from rts_predict.aoe2.cli import main
+
+            main()
+
+        mock_dl.assert_called_once_with(dry_run=False, force=True, log_interval=10)

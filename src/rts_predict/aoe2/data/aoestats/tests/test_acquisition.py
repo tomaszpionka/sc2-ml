@@ -302,3 +302,104 @@ class TestRunDownload:
         # 2 non-zero entries -> 4 files total
         assert result["total_targets"] == 2
         assert result["total_files"] == 4
+
+    def test_cleans_up_existing_tmp_on_partial_failure(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Pre-existing .tmp file is removed after mid-read OSError (lines 181-184)."""
+        from rts_predict.aoe2.data.aoestats.acquisition import download_file
+
+        target = tmp_path / "file.parquet"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp_file = target.with_suffix(target.suffix + ".tmp")
+        # Pre-create the .tmp to simulate a previously interrupted download
+        tmp_file.write_bytes(b"partial stale data")
+        assert tmp_file.exists()
+
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.side_effect = OSError("simulated disk failure")
+
+        with (
+            patch("urllib.request.urlopen", return_value=mock_response),
+            pytest.raises(OSError),
+        ):
+            download_file("https://aoestats.io/file.parquet", target, "somechecksum")
+
+        assert not tmp_file.exists()
+
+    def test_download_failure_logged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
+    ) -> None:
+        """Failed download is logged with status='failed' in log (lines 336-339)."""
+        import rts_predict.aoe2.data.aoestats.acquisition as mod
+
+        monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
+        monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
+
+        def failing_download(
+            url: str, target_path: Path, expected_checksum: str
+        ) -> None:
+            raise ValueError("simulated checksum error")
+
+        monkeypatch.setattr(mod, "download_file", failing_download)
+
+        result = mod.run_download(dry_run=False, force=True)
+
+        assert result["failed"] > 0
+        import json
+
+        log_file = tmp_path / "_download_manifest.json"
+        entries = json.loads(log_file.read_text())
+        failed_entries = [e for e in entries if e["status"] == "failed"]
+        assert len(failed_entries) > 0
+
+    def test_progress_log_fires(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Progress log fires every log_interval entries (line 346)."""
+        import json as _json
+
+        import rts_predict.aoe2.data.aoestats.acquisition as mod
+
+        # Build a 2-entry manifest so we have 2 targets
+        entries = {
+            "db_dumps": [
+                {
+                    "start_date": "2023-01-01",
+                    "end_date": "2023-01-07",
+                    "num_matches": 100,
+                    "num_players": 200,
+                    "matches_url": "/media/2023-01-01_matches.parquet",
+                    "players_url": "/media/2023-01-01_players.parquet",
+                    "match_checksum": "a" * 32,
+                    "player_checksum": "b" * 32,
+                },
+                {
+                    "start_date": "2023-01-08",
+                    "end_date": "2023-01-14",
+                    "num_matches": 120,
+                    "num_players": 240,
+                    "matches_url": "/media/2023-01-08_matches.parquet",
+                    "players_url": "/media/2023-01-08_players.parquet",
+                    "match_checksum": "c" * 32,
+                    "player_checksum": "d" * 32,
+                },
+            ]
+        }
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(_json.dumps(entries))
+
+        monkeypatch.setattr(mod, "AOESTATS_MANIFEST", manifest_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOESTATS_RAW_MATCHES_DIR", tmp_path / "matches")
+        monkeypatch.setattr(mod, "AOESTATS_RAW_PLAYERS_DIR", tmp_path / "players")
+
+        # dry_run=True so no HTTP; log_interval=1 so progress fires after every entry
+        result = mod.run_download(dry_run=True, force=False, log_interval=1)
+
+        assert result["total_targets"] == 2
+        assert result["dry_run"] is True
