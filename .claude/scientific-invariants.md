@@ -1,5 +1,9 @@
 ## Scientific Invariants (read before any data or ML work)
 
+These invariants are dataset-agnostic and game-agnostic. For methodology
+guidance see docs/INDEX.md. For dataset-specific empirical findings see the
+per-dataset invariants file under each game package.
+
 These are not implementation preferences — they are thesis methodology commitments.
 Violating them produces results that cannot be defended at examination.
 
@@ -13,11 +17,15 @@ Violating them produces results that cannot be defended at examination.
    this player's history, predict their next game," not "predict this game
    from a god's-eye view."
 
-2. **For StarCraft II, the lowercased nickname is the canonical player identifier,
-   not the toon.** Toons are server-scoped. A player switching from KR to EU
-   server gets a new toon but keeps their nickname. Any feature indexed by toon
-   instead of canonical nickname is silently wrong. Multi-toon cases must be
-   classified (server switch, rename, ambiguous) in Phase 2.
+   See docs/INDEX.md → Manual 03_SPLITTING_AND_BASELINES for the authoritative
+   methodology.
+
+2. **The canonical player identifier is the lowercased in-game nickname, not
+   any server-scoped account ID.** Account IDs are server-scoped: a player
+   switching servers gets a new ID but keeps their nickname. Any feature indexed
+   by account ID instead of canonical nickname is silently wrong. Multi-account
+   cases must be classified (server switch, rename, ambiguous) during the
+   identity resolution phase.
 
 ### Temporal discipline
 
@@ -26,7 +34,10 @@ Violating them produces results that cannot be defended at examination.
    head-to-head counts, Elo/Glicko ratings — everything. The rating used
    as a feature is the rating **before** the game, not after. Violations
    here are fatal to the thesis. Verify with explicit temporal leakage
-   checks (Phase 7.5).
+   checks.
+
+   See docs/INDEX.md → Manual 03_SPLITTING_AND_BASELINES for the authoritative
+   methodology.
 
 4. **The prediction target is the next game given all prior history.**
    For a given focal player and target game at time T, the feature window
@@ -39,8 +50,7 @@ Violating them produces results that cannot be defended at examination.
 
 5. **Both players in every game must be treated identically by the feature
    pipeline.** The same function that computes features for the focal player
-   also computes features for the opponent. No player slot (player_a vs.
-   player_b, or player 1 vs. player 2 in the replay) receives privileged
+   also computes features for the opponent. No player slot receives privileged
    treatment. The model input is always structured as
    `(focal_player_features, opponent_features, context_features)` and this
    structure is identical regardless of which player is focal.
@@ -49,69 +59,61 @@ Violating them produces results that cannot be defended at examination.
    `P(B wins | B focal)` = `1 - P(A wins | A focal)` are consistent.
    Asymmetric feature computation would break this relationship.
 
-### Domain constants
-
-6. **The SC2 game loop to real-time conversion is 22.4 loops per second
-   at Faster (competitive) speed.** The engine runs at 16 loops per
-   game-second; the Faster speed multiplier is 1.4×; thus
-   `real_time_seconds = game_loops / 22.4`. The formula
-   `game_loops / 16 / 60` produces **game-minutes** (engine time),
-   which is 1.4× longer than real-time minutes. Both representations
-   are valid but must be clearly labelled in all reports and artifacts.
-
-   Sources: Blizzard s2client-proto (`protocol.md`: "22.4 gameloops per
-   second"), Vinyals et al. 2017 (arXiv:1708.04782), Liquipedia Game Speed
-   article.
-
-### Data field status (updated after Phase 0 audit)
-
-7. **APM from ToonPlayerDescMap is usable from 2017 onward.** Phase 0 found
-   97.5% of player slots have non-zero APM. The 2.5% zeros are concentrated
-   in 2016 tournaments (systematic — entire year missing) plus 22 sporadic
-   slots in 2017–2024. For feature engineering: use APM from 2017+ directly;
-   impute or exclude 2016 rows.
-
-   **MMR from ToonPlayerDescMap is NOT usable as a direct feature.** Phase 0
-   found 83.6% of slots have zero MMR. The missingness is systematic: driven
-   by tournament organiser (lobby vs. ladder replays), year (near-zero from
-   2021+), and `highestLeague` field availability. Player skill must instead
-   be derived from match history (Elo, Glicko-2, or rolling win rate).
+   See docs/INDEX.md → Manual 02_FEATURE_ENGINEERING for the authoritative
+   methodology.
 
 ### Reproducibility and rigour
 
-8. **All analytical results must be reported alongside the query or code
+6. **All analytical results must be reported alongside the query or code
    that produced them.** Any distribution, count, rate, or validation result
    written to a report artifact must include the exact SQL query or Python
    code used to compute it — not a description of it, the literal code.
-   This applies to every artifact generated in Phases 0 through 6 in
-   `SC2_THESIS_ROADMAP.md`. A finding without its derivation cannot be
-   audited, reproduced, or cited in the thesis.
+   A finding without its derivation cannot be audited, reproduced, or cited
+   in the thesis.
 
-9. **No magic numbers.** Every threshold used in data cleaning, feature
+   See docs/INDEX.md → Manual 01_DATA_EXPLORATION for the authoritative
+   methodology.
+
+7. **No magic numbers.** Every threshold used in data cleaning, feature
    engineering, or model configuration must be justified by either:
    (a) empirical evidence from the dataset (e.g., a duration threshold
-   derived from the observed distribution in Phase 1.3), or
-   (b) a cited precedent from the literature (e.g., Wu et al. 2017 used
-   10,000 game frames ≈ 7 real-time minutes as a minimum).
-   Unjustified constants (e.g., "1120 game loops" without derivation)
-   are not acceptable in a thesis-grade analysis. If a constant is used,
-   document its derivation inline.
+   derived from the observed distribution during profiling), or
+   (b) a cited precedent from the literature.
+   Unjustified constants are not acceptable in a thesis-grade analysis.
+   If a constant is used, document its derivation inline.
+
+   See docs/INDEX.md → Manual 01_DATA_EXPLORATION for cleaning thresholds,
+   Manual 02_FEATURE_ENGINEERING for feature engineering thresholds.
 
 ### Cross-game comparability
 
-10. **The SC2 and AoE2 experiments must share a common evaluation protocol.**
-    Both games use the same ML methods (logistic regression, random forest,
-    gradient boosted trees), the same evaluation metrics (accuracy, log-loss,
-    ROC-AUC, calibration), and the same statistical comparison methodology
-    (Friedman omnibus test, then pairwise Wilcoxon signed-rank with Holm
-    correction, complemented by Bayesian signed-rank with ROPE via baycomp;
-    per Benavoli et al. 2017, Garcia & Herrera 2008). Feature sets
-    differ by necessity (SC2 has in-game state, AoE2 does not), but the
-    common pre-game feature categories (skill rating, win rate, activity,
-    faction matchup, map, head-to-head) must be defined at a level of
-    abstraction that applies to both games.
+8. **The SC2 and AoE2 experiments must share a common evaluation protocol.**
+   Both games use the same ML methods (logistic regression, random forest,
+   gradient boosted trees), the same evaluation metrics (accuracy, log-loss,
+   ROC-AUC, calibration), and the same statistical comparison methodology
+   (Friedman omnibus test, then pairwise Wilcoxon signed-rank with Holm
+   correction, complemented by Bayesian signed-rank with ROPE via baycomp;
+   per Benavoli et al. 2017, Garcia & Herrera 2008). Feature sets
+   differ by necessity, but the common pre-game feature categories (skill
+   rating, win rate, activity, faction matchup, map, head-to-head) must be
+   defined at a level of abstraction that applies to both games.
 
-    The AoE2 data asymmetry (no in-game state) is not a flaw — it is a
-    controlled experimental variable. The cross-game comparison answers:
-    "Do the same methods work equally well with and without in-game data?"
-   
+   The AoE2 data asymmetry (no in-game state) is not a flaw — it is a
+   controlled experimental variable. The cross-game comparison answers:
+   "Do the same methods work equally well with and without in-game data?"
+
+   See docs/ml_experiment_lifecycle/06_CROSS_DOMAIN_TRANSFER_MANUAL.md for
+   the authoritative cross-domain methodology.
+
+---
+
+## Per-dataset findings
+
+Empirical findings about specific datasets (field availability, derived
+constants, observed distributions) live in per-dataset invariants files,
+not here. See:
+  - src/rts_predict/sc2/reports/sc2egset/INVARIANTS.md (when created)
+  - src/rts_predict/aoe2/reports/<dataset>/INVARIANTS.md (when created)
+
+These per-dataset files are populated as Phase 1 exploration surfaces
+verifiable findings.

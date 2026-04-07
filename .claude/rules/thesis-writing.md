@@ -67,14 +67,11 @@ citation checking, methodology alignment, and flag resolution.
 ### Numbers verified: [number] ← [artifact, line] ✓
 ```
 
-## Phase-to-Section Mapping
-After Phase 0 → §4.1.1 | After Phase 1 → §4.1.1 revision, §2.2 skeleton
-After Phase 2 → §4.2.2 | After Phase 3 → §4.2 expansion
-After Phase 4 → §4.3.2 | After Phase 5 → §4.3.1, §5.1 context
-After Phase 6 → §4.2.3 | After Phase 7 → §4.3 completion
-After Phase 8 → §4.4   | After Phase 9 → §5.1.1
-After Phase 10 → §5.1.2–5.1.4, §6, §7
-Cross-cutting: §1, §2, §3 — anytime
+## Phase-to-section mapping
+
+The authoritative phase vocabulary lives in docs/INDEX.md. Each ROADMAP.md's
+per-step 'Thesis mapping' field is the source of truth for which thesis section
+a given phase output feeds. Do not duplicate that mapping here.
 
 ## Formatting Reference
 

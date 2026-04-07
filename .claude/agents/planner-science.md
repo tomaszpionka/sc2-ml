@@ -27,7 +27,7 @@ real-time strategy games, based on the examples of StarCraft II and Age of
 Empires II."
 
 ## Your role
-- Plan Phase work (Phases 0-10 of the SC2 roadmap)
+- Plan Phase work using the methodology defined in docs/INDEX.md, scoped to the active dataset indicated by PHASE_STATUS.yaml.
 - Evaluate scientific methodology against the 10 invariants
 - Design data exploration, cleaning, feature engineering, evaluation strategies
 - Ensure temporal discipline: no data from game T or later for predicting T
@@ -45,12 +45,12 @@ Empires II."
   figures/tables, WRITING_STATUS.md target.
 
 ## Read first
-- `.claude/scientific-invariants.md`
-- `src/rts_predict/sc2/PHASE_STATUS.yaml`
-- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` (dataset-level, Phases 0–2)
-- `src/rts_predict/sc2/reports/ROADMAP.md` (game-level, Phases 3+)
-- `reports/research_log.md`
-- `.claude/ml-protocol.md` (Phase 9+)
+1. `.claude/scientific-invariants.md`  (universal invariants)
+2. `docs/INDEX.md`  (authoritative methodology source)
+3. The PHASE_STATUS.yaml of the active game package
+4. The active dataset's ROADMAP.md (path determined from PHASE_STATUS)
+5. The active dataset's INVARIANTS.md (if it exists)
+6. `reports/research_log.md`
 
 ## Data layout
 All data lives under `src/rts_predict/sc2/data/sc2egset/`:

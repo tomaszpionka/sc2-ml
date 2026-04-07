@@ -19,6 +19,17 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.2] — 2026-04-07 (PR #50: chore/dataset-agnostic-invariants)
+
+### Changed
+- `.claude/scientific-invariants.md` — stripped all SC2EGSet-specific empirical findings (APM, MMR, 22.4 game-loop constant); remaining 8 invariants are fully dataset-agnostic and game-agnostic; added explicit header declaring scope and 5 pointers to `docs/INDEX.md` and `docs/ml_experiment_lifecycle/06_CROSS_DOMAIN_TRANSFER_MANUAL.md`; added "Per-dataset findings" section directing readers to per-dataset INVARIANTS files
+- `.claude/agents/planner-science.md` — "Read first" list now uses dataset-agnostic paths (universal invariants → INDEX.md → active PHASE_STATUS → active ROADMAP → active INVARIANTS → research log); role description updated to reference `docs/INDEX.md` instead of SC2 roadmap
+- `.claude/rules/thesis-writing.md` — replaced hardcoded SC2 "Phase-to-Section Mapping" table with a pointer to `docs/INDEX.md` and each ROADMAP.md's per-step "Thesis mapping" field as the single source of truth
+- `CLAUDE.md` — added "Per-dataset invariants" row to Key File Locations table
+
+### Added
+- `src/rts_predict/sc2/reports/sc2egset/INVARIANTS.md` — new file holding SC2EGSet-specific empirical findings moved from `scientific-invariants.md`: 22.4 game-loop derivation with sources, APM usability from 2017 onward, MMR 83.6%-zero finding; each finding cites `01_04_apm_mmr_audit.md`
+
 ## [0.20.1] — 2026-04-06 (PR #49: fix/aoe2-acquisition-fixes)
 
 ### Added

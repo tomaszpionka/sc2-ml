@@ -71,6 +71,7 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` |
 | Dev constraints | `.claude/dev-constraints.md` (legacy warnings, ordering, platform) |
 | ML experiment protocol | `.claude/ml-protocol.md` (active Phase 9+) |
+| Per-dataset invariants | `src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md` |
 
 ## Agent Architecture
 
