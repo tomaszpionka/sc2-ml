@@ -22,7 +22,7 @@ phases:
     name: "Corpus inventory and data exploration"
     status: in_progress
     started: "2026-04-04"
-    notes: "Steps 1.1–1.7 complete (16 report artifacts produced). Step 1.8 (game settings and field completeness audit) pending."
+    notes: "Steps 1.1–1.7 complete (16 artifacts). Step 1.8 pending. Steps 1.9+ added per Manual 01 gap analysis; Phase 1 gate is now the four §6.1 deliverables. See _current_plan.md for provenance."
   2:
     name: "Player identity resolution"
     status: not_started
