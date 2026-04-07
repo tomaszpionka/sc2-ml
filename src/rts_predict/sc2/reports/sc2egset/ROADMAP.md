@@ -675,11 +675,11 @@ usable and which are dead.
 | handicap | 44,817 | ? | ? | ? |
 | ... | | | | |
  
-Output: `01_game_settings_audit.md`
-Output: `01_field_completeness_summary.csv`
-Output: `01_error_flags_audit.csv` (list of replays with any error flag = true)
+Output: `01_08_game_settings_audit.md`
+Output: `01_08_field_completeness_summary.csv` *(superseded — not produced; see note below)*
+Output: `01_08_error_flags_audit.csv` (list of replays with any error flag = true)
 
-**Note on Step 1.8 sub-steps F and I:** Sub-steps F (SQ/supplyCappedPercent profiling) and I (field completeness summary) are superseded by Step 1.10, which applies the §3.1 profiling battery uniformly to ALL ToonPlayerDescMap fields. Running 1.8F before Step 1.10 would profile SQ and supplyCappedPercent twice. Sub-steps A–E, G, H execute as originally defined. `01_field_completeness_summary.csv` is superseded by `01_10_tpdm_column_profile.csv` and `01_10_tpdm_field_status.csv`.
+**Note on Step 1.8 sub-steps F and I:** Sub-steps F (SQ/supplyCappedPercent profiling) and I (field completeness summary) are superseded by Step 1.10, which applies the §3.1 profiling battery uniformly to ALL ToonPlayerDescMap fields. Running 1.8F before Step 1.10 would profile SQ and supplyCappedPercent twice. Sub-steps A–E, G, H execute as originally defined. `01_08_field_completeness_summary.csv` is superseded by `01_10_tpdm_column_profile.csv` and `01_10_tpdm_field_status.csv`.
 
 **1.9 — Systematic ToonPlayerDescMap field inventory and JSON structure verification**
 
@@ -1385,9 +1385,9 @@ Required sections:
 5. Field status classification counts (dead / constant / near-constant / active breakdown, referencing 01_10_tpdm_field_status.csv)
 6. Year-stratified completeness summary (referencing 01_10_tpdm_availability_by_year.csv and 01_12_field_completeness_heatmap.png)
 7. Class balance confirmation (referencing 01_12_class_balance.csv)
-8. Game settings verification results (referencing 01_game_settings_audit.md from Step 1.8)
+8. Game settings verification results (referencing 01_08_game_settings_audit.md from Step 1.8)
 
-Feeding artifacts: 01_01_corpus_summary.json, 01_01_duplicate_detection.md, 01_01_player_count_anomalies.csv, 01_04_apm_mmr_audit.md, 01_game_settings_audit.md, 01_error_flags_audit.csv, 01_10_tpdm_column_profile.csv, 01_10_tpdm_field_status.csv, 01_10_tpdm_availability_by_year.csv, 01_12_class_balance.csv, 01_12_field_completeness_heatmap.png
+Feeding artifacts: 01_01_corpus_summary.json, 01_01_duplicate_detection.md, 01_01_player_count_anomalies.csv, 01_04_apm_mmr_audit.md, 01_08_game_settings_audit.md, 01_08_error_flags_audit.csv, 01_10_tpdm_column_profile.csv, 01_10_tpdm_field_status.csv, 01_10_tpdm_availability_by_year.csv, 01_12_class_balance.csv, 01_12_field_completeness_heatmap.png
 
 Sign-off criterion: Every section contains at least one quantified finding traceable to a named source artifact. No section is empty or contains only placeholder text.
 
@@ -1400,7 +1400,7 @@ Required sections:
 2. Risk table (columns: Risk ID, Description, Severity [Critical/High/Medium/Low], Affected Phase, Mitigation, Source Step)
 3. AMBIGUOUS fields appendix (one row per field classified as AMBIGUOUS in Step 1.11, with the conservative exclusion rationale from 01_11_temporal_leakage_classification.csv)
 
-Feeding artifacts: 01_01_duplicate_detection.md (near-duplicate risk), 01_01_player_count_anomalies.csv (anomalous replay risk), 01_04_apm_mmr_audit.md (MMR missingness, APM 2016 risk), 01_11_temporal_leakage_classification.csv (temporal leakage risk, AMBIGUOUS field risk), 01_12_class_balance.csv (class balance risk if applicable), 01_error_flags_audit.csv (error flag risk)
+Feeding artifacts: 01_01_duplicate_detection.md (near-duplicate risk), 01_01_player_count_anomalies.csv (anomalous replay risk), 01_04_apm_mmr_audit.md (MMR missingness, APM 2016 risk), 01_11_temporal_leakage_classification.csv (temporal leakage risk, AMBIGUOUS field risk), 01_12_class_balance.csv (class balance risk if applicable), 01_08_error_flags_audit.csv (error flag risk)
 
 Sign-off criterion: At minimum the following risks are documented: (1) temporal leakage from post-game fields (Source: Step 1.11), (2) MMR systematic missingness (Source: Step 1.4), (3) near-duplicate replay pairs (Source: Step 1.1), (4) every AMBIGUOUS field from Step 1.11. Every risk has all six table columns populated.
 
@@ -1464,9 +1464,9 @@ Gate condition:
 - `01_06_event_density_by_year.csv`
 - `01_06_event_density_by_tournament.csv`
 - `01_07_playerstats_sampling_check.csv`
-- `01_game_settings_audit.md`
-- `01_field_completeness_summary.csv`
-- `01_error_flags_audit.csv`
+- `01_08_game_settings_audit.md`
+- `01_08_field_completeness_summary.csv` *(superseded by Step 1.10 — not produced)*
+- `01_08_error_flags_audit.csv`
 
 ### Gate
 
@@ -1503,7 +1503,7 @@ Phase 1 is complete when ALL of the following named artifacts exist under `src/r
 | 1.5 | 01_05_patch_landscape.csv |
 | 1.6 | 01_06_event_type_inventory.csv, 01_06_event_count_distribution.csv, 01_06_event_density_by_year.csv, 01_06_event_density_by_tournament.csv |
 | 1.7 | 01_07_playerstats_sampling_check.csv |
-| 1.8 | 01_game_settings_audit.md, 01_error_flags_audit.csv (note: 01_field_completeness_summary.csv superseded by Step 1.10) |
+| 1.8 | 01_08_game_settings_audit.md, 01_08_error_flags_audit.csv (note: 01_08_field_completeness_summary.csv superseded by Step 1.10 — not produced) |
 | 1.9 | 01_09_tpdm_field_inventory.csv, 01_09_tpdm_key_set_constancy.csv, 01_09_toplevel_field_inventory.csv |
 | 1.10 | 01_10_tpdm_column_profile.csv, 01_10_tpdm_numeric_distributions.csv, 01_10_tpdm_categorical_topk.csv, 01_10_tpdm_field_status.csv, 01_10_tpdm_availability_by_year.csv |
 | 1.11 | 01_11_temporal_leakage_classification.csv, 01_11_leakage_empirical_checks.md |
@@ -1687,9 +1687,9 @@ sc2egset/
   01_06_event_density_by_year.csv
   01_06_event_density_by_tournament.csv
   01_07_playerstats_sampling_check.csv
-  01_game_settings_audit.md
-  01_field_completeness_summary.csv
-  01_error_flags_audit.csv
+  01_08_game_settings_audit.md
+  01_08_field_completeness_summary.csv
+  01_08_error_flags_audit.csv
   02_nickname_toon_mapping.csv
   02_multi_toon_cases.csv
   02_ambiguous_nicknames.md

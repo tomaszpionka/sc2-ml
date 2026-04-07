@@ -9,6 +9,72 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-07 — [FEAT] SC2 Phase 1 Step 1.8 — Game settings and replay field completeness audit
+
+**Objective:** Verify that all 22,390 SC2EGSet replays conform to competitive
+settings expectations (game speed, handicap, game mode flags, race selection,
+map metadata, version consistency) and audit parse error flags.
+
+**Method:** SQL queries via `poetry run sc2 db --dataset sc2egset query`; error
+flags scanned directly from 70 ZIP archives (fields not in DuckDB `raw` table).
+
+**Key findings from real data:**
+
+*Sub-step A — Game speed (PASS):*
+- 100% of replays have `gameSpeed=Faster` in both `initData` and `details`
+- Zero cross-field mismatches
+- No cleaning rule needed
+
+*Sub-step B — Handicap (NEAR-PASS):*
+- 44,815 / 44,817 player slots at handicap = 100
+- 2 slots at handicap = 0: anonymous phantom entries with empty toon key, empty
+  nickname, `color.a=0`; not real players
+- Will be excluded naturally by empty-nickname filter in Phase 2 identity resolution
+- Affected replays: `63a9f9bf…` and `0eba71d4…` (IEM Katowice 2017 and
+  HomeStory Cup XIX)
+
+*Sub-step C — Error flags (PASS):*
+- All 22,390 replays scanned from ZIP archives; zero parse errors of any kind
+- `gameEventsErr=0`, `messageEventsErr=0`, `trackerEvtsErr=0`
+- `01_error_flags_audit.csv` has header row only (no error replays)
+
+*Sub-step D — Game mode flags (NEAR-PASS):*
+- 22,387 / 22,390 replays: `noVictoryOrDefeat=false`, `competitive=false`,
+  `cooperative=false`, `practice=false`
+- 3 replays from `2017_IEM_XI_World_Championship_Katowice`: `competitive=true`,
+  `amm=true`, `battleNet=true` — these are ladder replays bundled with the
+  tournament; not valid tournament games
+- **Cleaning rule C-D1:** Exclude 3 replays with `competitive=true` in Phase 6
+
+*Sub-step E — Random race (INFORMATIONAL):*
+- 43,694 slots with race locked (selectedRace matches assigned_race)
+- 1,110 slots with empty `selectedRace` (player picked Random; assigned_race resolved)
+- 10 slots with explicit `selectedRace=Rand`
+- 3 slots with BW race codes (BWTe, BWPr, BWZe): anomalous
+- **Engineering note:** Use `ToonPlayerDescMap.race` (assigned_race) as feature,
+  not `selectedRace`
+- **Cleaning rule C-E1:** Flag replays with BW race codes for review
+
+*Sub-step G — Map/lobby metadata (PASS):*
+- `fog=0` for 100% of replays (standard fog of war)
+- `randomRaces=false` for 100% of replays (lobby-level toggle, not individual)
+- `observers=0` for 100% of replays
+- `maxPlayers`: 21,981 on 2-slot maps; 409 on 4/6/8/9-slot maps (map slot count,
+  not player count — 4-slot maps used for 1v1 are standard)
+- `isBlizzardMap=true` for 78.2% (17,515); 21.8% (4,875) are community maps
+
+*Sub-step H — Version consistency (PASS):*
+- Zero mismatches between `header.version` and `metadata.gameVersion`
+
+**Artifacts produced:**
+- `src/rts_predict/sc2/reports/sc2egset/01_08_game_settings_audit.md`
+- `src/rts_predict/sc2/reports/sc2egset/01_08_error_flags_audit.csv` (header-only)
+
+**Verification:** Both artifacts present and non-empty (CSV has header row).
+Gate condition met: `01_08_game_settings_audit.md` and `01_08_error_flags_audit.csv` exist.
+
+---
+
 ## 2026-04-07 — [FEAT] AoE2 Phase 0 — aoe2companion ingestion and audit (Steps 0.1–0.8)
 
 **Objective:** Execute Phase 0 for the aoe2companion dataset: source inventory,
