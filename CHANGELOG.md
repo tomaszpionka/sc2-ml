@@ -19,6 +19,20 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.6] — 2026-04-07 (PR #54: chore/phase1-roadmap-augmentation)
+
+### Changed
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` — Steps 1.9–1.16 inserted after Step 1.8 covering schema profiling, temporal analysis, leakage audit, data quality reporting, risk register, modeling readiness decision, and documentation consolidation; Phase 1 gate replaced with four §6.1 thesis deliverables (data dictionary, data quality report, risk register, modeling readiness decision)
+- `src/rts_predict/sc2/PHASE_STATUS.yaml` — Phase 1 `notes:` field updated to reflect new gate structure and pending steps 1.9–1.16
+
+## [0.20.5] — 2026-04-07 (PR #53: chore/research-log-template-content)
+
+### Added
+- `reports/RESEARCH_LOG_TEMPLATE.md` — canonical template for Category A and F research log entries, with mandatory fields (date, phase, step, actions, findings, next steps)
+
+### Changed
+- `reports/research_log.md` — Steps 1.6 and 1.7 rewritten into new template format; header note added pointing to `RESEARCH_LOG_TEMPLATE.md`
+
 ## [0.20.4] — 2026-04-07 (PR #52: chore/research-log-template)
 
 ### Added
