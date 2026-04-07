@@ -14,6 +14,8 @@ merged to `master`.
 ### Added
 
 ### Changed
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` — Steps 1.9–1.16 inserted after Step 1.8 covering schema profiling, temporal analysis, leakage audit, data quality reporting, risk register, modeling readiness decision, and documentation consolidation; Phase 1 gate replaced with four §6.1 thesis deliverables (data dictionary, data quality report, risk register, modeling readiness decision)
+- `src/rts_predict/sc2/PHASE_STATUS.yaml` — Phase 1 `notes:` field updated to reflect new gate structure and pending steps 1.9–1.16
 
 ### Fixed
 
