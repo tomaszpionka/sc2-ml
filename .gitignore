@@ -257,6 +257,7 @@ src/rts_predict/*/in_game_processing_manifest.json
 **/.DS_Store
 
 # PR body staging area
+!.github/tmp/
 .github/tmp/*
 !.github/tmp/.gitkeep
 
