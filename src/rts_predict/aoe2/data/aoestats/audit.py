@@ -80,7 +80,7 @@ def _profile_parquet_dir(
     parquet_dir: Path,
     glob_pattern: str,
     n_samples: int = _PROFILE_SAMPLES,
-) -> tuple[dict[str, list[dict]], list[dict], str, dict[str, list[str]]]:
+) -> tuple[dict[str, list[dict]], dict[str, int], list[dict], str, dict[str, list[str]]]:
     """Sample-based schema profiling for a directory of parquet files.
 
     Args:
@@ -89,7 +89,8 @@ def _profile_parquet_dir(
         n_samples: Number of samples to select.
 
     Returns:
-        Tuple of (per_sample_schemas, union_schema, stability, type_drift).
+        Tuple of (per_sample_schemas, per_sample_row_counts, union_schema,
+        stability, type_drift).
         type_drift maps column name to list of distinct types observed across samples.
     """
     all_files = sorted(parquet_dir.glob(glob_pattern))
@@ -102,6 +103,7 @@ def _profile_parquet_dir(
 
     con = duckdb.connect(":memory:")
     per_sample_schemas: dict[str, list[dict]] = {}
+    per_sample_row_counts: dict[str, int] = {}
 
     for f in samples:
         sql = _DESCRIBE_PARQUET_QUERY.format(path=str(f))
@@ -109,6 +111,9 @@ def _profile_parquet_dir(
         per_sample_schemas[f.name] = [
             {"column_name": r[0], "column_type": r[1]} for r in rows
         ]
+        count_sql = _COUNT_PARQUET_QUERY.format(path=str(f))
+        count_row = con.execute(count_sql).fetchone()
+        per_sample_row_counts[f.name] = int(count_row[0]) if count_row else 0
 
     glob = str(parquet_dir / glob_pattern)
     union_sql = _DESCRIBE_PARQUET_GLOB_QUERY.format(glob=glob)
@@ -140,7 +145,7 @@ def _profile_parquet_dir(
 
     stability = "STABLE" if (names_stable and not type_drift) else "DRIFTED"
 
-    return per_sample_schemas, union_schema, stability, type_drift
+    return per_sample_schemas, per_sample_row_counts, union_schema, stability, type_drift
 
 
 def _write_schema_report(
@@ -153,6 +158,7 @@ def _write_schema_report(
     total_files: int,
     glob: str,
     type_drift: dict[str, list[str]] | None = None,
+    per_sample_row_counts: dict[str, int] | None = None,
 ) -> None:
     """Write a Markdown schema profile report.
 
@@ -166,12 +172,14 @@ def _write_schema_report(
         total_files: Total number of files in the directory.
         glob: Glob pattern used for union schema.
         type_drift: Optional dict mapping column name to list of observed types.
+        per_sample_row_counts: Optional dict mapping filename to row count.
     """
     sample_sql_blocks: list[str] = []
 
     for fname in per_sample_schemas:
         sql_d = _DESCRIBE_PARQUET_QUERY.format(path=f"<path>/{fname}")
-        sample_sql_blocks.append(f"-- Sample: {fname}\n{sql_d};")
+        sql_c = _COUNT_PARQUET_QUERY.format(path=f"<path>/{fname}")
+        sample_sql_blocks.append(f"-- Sample: {fname}\n{sql_d};\n{sql_c};")
 
     md_lines = [
         f"# {title}",
@@ -215,12 +223,10 @@ def _write_schema_report(
         "",
     ]
     for fname, schema in per_sample_schemas.items():
-        md_lines += [
-            f"### {fname}",
-            "",
-            "| Column | Type |",
-            "|--------|------|",
-        ]
+        md_lines += [f"### {fname}", ""]
+        if per_sample_row_counts and fname in per_sample_row_counts:
+            md_lines += [f"Row count: {per_sample_row_counts[fname]}", ""]
+        md_lines += ["| Column | Type |", "|--------|------|"]
         for col in schema:
             md_lines.append(f"| {col['column_name']} | {col['column_type']} |")
         md_lines.append("")
@@ -421,8 +427,8 @@ def profile_match_schema(raw_dir: Path, reports_dir: Path) -> dict:
     all_files = sorted(matches_dir.glob("*_matches.parquet"))
     n = len(all_files)
 
-    per_sample_schemas, union_schema, stability, type_drift = _profile_parquet_dir(
-        matches_dir, "*_matches.parquet"
+    per_sample_schemas, per_sample_row_counts, union_schema, stability, type_drift = (
+        _profile_parquet_dir(matches_dir, "*_matches.parquet")
     )
 
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -436,6 +442,7 @@ def profile_match_schema(raw_dir: Path, reports_dir: Path) -> dict:
         total_files=n,
         glob=str(matches_dir / "*_matches.parquet"),
         type_drift=type_drift,
+        per_sample_row_counts=per_sample_row_counts,
     )
 
     logger.info("Step 0.2 complete: stability=%s", stability)
@@ -445,6 +452,7 @@ def profile_match_schema(raw_dir: Path, reports_dir: Path) -> dict:
         "union_schema": union_schema,
         "stability": stability,
         "type_drift": type_drift,
+        "per_sample_row_counts": per_sample_row_counts,
     }
 
 
@@ -464,8 +472,8 @@ def profile_player_schema(raw_dir: Path, reports_dir: Path) -> dict:
     all_files = sorted(players_dir.glob("*_players.parquet"))
     n = len(all_files)
 
-    per_sample_schemas, union_schema, stability, type_drift = _profile_parquet_dir(
-        players_dir, "*_players.parquet"
+    per_sample_schemas, per_sample_row_counts, union_schema, stability, type_drift = (
+        _profile_parquet_dir(players_dir, "*_players.parquet")
     )
 
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -479,6 +487,7 @@ def profile_player_schema(raw_dir: Path, reports_dir: Path) -> dict:
         total_files=n,
         glob=str(players_dir / "*_players.parquet"),
         type_drift=type_drift,
+        per_sample_row_counts=per_sample_row_counts,
     )
 
     logger.info("Step 0.3 complete: stability=%s", stability)
@@ -488,6 +497,7 @@ def profile_player_schema(raw_dir: Path, reports_dir: Path) -> dict:
         "union_schema": union_schema,
         "stability": stability,
         "type_drift": type_drift,
+        "per_sample_row_counts": per_sample_row_counts,
     }
 
 

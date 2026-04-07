@@ -346,3 +346,84 @@ class TestRunDownload:
         assert result["failed"] == 1
         assert result["downloaded"] == 3
         assert result["total_targets"] == 4
+
+    def test_cleans_up_existing_tmp_on_partial_failure(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
+    ) -> None:
+        """Temporary file already on disk is removed after mid-read OSError (line 217)."""
+        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+
+        monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", tmp_path / "matches")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_RATINGS_DIR", tmp_path / "ratings")
+
+        # Pre-create the .tmp file to simulate an interrupted previous download
+        target = tmp_path / "matches" / "match-2024-01-01.parquet"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp_file = target.with_suffix(target.suffix + ".tmp")
+        tmp_file.write_bytes(b"partial data")
+        assert tmp_file.exists()
+
+        # Mock urlopen so the response context manager raises OSError during read
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.side_effect = OSError("simulated disk failure")
+
+        with (
+            patch("urllib.request.urlopen", return_value=mock_response),
+            pytest.raises(OSError),
+        ):
+            mod.download_file("https://example.com/match-2024-01-01.parquet", target)
+
+        assert not tmp_file.exists()
+
+    def test_progress_log_fires(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Progress log fires every log_interval files (line 341).
+
+        Uses a 2-entry manifest and log_interval=1 so the modulo branch
+        triggers at index 0 and 1 (after files 1 and 2).
+        """
+        import json as _json
+
+        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+
+        # Build a 2-entry manifest so we have 2 targets
+        entries = [
+            {
+                "key": "match-2024-01-01.parquet",
+                "lastModified": "2024-01-02T00:00:00.000Z",
+                "eTag": '"abc"',
+                "size": 1000,
+                "storageClass": "STANDARD",
+                "url": "https://example.com/match-2024-01-01.parquet",
+            },
+            {
+                "key": "match-2024-01-02.parquet",
+                "lastModified": "2024-01-03T00:00:00.000Z",
+                "eTag": '"def"',
+                "size": 2000,
+                "storageClass": "STANDARD",
+                "url": "https://example.com/match-2024-01-02.parquet",
+            },
+        ]
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(_json.dumps(entries))
+
+        monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", manifest_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_MATCHES_DIR", tmp_path / "matches")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_LEADERBOARDS_DIR", tmp_path / "leaderboards")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_PROFILES_DIR", tmp_path / "profiles")
+        monkeypatch.setattr(mod, "AOE2COMPANION_RAW_RATINGS_DIR", tmp_path / "ratings")
+
+        # dry_run so no HTTP; log_interval=1 so progress fires after each file
+        result = mod.run_download(dry_run=True, log_interval=1)
+
+        assert result["total_targets"] == 2
+        assert result["dry_run"] is True

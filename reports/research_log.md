@@ -9,6 +9,127 @@ Reverse chronological entries. Each entry documents the reasoning and learning b
 
 ---
 
+## 2026-04-07 — [FEAT] AoE2 Phase 0 — aoe2companion ingestion and audit (Steps 0.1–0.8)
+
+**Objective:** Execute Phase 0 for the aoe2companion dataset: source inventory,
+schema profiling (matches, ratings, singletons), smoke test, full CTAS ingestion,
+reconciliation, and Phase 0 summary.
+
+**Key findings from real data:**
+
+*Step 0.1 — Source audit (PASS):*
+- 4,147 files on disk (matches manifest exactly)
+- 3 files oversized vs manifest (not truncated — benign growth); gate passes
+  because truncation (data loss) is the relevant failure mode, not growth
+- Zero unexpected failures, zero zero-byte files
+- `T_acquisition`: `2026-04-06T21:08:57.797026+00:00`
+
+*Step 0.2 — Match schema profiling (STABLE):*
+- 5 samples spanning 2020-08-01 to 2026-04-04
+- Column names and types stable across all samples
+- Per-sample row counts: 25,238 → 44,535 → 267,398 → 189,429 → 198,463
+
+*Step 0.3 — Rating schema profiling + dtype decision (explicit strategy):*
+- 8 samples: 3 sparse (header-only, ≤63 bytes), 2 transition, 3 dense
+- Sparse boundary date: 2025-06-26; threshold: 1,024 bytes
+- 1,336 header-only files (zero data rows), 455 transition, 281 dense
+- Explicit dtype map chosen; recorded in `00_03_dtype_decision.json`
+
+*Step 0.4 — Singleton schema profiling:*
+- leaderboard.parquet: 2,381,227 rows; `T_snapshot`: `2026-04-06T21:08:57`
+- profile.parquet: 3,609,686 rows; `T_snapshot`: `2026-04-06T21:09:07`
+- Temporal leakage warning written to report and INVARIANTS I2
+
+*Step 0.5 — Smoke test (PASS):*
+- Sparse + dense rating CSV union succeeded; explicit dtype map applied
+- All 4 smoke tables created; `filename` column confirmed on each
+
+*Step 0.6 — Full CTAS ingestion (PASS):*
+- raw_matches: 277,099,059 rows across 2,073 files
+- raw_ratings: 58,317,433 rows across 2,072 files (1,336 zero-row sparse files)
+- raw_leaderboard: 2,381,227 rows; raw_profiles: 3,609,686 rows
+- `T_ingestion`: `2026-04-07T11:21:37`
+
+*Step 0.7 — Reconciliation (DEGRADED):*
+- Manifest has no per-file row counts; reconciliation limited to file-count match
+- File-count assertions all pass (2073, 2072, 1, 1)
+- Zero-row rating files (1,336) matches sparse count from Step 0.3 exactly
+
+*Step 0.8 — Phase 0 summary:*
+- `00_08_phase0_summary.md` and `INVARIANTS.md` written to `reports/aoe2companion/`
+- INVARIANTS records: sparse-rating boundary, T_snapshot for both singletons,
+  reconciliation strength (DEGRADED), provenance guarantee
+
+**Verification:** All 8 gate artifacts present; INVARIANTS.md follows template §6.
+
+---
+
+## 2026-04-07 — [FEAT] AoE2 Phase 0 — aoestats ingestion and audit (Steps 0.1–0.7)
+
+**Objective:** Execute Phase 0 for the aoestats dataset: source inventory, schema
+profiling, smoke test, full CTAS ingestion, reconciliation, and Phase 0 summary.
+
+**Key findings from real data:**
+
+*Step 0.1 — Source audit (PASS):*
+- 172 match files on disk (matches manifest exactly)
+- 171 player files on disk (1 known failed download: `2025-11-16_2025-11-22_players.parquet`,
+  documented in manifest with `status='failed'`)
+- Zero unexpected failures, zero size mismatches
+- Gate logic updated: entries with `status='failed'` in manifest are "known failures"
+  and do not block the gate. Gate fails only for *unexpected* missing files.
+- `T_acquisition`: `2026-04-06T19:52:17.339148+00:00`
+
+*Step 0.2 — Match schema profiling (DRIFTED):*
+- 5 samples spanning 2022-08-28 to 2026-02-07
+- All 18 columns present across all samples (column names STABLE)
+- Type drift: `raw_match_type` alternates DOUBLE/BIGINT across files.
+  `union_by_name = true` resolves to DOUBLE in the union schema.
+
+*Step 0.3 — Player schema profiling (DRIFTED):*
+- 5 samples: same date range
+- All 14 columns present across all samples (column names STABLE)
+- Type drift: `feudal_age_uptime`, `castle_age_uptime`, `imperial_age_uptime`
+  changed DOUBLE→INTEGER (approx. 2023→2024 boundary). `profile_id` DOUBLE→BIGINT.
+  `opening` VARCHAR→INTEGER. DuckDB union resolves to the widest compatible type.
+- Note: both tables are marked DRIFTED because type drift is a real signal that
+  downstream feature engineering must handle.
+
+*Step 0.4 — Smoke test (PASS):*
+- Files tested: earliest (2022-08-28) and latest (2026-02-07) for both tables
+- `union_by_name = true` union succeeded for both tables
+- smoke_matches: 130,276 rows across 2 files. smoke_players: 471,459 rows across 2 files.
+- `filename` column present on both tables.
+
+*Step 0.5 — Full CTAS ingestion:*
+- raw_matches: **30,690,651 rows** across 172 files
+- raw_players: **107,627,584 rows** across 171 files
+- T_ingestion: `2026-04-07T16:36:52.108940+00:00`
+
+*Step 0.6 — Reconciliation (DEGRADED, PASS):*
+- Manifest has no per-file row counts → strength DEGRADED
+- File-count assertions: raw_matches 172/172 OK; raw_players 171/171 OK
+  (expected count adjusted to exclude 1 known failed download)
+- Min/max rows: matches 11,615–264,843; players 53,556–930,677
+
+*Step 0.7 — Phase 0 summary:*
+- `00_07_phase0_summary.md` and `INVARIANTS.md` written to `reports/aoestats/`
+- INVARIANTS.md covers I1 (DRIFTED with type-drift detail), I1a (known download
+  failure), I5 (row-count totals), I6 (DEGRADED reconciliation), I7 (provenance)
+
+**Code changes:**
+- `audit.py`: updated `run_source_audit` to distinguish known vs unexpected failures;
+  updated `_profile_parquet_dir` to detect type drift (returns 4-tuple); updated
+  `_write_schema_report` to render type-drift section; updated
+  `run_rowcount_reconciliation` to subtract known failed downloads from expected count;
+  updated `write_phase0_summary`/INVARIANTS.md to include type-drift and known-failure sections.
+- Tests: 8 new tests in `test_audit.py` to cover type-drift, known-failure, and
+  error-path branches.
+
+**Verification:** 302 tests pass, ruff clean, mypy clean, 96.31% coverage (≥ 95%).
+
+---
+
 ## 2026-04-06 — [CHORE] Migrate to per-dataset report subdirectory structure
 
 **Objective:** Introduce `reports/<dataset>/` subdirectories to prevent Phase 0–2

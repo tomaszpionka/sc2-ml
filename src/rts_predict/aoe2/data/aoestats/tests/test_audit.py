@@ -135,6 +135,19 @@ def test_profile_match_schema_includes_sql(raw_dir: Path, tmp_path: Path) -> Non
     assert "read_parquet" in md
 
 
+def test_profile_match_schema_includes_row_counts(raw_dir: Path, tmp_path: Path) -> None:
+    """Schema profile report must contain per-sample row counts."""
+    reports_dir = tmp_path / "reports"
+    result = profile_match_schema(raw_dir, reports_dir)
+    assert "per_sample_row_counts" in result
+    assert len(result["per_sample_row_counts"]) > 0
+    for count in result["per_sample_row_counts"].values():
+        assert isinstance(count, int)
+        assert count > 0
+    md = (reports_dir / "00_02_match_schema_profile.md").read_text()
+    assert "Row count:" in md
+
+
 def test_profile_player_schema_produces_report(
     raw_dir: Path,
     tmp_path: Path,
@@ -144,6 +157,19 @@ def test_profile_player_schema_produces_report(
     assert (reports_dir / "00_03_player_schema_profile.md").exists()
     assert result["stability"] in ("STABLE", "DRIFTED")
     assert len(result["union_schema"]) > 0
+
+
+def test_profile_player_schema_includes_row_counts(raw_dir: Path, tmp_path: Path) -> None:
+    """Player schema profile report must contain per-sample row counts."""
+    reports_dir = tmp_path / "reports"
+    result = profile_player_schema(raw_dir, reports_dir)
+    assert "per_sample_row_counts" in result
+    assert len(result["per_sample_row_counts"]) > 0
+    for count in result["per_sample_row_counts"].values():
+        assert isinstance(count, int)
+        assert count > 0
+    md = (reports_dir / "00_03_player_schema_profile.md").read_text()
+    assert "Row count:" in md
 
 
 # ── Step 0.4: run_smoke_test ──────────────────────────────────────────────────
@@ -574,3 +600,104 @@ def test_reconciliation_with_failed_manifest_entry(
     assert result["expected_file_counts"]["raw_players"] == 2
     assert result["file_count_ok"] is True
     assert len(result["notes"]) == 1  # note about failed entry
+
+
+# ── Step 9 coverage additions ────────────────────────────────────────────────
+
+
+def test_profile_schema_empty_dir_raises(tmp_path: Path) -> None:
+    """FileNotFoundError when matches dir contains no *_matches.parquet files (line 98)."""
+    import pytest
+
+    raw = tmp_path / "raw"
+    (raw / "matches").mkdir(parents=True)
+    reports_dir = tmp_path / "reports"
+    with pytest.raises(FileNotFoundError, match="No files matching"):
+        profile_match_schema(raw, reports_dir)
+
+
+def test_smoke_test_insufficient_match_files_raises(tmp_path: Path) -> None:
+    """FileNotFoundError when only 1 match file exists — need at least 2 (line 527)."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import pytest
+
+    raw = tmp_path / "raw"
+    matches_dir = raw / "matches"
+    matches_dir.mkdir(parents=True)
+    players_dir = raw / "players"
+    players_dir.mkdir(parents=True)
+
+    # Only 1 match file
+    pq.write_table(
+        pa.table({"match_id": pa.array([1], type=pa.int64())}),
+        matches_dir / "2024-01-01_2024-01-07_matches.parquet",
+    )
+    # 2 player files (sufficient)
+    pq.write_table(
+        pa.table({"match_id": pa.array([1], type=pa.int64())}),
+        players_dir / "2024-01-01_2024-01-07_players.parquet",
+    )
+    pq.write_table(
+        pa.table({"match_id": pa.array([2], type=pa.int64())}),
+        players_dir / "2024-01-08_2024-01-14_players.parquet",
+    )
+
+    reports_dir = tmp_path / "reports"
+    with pytest.raises(FileNotFoundError, match="Need at least 2 match"):
+        run_smoke_test(raw, reports_dir)
+
+
+def test_smoke_test_insufficient_player_files_raises(tmp_path: Path) -> None:
+    """FileNotFoundError when only 1 player file exists — need at least 2 (line 529)."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import pytest
+
+    raw = tmp_path / "raw"
+    matches_dir = raw / "matches"
+    matches_dir.mkdir(parents=True)
+    players_dir = raw / "players"
+    players_dir.mkdir(parents=True)
+
+    # 2 match files (sufficient)
+    pq.write_table(
+        pa.table({"match_id": pa.array([1], type=pa.int64())}),
+        matches_dir / "2024-01-01_2024-01-07_matches.parquet",
+    )
+    pq.write_table(
+        pa.table({"match_id": pa.array([2], type=pa.int64())}),
+        matches_dir / "2024-01-08_2024-01-14_matches.parquet",
+    )
+    # Only 1 player file
+    pq.write_table(
+        pa.table({"match_id": pa.array([1], type=pa.int64())}),
+        players_dir / "2024-01-01_2024-01-07_players.parquet",
+    )
+
+    reports_dir = tmp_path / "reports"
+    with pytest.raises(FileNotFoundError, match="Need at least 2 player"):
+        run_smoke_test(raw, reports_dir)
+
+
+def test_run_phase_0_audit_later_steps(
+    db_con: duckdb.DuckDBPyConnection,
+    raw_dir: Path,
+    manifest_file: Path,
+    tmp_path: Path,
+) -> None:
+    """Orchestrator runs steps 0.4-0.7 covering lines 1091, 1094, 1097, 1100-1102."""
+    reports_dir = tmp_path / "reports"
+
+    results = run_phase_0_audit(
+        db_con,
+        raw_dir,
+        manifest_file,
+        reports_dir,
+        steps=["0.4", "0.5", "0.6", "0.7"],
+    )
+
+    assert "0.4" in results   # covers line 1091
+    assert "0.5" in results   # covers line 1094
+    assert "0.6" in results   # covers line 1097
+    assert "0.7" in results   # covers lines 1100-1102

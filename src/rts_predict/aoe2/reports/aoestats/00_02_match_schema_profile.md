@@ -19,18 +19,23 @@ have different types across time:
 ```sql
 -- Sample: 2022-08-28_2022-09-03_matches.parquet
 DESCRIBE SELECT * FROM read_parquet('<path>/2022-08-28_2022-09-03_matches.parquet', filename = true);
+SELECT count(*) AS n_rows FROM read_parquet('<path>/2022-08-28_2022-09-03_matches.parquet');
 
 -- Sample: 2023-06-25_2023-07-01_matches.parquet
 DESCRIBE SELECT * FROM read_parquet('<path>/2023-06-25_2023-07-01_matches.parquet', filename = true);
+SELECT count(*) AS n_rows FROM read_parquet('<path>/2023-06-25_2023-07-01_matches.parquet');
 
 -- Sample: 2024-04-21_2024-04-27_matches.parquet
 DESCRIBE SELECT * FROM read_parquet('<path>/2024-04-21_2024-04-27_matches.parquet', filename = true);
+SELECT count(*) AS n_rows FROM read_parquet('<path>/2024-04-21_2024-04-27_matches.parquet');
 
 -- Sample: 2025-04-13_2025-04-19_matches.parquet
 DESCRIBE SELECT * FROM read_parquet('<path>/2025-04-13_2025-04-19_matches.parquet', filename = true);
+SELECT count(*) AS n_rows FROM read_parquet('<path>/2025-04-13_2025-04-19_matches.parquet');
 
 -- Sample: 2026-02-01_2026-02-07_matches.parquet
 DESCRIBE SELECT * FROM read_parquet('<path>/2026-02-01_2026-02-07_matches.parquet', filename = true);
+SELECT count(*) AS n_rows FROM read_parquet('<path>/2026-02-01_2026-02-07_matches.parquet');
 
 -- Union schema across all 172 files (metadata only)
 DESCRIBE SELECT * FROM read_parquet(
@@ -43,6 +48,8 @@ DESCRIBE SELECT * FROM read_parquet(
 ## Per-sample schemas
 
 ### 2022-08-28_2022-09-03_matches.parquet
+
+Row count: 11615
 
 | Column | Type |
 |--------|------|
@@ -67,6 +74,8 @@ DESCRIBE SELECT * FROM read_parquet(
 
 ### 2023-06-25_2023-07-01_matches.parquet
 
+Row count: 217711
+
 | Column | Type |
 |--------|------|
 | map | VARCHAR |
@@ -89,6 +98,8 @@ DESCRIBE SELECT * FROM read_parquet(
 | filename | VARCHAR |
 
 ### 2024-04-21_2024-04-27_matches.parquet
+
+Row count: 240980
 
 | Column | Type |
 |--------|------|
@@ -113,6 +124,8 @@ DESCRIBE SELECT * FROM read_parquet(
 
 ### 2025-04-13_2025-04-19_matches.parquet
 
+Row count: 224416
+
 | Column | Type |
 |--------|------|
 | map | VARCHAR |
@@ -135,6 +148,8 @@ DESCRIBE SELECT * FROM read_parquet(
 | filename | VARCHAR |
 
 ### 2026-02-01_2026-02-07_matches.parquet
+
+Row count: 118661
 
 | Column | Type |
 |--------|------|

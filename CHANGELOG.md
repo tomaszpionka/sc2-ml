@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.7] — 2026-04-07 (PR #55: feat/aoe2-phase0-ingestion)
+
+### Added
+- `src/rts_predict/aoe2/data/aoe2companion/audit.py` — Phase 0 audit functions for aoe2companion dataset (source audit, schema profiling for matches/ratings/singletons, smoke test, reconciliation, Phase 0 summary)
+- `src/rts_predict/aoe2/data/aoe2companion/ingestion.py` — full CTAS ingestion for all four aoe2companion raw tables
+- `src/rts_predict/aoe2/data/aoe2companion/types.py` — shared type aliases for aoe2companion audit return values
+- `src/rts_predict/aoe2/data/aoestats/audit.py` — Phase 0 audit functions for aoestats dataset (source audit, match/player schema profiling with per-sample row counts, smoke test, reconciliation)
+- `src/rts_predict/aoe2/data/aoestats/ingestion.py` — full CTAS ingestion for aoestats raw tables
+- `src/rts_predict/aoe2/reports/aoe2companion/` — 8 Phase 0 report artifacts: source audit, 3 schema profiles, dtype decision, smoke test, ingestion log, reconciliation, Phase 0 summary, and INVARIANTS.md
+- `src/rts_predict/aoe2/reports/aoestats/` — 7 Phase 0 report artifacts: source audit, match/player schema profiles (with per-sample row counts), smoke test, ingestion log, reconciliation, Phase 0 summary, and INVARIANTS.md
+
+### Changed
+- `src/rts_predict/aoe2/PHASE_STATUS.yaml` — Phase 0 marked `status: complete`, `gate_date: "2026-04-07"` for both aoe2companion and aoestats datasets
+- `reports/research_log.md` — aoe2companion Phase 0 entry (Steps 0.1–0.8) added in reverse-chronological order alongside existing aoestats entry
+
 ## [0.20.6] — 2026-04-07 (PR #54: chore/phase1-roadmap-augmentation)
 
 ### Changed
