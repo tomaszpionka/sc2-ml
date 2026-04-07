@@ -21,6 +21,14 @@ merged to `master`.
 
 ### Removed
 
+## [0.20.5] — 2026-04-07 (PR #53: chore/research-log-template-content)
+
+### Added
+- `reports/RESEARCH_LOG_TEMPLATE.md` — canonical template for Category A and F research log entries, with mandatory fields (date, phase, step, actions, findings, next steps)
+
+### Changed
+- `reports/research_log.md` — Steps 1.6 and 1.7 rewritten into new template format; header note added pointing to `RESEARCH_LOG_TEMPLATE.md`
+
 ## [0.20.4] — 2026-04-07 (PR #52: chore/research-log-template)
 
 ### Added
