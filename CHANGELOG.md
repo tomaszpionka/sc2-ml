@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [0.21.0] — 2026-04-07 (PR #N: feat/sc2-phase1-step1.8)
+
+### Added
+- `src/rts_predict/sc2/reports/sc2egset/01_08_game_settings_audit.md` — full game settings and replay field completeness audit for SC2EGSet (22,390 replays, 70 tournaments): game speed, handicap, error flags, game mode flags, random race, map/lobby metadata, and version consistency sub-steps with embedded SQL and findings
+- `src/rts_predict/sc2/reports/sc2egset/01_08_error_flags_audit.csv` — parse error flag scan results (zero errors found across all replays)
+
+### Changed
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` — Step 1.8 marked complete, cleaning rules C-D1 and C-E1 added to Phase 6 backlog
+- `reports/research_log.md` — Phase 1 Step 1.8 entry added with key findings and artifact references
+
 ## [0.20.7] — 2026-04-07 (PR #55: feat/aoe2-phase0-ingestion)
 
 ### Added
