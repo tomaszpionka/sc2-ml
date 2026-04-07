@@ -264,3 +264,7 @@ src/rts_predict/*/in_game_processing_manifest.json
 # api dirs — ignore everything except .gitkeep
 **/data/*/api/*
 !**/data/*/api/.gitkeep
+
+# local report files
+src/rts_predict/**/reports/**/[0-9][0-9]*
+                                                                                                                                                                                                                                          
