@@ -72,7 +72,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/rts_predict"]
-omit = ["**/tests/*"]
+omit = ["**/tests/*", "sandbox/**"]
 
 [tool.coverage.report]
 exclude_lines = [

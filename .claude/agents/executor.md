@@ -43,6 +43,21 @@ You are an implementation agent for a Python ML thesis codebase.
   Run Critical Review Checklist. Plant `[REVIEW:]` flags. Update WRITING_STATUS.md.
 - **Category B/C (Refactor/Chore):** Follow `.claude/rules/python-code.md`.
 
+## Notebook workflow (sandbox/)
+
+1. Use the template from `_current_plan.md` B.3.
+2. All functions and classes must live in `src/rts_predict/` and be imported.
+   Cells are capped at `[cells] max_lines` from `sandbox/notebook_config.toml`.
+   Notebooks are thin orchestration only — SQL strings, function calls, and
+   display logic.
+3. After completing the notebook, run fresh-kernel execution:
+   `poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
+4. Verify both `.ipynb` and `.py` pair files are present and synced.
+5. Update `reports/research_log.md` with a new entry.
+6. DuckDB connections are read-only by default. Document any write-access need
+   in the front-matter.
+7. Do NOT import from `processing.py` in any notebook.
+
 ## Read first
 - `_current_plan.md`
 - `src/rts_predict/sc2/PHASE_STATUS.yaml`
