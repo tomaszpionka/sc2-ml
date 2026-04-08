@@ -16,7 +16,7 @@ Commits: `type(scope): short description`. Atomic — one logical unit per commi
 1. Run checks (skip if no .py files in diff):
    a. `poetry run ruff check src/ tests/`
    b. `poetry run mypy src/rts_predict/`
-   c. `poetry run pytest tests/ src/ -v --cov --cov-report=term-missing | tee coverage.txt`
+   c. `poetry run pytest tests/ -v --cov --cov-report=term-missing | tee coverage.txt`
       (`--cov` without a path uses `[tool.coverage.run] source` from `pyproject.toml`,
       which is `src/rts_predict` — covers all game and common packages)
    d. Read and analyze `coverage.txt` — identify uncovered lines in project code

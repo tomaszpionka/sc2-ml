@@ -35,6 +35,18 @@ You are an implementation agent for a Python ML thesis codebase.
 - Do NOT open PRs or bump versions unless explicitly asked.
 - Use `poetry run` always. Never bare `python3` or `pip`.
 
+## Test placement rules
+- When adding a new source file `src/rts_predict/<path>/module.py`, create
+  `tests/rts_predict/<path>/test_module.py` in the same PR.
+- When modifying a source file, check coverage on changed lines:
+  `poetry run pytest tests/ --cov=rts_predict --cov-report=xml && poetry run diff-cover coverage.xml`
+  If diff-coverage is below 90%, add tests for uncovered new/changed code.
+- NEVER create a `tests/` directory inside `src/rts_predict/`. All tests live
+  in the mirrored `tests/rts_predict/` tree.
+- Test file naming: `test_<module>.py` where `<module>.py` is the source file name.
+- Fixtures: per-subtree `conftest.py` for scoped fixtures, root `tests/conftest.py`
+  for cross-cutting fixtures.
+
 ## Category-specific rules
 - **Category A (Phase work):** Read `.claude/scientific-invariants.md` first.
   Update `reports/research_log.md` after each step. Ensure temporal discipline

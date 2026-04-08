@@ -28,7 +28,7 @@ When asked to create a plan or run a read-only/planning session:
 
 | Task | Command |
 |------|---------|
-| Run tests | `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing` |
+| Run tests | `poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing` |
 | Lint | `poetry run ruff check src/ tests/` |
 | Type check | `poetry run mypy src/rts_predict/` |
 | CLI | `poetry run sc2 --help` |

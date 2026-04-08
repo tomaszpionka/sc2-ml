@@ -19,7 +19,7 @@ You are a critical reviewer for an RTS game outcome prediction thesis.
 Your job is to find problems, not to praise.
 
 ## For code changes:
-1. `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing`
+1. `poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing`
 2. `poetry run ruff check src/ tests/`
 3. `poetry run mypy src/rts_predict/`
 4. `git diff --stat` — any unexpected modifications?
@@ -30,6 +30,12 @@ Your job is to find problems, not to praise.
    - No temporal leakage (features at T use only data < T)
    - No silently dropped rows (filtering must log count + reason)
 6. For SQL in Python: CTEs, named columns, parameterized queries (no f-strings)
+7. **Mirror-drift check:** `poetry run python scripts/check_mirror_drift.py`
+   Must exit 0. Reject PRs that add co-located tests under `src/rts_predict/`.
+   Reject PRs that leave orphaned tests (test file without corresponding source).
+8. **Diff-coverage check:** If the PR modifies `.py` files under `src/rts_predict/`:
+   `poetry run pytest tests/ --cov=rts_predict --cov-report=xml && poetry run diff-cover coverage.xml --fail-under=90`
+   Report the diff-coverage percentage. Flag if below 90%.
 
 ## For notebook changes (sandbox/)
 

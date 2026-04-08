@@ -14,7 +14,7 @@ is planned after SC2 work is complete.
 ```bash
 poetry install
 poetry run sc2 --help
-poetry run pytest tests/ src/ -v --cov=rts_predict
+poetry run pytest tests/ -v --cov=rts_predict
 ```
 
 ## Key Documents

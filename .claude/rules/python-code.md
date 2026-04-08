@@ -8,7 +8,7 @@ paths:
 ## Pre-Commit Checks (MANDATORY)
 1. `poetry run ruff check src/ tests/`
 2. `poetry run mypy src/rts_predict/`
-3. `poetry run pytest tests/ src/ -v`
+3. `poetry run pytest tests/ -v`
 
 ## Style
 - Type hints on all function signatures (params and return)
@@ -26,19 +26,36 @@ paths:
 
 ## Testing
 - Every new/modified function MUST have a test
-- Co-located: `x/y/z/module.py` → `x/y/z/tests/test_module.py`
-- Package-root tests (CLI, validation) in `src/rts_predict/sc2/tests/`
-- Root `tests/` for infra and cross-package integration tests
+- Mirrored tree: `src/rts_predict/<path>/module.py` → `tests/rts_predict/<path>/test_module.py`
+- Infrastructure tests (MPS, DuckDB connectivity): `tests/infrastructure/`
+- Integration tests (cross-module): `tests/integration/`
+- Root `tests/conftest.py` for cross-cutting fixtures
+- Per-subtree `conftest.py` for scoped fixtures (e.g., `tests/rts_predict/sc2/data/conftest.py`)
 - Test with: empty DataFrames, single rows, NaN handling, boundary conditions
 - NEVER train models on real data inside tests — use synthetic fixtures
-- Test temporal leakage: for sample target games, assert no feature uses data ≥ T
+- Test temporal leakage: for sample target games, assert no feature uses data >= T
+- NEVER create a `tests/` directory inside `src/rts_predict/` — all tests live in the mirrored tree
 
-### Current test structure (add dirs as phases complete)
+### Current test structure
 ```
-src/rts_predict/sc2/
-├── data/tests/              # ✓ exists
-└── tests/                   # ✓ exists
-# Future: features/tests/ (Phase 7+), models/tests/ (Phase 9+)
+tests/
+├── conftest.py
+├── infrastructure/        # MPS, connectivity, mirror-drift checker
+└── rts_predict/           # Mirrors src/rts_predict/ exactly
+    ├── sc2/
+    │   ├── test_cli.py
+    │   └── data/
+    │       ├── conftest.py
+    │       └── test_*.py
+    ├── aoe2/
+    │   ├── test_cli.py
+    │   └── data/
+    │       ├── aoe2companion/
+    │       │   └── test_*.py
+    │       └── aoestats/
+    │           └── test_*.py
+    └── common/
+        └── test_*.py
 ```
 
 ## ML Code

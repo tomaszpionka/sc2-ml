@@ -32,14 +32,18 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `data/<dataset>/staging/` | Intermediate artifacts by type (gitignored, README tracked) | When extraction exists |
 | `data/<dataset>/db/` | DuckDB database file (gitignored, `.gitkeep` tracked) | Yes |
 | `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
-| `data/tests/` | Co-located unit tests for data modules | Yes |
+| — | Tests live in mirrored `tests/rts_predict/` tree, not inside game packages | — |
 | `reports/` | Phase artifacts (tracked in git) | Yes |
 | `reports/ROADMAP.md` | Game-level execution plan (Phases 3+) | Yes |
 | `reports/<dataset>/ROADMAP.md` | Dataset-level execution plan (Phases 0–2) | Per dataset |
 | `reports/<dataset>/` | Dataset-scoped phase artifacts | Per dataset |
 | `models/` | Serialised model artifacts (gitignored) | When modelling begins |
 | `logs/` | Pipeline logs (gitignored) | When pipeline exists |
-| `tests/` | Package-root tests (CLI, validation) | Yes |
+| — | CLI tests live in `tests/rts_predict/<game>/test_cli.py` | — |
+
+> **Test location:** All tests live under the root `tests/` directory in a tree
+> that exactly mirrors `src/rts_predict/`. See `.claude/rules/python-code.md` for
+> the convention and the mirror-drift guardrail that enforces it.
 
 ## Adding a new game
 

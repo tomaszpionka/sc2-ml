@@ -104,7 +104,7 @@ resolved from `PHASE_STATUS.yaml`.
 
 ## Mandatory checks — code changes
 
-1. `poetry run pytest tests/ src/ -v --cov=rts_predict --cov-report=term-missing`
+1. `poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing`
    — record exit code, test count, coverage %. Must be ≥ 95%.
 2. `poetry run ruff check src/ tests/` — record exit code and issues.
 3. `poetry run mypy src/rts_predict/` — record exit code and errors.
@@ -125,6 +125,12 @@ resolved from `PHASE_STATUS.yaml`.
    columns, no `SELECT *`, no f-string user input.
 8. DuckDB connections: `read_only=True` unless write access is explicitly
    justified in calling context.
+9. `poetry run python scripts/check_mirror_drift.py` — mirror intact, exit 0.
+   Flag any co-located test directory under `src/rts_predict/` as an automatic
+   blocker. Flag any orphaned test file as a non-blocker follow-up.
+10. Diff-coverage: `poetry run diff-cover coverage.xml --fail-under=90` — record
+    percentage. Below 90% is a blocker unless the uncovered lines are documented
+    as legitimately untestable in the PR description.
 
 ## Mandatory checks — sandbox notebooks
 
