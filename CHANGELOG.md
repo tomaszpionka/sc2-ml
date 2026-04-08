@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [0.24.1] — 2026-04-09 (PR #64: chore/phase1-sc2-archive-pre-reset)
+
+### Added
+- `src/rts_predict/sc2/reports/sc2egset/_archive_2026-04_pre_notebook_reset/_README.md`: tombstone explaining why artifacts were archived, what was excluded, and how to recover
+- `src/rts_predict/sc2/reports/sc2egset/_archive_2026-04_pre_notebook_reset/01_00_phase1_audit_inventory.csv`: full inventory of 36 archived artifacts with kind, step ID, size, mtime, deleted-symbol references, and disposition
+- Stage 3a entry in `reports/research_log.md`
+
+### Changed
+- 36 numbered Phase 0/1 artifacts moved via `git mv` from `sc2/reports/sc2egset/artifacts/` to `_archive_2026-04_pre_notebook_reset/` — preserved for historical reference, not current use
+
 ## [0.24.0] — 2026-04-08 (PR #63: feat/schema-export-utility)
 
 ### Added
