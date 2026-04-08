@@ -1,0 +1,10 @@
+# Jupytext configuration — pairs .ipynb with .py:percent for clean diffs.
+# See: https://jupytext.readthedocs.io/en/latest/config.html
+
+[formats]
+"sandbox//" = "ipynb,py:percent"
+
+[notebook_metadata_filter]
+# Strip volatile metadata from .ipynb to reduce diff noise.
+# Keep only: kernelspec, jupytext config.
+selected = "jupytext,kernelspec"

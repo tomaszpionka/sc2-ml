@@ -1,0 +1,7 @@
+repos:
+  - repo: https://github.com/mwouts/jupytext
+    rev: v1.19.1  # Match the version pinned in pyproject.toml
+    hooks:
+      - id: jupytext
+        args: [--sync]
+        files: ^sandbox/.*\.(ipynb|py)$

@@ -1,0 +1,10 @@
+[cells]
+# Maximum lines per notebook cell. Matches python-code.md "Max ~50 lines per function".
+# Enforced by AST-based reviewer check.
+max_lines = 50
+
+[execution]
+# Default timeout in seconds for fresh-kernel nbconvert execution.
+# Justified by Step 1.6 (~2 min on M4 Max 36 GB) * 5x safety margin.
+# Update after measuring proof-of-concept (B.9.16).
+timeout_seconds = 600
