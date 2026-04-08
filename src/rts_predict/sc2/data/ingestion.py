@@ -3,6 +3,10 @@
 Path A — Pre-match features (header, player stats, map metadata):
     ``move_data_to_duck_db`` bulk-loads SC2Replay JSON files into a DuckDB
     ``raw`` table.
+    ``ingest_map_alias_files`` loads per-tournament
+    ``map_foreign_to_english_mapping.json`` files into the ``raw_map_alias_files``
+    table — one row per file, storing the raw JSON verbatim with a SHA1 checksum.
+    Downstream Phase 1 work parses the JSON via DuckDB json_extract / ->> operators.
 
 Path B — In-game events (tracker events, game events, player metadata):
     ``run_in_game_extraction`` reads full replay JSON via multiprocessing,
@@ -12,9 +16,11 @@ Path B — In-game events (tracker events, game events, player metadata):
     PlayerStats score fields.
 """
 
+import hashlib
 import json
 import logging
 import multiprocessing
+from datetime import datetime, timezone
 from pathlib import Path
 
 import duckdb
@@ -83,6 +89,17 @@ _MATCH_PLAYER_MAP_TABLE_QUERY = (
     " SELECT DISTINCT * FROM read_parquet('{glob_pattern}')"
 )
 
+_RAW_MAP_ALIAS_CREATE_QUERY = """
+    CREATE TABLE IF NOT EXISTS raw_map_alias_files (
+        tournament_dir  VARCHAR   NOT NULL,
+        file_path       VARCHAR   NOT NULL,
+        byte_sha1       VARCHAR   NOT NULL,
+        n_bytes         BIGINT    NOT NULL,
+        raw_json        VARCHAR   NOT NULL,
+        ingested_at     TIMESTAMP NOT NULL
+    )
+"""
+
 
 def _build_player_stats_view_query() -> str:
     field_extracts = ",\n        ".join(
@@ -135,33 +152,74 @@ def move_data_to_duck_db(con: duckdb.DuckDBPyConnection, should_drop: bool = Fal
     logger.info(f"DuckDB ingestion complete. Total replays in 'raw': {row_count}")
 
 
-def load_map_translations(con: duckdb.DuckDBPyConnection) -> None:
-    """Scan and merge all map_foreign_to_english_mapping.json files into DuckDB.
+def ingest_map_alias_files(
+    con: duckdb.DuckDBPyConnection,
+    raw_dir: Path,
+    *,
+    mapping_filename: str = "map_foreign_to_english_mapping.json",
+) -> int:
+    """Ingest every per-tournament map alias JSON as a row in raw_map_alias_files.
 
-    Finds all translation dictionaries under REPLAYS_SOURCE_DIR, merges them into
-    a single mapping, and loads it as the 'map_translation' table.
-    DuckDB can ingest a Pandas DataFrame directly from memory.
+    Walks `raw_dir` for files named `mapping_filename`, computes the SHA1 of
+    each file's raw bytes, and inserts one row per file. The JSON is stored
+    verbatim as text — no parsing, no flattening, no deduplication. Downstream
+    Phase 1 work parses the JSON via DuckDB json_extract / ->> operators.
+
+    Args:
+        con: An open DuckDB connection. Caller manages its lifecycle.
+        raw_dir: Root directory containing the per-tournament subdirectories.
+        mapping_filename: The filename to look for in each tournament directory.
+
+    Returns:
+        Number of rows inserted.
+
+    Raises:
+        FileNotFoundError: If `raw_dir` does not exist.
+        ValueError: If zero matching files are found.
     """
-    logger.info("Searching for map translation dictionaries...")
-    global_mapping: dict[str, str] = {}
+    logger.info(f"Ingesting map alias files from: {raw_dir}")
 
-    for map_file in REPLAYS_SOURCE_DIR.rglob("*map_foreign_to_english_mapping.json"):
-        try:
-            with open(map_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                global_mapping.update(data)
-        except Exception as e:
-            logger.error(f"Error reading {map_file}: {e}")
+    if not raw_dir.exists():
+        raise FileNotFoundError(f"raw_dir does not exist: {raw_dir}")
 
-    if global_mapping:
-        mapping_df = pd.DataFrame(  # noqa: F841 — referenced by DuckDB SQL below
-            list(global_mapping.items()), columns=["foreign_name", "english_name"]
+    con.execute("DROP TABLE IF EXISTS raw_map_alias_files")
+    con.execute(_RAW_MAP_ALIAS_CREATE_QUERY)
+
+    alias_files = sorted(raw_dir.glob(f"*/{mapping_filename}"))
+
+    if not alias_files:
+        raise ValueError(
+            f"No {mapping_filename!r} files found under {raw_dir}"
         )
-        con.execute("DROP TABLE IF EXISTS map_translation")
-        con.execute("CREATE TABLE map_translation AS SELECT * FROM mapping_df")
-        logger.info(f"Loaded {len(global_mapping)} unique map translations into DuckDB.")
-    else:
-        logger.warning("No map translation dictionaries found.")
+
+    ingested_at = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+
+    rows: list[dict] = []
+    for path in alias_files:
+        tournament_dir = path.parent.name
+        raw_bytes = path.read_bytes()
+        byte_sha1 = hashlib.sha1(raw_bytes).hexdigest()
+        n_bytes = len(raw_bytes)
+        raw_json = path.read_text(encoding="utf-8")
+        rows.append(
+            {
+                "tournament_dir": tournament_dir,
+                "file_path": str(path),
+                "byte_sha1": byte_sha1,
+                "n_bytes": n_bytes,
+                "raw_json": raw_json,
+                "ingested_at": ingested_at,
+            }
+        )
+
+    alias_df = pd.DataFrame(rows)  # noqa: F841 — referenced by DuckDB SQL below
+    con.execute("INSERT INTO raw_map_alias_files SELECT * FROM alias_df")
+
+    n_inserted = len(rows)
+    logger.info(
+        f"Ingested {n_inserted} map alias file(s) into raw_map_alias_files."
+    )
+    return n_inserted
 
 
 # ── Path B: In-game event extraction ─────────────────────────────────────────

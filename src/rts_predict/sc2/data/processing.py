@@ -1,15 +1,17 @@
 """DuckDB view orchestration for the SC2 ML feature pipeline.
 
-Transforms raw replay JSON (loaded by ``ingestion``) into ML-ready tables:
+Provides utilities over the raw ingestion tables:
 
-1. ``flat_players`` — One row per player per match, with map name translations
-   applied and non-player rows (casters/observers) excluded.
-2. ``matches_flat`` — One row per player-pair perspective (2 rows per match),
-   the primary input table for feature engineering.
-3. ``match_series`` — Best-of series grouping via a time-gap heuristic, ensuring
+1. ``raw_enriched`` view — adds ``tournament_dir`` and ``replay_id`` columns
+   to the ``raw`` table.
+2. ``match_series`` — Best-of series grouping via a time-gap heuristic, ensuring
    no series is split across temporal folds.
-4. ``match_split`` — Temporal train/val/test assignment with tournament-level
+3. ``match_split`` — Temporal train/val/test assignment with tournament-level
    boundaries and series integrity constraints.
+
+Note: ``flat_players`` and ``matches_flat`` views were removed in PR #62.
+Map-name resolution and race normalisation are Phase 1/2 concerns; the
+``matches`` view family will be rebuilt once cleaning rules are established.
 """
 
 import logging
@@ -32,95 +34,6 @@ _RAW_ENRICHED_VIEW_QUERY = """
     FROM raw
 """
 
-_FLAT_PLAYERS_VIEW_QUERY = """
-    CREATE OR REPLACE VIEW flat_players AS
-    SELECT
-        filename AS match_id,
-        tournament_dir AS tournament_name,
-        (details->>'$.timeUTC')::TIMESTAMP AS match_time,
-
-        (header->>'$.elapsedGameLoops')::INTEGER AS game_loops,
-        (initData->>'$.gameDescription.mapSizeX')::INTEGER AS map_size_x,
-        (initData->>'$.gameDescription.mapSizeY')::INTEGER AS map_size_y,
-        metadata->>'$.dataBuild' AS data_build,
-        metadata->>'$.gameVersion' AS game_version,
-        COALESCE(mt.english_name, metadata->>'$.mapName') AS map_name,
-
-        (entry.value->>'$.playerID')::TINYINT AS player_id,
-        LOWER(entry.value->>'$.nickname') AS player_name,
-        CASE entry.value->>'$.race'
-            WHEN 'Terr' THEN 'Terran'
-            WHEN 'Prot' THEN 'Protoss'
-            ELSE entry.value->>'$.race'
-        END AS race,
-        (entry.value->>'$.startLocX')::INTEGER AS startLocX,
-        (entry.value->>'$.startLocY')::INTEGER AS startLocY,
-        (entry.value->>'$.APM')::INTEGER AS apm,
-        (entry.value->>'$.SQ')::INTEGER AS sq,
-        (entry.value->>'$.supplyCappedPercent')::INTEGER AS supply_capped_pct,
-        (entry.value->>'$.isInClan')::BOOLEAN AS is_in_clan,
-
-        entry.value->>'$.result' AS result
-    FROM raw_enriched
-    LEFT JOIN map_translation mt ON mt.foreign_name = (metadata->>'$.mapName'),
-         LATERAL json_each(ToonPlayerDescMap) AS entry
-    WHERE player_name IS NOT NULL AND player_name != ''
-      AND (entry.value->>'$.result') IN ('Win', 'Loss')  -- excludes casters and observers
-      AND (entry.value->>'$.race') NOT LIKE 'BW%'        -- excludes Brood War exhibition replays
-      AND filename IN (  -- 1v1 matches only (exactly 2 Win/Loss players)
-          SELECT filename FROM raw_enriched,
-                 LATERAL json_each(ToonPlayerDescMap) AS e2
-          WHERE (e2.value->>'$.result') IN ('Win', 'Loss')
-            AND (e2.value->>'$.nickname') IS NOT NULL
-            AND (e2.value->>'$.nickname') != ''
-          GROUP BY filename
-          HAVING COUNT(*) = 2
-      )
-"""
-
-_MATCHES_FLAT_VIEW_QUERY = """
-    CREATE OR REPLACE VIEW matches_flat AS
-    SELECT
-        p1.match_id,
-        p1.match_time,
-        p1.tournament_name,
-        p1.game_loops,
-        p1.map_size_x,
-        p1.map_size_y,
-        p1.data_build,
-        p1.game_version,
-        p1.map_name,
-
-        p1.player_id AS p1_player_id,
-        p2.player_id AS p2_player_id,
-
-        p1.player_name AS p1_name,
-        p2.player_name AS p2_name,
-
-        p1.race AS p1_race,
-        p2.race AS p2_race,
-
-        p1.startLocX AS p1_startLocX,
-        p1.startLocY AS p1_startLocY,
-        p2.startLocX AS p2_startLocX,
-        p2.startLocY AS p2_startLocY,
-
-        p1.apm AS p1_apm,
-        p1.sq AS p1_sq,
-        p2.apm AS p2_apm,
-        p2.sq AS p2_sq,
-
-        p1.supply_capped_pct AS p1_supply_capped_pct,
-        p2.supply_capped_pct AS p2_supply_capped_pct,
-
-        p1.is_in_clan AS p1_is_in_clan,
-        p2.is_in_clan AS p2_is_in_clan,
-
-        p1.result AS p1_result
-    FROM flat_players p1
-    JOIN flat_players p2 ON p1.match_id = p2.match_id AND p1.player_name != p2.player_name
-"""
-
 _MATCHES_WITH_SPLIT_QUERY = """
     SELECT m.*, ms.split
     FROM matches_flat m
@@ -132,16 +45,6 @@ _MATCHES_WITH_SPLIT_QUERY = """
 _MATCHES_WITHOUT_SPLIT_QUERY = (
     "SELECT * FROM matches_flat WHERE match_time IS NOT NULL ORDER BY match_time ASC"
 )
-
-_YEAR_DISTRIBUTION_QUERY = """
-    SELECT
-        EXTRACT(year FROM match_time) as year,
-        COUNT(*) as total_matches,
-        ROUND(COUNT(*) * 100.0 / (SUM(COUNT(*)) OVER()), 2) as pct_of_total
-    FROM matches_flat
-    GROUP BY year ORDER BY year;
-"""
-
 
 _SERIES_ASSIGNMENT_QUERY = """
     CREATE TABLE match_series AS
@@ -214,41 +117,10 @@ _SERIES_OTHER_PERSPECTIVE_QUERY = """
     WHERE m.match_id NOT IN (SELECT match_id FROM match_series)
 """
 
-_TOURNAMENT_GROUPING_QUERY = """
-    SELECT
-        tournament_name,
-        MIN(match_time) AS first_match_time,
-        COUNT(DISTINCT match_id) AS match_count
-    FROM flat_players
-    WHERE match_time IS NOT NULL
-      AND result IN ('Win', 'Loss')
-    GROUP BY tournament_name
-    ORDER BY first_match_time ASC
-"""
-
 def create_raw_enriched_view(con: duckdb.DuckDBPyConnection) -> None:
     """Create the raw_enriched view with tournament_dir and replay_id columns."""
     con.execute(_RAW_ENRICHED_VIEW_QUERY)
     logger.info("Created raw_enriched view.")
-
-
-def create_ml_views(con: duckdb.DuckDBPyConnection) -> None:
-    """Create the two DuckDB views used by the ML pipeline.
-
-    flat_players  — one row per player per match, with map translations applied
-                    and casters (no Win/Loss result) excluded.
-    matches_flat  — one row per player-pair perspective per match (2 rows per
-                    unique match_id), used as the primary ML input table.
-
-    Requires the ``raw_enriched`` view to exist (call
-    ``create_raw_enriched_view`` first).
-    """
-    logger.info(
-        "Creating ML views in DuckDB (map translations + player name unification)..."
-    )
-    con.execute(_FLAT_PLAYERS_VIEW_QUERY)
-    con.execute(_MATCHES_FLAT_VIEW_QUERY)
-    logger.info("View 'matches_flat' ready.")
 
 
 def get_matches_dataframe(

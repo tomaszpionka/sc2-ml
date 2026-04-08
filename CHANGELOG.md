@@ -19,6 +19,30 @@ merged to `master`.
 
 ### Removed
 
+## [0.23.0] — 2026-04-08 (PR #62: feat/phase0-map-alias-ingestion)
+
+### Added
+- `ingest_map_alias_files(con, raw_dir, *, mapping_filename)` in `ingestion.py`: row-per-file ingestion with SHA1 checksum, raw JSON stored verbatim, new `raw_map_alias_files` table schema (tournament_dir, file_path, byte_sha1, n_bytes, raw_json, ingested_at)
+- `_RAW_MAP_ALIAS_CREATE_QUERY` constant with the new 6-column schema
+- `in_memory_duckdb` fixture in `tests/rts_predict/sc2/data/conftest.py`
+- Verification notebook `sandbox/sc2/sc2egset/00_99_post_rebuild_verification.{py,ipynb}`
+- Report artifact `src/rts_predict/sc2/reports/sc2egset/artifacts/00_99_post_rebuild_verification.md`
+- Stage 1 entry in `reports/research_log.md`
+
+### Changed
+- `cli.py`: `init_database()` now calls `ingest_map_alias_files(con, REPLAYS_SOURCE_DIR)` — produces two raw tables only (`raw`, `raw_map_alias_files`)
+- `ingestion.py`: module docstring updated to reflect row-per-file design
+- `src/rts_predict/sc2/data/README.md`: updated pipeline usage and removed stale Stage 3/4 view docs
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`: Step 0.9 updated; Phase 1 inputs list updated
+
+### Removed
+- `load_map_translations()` from `ingestion.py` — replaced by `ingest_map_alias_files`
+- `map_translation` table (was created inline by `load_map_translations`)
+- `create_ml_views()` and `_MATCHES_VIEW_QUERY` from `processing.py`
+- `validate_map_translation_coverage()` from `audit.py`
+- All corresponding test classes: `TestCreateMlViews` (test_processing.py); old `TestIngestMapAliasFiles` (replaced with 3 new tests)
+- `map_translation` fixture from `raw_table_con` in `tests/rts_predict/sc2/data/conftest.py`
+
 ## [0.22.4] — 2026-04-08 (PR #61: chore/sandbox-and-artifacts-guidance)
 
 ### Added

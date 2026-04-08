@@ -169,15 +169,16 @@ Write a query that joins `raw` (Path A) to `tracker_events_raw` (Path B) on the 
 
 Output: `artifacts/00_08_join_validation.md`
 
-**0.9 — Run `load_map_translations` and verify**
+**0.9 — Ingest per-tournament map alias files**
 
-Run `load_map_translations()`. Then:
-- Count rows in `map_translation`
-- Count distinct `metadata->>'$.mapName'` values in `raw`
-- Count how many map names from `raw` have no translation (null join)
-- List the untranslated map names
+Run `ingest_map_alias_files(con, REPLAYS_SOURCE_DIR)`. The function walks
+every per-tournament `map_foreign_to_english_mapping.json` file and inserts
+one row per file into `raw_map_alias_files` (with `byte_sha1`, `n_bytes`,
+`raw_json`, `ingested_at`). Then verify:
+- `raw_map_alias_files` exists with expected schema
+- Row count matches the number of tournament alias files on disk
 
-Output: `artifacts/00_09_map_translation_coverage.csv`
+Output: `artifacts/00_99_post_rebuild_verification.md`
 
 ### Artifacts
 
@@ -188,7 +189,7 @@ Output: `artifacts/00_09_map_translation_coverage.csv`
 - `artifacts/00_05_full_ingestion_log.txt`
 - `artifacts/00_07_path_b_extraction_log.txt`
 - `artifacts/00_08_join_validation.md`
-- `artifacts/00_09_map_translation_coverage.csv`
+- `artifacts/00_99_post_rebuild_verification.md`
 
 ### Gate
 
@@ -221,7 +222,7 @@ Output: `artifacts/00_09_map_translation_coverage.csv`
  
 Phase 0 confirmed the plumbing works: tables load, joins have zero orphans, counts match. Phase 1 opens the box and looks *inside* the data values. Every finding here is an observation, not a decision — cleaning decisions are deferred to Phase 6.
  
-**Inputs:** `raw` table, `tracker_events_raw` table, `game_events_raw` table, `match_player_map` table, `map_translation` table. All from Phase 0.
+**Inputs:** `raw` table, `tracker_events_raw` table, `game_events_raw` table, `match_player_map` table, `raw_map_alias_files` table. All from Phase 0.
  
 ### Steps
  
@@ -1830,7 +1831,7 @@ sc2egset/
   artifacts/00_05_full_ingestion_log.txt
   artifacts/00_07_path_b_extraction_log.txt
   artifacts/00_08_join_validation.md
-  artifacts/00_09_map_translation_coverage.csv
+  artifacts/00_99_post_rebuild_verification.md
   artifacts/01_01_corpus_summary.json
   artifacts/01_01_player_count_anomalies.csv
   artifacts/01_01_result_field_audit.md

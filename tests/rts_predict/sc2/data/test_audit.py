@@ -15,7 +15,6 @@ from rts_predict.sc2.data.audit import (
     _REPLAY_ID_REGEX,
     run_phase_0_audit,
     run_source_audit,
-    validate_map_translation_coverage,
     validate_path_a_b_join,
     validate_tournament_name_extraction,
     write_replay_id_spec,
@@ -283,69 +282,6 @@ class TestValidatePathAbJoin:
         assert result["orphans_in_tracker_not_raw"] == 1
 
 
-# ── TestValidateMapTranslationCoverage ───────────────────────────────────────
-
-
-class TestValidateMapTranslationCoverage:
-    """Test validate_map_translation_coverage (Step 0.9)."""
-
-    @pytest.fixture()
-    def _map_con(self, tmp_path: Path) -> Generator[duckdb.DuckDBPyConnection, None, None]:
-        """DuckDB with raw table containing map names."""
-        con = duckdb.connect(":memory:")
-
-        raw_df = pd.DataFrame({  # noqa: F841
-            "filename": ["a.json", "b.json", "c.json"],
-            "metadata": [
-                json.dumps({"mapName": "MapA"}),
-                json.dumps({"mapName": "MapB"}),
-                json.dumps({"mapName": "MapC"}),
-            ],
-        })
-        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
-        con.execute("""
-            CREATE OR REPLACE TABLE raw AS
-            SELECT filename, metadata::JSON AS metadata FROM raw
-        """)
-
-        yield con
-        con.close()
-
-    def test_full_coverage(
-        self, _map_con: duckdb.DuckDBPyConnection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Scenario: All maps translated → untranslated_count=0."""
-        # Provide translations for all maps
-        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
-        map_file = tmp_path / "map_foreign_to_english_mapping.json"
-        map_file.write_text(json.dumps({
-            "MapA": "Map A English",
-            "MapB": "Map B English",
-            "MapC": "Map C English",
-        }))
-
-        result = validate_map_translation_coverage(
-            _map_con, output_path=tmp_path / "coverage.csv"
-        )
-
-        assert result["untranslated_count"] == 0
-
-    def test_partial_coverage(
-        self, _map_con: duckdb.DuckDBPyConnection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Scenario: Some maps untranslated → correct count and list."""
-        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
-        map_file = tmp_path / "map_foreign_to_english_mapping.json"
-        map_file.write_text(json.dumps({"MapA": "Map A English"}))
-
-        result = validate_map_translation_coverage(
-            _map_con, output_path=tmp_path / "coverage.csv"
-        )
-
-        assert result["untranslated_count"] == 2
-        assert set(result["untranslated_names"]) == {"MapB", "MapC"}
-
-
 # ── TestDefaultOutputPaths ───────────────────────────────────────────────────
 
 
@@ -427,36 +363,6 @@ class TestDefaultOutputPaths:
 
         assert (tmp_path / "reports" / "artifacts" / "00_08_join_validation.md").exists()
         assert result["join_clean"] is True
-
-    def test_validate_map_translation_coverage_default_path(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """validate_map_translation_coverage() without output_path writes to DATASET_ARTIFACTS_DIR."""  # noqa: E501
-        monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_ARTIFACTS_DIR", tmp_path / "reports" / "artifacts")  # noqa: E501
-        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
-
-        # Write a non-empty translation file so load_map_translations creates the table
-        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
-            json.dumps({"MapA": "Map A English"})
-        )
-
-        con = duckdb.connect(":memory:")
-        raw_df = pd.DataFrame({  # noqa: F841
-            "filename": ["a.json"],
-            "metadata": [json.dumps({"mapName": "MapA"})],
-        })
-        con.execute("CREATE TABLE raw AS SELECT * FROM raw_df")
-        con.execute(
-            "CREATE OR REPLACE TABLE raw AS "
-            "SELECT filename, metadata::JSON AS metadata FROM raw"
-        )
-
-        result = validate_map_translation_coverage(con)
-        con.close()
-
-        assert (tmp_path / "reports" / "artifacts" / "00_09_map_translation_coverage.csv").exists()
-        assert result["translation_count"] == 1
-        assert result["distinct_map_names"] == 1
 
 
 # ── TestRunPhase0Audit ────────────────────────────────────────────────────────
@@ -554,17 +460,13 @@ class TestRunPhase0Audit:
         assert "0.6" in results
         assert results["0.6"]["status"] == "raw_enriched view created"
 
-    def test_orchestrator_step_0_8_and_0_9(
+    def test_orchestrator_step_0_8(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Orchestrator steps 0.8 and 0.9 must return result dicts."""
+        """Orchestrator step 0.8 must return a result dict."""
         import json as _json
 
         monkeypatch.setattr("rts_predict.sc2.data.audit.DATASET_ARTIFACTS_DIR", tmp_path / "reports" / "artifacts")  # noqa: E501
-        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
-        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
-            _json.dumps({"MapA": "Map A English"})
-        )
 
         con = duckdb.connect(":memory:")
         raw_df = pd.DataFrame({  # noqa: F841
@@ -581,11 +483,22 @@ class TestRunPhase0Audit:
         })
         con.execute("CREATE TABLE tracker_events_raw AS SELECT * FROM tracker_df")
 
-        results = run_phase_0_audit(con, steps=["0.8", "0.9"])
+        results = run_phase_0_audit(con, steps=["0.8"])
         con.close()
 
         assert "0.8" in results
-        assert "0.9" in results
+        assert "0.9" not in results  # step 0.9 was removed
+
+    def test_orchestrator_step_0_9_not_in_all_steps(self) -> None:
+        """Step 0.9 is no longer in the default step list."""
+        import inspect
+
+        from rts_predict.sc2.data.audit import run_phase_0_audit
+
+        # Inspect the function source to confirm '0.9' is not in all_steps
+        source = inspect.getsource(run_phase_0_audit)
+        # all_steps list should NOT include "0.9"
+        assert '"0.9"' not in source.split("all_steps")[1].split("]")[0]
 
     def test_orchestrator_step_0_5_mocked(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

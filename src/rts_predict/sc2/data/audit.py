@@ -23,7 +23,6 @@ from rts_predict.sc2.config import (
 from rts_predict.sc2.data.ingestion import (
     audit_raw_data_availability,
     load_in_game_data_to_duckdb,
-    load_map_translations,
     move_data_to_duck_db,
     run_in_game_extraction,
 )
@@ -544,64 +543,6 @@ def validate_path_a_b_join(
     return result
 
 
-# ── Step 0.9 ─────────────────────────────────────────────────────────────────
-
-
-def validate_map_translation_coverage(
-    con: duckdb.DuckDBPyConnection,
-    output_path: Path | None = None,
-) -> dict:
-    """Step 0.9 — Check how many distinct map names have translations."""
-    load_map_translations(con)
-
-    row = con.execute("SELECT count(*) FROM map_translation").fetchone()
-    assert row is not None
-    translation_count = row[0]
-    row = con.execute(
-        "SELECT count(DISTINCT metadata->>'$.mapName') FROM raw"
-    ).fetchone()
-    assert row is not None
-    distinct_maps = row[0]
-
-    untranslated = con.execute("""
-        SELECT DISTINCT metadata->>'$.mapName' AS map_name
-        FROM raw
-        WHERE (metadata->>'$.mapName') NOT IN (
-            SELECT foreign_name FROM map_translation
-        )
-    """).fetchall()
-    untranslated_names = [r[0] for r in untranslated]
-
-    result = {
-        "translation_count": translation_count,
-        "distinct_map_names": distinct_maps,
-        "untranslated_count": len(untranslated_names),
-        "untranslated_names": untranslated_names,
-    }
-
-    if output_path is None:
-        output_path = DATASET_ARTIFACTS_DIR / "00_09_map_translation_coverage.csv"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Build CSV: all distinct map names with translation status
-    all_maps = con.execute("""
-        SELECT DISTINCT
-            r.map_name,
-            CASE WHEN mt.foreign_name IS NOT NULL THEN 'yes' ELSE 'no' END AS has_translation
-        FROM (SELECT DISTINCT metadata->>'$.mapName' AS map_name FROM raw) r
-        LEFT JOIN map_translation mt ON mt.foreign_name = r.map_name
-        ORDER BY r.map_name
-    """).fetchall()
-
-    csv_lines = ["map_name,has_translation"]
-    for name, has in all_maps:
-        csv_lines.append(f"{name},{has}")
-    output_path.write_text("\n".join(csv_lines))
-    logger.info(f"Map translation coverage written to {output_path}")
-
-    return result
-
-
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 
@@ -611,15 +552,18 @@ def run_phase_0_audit(
 ) -> dict[str, dict]:
     """Run Phase 0 audit steps in order.
 
+    Steps 0.1–0.8 are supported.  Step 0.9 (map translation coverage) was
+    superseded by the Phase 1 step 01_07 map-alias audit and has been removed.
+
     Args:
-        con: DuckDB connection (used for steps 0.5–0.9).
+        con: DuckDB connection (used for steps 0.5–0.8).
         steps: Optional list of step IDs (e.g. ``["0.1", "0.2"]``).
                If ``None``, runs all steps.
 
     Returns:
         Dict mapping step ID to result dict.
     """
-    all_steps = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]
+    all_steps = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8"]
     run_steps = steps if steps else all_steps
 
     results: dict[str, dict] = {}
@@ -656,10 +600,6 @@ def run_phase_0_audit(
     if "0.8" in run_steps:
         logger.info("=== Step 0.8: Path A ↔ B join validation ===")
         results["0.8"] = validate_path_a_b_join(con)
-
-    if "0.9" in run_steps:
-        logger.info("=== Step 0.9: Map translation coverage ===")
-        results["0.9"] = validate_map_translation_coverage(con)
 
     logger.info(f"Phase 0 audit complete. Steps run: {list(results.keys())}")
     return results

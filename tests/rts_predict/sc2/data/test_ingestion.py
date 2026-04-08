@@ -26,8 +26,8 @@ from rts_predict.sc2.data.ingestion import (
     _save_manifest,
     audit_raw_data_availability,
     extract_raw_events_from_file,
+    ingest_map_alias_files,
     load_in_game_data_to_duckdb,
-    load_map_translations,
     move_data_to_duck_db,
     run_in_game_extraction,
     save_raw_events_to_parquet,
@@ -624,51 +624,88 @@ class TestAuditRawDataAvailability:
         assert counts["stripped"] == 1
 
 
-class TestLoadMapTranslations:
-    """Test load_map_translations with synthetic mapping files."""
+class TestIngestMapAliasFiles:
+    """Tests for ingest_map_alias_files — row-per-file ingestion with SHA1."""
 
-    def test_with_translation_files(self, tmp_path: Path) -> None:
+    def _make_alias_file(self, tourn_dir: Path, content: str) -> Path:
+        """Write a map alias JSON file into a tournament subdirectory."""
+        tourn_dir.mkdir(parents=True, exist_ok=True)
+        alias_path = tourn_dir / "map_foreign_to_english_mapping.json"
+        alias_path.write_text(content, encoding="utf-8")
+        return alias_path
+
+    def test_ingest_map_alias_files_inserts_one_row_per_file(
+        self, tmp_path: Path, in_memory_duckdb: duckdb.DuckDBPyConnection
+    ) -> None:
         """
-        Scenario: Map translations loaded into DuckDB from JSON mapping files.
-        Preconditions: One mapping file with 2 translations in tournament data dir.
-        Assertions: map_translation table has 2 rows.
+        Scenario: 3 fake tournament dirs, each with a distinct JSON file.
+        Preconditions: 3 alias JSON files, each with different content.
+        Assertions: row count == 3, distinct tournament_dir count == 3,
+                    distinct byte_sha1 >= 1.
         """
-        source = tmp_path / "replays" / "tourn" / "data"
-        source.mkdir(parents=True)
-        mapping = {"MapKorean": "Map English LE", "AltitudeKR": "Altitude LE"}
-        (source / "map_foreign_to_english_mapping.json").write_text(json.dumps(mapping))
+        raw_dir = tmp_path / "raw"
+        contents = [
+            '{"MapA": "Map A LE"}',
+            '{"MapB": "Map B LE"}',
+            '{"MapC": "Map C LE"}',
+        ]
+        for i, content in enumerate(contents):
+            self._make_alias_file(raw_dir / f"2023_Tournament_{i}", content)
 
-        con = duckdb.connect(":memory:")
-        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path / "replays"):
-            load_map_translations(con)
+        n_inserted = ingest_map_alias_files(in_memory_duckdb, raw_dir)
 
-        row = con.execute("SELECT count(*) FROM map_translation").fetchone()
+        assert n_inserted == 3
+        row = in_memory_duckdb.execute(
+            "SELECT COUNT(*) FROM raw_map_alias_files"
+        ).fetchone()
         assert row is not None
-        assert row[0] == 2
-        con.close()
+        assert row[0] == 3
 
-    def test_no_translation_files_warns(self, tmp_path: Path, caplog) -> None:
+        row = in_memory_duckdb.execute(
+            "SELECT COUNT(DISTINCT tournament_dir) FROM raw_map_alias_files"
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 3
+
+        row = in_memory_duckdb.execute(
+            "SELECT COUNT(DISTINCT byte_sha1) FROM raw_map_alias_files"
+        ).fetchone()
+        assert row is not None
+        assert row[0] >= 1
+
+    def test_ingest_map_alias_files_preserves_raw_json_bytes(
+        self, tmp_path: Path, in_memory_duckdb: duckdb.DuckDBPyConnection
+    ) -> None:
         """
-        Scenario: Missing translation files logs a warning and creates no table.
-        Preconditions: Empty replays directory with no mapping JSON files.
-        Assertions: Warning logged; map_translation table does not exist.
+        Scenario: One tournament dir with known JSON content.
+        Preconditions: Alias JSON file with known exact text.
+        Assertions: raw_json column matches original file text byte-for-byte.
         """
-        source = tmp_path / "replays"
-        source.mkdir()
+        raw_dir = tmp_path / "raw"
+        known_content = '{"AlphaKR": "Alpha LE", "BetaKR": "Beta LE"}'
+        self._make_alias_file(raw_dir / "2024_GSL_S1", known_content)
 
-        con = duckdb.connect(":memory:")
-        with patch("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", source), \
-             caplog.at_level(logging.WARNING):
-            load_map_translations(con)
+        ingest_map_alias_files(in_memory_duckdb, raw_dir)
 
-        assert "No map translation dictionaries found" in caplog.text
-        # Table should NOT exist
-        tables = con.execute(
-            "SELECT table_name FROM information_schema.tables "
-            "WHERE table_name = 'map_translation'"
-        ).fetchall()
-        assert len(tables) == 0
-        con.close()
+        row = in_memory_duckdb.execute(
+            "SELECT raw_json FROM raw_map_alias_files"
+        ).fetchone()
+        assert row is not None
+        assert row[0] == known_content
+
+    def test_ingest_map_alias_files_raises_on_empty_root(
+        self, tmp_path: Path, in_memory_duckdb: duckdb.DuckDBPyConnection
+    ) -> None:
+        """
+        Scenario: Empty tmp_path with no alias files.
+        Preconditions: tmp_path contains no map_foreign_to_english_mapping.json.
+        Assertions: ValueError is raised.
+        """
+        raw_dir = tmp_path / "empty_raw"
+        raw_dir.mkdir()
+
+        with pytest.raises(ValueError):
+            ingest_map_alias_files(in_memory_duckdb, raw_dir)
 
 
 class TestCollectPendingFiles:
@@ -756,27 +793,6 @@ class TestRunInGameExtraction:
 # ── Exception-path coverage ──────────────────────────────────────────────────
 
 
-class TestLoadMapTranslationsExceptionPath:
-    """Test the exception-handling branch in load_map_translations."""
-
-    def test_corrupt_json_file_logs_error(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        """When a translation file contains invalid JSON, an error must be logged."""
-        monkeypatch.setattr("rts_predict.sc2.data.ingestion.REPLAYS_SOURCE_DIR", tmp_path)
-
-        # Write a valid translation file and one corrupt file
-        (tmp_path / "map_foreign_to_english_mapping.json").write_text(
-            json.dumps({"MapA": "Map A English"})
-        )
-        (tmp_path / "bad_map_foreign_to_english_mapping.json").write_text("NOT_JSON{{")
-
-        con = duckdb.connect(":memory:")
-        with caplog.at_level(logging.ERROR):
-            load_map_translations(con)
-        con.close()
-
-        assert any("Error reading" in msg for msg in caplog.messages)
 
 
 class TestAuditRawDataAvailabilityExceptionPath:

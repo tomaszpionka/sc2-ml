@@ -42,6 +42,14 @@ def duckdb_con() -> Generator[duckdb.DuckDBPyConnection, None, None]:
 
 
 @pytest.fixture()
+def in_memory_duckdb() -> Generator[duckdb.DuckDBPyConnection, None, None]:
+    """Fresh in-memory DuckDB connection for ingest_map_alias_files tests."""
+    con = duckdb.connect(":memory:")
+    yield con
+    con.close()
+
+
+@pytest.fixture()
 def matches_flat_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
     """DuckDB connection with a synthetic ``matches_flat`` view populated.
 
@@ -163,10 +171,10 @@ def _build_toon_player_desc_map(
 
 @pytest.fixture()
 def raw_table_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConnection:
-    """DuckDB connection with a synthetic ``raw`` table and ``map_translation`` table.
+    """DuckDB connection with a synthetic ``raw`` table.
 
     Creates 5 matches mimicking the structure produced by ``move_data_to_duck_db``,
-    suitable for testing ``create_ml_views()``.
+    suitable for testing view-creation helpers in processing.py.
     """
     matches = [
         ("GSL_S1", "Alpha", "Beta", "Terr", "Prot", "Win", "Altitude LE"),
@@ -212,11 +220,5 @@ def raw_table_con(duckdb_con: duckdb.DuckDBPyConnection) -> duckdb.DuckDBPyConne
             "ToonPlayerDescMap"::JSON AS "ToonPlayerDescMap"
         FROM raw
     """)
-
-    # Add a map translation so we can test foreign name resolution
-    map_df = pd.DataFrame([  # noqa: F841 — referenced by DuckDB SQL below
-        {"foreign_name": "MapKorean", "english_name": "Map English LE"},
-    ])
-    duckdb_con.execute("CREATE TABLE map_translation AS SELECT * FROM map_df")
 
     return duckdb_con

@@ -11,12 +11,13 @@ if TYPE_CHECKING:
 
 from rts_predict.common.db import DuckDBClient
 from rts_predict.common.db_cli import add_db_subparser, handle_db_command
-from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET
-from rts_predict.sc2.data.ingestion import load_map_translations, move_data_to_duck_db
-from rts_predict.sc2.data.processing import (
-    assign_series_ids,
-    create_ml_views,
-    create_raw_enriched_view,
+from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET, REPLAYS_SOURCE_DIR
+from rts_predict.sc2.data.ingestion import (
+    ingest_map_alias_files,
+    move_data_to_duck_db,
+    load_tracker_events_to_duckdb,
+    load_game_events_to_duckdb,
+    load_in_game_data_to_duckdb
 )
 
 logger = logging.getLogger("SC2_Pipeline")
@@ -39,21 +40,34 @@ def setup_logging() -> None:
 
 
 def init_database(con: duckdb.DuckDBPyConnection, *, should_drop: bool = False) -> None:
-    """Run the full Path A data pipeline: ingest → views → series → split.
+    """Ingest all Phase 0 raw data into DuckDB.
+
+    Produces the following raw tables (no ML views, no derived cleaning):
+
+    - ``raw`` — one row per SC2Replay JSON file (header/metadata fields).
+    - ``raw_map_alias_files`` — verbatim map alias JSON keyed by tournament_dir.
+    - ``tracker_events_raw`` — tracker events ingested from Parquet sources.
+    - ``game_events_raw`` — game events ingested from Parquet sources.
+    - ``match_player_map`` and ``player_stats`` — in-game player data from
+      Parquet sources (via ``load_in_game_data_to_duckdb``).
+
+    ML views (``flat_players``, ``matches_flat``) are intentionally NOT created
+    here. They depend on cleaning rules and race normalisation established in
+    Phase 1/2.
 
     Parameters
     ----------
     con : duckdb.DuckDBPyConnection
         Open connection to the target DuckDB database.
     should_drop : bool
-        If True, drop and recreate the raw table from scratch.
+        If True, drop and recreate the ``raw`` table from scratch.
     """
-    logger.info("=== Initializing database (Path A) ===")
+    logger.info("=== Initializing database (raw tables only) ===")
     move_data_to_duck_db(con, should_drop=should_drop)
-    create_raw_enriched_view(con)
-    load_map_translations(con)
-    create_ml_views(con)
-    assign_series_ids(con)
+    ingest_map_alias_files(con, REPLAYS_SOURCE_DIR)
+    load_tracker_events_to_duckdb(con)
+    load_game_events_to_duckdb(con)
+    load_in_game_data_to_duckdb(con)
     logger.info("=== Database initialization complete ===")
 
 

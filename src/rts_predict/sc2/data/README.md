@@ -37,7 +37,7 @@ Flat JSON dictionary mapping **1,488 localized SC2 map names** to **215 canonica
 
 **Language coverage:** English, Korean, Chinese (Simplified + Traditional), Russian, Spanish, French, German, Portuguese, Polish, Italian.
 
-**Pipeline usage:** `load_map_translations()` in `ingestion.py` scans all `*map_foreign_to_english_mapping.json` files under the replays source directory, merges them into DuckDB's `map_translation` table. The `flat_players` view in `processing.py` LEFT JOINs this table to normalize `metadata.mapName` → canonical English name. This ensures map-based features (map area, spawn distance, future map-race winrate features) are computed over consistent map identities regardless of replay client language.
+**Pipeline usage:** `ingest_map_alias_files()` in `ingestion.py` walks all per-tournament `map_foreign_to_english_mapping.json` files under the replays source directory and stores them verbatim in the `raw_map_alias_files` table — one row per file, with SHA1 checksum. Downstream Phase 1 work parses the JSON via DuckDB json_extract / ->> operators to normalise map names.
 
 ---
 
@@ -160,43 +160,13 @@ See Stage 1 table for types — only `messageEvents`, `gameEvents`, and `tracker
 
 ---
 
-## Stage 3: `flat_players` DuckDB View
+## Stage 3: `flat_players` and `matches_flat` DuckDB Views
 
-One row per player per match. Created by `create_ml_views()` in `processing.py`.
+These views are **not created in Phase 0**. Map-name resolution and race normalisation
+depend on cleaning rules established in Phase 1/2. The `raw_map_alias_files` table
+(one row per alias file) provides the raw JSON for Phase 1 to parse.
 
-| Column | Type | Source |
-|--------|------|--------|
-| `match_id` | VARCHAR | `raw.filename` |
-| `tournament_name` | VARCHAR | Extracted from filepath (3rd-to-last segment) |
-| `match_time` | TIMESTAMP | `details.timeUTC` |
-| `game_loops` | INTEGER | `header.elapsedGameLoops` |
-| `map_size_x` | INTEGER | `initData.gameDescription.mapSizeX` |
-| `map_size_y` | INTEGER | `initData.gameDescription.mapSizeY` |
-| `data_build` | VARCHAR | `metadata.dataBuild` |
-| `map_name` | VARCHAR | `metadata.mapName` (translated to English via `map_translation` table) |
-| `player_name` | VARCHAR | `ToonPlayerDescMap[*].nickname` (lowercased) |
-| `race` | VARCHAR | `ToonPlayerDescMap[*].race` (normalized: `Terran`, `Protoss`, `Zerg`) |
-| `startLocX` | INTEGER | `ToonPlayerDescMap[*].startLocX` |
-| `startLocY` | INTEGER | `ToonPlayerDescMap[*].startLocY` |
-| `apm` | INTEGER | `ToonPlayerDescMap[*].APM` |
-| `sq` | INTEGER | `ToonPlayerDescMap[*].SQ` (Spending Quotient) |
-| `supply_capped_pct` | INTEGER | `ToonPlayerDescMap[*].supplyCappedPercent` |
-| `is_in_clan` | BOOLEAN | `ToonPlayerDescMap[*].isInClan` |
-| `result` | VARCHAR | `Win` or `Loss` only (casters/observers excluded) |
-
----
-
-## Stage 4: `matches_flat` DuckDB View
-
-Two rows per unique match (one per player perspective). Created by self-joining `flat_players` on `match_id`.
-
-| Column Group | Columns |
-|-------------|---------|
-| **Match-level** | `match_id`, `match_time`, `tournament_name`, `game_loops`, `map_size_x`, `map_size_y`, `data_build`, `map_name` |
-| **Player 1 (perspective)** | `p1_name`, `p1_race`, `p1_startLocX`, `p1_startLocY`, `p1_apm`, `p1_sq`, `p1_supply_capped_pct`, `p1_is_in_clan`, `p1_result` |
-| **Player 2 (opponent)** | `p2_name`, `p2_race`, `p2_startLocX`, `p2_startLocY`, `p2_apm`, `p2_sq`, `p2_supply_capped_pct`, `p2_is_in_clan` |
-
-> `p1_result` is the only result column — p2's result is always the inverse.
+The view schema will be documented here once Phase 2 (player identity resolution) is complete.
 
 ---
 

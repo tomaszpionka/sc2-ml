@@ -41,32 +41,23 @@ class TestSetupLogging:
 
 
 class TestInitDatabase:
-    @patch(f"{_CLI}.assign_series_ids")
-    @patch(f"{_CLI}.create_ml_views")
-    @patch(f"{_CLI}.load_map_translations")
-    @patch(f"{_CLI}.create_raw_enriched_view")
+    @patch(f"{_CLI}.ingest_map_alias_files")
     @patch(f"{_CLI}.move_data_to_duck_db")
-    def test_calls_five_steps_in_order(
-        self, m_move, m_enrich, m_maps, m_views, m_series
+    def test_calls_two_steps_in_order(
+        self, m_move: MagicMock, m_ingest: MagicMock
     ) -> None:
-        from rts_predict.sc2.cli import init_database
+        from rts_predict.sc2.cli import REPLAYS_SOURCE_DIR, init_database
 
         con = MagicMock()
         init_database(con)
 
         m_move.assert_called_once_with(con, should_drop=False)
-        m_enrich.assert_called_once_with(con)
-        m_maps.assert_called_once_with(con)
-        m_views.assert_called_once_with(con)
-        m_series.assert_called_once_with(con)
+        m_ingest.assert_called_once_with(con, REPLAYS_SOURCE_DIR)
 
-    @patch(f"{_CLI}.assign_series_ids")
-    @patch(f"{_CLI}.create_ml_views")
-    @patch(f"{_CLI}.load_map_translations")
-    @patch(f"{_CLI}.create_raw_enriched_view")
+    @patch(f"{_CLI}.ingest_map_alias_files")
     @patch(f"{_CLI}.move_data_to_duck_db")
     def test_should_drop_forwarded(
-        self, m_move, m_enrich, m_maps, m_views, m_series
+        self, m_move: MagicMock, m_ingest: MagicMock
     ) -> None:
         from rts_predict.sc2.cli import init_database
 

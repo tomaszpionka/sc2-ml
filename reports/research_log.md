@@ -13,6 +13,56 @@ Reverse chronological entries.
 
 ---
 
+## 2026-04-08 — [PHASE 0 / Step 0.9] Map alias file ingestion — raw_map_alias_files table
+
+**Category:** A (science)
+**Branch:** `feat/phase0-map-alias-ingestion`
+**Dataset:** sc2egset
+**Artifacts produced:**
+- `sandbox/sc2/sc2egset/00_99_post_rebuild_verification.ipynb` (executed notebook)
+- `sandbox/sc2/sc2egset/00_99_post_rebuild_verification.py` (jupytext source)
+- `src/rts_predict/sc2/reports/sc2egset/artifacts/00_99_post_rebuild_verification.md` (report)
+
+### What
+
+Replaced the old `load_map_translations()` / `map_translation` table design with
+`ingest_map_alias_files()` / `raw_map_alias_files` table. The old approach merged
+all per-tournament alias JSON files via `dict.update()` (filesystem-order-dependent)
+and stored flat triplets (tournament_dir, foreign_name, english_name). The new
+approach stores one row per alias file, with the raw JSON verbatim plus SHA1
+checksum, `n_bytes`, and `ingested_at`. Downstream Phase 1 work will parse the JSON
+via DuckDB json_extract / ->> operators.
+
+Also deleted `create_ml_views()` and `_MATCHES_VIEW_QUERY` from `processing.py`
+and removed `validate_map_translation_coverage()` from `audit.py`. After this PR,
+`poetry run sc2 init` produces two raw tables only: `raw` and `raw_map_alias_files`.
+ML views (`flat_players`, `matches_flat`) are deferred to Phase 1/2 once cleaning
+rules and race normalisation are established.
+
+### Architectural change: ML views removed from Phase 0
+
+**What was removed:** `create_ml_views()` and `_MATCHES_VIEW_QUERY` from
+`processing.py`; the corresponding call and imports in `cli.py`.
+
+**Why:** These views depended on `map_translation` (now superseded) and applied
+race normalisation and map name translation — cleaning decisions that belong to
+Phase 1/2, not Phase 0 ingestion.
+
+**Where the replacement will live:** Phase 2 (player identity resolution) will
+establish canonical player/race references; Phase 3 (games table construction)
+will rebuild `flat_players` and `matches_flat` with correct cleaning rules.
+
+**Developer/notebook impact:** Any notebook or script that previously called
+`create_ml_views(con)` or queried `flat_players`/`matches_flat` must be updated
+in Phase 2/3. The `raw_enriched` view (adds `tournament_dir`, `replay_id`) is
+still created by `create_raw_enriched_view(con)` and remains available.
+
+### Verification report
+
+`src/rts_predict/sc2/reports/sc2egset/artifacts/00_99_post_rebuild_verification.md`
+
+---
+
 ## 2026-04-08 — [PHASE 1 / Step 1.8] SC2 game settings and replay field completeness audit (notebook re-run)
 
 **Category:** A (science)
