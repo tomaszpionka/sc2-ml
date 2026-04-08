@@ -33,7 +33,7 @@ Phase 0 was rebuilt after replacing the silent-merge `map_translation` table wit
    1      file_path   VARCHAR     True       None False
    2      byte_sha1   VARCHAR     True       None False
    3        n_bytes    BIGINT     True       None False
-   4       raw_json   VARCHAR     True       None False
+   4       raw_json      JSON     True       None False
    5    ingested_at TIMESTAMP     True       None False
 ```
 

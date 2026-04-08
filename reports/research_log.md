@@ -13,6 +13,34 @@ Reverse chronological entries.
 
 ---
 
+## 2026-04-09 — [SPEC 1.1] raw_json JSON-type contract test + archived snapshot correction
+
+**Category:** D (bug fix / spec audit)
+**Branch:** `fix/raw-json-duckdb-type`
+**Dataset:** sc2egset
+
+### What
+
+Spec 1.1 audit of the `raw_json` column type in `raw_map_alias_files`.
+
+- **A1:** `ingestion.py` line 92 — `raw_json JSON NOT NULL` was already correct (fix predated the spec).
+- **A2:** `raw_map_alias_files.yaml` schema YAML — `raw_json.type` was already `JSON`.
+- **A3:** No live code casts `raw_json` via `::VARCHAR`; one stale `VARCHAR` reference existed only in the archived post-rebuild verification snapshot.
+- **A4:** No existing test asserted the JSON type; the contract was untested.
+
+Added `test_ingest_map_alias_files_stores_raw_json_as_duckdb_json` to `tests/rts_predict/sc2/data/test_ingestion.py`. The test calls `json_keys(raw_json)` directly — a native DuckDB JSON function that would fail on a plain VARCHAR column without an explicit CAST — and asserts the returned key set matches the written JSON content.
+
+Corrected the stale schema block in `src/rts_predict/sc2/reports/sc2egset/artifacts/00_99_post_rebuild_verification.md`, changing `raw_json   VARCHAR` to `raw_json      JSON`.
+
+### Results
+
+- 403 tests passed, 0 failed.
+- Coverage: 96.74% (above 95% threshold).
+- Ruff: clean.
+- Mypy: clean (30 source files).
+
+---
+
 ## 2026-04-09 — [STAGE 3A] Phase 0/1 artifact inventory and archive
 
 **Category:** C (chore)

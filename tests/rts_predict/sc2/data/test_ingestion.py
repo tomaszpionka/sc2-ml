@@ -744,6 +744,37 @@ class TestIngestMapAliasFiles:
                 "INSERT INTO raw_map_alias_files SELECT * FROM duplicate_df"
             )
 
+    def test_ingest_map_alias_files_stores_raw_json_as_duckdb_json(
+        self,
+        tmp_path: Path,
+        in_memory_duckdb: duckdb.DuckDBPyConnection,
+    ) -> None:
+        """raw_json column is typed JSON and is queryable via native JSON operators.
+
+        Scenario: One tournament dir with a known JSON file containing a top-level
+            'maps' key holding an object.
+        Preconditions: A single alias JSON file is ingested into raw_map_alias_files.
+        Assertions: json_keys(raw_json) returns successfully (no CAST needed) and
+            the returned key set matches the keys written to disk.
+        """
+        raw_dir = tmp_path / "raw"
+        known_json = '{"AlphaKR": "Alpha LE", "BetaKR": "Beta LE"}'
+        known_keys = {"AlphaKR", "BetaKR"}
+        self._make_alias_file(raw_dir / "2024_GSL_S1", known_json)
+
+        ingest_map_alias_files(in_memory_duckdb, raw_dir)
+
+        # json_keys() is a native DuckDB JSON function that requires a JSON-typed
+        # column — it would raise on a plain VARCHAR unless an explicit CAST is used.
+        row = in_memory_duckdb.execute(
+            "SELECT json_keys(raw_json) FROM raw_map_alias_files LIMIT 1"
+        ).fetchone()
+        assert row is not None, "Query returned no rows"
+        returned_keys = set(row[0])
+        assert returned_keys == known_keys, (
+            f"Expected JSON keys {known_keys!r}, got {returned_keys!r}"
+        )
+
 
 class TestCollectPendingFiles:
     """Test _collect_pending_files with manifest filtering."""
