@@ -5,5 +5,4 @@
 # Keep only: kernelspec (needed by Jupyter to pick the kernel) and jupytext (needed for round-trip).
 notebook_metadata_filter = "kernelspec,jupytext"
 
-[formats]
-"sandbox/" = "ipynb,py:percent"
+formats = "ipynb,py:percent"
