@@ -19,7 +19,21 @@ merged to `master`.
 
 ### Removed
 
-## [0.21.0] — 2026-04-07 (PR #N: feat/sc2-phase1-step1.8)
+## [0.22.0] — 2026-04-08 (PR #57: feat/sc2-phase1-step1.9)
+
+### Added
+- `run_tpdm_field_inventory`, `run_tpdm_key_set_constancy`, `run_toplevel_field_inventory` functions in `src/rts_predict/sc2/data/exploration.py` (Step 1.9A/B/C)
+- Step `"1.9"` registered in `run_phase_1_exploration` orchestrator (also supports sub-step IDs `"1.9A"`, `"1.9B"`, `"1.9C"`)
+- Three CSV artifacts in `src/rts_predict/sc2/reports/sc2egset/`: `01_09_tpdm_field_inventory.csv` (20 TPDM keys), `01_09_tpdm_key_set_constancy.csv` (1 variant, 100% coverage), `01_09_toplevel_field_inventory.csv` (18 column/key pairs incl. nested `initData.gameDescription`)
+- 19 new tests for Step 1.9 in `src/rts_predict/sc2/data/tests/test_exploration.py`
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.21.0] — 2026-04-07 (PR #56: feat/sc2-phase1-step1.8)
 
 ### Added
 - `src/rts_predict/sc2/reports/sc2egset/01_08_game_settings_audit.md` — full game settings and replay field completeness audit for SC2EGSet (22,390 replays, 70 tournaments): game speed, handicap, error flags, game mode flags, random race, map/lobby metadata, and version consistency sub-steps with embedded SQL and findings

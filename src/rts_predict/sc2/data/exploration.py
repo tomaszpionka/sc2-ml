@@ -11,11 +11,13 @@ import json
 import logging
 import random
 from pathlib import Path
+from typing import Any
 
 import duckdb
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+import pyarrow.parquet as pq
 
 from rts_predict.sc2.config import DATASET_REPORTS_DIR, RANDOM_SEED
 
@@ -491,6 +493,58 @@ FROM per_tournament pt
 JOIN corpus_stats cs ON pt.event_type = cs.event_type
 ORDER BY pt.event_type, pt.tournament_dir
 """
+
+# Step 1.9
+_TPDM_FIELD_INVENTORY_QUERY = """\
+SELECT DISTINCT json_key
+FROM (
+    SELECT unnest(json_keys(entry.value)) AS json_key
+    FROM raw, LATERAL json_each("ToonPlayerDescMap") AS entry
+)
+ORDER BY json_key
+"""
+
+_TPDM_KEY_SET_CONSTANCY_QUERY = """\
+WITH key_sets AS (
+    SELECT
+        filename,
+        entry.key AS toon,
+        LIST(k ORDER BY k) AS key_list
+    FROM raw, LATERAL json_each("ToonPlayerDescMap") AS entry,
+         LATERAL unnest(json_keys(entry.value)) AS t(k)
+    GROUP BY filename, entry.key
+)
+SELECT key_list, COUNT(*) AS n_slots
+FROM key_sets
+GROUP BY key_list
+ORDER BY n_slots DESC
+"""
+
+# Top-level column list for Step 1.9C
+_TOPLEVEL_COLUMNS = ("header", "initData", "details", "metadata")
+
+_TOPLEVEL_FIELD_INVENTORY_QUERY = """\
+SELECT DISTINCT json_key
+FROM (
+    SELECT unnest(json_keys({col})) AS json_key FROM raw
+)
+ORDER BY json_key
+"""
+
+# Step 1.9D/E — event_data field inventory (parameterised at call site)
+# Template: {table_name} and {sample_clause} filled by build_* functions.
+# Not defined as module constants because they are parameterised — the
+# build_* helpers return the final SQL strings, which are also written to
+# the report artifacts (Scientific Invariant #6).
+
+# Step 1.9F — high-value game event types for constancy check
+_GAME_EVENT_TYPES_FOR_CONSTANCY = (
+    "Cmd",
+    "SelectionDelta",
+    "ControlGroupUpdate",
+    "CmdUpdateTargetPoint",
+    "CmdUpdateTargetUnit",
+)
 
 # Step 1.7
 _RANKED_GAMES_PER_YEAR_QUERY = """\
@@ -1067,6 +1121,887 @@ def run_playerstats_sampling_check(
     }
 
 
+# ── Step 1.9 ────────────────────────────────────────────────────────────────
+
+
+def run_tpdm_field_inventory(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+) -> dict[str, object]:
+    """Step 1.9A — Enumerate all distinct keys in ToonPlayerDescMap player objects.
+
+    Args:
+        con: Open DuckDB connection with a ``raw`` table present.
+        output_dir: Directory for artifact CSV; defaults to DATASET_REPORTS_DIR.
+
+    Returns:
+        Dict with keys ``artifact_path``, ``row_count``, and ``fields``.
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    df = con.execute(_TPDM_FIELD_INVENTORY_QUERY).df()
+    artifact = out / "01_09_tpdm_field_inventory.csv"
+    df.to_csv(artifact, index=False)
+
+    logger.info("Step 1.9A complete — %d distinct TPDM keys found", len(df))
+    return {
+        "artifact_path": str(artifact),
+        "row_count": len(df),
+        "fields": df["json_key"].tolist(),
+    }
+
+
+def run_tpdm_key_set_constancy(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+) -> dict[str, object]:
+    """Step 1.9B — Verify key-set constancy across all player slots.
+
+    Args:
+        con: Open DuckDB connection with a ``raw`` table present.
+        output_dir: Directory for artifact CSV; defaults to DATASET_REPORTS_DIR.
+
+    Returns:
+        Dict with keys ``artifact_path``, ``row_count``, ``total_slots``,
+        ``dominant_variant_slots``, ``dominant_coverage_pct``, and
+        ``gate_pass`` (True when dominant variant covers >99% of slots).
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    df = con.execute(_TPDM_KEY_SET_CONSTANCY_QUERY).df()
+    artifact = out / "01_09_tpdm_key_set_constancy.csv"
+    df.to_csv(artifact, index=False)
+
+    total_slots: int = int(df["n_slots"].sum()) if len(df) > 0 else 0
+    dominant_slots: int = int(df["n_slots"].iloc[0]) if len(df) > 0 else 0
+    dominant_pct: float = (
+        round(100.0 * dominant_slots / total_slots, 2) if total_slots > 0 else 0.0
+    )
+    gate_pass: bool = dominant_pct > 99.0
+
+    n_variants = len(df)
+    large_variants = int((df["n_slots"] / total_slots * 100 > 5).sum()) if total_slots > 0 else 0
+    halt_predicate: bool = large_variants > 5
+
+    logger.info(
+        "Step 1.9B complete — %d key-set variants; dominant covers %.1f%% of slots; "
+        "gate_pass=%s halt=%s",
+        n_variants, dominant_pct, gate_pass, halt_predicate,
+    )
+    return {
+        "artifact_path": str(artifact),
+        "row_count": len(df),
+        "total_slots": total_slots,
+        "dominant_variant_slots": dominant_slots,
+        "dominant_coverage_pct": dominant_pct,
+        "n_variants": n_variants,
+        "halt_predicate": halt_predicate,
+        "gate_pass": gate_pass,
+    }
+
+
+def run_toplevel_field_inventory(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+) -> dict[str, object]:
+    """Step 1.9C — Enumerate all distinct keys in top-level JSON columns.
+
+    Covers ``header``, ``initData``, ``details``, and ``metadata``.  For each
+    column the top-level keys are enumerated; for nested object-valued keys one
+    additional level of keys is also captured.
+
+    Args:
+        con: Open DuckDB connection with a ``raw`` table present.
+        output_dir: Directory for artifact CSV; defaults to DATASET_REPORTS_DIR.
+
+    Returns:
+        Dict with keys ``artifact_path``, ``row_count``, and ``by_column``
+        mapping each source column to its list of keys.
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    rows: list[dict[str, str]] = []
+    by_column: dict[str, list[str]] = {}
+
+    for col in _TOPLEVEL_COLUMNS:
+        sql = _TOPLEVEL_FIELD_INVENTORY_QUERY.format(col=f'"{col}"')
+        df = con.execute(sql).df()
+        keys: list[str] = df["json_key"].tolist()
+        by_column[col] = keys
+        for k in keys:
+            rows.append({"source_column": col, "json_key": k})
+
+        # One level deeper: try each key that looks like a nested object
+        for k in keys:
+            nested_sql = f"""\
+SELECT DISTINCT json_key
+FROM (
+    SELECT unnest(json_keys("{col}"->>'$.{k}')) AS json_key
+    FROM raw
+    WHERE "{col}"->>'$.{k}' IS NOT NULL
+      AND json_type("{col}"->>'$.{k}') = 'OBJECT'
+)
+ORDER BY json_key
+"""
+            try:
+                nested_df = con.execute(nested_sql).df()
+            except Exception:  # noqa: BLE001
+                continue
+            for nk in nested_df["json_key"].tolist():
+                rows.append({"source_column": f"{col}.{k}", "json_key": nk})
+
+    result_df = pd.DataFrame(rows, columns=["source_column", "json_key"])
+    artifact = out / "01_09_toplevel_field_inventory.csv"
+    result_df.to_csv(artifact, index=False)
+
+    logger.info("Step 1.9C complete — %d total (column, key) pairs", len(result_df))
+    return {
+        "artifact_path": str(artifact),
+        "row_count": len(result_df),
+        "by_column": by_column,
+    }
+
+
+def _run_step_1_9(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+) -> dict[str, object]:
+    """Run all sub-steps for Step 1.9 (1.9A, 1.9B, 1.9C)."""
+    a = run_tpdm_field_inventory(con, output_dir)
+    b = run_tpdm_key_set_constancy(con, output_dir)
+    c = run_toplevel_field_inventory(con, output_dir)
+    return {"1.9A": a, "1.9B": b, "1.9C": c}
+
+
+# ── Step 1.9D/E — SQL builder helpers ───────────────────────────────────────
+
+
+def build_event_data_field_inventory_query(
+    table_name: str,
+    sample_size: int = 100_000,
+) -> str:
+    """Return SQL that enumerates distinct JSON keys in event_data per event type.
+
+    Uses USING SAMPLE for large tables. Suitable for both tracker_events_raw and
+    game_events_raw.
+
+    Args:
+        table_name: DuckDB table name (e.g., 'tracker_events_raw')
+        sample_size: Number of rows to sample. Use 0 for no sampling.
+
+    Returns:
+        SQL string returning columns: event_type, json_key, is_nested
+    """
+    if sample_size > 0:
+        sample_clause = f"USING SAMPLE {sample_size} ROWS"
+    else:
+        sample_clause = ""
+
+    return f"""\
+WITH sampled AS (
+    SELECT event_type, event_data
+    FROM {table_name}
+    {sample_clause}
+),
+keys_unnested AS (
+    SELECT
+        s.event_type,
+        kv.key AS json_key,
+        json_type(s.event_data::JSON->kv.key) AS val_type
+    FROM sampled s,
+         LATERAL (
+             SELECT unnest(json_keys(s.event_data::JSON)) AS key
+         ) AS kv
+    WHERE s.event_data IS NOT NULL
+)
+SELECT
+    event_type,
+    json_key,
+    CASE WHEN val_type IN ('OBJECT', 'ARRAY') THEN true ELSE false END AS is_nested
+FROM keys_unnested
+GROUP BY event_type, json_key, val_type
+ORDER BY event_type, json_key
+"""
+
+
+def build_event_data_key_constancy_query(
+    table_name: str,
+    event_type: str,
+    sample_size: int = 10_000,
+) -> str:
+    """Return SQL that measures key-set variant distribution for one event type.
+
+    Builds a list of JSON keys per row, groups by that list, and counts variants.
+
+    Args:
+        table_name: DuckDB table name
+        event_type: Value of the event_type column to filter to
+        sample_size: Number of rows per event type to sample
+
+    Returns:
+        SQL string returning columns: key_list, n_events, pct
+    """
+    if sample_size > 0:
+        sample_clause = f"USING SAMPLE {sample_size} ROWS"
+    else:
+        sample_clause = ""
+
+    return f"""\
+WITH sampled AS (
+    SELECT
+        ROW_NUMBER() OVER () AS rn,
+        event_data
+    FROM {table_name}
+    WHERE event_type = '{event_type}'
+    {sample_clause}
+),
+key_sets AS (
+    SELECT
+        s.rn,
+        LIST(kv.k ORDER BY kv.k) AS key_list
+    FROM sampled s,
+         LATERAL (SELECT unnest(json_keys(s.event_data::JSON)) AS k) AS kv
+    WHERE s.event_data IS NOT NULL
+    GROUP BY s.rn
+),
+totals AS (
+    SELECT COUNT(*) AS total FROM key_sets
+)
+SELECT
+    ks.key_list,
+    COUNT(*) AS n_events,
+    ROUND(100.0 * COUNT(*) / t.total, 2) AS pct
+FROM key_sets ks, totals t
+GROUP BY ks.key_list, t.total
+ORDER BY n_events DESC
+"""
+
+
+def build_nested_field_inventory_query(
+    table_name: str,
+    event_type: str,
+    nested_key: str,
+    sample_size: int = 100_000,
+) -> str:
+    """Return SQL enumerating keys of a nested JSON object within event_data.
+
+    Used for PlayerStats.stats sub-object and Cmd.abil / Cmd.data sub-objects.
+
+    Args:
+        table_name: DuckDB table name
+        event_type: Filter to this event type
+        nested_key: Top-level key whose value is the nested object (e.g., 'stats')
+        sample_size: Number of rows to sample
+
+    Returns:
+        SQL string returning columns: nested_key_name
+    """
+    if sample_size > 0:
+        sample_clause = f"USING SAMPLE {sample_size} ROWS"
+    else:
+        sample_clause = ""
+
+    return f"""\
+WITH sampled AS (
+    SELECT event_data
+    FROM {table_name}
+    WHERE event_type = '{event_type}'
+    {sample_clause}
+),
+nested_keys AS (
+    SELECT
+        unnest(json_keys(event_data::JSON->'{nested_key}')) AS nested_key_name
+    FROM sampled
+    WHERE event_data IS NOT NULL
+      AND json_type(event_data::JSON->'{nested_key}') = 'OBJECT'
+)
+SELECT DISTINCT nested_key_name
+FROM nested_keys
+ORDER BY nested_key_name
+"""
+
+
+# ── Step 1.9D — Tracker event_data field inventory ──────────────────────────
+
+
+def run_tracker_event_data_inventory(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+    sample_size: int = 100_000,
+) -> dict[str, Any]:
+    """Step 1.9D — Enumerate event_data JSON fields for all tracker event types.
+
+    Runs three sub-queries:
+    (i) Per-event-type JSON key inventory with is_nested flag.
+    (ii) Key-set constancy for every distinct event type.
+    (iii) PlayerStats.stats nested field inventory.
+
+    Args:
+        con: Open DuckDB connection with tracker_events_raw present.
+        output_dir: Report directory; defaults to DATASET_REPORTS_DIR.
+        sample_size: Rows to SAMPLE for the key inventory query.
+
+    Returns:
+        Dict with artifact paths, constancy results, and gate_pass flag.
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    # ── 1.9D-i: per-event-type key inventory ────────────────────────────────
+    sql_inventory = build_event_data_field_inventory_query(
+        "tracker_events_raw", sample_size=sample_size
+    )
+    inventory_df = con.execute(sql_inventory).df()
+    artifact_inventory = out / "01_09D_tracker_event_data_field_inventory.csv"
+    inventory_df.to_csv(artifact_inventory, index=False)
+    logger.info(
+        "1.9D-i: %d (event_type, json_key) pairs written to %s",
+        len(inventory_df),
+        artifact_inventory.name,
+    )
+
+    # ── 1.9D-ii: key-set constancy per event type ────────────────────────────
+    event_types: list[str] = inventory_df["event_type"].unique().tolist()
+    constancy_rows: list[dict[str, Any]] = []
+    gate_violations: list[str] = []
+
+    for et in event_types:
+        sql_constancy = build_event_data_key_constancy_query(
+            "tracker_events_raw", et, sample_size=10_000
+        )
+        cdf = con.execute(sql_constancy).df()
+        if len(cdf) == 0:
+            continue
+        dominant_pct = float(cdf["pct"].iloc[0])
+        for _, row in cdf.iterrows():
+            constancy_rows.append({
+                "event_type": et,
+                "key_list": str(row["key_list"]),
+                "n_events": int(row["n_events"]),
+                "pct": float(row["pct"]),
+            })
+        if dominant_pct <= 99.0:
+            gate_violations.append(
+                f"WARN: tracker/{et} dominant variant={dominant_pct:.1f}% (<= 99%)"
+            )
+            logger.warning(
+                "1.9D gate: %s dominant variant=%.1f%% — below 99%% threshold",
+                et, dominant_pct,
+            )
+
+    constancy_df = pd.DataFrame(constancy_rows)
+    artifact_constancy = out / "01_09D_tracker_event_data_key_constancy.csv"
+    constancy_df.to_csv(artifact_constancy, index=False)
+    logger.info(
+        "1.9D-ii: key-constancy written for %d event types", len(event_types)
+    )
+
+    # ── 1.9D-iii: PlayerStats.stats nested fields ────────────────────────────
+    sql_nested = build_nested_field_inventory_query(
+        "tracker_events_raw", "PlayerStats", "stats", sample_size=sample_size
+    )
+    nested_df = con.execute(sql_nested).df()
+    artifact_nested = out / "01_09D_playerstats_stats_field_inventory.csv"
+    nested_df.to_csv(artifact_nested, index=False)
+    logger.info(
+        "1.9D-iii: %d PlayerStats.stats keys found", len(nested_df)
+    )
+
+    gate_pass = len(gate_violations) == 0
+    for msg in gate_violations:
+        logger.warning(msg)
+
+    return {
+        "artifact_inventory": str(artifact_inventory),
+        "artifact_constancy": str(artifact_constancy),
+        "artifact_nested": str(artifact_nested),
+        "event_types": event_types,
+        "gate_pass": gate_pass,
+        "gate_violations": gate_violations,
+        "inventory_df": inventory_df,
+        "constancy_df": constancy_df,
+    }
+
+
+# ── Step 1.9E — Game event_data field inventory ──────────────────────────────
+
+
+def run_game_event_data_inventory(
+    con: duckdb.DuckDBPyConnection,
+    output_dir: Path | None = None,
+    sample_size: int = 200_000,
+) -> dict[str, Any]:
+    """Step 1.9E — Enumerate event_data JSON fields for high-value game event types.
+
+    Runs three sub-queries:
+    (i) Per-event-type JSON key inventory with is_nested flag.
+    (ii) Nested sub-object enumerations for Cmd.abil, Cmd.data, SelectionDelta.delta.
+    (iii) Key-set constancy for 5 high-value types.
+
+    Args:
+        con: Open DuckDB connection with game_events_raw present.
+        output_dir: Report directory; defaults to DATASET_REPORTS_DIR.
+        sample_size: Rows to SAMPLE for the key inventory query.
+
+    Returns:
+        Dict with artifact paths, constancy results, and gate_pass flag.
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    # ── 1.9E-i: per-event-type key inventory ────────────────────────────────
+    sql_inventory = build_event_data_field_inventory_query(
+        "game_events_raw", sample_size=sample_size
+    )
+    inventory_df = con.execute(sql_inventory).df()
+
+    # ── 1.9E-ii: nested sub-object enumerations ─────────────────────────────
+    nested_specs = [
+        ("Cmd", "abil"),
+        ("Cmd", "data"),
+        ("SelectionDelta", "delta"),
+    ]
+    nested_rows: list[dict[str, Any]] = []
+    for et, nk in nested_specs:
+        sql_nested = build_nested_field_inventory_query(
+            "game_events_raw", et, nk, sample_size=sample_size
+        )
+        try:
+            ndf = con.execute(sql_nested).df()
+            for nested_key_name in ndf["nested_key_name"].tolist():
+                nested_rows.append({
+                    "event_type": et,
+                    "json_key": f"{nk}.{nested_key_name}",
+                    "is_nested": False,
+                })
+            logger.info(
+                "1.9E-ii: %s.%s has %d sub-keys", et, nk, len(ndf)
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("1.9E-ii: %s.%s enumeration failed: %s", et, nk, exc)
+
+    if nested_rows:
+        nested_supplement_df = pd.DataFrame(nested_rows)
+        inventory_df = pd.concat(
+            [inventory_df, nested_supplement_df], ignore_index=True
+        )
+
+    artifact_inventory = out / "01_09E_game_event_data_field_inventory.csv"
+    inventory_df.to_csv(artifact_inventory, index=False)
+    logger.info(
+        "1.9E-i/ii: %d rows (including nested supplements) written to %s",
+        len(inventory_df),
+        artifact_inventory.name,
+    )
+
+    # ── 1.9E-iii: key-set constancy for 5 high-value types ──────────────────
+    constancy_rows: list[dict[str, Any]] = []
+    gate_violations: list[str] = []
+
+    for et in _GAME_EVENT_TYPES_FOR_CONSTANCY:
+        sql_constancy = build_event_data_key_constancy_query(
+            "game_events_raw", et, sample_size=10_000
+        )
+        try:
+            cdf = con.execute(sql_constancy).df()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("1.9E constancy query failed for %s: %s", et, exc)
+            continue
+        if len(cdf) == 0:
+            continue
+        dominant_pct = float(cdf["pct"].iloc[0])
+        for _, row in cdf.iterrows():
+            constancy_rows.append({
+                "event_type": et,
+                "key_list": str(row["key_list"]),
+                "n_events": int(row["n_events"]),
+                "pct": float(row["pct"]),
+            })
+        if dominant_pct <= 95.0:
+            gate_violations.append(
+                f"WARN: game/{et} dominant variant={dominant_pct:.1f}% (<= 95%)"
+            )
+            logger.warning(
+                "1.9E gate: %s dominant variant=%.1f%% — below 95%% threshold",
+                et, dominant_pct,
+            )
+
+    constancy_df = pd.DataFrame(constancy_rows)
+    artifact_constancy = out / "01_09E_game_event_data_key_constancy.csv"
+    constancy_df.to_csv(artifact_constancy, index=False)
+    logger.info(
+        "1.9E-iii: key-constancy written for %d high-value event types",
+        len(_GAME_EVENT_TYPES_FOR_CONSTANCY),
+    )
+
+    gate_pass = len(gate_violations) == 0
+    for msg in gate_violations:
+        logger.warning(msg)
+
+    return {
+        "artifact_inventory": str(artifact_inventory),
+        "artifact_constancy": str(artifact_constancy),
+        "gate_pass": gate_pass,
+        "gate_violations": gate_violations,
+        "inventory_df": inventory_df,
+        "constancy_df": constancy_df,
+    }
+
+
+# ── Step 1.9F — Parquet↔DuckDB reconciliation + schema doc ─────────────────
+
+
+def verify_parquet_duckdb_schema_consistency(
+    staging_dir: Path,
+    db_path: Path,
+    table_name: str,
+    batch_prefix: str,
+    n_batches: int = 5,
+) -> dict[str, Any]:
+    """Compare a random sample of Parquet batch schemas with the DuckDB table.
+
+    Checks column names, column types, and column order for n_batches randomly
+    selected Parquet files from staging_dir matching batch_prefix*.parquet.
+
+    Args:
+        staging_dir: Directory containing batch Parquet files.
+        db_path: Path to db.duckdb.
+        table_name: DuckDB table name (e.g., 'tracker_events_raw').
+        batch_prefix: Filename prefix (e.g., 'tracker_events_batch_').
+        n_batches: Number of random batches to check.
+
+    Returns:
+        Dict with keys: parquet_schema, duckdb_schema, mismatches,
+        n_batches_checked.
+    """
+    parquet_files = sorted(staging_dir.glob(f"{batch_prefix}*.parquet"))
+    if not parquet_files:
+        logger.warning(
+            "verify_parquet_duckdb_schema_consistency: no files matching %s*.parquet in %s",
+            batch_prefix, staging_dir,
+        )
+        return {
+            "parquet_schema": [],
+            "duckdb_schema": [],
+            "mismatches": [],
+            "n_batches_checked": 0,
+        }
+
+    rng = random.Random(RANDOM_SEED)
+    selected = rng.sample(parquet_files, min(n_batches, len(parquet_files)))
+
+    # Read DuckDB schema
+    con_verify = duckdb.connect(str(db_path), read_only=True)
+    duckdb_cols: list[dict[str, str]] = []
+    try:
+        schema_df = con_verify.execute(f"DESCRIBE {table_name}").df()
+        duckdb_cols = [
+            {"name": row["column_name"], "type": row["column_type"]}
+            for _, row in schema_df.iterrows()
+        ]
+    finally:
+        con_verify.close()
+
+    duckdb_names = [c["name"] for c in duckdb_cols]
+
+    # Read Parquet schemas and compare
+    mismatches: list[dict[str, Any]] = []
+    parquet_schema_repr: list[str] = []
+
+    for pf in selected:
+        pq_schema = pq.read_schema(pf)
+        pq_names = pq_schema.names
+        if not parquet_schema_repr:
+            parquet_schema_repr = [
+                f"{pq_schema.field(n).name}:{pq_schema.field(n).type}" for n in pq_names
+            ]
+
+        # Check column names (order-independent)
+        missing_in_parquet = set(duckdb_names) - set(pq_names)
+        extra_in_parquet = set(pq_names) - set(duckdb_names)
+
+        if missing_in_parquet or extra_in_parquet:
+            mismatches.append({
+                "file": pf.name,
+                "missing_in_parquet": sorted(missing_in_parquet),
+                "extra_in_parquet": sorted(extra_in_parquet),
+            })
+
+    logger.info(
+        "verify_parquet_duckdb_schema_consistency: %s — checked %d batches, %d mismatches",
+        table_name, len(selected), len(mismatches),
+    )
+
+    return {
+        "parquet_schema": parquet_schema_repr,
+        "duckdb_schema": [f"{c['name']}:{c['type']}" for c in duckdb_cols],
+        "mismatches": mismatches,
+        "n_batches_checked": len(selected),
+    }
+
+
+def compile_event_schema_document(
+    tracker_inventory: pd.DataFrame,
+    game_inventory: pd.DataFrame,
+    tracker_constancy: pd.DataFrame,
+    game_constancy: pd.DataFrame,
+) -> str:
+    """Compile a markdown event_data schema reference from 1.9D/1.9E findings.
+
+    For each event type documents: JSON key list, inferred data type, null/missing
+    rate estimate, and intended Phase 4 usage.
+
+    Args:
+        tracker_inventory: DataFrame with columns event_type, json_key, is_nested.
+        game_inventory: DataFrame with columns event_type, json_key, is_nested.
+        tracker_constancy: DataFrame with columns event_type, key_list, n_events, pct.
+        game_constancy: DataFrame with columns event_type, key_list, n_events, pct.
+
+    Returns:
+        Markdown string — written to 01_09F_event_schema_reference.md
+    """
+    lines: list[str] = [
+        "# Event Data Schema Reference",
+        "",
+        "Generated from Steps 1.9D and 1.9E field inventory results.",
+        "Each section lists JSON keys found in `event_data` for that event type,",
+        "the dominant key-set variant coverage, and intended Phase 4 usage.",
+        "",
+    ]
+
+    # ── Tracker events ───────────────────────────────────────────────────────
+    lines.extend(["## Tracker Events (`tracker_events_raw`)", ""])
+
+    tracker_types = (
+        tracker_inventory["event_type"].unique().tolist()
+        if len(tracker_inventory) > 0
+        else []
+    )
+    tracker_constancy_map: dict[str, float] = {}
+    if len(tracker_constancy) > 0:
+        for et, grp in tracker_constancy.groupby("event_type"):
+            tracker_constancy_map[str(et)] = float(grp["pct"].max())
+
+    for et in sorted(tracker_types):
+        keys_df = tracker_inventory[tracker_inventory["event_type"] == et]
+        keys = keys_df["json_key"].tolist()
+        nested_keys = keys_df[keys_df["is_nested"] == True]["json_key"].tolist()  # noqa: E712
+        dominant_pct = tracker_constancy_map.get(et, float("nan"))
+
+        lines.extend([
+            f"### {et}",
+            "",
+            f"- **Dominant key-set coverage**: {dominant_pct:.1f}%"
+            if not pd.isna(dominant_pct) else "- **Dominant key-set coverage**: N/A",
+            f"- **JSON keys** ({len(keys)} total): "
+            + ", ".join(f"`{k}`" for k in sorted(keys)),
+        ])
+        if nested_keys:
+            lines.append(
+                "- **Nested keys**: "
+                + ", ".join(f"`{k}`" for k in sorted(nested_keys))
+            )
+        lines.extend(["- **Phase 4 usage**: TBD", ""])
+
+    # ── Game events ──────────────────────────────────────────────────────────
+    lines.extend(["## High-Value Game Events (`game_events_raw`)", ""])
+
+    game_constancy_map: dict[str, float] = {}
+    if len(game_constancy) > 0:
+        for et, grp in game_constancy.groupby("event_type"):
+            game_constancy_map[str(et)] = float(grp["pct"].max())
+
+    for et in sorted(_GAME_EVENT_TYPES_FOR_CONSTANCY):
+        keys_df = game_inventory[game_inventory["event_type"] == et]
+        keys = keys_df["json_key"].tolist()
+        nested_keys = keys_df[keys_df["is_nested"] == True]["json_key"].tolist()  # noqa: E712
+        dominant_pct = game_constancy_map.get(et, float("nan"))
+
+        lines.extend([
+            f"### {et}",
+            "",
+            f"- **Dominant key-set coverage**: {dominant_pct:.1f}%"
+            if not pd.isna(dominant_pct) else "- **Dominant key-set coverage**: N/A",
+            f"- **JSON keys** ({len(keys)} total): "
+            + ", ".join(f"`{k}`" for k in sorted(keys)),
+        ])
+        if nested_keys:
+            lines.append(
+                "- **Nested keys**: "
+                + ", ".join(f"`{k}`" for k in sorted(nested_keys))
+            )
+        lines.extend(["- **Phase 4 usage**: TBD", ""])
+
+    return "\n".join(lines)
+
+
+def run_parquet_duckdb_reconciliation(
+    output_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Step 1.9F-i — Verify Parquet↔DuckDB schema consistency for both tables.
+
+    Checks tracker_events_raw and game_events_raw batch Parquet files against
+    the live DuckDB schema.
+
+    Args:
+        output_dir: Report directory; defaults to DATASET_REPORTS_DIR.
+
+    Returns:
+        Dict with per-table reconciliation results and overall gate_pass.
+    """
+    from rts_predict.sc2.config import DB_FILE, IN_GAME_PARQUET_DIR
+
+    out = output_dir or DATASET_REPORTS_DIR
+    out.mkdir(parents=True, exist_ok=True)
+
+    tracker_result = verify_parquet_duckdb_schema_consistency(
+        staging_dir=IN_GAME_PARQUET_DIR,
+        db_path=DB_FILE,
+        table_name="tracker_events_raw",
+        batch_prefix="tracker_events_batch_",
+        n_batches=5,
+    )
+    game_result = verify_parquet_duckdb_schema_consistency(
+        staging_dir=IN_GAME_PARQUET_DIR,
+        db_path=DB_FILE,
+        table_name="game_events_raw",
+        batch_prefix="game_events_batch_",
+        n_batches=5,
+    )
+
+    all_mismatches = tracker_result["mismatches"] + game_result["mismatches"]
+    gate_pass = len(all_mismatches) == 0
+
+    # Write markdown report
+    lines = [
+        "# Parquet↔DuckDB Schema Reconciliation (Step 1.9F-i)",
+        "",
+        "## tracker_events_raw",
+        "",
+        f"Batches checked: {tracker_result['n_batches_checked']}",
+        "",
+        "**Parquet schema:**",
+        "",
+    ]
+    for col in tracker_result["parquet_schema"]:
+        lines.append(f"- `{col}`")
+    lines.extend([
+        "",
+        "**DuckDB schema:**",
+        "",
+    ])
+    for col in tracker_result["duckdb_schema"]:
+        lines.append(f"- `{col}`")
+    if tracker_result["mismatches"]:
+        lines.extend(["", "**MISMATCHES FOUND:**", ""])
+        for m in tracker_result["mismatches"]:
+            lines.append(f"- {m}")
+    else:
+        lines.extend(["", "**No mismatches — schemas are consistent.**", ""])
+
+    lines.extend([
+        "## game_events_raw",
+        "",
+        f"Batches checked: {game_result['n_batches_checked']}",
+        "",
+        "**Parquet schema:**",
+        "",
+    ])
+    for col in game_result["parquet_schema"]:
+        lines.append(f"- `{col}`")
+    lines.extend([
+        "",
+        "**DuckDB schema:**",
+        "",
+    ])
+    for col in game_result["duckdb_schema"]:
+        lines.append(f"- `{col}`")
+    if game_result["mismatches"]:
+        lines.extend(["", "**MISMATCHES FOUND:**", ""])
+        for m in game_result["mismatches"]:
+            lines.append(f"- {m}")
+    else:
+        lines.extend(["", "**No mismatches — schemas are consistent.**", ""])
+
+    lines.extend([
+        f"## Gate: {'PASS' if gate_pass else 'FAIL'}",
+        "",
+        f"Total mismatches across both tables: {len(all_mismatches)}",
+        "",
+    ])
+
+    artifact = out / "01_09F_parquet_duckdb_schema_reconciliation.md"
+    artifact.write_text("\n".join(lines))
+    logger.info("1.9F-i: reconciliation report written — gate_pass=%s", gate_pass)
+
+    return {
+        "tracker": tracker_result,
+        "game": game_result,
+        "gate_pass": gate_pass,
+        "artifact": str(artifact),
+    }
+
+
+def run_event_schema_document(
+    output_dir: Path | None = None,
+    tracker_sample_size: int = 100_000,
+    game_sample_size: int = 200_000,
+) -> dict[str, Any]:
+    """Step 1.9F-ii — Load 1.9D/1.9E CSVs and compile the schema reference doc.
+
+    Reads the four artifact CSVs produced by 1.9D and 1.9E, compiles a markdown
+    document via compile_event_schema_document, and asserts coverage.
+
+    Args:
+        output_dir: Report directory; defaults to DATASET_REPORTS_DIR.
+        tracker_sample_size: Unused; for signature symmetry with run_* callers.
+        game_sample_size: Unused; for signature symmetry with run_* callers.
+
+    Returns:
+        Dict with artifact path and gate_pass bool.
+    """
+    out = output_dir or DATASET_REPORTS_DIR
+
+    tracker_inventory = pd.read_csv(out / "01_09D_tracker_event_data_field_inventory.csv")
+    game_inventory = pd.read_csv(out / "01_09E_game_event_data_field_inventory.csv")
+    tracker_constancy = pd.read_csv(out / "01_09D_tracker_event_data_key_constancy.csv")
+    game_constancy = pd.read_csv(out / "01_09E_game_event_data_key_constancy.csv")
+
+    md = compile_event_schema_document(
+        tracker_inventory, game_inventory, tracker_constancy, game_constancy
+    )
+
+    artifact = out / "01_09F_event_schema_reference.md"
+    artifact.write_text(md)
+
+    # Gate: all event types covered
+    tracker_types_in_doc = set(tracker_inventory["event_type"].unique())
+    game_types_in_doc = set(_GAME_EVENT_TYPES_FOR_CONSTANCY)
+    missing_tracker = [t for t in tracker_types_in_doc if t not in md]
+    missing_game = [t for t in game_types_in_doc if t not in md]
+
+    gate_pass = len(missing_tracker) == 0 and len(missing_game) == 0
+    if not gate_pass:
+        logger.warning(
+            "1.9F-ii gate FAIL — missing tracker types: %s; missing game types: %s",
+            missing_tracker, missing_game,
+        )
+
+    logger.info(
+        "1.9F-ii: schema reference written to %s — gate_pass=%s",
+        artifact.name, gate_pass,
+    )
+    return {
+        "artifact": str(artifact),
+        "gate_pass": gate_pass,
+        "missing_tracker_types": missing_tracker,
+        "missing_game_types": missing_game,
+    }
+
+
 # ── Orchestrator ────────────────────────────────────────────────────────────
 
 
@@ -1074,12 +2009,19 @@ def run_phase_1_exploration(
     con: duckdb.DuckDBPyConnection,
     steps: list[str] | None = None,
 ) -> dict[str, dict]:
-    """Run Phase 1 exploration steps in order."""
-    all_steps = ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7"]
-    run_steps = steps if steps else all_steps
-    results: dict[str, dict] = {}
+    """Run Phase 1 exploration steps in order.
 
-    step_map = {
+    Args:
+        con: Open DuckDB connection with ``raw`` and related tables present.
+        steps: Subset of step IDs to run (e.g. ``["1.1", "1.9"]``).  Supports
+            canonical IDs (``"1.9"`` runs all three sub-steps via the combined
+            wrapper) as well as individual sub-step IDs (``"1.9A"`` etc.).
+            When ``None``, all canonical steps are run.
+
+    Returns:
+        Mapping of step ID to the result dict returned by each function.
+    """
+    step_map: dict[str, tuple[str, object]] = {
         "1.1": ("Corpus summary", run_corpus_summary),
         "1.2": ("Parse quality by tournament", run_parse_quality_by_tournament),
         "1.3": ("Duration distribution", run_duration_distribution),
@@ -1087,13 +2029,25 @@ def run_phase_1_exploration(
         "1.5": ("Patch landscape", run_patch_landscape),
         "1.6": ("Event type inventory", run_event_type_inventory),
         "1.7": ("PlayerStats sampling check", run_playerstats_sampling_check),
+        "1.9A": ("TPDM field inventory", run_tpdm_field_inventory),
+        "1.9B": ("TPDM key-set constancy", run_tpdm_key_set_constancy),
+        "1.9C": ("Top-level JSON field inventory", run_toplevel_field_inventory),
+        "1.9": ("TPDM and top-level JSON field inventory", _run_step_1_9),
+        "1.9D": ("Tracker event_data field inventory", run_tracker_event_data_inventory),
+        "1.9E": ("Game event_data field inventory", run_game_event_data_inventory),
     }
 
-    for step_id in all_steps:
-        if step_id in run_steps:
-            label, func = step_map[step_id]
-            logger.info(f"=== Step {step_id}: {label} ===")
-            results[step_id] = func(con)
+    canonical_order = ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.9"]
+    run_steps: list[str] = steps if steps is not None else canonical_order
 
-    logger.info(f"Phase 1 exploration complete. Steps run: {list(results.keys())}")
+    results: dict[str, dict] = {}
+    for step_id in run_steps:
+        if step_id not in step_map:
+            logger.warning("Unknown step '%s' — skipping", step_id)
+            continue
+        label, func = step_map[step_id]
+        logger.info("=== Step %s: %s ===", step_id, label)
+        results[step_id] = func(con)  # type: ignore[operator]
+
+    logger.info("Phase 1 exploration complete. Steps run: %s", list(results.keys()))
     return results

@@ -55,14 +55,20 @@
       "Edit(pyproject.toml)"
     ],
     "deny": [
-      "Write(src/**/data/*/raw/**)",
-      "Edit(src/**/data/*/raw/**)",
-      "Bash(rm -rf *)",
-      "Bash(rm -r *)",
+      "Bash(rm *)",
       "Bash(git push*)",
+      "Bash(git commit*)",
       "Bash(git checkout -- *)",
       "Bash(git reset --hard*)",
-      "Bash(git clean*)"
+      "Bash(git clean*)",
+      "Bash(git rebase*)",
+      "Write(src/**/data/*/raw/**)",
+      "Edit(src/**/data/*/raw/**)",
+      "Read(tmp/**)",
+      "Write(tmp/**)",
+      "Edit(tmp/**)",
+      "Write(docs/thesis/**)",
+      "Edit(docs/thesis/**)"
     ]
   },
   "hooks": {

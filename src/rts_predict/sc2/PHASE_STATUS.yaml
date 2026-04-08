@@ -22,7 +22,7 @@ phases:
     name: "Corpus inventory and data exploration"
     status: in_progress
     started: "2026-04-04"
-    notes: "Steps 1.1–1.7 complete (16 artifacts). Step 1.8 pending. Steps 1.9+ added per Manual 01 gap analysis; Phase 1 gate is now the four §6.1 deliverables. See _current_plan.md for provenance."
+    notes: "Steps 1.1–1.9F complete (23 artifacts). Steps 1.9D/E/F added 2026-04-07: event_data field inventory for tracker (10 types, 80 key-pairs, 39 PlayerStats.stats sub-keys) and game (5 high-value types, 100% constancy), Parquet↔DuckDB reconciliation (0 mismatches), consolidated schema reference. UnitBorn key-set at 93.81% (known exception: optional killer fields). Steps 1.10+ required before Phase 1 gate (four §6.1 deliverables). See _current_plan.md for provenance."
   2:
     name: "Player identity resolution"
     status: not_started

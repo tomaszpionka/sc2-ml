@@ -764,6 +764,163 @@ Gate condition:
 
 ---
 
+**1.9D — Tracker `event_data` field inventory**
+
+Context: Steps 1.9A–C profiled ToonPlayerDescMap and top-level JSON columns. The
+`tracker_events_raw` table (~62M rows, 10 distinct event types) stores per-event JSON
+payloads in an `event_data VARCHAR` column. This step enumerates all JSON keys inside
+those payloads, verifies key-set constancy, and inventories the PlayerStats.stats
+nested sub-object (39 metric fields). Required before Phase 4 can extract per-event
+feature columns.
+
+Inputs: tracker_events_raw table.
+
+Sub-steps:
+
+**1.9D-i — Per-event-type JSON key inventory**
+
+```python
+from rts_predict.sc2.data.exploration import (
+    build_event_data_field_inventory_query, run_tracker_event_data_inventory
+)
+# SQL query template (with USING SAMPLE 100000 ROWS):
+sql = build_event_data_field_inventory_query('tracker_events_raw', sample_size=100_000)
+```
+
+Returns columns: event_type, json_key, is_nested.
+
+**1.9D-ii — Key-set constancy per event type**
+
+```python
+from rts_predict.sc2.data.exploration import build_event_data_key_constancy_query
+# For each event type et:
+sql = build_event_data_key_constancy_query('tracker_events_raw', et, sample_size=10_000)
+```
+
+Returns columns: key_list, n_events, pct (sorted by n_events DESC).
+
+**1.9D-iii — PlayerStats.stats nested field inventory**
+
+```python
+from rts_predict.sc2.data.exploration import build_nested_field_inventory_query
+sql = build_nested_field_inventory_query(
+    'tracker_events_raw', 'PlayerStats', 'stats', sample_size=100_000
+)
+```
+
+Returns column: nested_key_name.
+
+Artifacts:
+- `01_09D_tracker_event_data_field_inventory.csv` (columns: event_type, json_key, is_nested)
+- `01_09D_tracker_event_data_key_constancy.csv` (columns: event_type, key_list, n_events, pct)
+- `01_09D_playerstats_stats_field_inventory.csv` (column: nested_key_name)
+
+Findings (2026-04-07):
+- 10 distinct tracker event types; 80 total (event_type, json_key) pairs.
+- 39 PlayerStats.stats sub-keys found.
+- Key-set constancy: 9/10 types at 100%; UnitBorn at 93.81% (warning, not halt) —
+  UnitBorn has optional `killerPlayerId`, `killerUnitTagIndex`, `killerUnitTagRecycle`
+  fields that are absent when the unit is not killed by another unit.
+
+Gate condition:
+- Artifact check: All three CSV files exist and are non-empty.
+- Continue predicate: Each event type has a dominant key-set variant >99%. UnitBorn
+  gate violation (93.81%) is documented as a known exception — optional killer fields
+  are structurally motivated. Continue to 1.9E.
+- Halt predicate: If any event type other than UnitBorn has dominant variant ≤95%.
+
+---
+
+**1.9E — Game `event_data` field inventory**
+
+Context: The `game_events_raw` table (~609M rows, 23 distinct event types) also stores
+JSON payloads in `event_data`. This step focuses on the 5 high-value event types that
+will drive Phase 4 in-game features: Cmd, SelectionDelta, ControlGroupUpdate,
+CmdUpdateTargetPoint, CmdUpdateTargetUnit.
+
+Inputs: game_events_raw table.
+
+Sub-steps:
+
+**1.9E-i — Per-event-type JSON key inventory**
+
+```python
+sql = build_event_data_field_inventory_query('game_events_raw', sample_size=200_000)
+```
+
+**1.9E-ii — Nested sub-object enumerations**
+
+```python
+# For (Cmd, abil), (Cmd, data), (SelectionDelta, delta):
+sql = build_nested_field_inventory_query('game_events_raw', et, nested_key, sample_size=200_000)
+```
+
+**1.9E-iii — Key-set constancy for 5 high-value types**
+
+```python
+for et in ('Cmd', 'SelectionDelta', 'ControlGroupUpdate',
+           'CmdUpdateTargetPoint', 'CmdUpdateTargetUnit'):
+    sql = build_event_data_key_constancy_query('game_events_raw', et, sample_size=10_000)
+```
+
+Artifacts:
+- `01_09E_game_event_data_field_inventory.csv` (columns: event_type, json_key, is_nested)
+- `01_09E_game_event_data_key_constancy.csv` (columns: event_type, key_list, n_events, pct)
+
+Findings (2026-04-07):
+- All 5 high-value types have dominant key-set variant = 100%. Gate PASS.
+- Nested sub-objects: Cmd.abil (3 keys), Cmd.data (1 key), SelectionDelta.delta (4 keys).
+
+Gate condition:
+- Artifact check: Both CSV files exist and are non-empty.
+- Continue predicate: All 5 types have dominant variant >95%.
+
+---
+
+**1.9F — Parquet↔DuckDB reconciliation + consolidated schema document**
+
+Context: Validates that the Parquet staging files (produced by Path B extraction) have
+schemas consistent with the DuckDB table definitions, and compiles a consolidated
+event_data schema reference from 1.9D and 1.9E findings.
+
+Inputs: Staging Parquet files in `staging/in_game_events/`, DuckDB db.duckdb, 1.9D/E CSVs.
+
+Sub-steps:
+
+**1.9F-i — Parquet↔DuckDB schema reconciliation**
+
+```python
+from rts_predict.sc2.data.exploration import run_parquet_duckdb_reconciliation
+result = run_parquet_duckdb_reconciliation(output_dir=DATASET_REPORTS_DIR)
+```
+
+Checks column names (order-independent) for 5 randomly selected batches per table.
+
+**1.9F-ii — Compile consolidated schema document**
+
+```python
+from rts_predict.sc2.data.exploration import run_event_schema_document
+result = run_event_schema_document(output_dir=DATASET_REPORTS_DIR)
+```
+
+Artifacts:
+- `01_09F_parquet_duckdb_schema_reconciliation.md`
+- `01_09F_event_schema_reference.md`
+
+Findings (2026-04-07):
+- Tracker Parquet schema: match_id:string, event_type:string, game_loop:int32,
+  player_id:int8, event_data:string — consistent with DuckDB (0 mismatches, 5 batches).
+- Game Parquet schema: same + user_id:int32 — consistent with DuckDB (0 mismatches, 5 batches).
+- Schema reference covers all 10 tracker types and all 5 high-value game types. Gate PASS.
+
+Gate condition:
+- Artifact check: Both MD files exist.
+- Continue predicate: 0 schema mismatches across both tables; all event types covered in reference.
+
+[CROSS-GAME]
+
+---
+
 **1.10 — Uniform column-level profiling of all ToonPlayerDescMap fields**
 
 Context: Manual 01 §3.1 prescribes a standard profiling battery for every variable. Step 1.9 will have enumerated the complete field list. This step applies the
@@ -1505,6 +1662,9 @@ Phase 1 is complete when ALL of the following named artifacts exist under `src/r
 | 1.7 | 01_07_playerstats_sampling_check.csv |
 | 1.8 | 01_08_game_settings_audit.md, 01_08_error_flags_audit.csv (note: 01_08_field_completeness_summary.csv superseded by Step 1.10 — not produced) |
 | 1.9 | 01_09_tpdm_field_inventory.csv, 01_09_tpdm_key_set_constancy.csv, 01_09_toplevel_field_inventory.csv |
+| 1.9D | 01_09D_tracker_event_data_field_inventory.csv, 01_09D_tracker_event_data_key_constancy.csv, 01_09D_playerstats_stats_field_inventory.csv |
+| 1.9E | 01_09E_game_event_data_field_inventory.csv, 01_09E_game_event_data_key_constancy.csv |
+| 1.9F | 01_09F_parquet_duckdb_schema_reconciliation.md, 01_09F_event_schema_reference.md |
 | 1.10 | 01_10_tpdm_column_profile.csv, 01_10_tpdm_numeric_distributions.csv, 01_10_tpdm_categorical_topk.csv, 01_10_tpdm_field_status.csv, 01_10_tpdm_availability_by_year.csv |
 | 1.11 | 01_11_temporal_leakage_classification.csv, 01_11_leakage_empirical_checks.md |
 | 1.12 | 01_12_class_balance.csv, 01_12_class_balance_stratified.csv, 01_12_field_completeness_heatmap.png |

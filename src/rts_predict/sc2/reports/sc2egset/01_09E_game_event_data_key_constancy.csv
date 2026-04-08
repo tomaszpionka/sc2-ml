@@ -1,0 +1,8 @@
+event_type,key_list,n_events,pct
+Cmd,"['abil' 'cmdFlags' 'data' 'evtTypeName' 'id' 'loop' 'otherUnit' 'sequence'
+ 'unitGroup' 'userid']",498,100.0
+SelectionDelta,['controlGroupId' 'delta' 'evtTypeName' 'id' 'loop' 'userid'],679,100.0
+ControlGroupUpdate,"['controlGroupIndex' 'controlGroupUpdate' 'evtTypeName' 'id' 'loop' 'mask'
+ 'userid']",1160,100.0
+CmdUpdateTargetPoint,['evtTypeName' 'id' 'loop' 'target' 'userid'],409,100.0
+CmdUpdateTargetUnit,['evtTypeName' 'id' 'loop' 'target' 'userid'],136,100.0
