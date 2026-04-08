@@ -1,0 +1,249 @@
+table: player_stats
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 4558736
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: Relative path to the source replay file. FK to raw and tracker_events_raw
+    via regexp_extract(match_id, '([0-9a-f]{32})\\.SC2Replay', 1).
+- name: game_loop
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: Game loop when the PlayerStats snapshot was recorded. PlayerStats events
+    fire every 160 loops (10 seconds at normal speed). Use as the temporal axis for
+    in-game feature extraction.
+- name: player_id
+  type: TINYINT
+  nullable: true
+  primary_key: false
+  comment: In-game player slot (1 or 2). Joinable to match_player_map.player_id for
+    nickname and race lookup.
+- name: food_made
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: 'Total supply capacity provided by the player''s structures and units (supply
+    cap, cumulative). In SC2: Protoss pylons, Terran supply depots, Zerg overlords.
+    Instantaneous snapshot at this game_loop.'
+- name: food_used
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Total supply consumed by the player's units at this game_loop. food_used
+    / food_made gives supply efficiency. Values are instantaneous snapshots (not cumulative).
+- name: minerals_collection_rate
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Mineral income rate in minerals/minute at this game_loop snapshot. Instantaneous
+    rate, not cumulative. Key economic indicator for macro play assessment.
+- name: minerals_current
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Current mineral bank (unspent minerals) at this game_loop. Instantaneous
+    snapshot. High values may indicate supply-blocked or transition periods.
+- name: minerals_friendly_fire_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes for the minerals_/vespene_ subcategory naming convention.
+    Minerals value of army units lost to own fire.
+- name: minerals_friendly_fire_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals value of economy units lost to own fire.
+- name: minerals_friendly_fire_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals value of technology structures lost to
+    own fire.
+- name: minerals_killed_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Cumulative minerals value of enemy army units destroyed by this player.
+    Key damage-dealt metric for combat effectiveness.
+- name: minerals_killed_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Cumulative minerals value of enemy economy units (workers, drones, probes,
+    SCVs) destroyed. High values indicate worker harassment success.
+- name: minerals_killed_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Cumulative minerals value of enemy technology structures destroyed. Indicates
+    strategic pressure on opponent tech.
+- name: minerals_lost_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative minerals value of own army units lost.
+- name: minerals_lost_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative minerals value of own economy units lost.
+- name: minerals_lost_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative minerals value of own tech structures
+    lost.
+- name: minerals_used_active_forces
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals currently invested in active army units.
+- name: minerals_used_current_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals in current army (snapshot).
+- name: minerals_used_current_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals in current economy (snapshot).
+- name: minerals_used_current_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals in current technology (snapshot).
+- name: minerals_used_in_progress_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals committed to army units currently training.
+- name: minerals_used_in_progress_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals committed to economy buildings under construction.
+- name: minerals_used_in_progress_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Minerals committed to tech structures under construction.
+- name: vespene_collection_rate
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Vespene (gas) income rate in units/minute at this game_loop snapshot. Instantaneous
+    rate. Vespene is required for advanced units and tech upgrades.
+- name: vespene_current
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Current vespene bank (unspent gas) at this game_loop. Instantaneous snapshot.
+- name: vespene_friendly_fire_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Vespene value of army units lost to own fire.
+- name: vespene_friendly_fire_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_friendly_fire_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_killed_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Cumulative vespene value of enemy army units destroyed. Companion to minerals_killed_army
+    for full resource-damage accounting.
+- name: vespene_killed_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative vespene value of enemy economy units
+    destroyed.
+- name: vespene_killed_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative vespene value of enemy tech destroyed.
+- name: vespene_lost_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Cumulative vespene value of own army units lost.
+- name: vespene_lost_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_lost_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_used_active_forces
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Vespene in active army (snapshot).
+- name: vespene_used_current_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_used_current_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_used_current_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_used_in_progress_army
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes. Vespene committed to army units currently training.
+- name: vespene_used_in_progress_economy
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: vespene_used_in_progress_technology
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: See table-level notes.
+- name: workers_active_count
+  type: FLOAT
+  nullable: true
+  primary_key: false
+  comment: Number of worker units (SCVs/Probes/Drones) actively mining at this game_loop.
+    Instantaneous snapshot. Key macro indicator — typically 66-70 workers at saturation;
+    deviations reflect build orders and harassment damage.
+notes: "VIEW (not a base table) over tracker_events_raw WHERE event_type = 'PlayerStats'.\n\
+  One row per player per PlayerStats snapshot per match.\nRow grain: one (match_id,\
+  \ game_loop, player_id) triple = one row (~4.56M rows).\nProduced by _build_player_stats_view_query()\
+  \ in ingestion.py; the CREATE OR REPLACE\nVIEW statement is run by load_in_game_data_to_duckdb().\
+  \ Field mapping defined in\nPLAYER_STATS_FIELD_MAP in schemas.py.\n\nColumn naming\
+  \ convention for the 30+ subcategory columns:\n{resource}_{category}_{subcategory}\
+  \ where:\n  resource = minerals | vespene\n  category = collection_rate | current\
+  \ | friendly_fire | killed | lost | used_active_forces\n             | used_current\
+  \ | used_in_progress\n  subcategory = army | economy | technology\n\n'killed' and\
+  \ 'lost' fields are cumulative totals (increasing monotonically over game_loop).\n\
+  'current', 'collection_rate', 'used_*' fields are instantaneous snapshots.\nAll\
+  \ values are FLOAT (cast from JSON via CAST(json_extract(...) AS FLOAT)).\nPhase\
+  \ 4 (in-game statistics profiling) will use this view as the primary source\nfor\
+  \ time-series economic features.\n"

@@ -11,13 +11,14 @@ if TYPE_CHECKING:
 
 from rts_predict.common.db import DuckDBClient
 from rts_predict.common.db_cli import add_db_subparser, handle_db_command
+from rts_predict.common.schema_export import export_schemas
 from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET, REPLAYS_SOURCE_DIR
 from rts_predict.sc2.data.ingestion import (
     ingest_map_alias_files,
-    move_data_to_duck_db,
-    load_tracker_events_to_duckdb,
     load_game_events_to_duckdb,
-    load_in_game_data_to_duckdb
+    load_in_game_data_to_duckdb,
+    load_tracker_events_to_duckdb,
+    move_data_to_duck_db,
 )
 
 logger = logging.getLogger("SC2_Pipeline")
@@ -99,6 +100,29 @@ def main() -> None:
         help="Steps to run (e.g. 1.1 1.3). Omit for all.",
     )
 
+    # export-schemas subcommand
+    export_parser = subparsers.add_parser(
+        "export-schemas",
+        help="Export DuckDB table schemas to YAML files",
+    )
+    export_parser.add_argument(
+        "--db",
+        type=Path,
+        default=DATASETS[DEFAULT_DATASET],
+        help="Path to the DuckDB database file (default: sc2egset DB)",
+    )
+    export_parser.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+        help="Output directory for YAML schema files",
+    )
+    export_parser.add_argument(
+        "--no-preserve",
+        action="store_true",
+        help="Overwrite existing YAMLs without preserving comments and notes",
+    )
+
     add_db_subparser(subparsers, DATASETS, DEFAULT_DATASET)
 
     args = parser.parse_args()
@@ -106,6 +130,9 @@ def main() -> None:
     if args.command == "init":
         with DuckDBClient(DATASETS[DEFAULT_DATASET]) as client:
             init_database(client.con, should_drop=args.force)
+
+    elif args.command == "export-schemas":
+        _run_export_schemas_command(args.db, args.out, args.no_preserve)
 
     elif args.command == "audit":
         _run_audit_command(args.steps)
@@ -127,6 +154,23 @@ def _run_explore_command(steps: list[str] | None) -> None:
     with DuckDBClient(DATASETS[DEFAULT_DATASET]) as client:
         results = run_phase_1_exploration(client.con, steps=steps)
         logger.info(f"Exploration complete. Steps run: {list(results.keys())}")
+
+
+def _run_export_schemas_command(
+    db: Path,
+    out: Path,
+    no_preserve: bool,
+) -> None:
+    """Export DuckDB table schemas to YAML files.
+
+    Args:
+        db: Path to the DuckDB database file.
+        out: Output directory for YAML schema files.
+        no_preserve: If True, overwrite existing YAMLs without preserving
+            human-written comments and notes.
+    """
+    written = export_schemas(db, out, preserve_comments=not no_preserve)
+    logger.info(f"export-schemas: wrote {len(written)} files to {out}")
 
 
 def _run_audit_command(steps: list[str] | None) -> None:

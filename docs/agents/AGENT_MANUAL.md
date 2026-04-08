@@ -142,6 +142,35 @@ errors reliably; subtle statistical reasoning issues need Opus review.
 
 ---
 
+## Reading database schemas
+
+Before writing any DuckDB query, read the schema YAMLs at:
+
+```
+src/rts_predict/<game>/data/<dataset>/db/schemas/
+```
+
+Start with `_index.yaml` for the table list and one-line descriptions.
+Open individual `<table_name>.yaml` files only when you need column-level
+detail (types, nullability, primary keys, semantics).
+
+These YAMLs are the canonical column documentation, version-controlled and
+re-runnable. They are produced by:
+
+```bash
+poetry run sc2 export-schemas --db <db_path> --out <schemas_dir>
+```
+
+Re-running the export preserves all hand-written `comment` and `notes` fields.
+Only the structural fields (column types, row counts, generation timestamp)
+are re-derived from the live database.
+
+If a query fails because a column does not exist as documented in the YAML,
+the YAML is stale — re-run the export and commit the result. Do not work
+around the discrepancy.
+
+---
+
 ## Standard Workflows
 
 ### Workflow A: Phase Work (most common)

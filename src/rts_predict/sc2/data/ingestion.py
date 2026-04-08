@@ -96,7 +96,8 @@ _RAW_MAP_ALIAS_CREATE_QUERY = """
         byte_sha1       VARCHAR   NOT NULL,
         n_bytes         BIGINT    NOT NULL,
         raw_json        VARCHAR   NOT NULL,
-        ingested_at     TIMESTAMP NOT NULL
+        ingested_at     TIMESTAMP NOT NULL,
+        PRIMARY KEY (tournament_dir)
     )
 """
 

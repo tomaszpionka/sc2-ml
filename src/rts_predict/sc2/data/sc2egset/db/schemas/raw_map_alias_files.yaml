@@ -1,0 +1,55 @@
+table: raw_map_alias_files
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 70
+columns:
+- name: tournament_dir
+  type: VARCHAR
+  nullable: false
+  primary_key: true
+  comment: Tournament directory basename, e.g. '2024_StaraZagora_BellumGensElite'.
+    Primary key — one row per tournament. Joinable to raw via split_part(filename,
+    '/', -3).
+- name: file_path
+  type: VARCHAR
+  nullable: false
+  primary_key: false
+  comment: Absolute path to the map_foreign_to_english_mapping.json file on disk at
+    ingestion time. Not a stable reference — use tournament_dir for joins.
+- name: byte_sha1
+  type: VARCHAR
+  nullable: false
+  primary_key: false
+  comment: SHA-1 hex digest of the raw file bytes. Used for deduplication and integrity
+    checks. Computed by hashlib.sha1() in ingest_map_alias_files().
+- name: n_bytes
+  type: BIGINT
+  nullable: false
+  primary_key: false
+  comment: Size of the mapping JSON file in bytes at ingestion time. Advisory — useful
+    for spotting truncated or empty files.
+- name: raw_json
+  type: VARCHAR
+  nullable: false
+  primary_key: false
+  comment: Full text of the map_foreign_to_english_mapping.json file, stored verbatim
+    as a VARCHAR. Contains a JSON object mapping Korean/foreign map names to English
+    canonical names. Parse downstream via DuckDB json_extract / ->> operators.
+- name: ingested_at
+  type: TIMESTAMP
+  nullable: false
+  primary_key: false
+  comment: UTC timestamp when this row was inserted by ingest_map_alias_files(). Stored
+    without timezone (naive UTC). Informational only — not used in feature computation.
+notes: 'One row per tournament-level map_foreign_to_english_mapping.json file.
+
+  Row grain: one tournament directory = one row (enforced by PRIMARY KEY on tournament_dir).
+
+  Produced by ingest_map_alias_files() in ingestion.py. Phase 1 step 01_07 consumes
+
+  this table to design the production map dimension. Verified count: 70 rows (Phase
+  0 gate,
+
+  one file per tournament directory as confirmed by Spec 1 verification).
+
+  '

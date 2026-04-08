@@ -252,6 +252,8 @@ src/rts_predict/*/in_game_processing_manifest.json
 
 **/data/*/db/*
 !**/data/*/db/.gitkeep
+!**/data/*/db/schemas/
+!**/data/*/db/schemas/*.yaml
 
 # Other files to ignore
 **/.DS_Store

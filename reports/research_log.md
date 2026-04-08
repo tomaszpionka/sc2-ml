@@ -13,6 +13,48 @@ Reverse chronological entries.
 
 ---
 
+## 2026-04-08 — [STAGE 2] Schema export utility + raw_map_alias_files PK
+
+**Category:** C (chore) / infrastructure
+**Branch:** `feat/schema-export-utility`
+**Dataset:** sc2egset
+
+### What
+
+Two bundled changes:
+
+1. **Primary key added to `raw_map_alias_files`**: `PRIMARY KEY (tournament_dir)` added
+   to the CREATE TABLE statement in `ingestion.py`. The one-file-per-dir invariant
+   (verified empirically in Spec 1) is now enforced by DuckDB (v1.5.1 confirmed via
+   `duckdb.ConstraintException`). DB rebuilt, verified: raw=22,390, raw_map_alias_files=70.
+
+2. **Generic schema export utility**: `src/rts_predict/common/schema_export.py`
+   implements `export_schemas(db_path, out_dir, *, preserve_comments=True)` — dumps
+   every DuckDB table/view to YAML, with comment and notes preservation across re-runs.
+   CLI: `poetry run sc2 export-schemas --db <path> --out <schemas_dir>`.
+
+### Schema YAMLs generated
+
+Seven files written to `src/rts_predict/sc2/data/sc2egset/db/schemas/`:
+- `_index.yaml` — table index with row counts, column counts, PK flags
+- `game_events_raw.yaml` — 608M rows, 6 columns, event type enumeration documented
+- `match_player_map.yaml` — 44K rows, 6 columns, bridge table for player identity
+- `player_stats.yaml` — 4.6M rows, 42 columns (VIEW), economic subcategory naming explained
+- `raw.yaml` — 22,390 rows, 6 JSON blob columns, all columns commented
+- `raw_map_alias_files.yaml` — 70 rows, 6 columns, PK confirmed
+- `tracker_events_raw.yaml` — 62M rows, 5 columns, 10 event types enumerated
+
+Comment preservation verified: second run produced zero diffs in comment/notes fields.
+
+### Tests
+
+- 10 tests in `tests/rts_predict/common/test_schema_export.py` (all pass)
+- 1 PK constraint test in `tests/rts_predict/sc2/data/test_ingestion.py`
+- 4 CLI routing/unit tests in `tests/rts_predict/sc2/test_cli.py`
+- Total suite: 405 tests, 96.62% coverage (above 95% gate)
+
+---
+
 ## 2026-04-08 — [PHASE 0 / Step 0.9] Map alias file ingestion — raw_map_alias_files table
 
 **Category:** A (science)

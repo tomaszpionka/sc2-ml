@@ -19,6 +19,26 @@ merged to `master`.
 
 ### Removed
 
+## [0.24.0] — 2026-04-08 (PR #63: feat/schema-export-utility)
+
+### Added
+- `src/rts_predict/common/schema_export.py`: generic DuckDB schema export utility producing per-table YAML files + `_index.yaml`, with comment/notes preservation across re-runs
+- `poetry run sc2 export-schemas --db <db> --out <dir>`: CLI command for schema export
+- `tests/rts_predict/common/test_schema_export.py`: 10 tests covering file count, structure, comment preservation, warning on dropped columns, and edge cases
+- `tests/rts_predict/common/conftest.py`: `two_table_db` fixture for schema export tests
+- Schema YAML files for all 6 sc2egset tables with hand-filled column comments and table-level notes: `src/rts_predict/sc2/data/sc2egset/db/schemas/`
+- "Reading database schemas" section in `docs/agents/AGENT_MANUAL.md`
+- `pyyaml` production dependency, `types-pyyaml` dev dependency
+- Stage 2 entry in `reports/research_log.md`
+
+### Changed
+- `raw_map_alias_files` table: added `PRIMARY KEY (tournament_dir)` — constraint enforced by DuckDB v1.5.1
+- DB rebuilt after PK addition; verified raw=22,390, raw_map_alias_files=70 (no drift)
+
+### Fixed
+
+### Removed
+
 ## [0.23.0] — 2026-04-08 (PR #62: feat/phase0-map-alias-ingestion)
 
 ### Added

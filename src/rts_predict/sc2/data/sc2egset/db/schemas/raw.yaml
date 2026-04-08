@@ -1,0 +1,55 @@
+table: raw
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 22390
+columns:
+- name: header
+  type: JSON
+  nullable: true
+  primary_key: false
+  comment: JSON blob from the replay header section. Contains elapsedGameLoops (total
+    game duration in game loops at 16 loops/sec). Access via header ->> '$.elapsedGameLoops'.
+- name: initData
+  type: JSON
+  nullable: true
+  primary_key: false
+  comment: JSON blob from the replay initData section. Contains gameDescription with
+    mapSizeX, mapSizeY. Access via initData ->> '$.gameDescription.mapSizeX'.
+- name: details
+  type: JSON
+  nullable: true
+  primary_key: false
+  comment: JSON blob from the replay details section. Contains timeUTC (match timestamp
+    as ISO string). Access via details ->> '$.timeUTC'.
+- name: metadata
+  type: JSON
+  nullable: true
+  primary_key: false
+  comment: JSON blob from the replay metadata section. Contains dataBuild, gameVersion,
+    mapName. Access via metadata ->> '$.mapName'.
+- name: ToonPlayerDescMap
+  type: JSON
+  nullable: true
+  primary_key: false
+  comment: JSON blob keyed by toon string ('toon-1', 'toon-2', etc.). Each value has
+    nickname, playerID, userID, race, result, APM, SQ, MMR, supplyCappedPercent, isInClan.
+    Primary source for pre-game player features. Iterate keys to extract per-player
+    rows.
+- name: filename
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: Absolute path to the source .SC2Replay.json file. Use regexp_extract(filename,
+    '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) to derive replay_id (canonical FK). Use
+    split_part(filename, '/', -3) to derive tournament_dir (joinable to raw_map_alias_files.tournament_dir).
+notes: 'One row per SC2Replay JSON file, produced by move_data_to_duck_db() in ingestion.py.
+
+  Row grain: one replay = one row. All analytical columns are JSON blobs accessed
+
+  via DuckDB ->> operators. The canonical join key (replay_id) is derived as
+
+  regexp_extract(filename, ''([0-9a-f]{32})\.SC2Replay\.json$'', 1) — it is not
+
+  stored as a persistent column. Verified count: 22,390 rows (Phase 0 gate).
+
+  '

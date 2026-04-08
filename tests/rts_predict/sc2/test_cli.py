@@ -201,3 +201,71 @@ class TestRunAuditCommand:
         _run_audit_command(steps=["0.1"])
 
         m_audit.assert_called_once_with(m_client.con, steps=["0.1"])
+
+
+class TestMainExportSchemasRouting:
+    """Verify that 'sc2 export-schemas' routes to _run_export_schemas_command."""
+
+    @patch(f"{_CLI}.setup_logging")
+    @patch(f"{_CLI}._run_export_schemas_command")
+    def test_main_export_schemas_routes_to_handler(
+        self, m_export: MagicMock, m_log: MagicMock, tmp_path: Path
+    ) -> None:
+        """main() with 'export-schemas --out DIR' calls _run_export_schemas_command."""
+        from rts_predict.sc2.cli import main
+
+        out_dir = str(tmp_path / "schemas")
+        with patch("sys.argv", ["sc2", "export-schemas", "--out", out_dir]):
+            main()
+
+        m_export.assert_called_once()
+
+    @patch(f"{_CLI}.setup_logging")
+    @patch(f"{_CLI}._run_export_schemas_command")
+    def test_main_export_schemas_no_preserve_flag(
+        self, m_export: MagicMock, m_log: MagicMock, tmp_path: Path
+    ) -> None:
+        """--no-preserve flag is forwarded correctly."""
+        from rts_predict.sc2.cli import main
+
+        out_dir = str(tmp_path / "schemas")
+        with patch("sys.argv", ["sc2", "export-schemas", "--out", out_dir, "--no-preserve"]):
+            main()
+
+        _args, _kwargs = m_export.call_args
+        # Third positional arg is no_preserve
+        assert _args[2] is True
+
+
+class TestRunExportSchemasCommand:
+    """Unit tests for _run_export_schemas_command."""
+
+    @patch(f"{_CLI}.export_schemas")
+    def test_run_export_schemas_command_calls_export_schemas(
+        self, m_export: MagicMock, tmp_path: Path
+    ) -> None:
+        """_run_export_schemas_command delegates to export_schemas with correct args."""
+        from rts_predict.sc2.cli import _run_export_schemas_command
+
+        db = tmp_path / "db.duckdb"
+        out = tmp_path / "schemas"
+        m_export.return_value = [out / "t.yaml", out / "_index.yaml"]
+
+        _run_export_schemas_command(db, out, no_preserve=False)
+
+        m_export.assert_called_once_with(db, out, preserve_comments=True)
+
+    @patch(f"{_CLI}.export_schemas")
+    def test_run_export_schemas_command_no_preserve(
+        self, m_export: MagicMock, tmp_path: Path
+    ) -> None:
+        """no_preserve=True inverts preserve_comments to False."""
+        from rts_predict.sc2.cli import _run_export_schemas_command
+
+        db = tmp_path / "db.duckdb"
+        out = tmp_path / "schemas"
+        m_export.return_value = []
+
+        _run_export_schemas_command(db, out, no_preserve=True)
+
+        m_export.assert_called_once_with(db, out, preserve_comments=False)

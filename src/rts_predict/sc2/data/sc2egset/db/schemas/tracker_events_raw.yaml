@@ -1,0 +1,56 @@
+table: tracker_events_raw
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 62003411
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: Relative path to the source replay file, e.g. '2016_IEM_10_Taipei/2016_IEM_10_Taipei_data/15ad08e3.SC2Replay.json'.
+    FK to raw — join via regexp_extract(match_id, '([0-9a-f]{32})\\.SC2Replay', 1)
+    = regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay', 1).
+- name: event_type
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: 'Tracker event type string. Known values (10 types): PlayerSetup, PlayerStats,
+    UnitBorn, UnitDied, UnitDone, UnitInit, UnitOwnerChange, UnitPositions, UnitTypeChange,
+    Upgrade. PlayerStats is the primary source for in-game economic features (see
+    player_stats view).'
+- name: game_loop
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: Game loop number when the event occurred. 16 game loops = 1 real-time second
+    at normal speed. Used to timestamp in-game events for temporal feature slicing.
+    PlayerStats events fire at regular intervals (every 160 loops = 10 seconds).
+- name: player_id
+  type: TINYINT
+  nullable: true
+  primary_key: false
+  comment: 'In-game player slot (1 or 2 in 1v1 matches). Joinable to match_player_map.player_id
+    for nickname and race lookup. Note: some event types (e.g. UnitPositions) may
+    have player_id = 0 (neutral/observer).'
+- name: event_data
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: JSON text containing event-type-specific payload. Parse via DuckDB json_extract(event_data,
+    '$.key') or event_data ->> '$.key'. For PlayerStats events, the payload is nested
+    under '$.stats' with 39 economic sub-keys (see player_stats view for the full
+    field map). For UnitBorn/UnitDied, contains unitTypeName, x, y, killer fields.
+notes: 'One row per tracker event extracted from SC2Replay JSON files.
+
+  Row grain: one event = one row (62M rows total; PlayerStats accounts for ~4.5M).
+
+  Produced by load_tracker_events_to_duckdb() in ingestion.py from Parquet sources
+
+  under IN_GAME_PARQUET_DIR. The player_stats VIEW is the recommended interface for
+
+  economic feature extraction — query tracker_events_raw directly only when you need
+
+  non-PlayerStats event types. Event types and key sets confirmed in Phase 1 step
+  1.9F.
+
+  '

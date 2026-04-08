@@ -1,0 +1,39 @@
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+n_tables: 6
+advisory_note: row_count values are accurate at generation time only.
+tables:
+- table: game_events_raw
+  row_count: 608618823
+  n_columns: 6
+  has_pk: false
+  notes_first_line: One row per game engine event extracted from SC2Replay JSON files.
+- table: match_player_map
+  row_count: 44815
+  n_columns: 6
+  has_pk: false
+  notes_first_line: One row per player per match, linking player IDs / user IDs /
+    nicknames / races.
+- table: player_stats
+  row_count: 4558736
+  n_columns: 42
+  has_pk: false
+  notes_first_line: VIEW (not a base table) over tracker_events_raw WHERE event_type
+    = 'PlayerStats'.
+- table: raw
+  row_count: 22390
+  n_columns: 6
+  has_pk: false
+  notes_first_line: One row per SC2Replay JSON file, produced by move_data_to_duck_db()
+    in ingestion.py.
+- table: raw_map_alias_files
+  row_count: 70
+  n_columns: 6
+  has_pk: true
+  notes_first_line: One row per tournament-level map_foreign_to_english_mapping.json
+    file.
+- table: tracker_events_raw
+  row_count: 62003411
+  n_columns: 5
+  has_pk: false
+  notes_first_line: One row per tracker event extracted from SC2Replay JSON files.

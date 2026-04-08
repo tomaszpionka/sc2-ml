@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.23.0"
+version = "0.24.0"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -37,6 +37,7 @@ pyarrow = "^23.0.1"
 optuna = "^4.8.0"
 shap = ">=0.44,<0.50"
 tabulate = "^0.10.0"
+pyyaml = "^6.0.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
@@ -50,6 +51,7 @@ jupytext = ">=1.16.0,<2"
 nbconvert = ">=7.16.0,<8"
 pre-commit = ">=3.7.0,<4"
 diff-cover = "^9.0"
+types-pyyaml = "^6.0.12.20260408"
 
 [build-system]
 requires = ["poetry-core"]

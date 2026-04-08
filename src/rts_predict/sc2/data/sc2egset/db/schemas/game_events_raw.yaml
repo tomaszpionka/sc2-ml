@@ -1,0 +1,62 @@
+table: game_events_raw
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 608618823
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: Relative path to the source replay file. FK to raw — join via regexp_extract(match_id,
+    '([0-9a-f]{32})\\.SC2Replay', 1). Same format as tracker_events_raw.match_id.
+- name: event_type
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: 'Game event type string. High-volume types (top 5): CameraUpdate (387M),
+    ControlGroupUpdate (69M), CommandManagerState (44M), SelectionDelta (41M), Cmd
+    (31M). High-value types for feature engineering: Cmd (unit commands / actions),
+    UserOptions (player settings). Confirmed 100% key-set constancy for the 5 high-value
+    types in Phase 1 step 1.9F.'
+- name: game_loop
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: Game loop number when the event occurred. 16 loops = 1 real-time second
+    at normal speed. Use for temporal slicing of in-game features.
+- name: user_id
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: SC2 engine user slot ID. Joinable to match_player_map.user_id for nickname
+    and race lookup. Distinct from player_id (1-based slot); user_id values depend
+    on lobby order and may be non-contiguous.
+- name: player_id
+  type: TINYINT
+  nullable: true
+  primary_key: false
+  comment: In-game player slot derived from user_id mapping. 1 or 2 in 1v1. Joinable
+    to match_player_map.player_id. May be null for observer/replay system events.
+- name: event_data
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: JSON text containing event-type-specific payload. Parse via event_data
+    ->> '$.key'. Structure varies by event_type — consult Phase 1 step 1.9F field
+    inventory for per-type key sets. Cmd events contain ability ID and target info;
+    UserOptions contains APM settings.
+notes: 'One row per game engine event extracted from SC2Replay JSON files.
+
+  Row grain: one event = one row (608M rows total — largest table in the DB).
+
+  Produced by load_game_events_to_duckdb() in ingestion.py from Parquet sources.
+
+  Key-set constancy for the 5 high-value event types was confirmed at 100% in
+
+  Phase 1 step 1.9F. For most Phase 1-2 feature work, prefer tracker_events_raw
+
+  and the player_stats view — game_events_raw is needed for action-sequence and
+
+  decision-timing features only.
+
+  '

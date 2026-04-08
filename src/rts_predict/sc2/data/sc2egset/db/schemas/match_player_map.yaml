@@ -1,0 +1,58 @@
+table: match_player_map
+database: /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/db/db.duckdb
+generated_at: '2026-04-08T21:38:27Z'
+row_count: 44815
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: Relative path to the source replay file. FK to raw and to tracker_events_raw
+    / game_events_raw via regexp_extract(match_id, '([0-9a-f]{32})\\.SC2Replay', 1).
+- name: player_id
+  type: TINYINT
+  nullable: true
+  primary_key: false
+  comment: In-game player slot (1 or 2 in 1v1 matches). Composite key with match_id.
+    Joinable to tracker_events_raw.player_id and game_events_raw.player_id.
+- name: user_id
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: SC2 engine user slot ID. Joinable to game_events_raw.user_id for event
+    attribution. Distinct from player_id.
+- name: nickname
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: In-game nickname as it appears in the replay ToonPlayerDescMap. Not yet
+    canonicalised — may contain case variants or multi-account aliases. Phase 2 identity
+    resolution will produce canonical_nickname.
+- name: race
+  type: VARCHAR
+  nullable: true
+  primary_key: false
+  comment: 'Player''s chosen race for this match. Values: ''Terr'', ''Prot'', ''Zerg''.
+    Note abbreviated form (not full name). Phase 1 normalisation may expand to full
+    names for consistency.'
+- name: total_game_loops
+  type: INTEGER
+  nullable: true
+  primary_key: false
+  comment: Total number of game loops in the match (match duration). Derived from
+    the Parquet extraction process. 16 loops = 1 real-time second at normal speed.
+    Purpose unclear beyond duration — needs validation in Phase 1 step 01_02.
+notes: 'One row per player per match, linking player IDs / user IDs / nicknames /
+  races.
+
+  Row grain: one (match_id, player_id) pair = one row (~2 rows per 1v1 match;
+
+  44,815 rows / 2 ≈ 22,407 matches, close to raw''s 22,390 — delta due to DISTINCT
+
+  deduplication in the CREATE TABLE AS SELECT DISTINCT query).
+
+  Produced by load_in_game_data_to_duckdb() in ingestion.py from Parquet sources.
+
+  This is the canonical bridge table for joining event tables to player identity.
+
+  '

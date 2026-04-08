@@ -707,6 +707,43 @@ class TestIngestMapAliasFiles:
         with pytest.raises(ValueError):
             ingest_map_alias_files(in_memory_duckdb, raw_dir)
 
+    def test_ingest_map_alias_files_enforces_unique_tournament_dir(
+        self, tmp_path: Path, in_memory_duckdb: duckdb.DuckDBPyConnection
+    ) -> None:
+        """raw_map_alias_files PRIMARY KEY rejects duplicate tournament_dir.
+
+        Scenario: One tournament dir is ingested, then a second ingest attempt
+            is made with the same directory (table not dropped between calls,
+            simulating an erroneous double-insert).
+        Preconditions: The table already has one row for 'TournA'.
+        Assertions: duckdb.ConstraintException is raised on the duplicate insert.
+        """
+        raw_dir = tmp_path / "raw"
+        alias_path = raw_dir / "TournA" / "map_foreign_to_english_mapping.json"
+        alias_path.parent.mkdir(parents=True)
+        alias_path.write_text('{"MapA": "Map A LE"}', encoding="utf-8")
+
+        # First ingest succeeds — populates raw_map_alias_files with TournA.
+        ingest_map_alias_files(in_memory_duckdb, raw_dir)
+
+        # Manually re-insert without the DROP so the PK guard fires.
+        from datetime import datetime, timezone
+
+        import pandas as pd
+
+        duplicate_df = pd.DataFrame([{  # noqa: F841 — referenced by DuckDB SQL
+            "tournament_dir": "TournA",
+            "file_path": str(alias_path),
+            "byte_sha1": "abc",
+            "n_bytes": 20,
+            "raw_json": '{"MapA": "Map A LE"}',
+            "ingested_at": datetime.now(tz=timezone.utc).replace(tzinfo=None),
+        }])
+        with pytest.raises(duckdb.ConstraintException):
+            in_memory_duckdb.execute(
+                "INSERT INTO raw_map_alias_files SELECT * FROM duplicate_df"
+            )
+
 
 class TestCollectPendingFiles:
     """Test _collect_pending_files with manifest filtering."""
