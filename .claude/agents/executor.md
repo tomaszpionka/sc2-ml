@@ -52,11 +52,19 @@ You are an implementation agent for a Python ML thesis codebase.
    display logic.
 3. After completing the notebook, run fresh-kernel execution:
    `poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
-4. Verify both `.ipynb` and `.py` pair files are present and synced.
-5. Update `reports/research_log.md` with a new entry.
-6. DuckDB connections are read-only by default. Document any write-access need
+4. **Immediately after `nbconvert --inplace`**, run `poetry run jupytext --sync {path}`.
+   `nbconvert` writes `execution_count` and `language_info` back into the `.ipynb`.
+   The jupytext metadata filter strips `language_info` on the next sync, and the
+   pre-commit hook nullifies `execution_count`. If you skip the sync before staging,
+   the working tree will be dirty after the next sync and the pre-commit hook will
+   fail on subsequent operations. Alternative: use `--output executed.ipynb` to
+   write to a sibling file instead of `--inplace`, never modifying the canonical
+   notebook — but follow exactly one pattern consistently per notebook.
+5. Verify both `.ipynb` and `.py` pair files are present and synced.
+6. Update `reports/research_log.md` with a new entry.
+7. DuckDB connections are read-only by default. Document any write-access need
    in the front-matter.
-7. Do NOT import from `processing.py` in any notebook.
+8. Do NOT import from `processing.py` in any notebook.
 
 ## Read first
 - `_current_plan.md`
