@@ -74,12 +74,23 @@ class DuckDBClient:
 
     # ── Context manager protocol ───────────────────────────────────────────
 
-    def __enter__(self) -> "DuckDBClient":
-        """Open the DuckDB connection and apply resource pragmas.
+    def open(self) -> "DuckDBClient":
+        """Open the DuckDB connection explicitly.
+
+        Equivalent to entering the context manager block. Use this when
+        the client is constructed outside a ``with`` block (e.g. from
+        ``get_notebook_db``).
 
         Returns:
-            The ``DuckDBClient`` instance (``self``).
+            Self, so callers can chain or assign.
+
+        Raises:
+            RuntimeError: If the connection is already open.
         """
+        if self._con is not None:
+            raise RuntimeError(
+                f"DuckDBClient.open() called on an already-open connection: {self._dataset.db_file}"
+            )
         self._dataset.db_file.parent.mkdir(parents=True, exist_ok=True)
         self._dataset.temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -91,6 +102,14 @@ class DuckDBClient:
         self._con = duckdb.connect(str(self._dataset.db_file), read_only=self._read_only)
         self._apply_pragmas()
         return self
+
+    def __enter__(self) -> "DuckDBClient":
+        """Open the DuckDB connection and apply resource pragmas.
+
+        Returns:
+            The ``DuckDBClient`` instance (``self``).
+        """
+        return self.open()
 
     def __exit__(self, *exc: object) -> None:
         """Close the DuckDB connection.

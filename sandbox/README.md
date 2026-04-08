@@ -44,8 +44,10 @@ committed. See `jupytext.toml` at the repo root.
    cap is a signal to extract logic to `src/`.
 3. **Read-only DuckDB.** Use `get_notebook_db()` from
    `rts_predict.common.notebook_utils`. Connections are read-only by default.
-4. **Both files committed.** Always stage both `.ipynb` and `.py` pair.
-   The jupytext pre-commit hook (`.pre-commit-config.yaml`) enforces sync.
+4. **Both files committed.** Always stage both `.ipynb` and `.py` of a pair.
+   The jupytext pre-commit hook (`.pre-commit-config.yaml`) enforces that
+   the two files have matching content, but does NOT enforce that both
+   are staged. Staging both is the author's responsibility.
 
 ## Configuration pointers
 

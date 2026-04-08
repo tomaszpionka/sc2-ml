@@ -11,6 +11,7 @@ from pathlib import Path
 from types import ModuleType
 from unittest.mock import MagicMock, patch
 
+import duckdb
 import pytest
 
 from rts_predict.common.db import DatasetConfig, DuckDBClient
@@ -131,8 +132,6 @@ def test_get_notebook_db_returns_duckdb_client_read_only(tmp_path: Path) -> None
         # Create the DB first in read-write mode so it exists
         db_file = tmp_path / "db" / "db.duckdb"
         (tmp_path / "db").mkdir(parents=True, exist_ok=True)
-        import duckdb
-
         con = duckdb.connect(str(db_file))
         con.close()
 
@@ -158,8 +157,6 @@ def test_get_notebook_db_read_only_blocks_writes(tmp_path: Path) -> None:
     ):
         db_file = tmp_path / "db" / "db.duckdb"
         (tmp_path / "db").mkdir(parents=True, exist_ok=True)
-        import duckdb
-
         # Create the table before opening read-only
         con = duckdb.connect(str(db_file))
         con.execute("CREATE TABLE t (x INTEGER)")
@@ -167,8 +164,10 @@ def test_get_notebook_db_read_only_blocks_writes(tmp_path: Path) -> None:
 
         client = get_notebook_db("sc2", "testset")
         try:
-            with pytest.raises(Exception):
+            with pytest.raises((duckdb.InvalidInputException, duckdb.IOException)) as exc_info:
                 client.con.execute("INSERT INTO t VALUES (1)")
+            err = str(exc_info.value).lower()
+            assert "read" in err or "readonly" in err
         finally:
             client.close()
 
@@ -215,7 +214,6 @@ def test_get_notebook_db_client_is_closeable(tmp_path: Path) -> None:
     ):
         db_file = tmp_path / "db" / "db.duckdb"
         (tmp_path / "db").mkdir(parents=True, exist_ok=True)
-        import duckdb
 
         con = duckdb.connect(str(db_file))
         con.close()
@@ -225,6 +223,27 @@ def test_get_notebook_db_client_is_closeable(tmp_path: Path) -> None:
         assert client._con is not None
         client.close()
         # Connection should be closed after .close()
+        assert client._con is None
+
+
+def test_get_notebook_db_close_is_idempotent(tmp_path: Path) -> None:
+    """DuckDBClient.close() must be safe to call multiple times (per docstring)."""
+    fake_module = _make_fake_config_module(tmp_path)
+
+    with patch(
+        "rts_predict.common.notebook_utils._load_game_config",
+        return_value=fake_module,
+    ):
+        db_file = tmp_path / "db" / "db.duckdb"
+        (tmp_path / "db").mkdir(parents=True, exist_ok=True)
+
+        con = duckdb.connect(str(db_file))
+        con.close()
+
+        client = get_notebook_db("sc2", "testset")
+        client.close()
+        # Second call must not raise
+        client.close()
         assert client._con is None
 
 
@@ -243,6 +262,20 @@ def test_get_reports_dir_unknown_dataset_raises() -> None:
     """get_reports_dir must raise ValueError for an unknown dataset."""
     with pytest.raises(ValueError, match="Unknown dataset"):
         get_reports_dir("sc2", "nonexistent_dataset")
+
+
+def test_get_reports_dir_missing_reports_dir_raises(tmp_path: Path) -> None:
+    """get_reports_dir must raise ValueError if config module lacks REPORTS_DIR."""
+    fake_module = _make_fake_config_module(tmp_path)
+    # Remove REPORTS_DIR from the module so getattr returns None
+    del fake_module.REPORTS_DIR
+
+    with patch(
+        "rts_predict.common.notebook_utils._load_game_config",
+        return_value=fake_module,
+    ):
+        with pytest.raises(ValueError, match="does not export REPORTS_DIR"):
+            get_reports_dir("sc2", "testset")
 
 
 def test_get_reports_dir_returns_path(tmp_path: Path) -> None:

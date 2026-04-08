@@ -1,6 +1,7 @@
 [cells]
 # Maximum lines per notebook cell. Matches python-code.md "Max ~50 lines per function".
-# Enforced by AST-based reviewer check.
+# Will be enforced by an AST-based reviewer check (planned, see _current_plan.md B.9.16).
+# Until then, this cap is a documented convention rather than a mechanical guardrail.
 max_lines = 50
 
 [execution]

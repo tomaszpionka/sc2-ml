@@ -45,6 +45,15 @@ def _load_game_config(game: str) -> ModuleType:
     return importlib.import_module(module_path)
 
 
+def _validate_dataset_known(config_module: ModuleType, game: str, dataset: str) -> None:
+    """Raise ValueError if dataset is not in the module's DATASETS registry.
+
+    This is a validation-only wrapper around _resolve_dataset_config for
+    callers that need the validation but not the resolved DatasetConfig.
+    """
+    _resolve_dataset_config(config_module, game, dataset)
+
+
 def _resolve_dataset_config(config_module: ModuleType, game: str, dataset: str) -> DatasetConfig:
     """Resolve a DatasetConfig from the config module's DATASETS registry.
 
@@ -105,32 +114,35 @@ def get_notebook_db(
         read_only,
     )
     client = DuckDBClient(dataset_config, read_only=read_only)
-    client.__enter__()
+    client.open()
     return client
 
 
 def get_reports_dir(game: str, dataset: str) -> Path:
     """Return the absolute path to the dataset's reports directory.
 
-    Resolves the path from the game config module. For SC2, returns
-    DATASET_REPORTS_DIR. For AoE2, derives the path from REPORTS_DIR
-    and the dataset name (matching the aoe2/config.py naming pattern).
+    Both game config modules (sc2/config.py and aoe2/config.py) export
+    a REPORTS_DIR constant. The returned path is REPORTS_DIR / dataset.
 
     Args:
         game: Game identifier ("sc2" or "aoe2").
-        dataset: Dataset identifier (e.g. "sc2egset").
+        dataset: Dataset identifier (e.g. "sc2egset", "aoe2companion").
 
     Returns:
         Absolute Path to the reports directory.
 
     Raises:
-        ValueError: If game or dataset is not recognized.
+        ValueError: If game or dataset is not recognized, or if the
+            game's config module does not export REPORTS_DIR.
     """
     config_module = _load_game_config(game)
-    # Validate the dataset exists in the DATASETS registry
-    _resolve_dataset_config(config_module, game, dataset)
-
-    reports_dir: Path = getattr(config_module, "REPORTS_DIR")
+    _validate_dataset_known(config_module, game, dataset)
+    reports_dir = getattr(config_module, "REPORTS_DIR", None)
+    if reports_dir is None:
+        raise ValueError(
+            f"Config module for game {game!r} does not export REPORTS_DIR"
+        )
+    assert isinstance(reports_dir, Path)  # for the type checker
     resolved: Path = reports_dir / dataset
     logger.debug("Resolved reports dir: %s", resolved)
     return resolved
