@@ -71,9 +71,7 @@ def add_db_subparser(
     db_sub.add_parser("tables", help="List all tables in the database.")
 
     # -- schema --
-    schema_parser = db_sub.add_parser(
-        "schema", help="Show column names and types for a table."
-    )
+    schema_parser = db_sub.add_parser("schema", help="Show column names and types for a table.")
     schema_parser.add_argument("table", help="Table name to inspect.")
 
 
