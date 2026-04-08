@@ -88,9 +88,7 @@ class DuckDBClient:
             self._dataset.db_file,
             self._read_only,
         )
-        self._con = duckdb.connect(
-            str(self._dataset.db_file), read_only=self._read_only
-        )
+        self._con = duckdb.connect(str(self._dataset.db_file), read_only=self._read_only)
         self._apply_pragmas()
         return self
 
@@ -99,6 +97,14 @@ class DuckDBClient:
 
         Args:
             *exc: Exception info forwarded from the ``with`` block (ignored).
+        """
+        self.close()
+
+    def close(self) -> None:
+        """Close the DuckDB connection explicitly.
+
+        Safe to call multiple times. Use this when the client is obtained
+        outside a ``with`` block (e.g. from ``get_notebook_db``).
         """
         if self._con is not None:
             self._con.close()
@@ -115,14 +121,10 @@ class DuckDBClient:
             RuntimeError: If accessed outside the ``with`` block.
         """
         if self._con is None:
-            raise RuntimeError(
-                "DuckDBClient.con accessed outside the context manager block."
-            )
+            raise RuntimeError("DuckDBClient.con accessed outside the context manager block.")
         return self._con
 
-    def query(
-        self, sql: str, params: list[object] | None = None
-    ) -> duckdb.DuckDBPyRelation:
+    def query(self, sql: str, params: list[object] | None = None) -> duckdb.DuckDBPyRelation:
         """Execute *sql* and return a lazy DuckDB relation.
 
         Args:
@@ -136,9 +138,7 @@ class DuckDBClient:
             return self.con.execute(sql, params)  # type: ignore[return-value]
         return self.con.sql(sql)
 
-    def fetch_df(
-        self, sql: str, params: list[object] | None = None
-    ) -> pd.DataFrame:
+    def fetch_df(self, sql: str, params: list[object] | None = None) -> pd.DataFrame:
         """Execute *sql* and return results as a ``pandas.DataFrame``.
 
         Args:
@@ -197,9 +197,7 @@ class DuckDBClient:
         assert self._con is not None
         self._con.execute(f"SET memory_limit = '{self._memory_limit}'")
         self._con.execute(f"SET threads = {self._threads}")
-        self._con.execute(
-            f"SET max_temp_directory_size = '{self._max_temp_dir_size}'"
-        )
+        self._con.execute(f"SET max_temp_directory_size = '{self._max_temp_dir_size}'")
         self._con.execute(f"SET temp_directory = '{self._dataset.temp_dir}'")
         logger.debug(
             "DuckDB pragmas applied — memory_limit=%s, threads=%d, "
