@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [0.22.1] — 2026-04-08 (PR #58: chore/notebook-sandbox)
+
+### Added
+- `sandbox/` directory structure for Jupyter notebook exploration (gitignored working artifacts)
+- `sandbox/jupytext.toml` — jupytext pairing config (percent format, metadata filter)
+- `sandbox/notebook_config.toml` — notebook workflow constraints (50-line cell cap, read-only DB policy)
+- `src/rts_predict/common/notebook_utils.py` — `get_notebook_db()` and `get_reports_dir()` helpers for sandbox notebooks
+- `.pre-commit-config.yaml` — jupytext sync hook wired into pre-commit
+- `sandbox/sc2/sc2egset/01_08_game_settings_audit.ipynb` — proof-of-concept notebook reproducing Step 1.8 game settings audit
+- `src/rts_predict/sc2/reports/sc2egset/SUPERSEDED.md` — documents which report artifacts are superseded by notebooks
+
+### Changed
+- `reports/research_log.md` — archived old log, created fresh with two new entries (Category A Step 1.8 audit + Category C sandbox chore)
+- `.claude/agents/` executor and reviewer agents updated with notebook workflow rules
+
 ## [0.22.0] — 2026-04-08 (PR #57: feat/sc2-phase1-step1.9)
 
 ### Added

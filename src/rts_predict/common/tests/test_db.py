@@ -143,9 +143,7 @@ def test_client_schema_returns_columns(tmp_path: Path) -> None:
     """schema() must return the correct column names and types from the DDL."""
     cfg = _make_config(tmp_path)
     with DuckDBClient(cfg) as client:
-        client.con.execute(
-            "CREATE TABLE products (id INTEGER, name VARCHAR, price DOUBLE)"
-        )
+        client.con.execute("CREATE TABLE products (id INTEGER, name VARCHAR, price DOUBLE)")
         pairs = client.schema("products")
 
     col_names = [p[0] for p in pairs]
@@ -175,3 +173,20 @@ def test_client_row_counts(tmp_path: Path) -> None:
         counts = client.row_counts()
 
     assert counts == {"alpha": 3, "beta": 1}
+
+
+# ---------------------------------------------------------------------------
+# DuckDBClient — open()
+# ---------------------------------------------------------------------------
+
+
+def test_client_open_double_call_raises(tmp_path: Path) -> None:
+    """DuckDBClient.open() must raise RuntimeError if already open."""
+    cfg = _make_config(tmp_path)
+    client = DuckDBClient(cfg)
+    client.open()
+    try:
+        with pytest.raises(RuntimeError, match="already-open"):
+            client.open()
+    finally:
+        client.close()

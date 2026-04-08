@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.22.0"
+version = "0.22.1"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -44,6 +44,11 @@ ruff = "^0.9.0"
 mypy = "^1.14.0"
 pytest-cov = "^7.1.0"
 coverage = "^7.13.5"
+jupyterlab = ">=4.4.0,<5"
+ipykernel = ">=6.30.0,<7"
+jupytext = ">=1.16.0,<2"
+nbconvert = ">=7.16.0,<8"
+pre-commit = ">=3.7.0,<4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -67,7 +72,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/rts_predict"]
-omit = ["**/tests/*"]
+omit = ["**/tests/*", "sandbox/**"]
 
 [tool.coverage.report]
 exclude_lines = [

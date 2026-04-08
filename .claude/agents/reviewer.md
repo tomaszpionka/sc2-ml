@@ -31,6 +31,26 @@ Your job is to find problems, not to praise.
    - No silently dropped rows (filtering must log count + reason)
 6. For SQL in Python: CTEs, named columns, parameterized queries (no f-strings)
 
+## For notebook changes (sandbox/)
+
+1. **Template compliance:** Cell 1 has `| Phase |` and `| Step |`; Cell 2 is
+   imports-only; final markdown cell has `## Conclusion`; final code cell has
+   `.close()`.
+2. **Jupytext sync:** Every modified `.ipynb` has a corresponding modified `.py`
+   in the same directory.
+3. **No inline definitions (AST-based):** Flag any `ast.FunctionDef`,
+   `ast.AsyncFunctionDef`, `ast.ClassDef` in any code cell, and any
+   `ast.Assign`/`ast.AnnAssign` where the value is `ast.Lambda` anywhere.
+   All helpers must live in `src/rts_predict/`.
+4. **Cell size (AST-based):** Flag any cell exceeding `[cells] max_lines` from
+   `sandbox/notebook_config.toml` (default 50).
+5. **Phase boundary check:** Imports in a Phase 1 notebook must not reference
+   `features/`, `feature_`, `models/`, or `model_` modules. Flag `import processing`.
+6. **Research log entry:** A new entry in `reports/research_log.md` references
+   the notebook path.
+7. **Report artifact consistency:** If the notebook front-matter lists artifacts,
+   verify those files are present in the changeset.
+
 ## For thesis chapters:
 1. Run Critical Review Checklist (`.claude/rules/thesis-writing.md`)
 2. Every number traces to a report artifact in `src/rts_predict/sc2/reports/`
