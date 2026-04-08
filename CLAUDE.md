@@ -73,6 +73,24 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 | ML experiment protocol | `.claude/ml-protocol.md` (active Phase 9+) |
 | Per-dataset invariants | `src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md` |
 
+## Phase Work Execution (Sandbox Notebooks)
+
+All Category A (phase work) code execution happens in Jupyter notebooks under
+`sandbox/<game>/<dataset>/`. Each notebook is a jupytext-paired `.py` (percent
+format) + `.ipynb` file. The `.py` file is the diff-reviewable source of truth;
+the `.ipynb` file carries cell outputs for audit.
+
+**Naming:** `{PHASE:02d}_{STEP}_{descriptive_name}.{py,ipynb}`
+**Example:** `sandbox/sc2/sc2egset/01_08_game_settings_audit.py`
+
+**Artifacts:** Notebooks save report artifacts (CSV, JSON, MD, PNG) to
+`src/rts_predict/<game>/reports/<dataset>/artifacts/` — never to the dataset
+report root directly. Use `get_reports_dir("sc2", "sc2egset") / "artifacts/"`
+from `rts_predict.common.notebook_utils`.
+
+**Hard rules:** See `sandbox/README.md` for the full contract (no inline
+definitions, 50-line cell cap, read-only DuckDB, both files committed).
+
 ## Agent Architecture
 
 5 sub-agents in `.claude/agents/` — see `docs/AGENT_MANUAL.md` for usage.

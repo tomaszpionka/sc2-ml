@@ -57,5 +57,8 @@ committed. See `jupytext.toml` at the repo root.
 ## Report artifacts
 
 Notebooks write report artifacts (CSV, MD, PNG) to
-`src/rts_predict/<game>/reports/<dataset>/`. Notebooks themselves are not
-cited as findings sources — only the report artifacts are.
+`src/rts_predict/<game>/reports/<dataset>/artifacts/` — always the `artifacts/`
+subdirectory, never the dataset report root directly. Use
+`get_reports_dir("sc2", "sc2egset") / "artifacts"` from
+`rts_predict.common.notebook_utils`. Notebooks themselves are not cited as
+findings sources — only the report artifacts are.

@@ -58,13 +58,16 @@ You are an implementation agent for a Python ML thesis codebase.
 ## Notebook workflow (sandbox/)
 
 1. Use the template from `_current_plan.md` B.3.
-2. All functions and classes must live in `src/rts_predict/` and be imported.
+2. Save all report artifacts to `get_reports_dir(game, dataset) / "artifacts"` —
+   never to the dataset report root directly. The `artifacts/` subdirectory is
+   the only valid target for machine-generated outputs (CSV, MD, PNG).
+3. All functions and classes must live in `src/rts_predict/` and be imported.
    Cells are capped at `[cells] max_lines` from `sandbox/notebook_config.toml`.
    Notebooks are thin orchestration only — SQL strings, function calls, and
    display logic.
-3. After completing the notebook, run fresh-kernel execution:
+4. After completing the notebook, run fresh-kernel execution:
    `poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
-4. **Immediately after `nbconvert --inplace`**, run `poetry run jupytext --sync {path}`.
+5. **Immediately after `nbconvert --inplace`**, run `poetry run jupytext --sync {path}`.
    `nbconvert` writes `execution_count` and `language_info` back into the `.ipynb`.
    The jupytext metadata filter strips `language_info` on the next sync, and the
    pre-commit hook nullifies `execution_count`. If you skip the sync before staging,
@@ -72,11 +75,11 @@ You are an implementation agent for a Python ML thesis codebase.
    fail on subsequent operations. Alternative: use `--output executed.ipynb` to
    write to a sibling file instead of `--inplace`, never modifying the canonical
    notebook — but follow exactly one pattern consistently per notebook.
-5. Verify both `.ipynb` and `.py` pair files are present and synced.
-6. Update `reports/research_log.md` with a new entry.
-7. DuckDB connections are read-only by default. Document any write-access need
+6. Verify both `.ipynb` and `.py` pair files are present and synced.
+7. Update `reports/research_log.md` with a new entry.
+8. DuckDB connections are read-only by default. Document any write-access need
    in the front-matter.
-8. Do NOT import from `processing.py` in any notebook.
+9. Do NOT import from `processing.py` in any notebook.
 
 ## Read first
 - `_current_plan.md`

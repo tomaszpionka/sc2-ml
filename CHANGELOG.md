@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [0.22.4] — 2026-04-08 (PR #61: chore/sandbox-and-artifacts-guidance)
+
+### Added
+- `CLAUDE.md`: new "Phase Work Execution (Sandbox Notebooks)" section documenting that all Category A code runs in `sandbox/<game>/<dataset>/` jupytext pairs and artifacts go to `reports/<dataset>/artifacts/`
+- `ARCHITECTURE.md`: `sandbox/` added to repo layout tree and cross-cutting files table
+- `.claude/dev-constraints.md`: new "Phase Work Execution" section
+- `.claude/agents/executor.md`: new notebook workflow item requiring artifacts to target `artifacts/` subdir
+- `.claude/agents/reviewer.md`: new "Artifact path check" item in notebook review checklist
+- `.claude/agents/reviewier-deep.md`: new "Artifact output path" blocker-level check
+- `.claude/agents/planner-science.md`: Category A plans must now specify sandbox notebook path and artifact target
+- `docs/agents/AGENT_MANUAL.md`: Workflow A now describes sandbox execution and artifact path convention
+
+### Changed
+- `sandbox/README.md`: fixed "Report artifacts" paragraph — path now correctly points to `reports/<dataset>/artifacts/` (was incorrectly pointing to the report root)
+
 ## [0.22.3] — 2026-04-08 (PR #60: chore/artifacts-subdir-migration)
 
 ### Changed
@@ -26,7 +41,7 @@ merged to `master`.
 - Added `DATASET_ARTIFACTS_DIR`, `AOE2COMPANION_ARTIFACTS_DIR`, `AOESTATS_ARTIFACTS_DIR` config constants; updated all writer functions in `audit.py` and `exploration.py` to use them
 - Updated 4 test files, ROADMAP.md, SUPERSEDED.md, INVARIANTS.md, ARCHITECTURE.md, research logs, and sandbox notebook to reference new artifact paths
 
-## [0.22.2] — 2026-04-08 (PR #N: chore/test-mirror-migration)
+## [0.22.2] — 2026-04-08 (PR #59: chore/test-mirror-migration)
 
 ### Added
 - `scripts/check_mirror_drift.py` — guardrail script enforcing `src/` ↔ `tests/` mirror

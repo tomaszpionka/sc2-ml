@@ -24,6 +24,13 @@ All pipeline data lives under `data/<dataset>/` within each game's subpackage (g
 - `src/rts_predict/sc2/data/sc2egset/db/db.duckdb` — main DuckDB database (reproducible)
 - `src/rts_predict/sc2/data/sc2egset/tmp/` — DuckDB spill-to-disk temp directory
 
+## Phase Work Execution
+
+All Category A (phase work) code runs in sandbox notebooks, not in `src/`
+modules or ad-hoc scripts. Path: `sandbox/<game>/<dataset>/XX_XX_<name>.{py,ipynb}`.
+Artifacts are saved to `reports/<dataset>/artifacts/`, never to the report root.
+See `sandbox/README.md` for the full contract.
+
 ## Platform
 - DuckDB: 24GB RAM, 4 threads (Apple M4 Max)
 - LightGBM + PyTorch: conflicting OpenMP — subprocess isolation

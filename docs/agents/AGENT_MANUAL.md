@@ -146,11 +146,17 @@ errors reliably; subtle statistical reasoning issues need Opus review.
 
 ### Workflow A: Phase Work (most common)
 
+Phase work executes in `sandbox/` notebooks. The plan specifies the notebook path
+(`sandbox/<game>/<dataset>/XX_XX_<name>.py`). The executor creates the jupytext
+`.py` + `.ipynb` pair, runs the analysis, and saves artifacts to
+`src/rts_predict/<game>/reports/<dataset>/artifacts/`.
+
 ```
 Step 1:  @planner-science plan Phase N step N.X
 Step 2:  [review plan in chat, request adjustments]
 Step 3:  [approved plan → write to _current_plan.md]
 Step 4:  @executor execute steps 1-3
+         (notebook in sandbox/, artifacts to reports/<dataset>/artifacts/)
          (use /model opus for hard analytical steps)
 Step 5:  @reviewer review changes
 Step 6:  [fix issues from reviewer]

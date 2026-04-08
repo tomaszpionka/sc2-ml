@@ -174,7 +174,12 @@ resolved from `PHASE_STATUS.yaml`.
     (A, B, C, ...), verify every sub-step in the source is present in
     the notebook. Missing sub-steps without explanation are a porting
     bug.
-14. **Research log entry.** If expected, verify it follows
+14. **Artifact output path.** All report artifacts must be written to
+    `reports/<dataset>/artifacts/`, never to the dataset report root.
+    Verify every `to_csv()`, `savefig()`, or file-write call targets a
+    path containing `/artifacts/`. Flag any write to the report root as
+    a blocker.
+15. **Research log entry.** If expected, verify it follows
     `RESEARCH_LOG_TEMPLATE.md` exactly: every section present, correct
     category (A/B/C), reverse-chronological position in the log.
 

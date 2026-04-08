@@ -56,6 +56,9 @@ Your job is to find problems, not to praise.
    the notebook path.
 7. **Report artifact consistency:** If the notebook front-matter lists artifacts,
    verify those files are present in the changeset.
+8. **Artifact path check:** All report artifacts must be written to
+   `reports/<dataset>/artifacts/`, never to the dataset report root. Flag
+   any artifact path missing the `artifacts/` subdirectory.
 
 ## For thesis chapters:
 1. Run Critical Review Checklist (`.claude/rules/thesis-writing.md`)

@@ -40,7 +40,9 @@ Empires II."
 - Always reference the specific Phase/Step from the appropriate ROADMAP.md (sc2egset/ for Phases 0–2, reports/ for Phases 3+).
 - Always check scientific-invariants.md before proposing design decisions.
 - For Category A plans: phase/step ref, branch, files, function signatures,
-  SQL queries, test cases, gate condition.
+  SQL queries, test cases, gate condition. The plan MUST specify the sandbox
+  notebook path (`sandbox/<game>/<dataset>/XX_XX_<name>.py`) and confirm that
+  artifacts target `reports/<dataset>/artifacts/`.
 - For Category F plans: section paths, feeding artifacts, draft vs revision,
   figures/tables, WRITING_STATUS.md target.
 

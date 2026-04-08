@@ -6,16 +6,26 @@ the conventions for extending it.
 ## Package layout
 
 ```
-src/rts_predict/
-├── __init__.py          # Docstring only — no __version__
-├── sc2/                 # StarCraft II — complete game package
-├── aoe2/                # Age of Empires II — placeholder, mirrors sc2/ when populated
-└── common/              # Shared evaluation code — see common/CONTRACT.md
+rts-outcome-prediction/
+├── src/rts_predict/
+│   ├── __init__.py          # Docstring only — no __version__
+│   ├── sc2/                 # StarCraft II — complete game package
+│   ├── aoe2/                # Age of Empires II — placeholder, mirrors sc2/ when populated
+│   └── common/              # Shared evaluation code — see common/CONTRACT.md
+├── sandbox/                 # Jupyter notebook exploration — see sandbox/README.md
+│   ├── sc2/sc2egset/        # SC2EGSet notebooks (Phases 0–2)
+│   └── aoe2/                # AoE2 placeholders
+├── tests/                   # Mirrored test tree — see .claude/rules/python-code.md
+├── thesis/                  # Thesis chapters and figures
+├── reports/                 # Cross-cutting research log and archives
+└── docs/                    # Methodology manuals and agent documentation
 ```
 
 Each game package is self-contained: it has its own CLI, config, data pipeline,
 reports, models directory, and tests. The top-level `rts_predict` package provides
 the namespace; it contains no game-specific logic and no version attribute.
+Phase work code execution happens in `sandbox/<game>/<dataset>/` notebooks — not in
+`src/` modules or ad-hoc scripts. See `sandbox/README.md` for the full contract.
 
 ## Game package contract
 
@@ -67,6 +77,7 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` | Pass 1→2 handoff for thesis writing |
 | Scientific invariants | `.claude/scientific-invariants.md` | Methodology constraints (apply to all games) |
 | Thesis writing | `.claude/rules/thesis-writing.md` | Writing workflow + Chat handoff (loads on thesis/ touch) |
+| Sandbox notebooks | `sandbox/<game>/<dataset>/` | Phase work execution (jupytext `.py` + `.ipynb` pairs); see `sandbox/README.md` |
 
 ## Progress tracking
 
