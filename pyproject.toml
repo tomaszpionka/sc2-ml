@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "0.22.1"
+version = "0.22.2"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -49,6 +49,7 @@ ipykernel = ">=6.30.0,<7"
 jupytext = ">=1.16.0,<2"
 nbconvert = ">=7.16.0,<8"
 pre-commit = ">=3.7.0,<4"
+diff-cover = "^9.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -62,7 +63,8 @@ target-version = "py312"
 select = ["E", "F", "W", "I"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "src"]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib --strict-markers --strict-config"
 markers = [
     "gnn: GNN-specific tests (deselect with '-m not gnn')",
     "mps: Apple MPS GPU tests (deselect with '-m not mps')",
@@ -72,7 +74,8 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/rts_predict"]
-omit = ["**/tests/*", "sandbox/**"]
+branch = true
+omit = ["sandbox/**"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -85,3 +88,17 @@ fail_under = 95
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
+
+[tool.mirror_drift]
+exempt_sources = [
+    "src/rts_predict/sc2/data/samples/process_sample.py",
+    "src/rts_predict/sc2/data/schemas.py",
+    "src/rts_predict/sc2/config.py",
+    "src/rts_predict/aoe2/config.py",
+    "src/rts_predict/aoe2/data/aoe2companion/types.py",
+    "src/rts_predict/common/json_utils.py",
+]
+
+[tool.diff_cover]
+compare_branch = "origin/master"
+fail_under = 90
