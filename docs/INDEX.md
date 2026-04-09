@@ -21,18 +21,18 @@ cross-domain transfer. Each is a standalone reference with academic citations.
 
 ### Which manual to consult by current phase
 
-| `PHASE_STATUS.yaml` value | Primary manual | Secondary |
-|---------------------------|---------------|-----------|
-| Phase 0–1 (acquisition, ingestion) | 01 | — |
-| Phase 2 (profiling, EDA) | 01 | — |
-| Phase 3 (cleaning, validation) | 01 | — |
-| Phase 4 (feature engineering) | 02 | 01 (for feature profiling) |
-| Phase 5 (splitting, baselines) | 03 | — |
-| Phase 6–7 (training, tuning) | 04 | 03 (for temporal CV) |
-| Phase 8 (evaluation, comparison) | 05 | 04 (for reproducibility) |
-| Phase 9 (error analysis, ablation) | 05 | 02 (for feature ablation context) |
-| Phase 10 (cross-domain transfer) | 06 | 03, 05 (for shared eval protocol) |
-| Phase 11 (thesis writing) | Thesis Writing Manual | 05 (for results presentation) |
+> The canonical Phase list and numbering live in [`docs/PHASES.md`](PHASES.md).
+> The table below is a convenience lookup only — it does not define Phases.
+
+| Active Phase | Primary manual | Secondary |
+|---|---|---|
+| **01** — Data Exploration | 01 | — |
+| **02** — Feature Engineering | 02 | 01 (for feature profiling) |
+| **03** — Splitting & Baselines | 03 | — |
+| **04** — Model Training | 04 | 03 (for temporal CV) |
+| **05** — Evaluation & Analysis | 05 | 04 (for reproducibility) |
+| **06** — Cross-Domain Transfer | 06 | 03, 05 (for shared eval protocol) |
+| **07** — Thesis Writing Wrap-up | Thesis Writing Manual | 05 (for results presentation) |
 
 ---
 
