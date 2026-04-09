@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.25.0] — 2026-04-09 (PR #66: plan/phase1-sc2-taxonomy)
+
+### Added
+- `sandbox/sc2/sc2egset/plans/01_00_phase1_taxonomy_and_first_chunk_plan.md`: Phase 1 planning document with JSON field taxonomy (~200 leaf fields), per-table shape assessment, 10 cross-table integrity concerns, 16 candidate steps in 3 sub-phases, and first-chunk recommendation (steps 01_01–01_05)
+
 ## [0.24.1] — 2026-04-09 (PR #64: chore/phase1-sc2-archive-pre-reset)
 
 ### Added
