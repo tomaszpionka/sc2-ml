@@ -12,13 +12,43 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
-- `docs/TAXONOMY.md`: project-wide terminology taxonomy — single source of truth for Phase / Pipeline Section / Step hierarchy, directory layout rules, operational terms (Spec, PR, Category, Session), and the list of terms explicitly not used
 
 ### Changed
 
 ### Fixed
 
 ### Removed
+
+## [0.29.4] — 2026-04-09 (PR #74: chore/archive-sc2egset-phase-migration)
+
+### Changed
+- `src/rts_predict/sc2/reports/sc2egset/archive/`: consolidated all pre-migration sc2egset artifacts — moved `INVARIANTS.md`, `SUPERSEDED.md`, `artifacts/00_99_post_rebuild_verification.md`, sandbox notebooks (`01_08_game_settings_audit`, `00_99_post_rebuild_verification`), `sandbox/sc2/sc2egset/plans/`, and `_archive_2026-04_pre_notebook_reset/` into a single `archive/` directory; created `archive/_README.md` describing the archive contents
+- `sandbox/sc2/sc2egset/`: removed pre-migration notebooks and plans; added `.gitkeep` to preserve directory for future Phase 01 work
+
+## [0.29.3] — 2026-04-09 (PR #73: chore/claude-agents-phase-refs)
+
+### Changed
+- `.claude/agents/executor.md`, `.claude/agents/planner-science.md`, `.claude/agents/reviewer.md`, `.claude/agents/reviewier-deep.md`, `docs/agents/AGENT_MANUAL.md`: replaced old-scheme phase references with canonical new-scheme refs and updated `PHASE_STATUS` path pattern to dataset-level
+
+## [0.29.2] — 2026-04-09 (PR #72: chore/sot-hierarchy-phase-refs)
+
+### Added
+- `docs/templates/step_template.yaml`: full science-oriented YAML step schema (20+ fields) covering identity, hierarchy context, scientific purpose, predecessors, inputs/outputs, reproducibility, scientific invariants applied, gate decomposition (artifact_check, continue_predicate, halt_predicate), thesis mapping, and research_log_entry
+
+### Changed
+- `ARCHITECTURE.md`: inserted `docs/PHASES.md` as new tier 4 in Source-of-Truth Hierarchy; renumbered old tiers 4–7 to 5–8; updated internal cross-references; removed old-scheme phase number ranges from package layout and game contract tables
+- `README.md`: replaced stale `SC2_THESIS_ROADMAP.md` references with `docs/PHASES.md` pointer; updated Project State sentence to Phase 01 naming scheme
+- `docs/TAXONOMY.md`: added Phase naming clarifications and `docs/PHASES.md` cross-reference updates
+
+## [0.29.1] — 2026-04-09 (PR #71: chore/claude-ops-phase-refs-core)
+
+### Changed
+- `.claude/dev-constraints.md`, `.claude/ml-protocol.md`, `.claude/rules/sql-data.md`, `.claude/rules/thesis-writing.md`, `.claude/scientific-invariants.md`, `CLAUDE.md`, `docs/INDEX.md`: replaced hardcoded old-scheme phase identifiers (Phases 0–11) with canonical new-scheme refs (Phase 01–07) and `docs/PHASES.md` pointers
+
+## [0.29.0] — 2026-04-09 (PR #70: docs/project-taxonomy-draft)
+
+### Changed
+- `docs/TAXONOMY.md`: added `docs/PHASES.md` cross-reference and Phase naming clarifications
 
 ## [0.28.0] — 2026-04-09 (PR #69: docs/canonical-phase-list)
 
