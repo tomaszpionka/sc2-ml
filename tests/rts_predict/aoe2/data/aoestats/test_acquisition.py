@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import urllib.error
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -11,6 +12,7 @@ from rts_predict.aoe2.config import AOESTATS_RAW_MATCHES_DIR, AOESTATS_RAW_PLAYE
 from rts_predict.aoe2.data.aoestats.acquisition import (
     _compute_md5,
     download_file,
+    download_overview,
     filter_download_targets,
     is_already_downloaded,
     load_manifest,
@@ -403,3 +405,74 @@ class TestRunDownload:
 
         assert result["total_targets"] == 2
         assert result["dry_run"] is True
+
+
+class TestDownloadOverview:
+    """Tests for download_overview()."""
+
+    def test_idempotent_skip_existing(self, tmp_path: Path) -> None:
+        """If target file already exists, return its path without HTTP request."""
+        existing = tmp_path / "overview.json"
+        existing.write_bytes(b'{"test": 1}')
+        result = download_overview(target_dir=tmp_path)
+        assert result == existing
+
+    def test_downloads_when_missing(self, tmp_path: Path) -> None:
+        """Downloads and writes file when target does not exist."""
+        content = b'{"civ": [1]}'
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.return_value = content
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            result = download_overview(target_dir=tmp_path)
+
+        assert result.exists()
+        assert result.name == "overview.json"
+        assert result.read_bytes() == content
+
+    def test_creates_parent_dirs(self, tmp_path: Path) -> None:
+        """Parent directories are created automatically."""
+        deep_dir = tmp_path / "a" / "b"
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.return_value = b'{"test": 1}'
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            result = download_overview(target_dir=deep_dir)
+
+        assert result.parent.exists()
+
+    def test_network_error_cleans_up_tmp(self, tmp_path: Path) -> None:
+        """On network error, no leftover .json.tmp file remains."""
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.URLError("fail"),
+        ):
+            with pytest.raises(urllib.error.URLError):
+                download_overview(target_dir=tmp_path)
+
+        tmp_files = list(tmp_path.glob("*.tmp"))
+        assert tmp_files == []
+
+    def test_custom_url_and_filename(self, tmp_path: Path) -> None:
+        """Custom url and filename are used correctly."""
+        mock_response = MagicMock()
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_response.read.return_value = b'{"data": true}'
+
+        with patch("urllib.request.urlopen", return_value=mock_response):
+            result = download_overview(
+                url="http://example.com/test",
+                target_dir=tmp_path,
+                filename="custom.json",
+            )
+
+        assert result.name == "custom.json"

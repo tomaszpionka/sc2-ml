@@ -22,6 +22,7 @@ from rts_predict.aoe2.config import (
     AOESTATS_MANIFEST,
     AOESTATS_RAW_DIR,
     AOESTATS_RAW_MATCHES_DIR,
+    AOESTATS_RAW_OVERVIEW_DIR,
     AOESTATS_RAW_PLAYERS_DIR,
 )
 
@@ -50,6 +51,57 @@ _DEFERRED_WARNING: str = (
     "aoestats acquisition is deferred -- use --force to proceed. "
     "Reason: aoe2companion Phase 0 profiling must complete first."
 )
+
+
+def download_overview(
+    url: str = "https://aoestats.io/api/overview/?format=json",
+    target_dir: Path | None = None,
+    filename: str = "overview.json",
+) -> Path:
+    """Download the aoestats overview JSON reference file.
+
+    Idempotent: if the target file already exists, returns its path
+    without making an HTTP request.
+
+    The overview JSON provides lookup tables (civilizations, maps,
+    game modes, etc.) used during schema discovery and ingestion.
+
+    Args:
+        url: URL to fetch the overview JSON from.
+        target_dir: Directory to write the file into. Defaults to
+            AOESTATS_RAW_OVERVIEW_DIR.
+        filename: Name of the output file. Default "overview.json".
+
+    Returns:
+        Absolute path to the downloaded (or already existing) file.
+
+    Raises:
+        urllib.error.URLError: On network errors.
+        OSError: On filesystem errors.
+    """
+    resolved_dir = target_dir if target_dir is not None else AOESTATS_RAW_OVERVIEW_DIR
+    target_path = resolved_dir / filename
+
+    if target_path.exists():
+        logger.info("Overview file already exists, skipping download: %s", target_path)
+        return target_path
+
+    resolved_dir.mkdir(parents=True, exist_ok=True)
+    tmp_path = target_path.with_suffix(".json.tmp")
+
+    try:
+        req = urllib.request.Request(url, headers=_HTTP_HEADERS)
+        with urllib.request.urlopen(req) as response:
+            content = response.read()
+        tmp_path.write_bytes(content)
+    except Exception:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
+
+    shutil.move(str(tmp_path), target_path)
+    logger.info("Downloaded overview to %s (%d bytes)", target_path, target_path.stat().st_size)
+    return target_path
 
 
 def load_manifest(manifest_path: Path) -> list[dict]:
