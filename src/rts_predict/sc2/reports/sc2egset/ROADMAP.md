@@ -42,7 +42,7 @@ explicitly noted.
 
 ---
 
-## Phase 01 — Data Exploration (placeholder)
+## Phase 01 — Data Exploration
 
 Pipeline Sections per `docs/PHASES.md`:
 
@@ -53,10 +53,43 @@ Pipeline Sections per `docs/PHASES.md`:
 - `01_05` — Temporal & Panel EDA
 - `01_06` — Decision Gates
 
-Steps will be defined in a planning session before Phase 01 work begins.
-The library modules that support Phase 01 (ingestion, exploration, audit)
-will require rework; Step definitions must not presuppose specific function
-signatures or exploration approaches.
+### Step 01_01_01 — File Inventory
+
+```yaml
+step_number: "01_01_01"
+name: "File Inventory"
+description: "Walk the sc2egset raw directory, count files, measure sizes, group by subdirectory."
+phase: "01 — Data Exploration"
+pipeline_section: "01_01 — Data Acquisition & Source Inventory"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
+dataset: "sc2egset"
+question: "What files exist on disk, how many are there, and how are they organized?"
+method: "Call inventory_directory() on the raw directory. Report totals, per-subdirectory breakdown, extension distribution, and summary statistics (min/max/median files per subdir). Flag subdirectories with 0 replay files."
+stratification: "By subdirectory (tournament)."
+predecessors: "none — independent"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py"
+inputs:
+  duckdb_tables: "none — reads filesystem only"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_01/01_01_01_file_inventory.json"
+  report: "artifacts/01_01/01_01_01_file_inventory.md"
+reproducibility: "All counts produced by inventory_directory() from rts_predict.common.inventory. Code and output are in the paired notebook."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "Inventory counts are produced by code in the notebook, saved alongside the report."
+  - number: "7"
+    how_upheld: "No thresholds used — pure counting."
+gate:
+  artifact_check: "artifacts/01_01/01_01_01_file_inventory.json and .md exist and are non-empty."
+  continue_predicate: "Inventory artifacts exist on disk."
+  halt_predicate: "Raw directory does not exist or is empty."
+thesis_mapping:
+  - "Chapter 3 — Data & Methodology > 3.1 Data Sources > SC2EGSet"
+research_log_entry: "Required on completion."
+```
 
 ---
 
