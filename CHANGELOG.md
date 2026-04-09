@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.8] — 2026-04-09 (PR #11: chore/research-log-archive-fresh-start)
+
+### Changed
+- `reports/RESEARCH_LOG_TEMPLATE.md`: updated step numbering format from `[PHASE X / Step X.Y]` to `[Phase XX / Step XX_YY_ZZ]` per docs/PHASES.md
+- `reports/research_log.md`: reset to fresh log with migration header note; all new entries use the new step format
+
+### Removed
+- `reports/research_log.md` (old log): archived to `reports/archive/research_log_pre_phase_migration.md`
+- `reports/_archive/` directory: consolidated into `reports/archive/`; `research_log_pre_notebook_sandbox.md` moved to `reports/archive/`
+
 ## [0.29.7] — 2026-04-09 (PR #N: chore/sandbox-phase-refs)
 
 ### Changed

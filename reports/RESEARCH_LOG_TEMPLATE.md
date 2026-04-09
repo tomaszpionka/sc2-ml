@@ -4,7 +4,7 @@ Copy this block to the top of `reports/research_log.md` for every new
 entry. Required for Category A (science) work, recommended for Category
 F (writing) sessions.
 
-## YYYY-MM-DD — [PHASE X / Step X.Y] Short descriptive title
+## YYYY-MM-DD — [Phase XX / Step XX_YY_ZZ] Short descriptive title
 
 **Category:** A (science) | F (writing) | C (chore)
 **Dataset:** sc2egset | aoestats | aoe2companion | —
