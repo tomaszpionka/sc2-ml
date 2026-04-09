@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.12] — 2026-04-09 (PR #82: chore/aoe2companion-roadmap)
+
+### Added
+- `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md`: new dataset ROADMAP for aoe2companion; Phase 01 fully decomposed into 6 Pipeline Sections (01_01–01_06) with 11 Steps tailored to aoe2companion's data structure (4 raw tables, no replay JSON parsing, no in-game event extraction); Phases 02-07 listed as placeholders; snapshot-table warning, sparse-regime boundary (2025-06-26), and acquisition provenance reference to README.md included; all notebook paths use nested layout; library function names verified against `ingestion.py`
+
 ## [0.29.11] — 2026-04-09 (PR #81: chore/sc2egset-roadmap-rewrite)
 
 ### Changed
