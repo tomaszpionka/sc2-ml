@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.28.0] — 2026-04-09 (PR #69: docs/canonical-phase-list)
+
+### Added
+- `docs/PHASES.md`: canonical Phase list — single source of truth for which Phases exist and what Pipeline Sections each contains; defines the 7-Phase ML experiment lifecycle (01 Data Exploration through 07 Thesis Writing Wrap-up), Phase scope rule, Pipeline Section derivation rule with per-Phase tables and exclusion rationale, Phase 07 gate-marker semantics, and maintenance rules
+
 ## [0.27.0] — 2026-04-09 (PR #68: docs/architecture-source-of-truth)
 
 ### Added
