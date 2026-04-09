@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-03 (Phase 1 Steps 1.1–1.7 done; Step 1.8 pending)
+Last updated: 2026-04-09 (Phase 01 Steps 01_01–01_07 done; Step 01_08 pending)
 
 ---
 
@@ -41,7 +41,7 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
 | §2.1 RTS game characteristics | `SKELETON` | — | Literature |
-| §2.2 StarCraft II | `SKELETON` | Phase 0–1 (timing, mechanics) | Game loop derivation sourced; Phase 1 confirmed 22.4 loops/sec consistent across all years |
+| §2.2 StarCraft II | `SKELETON` | Phase 01 (Data Exploration — timing, mechanics) | Game loop derivation sourced; Phase 01 confirmed 22.4 loops/sec consistent across all years |
 | §2.3 Age of Empires II | `BLOCKED` | AoE2 roadmap | Future |
 | §2.4 ML methods for classification | `SKELETON` | — | Literature |
 | §2.5 Player skill rating systems | `SKELETON` | — | Literature; Glicko-2 refs ready |
@@ -61,28 +61,28 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §4.1.1 SC2EGSet description | `BLOCKED` | Phase 0, Phase 1 | Phase 0 done, Phase 1 Steps 1.1–1.7 done; awaiting Step 1.8 (game settings + field completeness audit) before draftable |
+| §4.1.1 SC2EGSet description | `BLOCKED` | Phase 01 (Data Exploration) | Phase 01 Steps 01_01–01_07 done; awaiting Step 01_08 (game settings + field completeness audit) before draftable |
 | §4.1.2 AoE2 match data | `BLOCKED` | AoE2 roadmap | Future |
 | §4.1.3 Data asymmetry | `BLOCKED` | Both datasets | Future |
-| §4.2.1 Ingestion and validation | `DRAFTABLE` | Phase 0 | Phase 0 complete |
-| §4.2.2 Player identity resolution | `BLOCKED` | Phase 2 | |
-| §4.2.3 Cleaning rules | `BLOCKED` | Phase 6 | |
-| §4.3.1 Common pre-game features | `BLOCKED` | Phase 7 | |
-| §4.3.2 SC2 in-game features | `BLOCKED` | Phase 4 | |
+| §4.2.1 Ingestion and validation | `DRAFTABLE` | Phase 01 (Data Exploration), Pipeline Section 01_01 | Phase 01 Section 01_01 complete |
+| §4.2.2 Player identity resolution | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Sections 01_02–01_03 | |
+| §4.2.3 Cleaning rules | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_04 | |
+| §4.3.1 Common pre-game features | `BLOCKED` | Phase 02 (Feature Engineering) | |
+| §4.3.2 SC2 in-game features | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_05; Phase 02 (Feature Engineering) | |
 | §4.3.3 AoE2-specific features | `BLOCKED` | AoE2 roadmap | Future |
-| §4.4.1 Split strategy | `BLOCKED` | Phase 8 | |
-| §4.4.2 Model configurations | `BLOCKED` | Phase 9–10 | |
-| §4.4.3 Hyperparameter tuning | `BLOCKED` | Phase 10 | |
+| §4.4.1 Split strategy | `BLOCKED` | Phase 03 (Splitting & Baselines) | |
+| §4.4.2 Model configurations | `BLOCKED` | Phase 03 (Splitting & Baselines); Phase 04 (Model Training) | |
+| §4.4.3 Hyperparameter tuning | `BLOCKED` | Phase 04 (Model Training) | |
 | §4.4.4 Evaluation metrics | `SKELETON` | — | Can draft from literature |
 
 ## Chapter 5 — Experiments and Results
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §5.1.1 SC2 baselines | `BLOCKED` | Phase 9 | |
-| §5.1.2 SC2 pre-game prediction | `BLOCKED` | Phase 10 | |
-| §5.1.3 SC2 in-game prediction | `BLOCKED` | Phase 10 | |
-| §5.1.4 SC2 per-matchup / cold-start | `BLOCKED` | Phase 10 | |
+| §5.1.1 SC2 baselines | `BLOCKED` | Phase 03 (Splitting & Baselines) | |
+| §5.1.2 SC2 pre-game prediction | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
+| §5.1.3 SC2 in-game prediction | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
+| §5.1.4 SC2 per-matchup / cold-start | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
 | §5.2 AoE2 results | `BLOCKED` | AoE2 phases | Future |
 | §5.3 Cross-game comparison | `BLOCKED` | Both complete | Future |
 
@@ -108,8 +108,8 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| Appendix A — Infrastructure | `DRAFTABLE` | Phase 0 | Pipeline arch, schema |
-| Appendix B — Feature lists | `BLOCKED` | Phase 7 | |
-| Appendix C — Hyperparameters | `BLOCKED` | Phase 10 | |
-| Appendix D — Additional results | `BLOCKED` | Phase 10 | |
+| Appendix A — Infrastructure | `DRAFTABLE` | Phase 01 (Data Exploration), Pipeline Section 01_01 | Pipeline arch, schema |
+| Appendix B — Feature lists | `BLOCKED` | Phase 02 (Feature Engineering) | |
+| Appendix C — Hyperparameters | `BLOCKED` | Phase 04 (Model Training) | |
+| Appendix D — Additional results | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
 | Appendix E — Code repository | `SKELETON` | — | Repo structure description |

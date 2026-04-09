@@ -16,7 +16,7 @@ Game engine timing: 16 loops/game-second, 22.4 loops/real-second at Faster speed
 Sources: s2client-proto, Vinyals et al. 2017, Liquipedia Game Speed.
 Replay file format: s2protocol, tracker events, game events.
 
-DRAFTABLE after Phase 1 (game loop timing sourced, patch landscape produced).
+DRAFTABLE after Phase 01 (Data Exploration) — game loop timing sourced, patch landscape produced.
 -->
 
 ## 2.3 Age of Empires II

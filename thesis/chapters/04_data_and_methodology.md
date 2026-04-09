@@ -9,7 +9,7 @@ Citation: Białecki et al. 2023, Scientific Data, v2.1.0 (Zenodo: 17829625).
 Corpus size, tournament count, date range, replay structure.
 Data quality: parse coverage, duration distribution, APM/MMR findings.
 
-DRAFTABLE — Phase 0 complete, full stats after Phase 1.
+DRAFTABLE — Phase 01 (Data Exploration), Pipeline Section 01_01 complete; full stats after Phase 01 Section 01_05.
 -->
 
 ### 4.1.2 AoE2 match data
@@ -34,7 +34,7 @@ BLOCKED — both datasets needed.
 
 <!--
 Two-path pipeline, canonical replay_id, join validation.
-DRAFTABLE — Phase 0 complete.
+DRAFTABLE — Phase 01 (Data Exploration), Pipeline Section 01_01 complete.
 -->
 
 ### 4.2.2 Player identity resolution
@@ -42,7 +42,7 @@ DRAFTABLE — Phase 0 complete.
 <!--
 Toon fragmentation, nickname as canonical ID, multi-toon classification.
 Player coverage stats, cold-start players.
-BLOCKED — Phase 2.
+BLOCKED — Phase 01 (Data Exploration), Pipeline Sections 01_02–01_03.
 -->
 
 ### 4.2.3 Cleaning rules and valid corpus
@@ -50,7 +50,7 @@ BLOCKED — Phase 2.
 <!--
 Each exclusion rule with empirical motivation. Duration threshold derivation.
 Cleaning impact quantification.
-BLOCKED — Phase 6.
+BLOCKED — Phase 01 (Data Exploration), Pipeline Section 01_04.
 -->
 
 ## 4.3 Feature engineering
@@ -60,14 +60,14 @@ BLOCKED — Phase 6.
 <!--
 Elo/Glicko-2, rolling win rate, activity, H2H, tournament momentum, career stats.
 Symmetric formulation: focal_player + opponent + context.
-BLOCKED — Phase 7.
+BLOCKED — Phase 02 (Feature Engineering).
 -->
 
 ### 4.3.2 SC2-specific in-game features
 
 <!--
 PlayerStats fields at canonical timepoints, separability analysis.
-BLOCKED — Phase 4.
+BLOCKED — Phase 01 (Data Exploration), Pipeline Section 01_05; Phase 02 (Feature Engineering).
 -->
 
 ### 4.3.3 AoE2-specific features
@@ -84,21 +84,21 @@ BLOCKED — AoE2 roadmap.
 <!--
 Per-player temporal split. Why per-game splits cause leakage.
 Comparison with naïve global split.
-BLOCKED — Phase 8.
+BLOCKED — Phase 03 (Splitting & Baselines).
 -->
 
 ### 4.4.2 Model configurations
 
 <!--
 LR, RF, LightGBM/XGBoost, Elo/Glicko baseline. Neural nets if used.
-BLOCKED — Phase 9–10.
+BLOCKED — Phase 03 (Splitting & Baselines); Phase 04 (Model Training).
 -->
 
 ### 4.4.3 Hyperparameter tuning protocol
 
 <!--
 Validation-set-based, no test set peeking.
-BLOCKED — Phase 10.
+BLOCKED — Phase 04 (Model Training).
 -->
 
 ### 4.4.4 Evaluation metrics

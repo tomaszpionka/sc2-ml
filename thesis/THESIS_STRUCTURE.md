@@ -17,7 +17,7 @@ document to understand **where** each piece of analysis will appear in the final
 thesis, ensuring that every phase artifact is produced with the right level of
 detail and narrative framing for its target section.
 
-Sections marked `[SC2]` are fed primarily by the SC2 roadmap phases (`src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` for Phases 0–2, `src/rts_predict/sc2/reports/ROADMAP.md` for Phases 3+).
+Sections marked `[SC2]` are fed primarily by the SC2 roadmap phases (see `docs/PHASES.md` for the canonical 7-phase list; `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` is the sc2egset dataset execution plan).
 Sections marked `[AoE2]` will be fed by a future AoE2 roadmap (not yet written).
 Sections marked `[CROSS]` synthesise findings from both games.
 
@@ -120,7 +120,7 @@ weaknesses, hyperparameters, and interpretability.
 - Critical difference diagrams (Wilcoxon-based, not Nemenyi-based)
 
 **Fed by:** Literature review. Some domain knowledge validated during
-SC2 Phase 0–1 (game loop timing, APM/MMR findings).
+SC2 Phase 01 (Data Exploration) — game loop timing and APM/MMR findings.
 
 ---
 
@@ -174,7 +174,7 @@ engineering, and the unified experimental protocol.
 - Data quality: parse coverage, missing events, duration distribution
 - APM availability (2017+) and MMR unusability (systematic missingness)
 
-**Fed by:** SC2 Phases 0–1 (audit, corpus inventory).
+**Fed by:** SC2 Phase 01 (Data Exploration) — data acquisition, EDA, and corpus inventory.
 
 #### 4.1.2 AoE2 Match Data `[AoE2]`
 - Source: aoestats.io API / Parquet dumps, match metadata structure
@@ -182,7 +182,7 @@ engineering, and the unified experimental protocol.
 - Data limitations: no in-game state, no replay-level game events
 - Comparison with SC2 data richness — table of available fields
 
-**Fed by:** AoE2 roadmap Phase 0 (future).
+**Fed by:** AoE2 Phase 01 (Data Exploration — future).
 
 #### 4.1.3 Data asymmetry acknowledgement `[CROSS]`
 - SC2: rich in-game time series (PlayerStats every ~7s) + pre-game metadata
@@ -196,21 +196,21 @@ engineering, and the unified experimental protocol.
 - Two-path pipeline (Path A: metadata, Path B: events)
 - Canonical replay_id design and join validation
 
-**Fed by:** SC2 Phase 0.
+**Fed by:** SC2 Phase 01 (Data Exploration), Pipeline Section 01_01.
 
 #### 4.2.2 Player identity resolution
 - Toon fragmentation problem, nickname as canonical ID
 - Multi-toon classification (server switch, rename, ambiguous)
 - Player coverage: game count distribution, cold-start players
 
-**Fed by:** SC2 Phase 2.
+**Fed by:** SC2 Phase 01 (Data Exploration), Pipeline Sections 01_02–01_03.
 
 #### 4.2.3 Cleaning rules and valid corpus
 - Each exclusion rule with its empirical motivation (table format)
-- Data-driven duration threshold derivation (from Phase 1 distribution)
+- Data-driven duration threshold derivation (from Phase 01 EDA distribution)
 - Cleaning impact quantification
 
-**Fed by:** SC2 Phase 6.
+**Fed by:** SC2 Phase 01 (Data Exploration), Pipeline Section 01_04.
 
 ### 4.3 Feature engineering
 
@@ -227,14 +227,14 @@ engineering, and the unified experimental protocol.
   player_a and player_b; model input is always
   (focal_player_features, opponent_features, context_features)
 
-**Fed by:** SC2 Phase 7 (Group A), AoE2 feature engineering (future).
+**Fed by:** SC2 Phase 02 (Feature Engineering) — Group A features; AoE2 Phase 02 (future).
 
 #### 4.3.2 SC2-specific in-game features (SC2 only) `[SC2]`
 - PlayerStats economic fields at canonical timepoints
 - Unit and upgrade event summaries
 - Winner/loser separability analysis (Cohen's d ranking)
 
-**Fed by:** SC2 Phases 4, 7 (Group B).
+**Fed by:** SC2 Phase 01 (Data Exploration), Pipeline Section 01_05; Phase 02 (Feature Engineering) — Group B features.
 
 #### 4.3.3 AoE2-specific features `[AoE2]`
 - Civilisation pick features, map type features
@@ -249,7 +249,7 @@ engineering, and the unified experimental protocol.
 - Why per-game splits cause leakage in player-dependent prediction
 - Comparison with naïve global temporal split
 
-**Fed by:** SC2 Phase 8.
+**Fed by:** SC2 Phase 03 (Splitting & Baselines).
 
 #### 4.4.2 Model configurations
 - Logistic Regression: regularisation, feature scaling
@@ -267,7 +267,7 @@ engineering, and the unified experimental protocol.
 - Secondary: calibration curve, per-matchup accuracy, cold-start stratification
 - Cross-game comparison: Friedman test + critical difference diagram
 
-**Fed by:** SC2 Phases 8–9, AoE2 equivalent phases (future).
+**Fed by:** SC2 Phase 03 (Splitting & Baselines) and Phase 04 (Model Training); AoE2 equivalent phases (future).
 
 ---
 
@@ -293,7 +293,7 @@ engineering, and the unified experimental protocol.
 - ZvT, ZvP, TvP, mirrors
 - Accuracy stratified by career history length
 
-**Fed by:** SC2 Phases 9–10.
+**Fed by:** SC2 Phase 03 (Splitting & Baselines) and Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis).
 
 ### 5.2 Age of Empires II results `[AoE2]`
 
@@ -328,7 +328,7 @@ engineering, and the unified experimental protocol.
 - Cold-start curves overlaid
 - Discussion of information asymmetry (SC2 has in-game data, AoE2 does not)
 
-**Fed by:** Synthesis of SC2 Phases 9–10 and AoE2 equivalent phases.
+**Fed by:** Synthesis of SC2 Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) and AoE2 equivalent phases.
 
 ---
 
@@ -408,7 +408,7 @@ Key references to include (non-exhaustive):
 ### Appendix A — Data acquisition and preprocessing infrastructure
 - Pipeline architecture diagram
 - DuckDB schema
-- SC2 ingestion audit results (Phase 0 artifacts)
+- SC2 ingestion audit results (Phase 01 artifacts)
 - AoE2 data collection methodology
 
 ### Appendix B — Complete feature lists
@@ -431,16 +431,14 @@ Key references to include (non-exhaustive):
 
 ## Phase-to-chapter mapping (quick reference)
 
-| SC2 Roadmap Phase | Primary thesis section |
+Canonical phase list: `docs/PHASES.md`.
+
+| SC2 Roadmap Phase (new numbering) | Primary thesis section |
 |---|---|
-| Phase 0 — Ingestion audit | Appendix A |
-| Phase 1 — Corpus inventory | §4.1.1 (SC2EGSet description) |
-| Phase 2 — Player identity | §4.2.2 (Player identity resolution) |
-| Phase 3 — Games table | §4.2, §4.4.1 (Temporal structure, split design) |
-| Phase 4 — In-game profiling | §4.3.2 (SC2 in-game features) |
-| Phase 5 — Map/meta-game | §4.3.1 (Control features), §5.1 context |
-| Phase 6 — Cleaning | §4.2.3 (Cleaning rules) |
-| Phase 7 — Feature engineering | §4.3 (Feature engineering) |
-| Phase 8 — Split construction | §4.4.1 (Split strategy) |
-| Phase 9 — Baselines | §5.1.1 (SC2 baselines) |
-| Phase 10 — Models | §5.1.2–5.1.4 (SC2 results) |
+| Phase 01 — Data Exploration (Pipeline Sections 01_01–01_06) | §4.1.1 (SC2EGSet description), §4.2.1 (Ingestion), §4.2.2 (Player identity), §4.2.3 (Cleaning), Appendix A |
+| Phase 02 — Feature Engineering | §4.3 (Feature engineering) |
+| Phase 03 — Splitting & Baselines | §4.4.1 (Split strategy), §5.1.1 (SC2 baselines) |
+| Phase 04 — Model Training | §4.4.2–4.4.3 (Configurations, HPO), §5.1.2–5.1.4 (SC2 results) |
+| Phase 05 — Evaluation & Analysis | §5.1.2–5.1.4 (SC2 results, feature importance, ablation) |
+| Phase 06 — Cross-Domain Transfer | §5.3 (Cross-game comparison), §6.3 (Generalisability) |
+| Phase 07 — Thesis Writing Wrap-up | Gate marker — all findings incorporated into thesis |

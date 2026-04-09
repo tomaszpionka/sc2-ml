@@ -6,28 +6,28 @@
 
 <!--
 Random (50%), race-matchup, Glicko-2 rating, recent form, head-to-head.
-BLOCKED — Phase 9.
+BLOCKED — Phase 03 (Splitting & Baselines).
 -->
 
 ### 5.1.2 Pre-game prediction (Group A features)
 
 <!--
 Model comparison table. Feature importance (SHAP). Ablation study.
-BLOCKED — Phase 10.
+BLOCKED — Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis).
 -->
 
 ### 5.1.3 In-game prediction (Group B, SC2 only)
 
 <!--
 Accuracy as function of game time. Comparison with pre-game model.
-BLOCKED — Phase 10.
+BLOCKED — Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis).
 -->
 
 ### 5.1.4 Per-matchup and cold-start analysis
 
 <!--
 ZvT, ZvP, TvP, mirrors. Accuracy stratified by career history length.
-BLOCKED — Phase 10.
+BLOCKED — Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis).
 -->
 
 ## 5.2 Age of Empires II results

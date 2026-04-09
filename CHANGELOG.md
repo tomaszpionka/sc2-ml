@@ -19,6 +19,15 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.15] — 2026-04-09 (PR #12: chore/thesis-phase-refs)
+
+### Changed
+- `thesis/THESIS_STRUCTURE.md`: Phase-to-chapter mapping table rewritten from old 11-phase to new 7-phase (Phase 01–07) scheme; all scattered "Phase N" references updated; pointer to `docs/PHASES.md` added
+- `thesis/WRITING_STATUS.md`: "Feeds from" column updated throughout to use new Phase 01–07 numbering; last-updated date refreshed
+- `thesis/chapters/02_theoretical_background.md`: skeleton comment updated from "Phase 1" to "Phase 01 (Data Exploration)"
+- `thesis/chapters/04_data_and_methodology.md`: all skeleton BLOCKED/DRAFTABLE comments updated to new Phase numbering with Pipeline Section references
+- `thesis/chapters/05_experiments_and_results.md`: all skeleton BLOCKED comments updated to new Phase numbering
+
 ## [0.29.14] — 2026-04-09 (PR #10: chore/arch-game-contract-phase-refs)
 
 ### Changed
