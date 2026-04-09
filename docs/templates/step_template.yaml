@@ -1,0 +1,160 @@
+# Step Definition Template
+#
+# Canonical template for defining a Step in a dataset ROADMAP.
+# A Step is the atomic leaf unit of work in the project taxonomy:
+# one notebook, its artifacts, one research log entry.
+#
+# Authoritative sources:
+#   Taxonomy          docs/TAXONOMY.md
+#   Canonical Phases  docs/PHASES.md
+#   Invariants        .claude/scientific-invariants.md
+#   Research log      reports/RESEARCH_LOG_TEMPLATE.md
+#   Sandbox contract  sandbox/README.md
+#
+# How to use:
+#   1. Copy the YAML block below into the relevant dataset ROADMAP at
+#      src/rts_predict/<game>/reports/<dataset>/ROADMAP.md inside a
+#      fenced YAML code block.
+#   2. Replace every <placeholder> with a concrete value.
+#   3. Fields marked required: true must be populated. Fields marked
+#      required: false may be omitted entirely (do not leave them as
+#      empty strings -- remove the key).
+#   4. If a required field is genuinely not applicable, keep the key
+#      but add a one-line comment explaining why.
+#   5. Do not add new fields without updating this template first.
+#
+# Naming conventions:
+#   Step number       NN_NN_NN (Phase_Section_Step, zero-padded)
+#   Notebook path     sandbox/<game>/<dataset>/NN_<slug>/NN_<slug>/NN_NN_NN_<name>.py
+#   Artifact path     src/rts_predict/<game>/reports/<dataset>/artifacts/NN_<slug>/NN_<slug>/
+#
+# ---- TEMPLATE START (copy below this line) ----
+
+# -- Identity --
+
+step_number:
+  value: "<NN_NN_NN>"
+  required: true
+
+name:
+  value: "<short descriptive name, used in headings and the research log>"
+  required: true
+
+description:
+  value: "<one to two sentences: what this Step does, concretely>"
+  required: true
+
+# -- Hierarchy context --
+
+phase:
+  value: "<NN -- phase name, per docs/PHASES.md>"
+  required: true
+
+pipeline_section:
+  value: "<NN_NN -- section name, per docs/PHASES.md>"
+  required: true
+
+manual_reference:
+  value: "<manual_filename.md, section number>"
+  required: true
+
+dataset:
+  value: "<sc2egset | aoe2companion | aoestats>"
+  required: true
+
+# -- Scientific purpose --
+
+question:
+  value: "<one sentence: what does this Step answer?>"
+  required: true
+
+method:
+  value: "<two to four sentences: the analytical approach; SQL-first where possible; all non-trivial logic lives in src/rts_predict/ and is imported by the notebook>"
+  required: true
+
+stratification:
+  value: "<how the analysis is broken down: by year, tournament, matchup, race, era, etc.; corpus-wide single-number aggregates are not acceptable as the sole output>"
+  required: true
+
+# -- Predecessors --
+
+predecessors:
+  value:
+    - "<step number whose artifacts this Step consumes>"
+  required: false
+  # Use "none -- independent" if this Step has no upstream dependencies.
+
+# -- Inputs and outputs --
+
+notebook_path:
+  value: "<sandbox/<game>/<dataset>/NN_<slug>/NN_<slug>/NN_NN_NN_<name>.py>"
+  required: true
+  # Paired .ipynb committed alongside.
+
+inputs:
+  duckdb_tables:
+    value:
+      - "<table name>"
+    required: true
+  schema_yamls:
+    value:
+      - "<path to schema YAML>"
+    required: false
+  prior_artifacts:
+    value:
+      - "<artifact path from a predecessor Step>"
+    required: false
+  external_references:
+    value:
+      - "<manual, invariant, or paper cited in the analysis>"
+    required: false
+
+outputs:
+  data_artifacts:
+    value:
+      - "<NN_NN_NN_<name>.csv|parquet|json under artifacts/NN_<slug>/NN_<slug>/>"
+    required: true
+  report:
+    value: "<NN_NN_NN_<name>.md in the same artifact directory>"
+    required: true
+
+# -- Reproducibility --
+
+reproducibility:
+  value: "<SQL or Python code embedded in the report alongside every reported number, per Invariant 6; all thresholds cited to a source per Invariant 7; random seeds set and logged; library functions listed>"
+  required: true
+
+scientific_invariants_applied:
+  value:
+    - number: "<N>"
+      how_upheld: "<one sentence on how this Step upholds invariant N>"
+  required: true
+  # List every invariant from .claude/scientific-invariants.md that this
+  # Step touches. For early exploration Steps where no invariant applies,
+  # use: "N/A -- pure profiling".
+
+# -- Gate --
+
+gate:
+  artifact_check:
+    value: "<which files must exist on disk, non-empty, for this Step to be complete>"
+    required: true
+  continue_predicate:
+    value: "<what must hold for the next Step in this Pipeline Section to begin>"
+    required: true
+  halt_predicate:
+    value: "<what observation forces halt-and-escalate to the user; write 'none' if no halt condition exists>"
+    required: true
+
+# -- Traceability --
+
+thesis_mapping:
+  value:
+    - "<section path in thesis/THESIS_STRUCTURE.md that this Step feeds>"
+  required: true
+  # Used by the writer-thesis agent to trace prose claims back to their
+  # source Step.
+
+research_log_entry:
+  value: "<required on completion, following reports/RESEARCH_LOG_TEMPLATE.md; must link back to this Step ID>"
+  required: true

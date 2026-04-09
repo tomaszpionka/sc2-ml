@@ -23,7 +23,7 @@ poetry run pytest tests/ -v --cov=rts_predict
 |----------|---------|
 | `CLAUDE.md` | AI assistant instructions and project rules — read first |
 | `.claude/scientific-invariants.md` | Thesis methodology constraints — non-negotiable |
-| `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` | **Authoritative phase-by-phase execution plan** |
+| `docs/PHASES.md` | **Canonical phase list — 7 Phases of the ML experiment lifecycle** |
 | `reports/research_log.md` | Reverse-chronological thesis narrative |
 | `CHANGELOG.md` | Code version history |
 | `.claude/` | Coding, workflow, and ML experiment standards |
@@ -41,6 +41,6 @@ poetry run pytest tests/ -v --cov=rts_predict
 ## Project State
 
 The SC2 pipeline has a working ingestion layer and draft feature/model code, but data
-exploration (Phases 1–6 of `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md`) has not been completed.
+exploration (Phase 01 — see `docs/PHASES.md` and `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`) has not been completed.
 All feature and model code is a draft to be audited and revised as exploration findings
 arrive. Do not treat existing module outputs as validated results.

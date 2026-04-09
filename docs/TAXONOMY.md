@@ -91,6 +91,12 @@ not depend on `01_01_99`.
 - One or more artifacts under the matching `reports/<dataset>/artifacts/` subpath.
 - One entry in `reports/research_log.md` summarising the Step's findings.
 
+**Step schema.** A Step's definition in a dataset ROADMAP is a fenced YAML
+block matching the schema in [`docs/templates/step_template.yaml`](templates/step_template.yaml).
+The ROADMAP file is markdown; Step definitions are machine-parseable YAML
+inside it. Required fields must be populated; optional fields are omitted
+entirely rather than left empty.
+
 A Step that produces no artifact is not a Step — it's either a Chore or a
 Refactor (see *Categories* below).
 

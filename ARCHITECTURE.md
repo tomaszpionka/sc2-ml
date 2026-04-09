@@ -17,7 +17,7 @@ rts-outcome-prediction/
 │   ├── aoe2/                # Age of Empires II — placeholder, mirrors sc2/ when populated
 │   └── common/              # Shared evaluation code — see common/CONTRACT.md
 ├── sandbox/                 # Jupyter notebook exploration — see sandbox/README.md
-│   ├── sc2/sc2egset/        # SC2EGSet notebooks (Phases 0–2)
+│   ├── sc2/sc2egset/        # SC2EGSet notebooks (all dataset-scoped Phases)
 │   └── aoe2/                # AoE2 placeholders
 ├── tests/                   # Mirrored test tree — see .claude/rules/python-code.md
 ├── thesis/                  # Thesis chapters and figures
@@ -48,8 +48,8 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
 | — | Tests live in mirrored `tests/rts_predict/` tree, not inside game packages | — |
 | `reports/` | Phase artifacts (tracked in git) | Yes |
-| `reports/ROADMAP.md` | Game-level execution plan (Phases 3+) | Yes |
-| `reports/<dataset>/ROADMAP.md` | Dataset-level execution plan (Phases 0–2) | Per dataset |
+| `reports/ROADMAP.md` | Game-level navigation (lists datasets, points to docs/PHASES.md) | Yes |
+| `reports/<dataset>/ROADMAP.md` | Dataset-level execution plan (all Phases — see docs/PHASES.md) | Per dataset |
 | `reports/<dataset>/` | Named documentation files (`ROADMAP.md`, `INVARIANTS.md`, etc.) | Per dataset |
 | `reports/<dataset>/artifacts/` | Machine-generated step outputs (`XX_XX_*`, any extension) | Per dataset |
 | `models/` | Serialised model artifacts (gitignored) | When modelling begins |
@@ -90,26 +90,32 @@ the lower-precedence file is edited to match, never the reverse.
    what Phase, Pipeline Section, Step, Spec, PR, Category, and Session mean
    in this repository. See the taxonomy file itself for definitions.
 
-4. **`src/rts_predict/<game>/reports/ROADMAP.md`** — game-level roadmap.
+4. **`docs/PHASES.md`** — canonical Phase list. Enumerates the 7 Phases and
+   their Pipeline Sections. Derived from the methodology manuals in tier (2).
+   All downstream files that reference Phase numbers point here. See also
+   `docs/templates/step_template.yaml` for the Step definition schema used
+   in dataset ROADMAPs.
+
+5. **`src/rts_predict/<game>/reports/ROADMAP.md`** — game-level roadmap.
    Owns the canonical per-game Phase numbering. Each Phase must map to at
    least one manual in tier (2). If a manual in tier (2) and a game-level
    ROADMAP disagree, the ROADMAP is revised to match the manual — not the
    reverse.
 
-5. **`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`** — dataset-level
+6. **`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`** — dataset-level
    roadmap. Owns Pipeline Section and Step numbering within the dataset's
    in-scope Phases. Cannot invent Phases; can only decompose Phases into
    Pipeline Sections and Steps per `docs/TAXONOMY.md`.
 
-6. **`src/rts_predict/<game>/PHASE_STATUS.yaml`** — machine-readable phase
-   status. Strictly derived from tiers (4) and (5). Never authoritative;
+7. **`src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`** — machine-readable phase
+   status. Strictly derived from tiers (5) and (6). Never authoritative;
    never diverges. If it diverges from the ROADMAPs, it is wrong and gets
    regenerated.
 
-7. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
+8. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
    `.claude/agents/*.md`, and any other file that instructs Claude agents
    how to work. These reference phase numbers and terminology only via
-   pointers into tiers (3), (4), and (5). They never inline-encode a numbered
+   pointers into tiers (3), (4), (5), and (6). They never inline-encode a numbered
    Phase list and never redefine terminology.
 
 **The rule.** Higher-precedence tiers are sources; lower-precedence tiers
