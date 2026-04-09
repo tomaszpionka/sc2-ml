@@ -19,7 +19,7 @@ merged to `master`.
 
 ### Removed
 
-## [1.1.0] — 2026-04-09 (PR #15: feat/phase01-discovery-library)
+## [1.1.0] — 2026-04-09 (PR #88: feat/phase01-discovery-library)
 
 ### Added
 - `src/rts_predict/common/inventory.py`: `InventoryResult`, `SubdirSummary`, `FileEntry` dataclasses and `inventory_directory()` function for filesystem inventory
@@ -30,7 +30,7 @@ merged to `master`.
 - `tests/rts_predict/common/test_json_utils.py`: full test coverage for json_utils module (new and existing functions)
 - `tests/rts_predict/aoe2/data/aoestats/test_acquisition.py`: tests for `download_overview()`
 
-## [1.0.1] — 2026-04-09 (PR #NN: chore/roadmap-phase01-skeleton-reset)
+## [1.0.1] — 2026-04-09 (PR #87: chore/roadmap-phase01-skeleton-reset)
 
 ### Changed
 - 3 dataset ROADMAPs: Phase 01 reset from detailed Steps to generic Pipeline Section skeleton; detailed versions archived with `_2026-04-09_detailed_phase01` suffix
@@ -121,7 +121,7 @@ documents that landed before the migration started.
 - `reports/research_log.md` (full pre-migration log) →
   `reports/archive/research_log_pre_phase_migration.md`
 
-## [0.29.15] — 2026-04-09 (PR #12: chore/thesis-phase-refs)
+## [0.29.15] — 2026-04-09 (PR #85: chore/thesis-phase-refs)
 
 ### Changed
 - `thesis/THESIS_STRUCTURE.md`: Phase-to-chapter mapping table rewritten from old 11-phase to new 7-phase (Phase 01–07) scheme; all scattered "Phase N" references updated; pointer to `docs/PHASES.md` added
@@ -130,7 +130,7 @@ documents that landed before the migration started.
 - `thesis/chapters/04_data_and_methodology.md`: all skeleton BLOCKED/DRAFTABLE comments updated to new Phase numbering with Pipeline Section references
 - `thesis/chapters/05_experiments_and_results.md`: all skeleton BLOCKED comments updated to new Phase numbering
 
-## [0.29.14] — 2026-04-09 (PR #10: chore/arch-game-contract-phase-refs)
+## [0.29.14] — 2026-04-09 (PR #84: chore/arch-game-contract-phase-refs)
 
 ### Changed
 - `ARCHITECTURE.md`: game package contract table updated — `PHASE_STATUS.yaml` row moved from game-level to dataset-level (`reports/<dataset>/PHASE_STATUS.yaml`, Required column changed to "Per dataset")
@@ -469,7 +469,7 @@ documents that landed before the migration started.
 - `CLAUDE.md` — added `Methodology manuals index` row to Key File Locations table
 - `ARCHITECTURE.md` — added `Methodology manuals` row to Cross-cutting files table
 
-## [0.18.4] — 2026-04-06 (PR #N: chore/per-dataset-reports)
+## [0.18.4] — 2026-04-06 (PR #45: chore/per-dataset-reports)
 
 ### Added
 - `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` — dataset-level roadmap (Phases 0–2) split from the former monolithic `SC2_THESIS_ROADMAP.md`
@@ -494,7 +494,7 @@ documents that landed before the migration started.
 - `src/rts_predict/sc2/reports/SC2_THESIS_ROADMAP.md` — split into `sc2egset/ROADMAP.md` (Phases 0–2) and `ROADMAP.md` (Phases 3–10)
 - `src/rts_predict/aoe2/reports/AOE2_THESIS_ROADMAP.md` — replaced by `ROADMAP.md` placeholder
 
-## [0.18.3] — 2026-04-06 (PR #N: chore/per-dataset-reports)
+## [0.18.3] — 2026-04-06 (PR #44: chore/per-dataset-reports)
 
 ### Added
 - `src/rts_predict/sc2/data/tests/test_audit.py` — 9 new tests covering `run_full_path_a_ingestion`, `run_path_b_extraction`, and the `validate_path_a_b_join` audit-file cross-reference branch; `audit.py` now at 100% coverage
