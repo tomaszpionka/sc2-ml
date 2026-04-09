@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.6] — 2026-04-09 (PR #76: chore/archive-aoestats-phase-migration)
+
+### Changed
+- `src/rts_predict/aoe2/reports/aoestats/archive/`: consolidated all pre-migration aoestats artifacts — moved `INVARIANTS.md` and all 8 Phase 0 artifacts (`00_01` through `00_07`) into `archive/`; created `archive/_README.md` describing archive contents
+- `src/rts_predict/aoe2/reports/aoestats/README.md`: added permanent provenance record preserving acquisition facts (download date 2026-04-06, 172 non-zero weeks, 30,690,651 raw_matches rows, schema drift details, known download failure for `2025-11-16_2025-11-22_players.parquet`)
+
 ## [0.29.5] — 2026-04-09 (PR #75: chore/archive-aoe2companion-phase-migration)
 
 ### Changed
