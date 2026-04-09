@@ -1,0 +1,23 @@
+## Summary
+
+- Creates `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` — the dataset-scoped execution plan for aoestats, following the same structural template as aoe2companion (PR-9a)
+- Phase 01 fully decomposed into 9 Steps across 6 Pipeline Sections (`01_01`–`01_06`), tailored to aoestats' 2-table structure (raw_matches, raw_players); no leaderboard or profiles tables
+- Known missing file `2025-11-16_2025-11-22_players.parquet` documented in the header, Step 01_01_01 gate condition, cleaning rule inventory (01_04_01), and temporal EDA (01_05_01)
+- Schema drift documented in header with canonical resolved types; verified in profiling steps 01_03_01 and 01_03_02
+- Phases 02-07 listed as placeholder stubs per `docs/PHASES.md`; library function names (`load_all_raw_tables`) verified against `ingestion.py`
+- Version bumped to 0.29.13
+
+## Test plan
+
+- [x] `ROADMAP.md` created at `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md`
+- [x] Step 01_01_01 is "Ingest existing raw Parquet" — no download step
+- [x] Known missing file `2025-11-16_2025-11-22_players.parquet` appears in header, 01_01_01, 01_04_01, 01_05_01
+- [x] Schema drift section in header lists all 6 drifted columns with canonical types
+- [x] Only 2 raw tables (raw_matches, raw_players) — no leaderboard/profiles steps
+- [x] Library function `load_all_raw_tables()` matches actual `ingestion.py` definition
+- [x] All notebook paths use nested layout: `sandbox/aoe2/aoestats/01_exploration/<slug>/NN_NN_NN_<name>.py`
+- [x] No old phase numbers
+- [x] `CHANGELOG.md` entry added under `[0.29.13]`
+- [x] `pyproject.toml` version bumped to `0.29.13`
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

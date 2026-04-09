@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.13] — 2026-04-09 (PR #83: chore/aoestats-roadmap)
+
+### Added
+- `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md`: new dataset ROADMAP for aoestats; Phase 01 fully decomposed into 6 Pipeline Sections (01_01–01_06) with 9 Steps tailored to aoestats' data structure (2 raw tables: raw_matches and raw_players); known missing file `2025-11-16_2025-11-22_players.parquet` documented in header, Step 01_01_01, and cleaning rule inventory; schema drift (raw_match_type DOUBLE→BIGINT, five raw_players columns) documented in header with canonical resolved types verified in profiling steps; Phases 02-07 listed as placeholders; all notebook paths use nested layout under `sandbox/aoe2/aoestats/01_exploration/`; library function names verified against `ingestion.py`
+
 ## [0.29.12] — 2026-04-09 (PR #82: chore/aoe2companion-roadmap)
 
 ### Added
