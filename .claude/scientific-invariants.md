@@ -115,5 +115,5 @@ not here. See:
   - src/rts_predict/sc2/reports/sc2egset/INVARIANTS.md (when created)
   - src/rts_predict/aoe2/reports/<dataset>/INVARIANTS.md (when created)
 
-These per-dataset files are populated as Phase 1 exploration surfaces
+These per-dataset files are populated as Phase 01 (Data Exploration) surfaces
 verifiable findings.

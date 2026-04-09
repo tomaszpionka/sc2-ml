@@ -1,5 +1,4 @@
-> **Phase activation:** Active from Phase 9 (baselines) onward. Before Phase 9,
-> Claude Code does not need to read this file.
+> **Phase activation:** Active from Phase 04 (Model Training) onward. See docs/PHASES.md.
 
 Before reading this file, read `.claude/scientific-invariants.md`.
 The invariants there take precedence over any implementation convenience
@@ -30,7 +29,7 @@ its result) is contamination that makes results unreproducible in real inference
 2. **Run and log** — after every experiment, log results in the game-specific reports directory (e.g. `src/rts_predict/sc2/reports/`) following the `XX_run.md` naming convention
 3. **Compare baselines** — always compare against established results (~63-65% accuracy for classical models)
 4. **Temporal splits only** — no random shuffling. The correct split strategy is
-per-player leave-last-tournament-out (see reports/ROADMAP.md Phase 8). The
+per-player leave-last-tournament-out (see the active dataset's ROADMAP.md, Phase 03 — Splitting & Baselines). The
 legacy create_temporal_split() and GLOBAL_TEST_SIZE are superseded and must
 not be used for any thesis experiment.
 5. **Fixed seeds** — random seed 42 is the convention; all experiments must be reproducible

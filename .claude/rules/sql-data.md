@@ -17,7 +17,7 @@ regexp_extract(filename, '([0-9a-f]{32})\.SC2Replay\.json$', 1) AS replay_id
 ```sql
 split_part(filename, '/', -3) AS tournament_dir
 ```
-Validated Phase 0 Step 0.2 (50/50). Must be persistent column on `raw`.
+Validated in Phase 01, Pipeline Section 01_01 (Data Acquisition & Source Inventory). Must be persistent column on `raw`.
 
 ## View Design
 - Every view: comment block with purpose + row multiplicity

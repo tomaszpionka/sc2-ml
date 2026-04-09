@@ -45,7 +45,7 @@ tests after each logical unit → report which gate condition is met.
 
 | Category | Branch prefix | Read before planning |
 |----------|--------------|---------------------|
-| A — Phase work | `feat/` | scientific-invariants.md, SC2_THESIS_ROADMAP.md |
+| A — Phase work | `feat/` | scientific-invariants.md, docs/PHASES.md, active dataset ROADMAP.md |
 | B — Refactor | `refactor/` | (rules load automatically on .py touch) |
 | C — Chore | `chore/` | (rules load automatically) |
 | D — Bug fix | `fix/` | scientific-invariants.md if data/feature code |
@@ -60,7 +60,8 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 
 | What | Where |
 |------|-------|
-| Phase status | `src/rts_predict/sc2/PHASE_STATUS.yaml` |
+| Phase status | `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml` |
+| Canonical phase list | `docs/PHASES.md` |
 | SC2 dataset roadmap | `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` |
 | SC2 game roadmap | `src/rts_predict/sc2/reports/ROADMAP.md` |
 | Scientific invariants | `.claude/scientific-invariants.md` |
@@ -70,7 +71,7 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 | Thesis status | `thesis/WRITING_STATUS.md` |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` |
 | Dev constraints | `.claude/dev-constraints.md` (legacy warnings, ordering, platform) |
-| ML experiment protocol | `.claude/ml-protocol.md` (active Phase 9+) |
+| ML experiment protocol | `.claude/ml-protocol.md` |
 | Per-dataset invariants | `src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md` |
 
 ## Phase Work Execution (Sandbox Notebooks)
@@ -112,13 +113,13 @@ definitions, 50-line cell cap, read-only DuckDB, both files committed).
 ## Project Status
 
 Legacy code cleaned in v0.13.2. Surviving caution: `processing.py` →
-`create_temporal_split()` uses wrong split strategy (superseded by Phase 8).
+`create_temporal_split()` uses wrong split strategy (superseded by Phase 03, Splitting & Baselines — see docs/PHASES.md).
 AoE2 placeholder exists at `src/rts_predict/aoe2/` — do not add implementation
 code until instructed.
 
 ## Progress Tracking
 
-- **Session start:** Read PHASE_STATUS.yaml, then scientific-invariants.md
+- **Session start:** Read the active dataset's PHASE_STATUS.yaml, then scientific-invariants.md
 - **After each step:** Update `reports/research_log.md` (mandatory for Category A)
 - **After phase gate:** Update PHASE_STATUS.yaml, check thesis/WRITING_STATUS.md
 - **After Category F:** Update thesis/chapters/REVIEW_QUEUE.md
