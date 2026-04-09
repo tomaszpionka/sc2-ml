@@ -19,11 +19,27 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.9] — 2026-04-09 (PR #79: chore/phase-status-redesign)
+
+### Added
+- `src/rts_predict/sc2/reports/sc2egset/PHASE_STATUS.yaml`: new dataset-level phase status file with 7-phase schema (01–07), all `not_started`
+- `src/rts_predict/aoe2/reports/aoe2companion/PHASE_STATUS.yaml`: new dataset-level phase status file, same schema
+- `src/rts_predict/aoe2/reports/aoestats/PHASE_STATUS.yaml`: new dataset-level phase status file, same schema
+
+### Removed
+- `src/rts_predict/sc2/PHASE_STATUS.yaml`: replaced by dataset-level file; used wrong granularity (game-level) and old 11-phase numbering (0–10)
+- `src/rts_predict/aoe2/PHASE_STATUS.yaml`: replaced by per-dataset files; same issues
+
 ## [0.29.8] — 2026-04-09 (PR #78: chore/research-log-archive-fresh-start)
 
 ### Changed
 - `reports/RESEARCH_LOG_TEMPLATE.md`: updated step numbering format from `[PHASE X / Step X.Y]` to `[Phase XX / Step XX_YY_ZZ]` per docs/PHASES.md
 - `reports/research_log.md`: reset to fresh log with migration header note; all new entries use the new step format
+
+### Fixed
+- `CHANGELOG.md`: corrected PR number placeholders (`PR #N` → `PR #77` for 0.29.7, `PR #11` → `PR #78` for 0.29.8)
+- `CLAUDE.md`: updated sandbox naming convention from `{PHASE:02d}_{STEP}` to three-level `{PHASE}_{PIPELINE_SECTION}_{STEP}` matching sandbox/README.md
+- `CLAUDE.md`: fixed stale agent manual path `docs/AGENT_MANUAL.md` → `docs/agents/AGENT_MANUAL.md`
 
 ### Removed
 - `reports/research_log.md` (old log): archived to `reports/archive/research_log_pre_phase_migration.md`

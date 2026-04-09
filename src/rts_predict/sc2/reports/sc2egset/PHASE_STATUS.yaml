@@ -1,0 +1,34 @@
+# SC2EGSet Phase Status
+# Machine-readable status file. Claude Code reads this at session start.
+# Derived from the dataset ROADMAP. If this file disagrees with the
+# ROADMAP, this file is wrong -- regenerate from the ROADMAP.
+#
+# Canonical phase list: docs/PHASES.md
+# Statuses: not_started | in_progress | complete
+
+game: sc2
+dataset: sc2egset
+dataset_roadmap: src/rts_predict/sc2/reports/sc2egset/ROADMAP.md
+
+phases:
+  "01":
+    name: "Data Exploration"
+    status: not_started
+  "02":
+    name: "Feature Engineering"
+    status: not_started
+  "03":
+    name: "Splitting & Baselines"
+    status: not_started
+  "04":
+    name: "Model Training"
+    status: not_started
+  "05":
+    name: "Evaluation & Analysis"
+    status: not_started
+  "06":
+    name: "Cross-Domain Transfer"
+    status: not_started
+  "07":
+    name: "Thesis Writing Wrap-up"
+    status: not_started
