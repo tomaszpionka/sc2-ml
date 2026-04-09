@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.5] — 2026-04-09 (PR #75: chore/archive-aoe2companion-phase-migration)
+
+### Changed
+- `src/rts_predict/aoe2/reports/aoe2companion/archive/`: consolidated all pre-migration aoe2companion artifacts — moved `INVARIANTS.md`, `aoe2companion_download_report.md`, and all 10 Phase 0 artifacts (`00_01` through `00_08`) into `archive/`; created `archive/_README.md` describing archive contents
+- `src/rts_predict/aoe2/reports/aoe2companion/README.md`: added permanent provenance record preserving acquisition facts (download date 2026-04-06, 4,147 files, 277,099,059 raw_matches rows, snapshot timestamps, sparse rating regime boundary 2025-06-26, dtype strategy, reconciliation strength)
+
 ## [0.29.4] — 2026-04-09 (PR #74: chore/archive-sc2egset-phase-migration)
 
 ### Changed
