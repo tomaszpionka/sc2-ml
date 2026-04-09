@@ -2,787 +2,642 @@
   "step": "01_01_01",
   "dataset": "sc2egset",
   "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/raw",
-  "total_files": 432,
-  "total_bytes": 11202987120,
-  "num_subdirs": 70,
+  "layout": "two-level: raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json",
+  "num_tournament_dirs": 70,
   "files_at_root": 4,
-  "subdirs": [
+  "metadata_files_total": 432,
+  "total_replay_files": 22390,
+  "total_replay_bytes": 224458832476,
+  "tournaments_missing_data_dir": [],
+  "tournaments": [
     {
       "name": "2016_IEM_10_Taipei",
-      "file_count": 7,
-      "total_bytes": 10562592,
-      "total_mb": 10.07,
+      "replay_file_count": 30,
+      "total_bytes": 197556264,
+      "total_mb": 188.4,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 30
       }
     },
     {
       "name": "2016_IEM_11_Shanghai",
-      "file_count": 6,
-      "total_bytes": 18656708,
-      "total_mb": 17.79,
+      "replay_file_count": 60,
+      "total_bytes": 354216089,
+      "total_mb": 337.81,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 60
       }
     },
     {
       "name": "2016_WCS_Winter",
-      "file_count": 6,
-      "total_bytes": 135029780,
-      "total_mb": 128.77,
+      "replay_file_count": 465,
+      "total_bytes": 2569082145,
+      "total_mb": 2450.07,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 465
       }
     },
     {
       "name": "2017_HomeStory_Cup_XV",
-      "file_count": 7,
-      "total_bytes": 48771095,
-      "total_mb": 46.51,
+      "replay_file_count": 107,
+      "total_bytes": 967668122,
+      "total_mb": 922.84,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 107
       }
     },
     {
       "name": "2017_HomeStory_Cup_XVI",
-      "file_count": 6,
-      "total_bytes": 120605337,
-      "total_mb": 115.02,
+      "replay_file_count": 249,
+      "total_bytes": 2377540332,
+      "total_mb": 2267.4,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 249
       }
     },
     {
       "name": "2017_IEM_Shanghai",
-      "file_count": 6,
-      "total_bytes": 37628185,
-      "total_mb": 35.89,
+      "replay_file_count": 81,
+      "total_bytes": 738435844,
+      "total_mb": 704.23,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 81
       }
     },
     {
       "name": "2017_IEM_XI_World_Championship_Katowice",
-      "file_count": 6,
-      "total_bytes": 122290438,
-      "total_mb": 116.63,
+      "replay_file_count": 409,
+      "total_bytes": 2347521769,
+      "total_mb": 2238.77,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 409
       }
     },
     {
       "name": "2017_WCS_Austin",
-      "file_count": 6,
-      "total_bytes": 109115212,
-      "total_mb": 104.06,
+      "replay_file_count": 399,
+      "total_bytes": 2089079783,
+      "total_mb": 1992.3,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 399
       }
     },
     {
       "name": "2017_WCS_Global_Finals",
-      "file_count": 6,
-      "total_bytes": 24107794,
-      "total_mb": 22.99,
+      "replay_file_count": 45,
+      "total_bytes": 471965279,
+      "total_mb": 450.1,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 45
       }
     },
     {
       "name": "2017_WCS_Jonkoping",
-      "file_count": 6,
-      "total_bytes": 128133274,
-      "total_mb": 122.2,
+      "replay_file_count": 332,
+      "total_bytes": 2515862096,
+      "total_mb": 2399.31,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 332
       }
     },
     {
       "name": "2017_WCS_Montreal",
-      "file_count": 6,
-      "total_bytes": 76072972,
-      "total_mb": 72.55,
+      "replay_file_count": 242,
+      "total_bytes": 1507748569,
+      "total_mb": 1437.9,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 242
       }
     },
     {
       "name": "2017_WESG_Barcelona",
-      "file_count": 7,
-      "total_bytes": 67480608,
-      "total_mb": 64.35,
+      "replay_file_count": 135,
+      "total_bytes": 1346933776,
+      "total_mb": 1284.54,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 135
       }
     },
     {
       "name": "2017_WESG_Haikou",
-      "file_count": 6,
-      "total_bytes": 70956075,
-      "total_mb": 67.67,
+      "replay_file_count": 165,
+      "total_bytes": 1401044593,
+      "total_mb": 1336.14,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 165
       }
     },
     {
       "name": "2018_Cheeseadelphia_8",
-      "file_count": 7,
-      "total_bytes": 19594815,
-      "total_mb": 18.69,
+      "replay_file_count": 64,
+      "total_bytes": 392937182,
+      "total_mb": 374.73,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 64
       }
     },
     {
       "name": "2018_HomeStory_Cup_XVII",
-      "file_count": 6,
-      "total_bytes": 167463815,
-      "total_mb": 159.71,
+      "replay_file_count": 343,
+      "total_bytes": 3376056585,
+      "total_mb": 3219.66,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 343
       }
     },
     {
       "name": "2018_HomeStory_Cup_XVIII",
-      "file_count": 6,
-      "total_bytes": 158169605,
-      "total_mb": 150.84,
+      "replay_file_count": 352,
+      "total_bytes": 3134375323,
+      "total_mb": 2989.17,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 352
       }
     },
     {
       "name": "2018_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 209928775,
-      "total_mb": 200.2,
+      "replay_file_count": 444,
+      "total_bytes": 4189923025,
+      "total_mb": 3995.82,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 444
       }
     },
     {
       "name": "2018_IEM_PyeongChang",
-      "file_count": 6,
-      "total_bytes": 22154738,
-      "total_mb": 21.13,
+      "replay_file_count": 62,
+      "total_bytes": 438017585,
+      "total_mb": 417.73,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 62
       }
     },
     {
       "name": "2018_WCS_Austin",
-      "file_count": 6,
-      "total_bytes": 131014675,
-      "total_mb": 124.95,
+      "replay_file_count": 406,
+      "total_bytes": 2612852238,
+      "total_mb": 2491.81,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 406
       }
     },
     {
       "name": "2018_WCS_Global_Finals",
-      "file_count": 6,
-      "total_bytes": 35955788,
-      "total_mb": 34.29,
+      "replay_file_count": 72,
+      "total_bytes": 701516096,
+      "total_mb": 669.02,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 72
       }
     },
     {
       "name": "2018_WCS_Leipzig",
-      "file_count": 6,
-      "total_bytes": 145769771,
-      "total_mb": 139.02,
+      "replay_file_count": 420,
+      "total_bytes": 2921216862,
+      "total_mb": 2785.89,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 420
       }
     },
     {
       "name": "2018_WCS_Montreal",
-      "file_count": 6,
-      "total_bytes": 155950733,
-      "total_mb": 148.73,
+      "replay_file_count": 442,
+      "total_bytes": 3129309997,
+      "total_mb": 2984.34,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 442
       }
     },
     {
       "name": "2018_WCS_Valencia",
-      "file_count": 6,
-      "total_bytes": 161198954,
-      "total_mb": 153.73,
+      "replay_file_count": 410,
+      "total_bytes": 3231606915,
+      "total_mb": 3081.9,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 410
       }
     },
     {
       "name": "2018_WESG_Grand_Finals",
-      "file_count": 6,
-      "total_bytes": 84207877,
-      "total_mb": 80.31,
+      "replay_file_count": 313,
+      "total_bytes": 1671867020,
+      "total_mb": 1594.42,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 313
       }
     },
     {
       "name": "2019_Assembly_Summer",
-      "file_count": 6,
-      "total_bytes": 93701441,
-      "total_mb": 89.36,
+      "replay_file_count": 169,
+      "total_bytes": 1850464342,
+      "total_mb": 1764.74,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 169
       }
     },
     {
       "name": "2019_HomeStory_Cup_XIX",
-      "file_count": 6,
-      "total_bytes": 142489836,
-      "total_mb": 135.89,
+      "replay_file_count": 330,
+      "total_bytes": 2837063143,
+      "total_mb": 2705.63,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 330
       }
     },
     {
       "name": "2019_HomeStory_Cup_XX",
-      "file_count": 6,
-      "total_bytes": 157844765,
-      "total_mb": 150.53,
+      "replay_file_count": 317,
+      "total_bytes": 3164037059,
+      "total_mb": 3017.46,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 317
       }
     },
     {
       "name": "2019_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 220981707,
-      "total_mb": 210.74,
+      "replay_file_count": 440,
+      "total_bytes": 4450797304,
+      "total_mb": 4244.61,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 440
       }
     },
     {
       "name": "2019_WCS_Fall",
-      "file_count": 6,
-      "total_bytes": 229272674,
-      "total_mb": 218.65,
+      "replay_file_count": 601,
+      "total_bytes": 4540648955,
+      "total_mb": 4330.3,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 601
       }
     },
     {
       "name": "2019_WCS_Grand_Finals",
-      "file_count": 6,
-      "total_bytes": 51936923,
-      "total_mb": 49.53,
+      "replay_file_count": 111,
+      "total_bytes": 1020873099,
+      "total_mb": 973.58,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 111
       }
     },
     {
       "name": "2019_WCS_Spring",
-      "file_count": 6,
-      "total_bytes": 191315097,
-      "total_mb": 182.45,
+      "replay_file_count": 540,
+      "total_bytes": 3820599074,
+      "total_mb": 3643.61,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 540
       }
     },
     {
       "name": "2019_WCS_Summer",
-      "file_count": 6,
-      "total_bytes": 249995201,
-      "total_mb": 238.41,
+      "replay_file_count": 596,
+      "total_bytes": 4978423696,
+      "total_mb": 4747.79,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 596
       }
     },
     {
       "name": "2019_WCS_Winter",
-      "file_count": 6,
-      "total_bytes": 258623828,
-      "total_mb": 246.64,
+      "replay_file_count": 469,
+      "total_bytes": 5187812690,
+      "total_mb": 4947.48,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 469
       }
     },
     {
       "name": "2020_05_Dreamhack_Last_Chance",
-      "file_count": 6,
-      "total_bytes": 64295954,
-      "total_mb": 61.32,
+      "replay_file_count": 84,
+      "total_bytes": 1334307033,
+      "total_mb": 1272.49,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 84
       }
     },
     {
       "name": "2020_ASUS_ROG_Online",
-      "file_count": 6,
-      "total_bytes": 61551444,
-      "total_mb": 58.7,
+      "replay_file_count": 107,
+      "total_bytes": 1251284393,
+      "total_mb": 1193.32,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 107
       }
     },
     {
       "name": "2020_Dreamhack_SC2_Masters_Fall",
-      "file_count": 7,
-      "total_bytes": 536679976,
-      "total_mb": 511.82,
+      "replay_file_count": 799,
+      "total_bytes": 10985984595,
+      "total_mb": 10477.05,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 799
       }
     },
     {
       "name": "2020_Dreamhack_SC2_Masters_Summer",
-      "file_count": 6,
-      "total_bytes": 507947578,
-      "total_mb": 484.42,
+      "replay_file_count": 783,
+      "total_bytes": 10493013674,
+      "total_mb": 10006.92,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 783
       }
     },
     {
       "name": "2020_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 211402307,
-      "total_mb": 201.61,
+      "replay_file_count": 438,
+      "total_bytes": 4260262618,
+      "total_mb": 4062.9,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 438
       }
     },
     {
       "name": "2020_StayAtHome_Story_Cup_1",
-      "file_count": 6,
-      "total_bytes": 113483379,
-      "total_mb": 108.23,
+      "replay_file_count": 172,
+      "total_bytes": 2284876232,
+      "total_mb": 2179.03,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 172
       }
     },
     {
       "name": "2020_StayAtHome_Story_Cup_2",
-      "file_count": 6,
-      "total_bytes": 132622763,
-      "total_mb": 126.48,
+      "replay_file_count": 237,
+      "total_bytes": 2644388479,
+      "total_mb": 2521.89,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 237
       }
     },
     {
       "name": "2020_TSL5",
-      "file_count": 6,
-      "total_bytes": 145976123,
-      "total_mb": 139.21,
+      "replay_file_count": 185,
+      "total_bytes": 2904338215,
+      "total_mb": 2769.79,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 185
       }
     },
     {
       "name": "2020_TSL6",
-      "file_count": 6,
-      "total_bytes": 64686427,
-      "total_mb": 61.69,
+      "replay_file_count": 121,
+      "total_bytes": 1333918620,
+      "total_mb": 1272.12,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 121
       }
     },
     {
       "name": "2021_ASUS_ROG_Fall",
-      "file_count": 6,
-      "total_bytes": 54609283,
-      "total_mb": 52.08,
+      "replay_file_count": 78,
+      "total_bytes": 1115359459,
+      "total_mb": 1063.69,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 78
       }
     },
     {
       "name": "2021_Cheeseadelphia_Winter_Championship",
-      "file_count": 6,
-      "total_bytes": 27178197,
-      "total_mb": 25.92,
+      "replay_file_count": 73,
+      "total_bytes": 546930335,
+      "total_mb": 521.59,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 73
       }
     },
     {
       "name": "2021_Dreamhack_SC2_Masters_Fall",
-      "file_count": 6,
-      "total_bytes": 446441728,
-      "total_mb": 425.76,
+      "replay_file_count": 786,
+      "total_bytes": 9193241973,
+      "total_mb": 8767.36,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 786
       }
     },
     {
       "name": "2021_Dreamhack_SC2_Masters_Summer",
-      "file_count": 6,
-      "total_bytes": 452163730,
-      "total_mb": 431.22,
+      "replay_file_count": 791,
+      "total_bytes": 9264650611,
+      "total_mb": 8835.46,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 791
       }
     },
     {
       "name": "2021_Dreamhack_SC2_Masters_Winter",
-      "file_count": 6,
-      "total_bytes": 460220109,
-      "total_mb": 438.9,
+      "replay_file_count": 802,
+      "total_bytes": 9502746561,
+      "total_mb": 9062.53,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 802
       }
     },
     {
       "name": "2021_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 164651109,
-      "total_mb": 157.02,
+      "replay_file_count": 261,
+      "total_bytes": 3331265109,
+      "total_mb": 3176.94,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 261
       }
     },
     {
       "name": "2021_StayAtHome_Story_Cup_3",
-      "file_count": 6,
-      "total_bytes": 95401673,
-      "total_mb": 90.98,
+      "replay_file_count": 183,
+      "total_bytes": 1898267162,
+      "total_mb": 1810.33,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 183
       }
     },
     {
       "name": "2021_StayAtHome_Story_Cup_4",
-      "file_count": 6,
-      "total_bytes": 135153440,
-      "total_mb": 128.89,
+      "replay_file_count": 210,
+      "total_bytes": 2728107507,
+      "total_mb": 2601.73,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 210
       }
     },
     {
       "name": "2021_TSL7",
-      "file_count": 6,
-      "total_bytes": 87516445,
-      "total_mb": 83.46,
+      "replay_file_count": 132,
+      "total_bytes": 1791279929,
+      "total_mb": 1708.3,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 132
       }
     },
     {
       "name": "2021_TSL8",
-      "file_count": 6,
-      "total_bytes": 84390386,
-      "total_mb": 80.48,
+      "replay_file_count": 165,
+      "total_bytes": 1675713589,
+      "total_mb": 1598.09,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 165
       }
     },
     {
       "name": "2022_03_DH_SC2_Masters_Atlanta",
-      "file_count": 6,
-      "total_bytes": 619836044,
-      "total_mb": 591.12,
+      "replay_file_count": 1296,
+      "total_bytes": 12422314777,
+      "total_mb": 11846.84,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 1296
       }
     },
     {
       "name": "2022_Dreamhack_SC2_Masters_Last_Chance2021",
-      "file_count": 6,
-      "total_bytes": 168431581,
-      "total_mb": 160.63,
+      "replay_file_count": 355,
+      "total_bytes": 3374891684,
+      "total_mb": 3218.55,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 355
       }
     },
     {
       "name": "2022_Dreamhack_SC2_Masters_Valencia",
-      "file_count": 7,
-      "total_bytes": 611709975,
-      "total_mb": 583.37,
+      "replay_file_count": 1094,
+      "total_bytes": 12283054798,
+      "total_mb": 11714.03,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 1094
       }
     },
     {
       "name": "2022_HomeStory_Cup_XXI",
-      "file_count": 6,
-      "total_bytes": 65394443,
-      "total_mb": 62.37,
+      "replay_file_count": 91,
+      "total_bytes": 1259077428,
+      "total_mb": 1200.75,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 91
       }
     },
     {
       "name": "2022_HomeStory_Cup_XXII",
-      "file_count": 6,
-      "total_bytes": 133348902,
-      "total_mb": 127.17,
+      "replay_file_count": 285,
+      "total_bytes": 2655590610,
+      "total_mb": 2532.57,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 285
       }
     },
     {
       "name": "2022_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 169247485,
-      "total_mb": 161.41,
+      "replay_file_count": 263,
+      "total_bytes": 3377720242,
+      "total_mb": 3221.25,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 263
       }
     },
     {
       "name": "2022_TSL9",
-      "file_count": 6,
-      "total_bytes": 116578781,
-      "total_mb": 111.18,
+      "replay_file_count": 181,
+      "total_bytes": 2283204518,
+      "total_mb": 2177.43,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 181
       }
     },
     {
       "name": "2023_01_IEM_Katowice",
-      "file_count": 7,
-      "total_bytes": 148275005,
-      "total_mb": 141.41,
+      "replay_file_count": 260,
+      "total_bytes": 2876213713,
+      "total_mb": 2742.97,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 260
       }
     },
     {
       "name": "2023_04_ESL_SC2_Masters_Summer_Finals",
-      "file_count": 6,
-      "total_bytes": 462374987,
-      "total_mb": 440.96,
+      "replay_file_count": 698,
+      "total_bytes": 9190642695,
+      "total_mb": 8764.88,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 698
       }
     },
     {
       "name": "2023_05_Gamers8",
-      "file_count": 6,
-      "total_bytes": 82145906,
-      "total_mb": 78.34,
+      "replay_file_count": 122,
+      "total_bytes": 1605331794,
+      "total_mb": 1530.96,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 122
       }
     },
     {
       "name": "2023_07_ESL_SC2_Masters_Winter_Finals",
-      "file_count": 6,
-      "total_bytes": 153741242,
-      "total_mb": 146.62,
+      "replay_file_count": 270,
+      "total_bytes": 3052629105,
+      "total_mb": 2911.21,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 270
       }
     },
     {
       "name": "2023_HomeStory_Cup_XXIV",
-      "file_count": 6,
-      "total_bytes": 97440059,
-      "total_mb": 92.93,
+      "replay_file_count": 167,
+      "total_bytes": 1939110480,
+      "total_mb": 1849.28,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 167
       }
     },
     {
       "name": "2024_01_IEM_Katowice",
-      "file_count": 6,
-      "total_bytes": 235417291,
-      "total_mb": 224.51,
+      "replay_file_count": 422,
+      "total_bytes": 4557736779,
+      "total_mb": 4346.6,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 422
       }
     },
     {
       "name": "2024_03_ESL_SC2_Masters_Spring_Finals",
-      "file_count": 6,
-      "total_bytes": 125375195,
-      "total_mb": 119.57,
+      "replay_file_count": 264,
+      "total_bytes": 2442246067,
+      "total_mb": 2329.11,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 264
       }
     },
     {
       "name": "2024_05_EWC",
-      "file_count": 6,
-      "total_bytes": 95490466,
-      "total_mb": 91.07,
+      "replay_file_count": 154,
+      "total_bytes": 1867831439,
+      "total_mb": 1781.3,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 154
       }
     },
     {
       "name": "2024_HomeStory_Cup_XXV",
-      "file_count": 6,
-      "total_bytes": 83239925,
-      "total_mb": 79.38,
+      "replay_file_count": 175,
+      "total_bytes": 1630374739,
+      "total_mb": 1554.85,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 175
       }
     },
     {
       "name": "2024_HomeStory_Cup_XXVI",
-      "file_count": 6,
-      "total_bytes": 90249308,
-      "total_mb": 86.07,
+      "replay_file_count": 171,
+      "total_bytes": 1757554492,
+      "total_mb": 1676.13,
       "extensions": {
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 171
       }
     },
     {
       "name": "2024_StaraZagora_BellumGensElite",
-      "file_count": 7,
-      "total_bytes": 41174565,
-      "total_mb": 39.27,
+      "replay_file_count": 95,
+      "total_bytes": 808318171,
+      "total_mb": 770.87,
       "extensions": {
-        "": 1,
-        ".zip": 1,
-        ".log": 2,
-        ".json": 3
+        ".json": 95
       }
     }
   ]

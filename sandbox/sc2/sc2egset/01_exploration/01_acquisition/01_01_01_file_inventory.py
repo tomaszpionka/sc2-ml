@@ -25,10 +25,16 @@
 # This notebook walks the sc2egset raw directory and counts everything.
 # It does NOT compare against any expected counts — it produces the counts
 # for the first time.
+#
+# **Layout note:** The raw directory has a two-level structure:
+# `raw/TOURNAMENT_NAME/TOURNAMENT_NAME_data/*.SC2Replay.json`
+# The top level (`raw/TOURNAMENT/`) also contains metadata files
+# (`.zip`, `.log`, `.json`, no-extension). Both levels are inventoried.
 
 # %%
 import json
 import logging
+import statistics
 from pathlib import Path
 
 from rts_predict.common.inventory import inventory_directory
@@ -49,50 +55,78 @@ logger.info("Raw directory: %s", RAW_DIR)
 logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 
 # %%
-result = inventory_directory(RAW_DIR)
+# Level 1 inventory: RAW_DIR -> tournament directories (metadata files only)
+# Each tournament dir contains: .zip, .log, .json metadata, and a _data/ subdir.
+# inventory_directory goes one level deep, so it counts metadata files per tournament.
+meta_result = inventory_directory(RAW_DIR)
 
-logger.info("Total files: %d", result.total_files)
-logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
-logger.info("Subdirectories: %d", len(result.subdirs))
-logger.info("Files at root: %d", len(result.files_at_root))
+logger.info("Tournament directories (level 1): %d", len(meta_result.subdirs))
+logger.info("Metadata files across all tournaments: %d", meta_result.total_files)
+logger.info("Files at root: %d", len(meta_result.files_at_root))
 
 # %%
-# Compute per-subdirectory stats
-subdir_data = []
-for sd in result.subdirs:
-    subdir_data.append({
+# Level 2 inventory: for each tournament, scan its _data/ subdir for replay files.
+# The _data/ subdir is named TOURNAMENT_NAME_data and contains *.SC2Replay.json files.
+replay_subdir_data = []
+total_replay_files = 0
+total_replay_bytes = 0
+tournaments_missing_data_dir = []
+
+for sd in meta_result.subdirs:
+    data_dir = RAW_DIR / sd.name / (sd.name + "_data")
+    if not data_dir.exists():
+        logger.warning("No _data dir for tournament: %s", sd.name)
+        tournaments_missing_data_dir.append(sd.name)
+        continue
+    replay_inv = inventory_directory(data_dir)
+    total_replay_files += replay_inv.total_files
+    total_replay_bytes += replay_inv.total_bytes
+    ext_dist = {}
+    for f in replay_inv.files_at_root:
+        ext_dist[f.extension] = ext_dist.get(f.extension, 0) + 1
+    replay_subdir_data.append({
         "name": sd.name,
-        "file_count": sd.file_count,
-        "total_bytes": sd.total_bytes,
-        "total_mb": round(sd.total_bytes / (1024 * 1024), 2),
-        "extensions": sd.extensions,
+        "replay_file_count": replay_inv.total_files,
+        "total_bytes": replay_inv.total_bytes,
+        "total_mb": round(replay_inv.total_bytes / (1024 * 1024), 2),
+        "extensions": ext_dist,
     })
 
-# Summary statistics
-file_counts = [sd.file_count for sd in result.subdirs]
-if file_counts:
-    import statistics
-    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
-                min(file_counts), max(file_counts), statistics.median(file_counts))
+logger.info("Total replay files (level 2): %d", total_replay_files)
+logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
+if tournaments_missing_data_dir:
+    logger.warning("Tournaments with no _data dir: %s", tournaments_missing_data_dir)
 
-# Subdirectories with 0 replay files (if filtering was applied)
-# Since we use file_glob="*", all files are counted, so flag subdirs
-# with 0 .SC2Replay.json files specifically
-for sd in result.subdirs:
-    json_count = sd.extensions.get(".json", 0)
-    if json_count == 0:
-        logger.warning("Subdirectory with 0 .json files: %s", sd.name)
+# %%
+# Summary statistics for replay file counts per tournament
+replay_counts = [sd["replay_file_count"] for sd in replay_subdir_data]
+if replay_counts:
+    logger.info(
+        "Replays per tournament — min: %d, max: %d, median: %.1f, total: %d",
+        min(replay_counts),
+        max(replay_counts),
+        statistics.median(replay_counts),
+        sum(replay_counts),
+    )
+
+# Flag tournaments with 0 replay files
+for sd in replay_subdir_data:
+    if sd["replay_file_count"] == 0:
+        logger.warning("Tournament with 0 replay files: %s", sd["name"])
 
 # %%
 artifact = {
     "step": "01_01_01",
     "dataset": "sc2egset",
     "raw_dir": str(RAW_DIR),
-    "total_files": result.total_files,
-    "total_bytes": result.total_bytes,
-    "num_subdirs": len(result.subdirs),
-    "files_at_root": len(result.files_at_root),
-    "subdirs": subdir_data,
+    "layout": "two-level: raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json",
+    "num_tournament_dirs": len(meta_result.subdirs),
+    "files_at_root": len(meta_result.files_at_root),
+    "metadata_files_total": meta_result.total_files,
+    "total_replay_files": total_replay_files,
+    "total_replay_bytes": total_replay_bytes,
+    "tournaments_missing_data_dir": tournaments_missing_data_dir,
+    "tournaments": replay_subdir_data,
 }
 
 json_path = ARTIFACTS_DIR / "01_01_01_file_inventory.json"
@@ -103,24 +137,37 @@ logger.info("JSON artifact written: %s", json_path)
 lines = [
     "# Step 01_01_01 — File Inventory: sc2egset\n",
     f"**Raw directory:** `{RAW_DIR}`\n",
-    f"**Total files:** {result.total_files}\n",
-    f"**Total size:** {result.total_bytes / (1024**2):.2f} MB\n",
-    f"**Subdirectories:** {len(result.subdirs)}\n",
-    f"**Files at root level:** {len(result.files_at_root)}\n",
-    "\n## Per-subdirectory breakdown\n",
-    "| Subdirectory | Files | Size (MB) | Extensions |",
-    "|---|---|---|---|",
+    f"**Layout:** `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`\n",
+    f"**Tournament directories:** {len(meta_result.subdirs)}\n",
+    f"**Total replay files:** {total_replay_files}\n",
+    f"**Total replay size:** {total_replay_bytes / (1024**2):.2f} MB\n",
+    f"**Metadata files (zip/log/json at tournament level):** {meta_result.total_files}\n",
+    f"**Files at root level:** {len(meta_result.files_at_root)}\n",
 ]
-for sd in subdir_data:
-    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
-    lines.append(f"| {sd['name']} | {sd['file_count']} | {sd['total_mb']} | {ext_str} |")
 
-if file_counts:
+if replay_counts:
     lines.extend([
-        "\n## Summary statistics\n",
-        f"- Min files per subdir: {min(file_counts)}",
-        f"- Max files per subdir: {max(file_counts)}",
-        f"- Median files per subdir: {statistics.median(file_counts):.1f}",
+        "\n## Summary statistics (replays per tournament)\n",
+        f"- Min: {min(replay_counts)}",
+        f"- Max: {max(replay_counts)}",
+        f"- Median: {statistics.median(replay_counts):.1f}",
+    ])
+
+lines.extend([
+    "\n## Per-tournament breakdown\n",
+    "| Tournament | Replay Files | Size (MB) | Extensions |",
+    "|---|---|---|---|",
+])
+for sd in replay_subdir_data:
+    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
+    lines.append(
+        f"| {sd['name']} | {sd['replay_file_count']} | {sd['total_mb']} | {ext_str} |"
+    )
+
+if tournaments_missing_data_dir:
+    lines.extend([
+        "\n## Tournaments with no _data directory\n",
+        *[f"- {t}" for t in tournaments_missing_data_dir],
     ])
 
 md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"

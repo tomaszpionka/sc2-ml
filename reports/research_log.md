@@ -45,12 +45,15 @@ artifacts. The notebooks are the reproducibility record.
 
 ### Findings
 
-**sc2egset:** 432 total files across 70 tournament subdirectories + 4 files
-at root. Total size: 10,699.21 MB (~10.4 GB). Each subdirectory contains
-3 `.json` files (replay data), 1 `.zip` archive, 2 `.log` files, and
-optionally 1 extension-less file. No subdirectory has 0 `.json` files.
-Tournament coverage spans 2016 to 2024. Files per subdir range from 6 to 7;
-median is 6.0.
+**sc2egset:** Two-level layout: `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`.
+70 tournament directories, all with a `_data/` subdirectory (no missing data dirs).
+Total replay files: 22,390 `.SC2Replay.json` files across 70 `_data/`
+subdirectories, total replay size: ~214.1 GB (224,458,832,476 bytes).
+Metadata files at the tournament level (zip/log/json/no-extension): 432 total
+across 70 tournament dirs + 4 files at raw root. Tournament coverage spans
+2016 to 2024. Initial inventory (before this fix) only scanned the metadata
+files at tournament level — this notebook was corrected to scan the `_data/`
+subdirectories and report the actual replay counts.
 
 **aoe2companion:** 4,154 total files across 4 subdirectories + 3 files at
 root. Total size: 9,388.27 MB (~9.2 GB). Breakdown:
@@ -77,15 +80,16 @@ date_range_match=True. The asymmetry is the known missing file.
 
 ### What this means
 All three raw directories are non-empty and structurally sound. The sc2egset
-layout (one directory per tournament, 3 JSON files each) is uniform and
-ready for schema inspection. The aoe2companion matches directory is daily
-and complete (no gaps). The ratings directory has one 2-day gap in July 2025.
-The aoestats asymmetry (172 match files vs 171 player files) is consistent
-with the documented download failure already noted in the ROADMAP source data
-section — this is not a new finding.
+layout is two-level: tournament-level metadata + `_data/` subdirs with replay
+JSONs. The actual replay count is 22,390 files (~214.1 GB). The aoe2companion
+matches directory is daily and complete (no gaps). The ratings directory has
+one 2-day gap in July 2025. The aoestats asymmetry (172 match files vs 171
+player files) is consistent with the documented download failure already noted
+in the ROADMAP source data section — this is not a new finding.
 
 ### Decisions taken
-- None — observation only.
+- sc2egset notebook was corrected after initial inventory to scan into `_data/`
+  subdirectories for actual replay JSON counts, not just tournament-level metadata.
 
 ### Decisions deferred
 - Ingestion strategy depends on what we find in schema discovery (01_01_02/03).
@@ -94,8 +98,8 @@ section — this is not a new finding.
 - Chapter 3 — Data & Methodology > 3.1 Data Sources
 
 ### Open questions / follow-ups
-- sc2egset: The 4 files at root and the extension-less files within some
-  subdirectories should be inspected in 01_01_02 schema discovery.
+- sc2egset: The 4 files at root and the no-extension files within tournament
+  dirs should be inspected in 01_01_02 schema discovery.
 - aoe2companion: The ratings 2-day gap (2025-07-10 to 2025-07-12) is minor
   but should be flagged in cleaning notes.
 - aoestats: The 43-day gap in matches (2024-07-20 to 2024-09-01) is

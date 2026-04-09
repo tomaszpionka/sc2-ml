@@ -2,92 +2,96 @@
 
 **Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/raw`
 
-**Total files:** 432
+**Layout:** `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`
 
-**Total size:** 10684.00 MB
+**Tournament directories:** 70
 
-**Subdirectories:** 70
+**Total replay files:** 22390
+
+**Total replay size:** 214060.62 MB
+
+**Metadata files (zip/log/json at tournament level):** 432
 
 **Files at root level:** 4
 
 
-## Per-subdirectory breakdown
+## Summary statistics (replays per tournament)
 
-| Subdirectory | Files | Size (MB) | Extensions |
+- Min: 30
+- Max: 1296
+- Median: 260.5
+
+## Per-tournament breakdown
+
+| Tournament | Replay Files | Size (MB) | Extensions |
 |---|---|---|---|
-| 2016_IEM_10_Taipei | 7 | 10.07 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2016_IEM_11_Shanghai | 6 | 17.79 | .json: 3, .log: 2, .zip: 1 |
-| 2016_WCS_Winter | 6 | 128.77 | .json: 3, .log: 2, .zip: 1 |
-| 2017_HomeStory_Cup_XV | 7 | 46.51 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2017_HomeStory_Cup_XVI | 6 | 115.02 | .json: 3, .log: 2, .zip: 1 |
-| 2017_IEM_Shanghai | 6 | 35.89 | .json: 3, .log: 2, .zip: 1 |
-| 2017_IEM_XI_World_Championship_Katowice | 6 | 116.63 | .json: 3, .log: 2, .zip: 1 |
-| 2017_WCS_Austin | 6 | 104.06 | .json: 3, .log: 2, .zip: 1 |
-| 2017_WCS_Global_Finals | 6 | 22.99 | .json: 3, .log: 2, .zip: 1 |
-| 2017_WCS_Jonkoping | 6 | 122.2 | .json: 3, .log: 2, .zip: 1 |
-| 2017_WCS_Montreal | 6 | 72.55 | .json: 3, .log: 2, .zip: 1 |
-| 2017_WESG_Barcelona | 7 | 64.35 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2017_WESG_Haikou | 6 | 67.67 | .json: 3, .log: 2, .zip: 1 |
-| 2018_Cheeseadelphia_8 | 7 | 18.69 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2018_HomeStory_Cup_XVII | 6 | 159.71 | .json: 3, .log: 2, .zip: 1 |
-| 2018_HomeStory_Cup_XVIII | 6 | 150.84 | .json: 3, .log: 2, .zip: 1 |
-| 2018_IEM_Katowice | 6 | 200.2 | .json: 3, .log: 2, .zip: 1 |
-| 2018_IEM_PyeongChang | 6 | 21.13 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WCS_Austin | 6 | 124.95 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WCS_Global_Finals | 6 | 34.29 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WCS_Leipzig | 6 | 139.02 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WCS_Montreal | 6 | 148.73 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WCS_Valencia | 6 | 153.73 | .json: 3, .log: 2, .zip: 1 |
-| 2018_WESG_Grand_Finals | 6 | 80.31 | .json: 3, .log: 2, .zip: 1 |
-| 2019_Assembly_Summer | 6 | 89.36 | .json: 3, .log: 2, .zip: 1 |
-| 2019_HomeStory_Cup_XIX | 6 | 135.89 | .json: 3, .log: 2, .zip: 1 |
-| 2019_HomeStory_Cup_XX | 6 | 150.53 | .json: 3, .log: 2, .zip: 1 |
-| 2019_IEM_Katowice | 6 | 210.74 | .json: 3, .log: 2, .zip: 1 |
-| 2019_WCS_Fall | 6 | 218.65 | .json: 3, .log: 2, .zip: 1 |
-| 2019_WCS_Grand_Finals | 6 | 49.53 | .json: 3, .log: 2, .zip: 1 |
-| 2019_WCS_Spring | 6 | 182.45 | .json: 3, .log: 2, .zip: 1 |
-| 2019_WCS_Summer | 6 | 238.41 | .json: 3, .log: 2, .zip: 1 |
-| 2019_WCS_Winter | 6 | 246.64 | .json: 3, .log: 2, .zip: 1 |
-| 2020_05_Dreamhack_Last_Chance | 6 | 61.32 | .json: 3, .log: 2, .zip: 1 |
-| 2020_ASUS_ROG_Online | 6 | 58.7 | .json: 3, .log: 2, .zip: 1 |
-| 2020_Dreamhack_SC2_Masters_Fall | 7 | 511.82 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2020_Dreamhack_SC2_Masters_Summer | 6 | 484.42 | .json: 3, .log: 2, .zip: 1 |
-| 2020_IEM_Katowice | 6 | 201.61 | .json: 3, .log: 2, .zip: 1 |
-| 2020_StayAtHome_Story_Cup_1 | 6 | 108.23 | .json: 3, .log: 2, .zip: 1 |
-| 2020_StayAtHome_Story_Cup_2 | 6 | 126.48 | .json: 3, .log: 2, .zip: 1 |
-| 2020_TSL5 | 6 | 139.21 | .json: 3, .log: 2, .zip: 1 |
-| 2020_TSL6 | 6 | 61.69 | .json: 3, .log: 2, .zip: 1 |
-| 2021_ASUS_ROG_Fall | 6 | 52.08 | .json: 3, .log: 2, .zip: 1 |
-| 2021_Cheeseadelphia_Winter_Championship | 6 | 25.92 | .json: 3, .log: 2, .zip: 1 |
-| 2021_Dreamhack_SC2_Masters_Fall | 6 | 425.76 | .json: 3, .log: 2, .zip: 1 |
-| 2021_Dreamhack_SC2_Masters_Summer | 6 | 431.22 | .json: 3, .log: 2, .zip: 1 |
-| 2021_Dreamhack_SC2_Masters_Winter | 6 | 438.9 | .json: 3, .log: 2, .zip: 1 |
-| 2021_IEM_Katowice | 6 | 157.02 | .json: 3, .log: 2, .zip: 1 |
-| 2021_StayAtHome_Story_Cup_3 | 6 | 90.98 | .json: 3, .log: 2, .zip: 1 |
-| 2021_StayAtHome_Story_Cup_4 | 6 | 128.89 | .json: 3, .log: 2, .zip: 1 |
-| 2021_TSL7 | 6 | 83.46 | .json: 3, .log: 2, .zip: 1 |
-| 2021_TSL8 | 6 | 80.48 | .json: 3, .log: 2, .zip: 1 |
-| 2022_03_DH_SC2_Masters_Atlanta | 6 | 591.12 | .json: 3, .log: 2, .zip: 1 |
-| 2022_Dreamhack_SC2_Masters_Last_Chance2021 | 6 | 160.63 | .json: 3, .log: 2, .zip: 1 |
-| 2022_Dreamhack_SC2_Masters_Valencia | 7 | 583.37 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2022_HomeStory_Cup_XXI | 6 | 62.37 | .json: 3, .log: 2, .zip: 1 |
-| 2022_HomeStory_Cup_XXII | 6 | 127.17 | .json: 3, .log: 2, .zip: 1 |
-| 2022_IEM_Katowice | 6 | 161.41 | .json: 3, .log: 2, .zip: 1 |
-| 2022_TSL9 | 6 | 111.18 | .json: 3, .log: 2, .zip: 1 |
-| 2023_01_IEM_Katowice | 7 | 141.41 | : 1, .json: 3, .log: 2, .zip: 1 |
-| 2023_04_ESL_SC2_Masters_Summer_Finals | 6 | 440.96 | .json: 3, .log: 2, .zip: 1 |
-| 2023_05_Gamers8 | 6 | 78.34 | .json: 3, .log: 2, .zip: 1 |
-| 2023_07_ESL_SC2_Masters_Winter_Finals | 6 | 146.62 | .json: 3, .log: 2, .zip: 1 |
-| 2023_HomeStory_Cup_XXIV | 6 | 92.93 | .json: 3, .log: 2, .zip: 1 |
-| 2024_01_IEM_Katowice | 6 | 224.51 | .json: 3, .log: 2, .zip: 1 |
-| 2024_03_ESL_SC2_Masters_Spring_Finals | 6 | 119.57 | .json: 3, .log: 2, .zip: 1 |
-| 2024_05_EWC | 6 | 91.07 | .json: 3, .log: 2, .zip: 1 |
-| 2024_HomeStory_Cup_XXV | 6 | 79.38 | .json: 3, .log: 2, .zip: 1 |
-| 2024_HomeStory_Cup_XXVI | 6 | 86.07 | .json: 3, .log: 2, .zip: 1 |
-| 2024_StaraZagora_BellumGensElite | 7 | 39.27 | : 1, .json: 3, .log: 2, .zip: 1 |
-
-## Summary statistics
-
-- Min files per subdir: 6
-- Max files per subdir: 7
-- Median files per subdir: 6.0
+| 2016_IEM_10_Taipei | 30 | 188.4 | .json: 30 |
+| 2016_IEM_11_Shanghai | 60 | 337.81 | .json: 60 |
+| 2016_WCS_Winter | 465 | 2450.07 | .json: 465 |
+| 2017_HomeStory_Cup_XV | 107 | 922.84 | .json: 107 |
+| 2017_HomeStory_Cup_XVI | 249 | 2267.4 | .json: 249 |
+| 2017_IEM_Shanghai | 81 | 704.23 | .json: 81 |
+| 2017_IEM_XI_World_Championship_Katowice | 409 | 2238.77 | .json: 409 |
+| 2017_WCS_Austin | 399 | 1992.3 | .json: 399 |
+| 2017_WCS_Global_Finals | 45 | 450.1 | .json: 45 |
+| 2017_WCS_Jonkoping | 332 | 2399.31 | .json: 332 |
+| 2017_WCS_Montreal | 242 | 1437.9 | .json: 242 |
+| 2017_WESG_Barcelona | 135 | 1284.54 | .json: 135 |
+| 2017_WESG_Haikou | 165 | 1336.14 | .json: 165 |
+| 2018_Cheeseadelphia_8 | 64 | 374.73 | .json: 64 |
+| 2018_HomeStory_Cup_XVII | 343 | 3219.66 | .json: 343 |
+| 2018_HomeStory_Cup_XVIII | 352 | 2989.17 | .json: 352 |
+| 2018_IEM_Katowice | 444 | 3995.82 | .json: 444 |
+| 2018_IEM_PyeongChang | 62 | 417.73 | .json: 62 |
+| 2018_WCS_Austin | 406 | 2491.81 | .json: 406 |
+| 2018_WCS_Global_Finals | 72 | 669.02 | .json: 72 |
+| 2018_WCS_Leipzig | 420 | 2785.89 | .json: 420 |
+| 2018_WCS_Montreal | 442 | 2984.34 | .json: 442 |
+| 2018_WCS_Valencia | 410 | 3081.9 | .json: 410 |
+| 2018_WESG_Grand_Finals | 313 | 1594.42 | .json: 313 |
+| 2019_Assembly_Summer | 169 | 1764.74 | .json: 169 |
+| 2019_HomeStory_Cup_XIX | 330 | 2705.63 | .json: 330 |
+| 2019_HomeStory_Cup_XX | 317 | 3017.46 | .json: 317 |
+| 2019_IEM_Katowice | 440 | 4244.61 | .json: 440 |
+| 2019_WCS_Fall | 601 | 4330.3 | .json: 601 |
+| 2019_WCS_Grand_Finals | 111 | 973.58 | .json: 111 |
+| 2019_WCS_Spring | 540 | 3643.61 | .json: 540 |
+| 2019_WCS_Summer | 596 | 4747.79 | .json: 596 |
+| 2019_WCS_Winter | 469 | 4947.48 | .json: 469 |
+| 2020_05_Dreamhack_Last_Chance | 84 | 1272.49 | .json: 84 |
+| 2020_ASUS_ROG_Online | 107 | 1193.32 | .json: 107 |
+| 2020_Dreamhack_SC2_Masters_Fall | 799 | 10477.05 | .json: 799 |
+| 2020_Dreamhack_SC2_Masters_Summer | 783 | 10006.92 | .json: 783 |
+| 2020_IEM_Katowice | 438 | 4062.9 | .json: 438 |
+| 2020_StayAtHome_Story_Cup_1 | 172 | 2179.03 | .json: 172 |
+| 2020_StayAtHome_Story_Cup_2 | 237 | 2521.89 | .json: 237 |
+| 2020_TSL5 | 185 | 2769.79 | .json: 185 |
+| 2020_TSL6 | 121 | 1272.12 | .json: 121 |
+| 2021_ASUS_ROG_Fall | 78 | 1063.69 | .json: 78 |
+| 2021_Cheeseadelphia_Winter_Championship | 73 | 521.59 | .json: 73 |
+| 2021_Dreamhack_SC2_Masters_Fall | 786 | 8767.36 | .json: 786 |
+| 2021_Dreamhack_SC2_Masters_Summer | 791 | 8835.46 | .json: 791 |
+| 2021_Dreamhack_SC2_Masters_Winter | 802 | 9062.53 | .json: 802 |
+| 2021_IEM_Katowice | 261 | 3176.94 | .json: 261 |
+| 2021_StayAtHome_Story_Cup_3 | 183 | 1810.33 | .json: 183 |
+| 2021_StayAtHome_Story_Cup_4 | 210 | 2601.73 | .json: 210 |
+| 2021_TSL7 | 132 | 1708.3 | .json: 132 |
+| 2021_TSL8 | 165 | 1598.09 | .json: 165 |
+| 2022_03_DH_SC2_Masters_Atlanta | 1296 | 11846.84 | .json: 1296 |
+| 2022_Dreamhack_SC2_Masters_Last_Chance2021 | 355 | 3218.55 | .json: 355 |
+| 2022_Dreamhack_SC2_Masters_Valencia | 1094 | 11714.03 | .json: 1094 |
+| 2022_HomeStory_Cup_XXI | 91 | 1200.75 | .json: 91 |
+| 2022_HomeStory_Cup_XXII | 285 | 2532.57 | .json: 285 |
+| 2022_IEM_Katowice | 263 | 3221.25 | .json: 263 |
+| 2022_TSL9 | 181 | 2177.43 | .json: 181 |
+| 2023_01_IEM_Katowice | 260 | 2742.97 | .json: 260 |
+| 2023_04_ESL_SC2_Masters_Summer_Finals | 698 | 8764.88 | .json: 698 |
+| 2023_05_Gamers8 | 122 | 1530.96 | .json: 122 |
+| 2023_07_ESL_SC2_Masters_Winter_Finals | 270 | 2911.21 | .json: 270 |
+| 2023_HomeStory_Cup_XXIV | 167 | 1849.28 | .json: 167 |
+| 2024_01_IEM_Katowice | 422 | 4346.6 | .json: 422 |
+| 2024_03_ESL_SC2_Masters_Spring_Finals | 264 | 2329.11 | .json: 264 |
+| 2024_05_EWC | 154 | 1781.3 | .json: 154 |
+| 2024_HomeStory_Cup_XXV | 175 | 1554.85 | .json: 175 |
+| 2024_HomeStory_Cup_XXVI | 171 | 1676.13 | .json: 171 |
+| 2024_StaraZagora_BellumGensElite | 95 | 770.87 | .json: 95 |
