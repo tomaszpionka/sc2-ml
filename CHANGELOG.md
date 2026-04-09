@@ -19,6 +19,91 @@ merged to `master`.
 
 ### Removed
 
+## [1.0.0] — 2026-04-09 (PRs #71–#85: chore/phase-migration)
+
+Phase migration release. The project transitioned from an 11-phase scheme
+(0–10) to a 7-phase scheme (01–07) defined in `docs/PHASES.md`. All prior
+work remains accessible in per-dataset `archive/` directories.
+
+This release consolidates the work delivered across PRs #70–#85 (versions
+0.28.0–0.29.15) plus the foundational `docs/PHASES.md` and `docs/TAXONOMY.md`
+documents that landed before the migration started.
+
+### Added
+- `docs/PHASES.md` — canonical 7-phase list (Phase 01–07); single source of
+  truth for which Phases exist and what Pipeline Sections each contains
+- `docs/TAXONOMY.md` — project-wide terminology taxonomy (Phase / Pipeline
+  Section / Step hierarchy, directory layout rules, operational terms)
+- `docs/templates/step_template.yaml` — science-oriented YAML Step definition
+  schema (20+ fields: identity, hierarchy context, scientific purpose,
+  predecessors, inputs/outputs, reproducibility, gate decomposition, thesis
+  mapping, research_log_entry)
+- `src/rts_predict/aoe2/reports/aoe2companion/README.md` — permanent API
+  acquisition provenance record
+- `src/rts_predict/aoe2/reports/aoestats/README.md` — permanent API
+  acquisition provenance record (including known missing file and schema drift)
+- `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` — dataset ROADMAP
+  for aoe2companion; Phase 01 decomposed into 6 Pipeline Sections with 11 Steps
+- `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` — dataset ROADMAP for
+  aoestats; Phase 01 decomposed into 6 Pipeline Sections with 9 Steps
+- `src/rts_predict/sc2/reports/sc2egset/PHASE_STATUS.yaml` — dataset-level
+  phase status file with 7-phase schema (01–07), all `not_started`
+- `src/rts_predict/aoe2/reports/aoe2companion/PHASE_STATUS.yaml` — dataset-level
+  phase status file, same schema
+- `src/rts_predict/aoe2/reports/aoestats/PHASE_STATUS.yaml` — dataset-level
+  phase status file, same schema
+
+### Changed
+- Phase scheme migrated from 0–10 to 01–07 per `docs/PHASES.md` and
+  `docs/TAXONOMY.md`; all operational files updated to new scheme
+- `PHASE_STATUS.yaml` relocated from game-level to dataset-level
+  (`reports/<dataset>/PHASE_STATUS.yaml`)
+- All Claude operational files audited and updated: `.claude/dev-constraints.md`,
+  `.claude/ml-protocol.md`, `.claude/rules/sql-data.md`,
+  `.claude/rules/thesis-writing.md`, `.claude/scientific-invariants.md`,
+  `CLAUDE.md`, `docs/INDEX.md`, all agent files under `.claude/agents/`
+- `ARCHITECTURE.md`: inserted `docs/PHASES.md` as new tier 4 in Source-of-Truth
+  Hierarchy; renumbered tiers 5–8; game package contract table updated to
+  dataset-level `PHASE_STATUS.yaml`; "Adding a new game" Step 2 updated
+- `README.md`: replaced stale `SC2_THESIS_ROADMAP.md` references with
+  `docs/PHASES.md` pointer; Project State sentence updated to Phase 01 naming
+- `docs/TAXONOMY.md`: Phase naming clarifications and `docs/PHASES.md`
+  cross-references added
+- `docs/agents/AGENT_MANUAL.md`: Workflow A updated for sandbox execution;
+  `PHASE_STATUS` path pattern updated to dataset-level; added schema reading
+  section (carried forward from v0.24.0)
+- Game-level ROADMAPs rewritten as thin navigation pointers:
+  `src/rts_predict/sc2/reports/ROADMAP.md` and
+  `src/rts_predict/aoe2/reports/ROADMAP.md`
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`: complete rewrite from
+  old Phase 0–10 scheme to new Phase 01–07 structure with 18 Steps in Phase 01
+- `sandbox/README.md`: updated directory structure to nested Phase/PipelineSection/Step
+  layout per `docs/TAXONOMY.md`; naming convention updated to three-level
+  `{PHASE}_{SECTION}_{STEP}` scheme
+- `sandbox/notebook_config.toml`: removed stale phase references
+- `reports/RESEARCH_LOG_TEMPLATE.md`: step numbering format updated from
+  `[PHASE X / Step X.Y]` to `[Phase XX / Step XX_YY_ZZ]`
+- `reports/research_log.md`: reset to fresh log with migration header note
+- Thesis structure files: `thesis/THESIS_STRUCTURE.md` and
+  `thesis/WRITING_STATUS.md` updated to new Phase 01–07 numbering; chapter
+  skeleton comments updated across chapters 02, 04, 05
+
+### Removed
+- `src/rts_predict/sc2/PHASE_STATUS.yaml` — replaced by dataset-level file
+- `src/rts_predict/aoe2/PHASE_STATUS.yaml` — replaced by per-dataset files
+- Old 11-phase scheme references throughout all operational and documentation
+  files
+
+### Archived
+- All sc2egset Phase 0/1 artifacts, notebooks, and plans →
+  `src/rts_predict/sc2/reports/sc2egset/archive/`
+- All aoe2companion Phase 0 artifacts →
+  `src/rts_predict/aoe2/reports/aoe2companion/archive/`
+- All aoestats Phase 0 artifacts →
+  `src/rts_predict/aoe2/reports/aoestats/archive/`
+- `reports/research_log.md` (full pre-migration log) →
+  `reports/archive/research_log_pre_phase_migration.md`
+
 ## [0.29.15] — 2026-04-09 (PR #12: chore/thesis-phase-refs)
 
 ### Changed
