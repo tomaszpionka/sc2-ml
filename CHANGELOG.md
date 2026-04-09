@@ -19,6 +19,13 @@ merged to `master`.
 
 ### Removed
 
+## [0.27.0] — 2026-04-09 (PR #68: docs/architecture-source-of-truth)
+
+### Added
+- `ARCHITECTURE.md`: preamble pointer to `docs/TAXONOMY.md` as the vocabulary source of truth
+- `ARCHITECTURE.md`: new "Source-of-Truth Hierarchy" section — 7-tier precedence ladder with propagation rule and out-of-scope note
+- `ARCHITECTURE.md`: `docs/TAXONOMY.md` row added to the cross-cutting files table
+
 ## [0.26.0] — 2026-04-09 (PR #67: docs/project-taxonomy)
 
 ### Added

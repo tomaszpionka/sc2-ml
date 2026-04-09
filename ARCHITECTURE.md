@@ -3,6 +3,10 @@
 This document describes the package structure of `rts-outcome-prediction` and
 the conventions for extending it.
 
+For project terminology (Phase, Pipeline Section, Step, Spec, PR, Category,
+Session), see [`docs/TAXONOMY.md`](docs/TAXONOMY.md) — the single source of
+truth for vocabulary used throughout this repository.
+
 ## Package layout
 
 ```
@@ -67,10 +71,64 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 7. Do NOT create shared abstractions until the second game's implementation
    reveals genuine code overlap (see `common/CONTRACT.md`)
 
+## Source-of-Truth Hierarchy
+
+The repository uses a strict precedence order for resolving contradictions
+between files. When two files disagree, the higher-precedence file wins and
+the lower-precedence file is edited to match, never the reverse.
+
+1. **`.claude/scientific-invariants.md`** — universal, game-agnostic
+   methodology constraints. Highest precedence. Cannot be overridden by any
+   other file. Numberless (refers to concepts, not to numbered phases).
+
+2. **`docs/ml_experiment_lifecycle/*.md`** and **`docs/thesis/THESIS_WRITING_MANUAL.md`**
+   — thesis methodology reference. Describes lifecycle concepts with academic
+   citations. Does not own phase numbering; owns the vocabulary of methodology
+   and the definitions of lifecycle concepts.
+
+3. **`docs/TAXONOMY.md`** — project terminology. Single source of truth for
+   what Phase, Pipeline Section, Step, Spec, PR, Category, and Session mean
+   in this repository. See the taxonomy file itself for definitions.
+
+4. **`src/rts_predict/<game>/reports/ROADMAP.md`** — game-level roadmap.
+   Owns the canonical per-game Phase numbering. Each Phase must map to at
+   least one manual in tier (2). If a manual in tier (2) and a game-level
+   ROADMAP disagree, the ROADMAP is revised to match the manual — not the
+   reverse.
+
+5. **`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`** — dataset-level
+   roadmap. Owns Pipeline Section and Step numbering within the dataset's
+   in-scope Phases. Cannot invent Phases; can only decompose Phases into
+   Pipeline Sections and Steps per `docs/TAXONOMY.md`.
+
+6. **`src/rts_predict/<game>/PHASE_STATUS.yaml`** — machine-readable phase
+   status. Strictly derived from tiers (4) and (5). Never authoritative;
+   never diverges. If it diverges from the ROADMAPs, it is wrong and gets
+   regenerated.
+
+7. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
+   `.claude/agents/*.md`, and any other file that instructs Claude agents
+   how to work. These reference phase numbers and terminology only via
+   pointers into tiers (3), (4), and (5). They never inline-encode a numbered
+   Phase list and never redefine terminology.
+
+**The rule.** Higher-precedence tiers are sources; lower-precedence tiers
+are derivations. A change in a high-precedence file propagates downward
+through edits to the lower-precedence files. A change in a lower-precedence
+file that contradicts a higher-precedence file is a bug and gets reverted
+or rewritten, not ratified.
+
+**Out of scope for this hierarchy.** Per-dataset empirical findings (e.g.,
+`src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md`) are not listed
+above because the convention governing them has not yet been formalised.
+They will be added to this hierarchy in a future PR alongside the convention
+section.
+
 ## Cross-cutting files (not game-specific)
 
 | File | Location | Purpose |
 |------|----------|---------|
+| Project taxonomy | `docs/TAXONOMY.md` | Single source of truth for terminology (Phase, Pipeline Section, Step, Spec, PR, Category, Session) |
 | Methodology manuals | `docs/INDEX.md` → `docs/ml_experiment_lifecycle/` | ML experiment lifecycle reference (01–06) |
 | Research log | `reports/research_log.md` | Unified chronological narrative, tagged `[SC2]`/`[AoE2]`/`[CROSS]` |
 | Thesis | `thesis/` | Chapters, figures, tables, bibliography |
