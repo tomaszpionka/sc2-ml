@@ -40,7 +40,7 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `__init__.py` | Docstring identifying the game. NO `__version__`. | Yes |
 | `cli.py` | CLI entry point registered in `pyproject.toml` | Yes |
 | `config.py` | `GAME_DIR`, `ROOT_DIR`, `REPORTS_DIR`, DB paths, constants | Yes |
-| `PHASE_STATUS.yaml` | Machine-readable phase progress | Yes |
+| `reports/<dataset>/PHASE_STATUS.yaml` | Machine-readable phase progress (dataset-scoped) | Per dataset |
 | `data/` | Ingestion, processing, exploration, audit modules | Yes |
 | `data/<dataset>/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
 | `data/<dataset>/staging/` | Intermediate artifacts by type (gitignored, README tracked) | When extraction exists |
@@ -63,7 +63,7 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 ## Adding a new game
 
 1. Create `src/rts_predict/<game>/` mirroring the `sc2/` structure above
-2. Create `PHASE_STATUS.yaml` with `current_phase: null`
+2. Create `reports/<dataset>/PHASE_STATUS.yaml` per dataset (see schema in docs/PHASES.md)
 3. Create `reports/ROADMAP.md` (game-level placeholder)
 4. Create `reports/<dataset>/ROADMAP.md` per dataset
 5. Register the CLI entry point in `pyproject.toml`
@@ -97,10 +97,9 @@ the lower-precedence file is edited to match, never the reverse.
    in dataset ROADMAPs.
 
 5. **`src/rts_predict/<game>/reports/ROADMAP.md`** — game-level roadmap.
-   Owns the canonical per-game Phase numbering. Each Phase must map to at
-   least one manual in tier (2). If a manual in tier (2) and a game-level
-   ROADMAP disagree, the ROADMAP is revised to match the manual — not the
-   reverse.
+   Navigation document listing datasets and pointing to docs/PHASES.md.
+   Does not own phase numbering (that is tier 4, docs/PHASES.md). Does
+   not define Steps.
 
 6. **`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`** — dataset-level
    roadmap. Owns Pipeline Section and Step numbering within the dataset's
@@ -145,8 +144,9 @@ section.
 
 ## Progress tracking
 
-Phase progress per game is tracked in `PHASE_STATUS.yaml` files. Claude Code reads
-these at session start to determine the current phase without parsing full roadmaps.
+Phase progress per dataset is tracked in `PHASE_STATUS.yaml` files at the
+dataset level. Claude Code reads the active dataset's PHASE_STATUS.yaml at
+session start to determine the current phase without parsing full roadmaps.
 
 Thesis section progress is tracked in `thesis/WRITING_STATUS.md` (per-section status)
 and `thesis/chapters/REVIEW_QUEUE.md` (Pass 2 review queue).

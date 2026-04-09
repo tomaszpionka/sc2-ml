@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.14] — 2026-04-09 (PR #10: chore/arch-game-contract-phase-refs)
+
+### Changed
+- `ARCHITECTURE.md`: game package contract table updated — `PHASE_STATUS.yaml` row moved from game-level to dataset-level (`reports/<dataset>/PHASE_STATUS.yaml`, Required column changed to "Per dataset")
+- `ARCHITECTURE.md`: "Adding a new game" Step 2 updated to reference dataset-level `reports/<dataset>/PHASE_STATUS.yaml` with pointer to `docs/PHASES.md` schema
+- `ARCHITECTURE.md`: SOT Hierarchy tier 5 (game-level ROADMAP) description updated — no longer claims to own canonical Phase numbering; now described as a navigation document pointing to `docs/PHASES.md`
+- `ARCHITECTURE.md`: Progress tracking paragraph updated — "per game" changed to "per dataset"; sentence clarified to reference the active dataset's PHASE_STATUS.yaml
+
 ## [0.29.13] — 2026-04-09 (PR #83: chore/aoestats-roadmap)
 
 ### Added
