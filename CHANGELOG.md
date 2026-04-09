@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.10] — 2026-04-09 (PR #80: chore/game-roadmaps-phase-migration)
+
+### Changed
+- `src/rts_predict/sc2/reports/ROADMAP.md`: rewritten as thin navigation pointer; removed phase shells and planning content; lists sc2egset dataset with links to its ROADMAP and PHASE_STATUS.yaml
+- `src/rts_predict/aoe2/reports/ROADMAP.md`: rewritten as thin navigation pointer; removed placeholder planning content; lists aoe2companion and aoestats datasets with links to their ROADMAPs and PHASE_STATUS.yaml files
+
 ## [0.29.9] — 2026-04-09 (PR #79: chore/phase-status-redesign)
 
 ### Added

@@ -1,27 +1,24 @@
-# SC2 Game-Level Roadmap — Phase 2+
+# SC2 Game-Level Roadmap
 
-**Status:** Not authored. All Phase ≥2 work is cross-dataset and depends
-on completed Phase 1 exploration of every SC2 dataset currently in scope.
+This file is a navigation aid. It does not own phase planning or step
+definitions. All phases are dataset-scoped; each dataset has its own
+ROADMAP with fully defined Steps for the active Phase.
 
-**Authoring trigger:** When every dataset under
-`src/rts_predict/sc2/reports/<dataset>/` has reached its Phase 1 gate
-(the four epistemic-readiness deliverables defined in
-`docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md` §6.1 exist
-as named artifacts), `planner-science` drafts Phase 2 here, using the
-Phase 1 wrap-up reports as input. Not before.
+**Canonical phase structure:** [`docs/PHASES.md`](../../../docs/PHASES.md)
+**Methodology manuals:** [`docs/INDEX.md`](../../../docs/INDEX.md)
 
-**Methodology source of truth:** `docs/INDEX.md`.
-Do not introduce phase numbers, phase names, or thresholds in this file
-that are not already defined in the manuals indexed there.
+---
 
-**Planned phase shells (names only — content authored at trigger time):**
-- Phase 2 — Cleaning & validation
-- Phase 3 — Feature engineering
-- Phase 4 — Splitting & baselines
-- Phase 5 — Model training & hyperparameter tuning
-- Phase 6 — Evaluation, calibration & error analysis
-- Phase 7 — Cross-domain transfer (SC2 ↔ AoE2)
-- Phase 8 — Thesis writing wrap-up
+## Datasets
 
-**Active dataset roadmaps:**
-- `sc2egset/ROADMAP.md` — Phase 0 complete, Phase 1 in progress
+| Dataset | ROADMAP | PHASE_STATUS |
+|---------|---------|--------------|
+| sc2egset | [`reports/sc2egset/ROADMAP.md`](sc2egset/ROADMAP.md) | [`reports/sc2egset/PHASE_STATUS.yaml`](sc2egset/PHASE_STATUS.yaml) |
+
+---
+
+## Scope
+
+The SC2 game package currently contains one dataset (sc2egset). If
+additional SC2 datasets are added, they get their own entry in the table
+above, their own ROADMAP, and their own PHASE_STATUS.yaml.
