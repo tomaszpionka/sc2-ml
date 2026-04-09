@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [0.29.11] — 2026-04-09 (PR #81: chore/sc2egset-roadmap-rewrite)
+
+### Changed
+- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`: complete rewrite from old Phase 0-10 scheme to new Phase 01-07 structure; Phase 01 fully decomposed into 6 Pipeline Sections (01_01–01_06) with 18 Steps; Phases 02-07 listed as placeholders with Pipeline Section names from `docs/PHASES.md`; all notebook paths use nested layout per TAXONOMY.md; all library function references verified against actual code
+
 ## [0.29.10] — 2026-04-09 (PR #80: chore/game-roadmaps-phase-migration)
 
 ### Changed
