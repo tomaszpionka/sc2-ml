@@ -12,6 +12,7 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- `docs/TAXONOMY.md`: project-wide terminology taxonomy — single source of truth for Phase / Pipeline Section / Step hierarchy, directory layout rules, operational terms (Spec, PR, Category, Session), and the list of terms explicitly not used
 
 ### Changed
 

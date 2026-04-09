@@ -4,10 +4,9 @@ Single source of truth for terminology used across the `rts-outcome-prediction`
 repository. Every other file that uses one of these terms does so by pointing
 at this document. When a new term is added, edit this file only.
 
-This file defines terminology only. It does not define phase numbering for any
-specific game — that lives in `src/rts_predict/<game>/reports/ROADMAP.md`. It
-does not catalogue where each term is currently used — that is the job of the
-files that use them.
+This file defines terminology only. It does not enumerate the canonical Phase
+list — that lives in [`docs/PHASES.md`](PHASES.md). It does not catalogue where
+each term is currently used — that is the job of the files that use them.
 
 ---
 
@@ -36,17 +35,20 @@ uniform numeric-prefix convention.
 A Phase is named after its primary concern (e.g., "Phase 01 — Data
 Exploration"). The name and number together are the canonical identifier.
 
-**Per-game specialisation.** The canonical Phase list for a specific game is
-a translation of `docs/ml_experiment_lifecycle/` into a concrete plan for
-that game. The list is owned by `src/rts_predict/<game>/reports/ROADMAP.md`.
-If the game-level list and `docs/ml_experiment_lifecycle/` disagree, the
-game-level list is revised to match `docs/`, not the reverse.
+**Canonical list.** The canonical Phase list is owned by
+[`docs/PHASES.md`](PHASES.md). It is derived mechanically from
+`docs/ml_experiment_lifecycle/` under the rule "one Phase per manual" (plus
+the thesis writing wrap-up marker). See PHASES.md for the list itself, the
+Pipeline Section decomposition of each Phase, and the derivation rule.
 
-**Phase scope.** Some Phases are scoped to a single dataset (e.g., data
-acquisition, exploration); others span datasets within a game (e.g.,
-feature engineering, splitting); others span games (e.g., cross-domain
-transfer, thesis writing). The scope of each Phase is declared in the
-game-level ROADMAP.
+**Phase scope.** Every Phase is dataset-scoped. Each dataset's ROADMAP at
+`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md` implements all Phases
+defined in `docs/PHASES.md` as its own execution plan. Two datasets under
+the same game are independent — they do not share ROADMAPs, Pipeline Sections,
+or Steps. Cross-dataset and cross-game coordination (e.g., the Phase 06
+cross-domain transfer experiments, or Phase 07 thesis writing) is tracked
+outside the ROADMAP system — in `reports/research_log.md` and `thesis/`
+respectively. See `docs/PHASES.md` for the full scope rule.
 
 ### Pipeline Section
 
@@ -62,14 +64,15 @@ numbering is sequential within its Phase and does not need to match the
 `§` numbering of the source manual — it reflects execution order within
 this project, not the manual's table of contents.
 
-**Pipeline Section scope.** Pipeline Sections inherit the scope of their
-parent Phase. A Pipeline Section within a dataset-scoped Phase is
-dataset-scoped; within a game-scoped Phase, game-scoped.
+**Pipeline Section scope.** Every Pipeline Section is dataset-scoped, inherited
+from its parent Phase (see `docs/PHASES.md`).
 
-**Ownership.** Pipeline Sections within a dataset-scoped Phase are owned by
-the dataset-level ROADMAP at
-`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`. Pipeline Sections
-within a game-scoped Phase are owned by the game-level ROADMAP.
+**Ownership.** The canonical Pipeline Section list for each Phase is defined
+in [`docs/PHASES.md`](PHASES.md). Dataset ROADMAPs at
+`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md` implement those Pipeline
+Sections by decomposing each into executable Steps. A dataset ROADMAP does
+not invent, rename, or omit Pipeline Sections; it only adds Steps underneath
+them.
 
 ### Step
 
@@ -204,8 +207,9 @@ English; they just don't name formal units of work.
 - **Experiment** — not used as a formal unit. It appears in prose referring
   to ML experiments in the Phase 5 sense; that usage is unrelated to work
   organisation.
-- **Milestone** — not used. Phase gates (defined in the game-level ROADMAP)
-  replace this concept.
+- **Milestone** — not used. Use "Phase gate" instead. The canonical gate
+  definitions live in `docs/PHASES.md` (for Phase 07, which is itself a gate
+  marker) and in each dataset ROADMAP (for exit criteria of Phases 01–06).
 - **Workstream**, **Track**, **Initiative**, **Epic** — not used.
 - **Component** — not used as a work unit name. It may appear in prose for
   software components (e.g., "the ingestion component").
