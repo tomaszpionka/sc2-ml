@@ -19,7 +19,17 @@ merged to `master`.
 
 ### Removed
 
-## [0.29.7] — 2026-04-09 (PR #N: chore/sandbox-phase-refs)
+## [0.29.8] — 2026-04-09 (PR #78: chore/research-log-archive-fresh-start)
+
+### Changed
+- `reports/RESEARCH_LOG_TEMPLATE.md`: updated step numbering format from `[PHASE X / Step X.Y]` to `[Phase XX / Step XX_YY_ZZ]` per docs/PHASES.md
+- `reports/research_log.md`: reset to fresh log with migration header note; all new entries use the new step format
+
+### Removed
+- `reports/research_log.md` (old log): archived to `reports/archive/research_log_pre_phase_migration.md`
+- `reports/_archive/` directory: consolidated into `reports/archive/`; `research_log_pre_notebook_sandbox.md` moved to `reports/archive/`
+
+## [0.29.7] — 2026-04-09 (PR #77: chore/sandbox-phase-refs)
 
 ### Changed
 - `sandbox/README.md`: updated directory structure to show nested Phase/PipelineSection/Step layout per `docs/TAXONOMY.md`; updated naming convention from flat `{PHASE}_{STEP}` to three-level `{PHASE}_{SECTION}_{STEP}`; replaced old phase references ("Phases 0–2", "Phase 1", "Step 1.1", "Step 1.8") with new scheme; corrected jupytext.toml path to `sandbox/jupytext.toml`

@@ -81,8 +81,8 @@ All Category A (phase work) code execution happens in Jupyter notebooks under
 format) + `.ipynb` file. The `.py` file is the diff-reviewable source of truth;
 the `.ipynb` file carries cell outputs for audit.
 
-**Naming:** `{PHASE:02d}_{STEP}_{descriptive_name}.{py,ipynb}`
-**Example:** `sandbox/sc2/sc2egset/01_08_game_settings_audit.py`
+**Naming:** `{PHASE}_{PIPELINE_SECTION}_{STEP}_{descriptive_slug}.{py,ipynb}`
+**Example:** `sandbox/sc2/sc2egset/01_01_01_source_inventory.py`
 
 **Artifacts:** Notebooks save report artifacts (CSV, JSON, MD, PNG) to
 `src/rts_predict/<game>/reports/<dataset>/artifacts/` — never to the dataset
@@ -94,7 +94,7 @@ definitions, 50-line cell cap, read-only DuckDB, both files committed).
 
 ## Agent Architecture
 
-5 sub-agents in `.claude/agents/` — see `docs/AGENT_MANUAL.md` for usage.
+5 sub-agents in `.claude/agents/` — see `docs/agents/AGENT_MANUAL.md` for usage.
 
 | Agent | Model | Effort | Role |
 |-------|-------|--------|------|
