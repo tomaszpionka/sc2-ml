@@ -19,6 +19,23 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.2] — 2026-04-10 (PR #91: chore/update-agent-docs-and-rules)
+
+### Added
+- `.claude/commands/pr.md`: `/pr` slash command skill for full PR wrap-up workflow
+- `specs/README.md` + `specs/spec_*.md`: parallel spec execution framework
+- `CLAUDE.md`: Parallel Executor Orchestration section (Strategy A shared-branch, Strategy B worktree)
+- `docs/agents/AGENT_MANUAL.md`: Workflow E (parallel spec execution), Branch Guard hook docs, Custom Skills (`/pr`) section
+
+### Changed
+- All `poetry run` invocations prefixed with `source .venv/bin/activate &&` across CLAUDE.md, README.md, `.claude/agents/executor.md`, `.claude/agents/reviewer.md`, `.claude/rules/git-workflow.md`, `.claude/rules/python-code.md`, and `scripts/hooks/lint-on-edit.sh` for cross-machine reproducibility
+- `.claude/settings.json`: added `Bash(source .venv/bin/activate && poetry *)` to the allow-list
+- `README.md`: Quick Start commands updated; Prior Work section updated to reference per-dataset archive directories
+- `.claude/rules/git-workflow.md`: clarified commit message workflow (Write tool to `.github/tmp/commit.txt`); added absolute-path note for ephemeral files
+
+### Removed
+- `temp/commit_msg.txt`, `temp/pr.txt`: ephemeral files cleaned up
+
 ## [1.2.1] — 2026-04-10 (PR #90: chore/phase01-status-update)
 
 ### Changed

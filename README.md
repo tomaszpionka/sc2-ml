@@ -12,9 +12,9 @@ is planned after SC2 work is complete.
 
 ## Quick Start
 ```bash
-poetry install
-poetry run sc2 --help
-poetry run pytest tests/ -v --cov=rts_predict
+source .venv/bin/activate && poetry install
+source .venv/bin/activate && poetry run sc2 --help
+source .venv/bin/activate && poetry run pytest tests/ -v --cov=rts_predict
 ```
 
 ## Key Documents
@@ -30,17 +30,20 @@ poetry run pytest tests/ -v --cov=rts_predict
 | `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md` | Institutional requirements — formatting, defense, grading |
 | `.claude/thesis-formatting-rules.yaml` | Machine-readable PJAIT formatting thresholds |
 
-## Prior Drafts (reference only — not authoritative)
+## Prior Work (reference only — not authoritative)
 
-| Document | Status |
-|----------|--------|
-| `src/rts_predict/sc2/reports/archive/ROADMAP_v1.md` | Superseded — caused premature jump to modelling before data exploration |
-| `src/rts_predict/sc2/reports/archive/methodology_v1.md` | Superseded — assumed feature decisions not yet validated by exploration |
-| `src/rts_predict/sc2/reports/archive/sanity_validation.md` | Evidence log of known issues pre-restart |
+Superseded drafts and pre-restart artifacts are preserved in per-dataset
+archive directories:
 
-## Project State
+- `src/rts_predict/sc2/reports/sc2egset/archive/` — SC2EGSet prior exploration
+- `src/rts_predict/aoe2/reports/aoe2companion/archive/` — AoE2 Companion prior work
+- `src/rts_predict/aoe2/reports/aoestats/archive/` — AoE2 aoestats prior work
 
-The SC2 pipeline has a working ingestion layer and draft feature/model code, but data
-exploration (Phase 01 — see `docs/PHASES.md` and `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`) has not been completed.
-All feature and model code is a draft to be audited and revised as exploration findings
-arrive. Do not treat existing module outputs as validated results.
+Each archive has a `_README.md` explaining what it contains and why it was
+superseded.
+
+## Project Status
+
+Phase progress is tracked per dataset in `PHASE_STATUS.yaml` files — see
+`docs/PHASES.md` for the canonical phase list and `ARCHITECTURE.md` for
+the full source-of-truth hierarchy.

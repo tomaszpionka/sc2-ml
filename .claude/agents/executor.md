@@ -30,16 +30,30 @@ You are an implementation agent for a Python ML thesis codebase.
 ## Constraints
 - Execute ONLY the steps the user specifies. Do not skip ahead.
 - After every code change, run:
-  `poetry run ruff check src/ tests/` and relevant pytest subset.
+  `source .venv/bin/activate && poetry run ruff check src/ tests/` and relevant pytest subset.
 - Do NOT mark a step complete until verification passes.
 - Do NOT open PRs or bump versions unless explicitly asked.
-- Use `poetry run` always. Never bare `python3` or `pip`.
+- Use `source .venv/bin/activate && poetry run` always. Never bare `python3` or `pip`.
+
+## Parallel execution rules
+When spawned as one of multiple parallel executors:
+- Do NOT run `git checkout`, `git branch`, or any branch-modifying command.
+- Do NOT run `git add` or `git commit` — the parent session handles staging.
+- If your spec file says "Branch: ..." — that is for the parent session's
+  reference, not for you to create.
+- If you need to edit a file that another parallel executor might also touch,
+  complete your edit and report the conflict risk in your summary.
+
+When spawned with `isolation: "worktree"`:
+- You are in an isolated git worktree with your own branch.
+- Edit files freely — no conflict with other agents.
+- Do NOT run `git push`. The parent session merges your worktree branch.
 
 ## Test placement rules
 - When adding a new source file `src/rts_predict/<path>/module.py`, create
   `tests/rts_predict/<path>/test_module.py` in the same PR.
 - When modifying a source file, check coverage on changed lines:
-  `poetry run pytest tests/ --cov=rts_predict --cov-report=xml && poetry run diff-cover coverage.xml`
+  `source .venv/bin/activate && poetry run pytest tests/ --cov=rts_predict --cov-report=xml && poetry run diff-cover coverage.xml`
   If diff-coverage is below 90%, add tests for uncovered new/changed code.
 - NEVER create a `tests/` directory inside `src/rts_predict/`. All tests live
   in the mirrored `tests/rts_predict/` tree.
@@ -66,8 +80,8 @@ You are an implementation agent for a Python ML thesis codebase.
    Notebooks are thin orchestration only — SQL strings, function calls, and
    display logic.
 4. After completing the notebook, run fresh-kernel execution:
-   `poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
-5. **Immediately after `nbconvert --inplace`**, run `poetry run jupytext --sync {path}`.
+   `source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
+5. **Immediately after `nbconvert --inplace`**, run `source .venv/bin/activate && poetry run jupytext --sync {path}`.
    `nbconvert` writes `execution_count` and `language_info` back into the `.ipynb`.
    The jupytext metadata filter strips `language_info` on the next sync, and the
    pre-commit hook nullifies `execution_count`. If you skip the sync before staging,

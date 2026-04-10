@@ -14,9 +14,9 @@ Commits: `type(scope): short description`. Atomic — one logical unit per commi
 ## PR Creation Flow (on "wrap up")
 
 1. Run checks (skip if no .py files in diff):
-   a. `poetry run ruff check src/ tests/`
-   b. `poetry run mypy src/rts_predict/`
-   c. `poetry run pytest tests/ -v --cov --cov-report=term-missing | tee coverage.txt`
+   a. `source .venv/bin/activate && poetry run ruff check src/ tests/`
+   b. `source .venv/bin/activate && poetry run mypy src/rts_predict/`
+   c. `source .venv/bin/activate && poetry run pytest tests/ -v --cov --cov-report=term-missing | tee coverage.txt`
       (`--cov` without a path uses `[tool.coverage.run] source` from `pyproject.toml`,
       which is `src/rts_predict` — covers all game and common packages)
    d. Read and analyze `coverage.txt` — identify uncovered lines in project code
@@ -39,8 +39,15 @@ The PR body **must follow the template** in `.github/pull_request_template.md`:
 - `## Test plan` — concrete, checkable steps: commands run, artifacts verified, regressions checked
 - Footer line: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
 
+Always use **absolute paths** when referencing ephemeral files — relative paths
+break when the working directory changes mid-session.
+
 ```bash
-# 1. Write PR body to file (never inline heredoc — avoids shell quoting issues)
+# 1. Commit message — write via Write tool (never heredoc — breaks in zsh)
+#    Then user runs: git commit -F .github/tmp/commit.txt
+#    Path: .github/tmp/commit.txt
+
+# 2. PR body — write via Write tool
 cat > .github/tmp/pr.txt << 'EOF'
 ## Summary
 
@@ -53,11 +60,11 @@ cat > .github/tmp/pr.txt << 'EOF'
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 
-# 2. Create PR using the file
+# 3. Create PR using the file
 gh pr create --title "<type(scope): description>" --body-file .github/tmp/pr.txt
 
-# 3. Clean up after PR is created
-rm .github/tmp/pr.txt
+# 4. Clean up after PR is created
+rm -f .github/tmp/pr.txt .github/tmp/commit.txt
 ```
 
 ## End-of-Session Checklist (non-PR)
