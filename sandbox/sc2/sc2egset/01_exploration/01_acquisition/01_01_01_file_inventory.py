@@ -21,15 +21,16 @@
 # **Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
 # **Dataset:** sc2egset
 # **Question:** What files exist on disk, how many are there, and how are they organized?
+# **Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+# **ROADMAP reference:** `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` Step 01_01_01
+# **Commit:** 0a77634
 #
 # This notebook walks the sc2egset raw directory and counts everything.
 # It does NOT compare against any expected counts — it produces the counts
-# for the first time.
-#
-# **Layout note:** The raw directory has a two-level structure:
-# `raw/TOURNAMENT_NAME/TOURNAMENT_NAME_data/*.SC2Replay.json`
-# The top level (`raw/TOURNAMENT/`) also contains metadata files
-# (`.zip`, `.log`, `.json`, no-extension). Both levels are inventoried.
+# for the first time. The raw directory has a two-level structure:
+# `raw/TOURNAMENT_NAME/TOURNAMENT_NAME_data/*.SC2Replay.json`.
+# The top level also contains metadata files (`.zip`, `.log`, `.json`, no-extension).
+# Both levels are inventoried.
 
 # %%
 import json
@@ -44,14 +45,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # %%
-# Paths — derived from project config, not hardcoded
 from rts_predict.sc2.config import REPLAYS_SOURCE_DIR
 
 RAW_DIR: Path = REPLAYS_SOURCE_DIR
 ARTIFACTS_DIR: Path = get_reports_dir("sc2", "sc2egset") / "artifacts" / "01_01"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-logger.info("Raw directory: %s", RAW_DIR)
+logger.info("Source directory: %s", RAW_DIR)
 logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 
 # %%
@@ -63,6 +63,15 @@ meta_result = inventory_directory(RAW_DIR)
 logger.info("Tournament directories (level 1): %d", len(meta_result.subdirs))
 logger.info("Metadata files across all tournaments: %d", meta_result.total_files)
 logger.info("Files at root: %d", len(meta_result.files_at_root))
+
+# %% [markdown]
+# ### Level 1 inventory
+#
+# The level 1 scan of the raw directory reveals the tournament directory structure
+# and metadata file counts. Each tournament directory contains auxiliary files
+# (.zip archives, .log files, metadata .json) alongside a `_data/` subdirectory
+# holding the actual replay files. This cell establishes the top-level counts
+# before drilling into replay-level detail.
 
 # %%
 # Level 2 inventory: for each tournament, scan its _data/ subdir for replay files.
@@ -97,6 +106,15 @@ logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
 if tournaments_missing_data_dir:
     logger.warning("Tournaments with no _data dir: %s", tournaments_missing_data_dir)
 
+# %% [markdown]
+# ### Level 2 inventory — replay files
+#
+# The level 2 scan enters each tournament's `_data/` subdirectory and counts
+# replay files. The total replay file count and cumulative size establish the
+# authoritative source counts for all downstream steps. Any tournament missing
+# its `_data/` directory is flagged as a warning — these gaps must be acknowledged
+# in the data cleaning phase.
+
 # %%
 # Summary statistics for replay file counts per tournament
 replay_counts = [sd["replay_file_count"] for sd in replay_subdir_data]
@@ -113,6 +131,14 @@ if replay_counts:
 for sd in replay_subdir_data:
     if sd["replay_file_count"] == 0:
         logger.warning("Tournament with 0 replay files: %s", sd["name"])
+
+# %% [markdown]
+# ### Replay distribution across tournaments
+#
+# The summary statistics (min, max, median replays per tournament) characterise
+# the size distribution of the corpus. Tournaments with zero replay files are
+# flagged explicitly — these are not data errors but may indicate incomplete
+# extraction or metadata-only directories.
 
 # %%
 artifact = {
@@ -175,7 +201,23 @@ md_path.write_text("\n".join(lines) + "\n")
 logger.info("Markdown artifact written: %s", md_path)
 
 # %% [markdown]
-# ## Verification
+# ### Artifact output
 #
-# The artifacts have been written. The counts above ARE the authoritative
-# inventory — they are not compared against any prior documentation.
+# Both the structured JSON artifact and the human-readable Markdown report have
+# been written to the artifacts directory. These are the authoritative inventory
+# records for all downstream steps. Per Invariant #6, the code that produced
+# each number is traceable via the paired `.ipynb` notebook.
+
+# %% [markdown]
+# ## Conclusion
+#
+# ### Artifacts produced
+# - `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-tournament breakdown
+# - `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+#
+# ### Thesis mapping
+# - Chapter 3 — Data & Methodology > 3.1 Data Sources > SC2EGSet
+#
+# ### Follow-ups
+# - Step 01_01_02 (if defined) or Step 01_02_01: profile the replay JSON schema and field completeness
+# - Any tournaments flagged with missing `_data/` directories need acknowledgement in data cleaning (Section 01_04)

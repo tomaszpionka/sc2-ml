@@ -21,16 +21,21 @@
 # **Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
 # **Dataset:** aoe2companion
 # **Question:** What files exist on disk, how many are there, and how are they organized?
+# **Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+# **ROADMAP reference:** `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` Step 01_01_01
+# **Commit:** 0a77634
 #
 # This notebook walks the aoe2companion raw directory and counts everything.
 # For daily-file subdirectories, it extracts dates from filenames and reports
-# date range and gaps.
+# date range and gaps. The raw directory contains four subdirectories (matches,
+# ratings, leaderboards, profiles), each holding daily Parquet snapshots.
 
 # %%
 import json
 import logging
 import re
 import statistics
+from datetime import date, timedelta
 from pathlib import Path
 
 from rts_predict.common.inventory import inventory_directory
@@ -46,7 +51,7 @@ RAW_DIR: Path = AOE2COMPANION_RAW_DIR
 ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoe2companion") / "artifacts" / "01_01"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-logger.info("Raw directory: %s", RAW_DIR)
+logger.info("Source directory: %s", RAW_DIR)
 logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 
 # %%
@@ -56,6 +61,14 @@ logger.info("Total files: %d", result.total_files)
 logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
 logger.info("Subdirectories: %d", len(result.subdirs))
 logger.info("Files at root: %d", len(result.files_at_root))
+
+# %% [markdown]
+# ### Top-level inventory
+#
+# The raw directory scan reveals the subdirectory structure and total file counts.
+# The aoe2companion dataset is organised into four subdirectories (matches, ratings,
+# leaderboards, profiles), each containing daily Parquet snapshots. The total file
+# count and size establish the baseline for downstream processing steps.
 
 # %%
 subdir_data = []
@@ -73,9 +86,14 @@ if file_counts:
     logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
                 min(file_counts), max(file_counts), statistics.median(file_counts))
 
-# %%
-from datetime import date, timedelta
+# %% [markdown]
+# ### Per-subdirectory file counts
+#
+# The breakdown shows file counts and sizes for each subdirectory. The variance
+# in file counts across subdirectories reflects the different granularity and
+# retention policies of each data category (matches vs ratings vs snapshots).
 
+# %%
 # Try to extract dates from filenames in each subdirectory.
 # We discover the date pattern — we do NOT assume a format.
 # Common patterns: YYYY-MM-DD, YYYYMMDD embedded in filenames.
@@ -114,6 +132,15 @@ for sd in result.subdirs:
                      len(dates_found), len(gaps))
     else:
         logger.info("Subdir %s: no dates extracted from filenames", sd.name)
+
+# %% [markdown]
+# ### Date range and gap analysis
+#
+# Date extraction from filenames reveals the temporal coverage of each
+# subdirectory. Gaps between consecutive dates indicate missing daily snapshots.
+# These gaps are recorded in the artifact for acknowledgement during data cleaning
+# (Section 01_04). Subdirectories without date-patterned filenames (e.g., snapshot
+# tables) are noted separately.
 
 # %%
 artifact = {
@@ -167,7 +194,24 @@ md_path.write_text("\n".join(lines) + "\n")
 logger.info("Markdown artifact written: %s", md_path)
 
 # %% [markdown]
-# ## Verification
+# ### Artifact output
 #
-# The artifacts have been written. The counts above ARE the authoritative
-# inventory — they are not compared against any prior documentation.
+# Both the structured JSON artifact and the human-readable Markdown report have
+# been written to the artifacts directory. These are the authoritative inventory
+# records for all downstream steps. Per Invariant #6, the code that produced
+# each number is traceable via the paired `.ipynb` notebook.
+
+# %% [markdown]
+# ## Conclusion
+#
+# ### Artifacts produced
+# - `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown and date analysis
+# - `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+#
+# ### Thesis mapping
+# - Chapter 3 — Data & Methodology > 3.1 Data Sources > aoe2companion
+#
+# ### Follow-ups
+# - Step 01_01_02 (if defined) or Step 01_02_01: profile the Parquet schema and field completeness for each subdirectory
+# - Date gaps identified in the inventory must be acknowledged during data cleaning (Section 01_04)
+# - Sparse rating regime (pre-2025-06-26) flagged in ROADMAP must be verified against the date range found here
