@@ -6,9 +6,9 @@ paths:
 # Python Code Standards
 
 ## Pre-Commit Checks (MANDATORY)
-1. `poetry run ruff check src/ tests/`
-2. `poetry run mypy src/rts_predict/`
-3. `poetry run pytest tests/ -v`
+1. `source .venv/bin/activate && poetry run ruff check src/ tests/`
+2. `source .venv/bin/activate && poetry run mypy src/rts_predict/`
+3. `source .venv/bin/activate && poetry run pytest tests/ -v`
 
 ## Style
 - Type hints on all function signatures (params and return)

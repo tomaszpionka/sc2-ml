@@ -158,7 +158,7 @@ These YAMLs are the canonical column documentation, version-controlled and
 re-runnable. They are produced by:
 
 ```bash
-poetry run sc2 export-schemas --db <db_path> --out <schemas_dir>
+source .venv/bin/activate && poetry run sc2 export-schemas --db <db_path> --out <schemas_dir>
 ```
 
 Re-running the export preserves all hand-written `comment` and `notes` fields.
@@ -223,6 +223,27 @@ Step 5:  [wrap up PR]
 
 No planning, no execution, no review.
 
+### Workflow E: Parallel Spec Execution
+
+When a plan has been split into independent spec files (`specs/spec_NN.md`):
+
+```
+Step 1:  [parent creates branch OR uses worktree isolation]
+Step 2:  [parent spawns executor(s) — one per spec]
+         @executor execute specs/spec_01.md
+         @executor execute specs/spec_02.md   ← parallel if safe
+Step 3:  [shared branch: parent reviews all changes]
+         [worktree: parent merges each worktree branch]
+Step 4:  @reviewer review changes
+Step 5:  [parent stages, commits, wraps up PR]
+```
+
+**Two strategies:**
+- **Shared branch:** Executors edit the same working tree. Requires
+  non-overlapping file ownership. See `specs/README.md` for file maps.
+- **Worktree isolation:** Each executor gets `isolation: "worktree"`.
+  Full file isolation, but requires merging branches afterwards.
+
 ---
 
 ## Permission Model
@@ -244,6 +265,10 @@ Three layers protect your work:
 - Write inside repo → allowed silently
 - Write inside `~/` but outside repo → asks you for permission
 - Write outside `~/` → blocked with error message
+
+### Layer 4: Branch guard hook (catches edits on master)
+- Write/Edit on a feature branch → allowed silently
+- Write/Edit on master or main → blocked with error message
 
 **Result:** Normal work flows without any permission prompts. Dangerous
 operations are blocked. Edge cases ask you first.
@@ -283,6 +308,43 @@ sees them and self-corrects. No manual `ruff check` between edits.
 Checks the target path. Inside repo = silent. Outside repo in home = asks you.
 Outside home = blocked. Protects your system from accidental writes.
 
+### PreToolUse: Branch Guard (before every Write/Edit)
+Blocks all Write/Edit calls when on master or main branch. Forces you to
+create a feature branch first. Prevents the #1 historical friction source:
+accidentally editing files on master.
+
+## Custom Skills (Slash Commands)
+
+Skills live in `.claude/commands/` as markdown files. The filename becomes
+the slash command. Type the command and Claude expands the file as a prompt.
+
+| Command | File | What it does |
+|---------|------|--------------|
+| `/pr` | `.claude/commands/pr.md` | Full PR wrap-up: checks, version bump, CHANGELOG, PR body, cleanup |
+
+### `/pr` — PR Wrap-Up
+
+Type `/pr` when you are ready to create a pull request. Optionally add
+arguments (e.g., `/pr target main` or `/pr skip-checks`) as context hints.
+
+The skill walks through the complete PR Creation Flow from
+`.claude/rules/git-workflow.md`:
+1. Pre-flight (branch check, commit log, diff summary)
+2. Lint + mypy + pytest with coverage gate
+3. Version bump proposal (user confirms)
+4. CHANGELOG update
+5. Release commit (user executes)
+6. PR body written to `.github/tmp/pr.txt` (user reviews)
+7. PR creation command proposed (user executes)
+8. Ephemeral file cleanup
+
+**Key safety property:** Claude never runs `git push`, `git commit`, or
+`gh pr create` — it proposes commands for the user to execute.
+
+**Planned follow-up:** `/execute-plan` — a skill to execute steps from
+`_current_plan.md` or a `specs/spec_NN.md` file without spelling out the
+full instruction each time.
+
 ---
 
 ## When to Use `/model` vs Agents
@@ -310,7 +372,9 @@ A future enhancement will add support for autonomous multi-hour sessions
 where an agent works through an entire Phase independently:
 
 - Uses `maxTurns` in agent frontmatter to allow extended execution
-- Uses `isolation: worktree` for safe parallel work
+- Uses `isolation: worktree` for safe parallel work on separate branches, or
+  shared-branch parallel execution for specs that touch non-overlapping files
+  (see Workflow E above)
 - Implements test gates as mandatory checkpoints between steps
 - Records decisions and restarts in research_log.md
 - May use Docker for reproducible environments

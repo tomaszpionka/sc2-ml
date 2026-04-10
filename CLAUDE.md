@@ -7,7 +7,7 @@ Classical ML on pre-game features, with optional in-game and GNN comparisons.
 
 - **ALWAYS** read `.claude/scientific-invariants.md` before any data/feature/model work
 - **ALWAYS** read `PHASE_STATUS.yaml` at session start to know the current phase
-- **ALWAYS** use `poetry run <command>` — NEVER bare `python3` or `pip install`
+- **ALWAYS** activate the venv first: `source .venv/bin/activate && poetry run <command>` — NEVER bare `python3` or `pip install`
 - **NEVER** use data from game T or later to compute features for game T
 - **NEVER** begin a new phase until all prior phase artifacts exist on disk
 - **NEVER** skip the plan/execute two-session workflow for non-trivial work
@@ -28,10 +28,10 @@ When asked to create a plan or run a read-only/planning session:
 
 | Task | Command |
 |------|---------|
-| Run tests | `poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing` |
-| Lint | `poetry run ruff check src/ tests/` |
-| Type check | `poetry run mypy src/rts_predict/` |
-| CLI | `poetry run sc2 --help` |
+| Run tests | `source .venv/bin/activate && poetry run pytest tests/ -v --cov=rts_predict --cov-report=term-missing` |
+| Lint | `source .venv/bin/activate && poetry run ruff check src/ tests/` |
+| Type check | `source .venv/bin/activate && poetry run mypy src/rts_predict/` |
+| CLI | `source .venv/bin/activate && poetry run sc2 --help` |
 
 ## Plan / Execute Workflow
 
@@ -91,6 +91,26 @@ from `rts_predict.common.notebook_utils`.
 
 **Hard rules:** See `sandbox/README.md` for the full contract (no inline
 definitions, 50-line cell cap, read-only DuckDB, both files committed).
+
+## Parallel Executor Orchestration
+
+Two strategies for running executor subagents in parallel:
+
+**Strategy A — Shared branch** (for non-overlapping file edits):
+1. Parent creates the branch before spawning any executor
+2. Parent provides each executor with its spec file path
+3. Executors do NOT create branches, checkout, add, or commit
+4. Parent stages and commits after all executors complete
+5. Never assign parallel executors specs that edit the same file
+
+**Strategy B — Worktree isolation** (for overlapping or complex edits):
+1. Parent spawns executors with `isolation: "worktree"`
+2. Each executor gets an isolated worktree with its own branch
+3. Executors edit freely — no conflict possible
+4. Parent merges each worktree branch back after completion
+
+Use Strategy A for config/docs chores with known file maps. Use Strategy B
+for Phase work or any situation where file overlap is hard to predict.
 
 ## Agent Architecture
 
