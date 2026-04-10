@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.1] — 2026-04-10 (PR #90: chore/phase01-status-update)
+
+### Changed
+- PHASE_STATUS.yaml: Phase 01 status updated to `in_progress` for sc2egset, aoe2companion, and aoestats
+- `_current_plan.md` updated for traceability
+
 ## [1.2.0] — 2026-04-09 (PR #89: feat/phase01-step-01-01-01-file-inventory)
 
 ### Added
