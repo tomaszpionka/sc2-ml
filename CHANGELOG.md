@@ -19,6 +19,13 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.8] — 2026-04-10 (PR #97: chore/notebook-template-conformance-01_01_01)
+
+### Changed
+- `sandbox/sc2/sc2egset/01_01_01_file_inventory.{py,ipynb}`: restructured to conform with `docs/templates/notebook_template.yaml` v2 — added 3 missing frontmatter fields (Invariants applied, ROADMAP reference, Commit), consolidated datetime imports into cell_02, added markdown interpretation cells after every analysis code cell, replaced bare `## Verification` with structured `## Conclusion` (Artifacts produced, Thesis mapping, Follow-ups); analysis logic preserved verbatim
+- `sandbox/aoe2/aoe2companion/01_01_01_file_inventory.{py,ipynb}`: same template conformance pass — additionally consolidated datetime import from mid-notebook into cell_02
+- `sandbox/aoe2/aoestats/01_01_01_file_inventory.{py,ipynb}`: same template conformance pass — additionally consolidated datetime import from mid-notebook into cell_02
+
 ## [1.2.7] — 2026-04-10 (PR #96: chore/notebook-template-v2)
 
 ### Added

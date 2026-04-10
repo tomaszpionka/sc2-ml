@@ -1,749 +1,1043 @@
-# Notebook Template Fix Plan
+# Plan: Notebook Template v2 Conformance — 01_01_01 File Inventory
 
-**Category:** C (Chore)
-**Branch:** `chore/notebook-template-v2`
-**Date:** 2026-04-10
-**Triggered by:** Adversarial review at `temp/notebook_fix/notebook_template_review.md`
-
----
-
-## Problem Statement
-
-The current notebook template (`temp/notebook_fix/notebook_template.md`) is not
-fit for purpose. An adversarial review identified six critical gaps:
-
-1. Template front-matter format (markdown table) contradicts all three existing
-   notebooks (bold key-value pairs).
-2. No existing notebook has the Conclusion/Thesis mapping/Follow-ups sections
-   the template prescribes.
-3. Template is DuckDB-centric but all three existing notebooks are
-   filesystem-only (no DuckDB).
-4. No temporal leakage verification section for Phase 02+ notebooks.
-5. No environment/version pinning.
-6. Step numbering example (`1.8`) does not match project taxonomy (`01_01_01`).
-
-The template must be revised before Phase 02 notebooks are generated.
+**Category:** C (chore — conformance cleanup)
+**Branch:** `chore/notebook-template-conformance-01_01_01`
+**Scope:** Rewrite three `01_01_01_file_inventory.py` notebooks to match
+`docs/templates/notebook_template.yaml` v2. No functional changes — analysis
+logic is preserved verbatim. Only cell structure, frontmatter fields, and
+markdown interpretation cells change.
 
 ---
 
-## Decision 1: Template Format (YAML, not MD)
+## Context
 
-**Choice:** `docs/templates/notebook_template.yaml`
+### Files to modify
 
-**Rationale:**
-- The two existing templates in `docs/templates/` are both YAML
-  (`step_template.yaml`, `raw_data_readme_template.yaml`). Following
-  the established convention reduces cognitive load.
-- YAML supports structured comments (`# required: true/false`),
-  conditional field documentation, and machine-parseable field names.
-  A markdown template conflates content and structure.
-- The template is not itself a notebook -- it is a schema that describes
-  what a notebook should contain. YAML is the right format for schemas.
-- The executor agent reads the YAML and produces the `.py` (jupytext
-  percent-format) file. The YAML is never rendered directly.
+| # | Path | Game | Dataset |
+|---|------|------|---------|
+| 1 | `sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py` | sc2 | sc2egset |
+| 2 | `sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py` | aoe2 | aoe2companion |
+| 3 | `sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py` | aoe2 | aoestats |
 
-**File location:** `docs/templates/notebook_template.yaml`
+Each has a paired `.ipynb` that must be re-synced after the `.py` rewrite.
 
-**The old template** at `temp/notebook_fix/notebook_template.md` will NOT be
-deleted by this chore. It remains in `temp/` as historical context. A
-`.gitignore` entry or future cleanup can remove it.
+### Template requirements (Phase 01, no DuckDB)
 
----
+From `docs/templates/notebook_template.yaml`:
 
-## Decision 2: Front-matter Format (Bold Key-Value Pairs)
+- `cell_01_frontmatter` — mandatory, must include all 7 bold fields + description paragraph
+- `cell_02_imports` — ALL imports in one cell (including `from datetime import ...`)
+- `cell_03_paths` — config import + RAW_DIR + ARTIFACTS_DIR + log both
+- `cell_04_duckdb_setup` — NOT needed (Phase 01 filesystem-only)
+- `cells_05_to_N` — analysis cells, each followed by a markdown interpretation cell
+- `cell_leakage_verification` — NOT needed (Phase 01, no features)
+- `cell_conclusion` — mandatory: Artifacts produced, Thesis mapping, Follow-ups
+- `cell_cleanup` — NOT needed (no DuckDB)
 
-**Choice:** Adopt the bold key-value style that the three existing notebooks
-already use. Do NOT use a markdown table.
+### Invariants applied
 
-**Rationale:**
-- Three notebooks already exist with the bold key-value format. The
-  template should codify what works, not force a retroactive reformat.
-- Bold key-value pairs are more readable in the jupytext `.py` format
-  (where every line is a `#` comment) than a markdown table with
-  alignment pipes.
-- The step_template.yaml already defines the machine-parseable metadata
-  for each Step. The notebook front-matter is a human-readable header,
-  not a data interchange format.
+For Phase 01 File Inventory: `#6 (reproducibility), #7 (no magic numbers)`
+
+### Thesis mappings (from ROADMAPs)
+
+- **sc2egset:** `Chapter 3 — Data & Methodology > 3.1 Data Sources > SC2EGSet`
+- **aoe2companion:** `Chapter 3 — Data & Methodology > 3.1 Data Sources > aoe2companion`
+- **aoestats:** `Chapter 3 — Data & Methodology > 3.1 Data Sources > aoestats`
 
 ---
 
-## Decision 3: Conditional Sections (DuckDB vs. Non-DuckDB)
+## Execution Steps
 
-**Choice:** The template defines TWO setup/cleanup patterns and documents
-when each applies:
+### Step 0 — Branch setup
 
-- **Pattern A (DuckDB notebooks):** `get_notebook_db("{game}", "{dataset}")`
-  in setup, `con.close()` in cleanup.
-- **Pattern B (filesystem-only notebooks):** No DuckDB setup. Cleanup cell
-  is optional (only needed if other resources require explicit release).
-
-The template marks Pattern A cells with a comment: `# DuckDB notebooks only`.
-The template marks Pattern B as the default for Phase 01 file inventory
-notebooks.
-
-**Rationale:** All three existing notebooks are Pattern B. Phase 02+
-notebooks will predominantly be Pattern A. Both patterns must be documented.
-
----
-
-## Decision 4: Parameterized Placeholders
-
-All game/dataset-specific values use `{game}` and `{dataset}` placeholders,
-never hardcoded values. This prevents copy-paste errors flagged in Finding #4
-of the review.
-
-Placeholders used throughout the template:
-- `{game}` -- "sc2" or "aoe2"
-- `{dataset}` -- "sc2egset", "aoe2companion", or "aoestats"
-- `{phase_nn}` -- two-digit phase number, e.g., "01"
-- `{phase_name}` -- phase name, e.g., "Data Exploration"
-- `{section_nn_nn}` -- pipeline section number, e.g., "01_01"
-- `{section_name}` -- pipeline section name
-- `{step_nn_nn_nn}` -- step number, e.g., "01_01_01"
-- `{step_name}` -- descriptive step name
-- `{question}` -- one-sentence scientific question
-- `{slug}` -- descriptive filename slug
-
----
-
-## Decision 5: Invariant Declaration Mechanism
-
-Each notebook front-matter includes an `Invariants applied` field listing
-which of the 8 scientific invariants are active for that notebook, mirroring
-the `scientific_invariants_applied` field from `step_template.yaml`.
-
-For Phase 01 file inventory notebooks, this would read:
-```
-**Invariants applied:** #6 (reproducibility: counts produced by auditable code), #7 (no magic numbers: pure counting, no thresholds)
+```bash
+git checkout -b chore/notebook-template-conformance-01_01_01
 ```
 
-For Phase 02+ notebooks, temporal leakage invariant #3 would be listed with
-a description of how it is verified in the notebook body.
+Get the git short hash for the Commit field:
 
----
-
-## Decision 6: Temporal Leakage Verification Section
-
-A dedicated section titled `## Temporal Leakage Verification` is REQUIRED
-for all notebooks in Phase 02 and later. The template marks this section
-as conditional (`# Phase 02+ only`).
-
-The section must contain:
-1. A code cell that programmatically verifies no feature uses data from
-   game T or later to predict game T.
-2. A markdown cell interpreting the verification result.
-
-For Phase 01 notebooks, the section is omitted entirely (not present as
-an empty placeholder).
-
-**Structural enforcement:** The template documents this as a hard rule.
-Enforcement is by reviewer discipline and (future) CI lint -- see
-Decision 10 below.
-
----
-
-## Decision 7: Conclusion / Thesis Mapping Section
-
-The template prescribes a `## Conclusion` section with three subsections:
-
-1. **Artifacts produced** -- list of artifact paths written by this notebook.
-2. **Thesis mapping** -- target section(s) in `thesis/THESIS_STRUCTURE.md`.
-3. **Follow-ups** -- what the next Step or Pipeline Section should
-   investigate based on these findings.
-
-This replaces the current bare `## Verification` section in existing notebooks.
-The Verification content (if applicable) moves into the Conclusion as a
-brief statement, not a separate top-level section.
-
----
-
-## Decision 8: Environment Pinning
-
-The front-matter includes a `Commit` field recording the git short-hash at
-notebook creation time. This is sufficient because:
-
-- `poetry.lock` is committed and pinned. The git hash transitively pins
-  all library versions.
-- Python version is pinned in `pyproject.toml` (3.12).
-- Recording the full `poetry.lock` hash in every notebook front-matter
-  adds noise without additional auditability.
-
-Format:
+```bash
+git rev-parse --short HEAD
 ```
+
+Store this value as `{git_short_hash}` for use in all three notebooks.
+
+---
+
+### Step 1 — Rewrite sc2egset notebook
+
+**File:** `sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py`
+
+Rewrite the entire `.py` file with the following cell structure. Preserve the
+jupytext YAML header exactly as-is (lines 1-15 of the current file). Then write
+cells in this order:
+
+#### cell_01_frontmatter (markdown)
+
+```
+# Step 01_01_01 — File Inventory: sc2egset
+
+**Phase:** 01 — Data Exploration
+**Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
+**Dataset:** sc2egset
+**Question:** What files exist on disk, how many are there, and how are they organized?
+**Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+**ROADMAP reference:** `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` Step 01_01_01
 **Commit:** {git_short_hash}
+
+This notebook walks the sc2egset raw directory and counts everything.
+It does NOT compare against any expected counts — it produces the counts
+for the first time. The raw directory has a two-level structure:
+`raw/TOURNAMENT_NAME/TOURNAMENT_NAME_data/*.SC2Replay.json`.
+The top level also contains metadata files (`.zip`, `.log`, `.json`, no-extension).
+Both levels are inventoried.
 ```
 
-The executor populates this at notebook creation. It does NOT auto-update
-on re-runs -- it records the commit at which the notebook was authored.
+**Changes vs current:** Added `**Invariants applied:**`, `**ROADMAP reference:**`,
+`**Commit:**` fields. Moved the layout note from a separate paragraph into the
+description paragraph.
 
----
+#### cell_02_imports (code)
 
-## Decision 9: Phase-Specific Conditional Sections
+```python
+import json
+import logging
+import statistics
+from pathlib import Path
 
-The template uses YAML comments to mark sections that are phase-conditional.
-The executor includes or omits these sections based on the target Phase.
+from rts_predict.common.inventory import inventory_directory
+from rts_predict.common.notebook_utils import get_reports_dir
 
-| Phase | Additional required sections |
-|-------|----------------------------|
-| 01 | None beyond the base template |
-| 02 | Feature category (pre-game vs. in-game), symmetry verification cell, cold-start handling documentation |
-| 03 | Split strategy documentation, leakage verification cell, baseline comparison |
-| 04 | Hypothesis statement, experiment ID, hyperparameter table |
-| 05 | Statistical test justification, assumptions-checked cell, ROPE intervals |
-| 06 | Transfer taxonomy classification, domain shift documentation |
-
-These are documented in the template as a lookup table. The template body
-contains the base structure; phase-conditional cells are listed in a separate
-YAML block at the end of the template.
-
----
-
-## Decision 10: Validation / Enforcement Strategy
-
-Three tiers of enforcement, in order of implementation priority:
-
-### Tier 1 — Template documentation (this chore)
-The template itself documents hard rules with `# REQUIRED` / `# CONDITIONAL`
-/ `# OPTIONAL` annotations. Reviewer agents check notebooks against the
-template.
-
-### Tier 2 — Pre-commit AST check (separate chore, out of scope)
-A pre-commit hook that parses `.py` notebooks and validates:
-- Front-matter fields present
-- Cell line cap (50 lines)
-- No inline `def`/`class` definitions
-- Conclusion section exists
-
-This is the "planned" check mentioned in `notebook_config.toml`. It is
-NOT implemented in this chore. A separate `chore/notebook-lint` branch
-will handle it.
-
-### Tier 3 — CI notebook lint (separate chore, out of scope)
-A CI job that validates all notebooks in `sandbox/` against the template
-schema. This is NOT implemented in this chore.
-
-**This chore implements Tier 1 only.** Tiers 2 and 3 are documented as
-future work in the template's header comments.
-
----
-
-## Template Content Specification
-
-The YAML file has the following top-level structure:
-
-```yaml
-# Notebook Template v2
-#
-# Canonical template for sandbox notebooks (jupytext .py:percent format).
-# Used by executor agents to generate notebooks for Phase work.
-#
-# Authoritative sources:
-#   Taxonomy          docs/TAXONOMY.md
-#   Canonical Phases  docs/PHASES.md
-#   Invariants        .claude/scientific-invariants.md
-#   Sandbox contract  sandbox/README.md
-#   Cell rules        sandbox/notebook_config.toml
-#   Step schema       docs/templates/step_template.yaml
-#
-# Enforcement:
-#   Tier 1 (current): Template documentation + reviewer discipline
-#   Tier 2 (planned): Pre-commit AST-based cell validation
-#   Tier 3 (planned): CI notebook lint against this schema
-#
-# Format: YAML with fenced jupytext cell content in multiline strings.
-# Placeholders use {curly_braces}. All are listed in the placeholders block.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 ```
 
-### Section-by-section content
+**Changes vs current:** None — already conformant. (sc2egset has no mid-notebook
+imports.)
 
-#### Block 1: Placeholders registry
+#### cell_03_paths (code)
 
-```yaml
-placeholders:
-  game:
-    description: "Game identifier"
-    allowed: ["sc2", "aoe2"]
-    required: true
-  dataset:
-    description: "Dataset identifier"
-    allowed: ["sc2egset", "aoe2companion", "aoestats"]
-    required: true
-  phase_nn:
-    description: "Two-digit phase number"
-    example: "01"
-    required: true
-  phase_name:
-    description: "Phase name from docs/PHASES.md"
-    example: "Data Exploration"
-    required: true
-  section_nn_nn:
-    description: "Pipeline section number"
-    example: "01_01"
-    required: true
-  section_name:
-    description: "Pipeline section name from docs/PHASES.md"
-    example: "Data Acquisition & Source Inventory"
-    required: true
-  step_nn_nn_nn:
-    description: "Step number"
-    example: "01_01_01"
-    required: true
-  step_name:
-    description: "Descriptive step name from ROADMAP"
-    example: "File Inventory"
-    required: true
-  slug:
-    description: "Filename slug (lowercase, underscores)"
-    example: "file_inventory"
-    required: true
-  question:
-    description: "One-sentence scientific question from ROADMAP"
-    required: true
-  invariants_applied:
-    description: "Comma-separated list of invariant numbers and short descriptions"
-    example: "#6 (reproducibility), #7 (no magic numbers)"
-    required: true
-  git_short_hash:
-    description: "Git short hash at notebook creation time"
-    example: "a1b2c3d"
-    required: true
-  roadmap_path:
-    description: "Relative path to the dataset ROADMAP"
-    example: "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
-    required: true
+```python
+from rts_predict.sc2.config import REPLAYS_SOURCE_DIR
+
+RAW_DIR: Path = REPLAYS_SOURCE_DIR
+ARTIFACTS_DIR: Path = get_reports_dir("sc2", "sc2egset") / "artifacts" / "01_01"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+logger.info("Source directory: %s", RAW_DIR)
+logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 ```
 
-#### Block 2: Cell definitions (the notebook body)
+**Changes vs current:** Changed `logger.info("Raw directory: ...")` to
+`logger.info("Source directory: ...")` to match template wording.
 
-Each cell is defined as a YAML mapping with keys:
-- `cell_id`: sequential identifier (e.g., "cell_01")
-- `cell_type`: "markdown" or "code"
-- `required`: true/false
-- `condition`: when this cell is included (e.g., "always", "duckdb_only", "phase_02_plus")
-- `content`: multiline string with the cell content in jupytext percent format
-- `notes`: guidance for the executor
+#### cell_04 — Level 1 inventory (code)
 
-##### Cell 01 -- Front-matter (markdown, REQUIRED, always)
+Preserve the existing analysis code verbatim (lines 58-66 of current file):
 
-```yaml
-cell_01_frontmatter:
-  cell_type: markdown
-  required: true
-  condition: always
-  content: |
-    # Step {step_nn_nn_nn} -- {step_name}: {dataset}
+```python
+# Level 1 inventory: RAW_DIR -> tournament directories (metadata files only)
+# Each tournament dir contains: .zip, .log, .json metadata, and a _data/ subdir.
+# inventory_directory goes one level deep, so it counts metadata files per tournament.
+meta_result = inventory_directory(RAW_DIR)
 
-    **Phase:** {phase_nn} -- {phase_name}
-    **Pipeline Section:** {section_nn_nn} -- {section_name}
-    **Dataset:** {dataset}
-    **Question:** {question}
-    **Invariants applied:** {invariants_applied}
-    **ROADMAP reference:** `{roadmap_path}` Step {step_nn_nn_nn}
-    **Commit:** {git_short_hash}
-
-    {description_paragraph}
-  notes: |
-    - Use bold key-value pairs, NOT a markdown table.
-    - The description paragraph is 1-3 sentences explaining what the
-      notebook does concretely. Include layout notes if the data
-      structure is non-obvious.
-    - All fields are mandatory. Do not omit any.
+logger.info("Tournament directories (level 1): %d", len(meta_result.subdirs))
+logger.info("Metadata files across all tournaments: %d", meta_result.total_files)
+logger.info("Files at root: %d", len(meta_result.files_at_root))
 ```
 
-##### Cell 02 -- Imports and setup (code, REQUIRED, always)
+#### cell_05 — Level 1 interpretation (markdown) **NEW**
 
-```yaml
-cell_02_imports:
-  cell_type: code
-  required: true
-  condition: always
-  content: |
-    import logging
-    from pathlib import Path
+```
+### Level 1 inventory
 
-    from rts_predict.common.notebook_utils import get_reports_dir
-    # ... other imports from src/rts_predict/ ...
-
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-  notes: |
-    - All imports from src/rts_predict/. No inline definitions.
-    - logging setup is mandatory for auditability.
-    - Do NOT import get_notebook_db here unless this is a DuckDB notebook.
+The level 1 scan of the raw directory reveals the tournament directory structure
+and metadata file counts. Each tournament directory contains auxiliary files
+(.zip archives, .log files, metadata .json) alongside a `_data/` subdirectory
+holding the actual replay files. This cell establishes the top-level counts
+before drilling into replay-level detail.
 ```
 
-##### Cell 03 -- Paths and config (code, REQUIRED, always)
+#### cell_06 — Level 2 inventory (code)
 
-```yaml
-cell_03_paths:
-  cell_type: code
-  required: true
-  condition: always
-  content: |
-    from rts_predict.{game}.config import {CONFIG_CONSTANT}
+Preserve the existing analysis code verbatim (lines 69-98 of current file):
 
-    RAW_DIR: Path = {CONFIG_CONSTANT}
-    ARTIFACTS_DIR: Path = get_reports_dir("{game}", "{dataset}") / "artifacts" / "{section_nn_nn}"
-    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+```python
+# Level 2 inventory: for each tournament, scan its _data/ subdir for replay files.
+# The _data/ subdir is named TOURNAMENT_NAME_data and contains *.SC2Replay.json files.
+replay_subdir_data = []
+total_replay_files = 0
+total_replay_bytes = 0
+tournaments_missing_data_dir = []
 
-    logger.info("Source directory: %s", RAW_DIR)
-    logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
-  notes: |
-    - Paths derived from config, never hardcoded.
-    - ARTIFACTS_DIR always uses get_reports_dir() + "artifacts/" + section number.
-    - The {CONFIG_CONSTANT} placeholder is dataset-specific (e.g.,
-      REPLAYS_SOURCE_DIR for sc2egset, AOE2COMPANION_RAW_DIR for aoe2companion).
+for sd in meta_result.subdirs:
+    data_dir = RAW_DIR / sd.name / (sd.name + "_data")
+    if not data_dir.exists():
+        logger.warning("No _data dir for tournament: %s", sd.name)
+        tournaments_missing_data_dir.append(sd.name)
+        continue
+    replay_inv = inventory_directory(data_dir)
+    total_replay_files += replay_inv.total_files
+    total_replay_bytes += replay_inv.total_bytes
+    ext_dist = {}
+    for f in replay_inv.files_at_root:
+        ext_dist[f.extension] = ext_dist.get(f.extension, 0) + 1
+    replay_subdir_data.append({
+        "name": sd.name,
+        "replay_file_count": replay_inv.total_files,
+        "total_bytes": replay_inv.total_bytes,
+        "total_mb": round(replay_inv.total_bytes / (1024 * 1024), 2),
+        "extensions": ext_dist,
+    })
+
+logger.info("Total replay files (level 2): %d", total_replay_files)
+logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
+if tournaments_missing_data_dir:
+    logger.warning("Tournaments with no _data dir: %s", tournaments_missing_data_dir)
 ```
 
-##### Cell 04 -- DuckDB setup (code, CONDITIONAL: duckdb_only)
+#### cell_07 — Level 2 interpretation (markdown) **NEW**
 
-```yaml
-cell_04_duckdb_setup:
-  cell_type: code
-  required: false
-  condition: duckdb_only
-  content: |
-    from rts_predict.common.notebook_utils import get_notebook_db
+```
+### Level 2 inventory — replay files
 
-    con = get_notebook_db("{game}", "{dataset}")
-  notes: |
-    - Include this cell ONLY if the notebook queries DuckDB.
-    - Phase 01 file inventory notebooks do NOT need this cell.
-    - Phase 02+ notebooks that compute features from DuckDB DO need it.
-    - The {game} and {dataset} placeholders prevent copy-paste errors.
+The level 2 scan enters each tournament's `_data/` subdirectory and counts
+replay files. The total replay file count and cumulative size establish the
+authoritative source counts for all downstream steps. Any tournament missing
+its `_data/` directory is flagged as a warning — these gaps must be acknowledged
+in the data cleaning phase.
 ```
 
-##### Cells 05-N -- Analysis cells (code + markdown pairs)
+#### cell_08 — Summary statistics (code)
 
-```yaml
-cells_05_to_n_analysis:
-  cell_type: "alternating code + markdown"
-  required: true
-  condition: always
-  content: |
-    # Each analysis step is a code cell followed by a markdown interpretation cell.
-    # The code cell runs the query or computation.
-    # The markdown cell interprets the result: what does this number mean?
-    #
-    # Rules:
-    #   - Max 50 lines per cell (sandbox/notebook_config.toml).
-    #   - No inline def/class/lambda assignments.
-    #   - Every query code cell must be followed by a markdown cell within 2 cells.
-    #   - Per Invariant #6: report artifacts must embed the exact code that
-    #     produced each number. If the artifact is a markdown report, the
-    #     derivation code is the notebook cell itself (traceable via the
-    #     paired .ipynb).
-    #   - Per Invariant #7: every threshold must be justified by empirical
-    #     evidence or literature citation. Add a comment or markdown note
-    #     for each threshold.
-  notes: |
-    - The number of analysis cells varies by Step.
-    - The step_template.yaml 'method' field describes the analytical approach.
-    - Stratification (by tournament, by year, etc.) should be visible in
-      the code cells, not hidden in helper functions.
+Preserve the existing analysis code verbatim (lines 101-115 of current file):
+
+```python
+# Summary statistics for replay file counts per tournament
+replay_counts = [sd["replay_file_count"] for sd in replay_subdir_data]
+if replay_counts:
+    logger.info(
+        "Replays per tournament — min: %d, max: %d, median: %.1f, total: %d",
+        min(replay_counts),
+        max(replay_counts),
+        statistics.median(replay_counts),
+        sum(replay_counts),
+    )
+
+# Flag tournaments with 0 replay files
+for sd in replay_subdir_data:
+    if sd["replay_file_count"] == 0:
+        logger.warning("Tournament with 0 replay files: %s", sd["name"])
 ```
 
-##### Cell N+1 -- Temporal leakage verification (code + markdown, CONDITIONAL: phase_02_plus)
+#### cell_09 — Summary statistics interpretation (markdown) **NEW**
 
-```yaml
-cell_leakage_verification:
-  cell_type: "code + markdown pair"
-  required: false
-  condition: phase_02_plus
-  content: |
-    # %% [markdown]
-    # ## Temporal Leakage Verification
-    #
-    # Per Scientific Invariant #3: no feature for game T may use information
-    # from game T or later. This cell programmatically verifies that
-    # constraint.
+```
+### Replay distribution across tournaments
 
-    # %%
-    # Verification code here. Must assert that:
-    # 1. All feature computation windows end strictly before game T.
-    # 2. Rolling aggregates exclude the target game's own value.
-    # 3. Head-to-head counts exclude the target game.
-    #
-    # Example (adapt to the specific feature):
-    # assert (features_df["feature_timestamp"] < features_df["game_timestamp"]).all()
-
-    # %% [markdown]
-    # **Verification result:** {describe what was checked and whether it passed}
-  notes: |
-    - REQUIRED for Phase 02, 03, 04, 05, 06 notebooks that touch features
-      or model predictions.
-    - The verification must be programmatic (an assert or check), not just
-      a prose claim.
-    - If the notebook does not compute features or predictions (e.g., a pure
-      profiling notebook in Phase 02), document why leakage verification is
-      not applicable.
+The summary statistics (min, max, median replays per tournament) characterise
+the size distribution of the corpus. Tournaments with zero replay files are
+flagged explicitly — these are not data errors but may indicate incomplete
+extraction or metadata-only directories.
 ```
 
-##### Cell N+2 -- Conclusion (markdown, REQUIRED, always)
+#### cell_10 — Write JSON artifact (code)
 
-```yaml
-cell_conclusion:
-  cell_type: markdown
-  required: true
-  condition: always
-  content: |
-    ## Conclusion
+Preserve the existing analysis code verbatim (lines 118-134 of current file):
 
-    ### Artifacts produced
-    - `{artifact_path_1}` -- {one-line description}
-    - `{artifact_path_2}` -- {one-line description}
+```python
+artifact = {
+    "step": "01_01_01",
+    "dataset": "sc2egset",
+    "raw_dir": str(RAW_DIR),
+    "layout": "two-level: raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json",
+    "num_tournament_dirs": len(meta_result.subdirs),
+    "files_at_root": len(meta_result.files_at_root),
+    "metadata_files_total": meta_result.total_files,
+    "total_replay_files": total_replay_files,
+    "total_replay_bytes": total_replay_bytes,
+    "tournaments_missing_data_dir": tournaments_missing_data_dir,
+    "tournaments": replay_subdir_data,
+}
 
-    ### Thesis mapping
-    - {section path in thesis/THESIS_STRUCTURE.md, copied from ROADMAP step definition}
-
-    ### Follow-ups
-    - {what the next Step or Pipeline Section should investigate}
-    - {any deferred decisions or open questions}
-  notes: |
-    - This section is MANDATORY for every notebook.
-    - Artifacts produced must list every file written by this notebook.
-    - Thesis mapping must match the thesis_mapping field in the ROADMAP
-      step definition (step_template.yaml).
-    - Follow-ups replace the bare "Verification" section in existing notebooks.
-    - If the notebook is a pure inventory with no interpretive findings,
-      the Conclusion still lists artifacts and thesis mapping.
+json_path = ARTIFACTS_DIR / "01_01_01_file_inventory.json"
+json_path.write_text(json.dumps(artifact, indent=2, default=str))
+logger.info("JSON artifact written: %s", json_path)
 ```
 
-##### Cell N+3 -- Cleanup (code, CONDITIONAL: duckdb_only)
+#### cell_11 — Write Markdown artifact (code)
 
-```yaml
-cell_cleanup:
-  cell_type: code
-  required: false
-  condition: duckdb_only
-  content: |
-    con.close()
-  notes: |
-    - Include ONLY if cell_04_duckdb_setup was included.
-    - For filesystem-only notebooks, no cleanup cell is needed.
+Preserve the existing analysis code verbatim (lines 137-175 of current file):
+
+```python
+lines = [
+    "# Step 01_01_01 — File Inventory: sc2egset\n",
+    f"**Raw directory:** `{RAW_DIR}`\n",
+    f"**Layout:** `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`\n",
+    f"**Tournament directories:** {len(meta_result.subdirs)}\n",
+    f"**Total replay files:** {total_replay_files}\n",
+    f"**Total replay size:** {total_replay_bytes / (1024**2):.2f} MB\n",
+    f"**Metadata files (zip/log/json at tournament level):** {meta_result.total_files}\n",
+    f"**Files at root level:** {len(meta_result.files_at_root)}\n",
+]
+
+if replay_counts:
+    lines.extend([
+        "\n## Summary statistics (replays per tournament)\n",
+        f"- Min: {min(replay_counts)}",
+        f"- Max: {max(replay_counts)}",
+        f"- Median: {statistics.median(replay_counts):.1f}",
+    ])
+
+lines.extend([
+    "\n## Per-tournament breakdown\n",
+    "| Tournament | Replay Files | Size (MB) | Extensions |",
+    "|---|---|---|---|",
+])
+for sd in replay_subdir_data:
+    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
+    lines.append(
+        f"| {sd['name']} | {sd['replay_file_count']} | {sd['total_mb']} | {ext_str} |"
+    )
+
+if tournaments_missing_data_dir:
+    lines.extend([
+        "\n## Tournaments with no _data directory\n",
+        *[f"- {t}" for t in tournaments_missing_data_dir],
+    ])
+
+md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"
+md_path.write_text("\n".join(lines) + "\n")
+logger.info("Markdown artifact written: %s", md_path)
 ```
 
-#### Block 3: Phase-conditional additional sections
+**Note:** This cell is 39 lines — within the 50-line cap.
 
-```yaml
-phase_conditional_sections:
-  phase_02:
-    description: "Feature Engineering"
-    additional_front_matter_fields:
-      - "**Feature category:** pre-game | in-game | context"
-    additional_required_sections:
-      - name: "Symmetry Verification"
-        description: "Verify that features are computed identically for both players (Invariant #5)."
-        cell_type: "code + markdown pair"
-      - name: "Cold-Start Handling"
-        description: "Document how players with < N historical games are handled."
-        cell_type: markdown
-    leakage_verification: required
+#### cell_12 — Artifact writing interpretation (markdown) **NEW**
 
-  phase_03:
-    description: "Splitting & Baselines"
-    additional_front_matter_fields:
-      - "**Split strategy:** {description of temporal split}"
-    additional_required_sections:
-      - name: "Split Validation"
-        description: "Verify no temporal leakage across train/val/test boundaries."
-        cell_type: "code + markdown pair"
-      - name: "Baseline Comparison"
-        description: "Compare against the baseline hierarchy (Dummy -> Elo -> LR)."
-        cell_type: "code + markdown pair"
-    leakage_verification: required
+```
+### Artifact output
 
-  phase_04:
-    description: "Model Training"
-    additional_front_matter_fields:
-      - "**Experiment ID:** {unique experiment identifier}"
-      - "**Hypothesis:** {what we expect and why}"
-    additional_required_sections:
-      - name: "Hyperparameter Table"
-        description: "Table of all hyperparameters with values and justifications."
-        cell_type: markdown
-    leakage_verification: required
-
-  phase_05:
-    description: "Evaluation & Analysis"
-    additional_front_matter_fields: []
-    additional_required_sections:
-      - name: "Statistical Test Justification"
-        description: "Which test, why, assumptions checked."
-        cell_type: "code + markdown pair"
-      - name: "Assumptions Check"
-        description: "Programmatic check of statistical test assumptions."
-        cell_type: "code + markdown pair"
-    leakage_verification: required
-
-  phase_06:
-    description: "Cross-Domain Transfer"
-    additional_front_matter_fields:
-      - "**Transfer direction:** {sc2 -> aoe2 | aoe2 -> sc2 | bidirectional}"
-    additional_required_sections:
-      - name: "Domain Shift Documentation"
-        description: "Document the distributional differences between source and target."
-        cell_type: "code + markdown pair"
-    leakage_verification: required
+Both the structured JSON artifact and the human-readable Markdown report have
+been written to the artifacts directory. These are the authoritative inventory
+records for all downstream steps. Per Invariant #6, the code that produced
+each number is traceable via the paired `.ipynb` notebook.
 ```
 
-#### Block 4: Hard rules reference
+#### cell_conclusion (markdown) **REPLACES old Verification section**
 
-```yaml
-hard_rules:
-  - rule: "No inline definitions"
-    source: "sandbox/README.md"
-    description: "No def, class, or lambda assignments in any cell. All logic in src/rts_predict/."
+```
+## Conclusion
 
-  - rule: "Cell size cap"
-    source: "sandbox/notebook_config.toml"
-    description: "Max 50 lines per cell. Approaching the cap signals extraction to src/."
+### Artifacts produced
+- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-tournament breakdown
+- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
 
-  - rule: "Read-only DuckDB"
-    source: "sandbox/README.md"
-    description: "Use get_notebook_db() which is read-only by default."
+### Thesis mapping
+- Chapter 3 — Data & Methodology > 3.1 Data Sources > SC2EGSet
 
-  - rule: "Both files committed"
-    source: "sandbox/README.md"
-    description: "Always stage both .ipynb and .py of a pair."
-
-  - rule: "Artifacts to artifacts/ subdir"
-    source: "sandbox/README.md"
-    description: "Write to reports/<dataset>/artifacts/, never the dataset report root."
-
-  - rule: "Markdown after code"
-    source: "This template"
-    description: "Every query/computation code cell must be followed by a markdown interpretation cell within 2 cells."
-
-  - rule: "No magic numbers"
-    source: ".claude/scientific-invariants.md #7"
-    description: "Every threshold justified by empirical evidence or literature citation."
-
-  - rule: "Temporal discipline"
-    source: ".claude/scientific-invariants.md #3"
-    description: "No feature for game T may use information from game T or later."
+### Follow-ups
+- Step 01_01_02 (if defined) or Step 01_02_01: profile the replay JSON schema and field completeness
+- Any tournaments flagged with missing `_data/` directories need acknowledgement in data cleaning (Section 01_04)
 ```
 
 ---
 
-## Implementation Steps
+### Step 2 — Rewrite aoe2companion notebook
 
-### Step 1: Create the template file
+**File:** `sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py`
 
-**File:** `docs/templates/notebook_template.yaml`
+Preserve the jupytext YAML header (lines 1-15). Then write cells:
 
-Write the complete YAML file following the specification above. The file
-should be self-contained: an executor agent reading only this file and
-`sandbox/README.md` should be able to produce a conformant notebook for
-any Step in any Phase.
-
-The content is fully specified in the "Template Content Specification"
-section above. The executor should:
-
-1. Write the YAML header comments (authoritative sources, enforcement tiers).
-2. Write the placeholders block.
-3. Write each cell definition block with content and notes.
-4. Write the phase_conditional_sections block.
-5. Write the hard_rules block.
-
-### Step 2: Update sandbox/README.md
-
-**File:** `sandbox/README.md`
-
-Add a single line to the "Configuration pointers" section:
+#### cell_01_frontmatter (markdown)
 
 ```
-- `docs/templates/notebook_template.yaml` -- notebook cell structure and front-matter schema
+# Step 01_01_01 — File Inventory: aoe2companion
+
+**Phase:** 01 — Data Exploration
+**Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
+**Dataset:** aoe2companion
+**Question:** What files exist on disk, how many are there, and how are they organized?
+**Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+**ROADMAP reference:** `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` Step 01_01_01
+**Commit:** {git_short_hash}
+
+This notebook walks the aoe2companion raw directory and counts everything.
+For daily-file subdirectories, it extracts dates from filenames and reports
+date range and gaps. The raw directory contains four subdirectories (matches,
+ratings, leaderboards, profiles), each holding daily Parquet snapshots.
 ```
 
-This creates a cross-reference from the sandbox contract to the template.
-No other changes to `sandbox/README.md`.
+**Changes vs current:** Added `**Invariants applied:**`, `**ROADMAP reference:**`,
+`**Commit:**` fields. Expanded description paragraph with layout detail.
 
-### Step 3: Verify template against existing notebooks
+#### cell_02_imports (code)
 
-The executor should manually verify that each existing notebook's structure
-is expressible under the new template. Specifically:
+```python
+import json
+import logging
+import re
+import statistics
+from datetime import date, timedelta
+from pathlib import Path
 
-- The front-matter format (bold key-value pairs) matches cell_01.
-- The import/setup pattern matches cell_02 + cell_03.
-- The analysis cells match the alternating code+markdown pattern.
-- The Verification section can be migrated to the Conclusion section.
-- No DuckDB cells are needed (existing notebooks are Pattern B).
+from rts_predict.common.inventory import inventory_directory
+from rts_predict.common.notebook_utils import get_reports_dir
 
-This is a read-only verification step. Existing notebooks are NOT modified
-in this chore. They will be updated in a separate pass to add the Conclusion
-section and other missing fields.
-
-### Step 4: Update CHANGELOG.md
-
-Add an entry under `[Unreleased]`:
-
-```
-### Added
-- Notebook template v2 at `docs/templates/notebook_template.yaml` -- canonical schema for sandbox notebooks with parameterized placeholders, phase-conditional sections, and temporal leakage verification requirements
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 ```
 
+**Changes vs current:** Moved `from datetime import date, timedelta` from
+mid-notebook (old cell at line 77) into cell_02. All imports now in one cell.
+
+#### cell_03_paths (code)
+
+```python
+from rts_predict.aoe2.config import AOE2COMPANION_RAW_DIR
+
+RAW_DIR: Path = AOE2COMPANION_RAW_DIR
+ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoe2companion") / "artifacts" / "01_01"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+logger.info("Source directory: %s", RAW_DIR)
+logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
+```
+
+**Changes vs current:** Changed `"Raw directory"` to `"Source directory"`.
+
+#### cell_04 — Top-level inventory (code)
+
+Preserve verbatim (lines 52-58 of current file):
+
+```python
+result = inventory_directory(RAW_DIR)
+
+logger.info("Total files: %d", result.total_files)
+logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
+logger.info("Subdirectories: %d", len(result.subdirs))
+logger.info("Files at root: %d", len(result.files_at_root))
+```
+
+#### cell_05 — Top-level interpretation (markdown) **NEW**
+
+```
+### Top-level inventory
+
+The raw directory scan reveals the subdirectory structure and total file counts.
+The aoe2companion dataset is organised into four subdirectories (matches, ratings,
+leaderboards, profiles), each containing daily Parquet snapshots. The total file
+count and size establish the baseline for downstream processing steps.
+```
+
+#### cell_06 — Per-subdirectory breakdown (code)
+
+Preserve verbatim (lines 61-74 of current file):
+
+```python
+subdir_data = []
+for sd in result.subdirs:
+    subdir_data.append({
+        "name": sd.name,
+        "file_count": sd.file_count,
+        "total_bytes": sd.total_bytes,
+        "total_mb": round(sd.total_bytes / (1024 * 1024), 2),
+        "extensions": sd.extensions,
+    })
+
+file_counts = [sd.file_count for sd in result.subdirs]
+if file_counts:
+    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
+                min(file_counts), max(file_counts), statistics.median(file_counts))
+```
+
+#### cell_07 — Per-subdirectory interpretation (markdown) **NEW**
+
+```
+### Per-subdirectory file counts
+
+The breakdown shows file counts and sizes for each subdirectory. The variance
+in file counts across subdirectories reflects the different granularity and
+retention policies of each data category (matches vs ratings vs snapshots).
+```
+
+#### cell_08 — Date extraction and gap analysis (code)
+
+Preserve verbatim (lines 79-116 of current file), **MINUS** the
+`from datetime import date, timedelta` line (already moved to cell_02):
+
+```python
+# Try to extract dates from filenames in each subdirectory.
+# We discover the date pattern — we do NOT assume a format.
+# Common patterns: YYYY-MM-DD, YYYYMMDD embedded in filenames.
+DATE_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})")
+
+date_analysis = {}
+for sd in result.subdirs:
+    dates_found: list[date] = []
+    for f in sd.files:
+        match = DATE_PATTERN.search(f.path.stem)
+        if match:
+            try:
+                dates_found.append(date.fromisoformat(match.group(1)))
+            except ValueError:
+                pass
+    if dates_found:
+        dates_found.sort()
+        # Find gaps: consecutive dates with more than 1 day between them
+        gaps = []
+        for i in range(1, len(dates_found)):
+            delta = (dates_found[i] - dates_found[i - 1]).days
+            if delta > 1:
+                gaps.append({
+                    "after": str(dates_found[i - 1]),
+                    "before": str(dates_found[i]),
+                    "gap_days": delta,
+                })
+        date_analysis[sd.name] = {
+            "earliest": str(dates_found[0]),
+            "latest": str(dates_found[-1]),
+            "count": len(dates_found),
+            "gaps": gaps,
+        }
+        logger.info("Subdir %s: %s to %s (%d files, %d gaps)",
+                     sd.name, dates_found[0], dates_found[-1],
+                     len(dates_found), len(gaps))
+    else:
+        logger.info("Subdir %s: no dates extracted from filenames", sd.name)
+```
+
+**Note:** This cell is 38 lines — within the 50-line cap.
+
+#### cell_09 — Date analysis interpretation (markdown) **NEW**
+
+```
+### Date range and gap analysis
+
+Date extraction from filenames reveals the temporal coverage of each
+subdirectory. Gaps between consecutive dates indicate missing daily snapshots.
+These gaps are recorded in the artifact for acknowledgement during data cleaning
+(Section 01_04). Subdirectories without date-patterned filenames (e.g., snapshot
+tables) are noted separately.
+```
+
+#### cell_10 — Write JSON artifact (code)
+
+Preserve verbatim (lines 118-133 of current file):
+
+```python
+artifact = {
+    "step": "01_01_01",
+    "dataset": "aoe2companion",
+    "raw_dir": str(RAW_DIR),
+    "total_files": result.total_files,
+    "total_bytes": result.total_bytes,
+    "num_subdirs": len(result.subdirs),
+    "files_at_root": len(result.files_at_root),
+    "subdirs": subdir_data,
+    "date_analysis": date_analysis,
+}
+
+json_path = ARTIFACTS_DIR / "01_01_01_file_inventory.json"
+json_path.write_text(json.dumps(artifact, indent=2, default=str))
+logger.info("JSON artifact written: %s", json_path)
+```
+
+#### cell_11 — Write Markdown artifact (code)
+
+Preserve verbatim (lines 135-167 of current file):
+
+```python
+lines = [
+    "# Step 01_01_01 — File Inventory: aoe2companion\n",
+    f"**Raw directory:** `{RAW_DIR}`\n",
+    f"**Total files:** {result.total_files}\n",
+    f"**Total size:** {result.total_bytes / (1024**2):.2f} MB\n",
+    f"**Subdirectories:** {len(result.subdirs)}\n",
+    f"**Files at root level:** {len(result.files_at_root)}\n",
+    "\n## Per-subdirectory breakdown\n",
+    "| Subdirectory | Files | Size (MB) | Extensions |",
+    "|---|---|---|---|",
+]
+for sd in subdir_data:
+    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
+    lines.append(f"| {sd['name']} | {sd['file_count']} | {sd['total_mb']} | {ext_str} |")
+
+if date_analysis:
+    lines.extend(["\n## Date range analysis\n"])
+    for name, info in sorted(date_analysis.items()):
+        lines.append(f"### {name}\n")
+        lines.append(f"- Date range: {info['earliest']} to {info['latest']}")
+        lines.append(f"- Files with dates: {info['count']}")
+        if info["gaps"]:
+            lines.append(f"- Gaps found: {len(info['gaps'])}")
+            for g in info["gaps"]:
+                lines.append(f"  - {g['after']} -> {g['before']} ({g['gap_days']} days)")
+        else:
+            lines.append("- No gaps found")
+        lines.append("")
+
+md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"
+md_path.write_text("\n".join(lines) + "\n")
+logger.info("Markdown artifact written: %s", md_path)
+```
+
+**Note:** This cell is 33 lines — within the 50-line cap.
+
+#### cell_12 — Artifact writing interpretation (markdown) **NEW**
+
+```
+### Artifact output
+
+Both the structured JSON artifact and the human-readable Markdown report have
+been written to the artifacts directory. These are the authoritative inventory
+records for all downstream steps. Per Invariant #6, the code that produced
+each number is traceable via the paired `.ipynb` notebook.
+```
+
+#### cell_conclusion (markdown) **REPLACES old Verification section**
+
+```
+## Conclusion
+
+### Artifacts produced
+- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown and date analysis
+- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+
+### Thesis mapping
+- Chapter 3 — Data & Methodology > 3.1 Data Sources > aoe2companion
+
+### Follow-ups
+- Step 01_01_02 (if defined) or Step 01_02_01: profile the Parquet schema and field completeness for each subdirectory
+- Date gaps identified in the inventory must be acknowledged during data cleaning (Section 01_04)
+- Sparse rating regime (pre-2025-06-26) flagged in ROADMAP must be verified against the date range found here
+```
+
 ---
 
-## Files Modified
+### Step 3 — Rewrite aoestats notebook
 
-| File | Action | Description |
-|------|--------|-------------|
-| `docs/templates/notebook_template.yaml` | CREATE | New template file |
-| `sandbox/README.md` | EDIT (1 line) | Add cross-reference to template |
-| `CHANGELOG.md` | EDIT | Add entry under [Unreleased] |
+**File:** `sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py`
+
+Preserve the jupytext YAML header (lines 1-15). Then write cells:
+
+#### cell_01_frontmatter (markdown)
+
+```
+# Step 01_01_01 — File Inventory: aoestats
+
+**Phase:** 01 — Data Exploration
+**Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
+**Dataset:** aoestats
+**Question:** What files exist on disk, how many are there, and how are they organized?
+**Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+**ROADMAP reference:** `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` Step 01_01_01
+**Commit:** {git_short_hash}
+
+This notebook walks the aoestats raw directory and counts everything.
+For weekly-file subdirectories, it extracts date ranges from filenames
+and checks whether paired directories (matches and players) have matching
+file counts and date ranges. The raw directory contains paired weekly
+Parquet files where each file covers a one-week date span.
+```
+
+**Changes vs current:** Added `**Invariants applied:**`, `**ROADMAP reference:**`,
+`**Commit:**` fields. Expanded description paragraph.
+
+#### cell_02_imports (code)
+
+```python
+import json
+import logging
+import re
+import statistics
+from datetime import date
+from pathlib import Path
+
+from rts_predict.common.inventory import inventory_directory
+from rts_predict.common.notebook_utils import get_reports_dir
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+```
+
+**Changes vs current:** Moved `from datetime import date` from mid-notebook
+(old cell at line 78) into cell_02.
+
+#### cell_03_paths (code)
+
+```python
+from rts_predict.aoe2.config import AOESTATS_RAW_DIR
+
+RAW_DIR: Path = AOESTATS_RAW_DIR
+ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_01"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+logger.info("Source directory: %s", RAW_DIR)
+logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
+```
+
+**Changes vs current:** Changed `"Raw directory"` to `"Source directory"`.
+
+#### cell_04 — Top-level inventory (code)
+
+Preserve verbatim (lines 53-59 of current file):
+
+```python
+result = inventory_directory(RAW_DIR)
+
+logger.info("Total files: %d", result.total_files)
+logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
+logger.info("Subdirectories: %d", len(result.subdirs))
+logger.info("Files at root: %d", len(result.files_at_root))
+```
+
+#### cell_05 — Top-level interpretation (markdown) **NEW**
+
+```
+### Top-level inventory
+
+The raw directory scan reveals the subdirectory structure and total file counts.
+The aoestats dataset is organised into paired weekly Parquet files across
+subdirectories (matches and players). The total file count and size establish
+the baseline for downstream processing steps.
+```
+
+#### cell_06 — Per-subdirectory breakdown (code)
+
+Preserve verbatim (lines 61-75 of current file):
+
+```python
+subdir_data = []
+for sd in result.subdirs:
+    subdir_data.append({
+        "name": sd.name,
+        "file_count": sd.file_count,
+        "total_bytes": sd.total_bytes,
+        "total_mb": round(sd.total_bytes / (1024 * 1024), 2),
+        "extensions": sd.extensions,
+    })
+
+file_counts = [sd.file_count for sd in result.subdirs]
+if file_counts:
+    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
+                min(file_counts), max(file_counts), statistics.median(file_counts))
+```
+
+#### cell_07 — Per-subdirectory interpretation (markdown) **NEW**
+
+```
+### Per-subdirectory file counts
+
+The breakdown shows file counts and sizes for each subdirectory. Since matches
+and players directories are expected to be paired (one file per week per
+directory), count discrepancies signal missing files that must be acknowledged
+in data cleaning.
+```
+
+#### cell_08 — Weekly date extraction and gap analysis (code)
+
+Preserve verbatim (lines 80-119 of current file), **MINUS** the
+`from datetime import date` line (already moved to cell_02):
+
+```python
+# aoestats files are named like: 2024-01-01_2024-01-07_matches.parquet
+# Extract start_date and end_date from each filename.
+WEEK_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})")
+
+date_analysis = {}
+for sd in result.subdirs:
+    weeks: list[tuple[date, date]] = []
+    for f in sd.files:
+        match = WEEK_PATTERN.search(f.path.stem)
+        if match:
+            try:
+                start = date.fromisoformat(match.group(1))
+                end = date.fromisoformat(match.group(2))
+                weeks.append((start, end))
+            except ValueError:
+                pass
+    if weeks:
+        weeks.sort()
+        starts = [w[0] for w in weeks]
+        ends = [w[1] for w in weeks]
+        # Check for gaps between consecutive weeks
+        gaps = []
+        for i in range(1, len(weeks)):
+            prev_end = weeks[i - 1][1]
+            curr_start = weeks[i][0]
+            delta = (curr_start - prev_end).days
+            if delta > 1:
+                gaps.append({
+                    "prev_end": str(prev_end),
+                    "next_start": str(curr_start),
+                    "gap_days": delta,
+                })
+        date_analysis[sd.name] = {
+            "earliest_start": str(starts[0]),
+            "latest_end": str(ends[-1]),
+            "week_count": len(weeks),
+            "gaps": gaps,
+        }
+        logger.info("Subdir %s: %s to %s (%d weeks, %d gaps)",
+                     sd.name, starts[0], ends[-1], len(weeks), len(gaps))
+```
+
+**Note:** This cell is 38 lines — within the 50-line cap.
+
+#### cell_09 — Date analysis interpretation (markdown) **NEW**
+
+```
+### Weekly date range and gap analysis
+
+Date extraction from filenames reveals the temporal coverage of each subdirectory.
+The aoestats files span weekly date ranges (start_date to end_date). Gaps between
+consecutive weeks indicate missing weekly snapshots. The known missing file
+(`2025-11-16_2025-11-22_players.parquet`, documented in ROADMAP) should appear
+as a gap or count mismatch in the paired comparison below.
+```
+
+#### cell_10 — Paired directory comparison (code)
+
+Preserve verbatim (lines 122-145 of current file):
+
+```python
+# Discover paired directories by checking which subdirs share date ranges.
+# We do NOT assume matches/players pairing — we discover it.
+paired_report = {}
+subdir_names = [sd.name for sd in result.subdirs]
+for name_a in subdir_names:
+    for name_b in subdir_names:
+        if name_a >= name_b:
+            continue
+        if name_a in date_analysis and name_b in date_analysis:
+            a = date_analysis[name_a]
+            b = date_analysis[name_b]
+            paired_report[f"{name_a} vs {name_b}"] = {
+                "count_match": a["week_count"] == b["week_count"],
+                f"{name_a}_weeks": a["week_count"],
+                f"{name_b}_weeks": b["week_count"],
+                "date_range_match": (
+                    a["earliest_start"] == b["earliest_start"]
+                    and a["latest_end"] == b["latest_end"]
+                ),
+            }
+
+for pair, info in paired_report.items():
+    logger.info("Pair %s: count_match=%s, date_range_match=%s",
+                pair, info["count_match"], info["date_range_match"])
+```
+
+#### cell_11 — Paired comparison interpretation (markdown) **NEW**
+
+```
+### Paired directory comparison
+
+The comparison discovers which subdirectories share date ranges and whether
+their file counts match. A count mismatch between matches and players confirms
+the known data gap (one missing players file). The date range match indicates
+whether both directories cover the same temporal window despite the count
+difference. This pairing constraint is critical for downstream joins.
+```
+
+#### cell_12 — Write JSON artifact (code)
+
+Preserve verbatim (lines 147-163 of current file):
+
+```python
+artifact = {
+    "step": "01_01_01",
+    "dataset": "aoestats",
+    "raw_dir": str(RAW_DIR),
+    "total_files": result.total_files,
+    "total_bytes": result.total_bytes,
+    "num_subdirs": len(result.subdirs),
+    "files_at_root": len(result.files_at_root),
+    "subdirs": subdir_data,
+    "date_analysis": date_analysis,
+    "paired_comparison": paired_report,
+}
+
+json_path = ARTIFACTS_DIR / "01_01_01_file_inventory.json"
+json_path.write_text(json.dumps(artifact, indent=2, default=str))
+logger.info("JSON artifact written: %s", json_path)
+```
+
+#### cell_13 — Write Markdown artifact (code)
+
+Preserve verbatim (lines 165-208 of current file):
+
+```python
+lines = [
+    "# Step 01_01_01 — File Inventory: aoestats\n",
+    f"**Raw directory:** `{RAW_DIR}`\n",
+    f"**Total files:** {result.total_files}\n",
+    f"**Total size:** {result.total_bytes / (1024**2):.2f} MB\n",
+    f"**Subdirectories:** {len(result.subdirs)}\n",
+    f"**Files at root level:** {len(result.files_at_root)}\n",
+    "\n## Per-subdirectory breakdown\n",
+    "| Subdirectory | Files | Size (MB) | Extensions |",
+    "|---|---|---|---|",
+]
+for sd in subdir_data:
+    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
+    lines.append(f"| {sd['name']} | {sd['file_count']} | {sd['total_mb']} | {ext_str} |")
+
+if date_analysis:
+    lines.extend(["\n## Date range analysis\n"])
+    for name, info in sorted(date_analysis.items()):
+        lines.append(f"### {name}\n")
+        lines.append(f"- Date range: {info['earliest_start']} to {info['latest_end']}")
+        lines.append(f"- Weeks found: {info['week_count']}")
+        if info["gaps"]:
+            lines.append(f"- Gaps found: {len(info['gaps'])}")
+            for g in info["gaps"]:
+                lines.append(
+                    f"  - {g['prev_end']} -> {g['next_start']} ({g['gap_days']} days)"
+                )
+        else:
+            lines.append("- No gaps found")
+        lines.append("")
+
+if paired_report:
+    lines.extend(["\n## Paired directory comparison\n"])
+    lines.append("| Pair | Count match | Date range match |")
+    lines.append("|---|---|---|")
+    for pair, info in sorted(paired_report.items()):
+        lines.append(
+            f"| {pair} | {info['count_match']} | {info['date_range_match']} |"
+        )
+
+md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"
+md_path.write_text("\n".join(lines) + "\n")
+logger.info("Markdown artifact written: %s", md_path)
+```
+
+**Note:** This cell is 44 lines — within the 50-line cap.
+
+#### cell_14 — Artifact writing interpretation (markdown) **NEW**
+
+```
+### Artifact output
+
+Both the structured JSON artifact and the human-readable Markdown report have
+been written to the artifacts directory. These are the authoritative inventory
+records for all downstream steps. Per Invariant #6, the code that produced
+each number is traceable via the paired `.ipynb` notebook.
+```
+
+#### cell_conclusion (markdown) **REPLACES old Verification section**
+
+```
+## Conclusion
+
+### Artifacts produced
+- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown, date analysis, and paired comparison
+- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+
+### Thesis mapping
+- Chapter 3 — Data & Methodology > 3.1 Data Sources > aoestats
+
+### Follow-ups
+- Step 01_01_02 (if defined) or Step 01_02_01: profile the Parquet schema and field completeness for each subdirectory
+- The known missing file (`2025-11-16_2025-11-22_players.parquet`) should be confirmed by the count mismatch discovered here
+- Schema drift documented in ROADMAP must be verified during profiling (Section 01_03)
+```
 
 ---
 
-## Files NOT Modified
+### Step 4 — Jupytext sync
 
-| File | Reason |
-|------|--------|
-| `temp/notebook_fix/notebook_template.md` | Historical artifact in temp/; not deleted |
-| `sandbox/notebook_config.toml` | No changes needed; cell cap rule is referenced, not modified |
-| `sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py` | Existing notebooks updated in a separate chore |
-| `sandbox/aoe2/*/01_exploration/01_acquisition/01_01_01_file_inventory.py` | Same |
-| `.pre-commit-config.yaml` | AST-based lint hook is Tier 2 (separate chore) |
+After rewriting each `.py` file, run the jupytext sync command to regenerate
+the paired `.ipynb`:
 
----
+```bash
+source .venv/bin/activate && poetry run jupytext --sync sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py
+```
 
-## Gate Condition
+```bash
+source .venv/bin/activate && poetry run jupytext --sync sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py
+```
 
-This chore is complete when:
+```bash
+source .venv/bin/activate && poetry run jupytext --sync sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py
+```
 
-1. `docs/templates/notebook_template.yaml` exists and contains all blocks
-   specified in the Template Content Specification.
-2. `sandbox/README.md` references the template in its Configuration pointers.
-3. `CHANGELOG.md` has an entry for the template.
-4. All existing notebooks' structures are expressible under the template
-   (verified manually by the executor, documented in the PR description).
+The `.ipynb` files will lose their cell outputs (since the `.py` is the source
+of truth for structure). This is acceptable — the notebooks must be re-executed
+to repopulate outputs. Re-execution is out of scope for this chore.
 
 ---
 
-## Relationship to Review Findings
+### Step 5 — Verification
 
-| Review Finding | Template Fix |
-|----------------|-------------|
-| #1 (front-matter divergence) | Decision 2: bold key-value pairs adopted |
-| #2 (no Conclusion section) | Decision 7: Conclusion cell is REQUIRED |
-| #3 (DuckDB-centric) | Decision 3: conditional DuckDB cells |
-| #4 (no Invariant #6 enforcement) | Cell notes reference Invariant #6; Tier 2/3 enforcement deferred |
-| #5 (no version pinning) | Decision 8: Commit field in front-matter |
-| #6 (no temporal leakage section) | Decision 6: phase_02_plus conditional section |
-| Review rec #2 (fix step numbering) | Decision 4: all placeholders use XX_YY_ZZ format |
-| Review rec #4 (parameterize game/dataset) | Decision 4: {game}/{dataset} placeholders throughout |
-| Review rec #5 (invariants applied field) | Decision 5: front-matter field |
-| Review rec #8 (phase-specific sections) | Decision 9: phase_conditional_sections block |
-| Review rec #9 (AST cell cap check) | Decision 10: deferred to Tier 2 (separate chore) |
-| Review rec #10 (notebook lint CI) | Decision 10: deferred to Tier 3 (separate chore) |
+Run jupytext check on all three files:
+
+```bash
+source .venv/bin/activate && poetry run jupytext --check sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py && poetry run jupytext --check sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py && poetry run jupytext --check sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py
+```
+
+Manually verify for each notebook:
+1. All 7 frontmatter fields are present (Phase, Pipeline Section, Dataset,
+   Question, Invariants applied, ROADMAP reference, Commit)
+2. All imports are in cell_02 (no mid-notebook imports)
+3. Every code analysis cell is followed by a markdown interpretation cell
+   within 2 cells
+4. Conclusion section has all 3 subsections (Artifacts produced, Thesis mapping,
+   Follow-ups)
+5. No cell exceeds 50 lines
+6. No `def`, `class`, or lambda assignments in any cell
 
 ---
 
-## Out of Scope
+### Step 6 — Commit and PR prep
 
-1. **Updating existing notebooks** -- Existing 01_01_01 notebooks will be
-   updated in a separate chore after this template is merged.
-2. **Implementing the AST-based cell check** -- Tier 2 enforcement is a
-   separate `chore/notebook-lint` branch.
-3. **CI notebook validation** -- Tier 3 enforcement is infrastructure work.
-4. **Deleting the old template** -- `temp/` cleanup is a separate concern.
+Stage all 6 files (3 `.py` + 3 `.ipynb`):
+
+```bash
+git add sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.ipynb sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.ipynb sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.ipynb
+```
+
+Commit message (write to `.github/tmp/commit.txt`):
+
+```
+chore(notebooks): conform 01_01_01 file inventory to template v2
+
+Restructure all three file inventory notebooks (sc2egset, aoe2companion,
+aoestats) to match docs/templates/notebook_template.yaml v2:
+
+- Add missing frontmatter fields (Invariants applied, ROADMAP reference, Commit)
+- Consolidate all imports into cell_02 (move datetime imports from mid-notebook)
+- Add markdown interpretation cells after each analysis code cell
+- Replace bare Verification section with structured Conclusion
+  (Artifacts produced, Thesis mapping, Follow-ups)
+
+No functional changes — analysis logic is preserved verbatim.
+```
+
+Follow the standard version bump and PR workflow per git-workflow rule.
+
+---
+
+## Gate condition
+
+All three `.py` files pass `poetry run jupytext --check` and both `.py` +
+`.ipynb` are staged. The frontmatter, import consolidation, interpretation
+cells, and conclusion sections match the template v2 specification.
+
+---
+
+## Change summary
+
+| Notebook | Cells before | Cells after | New markdown cells | Import moves |
+|----------|-------------|-------------|-------------------|-------------|
+| sc2egset | 8 (6 code + 2 md) | 13 (6 code + 7 md) | 5 (4 interpretation + 1 conclusion) | 0 |
+| aoe2companion | 9 (7 code + 2 md) | 14 (6 code + 8 md) | 6 (4 interpretation + 1 conclusion) | `from datetime import date, timedelta` |
+| aoestats | 10 (8 code + 2 md) | 16 (7 code + 9 md) | 7 (5 interpretation + 1 conclusion) | `from datetime import date` |
+
+## Orchestration note
+
+This chore modifies non-overlapping files (three distinct notebooks). Strategy A
+(shared branch) is appropriate. A single executor can process all three
+sequentially. Alternatively, three parallel executors can each take one notebook
+on the shared branch since the files do not overlap.

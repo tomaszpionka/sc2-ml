@@ -21,17 +21,22 @@
 # **Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
 # **Dataset:** aoestats
 # **Question:** What files exist on disk, how many are there, and how are they organized?
+# **Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
+# **ROADMAP reference:** `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` Step 01_01_01
+# **Commit:** 0a77634
 #
 # This notebook walks the aoestats raw directory and counts everything.
 # For weekly-file subdirectories, it extracts date ranges from filenames
-# and checks whether paired directories have matching file counts and
-# date ranges.
+# and checks whether paired directories (matches and players) have matching
+# file counts and date ranges. The raw directory contains paired weekly
+# Parquet files where each file covers a one-week date span.
 
 # %%
 import json
 import logging
 import re
 import statistics
+from datetime import date
 from pathlib import Path
 
 from rts_predict.common.inventory import inventory_directory
@@ -47,7 +52,7 @@ RAW_DIR: Path = AOESTATS_RAW_DIR
 ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_01"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-logger.info("Raw directory: %s", RAW_DIR)
+logger.info("Source directory: %s", RAW_DIR)
 logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 
 # %%
@@ -57,6 +62,14 @@ logger.info("Total files: %d", result.total_files)
 logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
 logger.info("Subdirectories: %d", len(result.subdirs))
 logger.info("Files at root: %d", len(result.files_at_root))
+
+# %% [markdown]
+# ### Top-level inventory
+#
+# The raw directory scan reveals the subdirectory structure and total file counts.
+# The aoestats dataset is organised into paired weekly Parquet files across
+# subdirectories (matches and players). The total file count and size establish
+# the baseline for downstream processing steps.
 
 # %%
 subdir_data = []
@@ -74,9 +87,15 @@ if file_counts:
     logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
                 min(file_counts), max(file_counts), statistics.median(file_counts))
 
-# %%
-from datetime import date
+# %% [markdown]
+# ### Per-subdirectory file counts
+#
+# The breakdown shows file counts and sizes for each subdirectory. Since matches
+# and players directories are expected to be paired (one file per week per
+# directory), count discrepancies signal missing files that must be acknowledged
+# in data cleaning.
 
+# %%
 # aoestats files are named like: 2024-01-01_2024-01-07_matches.parquet
 # Extract start_date and end_date from each filename.
 WEEK_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})")
@@ -118,6 +137,15 @@ for sd in result.subdirs:
         logger.info("Subdir %s: %s to %s (%d weeks, %d gaps)",
                      sd.name, starts[0], ends[-1], len(weeks), len(gaps))
 
+# %% [markdown]
+# ### Weekly date range and gap analysis
+#
+# Date extraction from filenames reveals the temporal coverage of each subdirectory.
+# The aoestats files span weekly date ranges (start_date to end_date). Gaps between
+# consecutive weeks indicate missing weekly snapshots. The known missing file
+# (`2025-11-16_2025-11-22_players.parquet`, documented in ROADMAP) should appear
+# as a gap or count mismatch in the paired comparison below.
+
 # %%
 # Discover paired directories by checking which subdirs share date ranges.
 # We do NOT assume matches/players pairing — we discover it.
@@ -143,6 +171,15 @@ for name_a in subdir_names:
 for pair, info in paired_report.items():
     logger.info("Pair %s: count_match=%s, date_range_match=%s",
                 pair, info["count_match"], info["date_range_match"])
+
+# %% [markdown]
+# ### Paired directory comparison
+#
+# The comparison discovers which subdirectories share date ranges and whether
+# their file counts match. A count mismatch between matches and players confirms
+# the known data gap (one missing players file). The date range match indicates
+# whether both directories cover the same temporal window despite the count
+# difference. This pairing constraint is critical for downstream joins.
 
 # %%
 artifact = {
@@ -208,7 +245,24 @@ md_path.write_text("\n".join(lines) + "\n")
 logger.info("Markdown artifact written: %s", md_path)
 
 # %% [markdown]
-# ## Verification
+# ### Artifact output
 #
-# The artifacts have been written. The counts above ARE the authoritative
-# inventory — they are not compared against any prior documentation.
+# Both the structured JSON artifact and the human-readable Markdown report have
+# been written to the artifacts directory. These are the authoritative inventory
+# records for all downstream steps. Per Invariant #6, the code that produced
+# each number is traceable via the paired `.ipynb` notebook.
+
+# %% [markdown]
+# ## Conclusion
+#
+# ### Artifacts produced
+# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown, date analysis, and paired comparison
+# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+#
+# ### Thesis mapping
+# - Chapter 3 — Data & Methodology > 3.1 Data Sources > aoestats
+#
+# ### Follow-ups
+# - Step 01_01_02 (if defined) or Step 01_02_01: profile the Parquet schema and field completeness for each subdirectory
+# - The known missing file (`2025-11-16_2025-11-22_players.parquet`) should be confirmed by the count mismatch discovered here
+# - Schema drift documented in ROADMAP must be verified during profiling (Section 01_03)
