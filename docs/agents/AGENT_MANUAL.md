@@ -1,6 +1,6 @@
 # Agent Manual — RTS Thesis Workflow
 
-How to use the 5-agent Claude Code architecture for the master's thesis.
+How to use the 8-agent Claude Code architecture for the master's thesis.
 
 ---
 
@@ -14,6 +14,10 @@ How to use the 5-agent Claude Code architecture for the master's thesis.
 | Execute any plan steps | `@executor execute steps 3-5 from _current_plan.md` |
 | Hard step needing Opus reasoning | `/model opus` then work normally, `/model sonnet` after |
 | Validate work after execution | `@reviewer review changes` |
+| Heavyweight PR / spec review | `@reviewer-deep deep review of PR before merge` |
+| Challenge a plan's methodology (Phase 03+) | `@reviewer-adversarial challenge this plan` |
+| Stress-test findings before thesis entry | `@reviewer-adversarial methodology audit` |
+| Draft or revise a thesis chapter | `@writer-thesis draft section 3.2 — data collection` |
 
 ---
 
@@ -26,20 +30,28 @@ Don't overthink agent selection. Three questions:
    YES → @lookup
    NO  ↓
 
-2. Planning or executing?
+2. Challenging methodology or defensibility?
+   YES → @reviewer-adversarial
+   NO  ↓
+
+3. Planning or executing?
    PLANNING ↓                    EXECUTING ↓
    
-3a. Thesis science or           3b. Just use @executor.
-    Phase work?                      Switch /model opus
-    YES → @planner-science           for genuinely hard
-    NO  → @planner                   steps if needed.
+4a. Thesis science or           4b. Writing thesis prose?
+    Phase work?                      YES → @writer-thesis
+    YES → @planner-science           NO  → @executor
+    NO  → @planner                   (switch /model opus
+                                      for hard steps)
 
-After execution → @reviewer
+After execution:
+  → @reviewer (code quality, lint, tests)
+  → @reviewer-deep (heavyweight PR review, spec compliance, invariant tracing)
+  → @reviewer-adversarial (methodology soundness, thesis defensibility)
 ```
 
 ---
 
-## The 5 Agents
+## The 8 Agents
 
 ### `planner-science` — Thesis Architect (Opus, max effort)
 
@@ -129,6 +141,57 @@ code with subtle temporal leakage risks, the reviewer will flag for Pass 2
 review in Claude Chat (this Project, on Opus). Sonnet catches mechanical
 errors reliably; subtle statistical reasoning issues need Opus review.
 
+### `reviewer-adversarial` — Scientific Adversary (Opus, max effort)
+
+**When to use:** Challenging methodology, experimental design, and thesis
+defensibility. Use BEFORE execution to audit plans, DURING Phase work to
+challenge methodology choices, or AFTER to stress-test findings.
+
+- Plan reviews: "Is there a methodology flaw that correct execution cannot fix?"
+- Notebook/artifact reviews: "If I cite this finding in the thesis, will it survive scrutiny?"
+- Thesis chapter reviews: "Does this chapter make the thesis weaker or stronger?"
+- Experimental design: "If training takes 8 hours and the design is flawed, what did we waste?"
+
+**What it does NOT do:** Review code quality, test coverage, or spec compliance.
+That is `reviewer` and `reviewer-deep`'s territory. This agent focuses purely
+on scientific methodology and thesis defensibility.
+
+**When to invoke proactively:** Recommended before any Phase 03+ (Splitting &
+Baselines) work, before any thesis chapter that reports quantitative findings,
+and any time you are unsure whether a methodology choice will survive examination.
+
+**Example:**
+```
+@reviewer-adversarial challenge this plan
+@reviewer-adversarial adversarial review of sandbox/sc2/sc2egset/03_01_01_split.py
+@reviewer-adversarial will this survive examination?
+```
+
+### `reviewer-deep` — Heavyweight Code Reviewer (Opus, max effort)
+
+**When to use:** After execution for high-stakes changes: full PR reviews,
+multi-spec chores, methodology audits at code level, thesis chapter drafts.
+
+Use `reviewer-deep` (not the regular `reviewer`) when:
+- The change spans multiple specs or commits
+- The diff involves scientific code that will be cited in the thesis
+- You need invariant tracing, not just lint and test pass
+
+**Example:**
+```
+@reviewer-deep deep review of PR before merge
+@reviewer-deep audit this notebook for spec compliance
+```
+
+### `writer-thesis` — Thesis Drafter (Opus, max effort)
+
+**When to use:** Drafting or revising thesis chapters.
+
+**Example:**
+```
+@writer-thesis draft section 3.2 — data collection methodology
+```
+
 ### `lookup` — Speed Dial (Haiku)
 
 **When to use:** Any question answerable in 30 seconds.
@@ -184,11 +247,17 @@ Phase work executes in `sandbox/` notebooks. The plan specifies the notebook pat
 Step 1:  @planner-science plan Phase N step N.X
 Step 2:  [review plan in chat, request adjustments]
 Step 3:  [approved plan → write to _current_plan.md]
+Step 2.5 (recommended for Phase 03+):
+         @reviewer-adversarial challenge this plan
+         [address any BLOCKER findings before proceeding]
 Step 4:  @executor execute steps 1-3
          (notebook in sandbox/, artifacts to reports/<dataset>/artifacts/)
          (use /model opus for hard analytical steps)
 Step 5:  @reviewer review changes
 Step 6:  [fix issues from reviewer]
+Step 6.5 (recommended for Phase 03+ findings that enter the thesis):
+         @reviewer-adversarial methodology audit
+         [address any BLOCKER findings before writing thesis entry]
 Step 7:  [wrap up PR when reviewer approves]
 ```
 
@@ -244,6 +313,26 @@ Step 5:  [parent stages, commits, wraps up PR]
 - **Worktree isolation:** Each executor gets `isolation: "worktree"`.
   Full file isolation, but requires merging branches afterwards.
 
+### Workflow F: Methodology Challenge
+
+Use this workflow whenever you need a standalone adversarial methodology
+review — no execution involved. Can be invoked at any point:
+
+```
+Step 1:  [identify the artifact to challenge: plan, notebook .py, chapter]
+Step 2:  @reviewer-adversarial <trigger phrase> <artifact path>
+         Triggers: "challenge this", "adversarial review", "methodology audit",
+                   "will this survive examination?", "stress test"
+Step 3:  [read the 5-lens output and Verdict]
+Step 4:  If BLOCKER findings:
+           → revise the plan or artifact before proceeding
+           → re-invoke @reviewer-adversarial after revision
+         If WARNING findings:
+           → document in research_log.md and proceed
+         If NOTE findings:
+           → optional follow-up
+```
+
 ---
 
 ## Permission Model
@@ -283,6 +372,9 @@ operations are blocked. Edge cases ask you first.
 | `planner` | Sonnet | Never — code planning doesn't need Opus |
 | `executor` | Sonnet (default) | Only when you `/model opus` for hard steps |
 | `reviewer` | Sonnet | Never — mechanical checks don't need Opus |
+| `reviewer-adversarial` | Opus (always) | Every invocation — methodology adversary needs it |
+| `reviewer-deep` | Opus (always) | Every invocation — heavyweight review needs it |
+| `writer-thesis` | Opus (always) | Every invocation — thesis writing needs deep reasoning |
 | `lookup` | Haiku | Never — quick questions don't need Sonnet |
 
 **Session default (`opusplan`):** Opus activates automatically in `/plan` mode
@@ -295,6 +387,8 @@ their frontmatter model setting.
   that actually needs deep reasoning, then switch back
 - `@planner-science` is expensive — don't use it for code planning
 - `@reviewer` is cheaper than re-doing work because of missed bugs
+- `@reviewer-adversarial` is Opus — gate usage to Phase 03+ and thesis chapters;
+  quick methodology questions go to `@planner-science` first
 
 ---
 
@@ -379,7 +473,7 @@ where an agent works through an entire Phase independently:
 - Records decisions and restarts in research_log.md
 - May use Docker for reproducible environments
 
-The 5-agent architecture is forward-compatible with this. The planner produces
+The 8-agent architecture is forward-compatible with this. The planner produces
 the plan, the executor runs it with high maxTurns, and the reviewer validates
 at the end. The only additions needed are the test-gate mechanism and worktree
 isolation — no architectural changes.
@@ -432,6 +526,9 @@ terminal. Run `claude` directly to get full subagent support.
 | planner | blue | Sonnet |
 | executor | green | Sonnet |
 | reviewer | orange | Sonnet |
+| reviewer-adversarial | magenta | Opus |
+| reviewer-deep | red | Opus |
+| writer-thesis | yellow | Opus |
 | lookup | cyan | Haiku |
 
 **Performance notes:**

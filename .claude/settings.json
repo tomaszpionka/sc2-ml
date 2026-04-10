@@ -71,9 +71,9 @@
       "Bash(git rebase*)",
       "Write(src/**/data/*/raw/**)",
       "Edit(src/**/data/*/raw/**)",
-      "Read(tmp/**)",
-      "Write(tmp/**)",
-      "Edit(tmp/**)",
+      "Read(/tmp/**)",
+      "Write(/tmp/**)",
+      "Edit(/tmp/**)",
       "Write(docs/thesis/**)",
       "Edit(docs/thesis/**)"
     ]

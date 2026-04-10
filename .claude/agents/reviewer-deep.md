@@ -36,9 +36,9 @@ If something is right, say so once and move on.
 You MUST read these. Skipping is a failure mode that invalidates the
 review.
 
-1. `AGENT_MANUAL.md` — governing rules.
+1. `docs/agents/AGENT_MANUAL.md` — governing rules.
 2. `ARCHITECTURE.md` — game package contract.
-3. `.claude/scientific-invariants.md` — the 10 universal invariants.
+3. `.claude/scientific-invariants.md` — the 8 universal invariants.
    Non-negotiable methodology rules.
 4. `docs/INDEX.md` — authoritative methodology source.
 5. The active dataset's `PHASE_STATUS.yaml` (at
@@ -188,7 +188,7 @@ resolved from the dataset's `PHASE_STATUS.yaml`.
 For every change that touches data, features, models, evaluation, or
 any artifact that will be cited in the thesis:
 
-1. **Invariant trace.** For each of the 10 invariants in
+1. **Invariant trace.** For each of the 8 invariants in
    `.claude/scientific-invariants.md`, state: APPLIES / N/A. For every
    APPLIES, cite file:line evidence that the change respects it. "Looks
    fine" is not evidence.
@@ -291,6 +291,15 @@ paraphrased.
 REQUEST CHANGES — blockers must be fixed before merge.
 HALT — required reading missing or scope unclear. Explain.
 ```
+
+## Scope boundary
+
+For pure methodology and scientific defensibility review, defer to
+`reviewer-adversarial`. This agent focuses on code quality, spec
+compliance, and structural correctness. The distinction:
+- `reviewer-deep`: "Was this implemented correctly?"
+- `reviewer-adversarial`: "Should this have been implemented at all,
+  and will it survive examination?"
 
 ## Constraints
 
