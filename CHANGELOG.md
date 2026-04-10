@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.4] — 2026-04-10 (PR #93: chore/raw-data-readme-template)
+
+### Added
+- `docs/templates/raw_data_readme_template.yaml`: standardized YAML schema for `raw/README.md` files across all game*dataset combinations, with sections A–H (Identity, Provenance, Content/Layout, Temporal Coverage, Acquisition Filtering, Verification, Immutability, Known Limitations) plus illustrative SC2 and AoE2 examples
+
 ## [1.2.3] — 2026-04-10 (PR #92: chore/adversarial-review-agent)
 
 ### Added

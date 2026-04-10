@@ -1,0 +1,748 @@
+# Raw Data README Template (v2)
+#
+# Canonical schema for raw/README.md files across all game datasets.
+# A raw README documents identity, provenance, content, temporal coverage,
+# acquisition filtering, verification, immutability, and known limitations
+# for one raw directory.
+#
+# Authoritative sources:
+#   Canonical Phases      docs/PHASES.md
+#   Scientific Invariants .claude/scientific-invariants.md
+#   Exploration Manual    docs/INDEX.md -> 01_DATA_EXPLORATION_MANUAL.md
+#
+# How to use:
+#   1. Copy the YAML block below into the relevant raw README or use it as a
+#      checklist when authoring or auditing a raw/README.md file.
+#   2. Replace every <PLACEHOLDER> token with a concrete value drawn from
+#      Phase 01 profiling artifacts (01_01_01 and related notebooks).
+#   3. Fields marked required: true must be populated. Fields marked
+#      required: false may be omitted entirely (do not leave them as
+#      empty strings -- remove the key).
+#   4. If a required field is genuinely not applicable, keep the key
+#      but add a one-line comment explaining why.
+#   5. Do not add new fields without updating this template first.
+#   6. Concrete-looking values appear ONLY in Section Z (Examples Appendix).
+#      The template body uses <PLACEHOLDER> tokens exclusively.
+#
+# Relationship to scientific invariants:
+#   Invariant #6 (Reproducibility)  -- Sections B and F: source URLs,
+#       acquisition method, and verification mechanisms must accompany the data.
+#   Invariant #7 (No magic numbers) -- Section E: every acquisition filter
+#       must state its rule, justification, and exact item-count impact.
+#       Tilde estimates are not acceptable.
+#   Invariant #8 (Cross-game comparability) -- This schema is game-agnostic;
+#       both SC2 and AoE2 raw directories use the same fields.
+#
+# ---- TEMPLATE START (copy below this line) ----
+
+# ── Section A: Identity ──────────────────────────────────────────────────────
+
+game:
+  value: "<GAME_ID>"              # Game identifier. Allowed: sc2 | aoe2
+  required: true
+
+dataset:
+  value: "<DATASET_ID>"           # Dataset identifier matching the directory name
+  required: true
+
+raw_directory:
+  value: "<RAW_DIRECTORY_PATH>"   # Path relative to the repository root
+  required: true
+
+# ── Section B: Provenance ────────────────────────────────────────────────────
+# Invariant #6: source URL, acquisition method, and creator must be recorded
+# alongside the data so that any result can be traced back to its origin.
+
+source_name:
+  value: "<SOURCE_NAME>"
+  # Human-readable name of the data source as it appears in the literature.
+  required: true
+
+source_url:
+  value: "<SOURCE_URL>"
+  # Primary download URL or API endpoint. For CDN sources record the base URL.
+  required: true
+
+source_type:
+  value: "<SOURCE_TYPE>"
+  # How data was obtained. Allowed: api | cdn_download | web_scrape |
+  #   database_export | manual
+  required: true
+
+source_version:
+  value: "<SOURCE_VERSION>"
+  # Version tag, commit SHA, or release identifier of the specific snapshot
+  # acquired. Omit this key if the source has no versioning scheme.
+  required: false
+
+source_doi:
+  value: "<SOURCE_DOI>"
+  # DOI of the dataset or paper if one exists (e.g., "10.1234/example").
+  # Omit this key if no DOI exists.
+  required: false
+
+data_creator:
+  value: "<DATA_CREATOR>"
+  # Who created the original data (person, team, or organization), distinct
+  # from the redistributor or download host. Required for thesis attribution.
+  required: true
+
+sampling_mechanism:
+  value: "<SAMPLING_MECHANISM>"
+  # How records were selected for inclusion in the dataset.
+  # Allowed values (non-exhaustive): exhaustive | convenience | stratified |
+  #   tournament_only | api_paginated | manual_curation
+  # Describe in one sentence if none of the above applies.
+  required: true
+
+manifest_path:
+  value: "<MANIFEST_PATH>"
+  # Path to the manifest or index file used during acquisition.
+  # Omit this key entirely if no manifest exists.
+  required: false
+
+citation:
+  value: "<BIBTEX_KEY>"
+  # BibTeX key or full citation string. Used by thesis writing agents to
+  # trace prose claims in Chapter 3 (Data & Methodology, 3.1 Data Sources)
+  # back to the raw data without additional searches.
+  required: true
+
+license:
+  value: "<LICENSE>"
+  # SPDX identifier (e.g., CC-BY-4.0, MIT) or a plain description if no
+  # SPDX identifier exists. Check the source repository's LICENSE file.
+  required: true
+
+access_restrictions:
+  value: "<ACCESS_RESTRICTIONS>"
+  # Any access restrictions beyond the license (account required, rate limits,
+  # geographic restrictions). Omit this key if there are no restrictions.
+  required: false
+
+acquisition_date:
+  value: "<ACQUISITION_DATE>"
+  # ISO 8601 date or date range (YYYY-MM-DD or YYYY-MM-DD to YYYY-MM-DD).
+  # For multi-batch downloads, list all dates.
+  required: true
+
+acquisition_script:
+  value: "<ACQUISITION_SCRIPT_PATH>"
+  # Path to the download or acquisition script.
+  # Omit this key if data was downloaded manually without a script.
+  required: false
+
+# ── Section C: Content and Layout ───────────────────────────────────────────
+
+description:
+  value: "<DESCRIPTION>"
+  # 1-3 sentences describing what this raw data contains and why it exists.
+  required: true
+
+file_format:
+  value: "<FILE_FORMAT>"
+  # Primary file format(s). List multiple if the directory contains mixed
+  # formats (e.g., "parquet, CSV").
+  required: true
+
+subdirectory_layout:
+  # List of subdirectories (or top-level file groups) with contents and
+  # naming patterns.
+  # Invariant #7: naming patterns and file counts are empirical findings
+  # derived during Phase 01 profiling (01_01_01 notebook), not guesses.
+  # All counts and sizes must be populated from the inventory artifact.
+  required: true
+  value:
+    - directory: "<SUBDIRECTORY_PATH>"
+      contents: "<CONTENTS_DESCRIPTION>"
+      file_pattern: "<FILE_PATTERN>"   # e.g., "{hash}.SC2Replay.json" or "match-{date}.parquet"
+      file_count: <FILE_COUNT>         # exact integer from 01_01_01 artifact
+      size_mb: <SIZE_MB>               # float, uncompressed size in MB
+
+total_files:
+  value: <TOTAL_FILE_COUNT>
+  # Total file count in the raw directory, excluding .gitkeep files.
+  # Must match the sum across subdirectory_layout entries and be verified
+  # against the 01_01_01 file inventory artifact.
+  # Invariant #7: this must be an exact integer, not an approximation.
+  required: true
+
+total_size_mb:
+  value: <TOTAL_SIZE_MB>
+  # Total uncompressed size in MB. Float. Verified post-extraction.
+  # Invariant #7: must be a measured value, not an estimate.
+  required: true
+
+# ── Section D: Temporal Coverage ────────────────────────────────────────────
+
+temporal_grain:
+  value: "<TEMPORAL_GRAIN>"
+  # Granularity of temporal records. Allowed:
+  #   per_game | daily | weekly | snapshot | mixed
+  required: true
+
+date_range_start:
+  value: "<DATE_RANGE_START>"
+  # ISO 8601 date of the earliest record in the dataset.
+  # Invariant #7: must be derived from Phase 01 profiling, not assumed.
+  required: true
+
+date_range_end:
+  value: "<DATE_RANGE_END>"
+  # ISO 8601 date of the latest record in the dataset.
+  # Invariant #7: must be derived from Phase 01 profiling, not assumed.
+  required: true
+
+known_gaps:
+  # List of known temporal gaps (tournaments, periods, or partitions with
+  # no data). Set to an empty list [] if no gaps are known.
+  # "None found" and "not investigated" are both expressed via gap_analysis_status
+  # below -- do not conflate them by omitting this key.
+  # Invariant #7: gap date ranges must come from Phase 01 profiling.
+  required: true
+  value:
+    - gap_start: "<GAP_START_DATE>"    # ISO 8601
+      gap_end: "<GAP_END_DATE>"        # ISO 8601
+      reason: "<GAP_REASON>"
+
+gap_analysis_status:
+  value: "<GAP_ANALYSIS_STATUS>"
+  # Whether gaps have been fully investigated.
+  # Allowed: complete | partial | not_started
+  # "complete"     = all subdirectories checked via 01_01_01; known_gaps is authoritative
+  # "partial"      = some subdirectories checked; known_gaps may be incomplete
+  # "not_started"  = gap analysis has not yet been performed
+  required: true
+
+coverage_notes:
+  value: "<COVERAGE_NOTES>"
+  # Additional context about temporal coverage that does not fit in the
+  # structured fields above. Omit this key if no additional notes are needed.
+  required: false
+
+# ── Section E: Acquisition Filtering ────────────────────────────────────────
+# Invariant #7 (No magic numbers): Every filter applied during acquisition
+# must state the rule, a justification traceable to empirical evidence or
+# literature, and the EXACT count of excluded items. Tilde estimates (~N)
+# and free-text impact strings are not acceptable.
+
+acquisition_filters:
+  # Filters applied during download (items available at source that were
+  # intentionally not downloaded or were dropped after download).
+  # Set to an empty list [] if no filtering was performed.
+  # Omit this key only if it is certain that no filtering occurred.
+  required: false
+  value:
+    - rule: "<FILTER_RULE_DESCRIPTION>"
+      justification: "<FILTER_JUSTIFICATION>"
+      # Justification must cite empirical evidence or literature where possible.
+      excluded_count: <EXCLUDED_COUNT>
+      # Exact integer. Must be derived from the acquisition script logs or
+      # Phase 01 profiling. Tilde estimates are not acceptable (Invariant #7).
+      excluded_count_source: "<EXCLUDED_COUNT_SOURCE>"
+      # How excluded_count was derived. Examples:
+      #   "acquisition script log at acquisition_date"
+      #   "01_01_01 profiling artifact"
+      #   "manifest comparison (total manifest entries minus downloaded files)"
+      notes: "<OPTIONAL_FILTER_NOTES>"
+      # Optional: additional context that does not fit in rule/justification.
+      # Omit this key on a filter entry if no notes are needed.
+
+excluded_formats:
+  # Formats or data types available at the source but intentionally not
+  # downloaded (e.g., CSV equivalents when parquet was chosen instead).
+  # Omit this key if nothing was excluded by format choice.
+  required: false
+  value:
+    - format: "<EXCLUDED_FORMAT>"
+      reason: "<FORMAT_EXCLUSION_REASON>"
+
+# ── Section F: Verification ──────────────────────────────────────────────────
+# Invariant #6 (Reproducibility): Checksums or other verification mechanisms
+# must be recorded so post-download integrity can be confirmed.
+
+checksum_status:
+  value: "<CHECKSUM_STATUS>"
+  # Whether checksums are available for files in this directory.
+  # Allowed: full | partial | none
+  # "full"    = checksums available for all files
+  # "partial" = checksums available for some but not all files
+  # "none"    = no checksums available
+  required: true
+
+checksum_source:
+  value: "<CHECKSUM_SOURCE>"
+  # Where checksums come from (manifest field name, sidecar file, etc.).
+  # Required if checksum_status is "full" or "partial". Omit if "none".
+  required: false
+  # Conditional: required when checksum_status != none
+
+checksum_coverage_pct:
+  value: <CHECKSUM_COVERAGE_PCT>
+  # Integer 0-100. Percentage of files covered by checksums.
+  # Required if checksum_status is "partial". Omit otherwise.
+  required: false
+  # Conditional: required when checksum_status == partial
+
+unchecksummed_pattern:
+  value: "<UNCHECKSUMMED_PATTERN>"
+  # Glob or description identifying which files lack checksums.
+  # Useful when checksum_status is "partial". Omit if not applicable.
+  required: false
+
+checksum_verified:
+  value: <CHECKSUM_VERIFIED>
+  # Boolean. Whether checksums were verified against downloaded files.
+  # Required if checksum_status is "full" or "partial". Omit if "none".
+  required: false
+  # Conditional: required when checksum_status != none
+
+verification_date:
+  value: "<VERIFICATION_DATE>"
+  # ISO 8601 date on which checksums were verified.
+  # Required if checksum_verified is true. Omit otherwise.
+  required: false
+  # Conditional: required when checksum_verified == true
+
+# ── Section G: Immutability and Artifact Link ────────────────────────────────
+
+immutability:
+  # Raw data is never modified after acquisition. This block documents the
+  # status and mechanism that enforces (or merely declares) immutability.
+  required: true
+  status: true
+  # Always true. Violations invalidate the entire experiment trail.
+  enforcement_mechanism: "<ENFORCEMENT_MECHANISM>"
+  # How immutability is enforced or declared. Allowed:
+  #   "none_documented"          -- convention only, no technical enforcement
+  #   "read_only_permissions"    -- file system permissions set to read-only
+  #   "git_lfs_tracked"          -- files tracked in Git LFS (write-protected)
+  #   "directory_hash_verified"  -- directory hash computed and logged at acquisition
+  # Use "none_documented" if the raw directory is protected only by team convention.
+
+inventory_artifact:
+  value: "<INVENTORY_ARTIFACT_PATH>"
+  # Path to the 01_01_01 file inventory artifact produced by Phase 01.
+  # This artifact provides machine-readable per-directory file counts and
+  # sizes that validate the totals reported in Section C.
+  # Invariant #6: this cross-reference is required for reproducibility.
+  # If Phase 01 profiling has not yet been completed, set value to:
+  #   "PENDING: 01_01_01 not yet run"
+  # The README is not considered complete until this is a real artifact path.
+  required: true
+
+notes:
+  value: "<NOTES>"
+  # Free-form notes: deferred acquisition status, known issues, re-acquisition
+  # instructions, or anything that does not fit the structured fields above.
+  # Omit this key if no additional notes are needed.
+  required: false
+
+# ── Section H: Known Limitations ────────────────────────────────────────────
+# Informed by Gebru et al. (2021) "Datasheets for Datasets" -- thesis-relevant
+# subset. See "Not Covered" block at the end of this file for deferred questions.
+
+known_biases:
+  value: "<KNOWN_BIASES>"
+  # Describe selection, survivorship, geographic, or demographic biases
+  # present in this dataset. Use "None known" if no biases have been
+  # identified, but do not omit the field -- its absence is ambiguous.
+  required: true
+
+representativeness_notes:
+  value: "<REPRESENTATIVENESS_NOTES>"
+  # Who or what is over- or under-represented relative to the real-world
+  # population the dataset is intended to cover. Omit this key if no
+  # representativeness concerns have been identified.
+  required: false
+
+# ── Section Z: Examples Appendix ────────────────────────────────────────────
+# ILLUSTRATIVE ONLY -- values are placeholders, not ground truth.
+# Populate from 01_01_01 artifacts. Do not treat numbers below as authoritative.
+# These examples show the shape of a completed README for two dataset archetypes.
+
+# ---- Z.1: SC2-shaped example (tournament-per-directory, hash-named replay JSONs) ----
+#
+# game:
+#   value: "sc2"
+#   required: true
+#
+# dataset:
+#   value: "sc2egset"
+#   required: true
+#
+# raw_directory:
+#   value: "src/rts_predict/sc2/data/sc2egset/raw/"
+#   required: true
+#
+# source_name:
+#   value: "SC2EGSet -- StarCraft II E-Sports Game Set"
+#   required: true
+#
+# source_url:
+#   value: "https://github.com/StoicDeveloper/sc2egset"
+#   required: true
+#
+# source_type:
+#   value: "cdn_download"
+#   required: true
+#
+# source_version:
+#   value: "v1.0 (2022 release)"
+#   required: false
+#
+# source_doi:
+#   value: "10.XXXX/sc2egset-placeholder"
+#   required: false
+#
+# data_creator:
+#   value: "SC2EGSet authors (StoicDeveloper et al.)"
+#   required: true
+#
+# sampling_mechanism:
+#   value: "tournament_only -- replays from publicly released esports tournaments only; ladder excluded"
+#   required: true
+#
+# manifest_path:
+#   value: "src/rts_predict/sc2/data/sc2egset/api/api_dump_list.json"
+#   required: false
+#
+# citation:
+#   value: "sc2egset2022"
+#   required: true
+#
+# license:
+#   value: "CC BY 4.0"
+#   required: true
+#
+# acquisition_date:
+#   value: "2024-11-15"
+#   required: true
+#
+# acquisition_script:
+#   value: "src/rts_predict/sc2/acquisition/download_sc2egset.py"
+#   required: false
+#
+# description:
+#   value: >
+#     SC2EGSet contains StarCraft II tournament replay files exported as JSON.
+#     Each subdirectory corresponds to one tournament and contains per-replay
+#     JSON files alongside a map name mapping file. Coverage spans major
+#     esports tournaments from 2016 to 2023.
+#   required: true
+#
+# file_format:
+#   value: "JSON (SC2Replay export)"
+#   required: true
+#
+# subdirectory_layout:
+#   required: true
+#   value:
+#     - directory: "2016_IEM_10_Taipei/"
+#       contents: "Per-replay JSON files for the IEM Season 10 Taipei tournament"
+#       file_pattern: "<sha256_hash>.SC2Replay.json"
+#       file_count: 112         # ILLUSTRATIVE -- replace with 01_01_01 count
+#       size_mb: 48.3           # ILLUSTRATIVE -- replace with 01_01_01 measurement
+#     - directory: "2016_IEM_10_Taipei/map_foreign_to_english_mapping.json"
+#       contents: "Map name translation from foreign-language map IDs to English names"
+#       file_pattern: "map_foreign_to_english_mapping.json"
+#       file_count: 1
+#       size_mb: 0.1            # ILLUSTRATIVE
+#
+# total_files:
+#   value: 22184                # ILLUSTRATIVE -- replace with 01_01_01 count
+#   required: true
+#
+# total_size_mb:
+#   value: 9420.0               # ILLUSTRATIVE -- replace with 01_01_01 measurement
+#   required: true
+#
+# temporal_grain:
+#   value: "per_game"
+#   required: true
+#
+# date_range_start:
+#   value: "2016-01-15"         # ILLUSTRATIVE -- replace with 01_01_01 result
+#   required: true
+#
+# date_range_end:
+#   value: "2023-08-20"         # ILLUSTRATIVE -- replace with 01_01_01 result
+#   required: true
+#
+# known_gaps:
+#   required: true
+#   value:
+#     - gap_start: "2020-03-01" # ILLUSTRATIVE -- replace with 01_01_01 result
+#       gap_end: "2020-09-30"
+#       reason: "COVID-19 tournament suspensions; no replays released for this period"
+#
+# gap_analysis_status:
+#   value: "complete"
+#   required: true
+#
+# acquisition_filters:
+#   required: false
+#   value:
+#     - rule: "Replays from team leagues excluded"
+#       justification: >
+#         Team league games involve substitution mechanics that break the
+#         symmetric two-player prediction model. Including them would require
+#         a separate prediction formulation outside the thesis scope.
+#       excluded_count: 800     # ILLUSTRATIVE -- replace with acquisition log count
+#       excluded_count_source: "acquisition script log at 2024-11-15"
+#     - rule: "Corrupted replay files (unreadable JSON) excluded post-download"
+#       justification: >
+#         Files that fail JSON parsing cannot be ingested by the pipeline.
+#         Corruption rate derived empirically during Phase 01 (01_01_01 notebook).
+#       excluded_count: 14      # ILLUSTRATIVE -- replace with 01_01_01 count
+#       excluded_count_source: "01_01_01 profiling artifact"
+#
+# excluded_formats:
+#   required: false
+#   value:
+#     - format: ".SC2Replay (binary)"
+#       reason: >
+#         Binary replay files require a running StarCraft II client to parse.
+#         The JSON export format was chosen because it is human-readable and
+#         parseable without game client dependencies.
+#
+# checksum_status:
+#   value: "partial"
+#   required: true
+#
+# checksum_source:
+#   value: "Manifest file api/api_dump_list.json -- sha256 field per entry"
+#   required: false
+#
+# checksum_coverage_pct:
+#   value: 80                   # ILLUSTRATIVE
+#   required: false
+#
+# unchecksummed_pattern:
+#   value: "map_foreign_to_english_mapping.json files (one per tournament)"
+#   required: false
+#
+# checksum_verified:
+#   value: true
+#   required: false
+#
+# verification_date:
+#   value: "2024-11-15"
+#   required: false
+#
+# immutability:
+#   required: true
+#   status: true
+#   enforcement_mechanism: "none_documented"
+#
+# inventory_artifact:
+#   value: "src/rts_predict/sc2/reports/sc2egset/artifacts/01_data_exploration/01_source_inventory/01_01_01_source_inventory.csv"
+#   required: true
+#
+# known_biases:
+#   value: >
+#     Tournament-only coverage introduces survivorship bias: only games from
+#     professional players who competed in events with publicly released replays
+#     are represented. Ladder games and amateur play are absent.
+#   required: true
+#
+# representativeness_notes:
+#   value: >
+#     Top-N professional players are over-represented. Korean players dominate
+#     pre-2022 coverage due to tournament geography. Post-2022 coverage is more
+#     geographically diverse following globalization of the esports scene.
+#   required: false
+
+# ---- Z.2: AoE2-shaped example (date-stamped parquets, paired directories) ----
+#
+# game:
+#   value: "aoe2"
+#   required: true
+#
+# dataset:
+#   value: "aoe2companion"
+#   required: true
+#
+# raw_directory:
+#   value: "src/rts_predict/aoe2/data/aoe2companion/raw/"
+#   required: true
+#
+# source_name:
+#   value: "aoe2companion CDN dump"
+#   required: true
+#
+# source_url:
+#   value: "https://dump.cdn.aoe2companion.com/"
+#   required: true
+#
+# source_type:
+#   value: "cdn_download"
+#   required: true
+#
+# data_creator:
+#   value: "aoe2companion (community-run API service)"
+#   required: true
+#
+# sampling_mechanism:
+#   value: "exhaustive -- all matches recorded by the aoe2companion service for the covered date range"
+#   required: true
+#
+# manifest_path:
+#   value: "src/rts_predict/aoe2/data/aoe2companion/api/api_dump_list.json"
+#   required: false
+#
+# citation:
+#   value: "aoe2companion_cdn"
+#   required: true
+#
+# license:
+#   value: "Unknown -- no license file in source; check with data_creator before redistribution"
+#   required: true
+#
+# acquisition_date:
+#   value: "2025-07-01"         # ILLUSTRATIVE
+#   required: true
+#
+# description:
+#   value: >
+#     CDN dump from the aoe2companion service. Contains daily match parquet files,
+#     leaderboard and profile snapshots, and daily rating CSV files. Mixed
+#     granularity: match-level and player-level records in separate subdirectories.
+#   required: true
+#
+# file_format:
+#   value: "parquet, CSV"
+#   required: true
+#
+# subdirectory_layout:
+#   required: true
+#   value:
+#     - directory: "matches/"
+#       contents: "Daily match parquet files"
+#       file_pattern: "match-{date}.parquet"
+#       file_count: 2073        # ILLUSTRATIVE -- replace with 01_01_01 count
+#       size_mb: 7106           # ILLUSTRATIVE
+#     - directory: "leaderboards/"
+#       contents: "Leaderboard snapshot"
+#       file_pattern: "leaderboard.parquet"
+#       file_count: 1
+#       size_mb: 87             # ILLUSTRATIVE
+#     - directory: "profiles/"
+#       contents: "Player profile snapshot"
+#       file_pattern: "profile.parquet"
+#       file_count: 1
+#       size_mb: 170            # ILLUSTRATIVE
+#     - directory: "ratings/"
+#       contents: "Daily rating CSV files"
+#       file_pattern: "rating-{date}.csv"
+#       file_count: 2072        # ILLUSTRATIVE
+#       size_mb: 2703           # ILLUSTRATIVE
+#
+# total_files:
+#   value: 4147                 # ILLUSTRATIVE -- replace with 01_01_01 count
+#   required: true
+#
+# total_size_mb:
+#   value: 10066.0              # ILLUSTRATIVE -- replace with 01_01_01 measurement
+#   required: true
+#
+# temporal_grain:
+#   value: "daily"
+#   required: true
+#
+# date_range_start:
+#   value: "2025-06-27"         # ILLUSTRATIVE
+#   required: true
+#
+# date_range_end:
+#   value: "2025-07-01"         # ILLUSTRATIVE
+#   required: true
+#
+# known_gaps:
+#   required: true
+#   value: []
+#   # No temporal gaps within the downloaded range.
+#   # Files before 2025-06-27 exist but are header-only (substantive data starts 2025-06-27).
+#
+# gap_analysis_status:
+#   value: "complete"
+#   required: true
+#
+# coverage_notes:
+#   value: >
+#     Files before 2025-06-27 are sparse (header-only); files from 2025-06-27
+#     onward are substantive. This boundary was identified during Phase 01 profiling.
+#   required: false
+#
+# excluded_formats:
+#   required: false
+#   value:
+#     - format: "CSV equivalents of matches, leaderboards, profiles"
+#       reason: >
+#         Parquet format was chosen for size and query performance. CSV equivalents
+#         exist in the manifest but were not downloaded as they offer no additional
+#         information.
+#
+# checksum_status:
+#   value: "none"
+#   required: true
+#
+# checksum_verified:
+#   value: false
+#   required: false
+#
+# immutability:
+#   required: true
+#   status: true
+#   enforcement_mechanism: "none_documented"
+#
+# inventory_artifact:
+#   value: "PENDING: 01_01_01 not yet run"
+#   required: true
+#
+# known_biases:
+#   value: >
+#     Coverage is limited to games recorded by players who use the aoe2companion
+#     service. Players who do not link their accounts or use the service are absent.
+#     This may under-represent casual or non-English-speaking player communities.
+#   required: true
+
+# ── Not Covered (deferred Gebru et al. questions) ───────────────────────────
+#
+# The following questions from Gebru et al. (2021) "Datasheets for Datasets"
+# are intentionally deferred for this thesis. Each entry notes the reason.
+#
+# 1. Ethical review / IRB approval
+#    Reason: All datasets are publicly released tournament replays or CDN dumps
+#    of in-game data. No human subjects research is involved. If this changes
+#    (e.g., player survey data), revisit.
+#
+# 2. Preprocessing performed at source before publication
+#    Reason: Not documented by the data creators for any of the three datasets.
+#    Noted as a limitation in thesis Chapter 3; out of scope for this template.
+#
+# 3. Reuse conditions beyond the stated license
+#    Reason: License field covers the primary reuse condition. Fine-grained
+#    reuse restrictions (e.g., non-commercial only, no derivative datasets)
+#    should be noted in `access_restrictions` if applicable; no dedicated field
+#    is added here to avoid duplication.
+#
+# 4. Update / maintenance schedule
+#    Reason: All three datasets are treated as static snapshots acquired on a
+#    fixed date. Ongoing update monitoring is out of scope for a fixed-snapshot
+#    thesis analysis.
+#
+# 5. Collector vs. creator distinction beyond data_creator
+#    Reason: The `data_creator` field captures the original creator. The
+#    redistributor (CDN host, GitHub mirror) is captured in `source_url`.
+#    A full provenance chain (creator -> publisher -> mirror -> us) is not
+#    required for the three datasets in scope.
+#
+# 6. Intended vs. actual use alignment
+#    Reason: Addressed qualitatively in thesis Chapter 3.1 (Data Sources)
+#    and Chapter 3.2 (Data Suitability). No structured field added.
+#
+# 7. Full dataset statistics / data distributions
+#    Reason: Captured in Phase 01 profiling artifacts (01_01_01 through
+#    01_01_NN notebooks) and referenced via `inventory_artifact`. A separate
+#    structured field would duplicate those outputs.

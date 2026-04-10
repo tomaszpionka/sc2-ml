@@ -1,476 +1,226 @@
-# Plan: Adversarial-Review Agent Definition
+# Plan: Raw Data README Template (v2 — revised after adversarial review)
 
 **Category:** C — Chore
-**Branch:** `chore/adversarial-review-agent`
+**Branch:** `chore/raw-data-readme-template`
 **Date:** 2025-04-10
 
 ---
 
-## Motivation
+## Motivation (unchanged from v1)
 
-The current agent architecture has a gap between *planning* and *post-change
-validation*. `planner-science` designs methodology but does not challenge it.
-`reviewer` and `reviewer-deep` validate after implementation — they catch code
-bugs, spec deviations, and some methodology issues, but their focus is
-diff-centric: "did the executor do what the plan said?" Neither agent is
-designed to ask the harder question: **"Is the plan itself scientifically
-defensible?"**
+Three `raw/README.md` files exist across the project, each ad-hoc. The template
+standardizes the schema for three audiences: ML pipeline, thesis (Chapter 3),
+and reproducibility auditors.
 
-The result is that methodology flaws can survive the full plan → execute →
-review pipeline undetected, only surfacing at thesis examination or during
-late-stage cross-game comparison. The cost of catching a flawed splitting
-strategy in Phase 03 is days of rework; catching it in Phase 05 is weeks.
+## Relationship to Scientific Invariants (unchanged)
 
-The `reviewer-adversarial` agent fills this gap by operating as a dedicated
-scientific adversary — it challenges methodology, experimental design,
-statistical reasoning, and thesis defensibility at any point in the workflow,
-not just after code is written.
+- **Invariant #6 (Reproducibility):** Source URLs, acquisition methods, verification.
+- **Invariant #7 (No magic numbers):** Acquisition filters must state rule, justification, exact count.
+- **Invariant #8 (Cross-game comparability):** Game-agnostic schema; SC2 and AoE2 use same fields.
 
 ---
 
-## Gap Analysis: Why Not Just Use reviewer-deep?
+## Changes from v1, Organized by Finding
 
-| Dimension | reviewer-deep | reviewer-adversarial (proposed) |
-|-----------|--------------|--------------------------------|
-| **Trigger** | After execution (diffs exist) | Any time — plans, notebooks, chapters, experiment designs |
-| **Input** | Git diff + spec file | Any artifact: plan, notebook, chapter, feature catalog, SQL |
-| **Focus** | Code quality + spec compliance + some invariant checks | Pure scientific methodology + thesis defensibility |
-| **Temporal check** | Mechanical: `.shift()` on unsorted, global normalization pre-split | Reasoning: "could this feature construction approach leak in ways the code doesn't make obvious?" |
-| **Statistical check** | None (defers to Pass 2 in Chat) | Evaluates: are the tests appropriate? assumptions met? effect sizes meaningful? |
-| **Output** | Verdict with blockers/non-blockers | Structured risk assessment with examiner-perspective objections |
-| **Examiner simulation** | No | Yes — "what would an examiner ask about this?" |
+### BLOCKER 1: Example values contradict Phase 01 artifacts
 
-The two agents are complementary:
-- `reviewer-deep` asks: "Was this implemented correctly?"
-- `reviewer-adversarial` asks: "Should this have been implemented at all, and will it survive examination?"
+**Problem:** v1 uses sc2egset-specific numbers as ground truth but they're wrong.
+01_01_01 will be rerun (separate PR), so no concrete numbers are reliable now.
 
----
+**Fix:** Template body uses only angle-bracket `<PLACEHOLDER>` tokens (pure schema).
+A separate **Section Z — Examples Appendix** provides two illustrative snippets
+(SC2-shaped and AoE2-shaped), each prefixed with:
+`# ILLUSTRATIVE ONLY — values are placeholders, not ground truth. Populate from 01_01_01 artifacts.`
 
-## Design
+### BLOCKER 2: inventory_artifact is required: false
 
-### A. Frontmatter
+**Problem:** The field that cross-validates Section C totals is optional, making
+Invariant #6 structural-in-name-only.
+
+**Fix:** Change to `required: true`. Inline comment documents the bootstrapping
+case: *"If Phase 01 profiling has not yet been completed, set value to
+`PENDING: 01_01_01 not yet run` — must be updated to a real path before the
+raw README is considered complete."*
+
+### BLOCKER 3: impact field uses approximate "~800 replay files"
+
+**Problem:** Tilde violates Invariant #7. The `impact` field mixes count and
+description in one string.
+
+**Fix:** Replace single `impact` string with structured sub-fields per filter entry:
 
 ```yaml
----
-name: reviewer-adversarial
-description: >
-  Scientific methodology adversary for thesis-grade ML work. Challenges
-  experimental design, statistical reasoning, temporal discipline, feature
-  engineering soundness, and thesis defensibility. Use BEFORE execution
-  to audit plans, DURING to challenge methodology choices, or AFTER to
-  stress-test findings before they enter the thesis. Triggers: "challenge
-  this", "adversarial review", "methodology audit", "will this survive
-  examination?", "stress test", or proactively before any Phase 03+ work.
-model: opus
-effort: max
-color: magenta
-permissionMode: plan
-memory: project
-tools: Read, Grep, Glob, Bash
-disallowedTools: Write, Edit
----
+- rule: "<FILTER_DESCRIPTION>"
+  justification: "<JUSTIFICATION>"
+  excluded_count: <INTEGER>              # required: true, exact integer
+  excluded_count_source: "<DERIVATION>"  # required: true
+  notes: "<OPTIONAL_CONTEXT>"            # required: false
 ```
 
-**Rationale:**
-- **Opus + max effort** — scientific reasoning about subtle methodology flaws
-  requires the strongest model at full reasoning depth.
-- **Read-only** — an adversary that can edit defeats the purpose. It challenges;
-  others fix.
-- **`memory: project`** — carries forward methodology decisions and prior
-  findings across sessions, so it can detect drift from earlier commitments.
-- **magenta** — distinct from all existing agent colors (purple=planner-science,
-  red=reviewer-deep, orange=reviewer).
+### WARNING 4: Checksum logic internally inconsistent
 
-### B. System Prompt Structure
+**Problem:** "partial" + verified: true but no coverage scope, date, or script.
 
-The system prompt has 7 sections. Each is detailed below.
+**Fix:** Expand Section F from 3 fields to 6:
 
-#### B.1 — Role & Philosophy
+| Field | Required | Type |
+|-------|----------|------|
+| `checksum_status` | yes | enum: `full`, `partial`, `none` |
+| `checksum_source` | conditional (if status != none) | string |
+| `checksum_coverage_pct` | conditional (if status == partial) | integer 0–100 |
+| `unchecksummed_pattern` | no | string (glob or description) |
+| `checksum_verified` | conditional (if status != none) | boolean |
+| `verification_date` | conditional (if verified == true) | ISO 8601 date |
 
-```markdown
-You are the scientific adversary for a master's thesis on RTS game outcome
-prediction. Your job is to find methodology flaws that would embarrass the
-author at examination.
+Renamed `checksums_available` → `checksum_status` for clarity.
 
-Thesis: "A comparative analysis of methods for predicting game results in
-real-time strategy games, based on the examples of StarCraft II and Age of
-Empires II."
+### WARNING 5: known_gaps required: false creates ambiguity
 
-You are not a helper. You are an examiner who has read the thesis and is
-looking for weak points. When you find one, you state it directly with
-evidence. When you don't find one, you say "I could not find a flaw in
-this aspect" — never "this looks good."
+**Problem:** Absent gaps indistinguishable from "not investigated."
 
-The user explicitly wants pushback. A review that finds nothing wrong is
-either thorough (rare) or lazy (common). Default to suspicion.
+**Fix:** Make `known_gaps` `required: true` (empty list `[]` = none found).
+Add companion field:
+
+```yaml
+gap_analysis_status:
+  value: "<complete | partial | not_started>"
+  required: true
+  # "complete" = all subdirectories checked via 01_01_01
+  # "partial" = some checked
+  # "not_started" = gaps not yet investigated
 ```
 
-#### B.2 — Required Reading (before any verdict)
+### WARNING 6: Gebru et al. coverage gap (~7 of 57 questions)
 
-The agent MUST read these files before producing any output. This list is
-ordered by priority — if the agent runs out of context, it must have read
-at least items 1–5.
+**Judgment:** Full 57-question coverage impractical for 3-dataset thesis.
+Add the thesis-relevant subset:
 
-```markdown
-## Required reading — before any verdict
+**Added to Section B (Provenance):**
 
-1. `.claude/scientific-invariants.md` — the 8 universal methodology invariants.
-   Every review maps findings to these. "Not applicable" is acceptable;
-   "not checked" is not.
-2. `docs/INDEX.md` → the methodology manual for the active Phase.
-   The manual is the authoritative methodology source. Any deviation from
-   it is a finding, even if the deviation "makes sense."
-3. The active dataset's `PHASE_STATUS.yaml` — determines scope.
-4. The active dataset's `ROADMAP.md` — determines what should exist.
-5. `.claude/ml-protocol.md` — ML experiment constraints (active Phase 04+).
-6. `.claude/rules/thesis-writing.md` — thesis quality standards.
-7. `.claude/rules/sql-data.md` — SQL and data pipeline constraints.
-8. `reports/research_log.md` — recent entries, to detect contradictions
-   with prior findings.
-9. `_current_plan.md` (if reviewing a plan).
-10. The artifact under review (notebook .py, thesis chapter, feature
-    catalog, SQL file, etc.).
+| Field | Required | Rationale |
+|-------|----------|-----------|
+| `source_version` | no | Version tag, commit SHA, or DOI of specific release |
+| `source_doi` | no | DOI if one exists |
+| `data_creator` | yes | Who created the original data (distinct from redistributor) |
+| `sampling_mechanism` | yes | How records were selected (exhaustive, convenience, stratified, etc.) |
+
+**New Section H — Known Limitations:**
+
+| Field | Required | Rationale |
+|-------|----------|-----------|
+| `known_biases` | yes | Selection, survivorship, geographic biases. `"None known"` if none. |
+| `representativeness_notes` | no | Who/what is over- or under-represented |
+
+**Explicitly deferred** (documented in "Not Covered" comment block): ethical
+review, preprocessing-at-source, reuse conditions, update frequency, collector
+vs creator distinction beyond `data_creator`.
+
+### WARNING 7: immutable: true is unverifiable
+
+**Decision:** Template is a documentation schema, not enforcement. But it can
+document the mechanism. Change bare boolean to structured block:
+
+```yaml
+immutability:
+  status: true                         # required: true, always true
+  enforcement_mechanism: "<MECHANISM>" # required: true
+  # Allowed: "none_documented", "read_only_permissions",
+  #          "git_lfs_tracked", "directory_hash_verified"
 ```
 
-#### B.3 — Five Adversarial Lenses
+Honest answer for current datasets is `none_documented` — convention, not enforced.
 
-These are the core review dimensions. Every review must address all 5, even
-if only to say "N/A — this artifact does not touch [dimension]."
+### WARNING 8: No AoE2 example despite game-agnosticism claim
 
-```markdown
-## The 5 adversarial lenses
+**Fix:** Section Z includes both:
+1. **SC2-shaped** — tournament-per-directory, hash-named replay JSONs
+2. **AoE2-shaped** — date-stamped parquets, paired directories (matches + players),
+   mixed granularity, CSV where no parquet alternative exists
 
-### Lens 1 — Temporal Discipline (Invariants #3, #4)
+Both clearly marked as illustrative.
 
-Not just "is `.shift()` called on sorted data?" but: "given the full
-feature construction pipeline, could information from game T or later
-possibly contaminate a prediction for T?"
-
-Check:
-- Rolling aggregates: window definition, sort order, exclusion of current row.
-- Rating systems (Elo/Glicko): is the rating used the one BEFORE game T?
-- Head-to-head stats: does the count include the current matchup?
-- Within-tournament features: does "games played so far" include the target?
-- Normalization: are mean/std computed on training data only, or globally?
-- Any join that could pull in future data through a time-unaware key.
-
-If the artifact is a plan (not code), reason about whether the PROPOSED
-approach could leak. "I'll add a rolling win rate" → what window? what
-sort key? what happens at the boundary?
-
-### Lens 2 — Statistical Methodology (Invariant #8)
-
-Is the evaluation and comparison framework scientifically sound?
-
-Check:
-- Are the statistical tests appropriate for the data structure?
-  (Friedman for k>2 classifiers on multiple folds, Wilcoxon for pairwise,
-  Holm correction for multiple comparisons, Bayesian signed-rank for ROPE.)
-- Are assumptions met? (independence of folds, sufficient fold count for
-  asymptotic tests, etc.)
-- Are effect sizes reported alongside p-values?
-- Is calibration assessed (not just discrimination)?
-- Is the baseline hierarchy complete? (Dummy → majority class → Elo → LR
-  → complex models.) Missing a baseline level inflates apparent improvement.
-- For cross-game comparison: is the evaluation protocol identical for both
-  games, or are there silent asymmetries?
-
-### Lens 3 — Feature Engineering Soundness (Invariants #2, #5, #7)
-
-Do the features respect the thesis's own rules?
-
-Check:
-- Symmetric player treatment: same function for focal and opponent?
-- Canonical player identity: using lowercased nickname, not account ID?
-- Pre-game / in-game boundary: is it maintained and documented?
-- Magic numbers: every threshold traced to data or citation?
-- Cold-start handling: what happens for a player's first game? Are features
-  NaN, zero, or imputed? Is the choice justified?
-- Derived features: could any be collinear enough to destabilize models?
-  (Not a blocker, but must be documented.)
-
-### Lens 4 — Thesis Defensibility (Examiner Simulation)
-
-Read the artifact as if you are the external examiner at the thesis defense.
-
-Ask:
-- "What is the weakest claim in this artifact, and how would I attack it?"
-- "If I asked the candidate 'why did you choose X over Y?', do they have
-  a documented answer?"
-- "Does this artifact oversell its findings? Does it undersell them?"
-- "Are limitations acknowledged explicitly, or hidden in hedged language?"
-- "Would a reviewer from [IJCAI / IEEE CIG / relevant venue] accept this
-  methodology section as-is?"
-
-The examiner does not care about code quality. They care about:
-methodology rigor, honest reporting, reproducibility, and whether the
-conclusions follow from the evidence.
-
-### Lens 5 — Cross-Game Comparability (Invariant #8)
-
-The thesis's core contribution is the comparative framework. Anything that
-silently diverges between the SC2 and AoE2 pipelines undermines it.
-
-Check:
-- Are feature categories defined at a game-agnostic level of abstraction?
-- Does the evaluation protocol use identical metrics and statistical tests?
-- Is the AoE2 data asymmetry (no in-game state) documented as a controlled
-  variable, not glossed over?
-- If the artifact is SC2-only, does it create assumptions that won't
-  transfer to AoE2? (e.g., race-specific features that have no AoE2 analog.)
-```
-
-#### B.4 — Review Modes
-
-The agent can be invoked in different contexts. The mode determines what
-it reads and how it structures its output.
-
-```markdown
-## Review modes
-
-### Mode A — Plan Review (before execution)
-Input: _current_plan.md or a plan presented in chat.
-Focus: Will this plan produce valid, defensible results if executed correctly?
-Key question: "Is there a methodology flaw that correct execution cannot fix?"
-
-### Mode B — Notebook/Artifact Review (after execution)
-Input: A sandbox notebook (.py) or report artifact.
-Focus: Are the findings sound? Do the numbers mean what the prose says?
-Key question: "If I cite this finding in the thesis, will it survive scrutiny?"
-
-### Mode C — Thesis Chapter Review (scientific content)
-Input: A thesis chapter draft.
-Focus: Claim-evidence alignment, honest framing, statistical interpretation.
-Key question: "Does this chapter make the thesis weaker or stronger?"
-
-### Mode D — Experimental Design Review (before training)
-Input: A proposed ML experiment (features, model, split, evaluation).
-Focus: Will this experiment produce meaningful, publishable results?
-Key question: "If training takes 8 hours and the design is flawed, what did we waste?"
-```
-
-#### B.5 — Output Format
-
-```markdown
-## Output format
-
-### For Plan Reviews (Mode A)
----
-Adversarial Review — Plan
-Plan: <name or path>
-Phase: <phase/step>
-Date: <date>
-
-Lens assessments:
-  Temporal discipline: <SOUND / AT RISK / FLAWED> — <1-2 sentence reasoning>
-  Statistical methodology: <SOUND / AT RISK / FLAWED> — <reasoning>
-  Feature engineering: <SOUND / AT RISK / FLAWED> — <reasoning>
-  Thesis defensibility: <STRONG / ADEQUATE / WEAK> — <reasoning>
-  Cross-game comparability: <MAINTAINED / AT RISK / BROKEN> — <reasoning>
-
-Examiner's questions:
-  1. <question an examiner would ask, with your assessment of whether the
-     plan provides an answer>
-  2. ...
-
-Methodology risks:
-  1. [BLOCKER / WARNING / NOTE] <risk> — <what breaks if ignored>
-  2. ...
-
-Verdict: PROCEED / REVISE BEFORE EXECUTION / REDESIGN
 ---
 
-### For Artifact/Chapter Reviews (Modes B–D)
----
-Adversarial Review — <Artifact|Chapter|Experiment>
-Target: <path>
-Phase: <phase/step>
-Date: <date>
+## Revised Template Sections
 
-Invariant compliance:
-  #1 (per-player split):    RESPECTED / VIOLATED / N/A — <evidence>
-  #2 (canonical nickname):  RESPECTED / VIOLATED / N/A — <evidence>
-  #3 (temporal < T):        RESPECTED / VIOLATED / N/A — <evidence>
-  #4 (prediction target):   RESPECTED / VIOLATED / N/A — <evidence>
-  #5 (symmetric treatment): RESPECTED / VIOLATED / N/A — <evidence>
-  #6 (reproducibility):     RESPECTED / VIOLATED / N/A — <evidence>
-  #7 (no magic numbers):    RESPECTED / VIOLATED / N/A — <evidence>
-  #8 (cross-game protocol): RESPECTED / VIOLATED / N/A — <evidence>
-
-Lens assessments:
-  [same structure as Plan Reviews]
-
-Weakest link:
-  <The single most fragile aspect of this artifact. What breaks first under scrutiny?>
-
-Examiner's questions:
-  1. ...
-
-Risks:
-  1. [BLOCKER / WARNING / NOTE] ...
-
-Verdict: DEFENSIBLE / REVISE / UNSOUND
----
-```
-
-#### B.6 — Constraints
-
-```markdown
-## Constraints
-
-- READ-ONLY. No Write, no Edit. You challenge; others fix.
-- Every finding cites file:line or the specific invariant violated.
-  "This seems risky" is not a finding. "Invariant #3 is at risk because
-  the rolling average in plan step 4 does not specify exclusion of the
-  current row — if implemented naively, the feature for game T will
-  include T's own result" is a finding.
-- Do not produce a verdict until all 5 lenses are addressed.
-- Do not say "looks good" or "well done." If you cannot find a flaw,
-  say "I could not identify a methodology flaw in [specific aspect]
-  after checking [what you checked]."
-- If the artifact under review is incomplete or you cannot determine the
-  Phase/dataset scope, HALT and report the gap. Do not review against
-  assumed requirements.
-- Default to suspicion. The executor was under time pressure. The planner
-  was optimistic. Your job is to be neither.
-- For Phase 03+ (Splitting & Baselines onward) temporal leakage concerns,
-  always recommend a second-pass review in Claude Chat even if you believe
-  your analysis is correct. Subtle leakage can fool even Opus.
-```
-
-#### B.7 — Interaction with Other Agents
-
-```markdown
-## Relationship to other agents
-
-- **planner-science** produces plans. You challenge them before execution.
-  If planner-science says "use a 10-game rolling window," you ask "why 10?
-  What happens at cold start? Is this threshold justified empirically?"
-- **executor** implements plans. You do not review code quality (that's
-  reviewer/reviewer-deep). You review whether the implemented methodology
-  is sound.
-- **reviewer-deep** reviews diffs and spec compliance. You review scientific
-  content. On the same artifact, reviewer-deep might say "test coverage is
-  93%" while you say "the evaluation metric choice is unjustified."
-- **writer-thesis** drafts chapters. You review whether the scientific
-  claims in those chapters are defensible.
-
-Typical workflow positions:
-  planner-science → [YOU: challenge plan] → executor → reviewer-deep → [YOU: challenge findings]
-  writer-thesis → [YOU: challenge thesis claims] → Pass 2 in Chat
-```
+| Section | Name | Key changes from v1 |
+|---------|------|---------------------|
+| A | Identity | All `<PLACEHOLDER>` tokens |
+| B | Provenance | +`source_version`, +`source_doi`, +`data_creator`, +`sampling_mechanism` |
+| C | Content and Layout | All `<PLACEHOLDER>` tokens; no dataset-specific numbers |
+| D | Temporal Coverage | `known_gaps` required: true; +`gap_analysis_status` |
+| E | Acquisition Filtering | `impact` → `excluded_count` (int) + `excluded_count_source` + `notes` |
+| F | Verification | 3 → 6 fields; `checksums_available` → `checksum_status`; conditional requirements |
+| G | Immutability and Artifact Link | `immutable` → `immutability` block with `enforcement_mechanism`; `inventory_artifact` required: true |
+| H | Known Limitations (NEW) | `known_biases` (required), `representativeness_notes` (optional) |
+| Z | Examples Appendix (NEW) | SC2-shaped + AoE2-shaped illustrative snippets with non-authoritative warning |
+| -- | Not Covered (comment block) | Deferred Gebru questions with rationale |
 
 ---
 
 ## Implementation Steps
 
-### Step 1 — Create the agent definition file
+### Step 1 — Rewrite the template file
 
-**File:** `.claude/agents/reviewer-adversarial.md`
+**File:** `docs/templates/raw_data_readme_template.yaml`
 
-Write the full agent definition using the frontmatter from §A and the system
-prompt assembled from §B.1–B.7. Total system prompt should be ~250–300 lines
-(comparable to reviewer-deep at ~315 lines).
+Replace the entire file with:
+- Header comment block referencing PHASES.md, scientific-invariants.md, 01_DATA_EXPLORATION_MANUAL.md
+- Usage instructions (same pattern as step_template.yaml)
+- Sections A–H using `<PLACEHOLDER>` tokens for all `value:` fields
+- Section Z examples appendix with SC2-shaped and AoE2-shaped snippets
+- "Not Covered" comment block listing deferred Gebru questions
 
-**Verification:** File exists, YAML frontmatter parses correctly, tool list
-matches design.
+**Style:** Follow `step_template.yaml` conventions:
+- `field: { value: "<PLACEHOLDER>", required: true/false }`
+- Inline `#` comments explaining each field
+- Invariant references where applicable
 
-### Step 2 — Update AGENT_MANUAL.md
+### Step 2 — Verification
 
-**File:** `docs/agents/AGENT_MANUAL.md`
-
-Updates needed:
-1. Add `reviewer-adversarial` to the Quick Reference table with example invocation.
-2. Add a new subsection under "## The 5 Agents" (now 8 agents — rename header
-   to "## The Agents" or "## The 8 Agents").
-3. Add to the Decision Flowchart — branch: "Challenging methodology or
-   defensibility? → @reviewer-adversarial"
-4. Add to the Agent Colors table.
-5. Add to the Model & Cost Strategy table.
-6. Add to Workflow A (Phase Work) as an optional step between planner-science
-   and executor: "Step 2.5: @reviewer-adversarial challenge plan (recommended
-   for Phase 03+)".
-7. Add a new Workflow F for "Methodology Challenge" showing the standalone
-   invocation pattern.
-
-**Verification:** All references are internally consistent. No broken
-cross-references.
-
-### Step 3 — Update CLAUDE.md agent table
-
-**File:** `CLAUDE.md`
-
-Add `reviewer-adversarial` to the agent table under "## Agent Architecture":
-
-```
-| reviewer-adversarial | opus | max | Scientific methodology adversary |
-```
-
-Update count from "5 sub-agents" to "6 sub-agents" (note: there are actually
-already 7 agents in `.claude/agents/` — the CLAUDE.md table is stale at "5").
-
-**Verification:** Table row count matches `.claude/agents/*.md` file count.
-
-### Step 4 — Update the built-in reviewer-deep description
-
-**File:** `.claude/agents/reviewier-deep.md` (note: filename has a typo —
-"reviewier" not "reviewer". Fix the typo as part of this step.)
-
-Add a brief note in reviewer-deep's system prompt clarifying the boundary:
-
-> For pure methodology and scientific defensibility review, defer to
-> `reviewer-adversarial`. This agent focuses on code quality, spec
-> compliance, and structural correctness.
-
-**Verification:** reviewer-deep system prompt updated. File renamed to
-`reviewer-deep.md` (fixing the typo). All references updated.
-
-### Step 5 — Tests and smoke check
-
-Run `claude agents` from the terminal to verify the new agent appears in the
-list with correct model, color, and tool set.
-
-**Verification command:**
 ```bash
-ls -la .claude/agents/reviewer-adversarial.md
-grep -c "name: reviewer-adversarial" .claude/agents/reviewer-adversarial.md
-```
-
-### Step 6 — CHANGELOG entry
-
-Add under `[Unreleased]` → `Added`:
-```
-- `reviewer-adversarial` agent for scientific methodology challenge and thesis defensibility review
+source .venv/bin/activate && python3 -c "import yaml; yaml.safe_load(open('docs/templates/raw_data_readme_template.yaml')); print('YAML OK')"
 ```
 
 ---
 
-## Gate Condition
+## Gate Conditions
 
-- [ ] `.claude/agents/reviewer-adversarial.md` exists with valid YAML frontmatter
-- [ ] `docs/agents/AGENT_MANUAL.md` references the new agent in all relevant sections
-- [ ] `CLAUDE.md` agent table includes the new agent with correct count
-- [ ] `reviewier-deep.md` renamed to `reviewer-deep.md` (typo fix)
-- [ ] `reviewer-deep.md` contains boundary clarification with reviewer-adversarial
-- [ ] `claude agents` shows the new agent (manual verification)
-- [ ] CHANGELOG updated
-
----
-
-## Risks and Mitigations
-
-| Risk | Mitigation |
-|------|-----------|
-| System prompt too long → context waste on every invocation | Target ~250 lines; the 5 lenses are the core, everything else is structural |
-| Overlap with reviewer-deep confuses invocation decisions | Explicit boundary in both agents' prompts + decision flowchart update |
-| Agent finds "flaws" that are actually intentional design choices | Required reading includes ROADMAP and research log — documented decisions are not flaws |
-| Opus cost on every methodology question | Decision flowchart gates usage to Phase 03+ and thesis chapters; quick methodology questions go to planner-science first |
+- [ ] File is non-empty and parses as valid YAML
+- [ ] All fields from sections A–H present with `<PLACEHOLDER>` tokens and `required` flags
+- [ ] No dataset-specific numbers in template body (only in Section Z, clearly marked)
+- [ ] `inventory_artifact` is `required: true` with PENDING sentinel documented
+- [ ] `known_gaps` is `required: true` with `gap_analysis_status` companion
+- [ ] Acquisition filters use `excluded_count` (int) + `excluded_count_source`, not free-text `impact`
+- [ ] Section F has `checksum_status`, `checksum_coverage_pct`, `verification_date`
+- [ ] Section G has `immutability.enforcement_mechanism`
+- [ ] Section H has `known_biases` (required)
+- [ ] Section Z has SC2-shaped and AoE2-shaped examples with non-authoritative warning
+- [ ] Inline comments reference invariants #6, #7, #8 where applicable
+- [ ] Header references authoritative sources
+- [ ] No other files modified
 
 ---
 
-## Not In Scope
+## Adversarial Findings Disposition
 
-- Changing the `reviewer-deep` review checklist content (only adding a boundary note)
-- Adding new slash commands for the agent
-- Modifying settings.json agent descriptions (those are auto-derived from frontmatter)
-- Adding hooks for automatic adversarial review (future enhancement)
+| # | Type | Finding | Disposition |
+|---|------|---------|------------|
+| 1 | BLOCKER | Example values contradict artifacts | FIXED: `<PLACEHOLDER>` tokens; examples in Section Z |
+| 2 | BLOCKER | inventory_artifact optional | FIXED: required: true with PENDING sentinel |
+| 3 | BLOCKER | impact field approximation | FIXED: `excluded_count` (int) + `excluded_count_source` |
+| 4 | WARNING | Checksum logic inconsistent | FIXED: 6 fields with conditional requirements |
+| 5 | WARNING | known_gaps ambiguity | FIXED: required: true + `gap_analysis_status` |
+| 6 | WARNING | Gebru coverage gap | PARTIAL: +6 thesis-relevant fields; remainder deferred with docs |
+| 7 | WARNING | immutable unverifiable | PARTIAL: `enforcement_mechanism` field; infrastructure deferred |
+| 8 | WARNING | No AoE2 example | FIXED: Section Z AoE2-shaped snippet |
+
+---
+
+## Not in Scope
+
+- Updating existing `raw/README.md` files to conform (separate chore PR)
+- Rerunning 01_01_01 to fix stale numbers (separate PR, user-confirmed)
+- Validation script for template coverage (future)
+- Directory hash / manifest infrastructure for immutability enforcement
+- Full 57-question Gebru datasheet (thesis-relevant subset selected; deferred documented)
