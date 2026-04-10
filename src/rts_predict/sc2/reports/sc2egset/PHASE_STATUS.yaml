@@ -13,7 +13,7 @@ dataset_roadmap: src/rts_predict/sc2/reports/sc2egset/ROADMAP.md
 phases:
   "01":
     name: "Data Exploration"
-    status: not_started
+    status: in_progress
   "02":
     name: "Feature Engineering"
     status: not_started
