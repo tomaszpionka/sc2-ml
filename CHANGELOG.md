@@ -19,6 +19,18 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.3] — 2026-04-10 (PR #92: chore/adversarial-review-agent)
+
+### Added
+- `reviewer-adversarial` agent for scientific methodology challenge and thesis defensibility review
+- `docs/agents/AGENT_MANUAL.md`: added `reviewer-adversarial`, `reviewer-deep`, and `writer-thesis` subsections, Workflow F (Methodology Challenge), Quick Reference rows, and Decision Flowchart updates
+
+### Changed
+- Renamed `.claude/agents/reviewier-deep.md` → `reviewer-deep.md` (typo fix)
+- `.claude/agents/reviewer-deep.md`: added scope boundary section clarifying split with `reviewer-adversarial`; fixed "10 invariants" → "8 invariants"; fixed `AGENT_MANUAL.md` path to `docs/agents/AGENT_MANUAL.md`
+- `CLAUDE.md`: agent table expanded from 5 to 8 agents
+- `docs/agents/AGENT_MANUAL.md`: subtitle, agent count, color table, and cost table updated to reflect 8 agents
+
 ## [1.2.2] — 2026-04-10 (PR #91: chore/update-agent-docs-and-rules)
 
 ### Added

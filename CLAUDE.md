@@ -114,7 +114,7 @@ for Phase work or any situation where file overlap is hard to predict.
 
 ## Agent Architecture
 
-5 sub-agents in `.claude/agents/` — see `docs/agents/AGENT_MANUAL.md` for usage.
+8 sub-agents in `.claude/agents/` — see `docs/agents/AGENT_MANUAL.md` for usage.
 
 | Agent | Model | Effort | Role |
 |-------|-------|--------|------|
@@ -122,6 +122,9 @@ for Phase work or any situation where file overlap is hard to predict.
 | `planner` | sonnet | high | Code refactoring, chores, test planning |
 | `executor` | sonnet | high | All implementation (use `/model opus` for hard steps) |
 | `reviewer` | sonnet | high | Post-change validation, catches regressions |
+| `reviewer-adversarial` | opus | max | Scientific methodology adversary, thesis defensibility |
+| `reviewer-deep` | opus | max | Heavyweight PR review, invariant tracing, spec compliance |
+| `writer-thesis` | opus | max | Thesis chapter drafting and revision |
 | `lookup` | haiku | low | Quick git/shell/file questions |
 
 ## Permissions
