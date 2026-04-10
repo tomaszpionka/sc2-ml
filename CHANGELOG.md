@@ -19,6 +19,13 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.6] — 2026-04-10 (PR #95: chore/raw-readme-conformance)
+
+### Changed
+- `src/rts_predict/sc2/data/sc2egset/raw/README.md`: rewritten to conform to `raw_data_readme_template.yaml` (YAML front-matter + Markdown body); all artifact-derived numeric fields marked PENDING until corrected 01_01_01 artifacts are available
+- `src/rts_predict/aoe2/data/aoe2companion/raw/README.md`: rewritten to conform to `raw_data_readme_template.yaml`; all artifact-derived numeric fields marked PENDING
+- `src/rts_predict/aoe2/data/aoestats/raw/README.md`: rewritten to conform to `raw_data_readme_template.yaml`; all artifact-derived numeric fields marked PENDING
+
 ## [1.2.5] — 2026-04-10 (PR #94: chore/fix-agent-definitions)
 
 ### Changed
