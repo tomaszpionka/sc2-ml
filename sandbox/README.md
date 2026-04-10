@@ -67,6 +67,7 @@ committed. See `sandbox/jupytext.toml` for pairing configuration.
 
 - `sandbox/jupytext.toml` — pairing format and metadata filter
 - `sandbox/notebook_config.toml` — cell line cap and execution timeout
+- `docs/templates/notebook_template.yaml` — notebook cell structure and front-matter schema
 
 ## Report artifacts
 

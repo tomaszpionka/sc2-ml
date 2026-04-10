@@ -12,6 +12,7 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- Notebook template v2 at `docs/templates/notebook_template.yaml` -- canonical schema for sandbox notebooks with parameterized placeholders, phase-conditional sections, and temporal leakage verification requirements
 
 ### Changed
 

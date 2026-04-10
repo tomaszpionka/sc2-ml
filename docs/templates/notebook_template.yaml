@@ -1,0 +1,517 @@
+# Notebook Template v2
+#
+# Canonical template for sandbox notebooks (jupytext .py:percent format).
+# Used by executor agents to generate notebooks for Phase work.
+#
+# Authoritative sources:
+#   Taxonomy          docs/TAXONOMY.md
+#   Canonical Phases  docs/PHASES.md
+#   Invariants        .claude/scientific-invariants.md
+#   Sandbox contract  sandbox/README.md
+#   Cell rules        sandbox/notebook_config.toml
+#   Step schema       docs/templates/step_template.yaml
+#
+# Enforcement:
+#   Tier 1 (current): Template documentation + reviewer discipline
+#   Tier 2 (planned): Pre-commit AST-based cell validation
+#   Tier 3 (planned): CI notebook lint against this schema
+#
+# Format: YAML with fenced jupytext cell content in multiline strings.
+# Placeholders use {curly_braces}. All are listed in the placeholders block.
+
+# ── Block 1: Placeholders Registry ──────────────────────────────────────────
+#
+# All placeholders that appear in cell content below are defined here.
+# The executor must substitute every {placeholder} before writing the notebook.
+
+placeholders:
+  game:
+    description: "Game identifier"
+    allowed: ["sc2", "aoe2"]
+    required: true
+
+  dataset:
+    description: "Dataset identifier"
+    allowed: ["sc2egset", "aoe2companion", "aoestats"]
+    required: true
+
+  phase_nn:
+    description: "Two-digit phase number"
+    example: "01"
+    required: true
+
+  phase_name:
+    description: "Phase name from docs/PHASES.md"
+    example: "Data Exploration"
+    required: true
+
+  section_nn_nn:
+    description: "Pipeline section number"
+    example: "01_01"
+    required: true
+
+  section_name:
+    description: "Pipeline section name from docs/PHASES.md"
+    example: "Data Acquisition & Source Inventory"
+    required: true
+
+  step_nn_nn_nn:
+    description: "Step number"
+    example: "01_01_01"
+    required: true
+
+  step_name:
+    description: "Descriptive step name from ROADMAP"
+    example: "File Inventory"
+    required: true
+
+  slug:
+    description: "Filename slug (lowercase, underscores)"
+    example: "file_inventory"
+    required: true
+    usage: "filename only — not used in cell content"
+
+  question:
+    description: "One-sentence scientific question from ROADMAP"
+    required: true
+
+  invariants_applied:
+    description: "Comma-separated list of invariant numbers and short descriptions"
+    example: "#6 (reproducibility), #7 (no magic numbers)"
+    required: true
+
+  git_short_hash:
+    description: "Git short hash at notebook creation time"
+    example: "a1b2c3d"
+    required: true
+
+  roadmap_path:
+    description: "Relative path to the dataset ROADMAP"
+    example: "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
+    required: true
+
+  description_paragraph:
+    description: "Free-text paragraph (1-3 sentences) describing what the notebook does concretely"
+    required: true
+    format: free-text
+
+  CONFIG_CONSTANT:
+    description: "Dataset-specific config constant imported from rts_predict.<game>.config"
+    required: true
+    examples:
+      sc2egset: "REPLAYS_SOURCE_DIR"
+      aoe2companion: "AOE2COMPANION_RAW_DIR"
+      aoestats: "AOESTATS_RAW_DIR"
+
+  artifact_path_1:
+    description: "Full path (relative to repo root) of the first artifact written by this notebook"
+    required: true
+
+  artifact_path_2:
+    description: "Full path (relative to repo root) of the second artifact written by this notebook"
+    required: false
+    note: "Add additional artifact_path_N entries as needed; remove if the notebook writes only one artifact"
+
+# ── Block 2: Cell Definitions ────────────────────────────────────────────────
+#
+# Each cell is defined as a YAML mapping with keys:
+#   cell_id    -- sequential identifier (e.g., "cell_01")
+#   cell_type  -- "markdown" or "code"
+#   required   -- true or false
+#   condition  -- when this cell is included:
+#                 "always" | "duckdb_only" | "phase_02_plus"
+#   content    -- multiline string with the cell content
+#                 (executor writes this as a %% or %% [markdown] cell)
+#   notes      -- guidance for the executor; not written to the notebook
+
+cells:
+
+  cell_01_frontmatter:
+    cell_id: cell_01
+    cell_type: markdown
+    required: true
+    condition: always
+    content: |
+      # Step {step_nn_nn_nn} — {step_name}: {dataset}
+
+      **Phase:** {phase_nn} — {phase_name}
+      **Pipeline Section:** {section_nn_nn} — {section_name}
+      **Dataset:** {dataset}
+      **Question:** {question}
+      **Invariants applied:** {invariants_applied}
+      **ROADMAP reference:** `{roadmap_path}` Step {step_nn_nn_nn}
+      **Commit:** {git_short_hash}
+
+      {description_paragraph}
+    notes: |
+      - Use bold key-value pairs, NOT a markdown table.
+      - The description paragraph is 1-3 sentences explaining what the
+        notebook does concretely. Include layout notes if the data
+        structure is non-obvious (e.g., two-level directory structure,
+        paired subdirectory constraints).
+      - All fields are mandatory. Do not omit any.
+      - The Commit field records the git short hash at notebook creation
+        time. It does NOT auto-update on re-runs.
+
+  cell_02_imports:
+    cell_id: cell_02
+    cell_type: code
+    required: true
+    condition: always
+    content: |
+      import logging
+      from pathlib import Path
+
+      from rts_predict.common.notebook_utils import get_reports_dir
+      # ... other imports from src/rts_predict/ ...
+
+      logging.basicConfig(level=logging.INFO)
+      logger = logging.getLogger(__name__)
+    notes: |
+      - All imports from src/rts_predict/. No inline definitions.
+      - logging setup is mandatory for auditability (all counts and
+        computations must be traceable via logger output).
+      - Do NOT import get_notebook_db here unless this is a DuckDB notebook.
+      - Additional standard library imports (json, statistics, re, etc.)
+        are allowed in this cell.
+
+  cell_03_paths:
+    cell_id: cell_03
+    cell_type: code
+    required: true
+    condition: always
+    content: |
+      from rts_predict.{game}.config import {CONFIG_CONSTANT}
+
+      RAW_DIR: Path = {CONFIG_CONSTANT}
+      ARTIFACTS_DIR: Path = get_reports_dir("{game}", "{dataset}") / "artifacts" / "{section_nn_nn}"
+      ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+      logger.info("Source directory: %s", RAW_DIR)
+      logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
+    notes: |
+      - Paths derived from config, never hardcoded.
+      - ARTIFACTS_DIR always uses get_reports_dir() + "artifacts/" + section number.
+      - The {CONFIG_CONSTANT} placeholder is dataset-specific:
+          sc2egset      -> REPLAYS_SOURCE_DIR
+          aoe2companion -> AOE2COMPANION_RAW_DIR
+          aoestats      -> AOESTATS_RAW_DIR
+      - Log both source and artifacts directories for reproducibility.
+
+  cell_04_duckdb_setup:
+    cell_id: cell_04
+    cell_type: code
+    required: false
+    condition: duckdb_only
+    content: |
+      from rts_predict.common.notebook_utils import get_notebook_db
+
+      con = get_notebook_db("{game}", "{dataset}")
+    notes: |
+      - Include this cell ONLY if the notebook queries DuckDB.
+      - Phase 01 file inventory notebooks do NOT need this cell.
+      - Phase 02+ notebooks that compute features from DuckDB DO need it.
+      - The {game} and {dataset} placeholders prevent copy-paste errors.
+      - get_notebook_db() opens a read-only connection by default.
+        Document any write-access need in the front-matter.
+
+  cells_05_to_n_analysis:
+    cell_id: "cell_05 ... cell_N (variable)"
+    cell_type: "alternating code + markdown"
+    required: true
+    condition: always
+    content: |
+      # Each analysis step is a code cell followed by a markdown
+      # interpretation cell.
+      #
+      # The code cell runs the query, filesystem scan, or computation.
+      # The markdown cell interprets the result: what does this number mean?
+      # What is surprising? What is consistent with expectations?
+      #
+      # Rules enforced by this template:
+      #   - Max 50 lines per cell (sandbox/notebook_config.toml).
+      #   - No inline def / class / lambda assignments.
+      #   - Every query or computation code cell must be followed by a
+      #     markdown interpretation cell within 2 cells.
+      #   - Per Invariant #6: report artifacts must embed the exact code
+      #     that produced each number. The notebook cell is the derivation
+      #     code, traceable via the paired .ipynb.
+      #   - Per Invariant #7: every threshold must be justified by
+      #     empirical evidence or literature citation. Add a comment or
+      #     markdown note for each threshold used.
+    notes: |
+      - The number of analysis cells varies by Step.
+      - The step_template.yaml 'method' field describes the analytical
+        approach for each Step; use it to determine what analysis cells
+        to generate.
+      - Stratification (by tournament, by year, by matchup, by race)
+        should be visible in the code cells, not hidden in helper
+        functions. Corpus-wide single-number aggregates are not
+        acceptable as the sole output.
+
+  cell_leakage_verification:
+    cell_id: "cell_N+1 (before Conclusion)"
+    cell_type: "code + markdown pair"
+    required: false
+    condition: phase_02_plus
+    content: |
+      # %% [markdown]
+      # ## Temporal Leakage Verification
+      #
+      # Per Scientific Invariant #3: no feature for game T may use
+      # information from game T or later. This cell programmatically
+      # verifies that constraint.
+
+      # %%
+      # Verification code here. Must assert that:
+      # 1. All feature computation windows end strictly before game T.
+      # 2. Rolling aggregates exclude the target game's own value.
+      # 3. Head-to-head counts exclude the target game.
+      #
+      # Example (adapt to the specific feature):
+      # assert (features_df["feature_timestamp"] < features_df["game_timestamp"]).all()
+
+      # %% [markdown]
+      # **Verification result:** {describe what was checked and whether it passed}
+    notes: |
+      - REQUIRED for Phase 02, 03, 04, 05, 06 notebooks that touch
+        features or model predictions.
+      - The verification must be programmatic (an assert or a check that
+        logs a PASS/FAIL result), not just a prose claim.
+      - If the notebook does not compute features or predictions (e.g., a
+        pure profiling notebook in Phase 02), document why leakage
+        verification is not applicable in the markdown cell.
+      - Three leakage failure modes to check explicitly:
+          (a) Rolling aggregates that include the target game's own value.
+          (b) Head-to-head win rates that include the target game.
+          (c) Within-tournament features that include the target game's
+              position relative to later games in the same tournament.
+
+  cell_conclusion:
+    cell_id: "cell_N+2 (last markdown)"
+    cell_type: markdown
+    required: true
+    condition: always
+    content: |
+      ## Conclusion
+
+      ### Artifacts produced
+      - `{artifact_path_1}` — {one-line description}
+      - `{artifact_path_2}` — {one-line description}
+
+      ### Thesis mapping
+      - {section path in thesis/THESIS_STRUCTURE.md, copied from ROADMAP step definition}
+
+      ### Follow-ups
+      - {what the next Step or Pipeline Section should investigate}
+      - {any deferred decisions or open questions from this notebook}
+    notes: |
+      - This section is MANDATORY for every notebook.
+      - Artifacts produced must list every file written by this notebook,
+        with full paths relative to the repo root.
+      - Thesis mapping must match the thesis_mapping field in the ROADMAP
+        step definition (step_template.yaml).
+      - Follow-ups replace the bare "Verification" section used in
+        existing Phase 01 notebooks. The Verification content (if needed)
+        moves into a brief statement inside Conclusion, not a separate
+        top-level section.
+      - If the notebook is a pure inventory with no interpretive findings,
+        the Conclusion still lists artifacts and thesis mapping.
+
+  cell_cleanup:
+    cell_id: "cell_N+3 (last code, duckdb only)"
+    cell_type: code
+    required: false
+    condition: duckdb_only
+    content: |
+      con.close()
+    notes: |
+      - Include ONLY if cell_04_duckdb_setup was included.
+      - For filesystem-only (Pattern B) notebooks, no cleanup cell is needed.
+      - Place this cell after the Conclusion markdown cell so cleanup
+        does not interrupt the narrative flow.
+
+# ── Block 3: Phase-Conditional Additional Sections ───────────────────────────
+#
+# For Phase 02+, the cells_05_to_n_analysis block expands to include additional
+# required sections. The executor uses this lookup table to determine which
+# extra cells to insert for a given Phase.
+#
+# These sections are inserted between the analysis cells (cell_05..N) and the
+# Conclusion cell. The leakage_verification requirement is listed here for
+# clarity but is also specified in cell_leakage_verification above.
+
+phase_conditional_sections:
+
+  # Note: pipe-separated values in additional_front_matter_fields are choices —
+  # the executor picks the one that applies and removes the others.
+  phase_02:
+    description: "Feature Engineering"
+    additional_front_matter_fields:
+      - "**Feature category:** pre-game | in-game | context"
+    additional_required_sections:
+      - name: "Symmetry Verification"
+        description: >
+          Verify that features are computed identically for both players
+          in the match, per Scientific Invariant #5. A feature that
+          differs in computation method between player 1 and player 2
+          introduces a systematic asymmetry that biases predictions.
+        cell_type: "code + markdown pair"
+      - name: "Cold-Start Handling"
+        description: >
+          Document how players with fewer than N historical games are
+          handled (e.g., default Elo, global average, exclusion).
+          The threshold N must be justified empirically or by literature.
+        cell_type: markdown
+    leakage_verification: required
+
+  phase_03:
+    description: "Splitting & Baselines"
+    additional_front_matter_fields:
+      - "**Split strategy:** {description of temporal split}"
+    additional_required_sections:
+      - name: "Split Validation"
+        description: >
+          Verify no temporal leakage across train/val/test boundaries.
+          Assert that the latest timestamp in the training set is strictly
+          before the earliest timestamp in the validation set, and that
+          the latest validation timestamp is strictly before the earliest
+          test timestamp.
+        cell_type: "code + markdown pair"
+      - name: "Baseline Comparison"
+        description: >
+          Compare against the baseline hierarchy (Dummy -> Elo -> LR).
+          Each baseline must be trained and evaluated under the same
+          temporal split as the main model.
+        cell_type: "code + markdown pair"
+    leakage_verification: required
+
+  phase_04:
+    description: "Model Training"
+    additional_front_matter_fields:
+      - "**Experiment ID:** {unique experiment identifier}"
+      - "**Hypothesis:** {what we expect and why}"
+    additional_required_sections:
+      - name: "Hyperparameter Table"
+        description: >
+          Markdown table of all hyperparameters with their values and
+          justifications. Each hyperparameter must be justified by
+          empirical evidence, literature citation, or a documented
+          grid/random search result. No magic numbers per Invariant #7.
+        cell_type: markdown
+    leakage_verification: required
+
+  phase_05:
+    description: "Evaluation & Analysis"
+    additional_front_matter_fields: []
+    additional_required_sections:
+      - name: "Statistical Test Justification"
+        description: >
+          Document which statistical test is used and why. State the
+          null hypothesis, test statistic, significance level, and
+          whether corrections for multiple comparisons are applied.
+        cell_type: "code + markdown pair"
+      - name: "Assumptions Check"
+        description: >
+          Programmatically verify the assumptions of the chosen statistical
+          test (e.g., normality for t-test, independence of samples).
+          Log PASS/FAIL for each assumption.
+        cell_type: "code + markdown pair"
+    leakage_verification: required
+
+  phase_06:
+    description: "Cross-Domain Transfer"
+    additional_front_matter_fields:
+      - "**Transfer direction:** sc2 -> aoe2 | aoe2 -> sc2 | bidirectional"
+    additional_required_sections:
+      - name: "Domain Shift Documentation"
+        description: >
+          Document the distributional differences between source and
+          target domains. Include at least: feature value range comparison,
+          label distribution comparison, and temporal coverage comparison.
+          Use a code cell to compute the comparisons, followed by a
+          markdown interpretation.
+        cell_type: "code + markdown pair"
+    leakage_verification: required
+
+# ── Block 4: Hard Rules Reference ────────────────────────────────────────────
+#
+# These rules are enforced at Tier 1 (documentation + reviewer discipline).
+# Tier 2 (pre-commit AST check) and Tier 3 (CI lint) are planned separately.
+
+hard_rules:
+
+  - rule: "No inline definitions"
+    source: "sandbox/README.md"
+    description: >
+      No def, class, or lambda assignments in any cell. All non-trivial
+      Python logic lives in src/rts_predict/ and is imported by the
+      notebook. Cells are thin orchestration only.
+
+  - rule: "Cell size cap"
+    source: "sandbox/notebook_config.toml"
+    description: >
+      Max 50 lines per cell. A cell approaching the cap is a signal to
+      extract logic to src/rts_predict/. The cap applies to code cells;
+      markdown cells are not counted but should be concise.
+
+  - rule: "Read-only DuckDB"
+    source: "sandbox/README.md"
+    description: >
+      Use get_notebook_db() from rts_predict.common.notebook_utils.
+      Connections are read-only by default. Any write-access need must
+      be documented in the notebook front-matter.
+
+  - rule: "Both files committed"
+    source: "sandbox/README.md"
+    description: >
+      Always stage both .ipynb and .py of a jupytext pair. The
+      pre-commit hook verifies content matching but does not enforce
+      that both are staged. Staging both is the author's responsibility.
+
+  - rule: "Artifacts to artifacts/ subdir"
+    source: "sandbox/README.md"
+    description: >
+      Write all report artifacts (CSV, JSON, MD, PNG) to
+      get_reports_dir("{game}", "{dataset}") / "artifacts" / "{section_nn_nn}".
+      Never write to the dataset report root directly. The artifacts/
+      subdirectory is the only valid target for machine-generated outputs.
+
+  - rule: "Markdown after code"
+    source: "This template (cell_05_to_n_analysis)"
+    description: >
+      Every query or computation code cell must be followed by a markdown
+      interpretation cell within 2 cells. The interpretation must state
+      what the result means, not just restate the numbers.
+
+  - rule: "No magic numbers"
+    source: ".claude/scientific-invariants.md #7"
+    description: >
+      Every threshold, cutoff, or constant used in analysis must be
+      justified by empirical evidence or literature citation. Add a
+      comment or markdown note for each threshold. The comment must
+      name the source (paper, empirical measurement, ROADMAP decision).
+
+  - rule: "Temporal discipline"
+    source: ".claude/scientific-invariants.md #3"
+    description: >
+      No feature for game T may use information from game T or later.
+      Use strictly match_time < T (not <=) when filtering historical
+      data for game T. For Phase 02+ notebooks, the Temporal Leakage
+      Verification section is mandatory.
+
+  - rule: "Logging mandatory"
+    source: "This template (cell_02_imports)"
+    description: >
+      logging.basicConfig(level=logging.INFO) and
+      logger = logging.getLogger(__name__) are required in every
+      notebook. All counts, file paths, and key intermediate results
+      must be logged at INFO level for auditability.
+
+  - rule: "Commit field in front-matter"
+    source: "This template (cell_01_frontmatter)"
+    description: >
+      The Commit field records the git short hash at notebook creation
+      time. The executor populates this once at creation. It does NOT
+      auto-update on re-runs. This hash transitively pins the full
+      dependency environment via poetry.lock.
