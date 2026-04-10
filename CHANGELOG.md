@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.0] — 2026-04-09 (PR #89: feat/phase01-step-01-01-01-file-inventory)
+
+### Added
+- Step 01_01_01 file inventory notebooks for sc2egset, aoe2companion, and aoestats
+- File inventory artifacts (JSON + Markdown) for all 3 datasets
+- Step 01_01_01 definitions in all 3 dataset ROADMAPs
+- Research log entry for Step 01_01_01
+
 ## [1.1.0] — 2026-04-09 (PR #88: feat/phase01-discovery-library)
 
 ### Added

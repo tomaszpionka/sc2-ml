@@ -1,0 +1,71 @@
+{
+  "step": "01_01_01",
+  "dataset": "aoe2companion",
+  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoe2companion/raw",
+  "total_files": 4154,
+  "total_bytes": 9843821102,
+  "num_subdirs": 4,
+  "files_at_root": 3,
+  "subdirs": [
+    {
+      "name": "leaderboards",
+      "file_count": 2,
+      "total_bytes": 87365391,
+      "total_mb": 83.32,
+      "extensions": {
+        "": 1,
+        ".parquet": 1
+      }
+    },
+    {
+      "name": "matches",
+      "file_count": 2074,
+      "total_bytes": 6943170493,
+      "total_mb": 6621.52,
+      "extensions": {
+        "": 1,
+        ".parquet": 2073
+      }
+    },
+    {
+      "name": "profiles",
+      "file_count": 2,
+      "total_bytes": 169703153,
+      "total_mb": 161.84,
+      "extensions": {
+        "": 1,
+        ".parquet": 1
+      }
+    },
+    {
+      "name": "ratings",
+      "file_count": 2073,
+      "total_bytes": 2641982859,
+      "total_mb": 2519.59,
+      "extensions": {
+        "": 1,
+        ".csv": 2072
+      }
+    }
+  ],
+  "date_analysis": {
+    "matches": {
+      "earliest": "2020-08-01",
+      "latest": "2026-04-04",
+      "count": 2073,
+      "gaps": []
+    },
+    "ratings": {
+      "earliest": "2020-08-01",
+      "latest": "2026-04-04",
+      "count": 2072,
+      "gaps": [
+        {
+          "after": "2025-07-10",
+          "before": "2025-07-12",
+          "gap_days": 2
+        }
+      ]
+    }
+  }
+}

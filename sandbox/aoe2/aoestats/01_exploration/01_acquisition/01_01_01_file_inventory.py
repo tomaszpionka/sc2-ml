@@ -1,0 +1,214 @@
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:percent
+#     notebook_metadata_filter: kernelspec,jupytext
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.1
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# %% [markdown]
+# # Step 01_01_01 — File Inventory: aoestats
+#
+# **Phase:** 01 — Data Exploration
+# **Pipeline Section:** 01_01 — Data Acquisition & Source Inventory
+# **Dataset:** aoestats
+# **Question:** What files exist on disk, how many are there, and how are they organized?
+#
+# This notebook walks the aoestats raw directory and counts everything.
+# For weekly-file subdirectories, it extracts date ranges from filenames
+# and checks whether paired directories have matching file counts and
+# date ranges.
+
+# %%
+import json
+import logging
+import re
+import statistics
+from pathlib import Path
+
+from rts_predict.common.inventory import inventory_directory
+from rts_predict.common.notebook_utils import get_reports_dir
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# %%
+from rts_predict.aoe2.config import AOESTATS_RAW_DIR
+
+RAW_DIR: Path = AOESTATS_RAW_DIR
+ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_01"
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+logger.info("Raw directory: %s", RAW_DIR)
+logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
+
+# %%
+result = inventory_directory(RAW_DIR)
+
+logger.info("Total files: %d", result.total_files)
+logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
+logger.info("Subdirectories: %d", len(result.subdirs))
+logger.info("Files at root: %d", len(result.files_at_root))
+
+# %%
+subdir_data = []
+for sd in result.subdirs:
+    subdir_data.append({
+        "name": sd.name,
+        "file_count": sd.file_count,
+        "total_bytes": sd.total_bytes,
+        "total_mb": round(sd.total_bytes / (1024 * 1024), 2),
+        "extensions": sd.extensions,
+    })
+
+file_counts = [sd.file_count for sd in result.subdirs]
+if file_counts:
+    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
+                min(file_counts), max(file_counts), statistics.median(file_counts))
+
+# %%
+from datetime import date
+
+# aoestats files are named like: 2024-01-01_2024-01-07_matches.parquet
+# Extract start_date and end_date from each filename.
+WEEK_PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})")
+
+date_analysis = {}
+for sd in result.subdirs:
+    weeks: list[tuple[date, date]] = []
+    for f in sd.files:
+        match = WEEK_PATTERN.search(f.path.stem)
+        if match:
+            try:
+                start = date.fromisoformat(match.group(1))
+                end = date.fromisoformat(match.group(2))
+                weeks.append((start, end))
+            except ValueError:
+                pass
+    if weeks:
+        weeks.sort()
+        starts = [w[0] for w in weeks]
+        ends = [w[1] for w in weeks]
+        # Check for gaps between consecutive weeks
+        gaps = []
+        for i in range(1, len(weeks)):
+            prev_end = weeks[i - 1][1]
+            curr_start = weeks[i][0]
+            delta = (curr_start - prev_end).days
+            if delta > 1:
+                gaps.append({
+                    "prev_end": str(prev_end),
+                    "next_start": str(curr_start),
+                    "gap_days": delta,
+                })
+        date_analysis[sd.name] = {
+            "earliest_start": str(starts[0]),
+            "latest_end": str(ends[-1]),
+            "week_count": len(weeks),
+            "gaps": gaps,
+        }
+        logger.info("Subdir %s: %s to %s (%d weeks, %d gaps)",
+                     sd.name, starts[0], ends[-1], len(weeks), len(gaps))
+
+# %%
+# Discover paired directories by checking which subdirs share date ranges.
+# We do NOT assume matches/players pairing — we discover it.
+paired_report = {}
+subdir_names = [sd.name for sd in result.subdirs]
+for name_a in subdir_names:
+    for name_b in subdir_names:
+        if name_a >= name_b:
+            continue
+        if name_a in date_analysis and name_b in date_analysis:
+            a = date_analysis[name_a]
+            b = date_analysis[name_b]
+            paired_report[f"{name_a} vs {name_b}"] = {
+                "count_match": a["week_count"] == b["week_count"],
+                f"{name_a}_weeks": a["week_count"],
+                f"{name_b}_weeks": b["week_count"],
+                "date_range_match": (
+                    a["earliest_start"] == b["earliest_start"]
+                    and a["latest_end"] == b["latest_end"]
+                ),
+            }
+
+for pair, info in paired_report.items():
+    logger.info("Pair %s: count_match=%s, date_range_match=%s",
+                pair, info["count_match"], info["date_range_match"])
+
+# %%
+artifact = {
+    "step": "01_01_01",
+    "dataset": "aoestats",
+    "raw_dir": str(RAW_DIR),
+    "total_files": result.total_files,
+    "total_bytes": result.total_bytes,
+    "num_subdirs": len(result.subdirs),
+    "files_at_root": len(result.files_at_root),
+    "subdirs": subdir_data,
+    "date_analysis": date_analysis,
+    "paired_comparison": paired_report,
+}
+
+json_path = ARTIFACTS_DIR / "01_01_01_file_inventory.json"
+json_path.write_text(json.dumps(artifact, indent=2, default=str))
+logger.info("JSON artifact written: %s", json_path)
+
+# %%
+lines = [
+    "# Step 01_01_01 — File Inventory: aoestats\n",
+    f"**Raw directory:** `{RAW_DIR}`\n",
+    f"**Total files:** {result.total_files}\n",
+    f"**Total size:** {result.total_bytes / (1024**2):.2f} MB\n",
+    f"**Subdirectories:** {len(result.subdirs)}\n",
+    f"**Files at root level:** {len(result.files_at_root)}\n",
+    "\n## Per-subdirectory breakdown\n",
+    "| Subdirectory | Files | Size (MB) | Extensions |",
+    "|---|---|---|---|",
+]
+for sd in subdir_data:
+    ext_str = ", ".join(f"{k}: {v}" for k, v in sorted(sd["extensions"].items()))
+    lines.append(f"| {sd['name']} | {sd['file_count']} | {sd['total_mb']} | {ext_str} |")
+
+if date_analysis:
+    lines.extend(["\n## Date range analysis\n"])
+    for name, info in sorted(date_analysis.items()):
+        lines.append(f"### {name}\n")
+        lines.append(f"- Date range: {info['earliest_start']} to {info['latest_end']}")
+        lines.append(f"- Weeks found: {info['week_count']}")
+        if info["gaps"]:
+            lines.append(f"- Gaps found: {len(info['gaps'])}")
+            for g in info["gaps"]:
+                lines.append(
+                    f"  - {g['prev_end']} -> {g['next_start']} ({g['gap_days']} days)"
+                )
+        else:
+            lines.append("- No gaps found")
+        lines.append("")
+
+if paired_report:
+    lines.extend(["\n## Paired directory comparison\n"])
+    lines.append("| Pair | Count match | Date range match |")
+    lines.append("|---|---|---|")
+    for pair, info in sorted(paired_report.items()):
+        lines.append(
+            f"| {pair} | {info['count_match']} | {info['date_range_match']} |"
+        )
+
+md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"
+md_path.write_text("\n".join(lines) + "\n")
+logger.info("Markdown artifact written: %s", md_path)
+
+# %% [markdown]
+# ## Verification
+#
+# The artifacts have been written. The counts above ARE the authoritative
+# inventory — they are not compared against any prior documentation.

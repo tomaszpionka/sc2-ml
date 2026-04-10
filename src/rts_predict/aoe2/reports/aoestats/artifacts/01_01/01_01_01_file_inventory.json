@@ -1,0 +1,100 @@
+{
+  "step": "01_01_01",
+  "dataset": "aoestats",
+  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoestats/raw",
+  "total_files": 349,
+  "total_bytes": 3956914000,
+  "num_subdirs": 3,
+  "files_at_root": 2,
+  "subdirs": [
+    {
+      "name": "matches",
+      "file_count": 173,
+      "total_bytes": 640212356,
+      "total_mb": 610.55,
+      "extensions": {
+        "": 1,
+        ".parquet": 172
+      }
+    },
+    {
+      "name": "overview",
+      "file_count": 2,
+      "total_bytes": 21706,
+      "total_mb": 0.02,
+      "extensions": {
+        "": 1,
+        ".json": 1
+      }
+    },
+    {
+      "name": "players",
+      "file_count": 172,
+      "total_bytes": 3316503745,
+      "total_mb": 3162.86,
+      "extensions": {
+        "": 1,
+        ".parquet": 171
+      }
+    }
+  ],
+  "date_analysis": {
+    "matches": {
+      "earliest_start": "2022-08-28",
+      "latest_end": "2026-02-07",
+      "week_count": 172,
+      "gaps": [
+        {
+          "prev_end": "2024-07-20",
+          "next_start": "2024-09-01",
+          "gap_days": 43
+        },
+        {
+          "prev_end": "2024-09-28",
+          "next_start": "2024-10-06",
+          "gap_days": 8
+        },
+        {
+          "prev_end": "2025-03-22",
+          "next_start": "2025-03-30",
+          "gap_days": 8
+        }
+      ]
+    },
+    "players": {
+      "earliest_start": "2022-08-28",
+      "latest_end": "2026-02-07",
+      "week_count": 171,
+      "gaps": [
+        {
+          "prev_end": "2024-07-20",
+          "next_start": "2024-09-01",
+          "gap_days": 43
+        },
+        {
+          "prev_end": "2024-09-28",
+          "next_start": "2024-10-06",
+          "gap_days": 8
+        },
+        {
+          "prev_end": "2025-03-22",
+          "next_start": "2025-03-30",
+          "gap_days": 8
+        },
+        {
+          "prev_end": "2025-11-15",
+          "next_start": "2025-11-23",
+          "gap_days": 8
+        }
+      ]
+    }
+  },
+  "paired_comparison": {
+    "matches vs players": {
+      "count_match": false,
+      "matches_weeks": 172,
+      "players_weeks": 171,
+      "date_range_match": true
+    }
+  }
+}
