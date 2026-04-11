@@ -12,12 +12,33 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- `docs/templates/phase_template.yaml` — ROADMAP authoring template for Phase blocks
+- `docs/templates/pipeline_section_template.yaml` — ROADMAP authoring template for Pipeline Section blocks
+- `docs/templates/dataset_roadmap_template.yaml` — ROADMAP document structure template
+- `docs/templates/research_log_template.yaml` — research log document structure template
+- `docs/templates/phase_status_template.yaml` — schema for PHASE_STATUS.yaml files
+- `docs/templates/pipeline_section_status_template.yaml` — schema for PIPELINE_SECTION_STATUS.yaml files
+- `docs/templates/step_status_template.yaml` — schema for STEP_STATUS.yaml files
+- PIPELINE_SECTION_STATUS.yaml for all 3 datasets (sc2egset, aoe2companion, aoestats)
 
 ### Changed
+- STEP_STATUS.yaml: added `game` and `pipeline_section` fields (all 3 datasets); updated derivation comments to three-tier chain
+- PHASE_STATUS.yaml: added derivation chain comments (all 3 datasets)
+- ARCHITECTURE.md: documented full status tracking hierarchy (three-tier chain, game package contract table, progress tracking section)
+- CLAUDE.md: added PIPELINE_SECTION_STATUS.yaml to Key File Locations
 
 ### Fixed
 
 ### Removed
+
+## [3.0.1] — 2026-04-11 (PR #106: chore/hooks-and-permissions)
+
+### Added
+- `scripts/hooks/log-bash.sh` — PreToolUse hook that appends every Bash invocation to `~/.claude/bash-audit.log` for full audit trail across all agents and sub-agents
+- `scripts/hooks/README.md` — documents all four hooks with useful query commands for each log
+
+### Changed
+- `.claude/settings.json` — replaced ~50 per-command `Bash(cmd:*)` allow entries (several broken due to wrong `:` separator) with a single `Bash(*)` wildcard; same consolidation for `Write(*)`/`Edit(*)`; deny list unchanged; added `PreToolUse` Bash hook entry
 
 ## [3.0.0] — 2026-04-11 (PR #105: chore/pre-01_01_02-housekeeping)
 
