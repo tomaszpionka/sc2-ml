@@ -174,7 +174,7 @@ execute part of a Step, one Step, or multiple Steps.
 A single executable plan scoped to one pull request. A Spec is authored by
 a planner agent, reviewed and approved by the user, then executed by the
 executor agent. The canonical location for the active Spec is
-`_current_plan.md` at the repo root.
+`planning/current_plan.md` at the repo root.
 
 ### PR
 
@@ -197,9 +197,71 @@ Work classification. Drives branch prefix and agent routing.
 ### Session
 
 One conversation with Claude (chat or code). A Spec is typically split
-across two Sessions: a planning Session that authors `_current_plan.md`,
+across two Sessions: a planning Session that authors `planning/current_plan.md`,
 and an execution Session that carries out the plan. The split is
 deliberate — it forces an explicit approval checkpoint.
+
+### DAG
+
+A Directed Acyclic Graph representing the execution schedule for a single
+Spec. One DAG corresponds to exactly one Spec and one PR. The DAG is a
+derived artifact: it is generated from `planning/current_plan.md` after
+user approval. The canonical location for the active DAG is
+`planning/dags/DAG.yaml`.
+
+A DAG contains Jobs. Jobs contain Task Groups. Task Groups contain Tasks.
+The graph edges represent execution dependencies: a Task Group that
+depends on another cannot begin until the dependency completes and its
+review gate passes.
+
+**Relationship to the science hierarchy:** A DAG may execute part of a
+Step, one Step, or multiple Steps. The DAG's `step_refs` field links to
+the science hierarchy for traceability, but the DAG does not own or
+redefine Step numbering.
+
+### Job
+
+A named logical unit within a DAG. Jobs are independent top-level
+containers. In most cases a DAG has exactly one Job. Multiple Jobs exist
+when a single Spec spans truly independent workstreams (e.g., SC2 and
+AoE2 parallel execution within the same PR).
+
+Jobs are identified by `J01`, `J02`, etc. This prefix is distinct from
+the Step numbering convention (`NN_NN_NN`) to prevent confusion.
+
+### Task Group
+
+An ordered group of Tasks within a Job. Task Groups execute sequentially
+when they have dependencies (`depends_on`), or in parallel when they do
+not. A review gate runs automatically after every Task Group completes.
+
+Task Groups are identified by `TG01`, `TG02`, etc.
+
+The review gate is the natural unit of git commits: the parent session
+commits all changes from a Task Group as a single commit after the
+review gate passes. This produces an auditable PR with one commit per
+Task Group.
+
+**Relationship to Pipeline Section:** A Task Group is NOT a synonym for
+Pipeline Section. A Pipeline Section is a science hierarchy unit that may
+span multiple Task Groups across multiple DAGs. A Task Group is a single
+dispatch batch within one DAG.
+
+### Task
+
+A single agent invocation within a Task Group. One Task corresponds to
+one spec file (`planning/specs/spec_NN_<slug>.md`) and one agent
+dispatch. Tasks within a Task Group MAY run in parallel if their
+`file_scope` declarations do not overlap.
+
+Tasks are identified by `T01`, `T02`, etc.
+
+**Relationship to Step:** A Task is NOT a synonym for Step. A Step is the
+atomic leaf unit of the science hierarchy; it produces one notebook and
+its artifacts. A Task is an operational dispatch unit; it may implement
+part of a Step (e.g., just the library code), or a non-science operation
+(e.g., updating a research log). Multiple Tasks across one or more Task
+Groups may be needed to complete a single Step.
 
 ---
 
@@ -211,9 +273,6 @@ English; they just don't name formal units of work.
 
 - **Stage** — not used. Historically overloaded in the repo. If Stage-like
   coordination is needed, use Phase.
-- **Task** — not used as a formal unit.
-- **Job** — not used. Reserved for batch-processing connotations that don't
-  apply here.
 - **Experiment** — not used as a formal unit. It appears in prose referring
   to ML experiments in the Phase 5 sense; that usage is unrelated to work
   organisation.

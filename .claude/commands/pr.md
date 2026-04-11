@@ -108,5 +108,5 @@ Report the PR URL if visible in the gh output.
   commands for the user to execute.
 - ALWAYS use absolute paths for ephemeral files.
 - ALWAYS use `source .venv/bin/activate &&` before poetry commands.
-- If `_current_plan.md` exists, check whether it should be deleted or kept
-  for the PR description context.
+- If `planning/current_plan.md` contains a non-empty plan, check whether it
+  should be purged or kept for the PR description context.

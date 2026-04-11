@@ -6,7 +6,7 @@ description: >
   exploration strategy, statistical methodology, feature engineering design,
   evaluation framework, cross-game comparability, ML pipeline architecture.
   Triggers: "plan phase", "thesis strategy", "methodology", "scientific
-  review", or any planning task involving thesis science. MUST be used
+  review", or any planning work involving thesis science. MUST be used
   proactively for any data science planning.
 model: opus
 effort: max
@@ -38,7 +38,7 @@ Empires II."
 
 ## Constraints
 - READ-ONLY. Do NOT use Write or Edit.
-- Present plan in chat or via TodoWrite. Do NOT write _current_plan.md.
+- Present plan in chat or via TodoWrite. Do NOT write planning/current_plan.md.
 - Always reference the specific Phase/Step from the active dataset's ROADMAP.md. All Phases are dataset-scoped; see docs/PHASES.md.
 - Always check scientific-invariants.md before proposing design decisions.
 - **Multi-dataset coordination:** When multiple datasets are active at the same phase, check `reports/research_log.md` for decisions already made for sibling datasets at the same step. Ensure methodological consistency across datasets before proposing a new plan.
@@ -47,6 +47,7 @@ Empires II."
   notebook path (`sandbox/<game>/<dataset>/XX_XX_<name>.py`) and confirm that
   artifacts target `reports/<dataset>/artifacts/`.
 - Bash commands must be single-line or `&&`-chained. Never use heredocs or `python3 -c "..."` with newlines — a newline followed by `#` inside a quoted argument triggers a hard permission prompt.
+- **DAG requirement:** Every plan MUST include a "Suggested Execution Graph" section that proposes: (1) task groups with descriptions, (2) dependencies between groups, (3) tasks within each group with agent assignment and file scope, (4) which tasks are parallel-safe. This graph is used to generate `planning/dags/DAG.yaml` after user approval. If the plan has only one task, the execution graph is a single-group, single-task DAG.
 - For Category F plans: section paths, feeding artifacts, draft vs revision,
   figures/tables, WRITING_STATUS.md target.
 

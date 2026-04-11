@@ -1,7 +1,7 @@
 # Sandbox
 
 This directory is a sandbox. Working documents live here. For the authoritative
-plan, see `_current_plan.md`. For the canonical Phase list, see `docs/PHASES.md`.
+plan, see `planning/current_plan.md`. For the canonical Phase list, see `docs/PHASES.md`.
 For terminology, see `docs/TAXONOMY.md`.
 
 ## Purpose
@@ -9,7 +9,7 @@ For terminology, see `docs/TAXONOMY.md`.
 Exploration workspace for SC2 and AoE2 phase work. Each notebook is an
 executable artifact — query, output, narrative, and interpretation in one
 place. Notebooks complement the `src/rts_predict/` modules; they do not replace
-them. See `_current_plan.md` sections A.1–A.3 for full rationale.
+them. See `planning/current_plan.md` sections A.1–A.3 for full rationale.
 
 ## Directory structure
 

@@ -11,7 +11,7 @@ How to use the 8-agent Claude Code architecture for the master's thesis.
 | Quick question (git, files, commands) | `@lookup what branch am I on?` |
 | Plan a Phase step or thesis methodology | `@planner-science plan Phase 01 step 01_01_01` |
 | Plan a refactoring or chore | `@planner plan test coverage for exploration.py` |
-| Execute any plan steps | `@executor execute steps 3-5 from _current_plan.md` |
+| Execute any plan steps | `@executor execute steps 3-5 from planning/current_plan.md` |
 | Hard step needing Opus reasoning | `/model opus` then work normally, `/model sonnet` after |
 | Validate work after execution | `@reviewer review changes` |
 | Heavyweight PR / spec review | `@reviewer-deep deep review of PR before merge` |
@@ -69,7 +69,7 @@ Produces a detailed plan with phase/step references, file lists, function
 signatures, SQL queries, test cases, and gate conditions.
 
 **What it does NOT do:** Write any files. It's read-only. You approve the plan,
-then write it to `_current_plan.md` (or let the parent session do it).
+then write it to `planning/current_plan.md` (or let the parent session do it).
 
 **Example:**
 ```
@@ -110,7 +110,7 @@ lose it.
 
 **Example:**
 ```
-@executor execute steps 1-3 from _current_plan.md
+@executor execute steps 1-3 from planning/current_plan.md
 ```
 
 ### `reviewer` — Quality Gate (Sonnet, high effort)
@@ -246,7 +246,7 @@ Phase work executes in `sandbox/` notebooks. The plan specifies the notebook pat
 ```
 Step 1:  @planner-science plan Phase N step N.X
 Step 2:  [review plan in chat, request adjustments]
-Step 3:  [approved plan → write to _current_plan.md]
+Step 3:  [approved plan → write to planning/current_plan.md]
 Step 2.5 (recommended for Phase 03+):
          @reviewer-adversarial challenge this plan
          [address any BLOCKER findings before proceeding]
@@ -309,7 +309,7 @@ Step 5:  [parent stages, commits, wraps up PR]
 
 **Two strategies:**
 - **Shared branch:** Executors edit the same working tree. Requires
-  non-overlapping file ownership. See `specs/README.md` for file maps.
+  non-overlapping file ownership. See `planning/specs/README.md` for file maps.
 - **Worktree isolation:** Each executor gets `isolation: "worktree"`.
   Full file isolation, but requires merging branches afterwards.
 
@@ -436,7 +436,7 @@ The skill walks through the complete PR Creation Flow from
 `gh pr create` — it proposes commands for the user to execute.
 
 **Planned follow-up:** `/execute-plan` — a skill to execute steps from
-`_current_plan.md` or a `specs/spec_NN.md` file without spelling out the
+`planning/current_plan.md` or a `specs/spec_NN.md` file without spelling out the
 full instruction each time.
 
 ---
@@ -477,6 +477,51 @@ The 8-agent architecture is forward-compatible with this. The planner produces
 the plan, the executor runs it with high maxTurns, and the reviewer validates
 at the end. The only additions needed are the test-gate mechanism and worktree
 isolation — no architectural changes.
+
+---
+
+## DAG Orchestration
+
+The plan/execute workflow supports DAG-based multi-agent orchestration.
+See `planning/README.md` for the full lifecycle and `planning/dags/README.md`
+for the DAG format.
+
+### Planning session
+
+1. Planner produces plan in chat (includes "Suggested Execution Graph" section).
+2. Parent writes plan to `planning/current_plan.md`.
+3. Adversarial reviewer reviews the plan.
+4. User approves.
+
+### Execution session
+
+1. Parent materializes `planning/dags/DAG.yaml` and `planning/specs/spec_*.md`.
+2. Parent reads `DAG.yaml` and dispatches agents per task group:
+   - Parallel-safe tasks within a group run simultaneously.
+   - Sequential tasks run one at a time.
+3. After each task group: parent stages, commits, dispatches review gate.
+4. After all groups: final adversarial review.
+5. PR wrap-up.
+
+### Review gates
+
+| Gate | Agent | When |
+|------|-------|------|
+| Per-group (heavyweight) | `reviewer-deep` | Any `.py`, `.ipynb`, SQL, or `src/`/`sandbox/` in scope |
+| Per-group (lightweight) | `reviewer` | All scope is `.md`, `.yaml`, status files only |
+| Final | `reviewer-adversarial` | After all groups complete |
+
+### Failure handling
+
+All failures halt the DAG. The user decides next action in the session.
+No automatic retries. The parent may re-run a single task group after
+the user addresses the issue.
+
+### Templates
+
+- DAG format: `docs/templates/dag_template.yaml`
+- DAG status: `docs/templates/dag_status_template.yaml`
+- Spec format: `docs/templates/spec_template.md`
 
 ---
 

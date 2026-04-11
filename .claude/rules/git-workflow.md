@@ -2,7 +2,7 @@
 paths:
   - "CHANGELOG.md"
   - "pyproject.toml"
-  - "_current_plan.md"
+  - "planning/current_plan.md"
 ---
 
 # Git Workflow

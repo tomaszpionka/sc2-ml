@@ -1,7 +1,7 @@
 """Notebook helpers — DuckDB connection factory for sandbox notebooks.
 
 Zero game-domain content. Provides a read-only DuckDB connection
-pre-configured for the specified dataset. See ``_current_plan.md`` B.4.1
+pre-configured for the specified dataset. See ``planning/current_plan.md`` B.4.1
 and A.2 Risk 2 for design rationale.
 
 Risk 2 mitigation: connections are read-only by default to prevent
@@ -87,7 +87,7 @@ def get_notebook_db(
 
     Resolves the dataset config from the game package's config module
     and returns an open connection. The connection is read-only by default
-    to avoid single-writer lock conflicts with the CLI (see _current_plan.md
+    to avoid single-writer lock conflicts with the CLI (see planning/current_plan.md
     A.2 Risk 2).
 
     WARNING: If read_only=False, the caller must close the connection before

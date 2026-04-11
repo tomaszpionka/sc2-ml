@@ -1,0 +1,124 @@
+# DAG Template -- Operational Orchestration Contract
+#
+# This template defines a Directed Acyclic Graph (DAG) for multi-agent
+# execution of a single Spec (as defined in docs/TAXONOMY.md). The DAG
+# is an operational layer artifact (Source-of-Truth tier 8 per
+# ARCHITECTURE.md). It MUST NOT redefine or conflict with any term in
+# docs/TAXONOMY.md.
+#
+# Terminology (defined in docs/TAXONOMY.md):
+#   Job        -- a named logical unit within a DAG. Contains task_groups.
+#   Task Group -- an ordered group of tasks within a job. Execution order
+#                 is sequential across groups within a job. A review gate
+#                 follows every task_group automatically.
+#   Task       -- a single agent invocation. Tasks within a task_group MAY
+#                 run in parallel if their file scopes do not overlap.
+#
+# Location: planning/dags/DAG.yaml (single active DAG)
+# Template: docs/templates/dag_template.yaml (this file)
+#
+# ---- TEMPLATE START ----
+
+# -- DAG Metadata --
+dag_id: "<unique identifier, e.g., dag_01_01_01_source_inventory>"
+spec_ref: "planning/current_plan.md"        # The Spec this DAG implements
+category: "A"                               # A-F per TAXONOMY.md Category system
+branch: "<branch name per Category convention>"
+base_ref: "master"                          # Branch point SHA or name
+
+# Optional: link to the science hierarchy (informational, not authoritative)
+phase_ref: "01"                             # Which Phase this DAG executes within
+pipeline_section_ref: "01_01"               # Which Pipeline Section, if applicable
+step_refs:                                  # Which Step(s), if applicable
+  - "01_01_01"
+
+# -- Isolation Strategy --
+# Governs how parallel tasks and sequential task_groups interact with git.
+# "shared_branch" = Strategy A from planning/specs/README.md
+# "worktree"      = Strategy B from planning/specs/README.md
+default_isolation: "shared_branch"
+
+# -- Jobs --
+# A DAG contains one or more jobs. Jobs are independent top-level units.
+# In most cases there is exactly one job per DAG.
+jobs:
+  - job_id: "J01"
+    name: "<descriptive name>"
+    description: "<what this job accomplishes>"
+
+    task_groups:
+      - group_id: "TG01"
+        name: "<descriptive name>"
+        description: "<what this group accomplishes as a unit>"
+        depends_on: []                      # List of group_ids that must complete first
+
+        # -- Review gate (auto-injected after this group completes) --
+        # The orchestrator automatically runs a review agent after every
+        # task_group. This section configures that review.
+        review_gate:
+          agent: "reviewer-deep"              # Default: reviewer-deep (Opus).
+                                            # Override to "reviewer" (Sonnet) for lightweight
+                                            # groups (all file_scope entries are non-code:
+                                            # .md, .yaml, status files only).
+          base_ref: "auto"                  # "auto" = SHA before first task in group started
+          scope: "diff"                     # "diff" = only changes from this group
+                                            # "cumulative" = all changes since DAG start
+          on_blocker: "halt"                # Always halt and wait for user decision.
+
+        tasks:
+          - task_id: "T01"
+            name: "<descriptive name>"
+            spec_file: "planning/specs/spec_01.md"  # The spec this task executes
+            agent: "executor"               # Which agent to dispatch
+            isolation: "inherit"            # "inherit" from default_isolation, or override
+            parallel_safe: true             # Can this run in parallel with sibling tasks?
+            file_scope:                     # Files this task is expected to WRITE
+              - "src/rts_predict/sc2/data/exploration.py"
+            read_scope: []                  # Files this task needs to READ (from other tasks)
+            depends_on: []                  # List of task_ids within this group
+
+          - task_id: "T02"
+            name: "<another task>"
+            spec_file: "planning/specs/spec_02.md"
+            agent: "executor"
+            isolation: "inherit"
+            parallel_safe: false            # Reads T01's output — must run after T01
+            file_scope:
+              - "tests/rts_predict/sc2/test_exploration.py"
+            read_scope:
+              - "src/rts_predict/sc2/data/exploration.py"  # Written by T01
+            depends_on: ["T01"]
+
+      - group_id: "TG02"
+        name: "<second group, runs after TG01>"
+        depends_on: ["TG01"]               # Sequential dependency
+
+        review_gate:
+          agent: "reviewer-deep"
+          base_ref: "auto"
+          scope: "diff"
+          on_blocker: "halt"
+
+        tasks:
+          - task_id: "T03"
+            name: "<depends on TG01 output>"
+            spec_file: "planning/specs/spec_03.md"
+            agent: "executor"
+            isolation: "inherit"
+            parallel_safe: false            # Only task in group, or sequential
+            file_scope:
+              - "sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_source_inventory.py"
+            depends_on: []
+
+# -- Final Review Gate --
+# Always runs after all jobs complete. Uses heavyweight review.
+final_review:
+  agent: "reviewer-adversarial"             # Opus: full methodology review
+  scope: "all"                              # All changes across entire DAG
+  base_ref: "master"                        # Or the branch point
+  on_blocker: "halt"                        # Always halt on final review blockers
+
+# -- Failure Policy --
+failure_policy:
+  on_failure: "halt"                        # Always halt on any failure. The user
+                                            # decides next action in the session.

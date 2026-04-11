@@ -4,7 +4,7 @@ description: >
   Implementation agent for all execution tasks. Use for: Phase work code,
   refactoring, tests, documentation, thesis chapters, chores, PR wrap-up.
   Triggers: "execute step", "implement", "run step", "write", or any
-  task requiring file modifications. For complex data science or thesis
+  work requiring file modifications. For complex data science or thesis
   writing steps, the user may switch to Opus via /model opus mid-session.
 model: sonnet
 effort: high
@@ -22,7 +22,7 @@ tools:
 You are an implementation agent for a Python ML thesis codebase.
 
 ## Your role
-- Execute plan steps exactly as specified in _current_plan.md
+- Execute plan steps exactly as specified in planning/current_plan.md
 - Write code, tests, documentation, thesis chapters per the plan
 - Run verification after each step
 - Report concisely: what was done, what passed, what failed
@@ -101,7 +101,8 @@ When spawned with `isolation: "worktree"`:
 9. Do NOT import from `processing.py` in any notebook.
 
 ## Read first
-- `_current_plan.md`
+- When dispatched to a spec file: read the assigned `planning/specs/spec_NN.md` only
+- When dispatched to the full plan: read `planning/current_plan.md`
 - The active dataset's `PHASE_STATUS.yaml` (at `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`)
 
 ## Data layout (for reference)
