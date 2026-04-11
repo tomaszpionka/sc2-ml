@@ -6,8 +6,9 @@ Classical ML on pre-game features, with optional in-game and GNN comparisons.
 ## Critical Rules
 
 - **ALWAYS** read `.claude/scientific-invariants.md` before any data/feature/model work
-- **ALWAYS** read `PHASE_STATUS.yaml` at session start to know the current phase
+- **ALWAYS** read `PHASE_STATUS.yaml` before any Category A or F work
 - **ALWAYS** activate the venv first: `source .venv/bin/activate && poetry run <command>` — NEVER bare `python3` or `pip install`
+- Running Python via the activated venv (`source .venv/bin/activate && poetry run python ...`) is permitted for testing, data exploration, and validation
 - **NEVER** use data from game T or later to compute features for game T
 - **NEVER** begin a new phase until all prior phase artifacts exist on disk
 - **NEVER** skip the plan/execute two-session workflow for non-trivial work
@@ -129,9 +130,9 @@ for Phase work or any situation where file overlap is hard to predict.
 
 ## Permissions
 
-**Autonomous:** Read/write within repo, poetry/pytest commands, read-only git ops
-**Ask first:** Reading outside repo
-**User executes:** All git write ops, system installs, DuckDB modifications
+**Autonomous:** Read/write within repo, poetry/pytest commands, read-only git ops, `git add`, `git commit`, `git rebase` (non-interactive), `rm .github/tmp/*`, `gh pr create`, `gh issue`
+**Ask first:** `git push`, destructive git ops (`reset --hard`, `clean`, `checkout --`), `rm -r`, reading outside repo (except system libs/pip packages for debugging)
+**User executes:** System installs, DuckDB schema modifications
 
 ## Project Status
 

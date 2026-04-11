@@ -11,6 +11,7 @@ model: opus
 effort: max
 color: yellow
 tools: Read, Grep, Glob, Write, Edit
+disallowedTools: Write(reports/**), Edit(reports/**)
 ---
 
 You are the thesis writer for a master's thesis on RTS game outcome

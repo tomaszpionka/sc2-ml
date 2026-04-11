@@ -19,6 +19,17 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.10] — 2026-04-11 (PR #99: chore/unsupervised-permissions-overhaul)
+
+### Changed
+- `.claude/settings.json`: replaced space-wildcard `poetry *` allow entry with 11 colon-delimited per-tool entries (ruff, mypy, pytest, jupyter, jupytext, diff-cover, sc2, python); added `git add:*`, `git commit:*`, `git rebase:*`, `gh pr:*`, `gh issue:*`, `.venv/bin/python:*`, `rm .github/tmp/*` to allow; narrowed `rm *` deny to `rm -r*`, `git rebase*` to `git rebase -i*`; removed `git commit*` from deny; removed `/tmp/**` Read/Write/Edit deny entries
+- `.claude/settings.local.json`: pruned 107 accumulated one-off allow entries down to 11 (removed dead entries, absolute-path violations, double-slash bugs, `xargs rm` loophole, bare python3/pip entries, and everything now covered by settings.json)
+- `CLAUDE.md`: updated Permissions section to reflect autonomous `git add`/`git commit`/`git rebase`; relaxed PHASE_STATUS.yaml rule to Category A/F only; added venv Python permission rule
+- `.claude/agents/writer-thesis.md`: added `disallowedTools: Write(reports/**), Edit(reports/**)` to enforce "Do not modify reports/" programmatically
+
+### Removed
+- `Bash(python3 -m pytest*)` allow entry (contradicted "NEVER bare python3" rule)
+
 ## [1.2.9] — 2026-04-11 (PR #98: chore/inventory-enhancements-filename-patterns)
 
 ### Added
