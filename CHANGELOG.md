@@ -19,6 +19,11 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.12] — 2026-04-11 (PR #101: chore/fix-source-activation-permissions)
+
+### Changed
+- `.claude/settings.json`: consolidated 11 fragmented `source .venv/bin/activate` Bash allow-patterns into a single catch-all `Bash(source .venv/bin/activate:*)`, covering all command variants (timed runs, piped output, non-poetry chains)
+
 ## [1.2.11] — 2026-04-11 (PR #100: chore/web-access-science-agents)
 
 ### Added
