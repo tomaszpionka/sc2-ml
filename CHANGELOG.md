@@ -12,10 +12,30 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [3.0.4] — 2026-04-11 (PR #109: chore/session-audit-dashboard)
+
+### Added
+- `scripts/session_audit.py` — on-demand session audit dashboard (token usage, PR efficiency, subagent analysis)
+- `.claude/commands/materialize_plan.md` — `/materialize_plan` slash command enforcing the materialization flow
 - `scripts/hooks/check_phases_drift.py` — pre-commit hook that detects drift between `docs/PHASES.md` and `docs/ml_experiment_phases/PHASES.md` by comparing phase number + name pairs; fires only when either file is staged
 - `.pre-commit-config.yaml`: `phases-drift` hook entry wired to `check_phases_drift.py`
 
 ### Changed
+- `scripts/hooks/log-subagent.sh`: audit log moved to `~/Projects/tp-claude-logs/agent-audit.log`, ephemeral state to `/tmp/tp-claude-logs/`, added `project=` field
+- `scripts/hooks/log-bash.sh`: audit log moved from `~/.claude/bash-audit.log` to `~/Projects/tp-claude-logs/bash-audit.log`, added `project=` field
+- `scripts/hooks/README.md`: updated all path references and format examples
+- `docs/templates/dag_template.yaml`: renamed `spec_ref` to `plan_ref`, clarified `spec_file` comment
+- `planning/README.md`: expanded materialization to 5 sub-steps (purge → specs → DAG → INDEX → commit)
+- `planning/specs/README.md`: added 4 rules (start at 01, purge before create, one per task, derived not invented)
+- `.claude/agents/planner.md` and `planner-science.md`: DAG requirement now includes `spec_file` paths
+- `CLAUDE.md`: inlined 5-step materialization sequence
 - `docs/templates/research_log_template.yaml`: normalized `ordering:` field to `value:` + `required:` pattern; updated `markdown_rendering` to point to `docs/research/RESEARCH_LOG_ENTRY.md`
 - `planning/current_plan.md`: added `scripts/hooks/log-subagent.sh` to T10 file_scope (was modified in execution but missing from plan manifest)
 - `CHANGELOG.md` [3.0.3]: added `.gitignore` removal to `### Removed` (was undocumented)
@@ -28,6 +48,8 @@ merged to `master`.
 ### Fixed
 
 ### Removed
+- `session_audit.md` (replaced by `scripts/session_audit.py`)
+- 10 orphaned spec files from PR #108 (`planning/specs/spec_01` through `spec_10`)
 - `reports/RESEARCH_LOG_TEMPLATE.md` — superseded by `docs/research/RESEARCH_LOG_ENTRY.md` (added in 3.0.3)
 
 ## [3.0.3] — 2026-04-11 (PR #108: chore/template-hierarchy)

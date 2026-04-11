@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG="/tmp/rts-agent-log.txt"
+# Persistent audit log → $HOME/Projects/tp-claude-logs/agent-audit.log
+LOGDIR="$HOME/Projects/tp-claude-logs"
+mkdir -p "$LOGDIR"
+LOG="$LOGDIR/agent-audit.log"
 INPUT=$(cat)
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -11,6 +14,7 @@ SESSION=$(echo "$INPUT"    | jq -r '.session_id            // "unknown"')
 AGENT=$(echo "$INPUT"      | jq -r '.agent_id              // "unknown"')
 AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type            // "unknown"')
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.agent_transcript_path // "none"')
+PROJECT="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || echo unknown)")"
 
 # --- Model lookup from agent_type ---
 case "$AGENT_TYPE" in
@@ -25,19 +29,23 @@ case "$AGENT_TYPE" in
   *)                    MODEL="claude-sonnet-4-6"         ;;
 esac
 
+# Ephemeral per-boot state (intentionally in /tmp/)
+STATEDIR="/tmp/tp-claude-logs"
+mkdir -p "$STATEDIR"
+SESSIONS_SEEN="$STATEDIR/sessions-seen.txt"
+COUNTS_FILE="$STATEDIR/sessions-counts.txt"
+LOCK_DIR="$STATEDIR/sessions-counts.lock"
+
 # --- SessionOpen: emit once per session on first SubagentStart ---
-SESSIONS_SEEN="/tmp/rts-sessions-seen.txt"
 touch "$SESSIONS_SEEN"
 if [[ "$EVENT" == "SubagentStart" ]]; then
   if ! grep -qF "$SESSION" "$SESSIONS_SEEN"; then
     echo "$SESSION" >> "$SESSIONS_SEEN"
-    echo "[$TIMESTAMP] SessionOpen   session=$SESSION orchestrator=$MODEL" >> "$LOG"
+    echo "[$TIMESTAMP] SessionOpen   session=$SESSION orchestrator=$MODEL project=$PROJECT" >> "$LOG"
   fi
 fi
 
 # --- SessionClose: track started/stopped counts per session ---
-COUNTS_FILE="/tmp/rts-sessions-counts.txt"
-LOCK_DIR="/tmp/rts-sessions-counts.lock"
 touch "$COUNTS_FILE"
 
 # Portable atomic lock via mkdir (works on macOS without flock)
@@ -79,16 +87,16 @@ fi
 
 # --- Emit log line ---
 if [[ "$EVENT" == "SubagentStart" ]]; then
-  echo "[$TIMESTAMP] SubagentStart session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL" >> "$LOG"
+  echo "[$TIMESTAMP] SubagentStart session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL project=$PROJECT" >> "$LOG"
 elif [[ "$EVENT" == "SubagentStop" ]]; then
   if [[ "$IN_TOKENS" == "unavailable" ]]; then
-    echo "[$TIMESTAMP] SubagentStop  session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL tokens=unavailable" >> "$LOG"
+    echo "[$TIMESTAMP] SubagentStop  session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL tokens=unavailable project=$PROJECT" >> "$LOG"
   else
-    echo "[$TIMESTAMP] SubagentStop  session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL in=$IN_TOKENS out=$OUT_TOKENS cache_read=$CACHE_READ" >> "$LOG"
+    echo "[$TIMESTAMP] SubagentStop  session=$SESSION agent=$AGENT type=$AGENT_TYPE model=$MODEL in=$IN_TOKENS out=$OUT_TOKENS cache_read=$CACHE_READ project=$PROJECT" >> "$LOG"
   fi
 fi
 
 # --- SessionClose: emit after stop count reaches start count ---
 if [[ "$EVENT" == "SubagentStop" && "$STARTED" -gt 0 && "$STOPPED" -ge "$STARTED" ]]; then
-  echo "[$TIMESTAMP] SessionClose  session=$SESSION total_agents=$STARTED" >> "$LOG"
+  echo "[$TIMESTAMP] SessionClose  session=$SESSION total_agents=$STARTED project=$PROJECT" >> "$LOG"
 fi

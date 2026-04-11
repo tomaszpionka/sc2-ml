@@ -46,10 +46,11 @@ are the execution contract.
 to `planning/current_plan.md`. Plan MUST include a Suggested Execution Graph.
 No code changes. End by asking for approval.
 
-**Materialization (first action after approval):** Generate `planning/dags/DAG.yaml`
-and `planning/specs/spec_*.md` from the approved plan. Update `planning/INDEX.md`
-with spec links. Commit the materialization. Execution MUST NOT begin until
-DAG + specs exist on disk — no exceptions, even for single-task plans.
+**Materialization (first action after approval):** (a) Purge old `specs/spec_*.md`
+(keep README.md). (b) Generate new `specs/spec_NN_<name>.md` from the plan —
+numbering always starts at 01. (c) Generate `dags/DAG.yaml` with `spec_file`
+pointing to (b). (d) Update `planning/INDEX.md`. (e) Commit together. Execution
+MUST NOT begin until DAG + specs exist on disk — no exceptions.
 
 **Execution:** Read `planning/dags/DAG.yaml` → dispatch agents per task groups →
 agents read their assigned spec file, not the full plan → review gates after

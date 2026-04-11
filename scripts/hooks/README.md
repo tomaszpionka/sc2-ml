@@ -8,11 +8,11 @@ Four hooks are wired up in `.claude/settings.json`. Each section below describes
 
 **Event:** `PreToolUse` — matcher: `Bash`  
 **Fires:** before every Bash command, from any agent (root, executor, planner, lookup, …)  
-**Log:** `~/.claude/bash-audit.log` — persistent across reboots, global to all projects
+**Log:** `~/Projects/tp-claude-logs/bash-audit.log` — persistent across reboots, global to all projects; includes a `project=` field per entry
 
 **Format:**
 ```
-[2026-04-11 14:23:01] session=abc123 agent=xyz456 type=executor
+[2026-04-11 14:23:01] session=abc123 agent=xyz456 type=executor project=rts-outcome-prediction
   desc: Check line/byte counts of template files
   cmd:  for f in /path/a /path/b; do echo "=== $f ==="; wc -lc "$f"; done
 ---
@@ -24,37 +24,37 @@ Four hooks are wired up in `.claude/settings.json`. Each section below describes
 
 ```bash
 # Live tail
-tail -f ~/.claude/bash-audit.log
+tail -f ~/Projects/tp-claude-logs/bash-audit.log
 
 # All commands from one session
-grep -A3 "session=SESSION_ID" ~/.claude/bash-audit.log
+grep -A3 "session=SESSION_ID" ~/Projects/tp-claude-logs/bash-audit.log
 
 # All commands run by a specific agent type
-grep -A3 "type=executor" ~/.claude/bash-audit.log
+grep -A3 "type=executor" ~/Projects/tp-claude-logs/bash-audit.log
 
 # All git commands across all sessions
-grep "cmd:.*git " ~/.claude/bash-audit.log
+grep "cmd:.*git " ~/Projects/tp-claude-logs/bash-audit.log
 
 # All destructive-looking commands (rm, drop, truncate)
-grep -i "cmd:.*\(rm \|DROP\|TRUNCATE\)" ~/.claude/bash-audit.log
+grep -i "cmd:.*\(rm \|DROP\|TRUNCATE\)" ~/Projects/tp-claude-logs/bash-audit.log
 
 # Count commands per agent type
-grep "^\[" ~/.claude/bash-audit.log | grep -oP 'type=\K\S+' | sort | uniq -c | sort -rn
+grep "^\[" ~/Projects/tp-claude-logs/bash-audit.log | grep -oP 'type=\K\S+' | sort | uniq -c | sort -rn
 
 # Count commands per session
-grep "^\[" ~/.claude/bash-audit.log | grep -oP 'session=\K\S+' | sort | uniq -c | sort -rn
+grep "^\[" ~/Projects/tp-claude-logs/bash-audit.log | grep -oP 'session=\K\S+' | sort | uniq -c | sort -rn
 
 # Commands run on a specific date
-grep "^\[2026-04-11" ~/.claude/bash-audit.log
+grep "^\[2026-04-11" ~/Projects/tp-claude-logs/bash-audit.log
 
 # Commands whose description matches a keyword
-grep -A2 "desc:.*split" ~/.claude/bash-audit.log
+grep -A2 "desc:.*split" ~/Projects/tp-claude-logs/bash-audit.log
 
 # Show full records that contain a keyword anywhere (header + desc + cmd)
-awk '/keyword/{found=1} found{print; if(/^---/){found=0}}' ~/.claude/bash-audit.log
+awk '/keyword/{found=1} found{print; if(/^---/){found=0}}' ~/Projects/tp-claude-logs/bash-audit.log
 
 # Count total commands logged
-grep -c "^---" ~/.claude/bash-audit.log
+grep -c "^---" ~/Projects/tp-claude-logs/bash-audit.log
 ```
 
 ---
@@ -63,54 +63,54 @@ grep -c "^---" ~/.claude/bash-audit.log
 
 **Events:** `SubagentStart` and `SubagentStop`  
 **Fires:** when any sub-agent is spawned or completes  
-**Log:** `/tmp/rts-agent-log.txt` — cleared on reboot  
-**Side files:** `/tmp/rts-sessions-seen.txt`, `/tmp/rts-sessions-counts.txt`
+**Log:** `~/Projects/tp-claude-logs/agent-audit.log` — persistent across reboots  
+**Side files:** `/tmp/tp-claude-logs/sessions-seen.txt`, `/tmp/tp-claude-logs/sessions-counts.txt`
 
 **Format:**
 ```
-[2026-04-11 14:20:00] SessionOpen   session=abc123 orchestrator=claude-sonnet-4-6
-[2026-04-11 14:20:01] SubagentStart session=abc123 agent=xyz type=executor model=claude-sonnet-4-6
-[2026-04-11 14:20:45] SubagentStop  session=abc123 agent=xyz type=executor model=claude-sonnet-4-6 in=12400 out=870 cache_read=9100
-[2026-04-11 14:20:45] SessionClose  session=abc123 total_agents=1
+[2026-04-11 14:20:00] SessionOpen   session=abc123 orchestrator=claude-sonnet-4-6 project=rts-outcome-prediction
+[2026-04-11 14:20:01] SubagentStart session=abc123 agent=xyz type=executor model=claude-sonnet-4-6 project=rts-outcome-prediction
+[2026-04-11 14:20:45] SubagentStop  session=abc123 agent=xyz type=executor model=claude-sonnet-4-6 in=12400 out=870 cache_read=9100 project=rts-outcome-prediction
+[2026-04-11 14:20:45] SessionClose  session=abc123 total_agents=1 project=rts-outcome-prediction
 ```
 
 **Useful commands:**
 
 ```bash
 # Live tail
-tail -f /tmp/rts-agent-log.txt
+tail -f ~/Projects/tp-claude-logs/agent-audit.log
 
 # Full timeline for one session
-grep "session=SESSION_ID" /tmp/rts-agent-log.txt
+grep "session=SESSION_ID" ~/Projects/tp-claude-logs/agent-audit.log
 
 # All sessions opened today
-grep "SessionOpen" /tmp/rts-agent-log.txt
+grep "SessionOpen" ~/Projects/tp-claude-logs/agent-audit.log
 
 # All agent types spawned and how many times
-grep "SubagentStart" /tmp/rts-agent-log.txt | grep -oP 'type=\K\S+' | sort | uniq -c | sort -rn
+grep "SubagentStart" ~/Projects/tp-claude-logs/agent-audit.log | grep -oP 'type=\K\S+' | sort | uniq -c | sort -rn
 
 # Token usage per agent (SubagentStop lines only)
-grep "SubagentStop" /tmp/rts-agent-log.txt | grep -v "tokens=unavailable"
+grep "SubagentStop" ~/Projects/tp-claude-logs/agent-audit.log | grep -v "tokens=unavailable"
 
 # Total output tokens across all stopped agents
-grep "SubagentStop" /tmp/rts-agent-log.txt \
+grep "SubagentStop" ~/Projects/tp-claude-logs/agent-audit.log \
   | grep -oP 'out=\K[0-9]+' | awk '{s+=$1} END {print "total_out_tokens:", s}'
 
 # Total cache_read tokens (cost savings indicator)
-grep "SubagentStop" /tmp/rts-agent-log.txt \
+grep "SubagentStop" ~/Projects/tp-claude-logs/agent-audit.log \
   | grep -oP 'cache_read=\K[0-9]+' | awk '{s+=$1} END {print "total_cache_read:", s}'
 
 # Sessions where agents were started but never stopped (hung/crashed agents)
 comm -23 \
-  <(grep "SubagentStart" /tmp/rts-agent-log.txt | grep -oP 'agent=\K\S+' | sort) \
-  <(grep "SubagentStop"  /tmp/rts-agent-log.txt | grep -oP 'agent=\K\S+' | sort)
+  <(grep "SubagentStart" ~/Projects/tp-claude-logs/agent-audit.log | grep -oP 'agent=\K\S+' | sort) \
+  <(grep "SubagentStop"  ~/Projects/tp-claude-logs/agent-audit.log | grep -oP 'agent=\K\S+' | sort)
 
 # Count agents per session
-grep "SubagentStop" /tmp/rts-agent-log.txt \
+grep "SubagentStop" ~/Projects/tp-claude-logs/agent-audit.log \
   | grep -oP 'session=\K\S+' | sort | uniq -c | sort -rn
 
 # Sessions that spawned a planner-science agent
-grep "SubagentStart" /tmp/rts-agent-log.txt | grep "type=planner-science"
+grep "SubagentStart" ~/Projects/tp-claude-logs/agent-audit.log | grep "type=planner-science"
 ```
 
 ---

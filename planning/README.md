@@ -23,11 +23,22 @@ Task), see [`docs/TAXONOMY.md`](../docs/TAXONOMY.md).
 1. **Planning session:** Planner produces plan in chat. Parent writes to
    `current_plan.md`. Plan MUST include a Suggested Execution Graph.
    Adversarial reviewer reviews. User approves.
-2. **Materialization (first action after approval):** Parent generates
-   `dags/DAG.yaml` and `specs/spec_*.md` from the approved plan's
-   Suggested Execution Graph. Updates `INDEX.md` with spec links.
-   Commits the materialized artifacts. **Execution MUST NOT begin until
-   DAG + specs exist on disk — no exceptions, even for single-task plans.**
+2. **Materialization (first action after approval):**
+   a. **Purge old specs:** Delete all `specs/spec_*.md` files (keep `README.md`).
+      Old specs belong to the prior plan — they must not persist into the new
+      execution. Specs always start from `spec_01` on every plan.
+   b. **Generate specs:** Extract one `specs/spec_NN_<name>.md` per DAG task
+      from the approved plan. Specs are numbered sequentially starting at 01,
+      matching `task_id` in the DAG. Content comes from the plan — specs are
+      derived, not invented.
+   c. **Generate DAG:** Write `dags/DAG.yaml`. Each task's `spec_file` field
+      MUST point to the spec created in step (b). The DAG's `plan_ref` field
+      points to `planning/current_plan.md` (provenance only — executors read
+      specs, not the plan).
+   d. **Update INDEX.md** with spec links.
+   e. **Commit** all materialized artifacts together.
+   **Execution MUST NOT begin until DAG + specs exist on disk — no exceptions,
+   even for single-task plans.**
 3. **Execution (only after materialization is committed):** Parent reads
    `dags/DAG.yaml` and dispatches agents per task group. Agents read their
    assigned spec file, not the full plan. Updates `DAG_STATUS.yaml` (if
