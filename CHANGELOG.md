@@ -19,6 +19,36 @@ merged to `master`.
 
 ### Removed
 
+## [2.0.0] — 2026-04-11 (PR #104: chore/architecture-audit-fixes)
+
+### Added
+- `.claude/scientific-invariants.md` Invariant #3: normalization leakage guard (de Prado 2018, Arlot & Celisse 2010) — scalers must fit on training data only
+- Invariant #8: two-level statistical comparison framework — within-game (Friedman, N_folds >= 5) vs cross-game (per-game rankings + bootstrapped CIs + 5x2 cv F-test for N=2 games)
+- AoE2 dataset strategy: aoe2companion = PRIMARY, aoestats = SUPPLEMENTARY VALIDATION — documented in game ROADMAP, per-dataset ROADMAPs, and research_log
+- `docs/templates/notebook_template.yaml`: `{phase_slug}` and `{section_slug}` placeholders for TAXONOMY-compliant artifact paths
+- `thesis/THESIS_STRUCTURE.md`: provisional markers on Chapters 5-7
+- `docs/templates/raw_data_readme_template.yaml`: Section Z skip-gate header for agents
+
+### Changed
+- **BREAKING:** Artifact directory convention aligned to TAXONOMY.md — `artifacts/01_01/` → `artifacts/01_exploration/01_acquisition/` across all 3 datasets (sc2egset, aoe2companion, aoestats)
+- Thesis chapter numbering fixed: "Chapter 3 — Data & Methodology" → "Chapter 4 — Data and Methodology" in ROADMAPs, notebooks, research_log, raw_data_readme_template
+- Evaluation metrics hierarchy: Brier score (Murphy decomposition) promoted to primary metric in THESIS_STRUCTURE.md §4.4.4
+- `CONTRACT.md`: Invariant #10 → #8 (renumbering drift fix)
+- `.claude/ml-protocol.md`: activation gate lowered from Phase 04 to Phase 02; research log field names reconciled with actual usage; stale archive references updated
+- `.claude/agents/planner-science.md`: ml-protocol reference updated to Phase 02
+- `docs/thesis/THESIS_WRITING_MANUAL.md`: Friedman N=2 caveat added, two-level comparison framework
+- `CLAUDE.md`: converted duplicated sections to pointers → ARCHITECTURE.md (153 → 108 lines); restored after-phase-gate and after-Category-F tracking instructions
+- `docs/TAXONOMY.md`: reference-only usage note added
+- ROADMAP placeholder sections (Phases 02-07): Pipeline Section lists replaced with one-line pointers to `docs/PHASES.md` (3 ROADMAPs)
+- `thesis/WRITING_STATUS.md`: compressed BLOCKED entries into summary lines (115 → 95 lines)
+- `pyproject.toml`: removed dead ruff/mirror_drift references to deleted archive paths
+
+### Removed
+- `reports/archive/` — stale pre-phase-migration research log archives
+- `src/rts_predict/sc2/reports/sc2egset/archive/` — all superseded exploration artifacts
+- `src/rts_predict/aoe2/reports/aoe2companion/archive/` — all superseded exploration artifacts
+- `src/rts_predict/aoe2/reports/aoestats/archive/` — all superseded exploration artifacts
+
 ## [1.2.14] — 2026-04-11 (PR #103: chore/pre-commit-followup)
 
 ### Changed
