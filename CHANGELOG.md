@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.11] — 2026-04-11 (PR #100: chore/web-access-science-agents)
+
+### Added
+- `.claude/agents/reviewer-adversarial.md`: `WebFetch`, `WebSearch` added to tools; new `## Web access — when and how to use it` guidance section specifying allowed use cases and preferred sources (NeurIPS/ICML/AAAI/IJCAI, arXiv, JMLR, canonical textbooks)
+- `.claude/agents/planner-science.md`: `WebFetch`, `WebSearch` added to tools
+- `.claude/agents/reviewer-deep.md`: `WebFetch`, `WebSearch` added to tools
+- `.claude/settings.json`: `WebFetch`, `WebSearch` added to `permissions.allow` (auto-approve without per-call prompt)
+
 ## [1.2.10] — 2026-04-11 (PR #99: chore/unsupervised-permissions-overhaul)
 
 ### Changed
