@@ -75,6 +75,15 @@
             "command": "./scripts/hooks/guard-write-path.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/hooks/guard-master-branch.sh"
+          }
+        ]
       }
     ]
   }
