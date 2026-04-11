@@ -1,77 +1,25 @@
-# Specs — Parallel Execution Guide
+# Specs Directory
 
-## Choosing a strategy
+Task specs for the active plan in `planning/current_plan.md`. Each spec is a
+self-contained brief for one executor agent — it reads only its spec file, not
+the full plan.
 
-| Situation | Use |
-|-----------|-----|
-| Specs touch completely different files | Strategy A (shared branch) |
-| Specs overlap in distinct sections of same file | Strategy A (low risk) |
-| Specs heavily overlap or touch same lines | Strategy B (worktree) |
-| Unsure about overlap | Strategy B (safe default) |
+## Lifecycle
 
-## Strategy A: Shared branch
+1. **Materialized** from the approved plan (DAG + specs committed together)
+2. **Consumed** during execution (agents read their assigned spec)
+3. **Purged** after the PR merges (specs are ephemeral per-branch artifacts)
 
-```bash
-# 1. Parent creates the shared branch
-git checkout -b chore/my-feature
+## Naming Convention
 
-# 2. Spawn executors (no isolation)
-Agent({
-  subagent_type: "executor",
-  prompt: "Execute specs/spec_01.md. Do NOT create branches or commit."
-})
-Agent({
-  subagent_type: "executor",
-  prompt: "Execute specs/spec_02.md. Do NOT create branches or commit."
-})
+`spec_NN_<short_name>.md` — numbered to match `task_id` in `planning/dags/DAG.yaml`.
 
-# 3. Parent reviews, stages, commits
-```
+## Format
 
-## Strategy B: Worktree isolation
+YAML frontmatter (`task_id`, `file_scope`, `read_scope`, `depends_on`) followed
+by markdown instructions and verification checklist. See
+`docs/templates/spec_template.md` for the schema.
 
-```bash
-# 1. Spawn executors with isolation (each gets its own worktree + branch)
-Agent({
-  subagent_type: "executor",
-  isolation: "worktree",
-  prompt: "Execute specs/spec_01.md. Do NOT commit or push."
-})
-Agent({
-  subagent_type: "executor",
-  isolation: "worktree",
-  prompt: "Execute specs/spec_02.md. Do NOT commit or push."
-})
+## Current Specs
 
-# 2. Each returns its worktree path and branch name
-# 3. Parent merges branches:
-git merge <worktree-branch-1>
-git merge <worktree-branch-2>
-# 4. Resolve any conflicts, commit
-```
-
-## File ownership map (specs 01-03)
-
-| File | spec_01 | spec_02 | spec_03 | Conflict? |
-|------|---------|---------|---------|-----------|
-| `CLAUDE.md` | line 13 (Critical Rules) | lines 10, 29-34 | — | YES — different sections |
-| `.claude/settings.json` | hooks.PreToolUse | permissions.allow | — | YES — different keys |
-| `.claude/rules/python-code.md` | — | lines 9-11 | — | No |
-| `.claude/rules/git-workflow.md` | — | lines 17-19 | PR Body section | YES — different sections |
-| `.claude/agents/executor.md` | — | lines 33-71 | — | No |
-| `.claude/agents/reviewer.md` | — | lines 22-37 | — | No |
-| `scripts/hooks/guard-master-branch.sh` | NEW | — | — | No |
-| `scripts/hooks/lint-on-edit.sh` | — | line 9 | — | No |
-| `README.md` | — | — | lines 14-47 | No |
-| Memory files | — | 3 files | 3 files | No overlap |
-
-## Recommended order for specs 01-03
-
-**Option A — Strategy A, partial parallel:**
-1. spec_01 alone (touches CLAUDE.md + settings.json)
-2. spec_02 + spec_03 in parallel (overlapping files are in distinct sections)
-
-**Option B — Strategy B, full parallel:**
-All three with `isolation: "worktree"`. Merge back in order: spec_01, spec_02, spec_03.
-Conflicts on CLAUDE.md and settings.json will be in different sections — git
-should auto-resolve.
+See `planning/dags/DAG.yaml` for the authoritative task-to-spec mapping.

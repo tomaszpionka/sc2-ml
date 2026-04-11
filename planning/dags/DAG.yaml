@@ -21,7 +21,7 @@ jobs:
           - task_id: "T01"
             name: "Update log-subagent.sh — paths + project field"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#S1a"
+            spec_file: "planning/specs/spec_01_log_subagent.md"
             file_scope:
               - "scripts/hooks/log-subagent.sh"
             parallel_safe: true
@@ -29,7 +29,7 @@ jobs:
           - task_id: "T02"
             name: "Update log-bash.sh — path + project field"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#S1b"
+            spec_file: "planning/specs/spec_02_log_bash.md"
             file_scope:
               - "scripts/hooks/log-bash.sh"
             parallel_safe: true
@@ -37,7 +37,7 @@ jobs:
           - task_id: "T03"
             name: "Update hooks README"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#S1c"
+            spec_file: "planning/specs/spec_03_hooks_readme.md"
             file_scope:
               - "scripts/hooks/README.md"
             parallel_safe: true
@@ -45,7 +45,7 @@ jobs:
           - task_id: "T04"
             name: "Migrate old logs — stage, prepend, cleanup"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#Migration"
+            spec_file: "planning/specs/spec_04_migrate_logs.md"
             file_scope: []
             parallel_safe: false
             depends_on: ["T01", "T02"]
@@ -61,7 +61,7 @@ jobs:
           - task_id: "T05"
             name: "Write scripts/session_audit.py"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#S2"
+            spec_file: "planning/specs/spec_05_dashboard.md"
             file_scope:
               - "scripts/session_audit.py"
             read_scope:
@@ -82,7 +82,7 @@ jobs:
           - task_id: "T06"
             name: "Delete static reports, update CHANGELOG"
             agent: "executor"
-            spec_ref: "planning/current_plan.md#S3"
+            spec_file: "planning/specs/spec_06_cleanup.md"
             file_scope:
               - "CHANGELOG.md"
               - "session_audit.md"
