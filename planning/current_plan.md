@@ -1,425 +1,336 @@
-# Category C Plan: Template Hierarchy Restructuring (revised)
+# Category C Plan: Session Audit Dashboard
 
 **Category:** C (chore)
-**Branch:** `chore/template-hierarchy`
-**Date:** 2026-04-11 (revised — full honest inventory)
+**Branch:** `chore/session-audit-dashboard`
+**Date:** 2026-04-11
+**Priority:** Low — utility tooling, no science or thesis dependency
 
 ---
 
 ## Scope
 
-Complete the template hierarchy restructuring. The prior plan claimed Steps 1-11
-were done; in reality the files exist on disk with content but are **untracked
-or unstaged** — never committed. Additionally, `docs/ml_experiment_phases/` and
-`docs/research/` contain zero-byte stubs that need to be populated.
-
-This plan covers ALL remaining work on this branch: committing existing content,
-populating zero-byte stubs, retracting premature AoE2 commitments, and updating
-cross-cutting references.
+Create an on-demand session audit dashboard (`scripts/session_audit.py`) and
+consolidate log file placement. Move persistent audit logs into
+`~/Projects/tp-claude-logs/` (macOS-canonical user app data)
+and ephemeral state into `/tmp/tp-claude-logs/`. Clears all custom files out of
+`~/.claude/` (tool-managed).
 
 ---
 
-## True state of disk
+## Design Decision: Log File Placement
 
-### Has content but UNTRACKED (need `git add`):
-- `docs/templates/phase_template.yaml` (2,043 bytes)
-- `docs/templates/pipeline_section_template.yaml` (1,877 bytes)
-- `docs/templates/dataset_roadmap_template.yaml` (2,472 bytes)
-- `docs/templates/phase_status_template.yaml` (2,093 bytes)
-- `docs/templates/pipeline_section_status_template.yaml` (2,204 bytes)
-- `docs/templates/step_status_template.yaml` (2,405 bytes)
-- `src/rts_predict/sc2/reports/sc2egset/PIPELINE_SECTION_STATUS.yaml` (1,678 bytes)
-- `src/rts_predict/aoe2/reports/aoe2companion/PIPELINE_SECTION_STATUS.yaml` (1,689 bytes)
-- `src/rts_predict/aoe2/reports/aoestats/PIPELINE_SECTION_STATUS.yaml` (1,756 bytes)
-- `planning/dags/DAG.yaml` (materialized DAG for this plan)
-- `planning/specs/spec_01_roadmap_retractions.md` (materialized spec — now stale)
+### Rejected: `~/.claude/` (any path)
 
-### Modified but UNSTAGED (need `git add`):
-- `docs/templates/research_log_template.yaml` (modified from tracked version)
-- `src/rts_predict/sc2/reports/sc2egset/STEP_STATUS.yaml` (added game, pipeline_section)
-- `src/rts_predict/aoe2/reports/aoe2companion/STEP_STATUS.yaml` (same)
-- `src/rts_predict/aoe2/reports/aoestats/STEP_STATUS.yaml` (same)
-- `src/rts_predict/sc2/reports/sc2egset/PHASE_STATUS.yaml` (derivation chain comments)
-- `src/rts_predict/aoe2/reports/aoe2companion/PHASE_STATUS.yaml` (same)
-- `src/rts_predict/aoe2/reports/aoestats/PHASE_STATUS.yaml` (same)
-- `src/rts_predict/aoe2/reports/ROADMAP.md` (Step 0a — retracted dataset strategy)
-- `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` (Step 0b — retracted role banner)
-- `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` (Step 0c — retracted role banner)
-- `reports/research_log.md` (Step 0d — retraction entry)
-- `CHANGELOG.md` (partially updated)
-- `CLAUDE.md` (materialization gate added to Plan/Execute section)
-- `planning/README.md` (materialization gate added to Lifecycle)
-- `planning/INDEX.md` (spec link added)
-- `.claude/agents/executor.md` (spec-first read order)
+A reviewer audit found that `~/.claude/` is tool-managed by Claude Code — it
+contains `backups/`, `sessions/`, `telemetry/`, `tasks/`, `plans/`, and other
+directories created/managed by the CLI process. Custom files placed here are
+co-tenants with no lease. Risks:
 
-### Zero-byte stubs — NEED POPULATING:
-- `docs/ml_experiment_phases/PHASES.md`
-- `docs/ml_experiment_phases/PIPELINE_SECTIONS.md`
-- `docs/ml_experiment_phases/STEPS.md`
-- `docs/research/RESEARCH_LOG.md`
-- `docs/research/RESEARCH_LOG_ENTRY.md`
-- `docs/research/ROADMAP.md`
+- **Namespace collision:** A future Claude Code release could add its own
+  `logs/`, `agent-audit.log`, or `bash-audit.log` and silently overwrite or
+  corrupt custom files.
+- **No project isolation:** A global log mixes telemetry from all repos.
+- **Existing precedent is wrong:** `~/.claude/bash-audit.log` (from
+  `log-bash.sh`) has the same problems — it should be migrated, not replicated.
 
-### Debris to remove:
-- `_current_plan.md` (root relic from planning/ migration)
+### Rejected: `.claude/logs/` (project-local)
 
----
+Good isolation, but `.claude/` in the repo is also partly read by Claude Code's
+project-settings mechanism. A future CLI release that scans `.claude/` for new
+subdirectories could conflict. Also requires `.gitignore` entry.
 
-## Execution steps
+### Rejected: `/tmp/tp-claude-logs/`
 
-### TG01: Commit existing template + status file content
+Safe namespace (sticky bit, user-owned), but `/tmp/` is cleared on every reboot
+by macOS `launchd`. Subagent telemetry would be lost — defeating the purpose of
+moving away from the current volatile `/tmp/rts-agent-log.txt`.
 
-All template and status files already have correct content on disk. This group
-stages and commits them.
+### Adopted: `~/Projects/tp-claude-logs/`
 
-**T01 — Stage and commit 6 authoring/status templates**
+User-managed directory alongside project repos. Simple, visible, persistent.
 
-Stage the 6 untracked template files in `docs/templates/` plus the modified
-`research_log_template.yaml`. Verify content is non-empty and follows the
-`value:` + `required:` pattern from `step_template.yaml`. Commit.
+| Property | Value |
+|----------|-------|
+| Base dir | `~/Projects/tp-claude-logs/` |
+| Agent audit | `~/Projects/tp-claude-logs/agent-audit.log` |
+| Bash audit | `~/Projects/tp-claude-logs/bash-audit.log` |
+| Session state | `/tmp/tp-claude-logs/sessions-seen.txt` |
+| Session counts | `/tmp/tp-claude-logs/sessions-counts.txt` |
+| Lock dir | `/tmp/tp-claude-logs/sessions-counts.lock` |
+| Persistence | **Yes** — survives reboots, only lost if manually deleted |
+| CLI conflict | None — fully outside `~/.claude/` and repo tree |
+| Git | Not inside any repo — nothing to ignore |
 
-Files: `docs/templates/{phase_template,pipeline_section_template,dataset_roadmap_template,phase_status_template,pipeline_section_status_template,step_status_template}.yaml`, `docs/templates/research_log_template.yaml`
+Session state files (`sessions-seen.txt`, `sessions-counts.txt`, lock dir)
+remain in `/tmp/tp-claude-logs/` — they are intentionally per-boot ephemeral
+state (tracking which sessions have emitted `SessionOpen`), not audit data.
 
-**T02 — Stage and commit 3 PIPELINE_SECTION_STATUS.yaml + 6 modified status files**
-
-Stage the 3 untracked PIPELINE_SECTION_STATUS.yaml files and the 6 modified
-STEP_STATUS.yaml / PHASE_STATUS.yaml files. Verify derivation chain comments
-are consistent across all 9 files. Commit.
-
-Files: `src/rts_predict/{sc2/reports/sc2egset,aoe2/reports/aoe2companion,aoe2/reports/aoestats}/{PIPELINE_SECTION_STATUS,STEP_STATUS,PHASE_STATUS}.yaml`
-
-### TG02: Retract premature AoE2 dataset strategy
-
-The edits are already on disk (executed earlier this session). Stage and commit.
-
-**T03 — Stage and commit AoE2 ROADMAP retractions + research log**
-
-Verify the 3 ROADMAP files contain "TO BE DETERMINED" roles (not PRIMARY /
-SUPPLEMENTARY VALIDATION), the game-level ROADMAP has "provisional" language,
-and `reports/research_log.md` has the retraction section. Stage and commit.
-
-Files: `src/rts_predict/aoe2/reports/{ROADMAP.md,aoestats/ROADMAP.md,aoe2companion/ROADMAP.md}`, `reports/research_log.md`
-
-### TG03: Populate zero-byte stubs in `docs/ml_experiment_phases/`
-
-These files decompose `docs/PHASES.md` into one file per hierarchy level.
-
-**T04 — Populate `docs/ml_experiment_phases/PHASES.md`**
-
-Extract Phase-level content from `docs/PHASES.md`: the 7-Phase table, scope
-rules, Phase 07 semantics, and maintenance rules. This file becomes the
-reference for Phase definitions independent of Pipeline Section details.
-
-Structure:
-- Header referencing `docs/PHASES.md` as upstream source
-- The 7-Phase summary table (number, name, source manual, one-line summary)
-- Phase scope rule (every Phase is dataset-scoped)
-- Phase 07 gate marker semantics
-- Maintenance rules (never invent/renumber Phases)
-
-**T05 — Populate `docs/ml_experiment_phases/PIPELINE_SECTIONS.md`**
-
-Extract Pipeline Section content from `docs/PHASES.md`: the derivation rule,
-the per-Phase Pipeline Section tables, and the exclusion lists. This becomes
-the reference for Pipeline Section enumeration.
-
-Structure:
-- Header referencing `docs/PHASES.md` as upstream source
-- Pipeline Section derivation rule (which manual sections become Pipeline Sections)
-- Per-Phase Pipeline Section tables (Phases 01-06)
-- Exclusion lists (what was excluded from each Phase and why)
-
-**T06 — Populate `docs/ml_experiment_phases/STEPS.md`**
-
-Step-level reference: not an enumeration (Steps are dataset-scoped in ROADMAPs)
-but the contract that defines what a Step IS and what it must produce.
-
-Structure:
-- Header referencing `docs/TAXONOMY.md` Step definition
-- Step numbering convention (NN_NN_NN)
-- Step contract (one notebook, artifacts, research log entry)
-- Step schema reference (pointer to `docs/templates/step_template.yaml`)
-- Directory layout (sandbox + artifacts mirroring rule)
-
-### TG04: Populate zero-byte stubs in `docs/research/`
-
-**T07 — Populate `docs/research/RESEARCH_LOG.md`**
-
-Reference document for the research log structure. Not the log itself (that's
-`reports/research_log.md`) — this is the specification.
-
-Structure:
-- Purpose and location of the actual log (`reports/research_log.md`)
-- Ordering convention (reverse chronological)
-- Entry structure reference (pointer to `docs/templates/research_log_entry_template.yaml`)
-- Hierarchy linking (how entries reference Phase/Step)
-- Dataset tagging rules
-- When entries are required (Category A mandatory, C recommended, F recommended)
-
-**T08 — Populate `docs/research/RESEARCH_LOG_ENTRY.md`**
-
-Human-readable rendering of `docs/templates/research_log_entry_template.yaml`,
-replacing the old `reports/RESEARCH_LOG_TEMPLATE.md` which served this purpose.
-
-Structure: mirrors the YAML template fields as markdown sections with guidance
-on what each section should contain.
-
-**T09 — Populate `docs/research/ROADMAP.md`**
-
-Reference document for dataset ROADMAP structure.
-
-Structure:
-- Purpose (dataset-level execution plans for Phases 01-07)
-- Location convention (`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`)
-- Schema reference (pointer to `docs/templates/dataset_roadmap_template.yaml`)
-- Relationship to `docs/PHASES.md` (ROADMAPs implement, don't invent)
-- Step definition reference (pointer to `docs/templates/step_template.yaml`)
-
-### TG05: Workflow updates + cleanup + CHANGELOG
-
-**T10 — Stage workflow changes and clean up debris**
-
-Stage the already-modified workflow files:
-- `CLAUDE.md` (materialization gate)
-- `planning/README.md` (materialization gate)
-- `planning/INDEX.md` (spec link)
-- `.claude/agents/executor.md` (spec-first read order)
-
-Delete `_current_plan.md` from repo root (untracked relic).
-
-Update `CHANGELOG.md` with the full set of changes for this branch.
-
-Stage `planning/dags/DAG.yaml` and `planning/specs/spec_01_roadmap_retractions.md`.
-
-Commit.
+**Migration:** On first execution, the hook `mkdir -p`s the dir. Existing data
+from `/tmp/rts-agent-log.txt` and `~/.claude/bash-audit.log` should be migrated
+once manually:
+```bash
+mkdir -p ~/Projects/tp-claude-logs
+cat /tmp/rts-agent-log.txt >> ~/Projects/tp-claude-logs/agent-audit.log 2>/dev/null
+cat ~/.claude/bash-audit.log >> ~/Projects/tp-claude-logs/bash-audit.log 2>/dev/null
+```
 
 ---
 
-## File manifest
+## Data Sources for the Dashboard
 
-**Untracked → staged (9):**
-1. `docs/templates/phase_template.yaml`
-2. `docs/templates/pipeline_section_template.yaml`
-3. `docs/templates/dataset_roadmap_template.yaml`
-4. `docs/templates/phase_status_template.yaml`
-5. `docs/templates/pipeline_section_status_template.yaml`
-6. `docs/templates/step_status_template.yaml`
-7. `src/rts_predict/sc2/reports/sc2egset/PIPELINE_SECTION_STATUS.yaml`
-8. `src/rts_predict/aoe2/reports/aoe2companion/PIPELINE_SECTION_STATUS.yaml`
-9. `src/rts_predict/aoe2/reports/aoestats/PIPELINE_SECTION_STATUS.yaml`
-
-**Modified → staged (16):**
-10. `docs/templates/research_log_template.yaml`
-11-13. 3× STEP_STATUS.yaml
-14-16. 3× PHASE_STATUS.yaml
-17-19. 3× AoE2 ROADMAPs
-20. `reports/research_log.md`
-21. `CHANGELOG.md`
-22. `CLAUDE.md`
-23. `planning/README.md`
-24. `planning/INDEX.md`
-25. `.claude/agents/executor.md`
-
-**New (populated from zero-byte, 6):**
-26. `docs/ml_experiment_phases/PHASES.md`
-27. `docs/ml_experiment_phases/PIPELINE_SECTIONS.md`
-28. `docs/ml_experiment_phases/STEPS.md`
-29. `docs/research/RESEARCH_LOG.md`
-30. `docs/research/RESEARCH_LOG_ENTRY.md`
-31. `docs/research/ROADMAP.md`
-
-**Planning artifacts (2):**
-32. `planning/dags/DAG.yaml`
-33. `planning/specs/spec_01_roadmap_retractions.md` (stale — from prior partial execution)
-
-**Deleted (1):**
-34. `_current_plan.md`
+| Source | Contents | Persistent? |
+|--------|----------|-------------|
+| `~/.claude/projects/<project>/*.jsonl` | Per-session orchestrator tokens (input, output, cache_read, cache_create, model) keyed by message UUID | Yes (Claude-managed) |
+| `~/Projects/tp-claude-logs/agent-audit.log` | Subagent start/stop with type, model, per-agent tokens, durations | No (volatile) |
+| `~/Projects/tp-claude-logs/bash-audit.log` | Per-command audit trail | Yes |
+| `gh pr list --state merged --json ...` | PR metadata (additions, deletions, mergedAt) | Yes (API) |
+| `git log` | Commit history | Yes |
 
 ---
 
-## Gate condition
+## Execution Steps
 
-- All 6 authoring templates in `docs/templates/` are tracked and non-empty
-- All 3 status templates in `docs/templates/` are tracked and non-empty
-- All 3 PIPELINE_SECTION_STATUS.yaml files are tracked and non-empty
-- All 6 STEP_STATUS/PHASE_STATUS.yaml files have `pipeline_section` / derivation chain
-- All 3 AoE2 ROADMAPs have "TO BE DETERMINED" roles, no Phase scope restrictions
-- All 6 files in `docs/ml_experiment_phases/` and `docs/research/` are non-empty
-- `_current_plan.md` does not exist at repo root
-- CHANGELOG.md has entries for all changes
-- Derivation chain is consistent across all status files
+### S1. Consolidate hook logs into `~/Projects/tp-claude-logs/`
+
+Audit logs (persistent) go to `~/Projects/tp-claude-logs/`.
+Ephemeral per-boot state files go to `/tmp/tp-claude-logs/`.
+
+**S1a — Update `scripts/hooks/log-subagent.sh`**
+
+Current state:
+- `LOG="/tmp/rts-agent-log.txt"` (line 4)
+- `SESSIONS_SEEN="/tmp/rts-sessions-seen.txt"` (line 29)
+- `COUNTS_FILE="/tmp/rts-sessions-counts.txt"` (line 39)
+- `LOCK_DIR="/tmp/rts-sessions-counts.lock"` (line 40)
+
+Change to:
+```bash
+# Persistent audit log
+LOGDIR="$HOME/Projects/tp-claude-logs"
+mkdir -p "$LOGDIR"
+LOG="$LOGDIR/agent-audit.log"
+
+# Ephemeral per-boot state (intentionally in /tmp/)
+STATEDIR="/tmp/tp-claude-logs"
+mkdir -p "$STATEDIR"
+SESSIONS_SEEN="$STATEDIR/sessions-seen.txt"
+COUNTS_FILE="$STATEDIR/sessions-counts.txt"
+LOCK_DIR="$STATEDIR/sessions-counts.lock"
+```
+
+Add `project=` field to every log line (SessionOpen, SubagentStart,
+SubagentStop, SessionClose) for future cross-project filtering:
+```bash
+PROJECT="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || echo unknown)")"
+```
+
+Append `project=$PROJECT` to each `echo "[$TIMESTAMP] ..."` line.
+
+**S1b — Update `scripts/hooks/log-bash.sh`**
+
+Current state:
+- `LOG="$HOME/.claude/bash-audit.log"` (line 8)
+
+Change to:
+```bash
+LOGDIR="$HOME/Projects/tp-claude-logs"
+mkdir -p "$LOGDIR"
+LOG="$LOGDIR/bash-audit.log"
+```
+
+Add `project=` field to the log record block (line 23). Show the full
+replacement for the record block (lines 22–28):
+```bash
+PROJECT="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || echo unknown)")"
+{
+  printf '[%s] session=%s agent=%s type=%s project=%s\n' \
+    "$TIMESTAMP" "$SESSION" "$AGENT" "$AGENT_TYPE" "$PROJECT"
+  [[ -n "$DESC" ]] && printf '  desc: %s\n' "$DESC"
+  printf '  cmd:  %s\n' "$CMD_ONELINE"
+  printf -- '---\n'
+} >> "$LOG"
+```
+
+**S1c — Update `scripts/hooks/README.md`**
+
+Update all log file path references from `/tmp/rts-agent-log.txt` and
+`~/.claude/bash-audit.log` to `/tmp/tp-claude-logs/` paths. Document the
+volatility trade-off and the manual migration command.
+
+### S2. Create the dashboard script
+
+**File:** `scripts/session_audit.py`
+
+Standalone Python script. Reads the data sources and prints the report as
+markdown to stdout. **No external dependencies** — stdlib only (`json`, `glob`,
+`datetime`, `collections`, `subprocess`, `argparse`).
+
+**CLI interface:**
+```
+python scripts/session_audit.py                      # full report
+python scripts/session_audit.py --since 2026-04-09   # filter by date
+python scripts/session_audit.py --pr-range 90-108    # filter by PR range
+python scripts/session_audit.py --format csv          # for spreadsheet import
+python scripts/session_audit.py --verbose             # per-session detail
+```
+
+**Sections to generate:**
+1. Daily token usage table (from session JSONLs)
+2. Daily efficiency: lines changed vs output tokens (JSONLs + gh API)
+3. Model usage breakdown (from JSONL `message.model` field)
+4. Complete PR table (from gh API)
+5. Era analysis — hardcoded boundary at PR #107 (DAG introduction); eras:
+   "pre-DAG" (#1–#106), "DAG impl" (#107), "post-DAG" (#108+). Future: accept
+   `--era-boundary` flag to override
+6. Subagent analysis (from `~/Projects/tp-claude-logs/agent-audit.log`, graceful
+   fallback if file missing — print "no subagent data available")
+7. Per-session detail (with `--verbose`)
+
+**`--format csv` behaviour:** Each section emits a tab-separated table with a
+header row. Sections are separated by a blank line and a `# Section Name`
+comment line. Designed for spreadsheet paste, not programmatic parsing.
+
+**Error handling:** All `subprocess` calls (`gh`, `git`) must catch failures and
+print a warning section (e.g., `## PR table\n\n_gh CLI unavailable — skipping_`)
+rather than crashing. The dashboard must always produce valid output, even if
+degraded.
+
+**JSONL parsing notes:**
+- Deduplicate by `message.id` (access: `record["message"]["id"]`, format:
+  `msg_01DPxX...`) — the JSONL emits 3-4 records per API response with different
+  record-level `uuid` values but the same `message.id`. Using the wrong key
+  (`uuid` or `message.uuid`) would produce 3-4x token inflation
+- Only count records where `type == "assistant"` and `message.usage` exists
+- Token fields: `usage.input_tokens`, `usage.output_tokens`,
+  `usage.cache_read_input_tokens`, `usage.cache_creation_input_tokens`
+- Model: `message.model`
+- Timestamp: `record.timestamp` (ISO 8601 with Z suffix)
+
+**Agent log parsing notes:**
+- Format: `[YYYY-MM-DD HH:MM:SS] EventType key=value key=value ...`
+- Events: `SessionOpen`, `SessionClose`, `SubagentStart`, `SubagentStop`
+- Token fields on `SubagentStop`: `in=`, `out=`, `cache_read=`
+- Duration: diff between matching Start/Stop by `agent=` ID
+- New field: `project=` for filtering
+
+### S3. Clean up
+
+- Delete `session_audit.md` from repo root (now generated on demand)
+- Delete `session_audit_plan.md` from repo root (consumed into this plan)
+
+---
+
+## File Manifest
+
+| File | Action |
+|------|--------|
+| `scripts/hooks/log-subagent.sh` | Audit log → `~/Projects/tp-claude-logs/`, state → `/tmp/tp-claude-logs/`, add `project=` |
+| `scripts/hooks/log-bash.sh` | Move `~/.claude/bash-audit.log` → `~/Projects/tp-claude-logs/`, add `project=` |
+| `scripts/hooks/README.md` | Update path references, document persistence model |
+| `scripts/session_audit.py` | New — dashboard generator |
+| `session_audit.md` | Delete (generated artifact) |
+| `session_audit_plan.md` | Delete (consumed into plan) |
+
+---
+
+## Gate Condition
+
+- `python scripts/session_audit.py` produces valid markdown with all 7 sections
+- `--since` and `--pr-range` filters produce correct subsets
+- `~/Projects/tp-claude-logs/agent-audit.log` is written by the subagent hook
+- `~/Projects/tp-claude-logs/bash-audit.log` is written by the bash hook
+- Both logs include `project=rts-outcome-prediction` field
+- No new writes to `~/.claude/bash-audit.log` or `/tmp/rts-agent-log.txt`
+- Session state files (`sessions-seen.txt`, `sessions-counts.txt`, lock dir)
+  are under `/tmp/tp-claude-logs/` not scattered in `/tmp/`
+- No new dependencies added to pyproject.toml
+- Dashboard degrades gracefully when agent log is empty (e.g., first run after migration)
+- Dashboard degrades gracefully when `gh` CLI is unavailable (prints warning, does not crash)
+- `python scripts/session_audit.py | grep -q "## Daily token usage"` succeeds
+- `python scripts/session_audit.py | grep -q "## Model usage"` succeeds
 
 ---
 
 ## Suggested Execution Graph
 
 ```yaml
-dag_id: "dag_template_hierarchy_full"
+dag_id: "dag_session_audit_dashboard"
 spec_ref: "planning/current_plan.md"
 category: "C"
-branch: "chore/template-hierarchy"
+branch: "chore/session-audit-dashboard"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Template hierarchy — full completion"
+    name: "Session audit dashboard"
 
     task_groups:
       - group_id: "TG01"
-        name: "Commit existing template + status file content"
+        name: "Consolidate hook logs"
         depends_on: []
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
           scope: "diff"
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Stage + commit 7 template files"
+            name: "Update log-subagent.sh — paths + project field"
             agent: "executor"
             file_scope:
-              - "docs/templates/phase_template.yaml"
-              - "docs/templates/pipeline_section_template.yaml"
-              - "docs/templates/dataset_roadmap_template.yaml"
-              - "docs/templates/phase_status_template.yaml"
-              - "docs/templates/pipeline_section_status_template.yaml"
-              - "docs/templates/step_status_template.yaml"
-              - "docs/templates/research_log_template.yaml"
+              - "scripts/hooks/log-subagent.sh"
             parallel_safe: true
             depends_on: []
           - task_id: "T02"
-            name: "Stage + commit 9 status files"
+            name: "Update log-bash.sh — path + project field"
             agent: "executor"
             file_scope:
-              - "src/rts_predict/sc2/reports/sc2egset/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/sc2/reports/sc2egset/STEP_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/STEP_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/STEP_STATUS.yaml"
-              - "src/rts_predict/sc2/reports/sc2egset/PHASE_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/PHASE_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/PHASE_STATUS.yaml"
+              - "scripts/hooks/log-bash.sh"
+            parallel_safe: true
+            depends_on: []
+          - task_id: "T03"
+            name: "Update hooks README"
+            agent: "executor"
+            file_scope:
+              - "scripts/hooks/README.md"
             parallel_safe: true
             depends_on: []
 
       - group_id: "TG02"
-        name: "Retract premature AoE2 dataset strategy"
+        name: "Create dashboard script"
         depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T03"
-            name: "Stage + commit AoE2 ROADMAP retractions + research log"
-            agent: "executor"
-            file_scope:
-              - "src/rts_predict/aoe2/reports/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoestats/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md"
-              - "reports/research_log.md"
-            parallel_safe: false
-            depends_on: []
-
-      - group_id: "TG03"
-        name: "Populate docs/ml_experiment_phases/"
-        depends_on: ["TG01"]
-        review_gate:
-          agent: "reviewer"
-          base_ref: "auto"
           scope: "diff"
           on_blocker: "halt"
         tasks:
           - task_id: "T04"
-            name: "Populate PHASES.md"
+            name: "Write scripts/session_audit.py"
             agent: "executor"
             file_scope:
-              - "docs/ml_experiment_phases/PHASES.md"
+              - "scripts/session_audit.py"
             read_scope:
-              - "docs/PHASES.md"
-            parallel_safe: true
-            depends_on: []
-          - task_id: "T05"
-            name: "Populate PIPELINE_SECTIONS.md"
-            agent: "executor"
-            file_scope:
-              - "docs/ml_experiment_phases/PIPELINE_SECTIONS.md"
-            read_scope:
-              - "docs/PHASES.md"
-            parallel_safe: true
-            depends_on: []
-          - task_id: "T06"
-            name: "Populate STEPS.md"
-            agent: "executor"
-            file_scope:
-              - "docs/ml_experiment_phases/STEPS.md"
-            read_scope:
-              - "docs/TAXONOMY.md"
-              - "docs/templates/step_template.yaml"
-            parallel_safe: true
+              - "session_audit.md"
+              - "scripts/hooks/log-subagent.sh"
+              - "scripts/hooks/log-bash.sh"
+            parallel_safe: false
             depends_on: []
 
-      - group_id: "TG04"
-        name: "Populate docs/research/"
-        depends_on: ["TG01"]
+      - group_id: "TG03"
+        name: "Cleanup + CHANGELOG"
+        depends_on: ["TG02"]
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T07"
-            name: "Populate RESEARCH_LOG.md"
-            agent: "executor"
-            file_scope:
-              - "docs/research/RESEARCH_LOG.md"
-            read_scope:
-              - "docs/templates/research_log_template.yaml"
-            parallel_safe: true
-            depends_on: []
-          - task_id: "T08"
-            name: "Populate RESEARCH_LOG_ENTRY.md"
-            agent: "executor"
-            file_scope:
-              - "docs/research/RESEARCH_LOG_ENTRY.md"
-            read_scope:
-              - "docs/templates/research_log_entry_template.yaml"
-            parallel_safe: true
-            depends_on: []
-          - task_id: "T09"
-            name: "Populate ROADMAP.md"
-            agent: "executor"
-            file_scope:
-              - "docs/research/ROADMAP.md"
-            read_scope:
-              - "docs/templates/dataset_roadmap_template.yaml"
-            parallel_safe: true
-            depends_on: []
-
-      - group_id: "TG05"
-        name: "Workflow updates + cleanup + CHANGELOG"
-        depends_on: ["TG02", "TG03", "TG04"]
-        review_gate:
-          agent: "reviewer"
-          base_ref: "auto"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T10"
-            name: "Stage workflow files, delete relic, update CHANGELOG"
+          - task_id: "T05"
+            name: "Delete static reports, update CHANGELOG"
             agent: "executor"
             file_scope:
-              - "CLAUDE.md"
               - "CHANGELOG.md"
-              - "planning/README.md"
-              - "planning/INDEX.md"
-              - "planning/dags/DAG.yaml"
-              - "planning/specs/spec_01_roadmap_retractions.md"
-              - ".claude/agents/executor.md"
-              - "scripts/hooks/log-subagent.sh"
+              - "session_audit.md"
+              - "session_audit_plan.md"
             parallel_safe: false
             depends_on: []
 
@@ -432,15 +343,3 @@ final_review:
 failure_policy:
   on_failure: "halt"
 ```
-
----
-
-## Provenance
-
-This plan supersedes the prior version (committed at 9e4279f on this branch)
-which incorrectly claimed Steps 1-11 were complete. The files existed on disk
-with content but were never committed. This revision is an honest inventory of
-all remaining work.
-
-The `docs/ml_experiment_phases/` decomposition and `docs/research/` population
-are new scope items identified by the user — the original plan missed them.

@@ -1,192 +1,86 @@
-dag_id: "dag_template_hierarchy_full"
+dag_id: "dag_session_audit_dashboard"
 spec_ref: "planning/current_plan.md"
 category: "C"
-branch: "chore/template-hierarchy"
+branch: "chore/session-audit-dashboard"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Template hierarchy — full completion"
+    name: "Session audit dashboard"
 
     task_groups:
       - group_id: "TG01"
-        name: "Commit existing template + status file content"
+        name: "Consolidate hook logs"
         depends_on: []
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
           scope: "diff"
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Stage + commit 7 template files"
-            spec_file: "planning/specs/spec_01_templates.md"
+            name: "Update log-subagent.sh — paths + project field"
             agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
+            spec_ref: "planning/current_plan.md#S1a"
             file_scope:
-              - "docs/templates/phase_template.yaml"
-              - "docs/templates/pipeline_section_template.yaml"
-              - "docs/templates/dataset_roadmap_template.yaml"
-              - "docs/templates/phase_status_template.yaml"
-              - "docs/templates/pipeline_section_status_template.yaml"
-              - "docs/templates/step_status_template.yaml"
-              - "docs/templates/research_log_template.yaml"
-            read_scope: []
+              - "scripts/hooks/log-subagent.sh"
+            parallel_safe: true
             depends_on: []
           - task_id: "T02"
-            name: "Stage + commit 9 status files"
-            spec_file: "planning/specs/spec_02_status_files.md"
+            name: "Update log-bash.sh — path + project field"
             agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
+            spec_ref: "planning/current_plan.md#S1b"
             file_scope:
-              - "src/rts_predict/sc2/reports/sc2egset/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/PIPELINE_SECTION_STATUS.yaml"
-              - "src/rts_predict/sc2/reports/sc2egset/STEP_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/STEP_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/STEP_STATUS.yaml"
-              - "src/rts_predict/sc2/reports/sc2egset/PHASE_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoe2companion/PHASE_STATUS.yaml"
-              - "src/rts_predict/aoe2/reports/aoestats/PHASE_STATUS.yaml"
-            read_scope: []
+              - "scripts/hooks/log-bash.sh"
+            parallel_safe: true
+            depends_on: []
+          - task_id: "T03"
+            name: "Update hooks README"
+            agent: "executor"
+            spec_ref: "planning/current_plan.md#S1c"
+            file_scope:
+              - "scripts/hooks/README.md"
+            parallel_safe: true
             depends_on: []
 
       - group_id: "TG02"
-        name: "Retract premature AoE2 dataset strategy"
+        name: "Create dashboard script"
         depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T03"
-            name: "Stage + commit AoE2 ROADMAP retractions + research log"
-            spec_file: "planning/specs/spec_03_roadmap_retractions.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: false
-            file_scope:
-              - "src/rts_predict/aoe2/reports/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoestats/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md"
-              - "reports/research_log.md"
-            read_scope: []
-            depends_on: []
-
-      - group_id: "TG03"
-        name: "Populate docs/ml_experiment_phases/"
-        depends_on: ["TG01"]
-        review_gate:
-          agent: "reviewer"
-          base_ref: "auto"
           scope: "diff"
           on_blocker: "halt"
         tasks:
           - task_id: "T04"
-            name: "Populate PHASES.md"
-            spec_file: "planning/specs/spec_04_phases_md.md"
+            name: "Write scripts/session_audit.py"
             agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
+            spec_ref: "planning/current_plan.md#S2"
             file_scope:
-              - "docs/ml_experiment_phases/PHASES.md"
+              - "scripts/session_audit.py"
             read_scope:
-              - "docs/PHASES.md"
-            depends_on: []
-          - task_id: "T05"
-            name: "Populate PIPELINE_SECTIONS.md"
-            spec_file: "planning/specs/spec_05_pipeline_sections_md.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
-            file_scope:
-              - "docs/ml_experiment_phases/PIPELINE_SECTIONS.md"
-            read_scope:
-              - "docs/PHASES.md"
-            depends_on: []
-          - task_id: "T06"
-            name: "Populate STEPS.md"
-            spec_file: "planning/specs/spec_06_steps_md.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
-            file_scope:
-              - "docs/ml_experiment_phases/STEPS.md"
-            read_scope:
-              - "docs/TAXONOMY.md"
-              - "docs/templates/step_template.yaml"
+              - "session_audit.md"
+              - "scripts/hooks/log-subagent.sh"
+              - "scripts/hooks/log-bash.sh"
+            parallel_safe: false
             depends_on: []
 
-      - group_id: "TG04"
-        name: "Populate docs/research/"
-        depends_on: ["TG01"]
+      - group_id: "TG03"
+        name: "Cleanup + CHANGELOG"
+        depends_on: ["TG02"]
         review_gate:
           agent: "reviewer"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T07"
-            name: "Populate RESEARCH_LOG.md"
-            spec_file: "planning/specs/spec_07_research_log_md.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
-            file_scope:
-              - "docs/research/RESEARCH_LOG.md"
-            read_scope:
-              - "docs/templates/research_log_template.yaml"
-            depends_on: []
-          - task_id: "T08"
-            name: "Populate RESEARCH_LOG_ENTRY.md"
-            spec_file: "planning/specs/spec_08_research_log_entry_md.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
-            file_scope:
-              - "docs/research/RESEARCH_LOG_ENTRY.md"
-            read_scope:
-              - "docs/templates/research_log_entry_template.yaml"
-            depends_on: []
-          - task_id: "T09"
-            name: "Populate ROADMAP.md"
-            spec_file: "planning/specs/spec_09_research_roadmap_md.md"
-            agent: "executor"
-            isolation: "inherit"
-            parallel_safe: true
-            file_scope:
-              - "docs/research/ROADMAP.md"
-            read_scope:
-              - "docs/templates/dataset_roadmap_template.yaml"
-            depends_on: []
-
-      - group_id: "TG05"
-        name: "Workflow updates + cleanup + CHANGELOG"
-        depends_on: ["TG02", "TG03", "TG04"]
-        review_gate:
-          agent: "reviewer"
-          base_ref: "auto"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T10"
-            name: "Stage workflow files, delete relic, update CHANGELOG"
-            spec_file: "planning/specs/spec_10_cleanup.md"
+          - task_id: "T05"
+            name: "Delete static reports, update CHANGELOG"
             agent: "executor"
-            isolation: "inherit"
-            parallel_safe: false
+            spec_ref: "planning/current_plan.md#S3"
             file_scope:
-              - "CLAUDE.md"
               - "CHANGELOG.md"
-              - "planning/README.md"
-              - "planning/INDEX.md"
-              - "planning/dags/DAG.yaml"
-              - ".claude/agents/executor.md"
-            read_scope: []
+              - "session_audit.md"
+              - "session_audit_plan.md"
+            parallel_safe: false
             depends_on: []
 
 final_review:
