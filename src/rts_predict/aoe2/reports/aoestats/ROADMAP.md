@@ -29,6 +29,13 @@ Steps are numbered `XX_YY_ZZ` where `XX` = Phase, `YY` = Pipeline Section,
 
 ## Source data
 
+> **Provenance:** Row counts, table structures, and schema drift details below
+> come from pre-phase-system DuckDB ingestion (reports/aoestats/README.md,
+> 2026-04-07). They have NOT been verified under the Phase 01 system. Step
+> 01_01_02 (schema discovery) will produce authoritative schema and row count
+> artifacts. Until then, treat these values as planning context, not verified
+> findings.
+
 **aoestats.io weekly dumps** — community match and player statistics dataset.
 ~30.7M matches, ~107.6M players across 343 files on disk (172 match parquets +
 171 player parquets). Downloaded 2026-04-06.

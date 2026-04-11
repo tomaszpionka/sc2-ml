@@ -31,39 +31,32 @@ description: >
   Coverage spans 2020-08-01 to 2026-04-04.
 file_format: "parquet, CSV"
 
-# NOTE: All file_count and size_mb values below are PENDING.
-# The 01_01_01 file inventory artifact currently counts .gitkeep placeholder files
-# present in each subdirectory. A corrected artifact (with post-processing exclusion
-# of .gitkeep files and root-level non-data files) is required before these
-# numbers can be populated.
+# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# Dotfiles excluded: .gitkeep x4 (one per subdir), .DS_Store x1 at root.
 subdirectory_layout:
   - directory: "matches/"
     contents: "Daily match parquet files"
     file_pattern: "match-{date}.parquet"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 2073
+    size_mb: 6621.52
   - directory: "leaderboards/"
     contents: "Leaderboard snapshot parquet file"
     file_pattern: "leaderboard.parquet"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 1
+    size_mb: 83.32
   - directory: "profiles/"
     contents: "Player profile snapshot parquet file"
     file_pattern: "profile.parquet"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 1
+    size_mb: 161.84
   - directory: "ratings/"
     contents: "Daily rating CSV files"
     file_pattern: "rating-{date}.csv"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 2072
+    size_mb: 2519.59
 
-# total_files is PENDING: the 01_01_01 artifact currently counts .gitkeep files
-# in each subdirectory. A corrected artifact with post-processing exclusion of
-# .gitkeep files and root-level non-data files is required.
-total_files: "PENDING: awaiting corrected 01_01_01 artifact"
-# total_size_mb is PENDING: same artifact correction required as total_files.
-total_size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+total_files: 4149  # excludes 5 dotfiles (.gitkeep x4, .DS_Store x1)
+total_size_mb: 9387.8
 
 # -- Section D: Temporal Coverage ----------------------------------------------
 
@@ -134,23 +127,20 @@ This directory holds the raw data layer and must never be modified.
 **Acquisition script:** `src/rts_predict/aoe2/data/aoe2companion/acquisition.py`
 **Manifest:** `src/rts_predict/aoe2/data/aoe2companion/api/api_dump_list.json`
 
-> **Note on file counts and sizes:** All numeric values (file counts, sizes) are
-> PENDING. The 01_01_01 file inventory artifact currently includes `.gitkeep`
-> placeholder files in each subdirectory in its counts. A corrected artifact with
-> post-processing exclusion of `.gitkeep` files and root-level non-data files is
-> required before these numbers can be populated.
+> **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
+> (.gitkeep x4, .DS_Store x1). Counts reflect data files only.
 
 ## Subdirectory Layout
 
 | Directory | Contents | Pattern | File count | Size (MB) |
 |-----------|----------|---------|-----------|-----------|
-| `matches/` | Daily match parquet files | `match-{date}.parquet` | PENDING | PENDING |
-| `leaderboards/` | Leaderboard snapshot | `leaderboard.parquet` | PENDING | PENDING |
-| `profiles/` | Player profile snapshot | `profile.parquet` | PENDING | PENDING |
-| `ratings/` | Daily rating CSV files | `rating-{date}.csv` | PENDING | PENDING |
+| `matches/` | Daily match parquet files | `match-{date}.parquet` | 2073 | 6,621.5 |
+| `leaderboards/` | Leaderboard snapshot | `leaderboard.parquet` | 1 | 83.3 |
+| `profiles/` | Player profile snapshot | `profile.parquet` | 1 | 161.8 |
+| `ratings/` | Daily rating CSV files | `rating-{date}.csv` | 2072 | 2,519.6 |
 
-**Total files:** PENDING (awaiting corrected 01_01_01 artifact)
-**Total size:** PENDING (awaiting corrected 01_01_01 artifact)
+**Total files:** 4,149 (excludes 5 dotfiles: .gitkeep x4, .DS_Store x1)
+**Total size:** 9,387.8 MB (9.2 GB)
 
 ## Temporal Coverage
 

@@ -28,6 +28,13 @@ Steps are numbered `XX_YY_ZZ` where `XX` = Phase, `YY` = Pipeline Section,
 
 ## Source data
 
+> **Provenance:** Row counts, table structures, and schema drift details below
+> come from pre-phase-system DuckDB ingestion (reports/aoe2companion/README.md,
+> 2026-04-07). They have NOT been verified under the Phase 01 system. Step
+> 01_01_02 (schema discovery) will produce authoritative schema and row count
+> artifacts. Until then, treat these values as planning context, not verified
+> findings.
+
 **aoe2companion API** — community match history and rating dataset.
 ~277M matches, ~58M ratings, ~2.4M leaderboard entries, ~3.6M profiles across
 4,147 files totalling ~9.3 GB. Downloaded 2026-04-06.

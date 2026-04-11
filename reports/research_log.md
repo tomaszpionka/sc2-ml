@@ -26,7 +26,7 @@ Both datasets had identical ROADMAP structures implying equal treatment.
 Without formalization, Phase 01 work proceeds on both at equal priority,
 potentially wasting 50% of AoE2 effort.
 
-### Decision
+### Decisions taken
 - aoe2companion (277M matches, daily, 2020–2026) runs full Phases 01–07.
 - aoestats (30.7M matches, weekly, 2022–2026) runs full Phase 01, then
   lightweight Phase 02–05 replication for validation.

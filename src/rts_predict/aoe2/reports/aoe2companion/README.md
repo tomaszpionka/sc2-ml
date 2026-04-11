@@ -1,3 +1,10 @@
+> **Provenance note:** This file is a permanent acquisition provenance record
+> from the pre-phase-system era (2026-04-07). The row counts, schema details,
+> and dtype decisions recorded here have NOT been re-validated under the Phase
+> 01 system. Phase 01 Step 01_01_02 (schema discovery) will produce
+> authoritative schema artifacts. Do not cite numbers from this file as
+> Phase-01-validated findings.
+
 # aoe2companion -- Raw Data Provenance
 
 Permanent provenance record for the aoe2companion raw data. This file is

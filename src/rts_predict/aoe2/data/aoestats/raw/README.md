@@ -27,40 +27,32 @@ acquisition_script: "src/rts_predict/aoe2/data/aoestats/acquisition.py"
 description: >
   Weekly database dumps from aoestats.io. Contains paired weekly match and player
   parquet files named by date range, plus a single overview JSON reference file.
-  The number of non-zero weeks downloaded (2022-08-28 to 2026-02-07) and the
-  count of excluded zero-match weeks are PENDING (awaiting corrected 01_01_01
-  artifact). 16 zero-match weeks from the manifest were excluded during
-  acquisition (derived from manifest comparison, not from 01_01_01 artifact).
+  172 non-zero match weeks downloaded (2022-08-28 to 2026-02-07).
+  16 zero-match weeks from the manifest were excluded during acquisition
+  (derived from manifest comparison; 188 total manifest entries - 172 downloaded = 16 excluded).
 file_format: "parquet, JSON"
 
-# NOTE: All file_count and size_mb values below are PENDING.
-# The 01_01_01 file inventory artifact currently counts .gitkeep placeholder files
-# present in each subdirectory. A corrected artifact (with post-processing exclusion
-# of .gitkeep files and root-level non-data files) is required before these
-# numbers can be populated.
+# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# Dotfiles excluded: .gitkeep x3 (one per subdir).
 subdirectory_layout:
   - directory: "matches/"
     contents: "Weekly match parquet files named {start_date}_{end_date}_matches.parquet"
     file_pattern: "{start_date}_{end_date}_matches.parquet"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 172
+    size_mb: 610.55
   - directory: "players/"
     contents: "Weekly player parquet files named {start_date}_{end_date}_players.parquet"
     file_pattern: "{start_date}_{end_date}_players.parquet"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 171
+    size_mb: 3162.86
   - directory: "overview/"
     contents: "Overview JSON reference file with lookup tables (civilizations, maps, game modes)"
     file_pattern: "overview.json"
-    file_count: "PENDING: awaiting corrected 01_01_01 artifact"
-    size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+    file_count: 1
+    size_mb: 0.02
 
-# total_files is PENDING: the 01_01_01 artifact currently counts .gitkeep files
-# in each subdirectory. A corrected artifact with post-processing exclusion of
-# .gitkeep files and root-level non-data files is required.
-total_files: "PENDING: awaiting corrected 01_01_01 artifact"
-# total_size_mb is PENDING: same artifact correction required as total_files.
-total_size_mb: "PENDING: awaiting corrected 01_01_01 artifact"
+total_files: 346  # excludes 3 dotfiles (.gitkeep x3)
+total_size_mb: 3773.6
 
 # -- Section D: Temporal Coverage ----------------------------------------------
 
@@ -87,10 +79,9 @@ known_gaps:
 
 gap_analysis_status: complete
 coverage_notes: >
-  Per-directory file counts for matches/ and players/ are PENDING (awaiting
-  corrected 01_01_01 artifact that excludes .gitkeep files). The paired
-  comparison in 01_01_01 shows a count mismatch of 1 between matches and
-  players weeks, reflected in the fourth gap entry above.
+  Per-directory file counts: matches/=172, players/=171 (each excludes 1 .gitkeep).
+  The 1-file count mismatch between matches and players is reflected in the
+  fourth gap entry above (players has one additional gap week).
   16 zero-match weeks from the manifest were excluded during acquisition
   (see acquisition_filters below).
 
@@ -151,22 +142,19 @@ This directory holds the raw data layer and must never be modified.
 **Acquisition script:** `src/rts_predict/aoe2/data/aoestats/acquisition.py`
 **Manifest:** `src/rts_predict/aoe2/data/aoestats/api/db_dump_list.json`
 
-> **Note on file counts and sizes:** All numeric values (file counts, sizes) are
-> PENDING. The 01_01_01 file inventory artifact currently includes `.gitkeep`
-> placeholder files in each subdirectory in its counts. A corrected artifact with
-> post-processing exclusion of `.gitkeep` files and root-level non-data files is
-> required before these numbers can be populated.
+> **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
+> (.gitkeep x3, one per subdir). Counts reflect data files only.
 
 ## Subdirectory Layout
 
 | Directory | Contents | Pattern | File count | Size (MB) |
 |-----------|----------|---------|-----------|-----------|
-| `matches/` | Weekly match parquet files | `{start}_{end}_matches.parquet` | PENDING | PENDING |
-| `players/` | Weekly player parquet files | `{start}_{end}_players.parquet` | PENDING | PENDING |
-| `overview/` | Overview JSON reference | `overview.json` | PENDING | PENDING |
+| `matches/` | Weekly match parquet files | `{start}_{end}_matches.parquet` | 172 | 610.6 |
+| `players/` | Weekly player parquet files | `{start}_{end}_players.parquet` | 171 | 3,162.9 |
+| `overview/` | Overview JSON reference | `overview.json` | 1 | 0.02 |
 
-**Total files:** PENDING (awaiting corrected 01_01_01 artifact)
-**Total size:** PENDING (awaiting corrected 01_01_01 artifact)
+**Total files:** 346 (excludes 3 dotfiles: .gitkeep x3)
+**Total size:** 3,773.6 MB (3.7 GB)
 
 ## Temporal Coverage
 
@@ -195,7 +183,7 @@ re-downloads.
 ## Known Limitations
 
 - Source selection criteria not documented; representativeness unknown
-- players/ has one fewer file than matches/ (count PENDING corrected artifact)
+- players/ has one fewer file than matches/ (172 vs 171: one additional gap week in players)
 
 ## Inventory Artifact
 
