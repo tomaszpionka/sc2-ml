@@ -40,6 +40,8 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 | `__init__.py` | Docstring identifying the game. NO `__version__`. | Yes |
 | `cli.py` | CLI entry point registered in `pyproject.toml` | Yes |
 | `config.py` | `GAME_DIR`, `ROOT_DIR`, `REPORTS_DIR`, DB paths, constants | Yes |
+| `reports/<dataset>/STEP_STATUS.yaml` | Machine-readable step progress (dataset-scoped) | Per dataset |
+| `reports/<dataset>/PIPELINE_SECTION_STATUS.yaml` | Machine-readable pipeline section progress (dataset-scoped) | Per dataset |
 | `reports/<dataset>/PHASE_STATUS.yaml` | Machine-readable phase progress (dataset-scoped) | Per dataset |
 | `data/` | Processing module (Phase 01 minimal subset) | Yes |
 | `data/<dataset>/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
@@ -106,16 +108,35 @@ the lower-precedence file is edited to match, never the reverse.
    in-scope Phases. Cannot invent Phases; can only decompose Phases into
    Pipeline Sections and Steps per `docs/TAXONOMY.md`.
 
-7. **`src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`** — machine-readable phase
-   status. Strictly derived from tiers (5) and (6). Never authoritative;
-   never diverges. If it diverges from the ROADMAPs, it is wrong and gets
-   regenerated.
+7. **Machine-readable status files** — three files per dataset, forming a derivation chain:
+
+   - **7a. `STEP_STATUS.yaml`** — derived from the dataset ROADMAP (tier 6). Authoritative
+     at the step level. Each entry has a `pipeline_section` upward link.
+   - **7b. `PIPELINE_SECTION_STATUS.yaml`** — derived from STEP_STATUS.yaml (tier 7a).
+     Lists only pipeline sections for active phases (added incrementally as phases activate).
+   - **7c. `PHASE_STATUS.yaml`** — derived from PIPELINE_SECTION_STATUS.yaml (tier 7b).
+     Lists all 7 phases including not_started ones.
+
+   None of these files are authoritative. If any disagrees with its upstream source,
+   it is wrong and gets regenerated. Full chain: ROADMAP → STEP_STATUS →
+   PIPELINE_SECTION_STATUS → PHASE_STATUS.
 
 8. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
    `.claude/agents/*.md`, and any other file that instructs Claude agents
    how to work. These reference phase numbers and terminology only via
    pointers into tiers (3), (4), (5), and (6). They never inline-encode a numbered
    Phase list and never redefine terminology.
+
+   **8b. Planning artifacts** — `planning/current_plan.md` (the active Spec),
+   `planning/dags/DAG.yaml` (the active execution schedule),
+   `planning/specs/spec_*.md` (task-level instructions). Within this sub-tier,
+   precedence is: plan (authoritative) > DAG (derived execution order) >
+   specs (derived task-level extracts). If any derived artifact diverges from
+   the plan, the plan wins and the DAG is regenerated. Planning artifacts are
+   ephemeral: committed on the feature branch for PR auditability, then purged
+   after merge (see `planning/README.md`). Permanent documentation files
+   (`planning/INDEX.md`, `planning/README.md`, `planning/*/README.md`) are
+   tier 8 operational files, not ephemeral planning artifacts.
 
 **The rule.** Higher-precedence tiers are sources; lower-precedence tiers
 are derivations. A change in a high-precedence file propagates downward
@@ -144,9 +165,19 @@ section.
 
 ## Progress tracking
 
-Phase progress per dataset is tracked in `PHASE_STATUS.yaml` files at the
-dataset level. Claude Code reads the active dataset's PHASE_STATUS.yaml at
-session start to determine the current phase without parsing full roadmaps.
+Phase progress per dataset is tracked through a three-tier derivation chain
+of machine-readable status files, all at the dataset level:
+
+1. `STEP_STATUS.yaml` — step-level status, derived from the dataset ROADMAP.
+   Each step entry includes a `pipeline_section` upward link.
+2. `PIPELINE_SECTION_STATUS.yaml` — pipeline section status, derived from
+   STEP_STATUS.yaml. Only lists pipeline sections for active phases.
+3. `PHASE_STATUS.yaml` — phase-level status, derived from
+   PIPELINE_SECTION_STATUS.yaml. Lists all 7 phases.
+
+Claude Code reads the active dataset's PHASE_STATUS.yaml at session start to
+determine the current phase without parsing full roadmaps. At session start,
+also read STEP_STATUS.yaml to determine the most recent step completed.
 
 Thesis section progress is tracked in `thesis/WRITING_STATUS.md` (per-section status)
 and `thesis/chapters/REVIEW_QUEUE.md` (Pass 2 review queue).
