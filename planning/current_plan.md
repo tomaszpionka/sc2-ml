@@ -65,14 +65,49 @@ Session state files (`sessions-seen.txt`, `sessions-counts.txt`, lock dir)
 remain in `/tmp/tp-claude-logs/` — they are intentionally per-boot ephemeral
 state (tracking which sessions have emitted `SessionOpen`), not audit data.
 
-**Migration:** On first execution, the hook `mkdir -p`s the dir. Existing data
-from `/tmp/rts-agent-log.txt` and `~/.claude/bash-audit.log` should be migrated
-once manually:
+**Migration — sequencing matters for chronological integrity:**
+
+Once the hooks are updated (S1a, S1b), new log entries start landing in the new
+directory immediately. The old data must be injected *before* (on top of) the
+live entries, not appended after them, or the timeline breaks.
+
+**Step 1 — Stage old logs into the new dir with `_old` suffix:**
 ```bash
-mkdir -p ~/Projects/tp-claude-logs
-cat /tmp/rts-agent-log.txt >> ~/Projects/tp-claude-logs/agent-audit.log 2>/dev/null
-cat ~/.claude/bash-audit.log >> ~/Projects/tp-claude-logs/bash-audit.log 2>/dev/null
+cp /tmp/rts-agent-log.txt ~/Projects/tp-claude-logs/agent-audit_old.log 2>/dev/null
+cp ~/.claude/bash-audit.log ~/Projects/tp-claude-logs/bash-audit_old.log 2>/dev/null
 ```
+
+**Step 2 — Prepend old data into the live logs (old on top, new below):**
+```bash
+# agent-audit: old entries (pre-migration) + new entries (post-migration)
+cat ~/Projects/tp-claude-logs/agent-audit_old.log \
+    ~/Projects/tp-claude-logs/agent-audit.log \
+    > ~/Projects/tp-claude-logs/agent-audit_merged.log \
+  && mv ~/Projects/tp-claude-logs/agent-audit_merged.log \
+        ~/Projects/tp-claude-logs/agent-audit.log
+
+# bash-audit: same pattern
+cat ~/Projects/tp-claude-logs/bash-audit_old.log \
+    ~/Projects/tp-claude-logs/bash-audit.log \
+    > ~/Projects/tp-claude-logs/bash-audit_merged.log \
+  && mv ~/Projects/tp-claude-logs/bash-audit_merged.log \
+        ~/Projects/tp-claude-logs/bash-audit.log
+```
+
+**Step 3 — Clean up staging files:**
+```bash
+rm ~/Projects/tp-claude-logs/agent-audit_old.log
+rm ~/Projects/tp-claude-logs/bash-audit_old.log
+```
+
+**Timing:** This migration runs AFTER TG01 hooks are committed and active, as a
+separate migration task (T04 in TG01). It is NOT parallel-safe with the hooks —
+depends on T01 and T02 completing first. A brief window exists where the live
+log has only post-migration entries; after the prepend, the full timeline is
+restored.
+
+**Edge case:** If the live log does not yet exist when prepend runs (no hook has
+fired yet), the `cat` simply copies the old file as-is. This is correct.
 
 ---
 
@@ -81,7 +116,7 @@ cat ~/.claude/bash-audit.log >> ~/Projects/tp-claude-logs/bash-audit.log 2>/dev/
 | Source | Contents | Persistent? |
 |--------|----------|-------------|
 | `~/.claude/projects/<project>/*.jsonl` | Per-session orchestrator tokens (input, output, cache_read, cache_create, model) keyed by message UUID | Yes (Claude-managed) |
-| `~/Projects/tp-claude-logs/agent-audit.log` | Subagent start/stop with type, model, per-agent tokens, durations | No (volatile) |
+| `~/Projects/tp-claude-logs/agent-audit.log` | Subagent start/stop with type, model, per-agent tokens, durations | Yes |
 | `~/Projects/tp-claude-logs/bash-audit.log` | Per-command audit trail | Yes |
 | `gh pr list --state merged --json ...` | PR metadata (additions, deletions, mergedAt) | Yes (API) |
 | `git log` | Commit history | Yes |

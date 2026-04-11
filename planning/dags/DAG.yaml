@@ -42,6 +42,13 @@ jobs:
               - "scripts/hooks/README.md"
             parallel_safe: true
             depends_on: []
+          - task_id: "T04"
+            name: "Migrate old logs — stage, prepend, cleanup"
+            agent: "executor"
+            spec_ref: "planning/current_plan.md#Migration"
+            file_scope: []
+            parallel_safe: false
+            depends_on: ["T01", "T02"]
 
       - group_id: "TG02"
         name: "Create dashboard script"
@@ -51,7 +58,7 @@ jobs:
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T04"
+          - task_id: "T05"
             name: "Write scripts/session_audit.py"
             agent: "executor"
             spec_ref: "planning/current_plan.md#S2"
@@ -72,7 +79,7 @@ jobs:
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T05"
+          - task_id: "T06"
             name: "Delete static reports, update CHANGELOG"
             agent: "executor"
             spec_ref: "planning/current_plan.md#S3"
