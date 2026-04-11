@@ -1,5 +1,5 @@
 dag_id: "dag_session_audit_dashboard"
-spec_ref: "planning/current_plan.md"
+plan_ref: "planning/current_plan.md"
 category: "C"
 branch: "chore/session-audit-dashboard"
 base_ref: "master"
