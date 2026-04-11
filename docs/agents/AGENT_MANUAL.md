@@ -11,7 +11,7 @@ How to use the 8-agent Claude Code architecture for the master's thesis.
 | Quick question (git, files, commands) | `@lookup what branch am I on?` |
 | Plan a Phase step or thesis methodology | `@planner-science plan Phase 01 step 01_01_01` |
 | Plan a refactoring or chore | `@planner plan test coverage for exploration.py` |
-| Execute any plan steps | `@executor execute steps 3-5 from _current_plan.md` |
+| Execute any plan steps | `@executor execute steps 3-5 from planning/current_plan.md` |
 | Hard step needing Opus reasoning | `/model opus` then work normally, `/model sonnet` after |
 | Validate work after execution | `@reviewer review changes` |
 | Heavyweight PR / spec review | `@reviewer-deep deep review of PR before merge` |
@@ -69,7 +69,7 @@ Produces a detailed plan with phase/step references, file lists, function
 signatures, SQL queries, test cases, and gate conditions.
 
 **What it does NOT do:** Write any files. It's read-only. You approve the plan,
-then write it to `_current_plan.md` (or let the parent session do it).
+then write it to `planning/current_plan.md` (or let the parent session do it).
 
 **Example:**
 ```
@@ -110,7 +110,7 @@ lose it.
 
 **Example:**
 ```
-@executor execute steps 1-3 from _current_plan.md
+@executor execute steps 1-3 from planning/current_plan.md
 ```
 
 ### `reviewer` — Quality Gate (Sonnet, high effort)
@@ -246,7 +246,7 @@ Phase work executes in `sandbox/` notebooks. The plan specifies the notebook pat
 ```
 Step 1:  @planner-science plan Phase N step N.X
 Step 2:  [review plan in chat, request adjustments]
-Step 3:  [approved plan → write to _current_plan.md]
+Step 3:  [approved plan → write to planning/current_plan.md]
 Step 2.5 (recommended for Phase 03+):
          @reviewer-adversarial challenge this plan
          [address any BLOCKER findings before proceeding]
@@ -436,7 +436,7 @@ The skill walks through the complete PR Creation Flow from
 `gh pr create` — it proposes commands for the user to execute.
 
 **Planned follow-up:** `/execute-plan` — a skill to execute steps from
-`_current_plan.md` or a `specs/spec_NN.md` file without spelling out the
+`planning/current_plan.md` or a `specs/spec_NN.md` file without spelling out the
 full instruction each time.
 
 ---

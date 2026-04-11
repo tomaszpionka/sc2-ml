@@ -174,7 +174,7 @@ execute part of a Step, one Step, or multiple Steps.
 A single executable plan scoped to one pull request. A Spec is authored by
 a planner agent, reviewed and approved by the user, then executed by the
 executor agent. The canonical location for the active Spec is
-`_current_plan.md` at the repo root.
+`planning/current_plan.md` at the repo root.
 
 ### PR
 
@@ -197,7 +197,7 @@ Work classification. Drives branch prefix and agent routing.
 ### Session
 
 One conversation with Claude (chat or code). A Spec is typically split
-across two Sessions: a planning Session that authors `_current_plan.md`,
+across two Sessions: a planning Session that authors `planning/current_plan.md`,
 and an execution Session that carries out the plan. The split is
 deliberate — it forces an explicit approval checkpoint.
 

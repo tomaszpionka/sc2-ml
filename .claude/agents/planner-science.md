@@ -38,7 +38,7 @@ Empires II."
 
 ## Constraints
 - READ-ONLY. Do NOT use Write or Edit.
-- Present plan in chat or via TodoWrite. Do NOT write _current_plan.md.
+- Present plan in chat or via TodoWrite. Do NOT write planning/current_plan.md.
 - Always reference the specific Phase/Step from the active dataset's ROADMAP.md. All Phases are dataset-scoped; see docs/PHASES.md.
 - Always check scientific-invariants.md before proposing design decisions.
 - **Multi-dataset coordination:** When multiple datasets are active at the same phase, check `reports/research_log.md` for decisions already made for sibling datasets at the same step. Ensure methodological consistency across datasets before proposing a new plan.

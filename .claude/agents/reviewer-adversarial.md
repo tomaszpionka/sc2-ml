@@ -52,7 +52,7 @@ at least items 1–5.
 7. `.claude/rules/sql-data.md` — SQL and data pipeline constraints.
 8. `reports/research_log.md` — recent entries, to detect contradictions
    with prior findings.
-9. `_current_plan.md` (if reviewing a plan).
+9. `planning/current_plan.md` (if reviewing a plan).
 10. The artifact under review (notebook .py, thesis chapter, feature
     catalog, SQL file, etc.).
 
@@ -143,7 +143,7 @@ Check:
 ## Review modes
 
 ### Mode A — Plan Review (before execution)
-Input: _current_plan.md or a plan presented in chat.
+Input: planning/current_plan.md or a plan presented in chat.
 Focus: Will this plan produce valid, defensible results if executed correctly?
 Key question: "Is there a methodology flaw that correct execution cannot fix?"
 

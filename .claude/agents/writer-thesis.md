@@ -24,7 +24,7 @@ to an artifact under reports/ or to a references.bib entry.
 1. docs/THESIS_WRITING_MANUAL.md — formatting, citation style,
    reference-style markdown links convention.
 2. .claude/scientific-invariants.md — claims must respect these.
-3. The Category F plan you are executing (in chat or _current_plan.md).
+3. The Category F plan you are executing (in chat or planning/current_plan.md).
 4. WRITING_STATUS.md — current state of the chapter you are touching.
 5. Every artifact the plan cites, in full. Do not draft from plan
    summaries alone — read the source reports.
