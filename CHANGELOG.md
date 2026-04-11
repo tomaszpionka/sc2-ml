@@ -12,6 +12,28 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- `docs/templates/phase_template.yaml` — ROADMAP authoring template for Phase blocks
+- `docs/templates/pipeline_section_template.yaml` — ROADMAP authoring template for Pipeline Section blocks
+- `docs/templates/dataset_roadmap_template.yaml` — ROADMAP document structure template
+- `docs/templates/research_log_template.yaml` — research log document structure template
+- `docs/templates/phase_status_template.yaml` — schema for PHASE_STATUS.yaml files
+- `docs/templates/pipeline_section_status_template.yaml` — schema for PIPELINE_SECTION_STATUS.yaml files
+- `docs/templates/step_status_template.yaml` — schema for STEP_STATUS.yaml files
+- PIPELINE_SECTION_STATUS.yaml for all 3 datasets (sc2egset, aoe2companion, aoestats)
+
+### Changed
+- STEP_STATUS.yaml: added `game` and `pipeline_section` fields (all 3 datasets); updated derivation comments to three-tier chain
+- PHASE_STATUS.yaml: added derivation chain comments (all 3 datasets)
+- ARCHITECTURE.md: documented full status tracking hierarchy (three-tier chain, game package contract table, progress tracking section)
+- CLAUDE.md: added PIPELINE_SECTION_STATUS.yaml to Key File Locations
+
+### Fixed
+
+### Removed
+
+## [3.0.2] — 2026-04-11 (PR #N: chore/dag-orchestration-infrastructure)
+
+### Added
 - `planning/` directory — unified orchestration root for plan/execute workflow
 - `planning/INDEX.md` — agent routing table (token-efficient entry point)
 - `planning/README.md` — lifecycle, purge protocol, source-of-truth rules
@@ -24,16 +46,6 @@ merged to `master`.
 - DAG Orchestration section in `docs/agents/AGENT_MANUAL.md`
 - Tier 8b (planning artifacts) in `ARCHITECTURE.md` source-of-truth hierarchy
 
-<!-- Below: entries inherited from master [Unreleased], not part of this branch -->
-- `docs/templates/phase_template.yaml` — ROADMAP authoring template for Phase blocks
-- `docs/templates/pipeline_section_template.yaml` — ROADMAP authoring template for Pipeline Section blocks
-- `docs/templates/dataset_roadmap_template.yaml` — ROADMAP document structure template
-- `docs/templates/research_log_template.yaml` — research log document structure template
-- `docs/templates/phase_status_template.yaml` — schema for PHASE_STATUS.yaml files
-- `docs/templates/pipeline_section_status_template.yaml` — schema for PIPELINE_SECTION_STATUS.yaml files
-- `docs/templates/step_status_template.yaml` — schema for STEP_STATUS.yaml files
-- PIPELINE_SECTION_STATUS.yaml for all 3 datasets (sc2egset, aoe2companion, aoestats)
-
 ### Changed
 - `_current_plan.md` → `planning/current_plan.md` (path migration across 13 files)
 - `specs/` → `planning/specs/` (directory restructure)
@@ -41,16 +53,6 @@ merged to `master`.
 - Planners now required to include "Suggested Execution Graph" in every plan
 - Executor "Read first" updated for spec-file vs full-plan dispatch
 - Disambiguated casual "task" usage in agent descriptions (now a formal term)
-
-<!-- Below: entries inherited from master [Unreleased], not part of this branch -->
-- STEP_STATUS.yaml: added `game` and `pipeline_section` fields (all 3 datasets); updated derivation comments to three-tier chain
-- PHASE_STATUS.yaml: added derivation chain comments (all 3 datasets)
-- ARCHITECTURE.md: documented full status tracking hierarchy (three-tier chain, game package contract table, progress tracking section)
-- CLAUDE.md: added PIPELINE_SECTION_STATUS.yaml to Key File Locations
-
-### Fixed
-
-### Removed
 
 ## [3.0.1] — 2026-04-11 (PR #106: chore/hooks-and-permissions)
 
