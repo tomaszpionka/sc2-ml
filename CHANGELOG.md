@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.14] — 2026-04-11 (PR #103: chore/pre-commit-followup)
+
+### Changed
+- `.claude/settings.json`: add `Bash(pre-commit *)` to allow list so subagents can run pre-commit commands without triggering permission prompts (followup to #102)
+- `.gitignore`: add `!/_current_review.md` and `!/_phases_review.md` as tracked exceptions
+
+### Removed
+- `source_audit.md`: stale planning artefact, superseded by phase work
+- `web_enable_plan.md`: stale planning artefact, superseded by phase work
+
 ## [1.2.13] — 2026-04-11 (PR #102: chore/pre-commit-hooks)
 
 ### Added

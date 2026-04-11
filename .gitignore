@@ -270,9 +270,4 @@ src/rts_predict/*/in_game_processing_manifest.json
 # Notebook sandbox — checkpoint artifacts
 sandbox/**/.ipynb_checkpoints/
 
-# Working planning and review artifacts (not tracked)
-# spec_*.md and _*.md at repo root are working documents (plans, specs, reviews)
-/spec*.md
-/_*.md
-!/_current_plan.md
-/pr_update.txt
+# Working planning and review artifacts (not tracked) - TBD

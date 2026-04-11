@@ -26,6 +26,7 @@
       "Bash(grep *)",
       "Bash(ruff *)",
       "Bash(mypy *)",
+      "Bash(pre-commit *)",
       "Bash(chmod *)",
       "Bash(mkdir *)",
       "Bash(source .venv/bin/activate)",
