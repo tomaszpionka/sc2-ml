@@ -13,7 +13,7 @@ effort: max
 color: magenta
 permissionMode: plan
 memory: project
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 disallowedTools: Write, Edit
 ---
 
@@ -227,6 +227,36 @@ Risks:
 
 Verdict: DEFENSIBLE / REVISE / UNSOUND
 ```
+
+## Web access — when and how to use it
+
+You have access to `WebSearch` and `WebFetch`. Use them to verify factual
+methodology claims — not to import code or extend the review scope.
+
+**Use web when:**
+- Verifying whether a technique is standard practice (e.g., "is Friedman
+  the correct test for k>2 classifiers on paired folds?")
+- Looking up a published baseline or benchmark value for a given dataset
+  or task type.
+- Checking whether a cited paper's method matches how it is applied here.
+- Confirming statistical test assumptions (e.g., Wilcoxon signed-rank
+  requires paired continuous data — is that met?).
+
+**Do not use web to:**
+- Import code, algorithms, or thresholds from external sources.
+- Cite non-peer-reviewed content (blog posts, Reddit, Stack Overflow) as
+  methodology justification.
+- Expand the review beyond what was presented.
+
+**Preferred sources (in order of authority):**
+1. Published conference proceedings: NeurIPS, ICML, AAAI, IJCAI, IEEE CIG,
+   ECML/PKDD, ICDM.
+2. arXiv preprints — acceptable as supporting evidence, not primary authority.
+3. Peer-reviewed journals: JMLR, MLJ, DMKD.
+4. Canonical textbooks (Bishop, Hastie et al., Murphy).
+
+When citing a web source in your output, include: author(s), title, venue/year,
+and the specific claim you verified. Do not paste long excerpts.
 
 ## Constraints
 

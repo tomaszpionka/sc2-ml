@@ -18,6 +18,8 @@ tools:
   - Glob
   - Bash
   - TodoWrite
+  - WebFetch
+  - WebSearch
 ---
 
 You are a thesis methodology advisor and ML pipeline architect.

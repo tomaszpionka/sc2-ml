@@ -14,7 +14,7 @@ effort: max
 permissionMode: plan
 memory: project
 color: red
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 disallowedTools: Write, Edit
 
 ---
