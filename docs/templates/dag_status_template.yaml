@@ -1,0 +1,31 @@
+# DAG Status — Execution State Tracker
+#
+# Populated on plan approval. Purged after PR merge.
+# Template: docs/templates/dag_status_template.yaml
+# Location: planning/dags/DAG_STATUS.yaml
+
+dag_id: "<matches DAG.yaml dag_id>"
+branch: "<feature branch name>"
+status: "pending"                           # pending | in_progress | completed | halted
+
+jobs:
+  - job_id: "J01"
+    status: "pending"
+    task_groups:
+      - group_id: "TG01"
+        status: "pending"                   # pending | in_progress | completed | halted
+        review_passed: false
+        tasks:
+          - task_id: "T01"
+            status: "pending"               # pending | in_progress | completed | failed
+          - task_id: "T02"
+            status: "pending"
+
+      - group_id: "TG02"
+        status: "pending"
+        review_passed: false
+        tasks:
+          - task_id: "T03"
+            status: "pending"
+
+final_review_passed: false
