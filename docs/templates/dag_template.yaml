@@ -71,10 +71,7 @@ jobs:
         tasks:
           - task_id: "T01"
             name: "<descriptive name>"
-            spec_file: "planning/specs/spec_01.md"  # The spec this executor reads.
-                                            # MUST exist on disk before execution.
-                                            # Created during materialization from
-                                            # the plan (plan_ref above).
+            spec_file: "planning/specs/spec_01.md"  # The spec agent assigned to this task executes
             agent: "executor"               # Which agent to dispatch
             isolation: "inherit"            # "inherit" from default_isolation, or override
             parallel_safe: true             # Can this run in parallel with sibling tasks?
