@@ -309,7 +309,7 @@ Step 5:  [parent stages, commits, wraps up PR]
 
 **Two strategies:**
 - **Shared branch:** Executors edit the same working tree. Requires
-  non-overlapping file ownership. See `specs/README.md` for file maps.
+  non-overlapping file ownership. See `planning/specs/README.md` for file maps.
 - **Worktree isolation:** Each executor gets `isolation: "worktree"`.
   Full file isolation, but requires merging branches afterwards.
 

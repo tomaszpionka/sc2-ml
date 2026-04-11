@@ -6,7 +6,7 @@
 # ARCHITECTURE.md). It MUST NOT redefine or conflict with any term in
 # docs/TAXONOMY.md.
 #
-# Terminology (to be added to TAXONOMY.md before first use):
+# Terminology (defined in docs/TAXONOMY.md):
 #   Job        -- a named logical unit within a DAG. Contains task_groups.
 #   Task Group -- an ordered group of tasks within a job. Execution order
 #                 is sequential across groups within a job. A review gate
@@ -34,8 +34,8 @@ step_refs:                                  # Which Step(s), if applicable
 
 # -- Isolation Strategy --
 # Governs how parallel tasks and sequential task_groups interact with git.
-# "shared_branch" = Strategy A from specs/README.md
-# "worktree"      = Strategy B from specs/README.md
+# "shared_branch" = Strategy A from planning/specs/README.md
+# "worktree"      = Strategy B from planning/specs/README.md
 default_isolation: "shared_branch"
 
 # -- Jobs --
@@ -74,8 +74,7 @@ jobs:
             parallel_safe: true             # Can this run in parallel with sibling tasks?
             file_scope:                     # Files this task is expected to WRITE
               - "src/rts_predict/sc2/data/exploration.py"
-            read_scope:                     # Files this task needs to READ (from other tasks)
-              - []                          # Empty = no cross-task read deps
+            read_scope: []                  # Files this task needs to READ (from other tasks)
             depends_on: []                  # List of task_ids within this group
 
           - task_id: "T02"

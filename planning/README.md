@@ -48,4 +48,4 @@ Within this directory, precedence is:
 2. `dags/DAG.yaml` — derived. Execution order. If it diverges, the plan wins.
 3. `specs/spec_*.md` — derived. Task-level extracts. If they diverge, the plan wins.
 
-See `ARCHITECTURE.md` tier 8a/8b for the full hierarchy.
+See `ARCHITECTURE.md` tier 8/8b for the full hierarchy.

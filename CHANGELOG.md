@@ -23,6 +23,8 @@ merged to `master`.
 - DAG, Job, Task Group, Task — operational terms in `docs/TAXONOMY.md`
 - DAG Orchestration section in `docs/agents/AGENT_MANUAL.md`
 - Tier 8b (planning artifacts) in `ARCHITECTURE.md` source-of-truth hierarchy
+
+<!-- Below: entries inherited from master [Unreleased], not part of this branch -->
 - `docs/templates/phase_template.yaml` — ROADMAP authoring template for Phase blocks
 - `docs/templates/pipeline_section_template.yaml` — ROADMAP authoring template for Pipeline Section blocks
 - `docs/templates/dataset_roadmap_template.yaml` — ROADMAP document structure template
@@ -39,6 +41,8 @@ merged to `master`.
 - Planners now required to include "Suggested Execution Graph" in every plan
 - Executor "Read first" updated for spec-file vs full-plan dispatch
 - Disambiguated casual "task" usage in agent descriptions (now a formal term)
+
+<!-- Below: entries inherited from master [Unreleased], not part of this branch -->
 - STEP_STATUS.yaml: added `game` and `pipeline_section` fields (all 3 datasets); updated derivation comments to three-tier chain
 - PHASE_STATUS.yaml: added derivation chain comments (all 3 datasets)
 - ARCHITECTURE.md: documented full status tracking hierarchy (three-tier chain, game package contract table, progress tracking section)

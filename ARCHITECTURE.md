@@ -154,7 +154,7 @@ section.
 
 | File | Location | Purpose |
 |------|----------|---------|
-| Project taxonomy | `docs/TAXONOMY.md` | Single source of truth for terminology (Phase, Pipeline Section, Step, Spec, PR, Category, Session) |
+| Project taxonomy | `docs/TAXONOMY.md` | Single source of truth for all project terminology (see file for full list) |
 | Methodology manuals | `docs/INDEX.md` → `docs/ml_experiment_lifecycle/` | ML experiment lifecycle reference (01–06) |
 | Research log | `reports/research_log.md` | Unified chronological narrative, tagged `[SC2]`/`[AoE2]`/`[CROSS]` |
 | Thesis | `thesis/` | Chapters, figures, tables, bibliography |
