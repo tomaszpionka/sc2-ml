@@ -51,7 +51,7 @@ review.
    change contradicts or duplicates prior findings.
 8. `_current_plan.md` (if present) — the plan you are reviewing against.
 9. Any spec file the user references (e.g. `spec_06_finalization.md`).
-10. `reports/RESEARCH_LOG_TEMPLATE.md` if research log entries are in
+10. `docs/templates/research_log_entry_template.yaml` if research log entries are in
     scope.
 11. The full diff: `git log --oneline <base>..HEAD` then `git diff --stat`
     then targeted file reads.
@@ -180,7 +180,7 @@ resolved from the dataset's `PHASE_STATUS.yaml`.
     path containing `/artifacts/`. Flag any write to the report root as
     a blocker.
 15. **Research log entry.** If expected, verify it follows
-    `RESEARCH_LOG_TEMPLATE.md` exactly: every section present, correct
+    `docs/templates/research_log_entry_template.yaml` exactly: every section present, correct
     category (A/B/C), reverse-chronological position in the log.
 
 ## Mandatory checks — scientific invariants

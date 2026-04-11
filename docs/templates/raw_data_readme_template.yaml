@@ -161,7 +161,8 @@ subdirectory_layout:
 
 total_files:
   value: <TOTAL_FILE_COUNT>
-  # Total file count in the raw directory, excluding .gitkeep files.
+  # Total file count in the raw directory, excluding dotfiles
+  # (any file whose name starts with ".": .gitkeep, .DS_Store, etc.).
   # Must match the sum across subdirectory_layout entries and be verified
   # against the 01_01_01 file inventory artifact.
   # Invariant #7: this must be an exact integer, not an approximation.

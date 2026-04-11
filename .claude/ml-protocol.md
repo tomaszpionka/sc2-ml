@@ -50,9 +50,10 @@ not be used for any thesis experiment.
 
 ### reports/research_log.md (thesis material)
 - Reverse chronological, date-stamped entries
-- Each entry uses structured fields: **What**, **Why**, **How** (reproducibility),
-  **Findings**, **Decisions taken**, **Decisions deferred**, **Thesis mapping**,
-  **Open questions / follow-ups**
+- Each entry follows the template at `docs/templates/research_log_entry_template.yaml`.
+  Required sections for Category A: What, Why, How (reproducibility), Findings,
+  Decisions taken, Decisions deferred, Thesis mapping, Open questions / follow-ups.
+  Optional sections: What this means, Acknowledged trade-offs.
 - References specific commits and notebook artifacts where relevant
 - Directly usable as source material when writing thesis chapters
 - Updated every session involving experimentation, methodology decisions, issues, or breakthroughs

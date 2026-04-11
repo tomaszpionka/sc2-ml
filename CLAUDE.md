@@ -64,6 +64,7 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 See `ARCHITECTURE.md` for the full cross-cutting files table and source-of-truth
 hierarchy. Quick pointers for the most common lookups:
 
+- Step status: `src/rts_predict/<game>/reports/<dataset>/STEP_STATUS.yaml`
 - Phase status: `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`
 - Scientific invariants: `.claude/scientific-invariants.md`
 - Canonical phase list: `docs/PHASES.md`
@@ -100,7 +101,7 @@ code until instructed.
 ## Progress Tracking
 
 See `ARCHITECTURE.md` for the full tracking protocol. Key rules:
-- **Session start:** Read active PHASE_STATUS.yaml, then scientific-invariants.md
+- **Session start:** Read active STEP_STATUS.yaml and PHASE_STATUS.yaml, then scientific-invariants.md
 - **After Category A step:** Update `reports/research_log.md`
 - **After phase gate:** Update PHASE_STATUS.yaml, check `thesis/WRITING_STATUS.md`
 - **After Category F:** Update `thesis/chapters/REVIEW_QUEUE.md`

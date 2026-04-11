@@ -1,0 +1,102 @@
+# Research Log Entry Template
+#
+# Canonical template for entries in reports/research_log.md.
+# Required for Category A (science) and Category F (writing) work.
+# Recommended for Category C (chore) when methodology decisions are made.
+#
+# Authoritative sources:
+#   Scientific Invariants  .claude/scientific-invariants.md
+#   Phase definitions      docs/PHASES.md
+#   Sandbox contract       sandbox/README.md
+#
+# Invariant #6: the "How (reproducibility)" field is mandatory for Category A
+# entries. A finding without its derivation cannot be cited in the thesis.
+
+# ── Header fields ──
+
+entry_title:
+  format: "## YYYY-MM-DD — [Phase XX / Step XX_YY_ZZ] Short descriptive title"
+  notes: >
+    For non-Phase work, use [CROSS] or [CHORE] instead of
+    [Phase XX / Step XX_YY_ZZ].
+  required: true
+
+category:
+  format: "**Category:** A (science) | C (chore) | F (writing)"
+  required: true
+
+dataset:
+  format: "**Dataset:** sc2egset | aoe2companion | aoestats | CROSS"
+  required: true
+
+artifacts_produced:
+  format: "**Artifacts produced:** list of artifact paths (repo-relative)"
+  required: false
+  condition: "Required for Category A entries that produce artifacts."
+
+# ── Body sections ──
+
+sections:
+
+  what:
+    heading: "### What"
+    description: "One paragraph. What did you do, concretely."
+    required: true
+
+  why:
+    heading: "### Why"
+    description: >
+      What question were you trying to answer. Which Manual section or
+      Invariant motivated it.
+    required: true
+
+  how_reproducibility:
+    heading: "### How (reproducibility)"
+    description: >
+      The literal SQL or Python that produced the core result.
+      Per Invariant #6, a finding without its derivation cannot be
+      cited in the thesis.
+    required: true
+    condition: "Required for Category A. Optional for Category C/F."
+
+  findings:
+    heading: "### Findings"
+    description: "Bullet list of factual observations. Numbers with units. No interpretation."
+    required: true
+    condition: "Required for Category A. Optional for Category C."
+
+  interpretation:
+    heading: "### What this means"
+    description: "How does this change what we think about the dataset?"
+    required: false
+    condition: "Include when findings warrant interpretation."
+
+  decisions_taken:
+    heading: "### Decisions taken"
+    description: >
+      Bullet list with one-sentence rationale each.
+      "None — observation only" is a valid entry.
+    required: true
+
+  decisions_deferred:
+    heading: "### Decisions deferred"
+    description: "What must be decided later, and at which phase/step."
+    required: true
+    condition: "Required for Category A. Optional for Category C."
+
+  acknowledged_trade_offs:
+    heading: "### Acknowledged trade-offs"
+    description: "For decision records: what was sacrificed and why."
+    required: false
+    condition: "Include when the entry records a methodology decision."
+
+  thesis_mapping:
+    heading: "### Thesis mapping"
+    description: "Target section(s) in thesis/THESIS_STRUCTURE.md."
+    required: true
+
+  open_questions:
+    heading: "### Open questions / follow-ups"
+    description: "Anything surprising or worth returning to."
+    required: true
+    condition: "Required for Category A. Optional for Category C."

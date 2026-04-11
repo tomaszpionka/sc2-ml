@@ -8,7 +8,7 @@
 #   Taxonomy          docs/TAXONOMY.md
 #   Canonical Phases  docs/PHASES.md
 #   Invariants        .claude/scientific-invariants.md
-#   Research log      reports/RESEARCH_LOG_TEMPLATE.md
+#   Research log      docs/templates/research_log_entry_template.yaml
 #   Sandbox contract  sandbox/README.md
 #
 # How to use:
@@ -156,5 +156,5 @@ thesis_mapping:
   # source Step.
 
 research_log_entry:
-  value: "<required on completion, following reports/RESEARCH_LOG_TEMPLATE.md; must link back to this Step ID>"
+  value: "<required on completion, following docs/templates/research_log_entry_template.yaml; must link back to this Step ID>"
   required: true

@@ -1,0 +1,16 @@
+# Step-level execution status for aoestats.
+# Derived from ROADMAP.md step definitions.
+# If this file disagrees with the ROADMAP, this file is wrong.
+#
+# PHASE_STATUS.yaml is derived from this file:
+#   Phase is complete    when ALL its steps are complete.
+#   Phase is in_progress when ANY step is in_progress or complete.
+#   Phase is not_started when NO step has started.
+
+dataset: aoestats
+
+steps:
+  "01_01_01":
+    name: "File Inventory"
+    status: complete
+    completed_at: "2026-04-09"

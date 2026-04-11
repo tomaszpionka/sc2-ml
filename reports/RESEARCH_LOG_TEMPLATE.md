@@ -1,3 +1,7 @@
+> **Canonical schema:** `docs/templates/research_log_entry_template.yaml`
+> This markdown version is a human-readable rendering. The YAML template
+> is the authoritative field list.
+
 # Research log entry template
 
 Copy this block to the top of `reports/research_log.md` for every new
