@@ -1,6 +1,6 @@
 [project]
 name = "rts-outcome-prediction"
-version = "1.2.12"
+version = "1.2.13"
 description = "RTS game result prediction — SC2 and AoE2 comparative ML study"
 authors = [{name = "Tomasz Pionka"}]
 requires-python = ">=3.12,<3.13"
@@ -60,6 +60,13 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = [
+    "src/rts_predict/sc2/reports/sc2egset/archive/",
+    # Sandbox notebooks use jupytext percent-format: imports after `# %%` cell
+    # boundaries always trigger E402, and comment/markdown cells trigger E501.
+    # Notebook quality is governed by sandbox/README.md, not ruff.
+    "sandbox/",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -98,6 +105,8 @@ exempt_sources = [
     "src/rts_predict/sc2/config.py",
     "src/rts_predict/aoe2/config.py",
     "src/rts_predict/aoe2/data/aoe2companion/types.py",
+    "src/rts_predict/sc2/reports/sc2egset/archive/00_99_post_rebuild_verification.py",
+    "src/rts_predict/sc2/reports/sc2egset/archive/01_08_game_settings_audit.py",
 ]
 
 [tool.diff_cover]

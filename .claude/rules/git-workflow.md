@@ -14,15 +14,14 @@ Commits: `type(scope): short description`. Atomic — one logical unit per commi
 ## PR Creation Flow (on "wrap up")
 
 1. Run checks (skip if no .py files in diff):
-   a. `source .venv/bin/activate && poetry run ruff check src/ tests/`
-   b. `source .venv/bin/activate && poetry run mypy src/rts_predict/`
-   c. `source .venv/bin/activate && poetry run pytest tests/ -v --cov --cov-report=term-missing | tee coverage.txt`
+   a. ruff and mypy are enforced by pre-commit hook — they run on every commit. No manual run needed at PR time unless diagnosing a specific error.
+   b. `source .venv/bin/activate && poetry run pytest tests/ -v --cov --cov-report=term-missing | tee coverage.txt`
       (`--cov` without a path uses `[tool.coverage.run] source` from `pyproject.toml`,
       which is `src/rts_predict` — covers all game and common packages)
-   d. Read and analyze `coverage.txt` — identify uncovered lines in project code
-   e. Add tests / fix code until coverage is at least 95% (`fail_under = 95` enforced in
+   c. Read and analyze `coverage.txt` — identify uncovered lines in project code
+   d. Add tests / fix code until coverage is at least 95% (`fail_under = 95` enforced in
       `[tool.coverage.report]` of `pyproject.toml`; threshold must not be lowered)
-   f. Re-run step c to verify, then delete `coverage.txt`
+   e. Re-run step b to verify, then delete `coverage.txt`
 2. Version: minor for feat/refactor/docs, patch for fix/test/chore
 3. Bump `version` in `pyproject.toml` (SINGLE source — NO `__init__.py`)
 4. Move `[Unreleased]` → `[X.Y.Z] — YYYY-MM-DD (PR #N: branch)`

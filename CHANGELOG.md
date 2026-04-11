@@ -19,6 +19,17 @@ merged to `master`.
 
 ### Removed
 
+## [1.2.13] — 2026-04-11 (PR #102: chore/pre-commit-hooks)
+
+### Added
+- `.pre-commit-config.yaml`: ruff-check hook (`astral-sh/ruff-pre-commit` v0.9.10, `--no-fix`) and mypy local hook (`poetry run mypy src/rts_predict/`, `pass_filenames: false`) alongside the existing jupytext sync hook
+- `what_can_be_pre_commit_hooks.md`: engineering audit that motivated this change
+
+### Changed
+- `pyproject.toml`: `[tool.ruff] extend-exclude` now skips `archive/` and `sandbox/` (E402/E501 are structural in jupytext percent-format notebooks); `[tool.mirror_drift] exempt_sources` now includes the two archive `.py` files to suppress false-positive orphan detection
+- `.claude/settings.json`: added `Write/Edit` allow for `.pre-commit-config.yaml`; added `Bash(git commit*--no-verify*)` to deny list to prevent hook bypass
+- `.claude/rules/python-code.md`, `.claude/agents/executor.md`, `.claude/rules/git-workflow.md`, `CLAUDE.md`: updated to reflect that ruff and mypy are now hook-enforced on every commit — no longer manual post-change gates
+
 ## [1.2.12] — 2026-04-11 (PR #101: chore/fix-source-activation-permissions)
 
 ### Changed

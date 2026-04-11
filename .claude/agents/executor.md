@@ -29,8 +29,8 @@ You are an implementation agent for a Python ML thesis codebase.
 
 ## Constraints
 - Execute ONLY the steps the user specifies. Do not skip ahead.
-- After every code change, run:
-  `source .venv/bin/activate && poetry run ruff check src/ tests/` and relevant pytest subset.
+- After every code change, run the relevant pytest subset.
+  (`ruff` and `mypy` run automatically as pre-commit hooks — no manual run needed.)
 - Do NOT mark a step complete until verification passes.
 - Do NOT open PRs or bump versions unless explicitly asked.
 - Use `source .venv/bin/activate && poetry run` always. Never bare `python3` or `pip`.

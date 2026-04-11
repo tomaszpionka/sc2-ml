@@ -5,10 +5,12 @@ paths:
 
 # Python Code Standards
 
-## Pre-Commit Checks (MANDATORY)
-1. `source .venv/bin/activate && poetry run ruff check src/ tests/`
-2. `source .venv/bin/activate && poetry run mypy src/rts_predict/`
-3. `source .venv/bin/activate && poetry run pytest tests/ -v`
+## Pre-Commit Checks
+
+`ruff check` and `mypy` run automatically as pre-commit hooks on every `git commit` — no manual run needed. If a commit is blocked by a hook, fix the reported error and re-stage.
+
+`pytest` is NOT a pre-commit hook (too slow at ~8s per commit). Run it manually after every code change:
+- `source .venv/bin/activate && poetry run pytest tests/ -v`
 
 ## Style
 - Type hints on all function signatures (params and return)

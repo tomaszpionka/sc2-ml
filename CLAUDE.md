@@ -34,6 +34,8 @@ When asked to create a plan or run a read-only/planning session:
 | Type check | `source .venv/bin/activate && poetry run mypy src/rts_predict/` |
 | CLI | `source .venv/bin/activate && poetry run sc2 --help` |
 
+> `ruff` (lint) and `mypy` (type check) also run automatically as pre-commit hooks on every `git commit`. Manual runs above are for diagnosing errors, not routine post-change checks.
+
 ## Plan / Execute Workflow
 
 All non-trivial work uses two sessions. `_current_plan.md` is the handoff artifact.
