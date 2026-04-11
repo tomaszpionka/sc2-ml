@@ -12,6 +12,16 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [3.0.4] — 2026-04-11 (PR #109: chore/session-audit-dashboard)
+
+### Added
 - `scripts/session_audit.py` — on-demand session audit dashboard (token usage, PR efficiency, subagent analysis)
 - `.claude/commands/materialize_plan.md` — `/materialize_plan` slash command enforcing the materialization flow
 - `scripts/hooks/check_phases_drift.py` — pre-commit hook that detects drift between `docs/PHASES.md` and `docs/ml_experiment_phases/PHASES.md` by comparing phase number + name pairs; fires only when either file is staged
