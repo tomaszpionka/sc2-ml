@@ -104,7 +104,7 @@ manifest_path:
 citation:
   value: "<BIBTEX_KEY>"
   # BibTeX key or full citation string. Used by thesis writing agents to
-  # trace prose claims in Chapter 3 (Data & Methodology, 3.1 Data Sources)
+  # trace prose claims in Chapter 4 (Data and Methodology, §4.1 Datasets)
   # back to the raw data without additional searches.
   required: true
 
@@ -355,6 +355,14 @@ representativeness_notes:
   # population the dataset is intended to cover. Omit this key if no
   # representativeness concerns have been identified.
   required: false
+
+# ==============================================================================
+# SECTION Z — EXAMPLES APPENDIX
+#
+# Read this section ONLY when creating a new raw/README.md for the first time.
+# It is reference material, not part of the template schema above.
+# Agents: skip this section during routine notebook or step work.
+# ==============================================================================
 
 # ── Section Z: Examples Appendix ────────────────────────────────────────────
 # ILLUSTRATIVE ONLY -- values are placeholders, not ground truth.
@@ -719,7 +727,7 @@ representativeness_notes:
 #
 # 2. Preprocessing performed at source before publication
 #    Reason: Not documented by the data creators for any of the three datasets.
-#    Noted as a limitation in thesis Chapter 3; out of scope for this template.
+#    Noted as a limitation in thesis Chapter 4; out of scope for this template.
 #
 # 3. Reuse conditions beyond the stated license
 #    Reason: License field covers the primary reuse condition. Fine-grained
@@ -739,8 +747,8 @@ representativeness_notes:
 #    required for the three datasets in scope.
 #
 # 6. Intended vs. actual use alignment
-#    Reason: Addressed qualitatively in thesis Chapter 3.1 (Data Sources)
-#    and Chapter 3.2 (Data Suitability). No structured field added.
+#    Reason: Addressed qualitatively in thesis Chapter 4, §4.1 (Datasets)
+#    and §4.2 (Data Preprocessing). No structured field added.
 #
 # 7. Full dataset statistics / data distributions
 #    Reason: Captured in Phase 01 profiling artifacts (01_01_01 through

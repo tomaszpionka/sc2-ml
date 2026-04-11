@@ -108,7 +108,7 @@ immutability:
   status: true
   enforcement_mechanism: none_documented
 
-inventory_artifact: "src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.json"
+inventory_artifact: "src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
 
 # -- Section H: Known Limitations ----------------------------------------------
 
@@ -173,4 +173,4 @@ Rating CSVs have no parquet equivalent and are downloaded.
 
 ## Inventory Artifact
 
-`src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.json`
+`src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`

@@ -47,7 +47,9 @@ How derived ratings serve as ML features.
 
 <!--
 Accuracy, log-loss, ROC-AUC, Brier score, calibration.
-Friedman omnibus + Wilcoxon/Holm pairwise + Bayesian signed-rank (ROPE).
+Within-game: Friedman omnibus + Wilcoxon/Holm pairwise + Bayesian signed-rank (ROPE).
+Cross-game (N=2): per-game rankings, bootstrapped CIs, 5x2 cv F-test.
+Friedman requires N >= 5 blocks (Demsar 2006); inapplicable with 2 games.
 Nemenyi deprecated due to pool-dependence (Benavoli et al. 2016).
 Critical difference diagrams (Wilcoxon-based). See THESIS_WRITING_MANUAL.md §3.2.
 -->

@@ -104,8 +104,12 @@ BLOCKED — Phase 04 (Model Training).
 ### 4.4.4 Evaluation metrics
 
 <!--
-Accuracy, log-loss, ROC-AUC, calibration, per-matchup, cold-start strata.
-Friedman omnibus + Wilcoxon/Holm pairwise + Bayesian signed-rank for cross-game comparison.
+Primary: Brier score (Murphy decomposition), log-loss.
+Discrimination: accuracy, ROC-AUC, calibration curves (ECE).
+Stratified: per-matchup, cold-start strata, sharpness histograms.
+Within-game: Friedman omnibus + Wilcoxon/Holm + Bayesian signed-rank on CV folds.
+Cross-game (N=2 games): per-game rankings with bootstrapped CIs, 5x2 cv F-test,
+qualitative concordance. Friedman inapplicable with N=2 (Demsar 2006).
 See THESIS_WRITING_MANUAL.md §3.2.
 SKELETON — can draft from literature.
 -->

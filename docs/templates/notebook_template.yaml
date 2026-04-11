@@ -55,6 +55,16 @@ placeholders:
     example: "Data Acquisition & Source Inventory"
     required: true
 
+  phase_slug:
+    description: "Phase directory slug per TAXONOMY.md ({NN}_{slug} convention)"
+    example: "01_exploration"
+    required: true
+
+  section_slug:
+    description: "Pipeline section directory slug per TAXONOMY.md ({NN}_{slug} convention)"
+    example: "01_acquisition"
+    required: true
+
   step_nn_nn_nn:
     description: "Step number"
     example: "01_01_01"
@@ -184,14 +194,14 @@ cells:
       from rts_predict.{game}.config import {CONFIG_CONSTANT}
 
       RAW_DIR: Path = {CONFIG_CONSTANT}
-      ARTIFACTS_DIR: Path = get_reports_dir("{game}", "{dataset}") / "artifacts" / "{section_nn_nn}"
+      ARTIFACTS_DIR: Path = get_reports_dir("{game}", "{dataset}") / "artifacts" / "{phase_slug}" / "{section_slug}"
       ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
       logger.info("Source directory: %s", RAW_DIR)
       logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
     notes: |
       - Paths derived from config, never hardcoded.
-      - ARTIFACTS_DIR always uses get_reports_dir() + "artifacts/" + section number.
+      - ARTIFACTS_DIR always uses get_reports_dir() + "artifacts/" + phase slug + section slug (e.g., "01_exploration" / "01_acquisition").
       - The {CONFIG_CONSTANT} placeholder is dataset-specific:
           sc2egset      -> REPLAYS_SOURCE_DIR
           aoe2companion -> AOE2COMPANION_RAW_DIR
@@ -473,7 +483,8 @@ hard_rules:
     source: "sandbox/README.md"
     description: >
       Write all report artifacts (CSV, JSON, MD, PNG) to
-      get_reports_dir("{game}", "{dataset}") / "artifacts" / "{section_nn_nn}".
+      get_reports_dir("{game}", "{dataset}") / "artifacts" / "{phase_slug}" / "{section_slug}"
+      (e.g., "artifacts" / "01_exploration" / "01_acquisition").
       Never write to the dataset report root directly. The artifacts/
       subdirectory is the only valid target for machine-generated outputs.
 

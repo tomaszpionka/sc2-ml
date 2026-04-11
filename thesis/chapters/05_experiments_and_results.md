@@ -55,7 +55,9 @@ BLOCKED — AoE2 phases.
 ### 5.3.1 Method ranking comparison
 
 <!--
-Friedman omnibus + Wilcoxon/Holm pairwise + Bayesian signed-rank, critical difference diagram.
+Within-game: Friedman omnibus + Wilcoxon/Holm + Bayesian signed-rank on CV folds.
+Cross-game (N=2): per-game rankings, bootstrapped CIs, 5x2 cv F-test, concordance.
+Critical difference diagrams per-game only (Friedman requires N >= 5; Demsar 2006).
 See THESIS_WRITING_MANUAL.md §3.2.
 BLOCKED — both games complete.
 -->

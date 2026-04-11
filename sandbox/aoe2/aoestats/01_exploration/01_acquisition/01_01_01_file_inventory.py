@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 from rts_predict.aoe2.config import AOESTATS_RAW_DIR
 
 RAW_DIR: Path = AOESTATS_RAW_DIR
-ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_01"
+ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_exploration" / "01_acquisition"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 logger.info("Source directory: %s", RAW_DIR)
@@ -285,11 +285,11 @@ logger.info("Markdown artifact written: %s", md_path)
 # ## Conclusion
 #
 # ### Artifacts produced
-# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown, date analysis, and paired comparison
-# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.md` — human-readable inventory report
+# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown, date analysis, and paired comparison
+# - `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md` — human-readable inventory report
 #
 # ### Thesis mapping
-# - Chapter 3 — Data & Methodology > 3.1 Data Sources > aoestats
+# - Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data
 #
 # ### Follow-ups
 # - Step 01_01_02 (if defined) or Step 01_02_01: profile the Parquet schema and field completeness for each subdirectory

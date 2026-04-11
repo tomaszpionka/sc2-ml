@@ -36,6 +36,14 @@ Violating them produces results that cannot be defended at examination.
    here are fatal to the thesis. Verify with explicit temporal leakage
    checks.
 
+   **Normalization leakage.** Mean, standard deviation, min/max, and any
+   other summary statistics used for feature scaling must be computed on
+   training data only. The scaler object must be fit on the training fold
+   and applied (transform only) to validation and test folds. Computing
+   global z-scores across the entire dataset contaminates test-set
+   predictions with distributional information from the test period
+   (de Prado 2018, Ch. 7; Arlot & Celisse 2010).
+
    See docs/INDEX.md → Manual 03_SPLITTING_AND_BASELINES for the authoritative
    methodology.
 
@@ -89,14 +97,26 @@ Violating them produces results that cannot be defended at examination.
 
 8. **The SC2 and AoE2 experiments must share a common evaluation protocol.**
    Both games use the same ML methods (logistic regression, random forest,
-   gradient boosted trees), the same evaluation metrics (accuracy, log-loss,
-   ROC-AUC, calibration), and the same statistical comparison methodology
-   (Friedman omnibus test, then pairwise Wilcoxon signed-rank with Holm
-   correction, complemented by Bayesian signed-rank with ROPE via baycomp;
-   per Benavoli et al. 2017, Garcia & Herrera 2008). Feature sets
-   differ by necessity, but the common pre-game feature categories (skill
-   rating, win rate, activity, faction matchup, map, head-to-head) must be
-   defined at a level of abstraction that applies to both games.
+   gradient boosted trees), the same evaluation metrics, and a common
+   statistical comparison methodology.
+
+   **Within-game comparison** (k classifiers on one game's temporal CV
+   folds, where N_folds >= 5): Friedman omnibus test, then pairwise
+   Wilcoxon signed-rank with Holm correction, complemented by Bayesian
+   signed-rank with ROPE via baycomp (per Benavoli et al. 2017, Garcia
+   & Herrera 2008).
+
+   **Cross-game comparison** (N = 2 games — insufficient for Friedman;
+   Demsar 2006 requires N >= 5): Per-game method rankings with effect
+   sizes and bootstrapped confidence intervals; per-dataset pairwise
+   tests (5×2 cv F-test or Nadeau-Bengio corrected t-test); Bayesian
+   comparison via baycomp where applicable; qualitative cross-game
+   concordance discussion.
+
+   Feature sets differ by necessity, but the common pre-game feature
+   categories (skill rating, win rate, activity, faction matchup, map,
+   head-to-head) must be defined at a level of abstraction that applies
+   to both games.
 
    The AoE2 data asymmetry (no in-game state) is not a flaw — it is a
    controlled experimental variable. The cross-game comparison answers:

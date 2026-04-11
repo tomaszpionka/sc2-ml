@@ -7,10 +7,34 @@ Age of Empires II."
 Reverse chronological entries.
 
 > **Phase migration note (2026-04-09):** This log was reset as part of the
-> Phase 01-07 migration. Prior entries are archived at
-> `reports/archive/research_log_pre_phase_migration.md` and
-> `reports/archive/research_log_pre_notebook_sandbox.md`.
+> Phase 01-07 migration. Prior entries were removed in v2.0.0 (archive
+> cleanup); historical context is preserved in git history.
 > All new entries use the Phase XX / Step XX_YY_ZZ format per docs/PHASES.md.
+
+---
+
+## 2026-04-11 — [CROSS] AoE2 Dataset Strategy Decision
+
+**Category:** C (chore — decision record)
+
+### What
+Formalized the AoE2 dataset strategy: aoe2companion is PRIMARY,
+aoestats is SUPPLEMENTARY VALIDATION.
+
+### Why
+Both datasets had identical ROADMAP structures implying equal treatment.
+Without formalization, Phase 01 work proceeds on both at equal priority,
+potentially wasting 50% of AoE2 effort.
+
+### Decision
+- aoe2companion (277M matches, daily, 2020–2026) runs full Phases 01–07.
+- aoestats (30.7M matches, weekly, 2022–2026) runs full Phase 01, then
+  lightweight Phase 02–05 replication for validation.
+- Phase 06 uses aoe2companion exclusively.
+- Contradictions between datasets are reported in thesis §6.5.
+
+### Thesis mapping
+- Chapter 4 — Data and Methodology > 4.1 Datasets
 
 ---
 
@@ -19,12 +43,12 @@ Reverse chronological entries.
 **Category:** A (science)
 **Dataset:** sc2egset, aoe2companion, aoestats
 **Artifacts produced:**
-- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.json`
-- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_01/01_01_01_file_inventory.md`
-- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.json`
-- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_01/01_01_01_file_inventory.md`
-- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.json`
-- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_01/01_01_01_file_inventory.md`
+- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+- `src/rts_predict/sc2/reports/sc2egset/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
+- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
+- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
 
 ### What
 Ran `inventory_directory()` on the raw directory of each dataset. Produced
@@ -95,7 +119,7 @@ in the ROADMAP source data section — this is not a new finding.
 - Ingestion strategy depends on what we find in schema discovery (01_01_02/03).
 
 ### Thesis mapping
-- Chapter 3 — Data & Methodology > 3.1 Data Sources
+- Chapter 4 — Data and Methodology > 4.1 Datasets
 
 ### Open questions / follow-ups
 - sc2egset: The 4 files at root and the no-extension files within tournament

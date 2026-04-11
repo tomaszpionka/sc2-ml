@@ -1,5 +1,9 @@
 # Thesis Structure
 
+> **Revision note (2026-04-11):** This structure is aspirational and will be
+> revised as phases complete. Chapters 5-7 subsection detail is provisional
+> and may change based on Phase 01-04 findings.
+
 **Title:** "A comparative analysis of methods for predicting game results in real-time strategy games, based on the examples of StarCraft II and Age of Empires II."
 
 **Degree:** Master of Science in Computer Science (Data Science specialisation)
@@ -112,12 +116,16 @@ weaknesses, hyperparameters, and interpretability.
 
 ### 2.6 Evaluation metrics and statistical comparison
 - Accuracy, log-loss, ROC-AUC, calibration (Brier score)
-- Friedman omnibus test for comparing classifiers across multiple datasets
-  [cite: Demšar 2006, JMLR]
+- Within-game statistical comparison (N_folds >= 5):
+  Friedman omnibus test for comparing classifiers across multiple folds
+  [cite: Demsar 2006, JMLR]
 - Pairwise Wilcoxon signed-rank with Holm correction [cite: Garcia & Herrera
   2008; Garcia et al. 2010]
 - Bayesian signed-rank test with ROPE [cite: Benavoli et al. 2017]
 - Critical difference diagrams (Wilcoxon-based, not Nemenyi-based)
+- Cross-game comparison (N = 2 games, Friedman inapplicable):
+  per-game rankings with bootstrapped CIs, 5x2 cv F-test or
+  Nadeau-Bengio corrected t-test, qualitative concordance
 
 **Fed by:** Literature review. Some domain knowledge validated during
 SC2 Phase 01 (Data Exploration) — game loop timing and APM/MMR findings.
@@ -263,14 +271,21 @@ engineering, and the unified experimental protocol.
 - Grid or Bayesian search with cross-validation on training set
 
 #### 4.4.4 Evaluation metrics
-- Primary: accuracy, log-loss, ROC-AUC
-- Secondary: calibration curve, per-matchup accuracy, cold-start stratification
-- Cross-game comparison: Friedman test + critical difference diagram
+- Primary (probabilistic quality): Brier score with Murphy decomposition
+  (reliability, resolution, uncertainty), log-loss
+- Discrimination: accuracy, ROC-AUC, calibration curves (reliability
+  diagrams, ECE)
+- Stratified analysis: per-matchup accuracy, cold-start stratification,
+  prediction sharpness histograms
+- Cross-game comparison: per-game method rankings with bootstrapped CIs,
+  5×2 cv F-test (Alpaydin 1999), qualitative concordance analysis
+  (Friedman inapplicable with N=2 games; Demsar 2006 requires N >= 5)
 
 **Fed by:** SC2 Phase 03 (Splitting & Baselines) and Phase 04 (Model Training); AoE2 equivalent phases (future).
 
 ---
 
+<!-- PROVISIONAL: Subsection detail below will be revised after Phase 03-04 findings. -->
 ## Chapter 5 — Experiments and Results (20–25 pp.)
 
 ### 5.1 StarCraft II results `[SC2]`
@@ -314,8 +329,12 @@ engineering, and the unified experimental protocol.
 
 #### 5.3.1 Method ranking comparison
 - Do the same methods rank in the same order for both games?
-- Friedman omnibus + Wilcoxon/Holm pairwise tests + Bayesian signed-rank on matched method × game matrix
-- Critical difference diagram
+- Within-game: Friedman omnibus + Wilcoxon/Holm pairwise + Bayesian
+  signed-rank on temporal CV folds
+- Cross-game: per-game rankings with effect sizes and bootstrapped CIs;
+  5×2 cv F-test; qualitative concordance discussion
+  (Friedman inapplicable with N=2 games)
+- Critical difference diagrams (per-game, not cross-game)
 
 #### 5.3.2 Feature category importance comparison
 - Which feature groups matter most in each game?
@@ -332,6 +351,7 @@ engineering, and the unified experimental protocol.
 
 ---
 
+<!-- PROVISIONAL: Subsection detail below will be revised after experiments complete. -->
 ## Chapter 6 — Discussion (8–12 pp.)
 
 ### 6.1 Interpretation of results
@@ -362,6 +382,7 @@ engineering, and the unified experimental protocol.
 
 ---
 
+<!-- PROVISIONAL: Will be revised after all results are available. -->
 ## Chapter 7 — Conclusions and Future Work (3–5 pp.)
 
 ### 7.1 Summary of contributions

@@ -8,6 +8,10 @@ This file defines terminology only. It does not enumerate the canonical Phase
 list — that lives in [`docs/PHASES.md`](PHASES.md). It does not catalogue where
 each term is currently used — that is the job of the files that use them.
 
+> **Usage note:** This file is reference documentation, not auto-loaded
+> context. Agents should read it on demand when terminology is ambiguous,
+> not at session start. For the Phase list itself, see `docs/PHASES.md`.
+
 ---
 
 ## The three-level work hierarchy

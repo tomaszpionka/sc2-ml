@@ -103,7 +103,7 @@ Sobering context: [Semmelrock et al. 2025][semmelrock] (*AI Magazine*) found tha
 
 A bigger accuracy number does not mean a better model — differences may reflect random variation. For your thesis comparing 3+ methods across 2 games, the statistical comparison framework has evolved significantly since [Demšar's 2006 landmark paper][demsar], and modern best practice incorporates corrections from subsequent research.
 
-**The Friedman test** remains the correct omnibus test for comparing multiple classifiers across multiple datasets or evaluation conditions. It is nonparametric, does not assume normality of performance metrics, and tests whether all algorithms perform equally.
+**The Friedman test** remains the correct omnibus test for comparing multiple classifiers across multiple evaluation conditions, **provided N >= 5 blocks** (datasets, folds, or evaluation conditions). It is nonparametric, does not assume normality of performance metrics, and tests whether all algorithms perform equally. **With only N = 2 games, the Friedman test degenerates to a sign test with near-zero power** (Demsar 2006 requires N >= 5). For the cross-game comparison in this thesis, use per-game method rankings with bootstrapped CIs, 5x2 cv F-test (Alpaydin 1999), and qualitative concordance instead. See Scientific Invariant #8 for the authoritative two-level framework.
 
 **The Nemenyi post-hoc test is no longer recommended.** [Benavoli, Corani & Mangili (2016)][benavoli-2016] demonstrated a fundamental flaw: the Nemenyi test suffers from **pool-dependence**, meaning the outcome of a comparison between classifiers A and B can change depending on which other classifiers are included in the experiment. This occurs because mean ranks are computed across all algorithms in the pool, so adding or removing an unrelated classifier C shifts the ranks assigned to A and B. [García & Herrera (2008)][garcia-herrera-2008] had earlier shown the Nemenyi test is excessively conservative compared to step-down alternatives.
 
@@ -113,10 +113,17 @@ A bigger accuracy number does not mean a better model — differences may reflec
 
 For a thesis comparing tabular ML vs. GNNs across two games, the recommended approach is:
 
+**Within-game comparison** (k classifiers on one game's temporal CV folds, N_folds >= 5):
 1. **Friedman test** as omnibus check across all methods
 2. **Pairwise Wilcoxon signed-rank tests with Holm correction** as the primary frequentist comparison
 3. **Bayesian signed-rank test with ROPE** (via `baycomp`) as the complementary analysis — reporting three-way probabilities alongside traditional p-values demonstrates statistical sophistication
 4. **Critical difference diagrams** for visualization, but computed from the Wilcoxon-based pairwise comparisons, not Nemenyi
+
+**Cross-game comparison** (N = 2 games — Friedman inapplicable):
+1. Per-game method rankings with effect sizes and bootstrapped confidence intervals
+2. 5x2 cv F-test or Nadeau-Bengio corrected t-test per dataset
+3. Bayesian comparison via baycomp where applicable
+4. Qualitative cross-game concordance discussion
 
 ### 3.3 Evaluation protocol
 

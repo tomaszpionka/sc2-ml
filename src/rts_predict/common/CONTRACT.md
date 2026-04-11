@@ -13,7 +13,7 @@ game package.
   subgroup distribution comparison. Game-agnostic by design.
 - **Report formatting**: markdown table generation, figure export helpers,
   research log entry templates.
-- **Cross-game comparison protocol**: the implementation of Scientific Invariant #10
+- **Cross-game comparison protocol**: the implementation of Scientific Invariant #8
   (shared evaluation protocol, identical metrics, matched experimental conditions).
 - **Base classes / interfaces**: abstract feature group, abstract data pipeline step,
   if these patterns emerge and prove useful. Do not create them speculatively.

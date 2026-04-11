@@ -30,17 +30,10 @@ source .venv/bin/activate && poetry run pytest tests/ -v --cov=rts_predict
 | `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md` | Institutional requirements — formatting, defense, grading |
 | `.claude/thesis-formatting-rules.yaml` | Machine-readable PJAIT formatting thresholds |
 
-## Prior Work (reference only — not authoritative)
+## Prior Work
 
-Superseded drafts and pre-restart artifacts are preserved in per-dataset
-archive directories:
-
-- `src/rts_predict/sc2/reports/sc2egset/archive/` — SC2EGSet prior exploration
-- `src/rts_predict/aoe2/reports/aoe2companion/archive/` — AoE2 Companion prior work
-- `src/rts_predict/aoe2/reports/aoestats/archive/` — AoE2 aoestats prior work
-
-Each archive has a `_README.md` explaining what it contains and why it was
-superseded.
+Superseded drafts and pre-restart artifacts were removed in v2.0.0 (archive
+cleanup). Historical context is preserved in git history and `CHANGELOG.md`.
 
 ## Project Status
 

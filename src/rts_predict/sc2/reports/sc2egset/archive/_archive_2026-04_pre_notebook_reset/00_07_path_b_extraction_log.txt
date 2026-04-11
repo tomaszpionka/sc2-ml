@@ -1,8 +1,0 @@
-Path B Extraction Log
-Extraction time: 2870.7s
-Loading time: 77.1s
-Parquet batches: 448
-tracker_events_raw rows: 62003411
-game_events_raw rows: 608618823
-match_player_map rows: 44815
-Manifest: 22390 extracted, 0 skipped

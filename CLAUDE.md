@@ -61,74 +61,28 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 
 ## Key File Locations
 
-| What | Where |
-|------|-------|
-| Phase status | `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml` |
-| Canonical phase list | `docs/PHASES.md` |
-| SC2 dataset roadmap | `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` |
-| SC2 game roadmap | `src/rts_predict/sc2/reports/ROADMAP.md` |
-| Scientific invariants | `.claude/scientific-invariants.md` |
-| Architecture | `ARCHITECTURE.md` |
-| Methodology manuals index | `docs/INDEX.md` |
-| Research log | `reports/research_log.md` |
-| Thesis status | `thesis/WRITING_STATUS.md` |
-| Review queue | `thesis/chapters/REVIEW_QUEUE.md` |
-| Dev constraints | `.claude/dev-constraints.md` (legacy warnings, ordering, platform) |
-| ML experiment protocol | `.claude/ml-protocol.md` |
-| Per-dataset invariants | `src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md` |
+See `ARCHITECTURE.md` for the full cross-cutting files table and source-of-truth
+hierarchy. Quick pointers for the most common lookups:
 
-## Phase Work Execution (Sandbox Notebooks)
+- Phase status: `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`
+- Scientific invariants: `.claude/scientific-invariants.md`
+- Canonical phase list: `docs/PHASES.md`
 
-All Category A (phase work) code execution happens in Jupyter notebooks under
-`sandbox/<game>/<dataset>/`. Each notebook is a jupytext-paired `.py` (percent
-format) + `.ipynb` file. The `.py` file is the diff-reviewable source of truth;
-the `.ipynb` file carries cell outputs for audit.
+## Phase Work Execution
 
-**Naming:** `{PHASE}_{PIPELINE_SECTION}_{STEP}_{descriptive_slug}.{py,ipynb}`
-**Example:** `sandbox/sc2/sc2egset/01_01_01_source_inventory.py`
-
-**Artifacts:** Notebooks save report artifacts (CSV, JSON, MD, PNG) to
-`src/rts_predict/<game>/reports/<dataset>/artifacts/` — never to the dataset
-report root directly. Use `get_reports_dir("sc2", "sc2egset") / "artifacts/"`
-from `rts_predict.common.notebook_utils`.
-
-**Hard rules:** See `sandbox/README.md` for the full contract (no inline
-definitions, 50-line cell cap, read-only DuckDB, both files committed).
+See `sandbox/README.md` for the full notebook contract. Key rule:
+all Category A code execution happens in jupytext-paired notebooks under
+`sandbox/<game>/<dataset>/`.
 
 ## Parallel Executor Orchestration
 
-Two strategies for running executor subagents in parallel:
-
-**Strategy A — Shared branch** (for non-overlapping file edits):
-1. Parent creates the branch before spawning any executor
-2. Parent provides each executor with its spec file path
-3. Executors do NOT create branches, checkout, add, or commit
-4. Parent stages and commits after all executors complete
-5. Never assign parallel executors specs that edit the same file
-
-**Strategy B — Worktree isolation** (for overlapping or complex edits):
-1. Parent spawns executors with `isolation: "worktree"`
-2. Each executor gets an isolated worktree with its own branch
-3. Executors edit freely — no conflict possible
-4. Parent merges each worktree branch back after completion
-
-Use Strategy A for config/docs chores with known file maps. Use Strategy B
-for Phase work or any situation where file overlap is hard to predict.
+See `ARCHITECTURE.md` or `docs/agents/AGENT_MANUAL.md` for Strategy A
+(shared branch) vs Strategy B (worktree isolation) details.
 
 ## Agent Architecture
 
-8 sub-agents in `.claude/agents/` — see `docs/agents/AGENT_MANUAL.md` for usage.
-
-| Agent | Model | Effort | Role |
-|-------|-------|--------|------|
-| `planner-science` | opus | max | Thesis methodology, Phase architecture, data science |
-| `planner` | sonnet | high | Code refactoring, chores, test planning |
-| `executor` | sonnet | high | All implementation (use `/model opus` for hard steps) |
-| `reviewer` | sonnet | high | Post-change validation, catches regressions |
-| `reviewer-adversarial` | opus | max | Scientific methodology adversary, thesis defensibility |
-| `reviewer-deep` | opus | max | Heavyweight PR review, invariant tracing, spec compliance |
-| `writer-thesis` | opus | max | Thesis chapter drafting and revision |
-| `lookup` | haiku | low | Quick git/shell/file questions |
+8 sub-agents in `.claude/agents/` — see `docs/agents/AGENT_MANUAL.md` for
+usage, model assignments, and routing rules.
 
 ## Permissions
 
@@ -145,8 +99,9 @@ code until instructed.
 
 ## Progress Tracking
 
-- **Session start:** Read the active dataset's PHASE_STATUS.yaml, then scientific-invariants.md
-- **After each step:** Update `reports/research_log.md` (mandatory for Category A)
-- **After phase gate:** Update PHASE_STATUS.yaml, check thesis/WRITING_STATUS.md
-- **After Category F:** Update thesis/chapters/REVIEW_QUEUE.md
+See `ARCHITECTURE.md` for the full tracking protocol. Key rules:
+- **Session start:** Read active PHASE_STATUS.yaml, then scientific-invariants.md
+- **After Category A step:** Update `reports/research_log.md`
+- **After phase gate:** Update PHASE_STATUS.yaml, check `thesis/WRITING_STATUS.md`
+- **After Category F:** Update `thesis/chapters/REVIEW_QUEUE.md`
 - **Session end:** See git-workflow rule (loads on PR/commit operations)

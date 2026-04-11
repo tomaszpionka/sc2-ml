@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-09 (all phases not_started; Phase 01 Steps not yet defined)
+Last updated: 2026-04-11
 
 ---
 
@@ -61,55 +61,35 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §4.1.1 SC2EGSet description | `BLOCKED` | Phase 01 (Data Exploration) | Phase 01 Steps 01_01–01_07 done; awaiting Step 01_08 (game settings + field completeness audit) before draftable |
-| §4.1.2 AoE2 match data | `BLOCKED` | AoE2 roadmap | Future |
-| §4.1.3 Data asymmetry | `BLOCKED` | Both datasets | Future |
-| §4.2.1 Ingestion and validation | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_01 | Blocked until Phase 01 Pipeline Section 01_01 is complete under new scheme. |
-| §4.2.2 Player identity resolution | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Sections 01_02–01_03 | |
-| §4.2.3 Cleaning rules | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_04 | |
-| §4.3.1 Common pre-game features | `BLOCKED` | Phase 02 (Feature Engineering) | |
-| §4.3.2 SC2 in-game features | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_05; Phase 02 (Feature Engineering) | |
-| §4.3.3 AoE2-specific features | `BLOCKED` | AoE2 roadmap | Future |
-| §4.4.1 Split strategy | `BLOCKED` | Phase 03 (Splitting & Baselines) | |
-| §4.4.2 Model configurations | `BLOCKED` | Phase 03 (Splitting & Baselines); Phase 04 (Model Training) | |
-| §4.4.3 Hyperparameter tuning | `BLOCKED` | Phase 04 (Model Training) | |
+| §4.1.1 SC2EGSet description | `BLOCKED` | Phase 01 (Data Exploration) | Steps 01_01–01_07 done; awaiting Step 01_08 (game settings + field completeness audit) |
 | §4.4.4 Evaluation metrics | `SKELETON` | — | Can draft from literature |
+
+Remaining 11 sections all `BLOCKED` — waiting on Phase 01–04 (SC2) and AoE2 roadmap phases.
 
 ## Chapter 5 — Experiments and Results
 
-| Section | Status | Feeds from | Notes |
-|---------|--------|------------|-------|
-| §5.1.1 SC2 baselines | `BLOCKED` | Phase 03 (Splitting & Baselines) | |
-| §5.1.2 SC2 pre-game prediction | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
-| §5.1.3 SC2 in-game prediction | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
-| §5.1.4 SC2 per-matchup / cold-start | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
-| §5.2 AoE2 results | `BLOCKED` | AoE2 phases | Future |
-| §5.3 Cross-game comparison | `BLOCKED` | Both complete | Future |
+All 6 sections `BLOCKED` — waiting on Phases 03-05 (SC2) and AoE2 phases.
 
 ## Chapter 6 — Discussion
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §6.1 Interpretation | `BLOCKED` | Chapter 5 | |
-| §6.2 Comparison with literature | `BLOCKED` | Chapter 5 | |
-| §6.3 Generalisability | `BLOCKED` | Chapter 5 | |
-| §6.4 Practical implications | `BLOCKED` | Chapter 5 | |
 | §6.5 Threats to validity | `SKELETON` | — | Can start listing now |
+
+Remaining 4 sections all `BLOCKED` — waiting on Chapter 5.
 
 ## Chapter 7 — Conclusions
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §7.1 Summary of contributions | `BLOCKED` | All | Write last |
-| §7.2 Key findings | `BLOCKED` | Chapter 5–6 | |
 | §7.3 Future work | `SKELETON` | — | Can accumulate ideas throughout |
+
+Remaining 2 sections all `BLOCKED` — waiting on Chapters 5–6.
 
 ## Appendices
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| Appendix A — Infrastructure | `BLOCKED` | Phase 01 (Data Exploration), Pipeline Section 01_01 | Blocked until Phase 01 produces pipeline architecture artifacts. |
-| Appendix B — Feature lists | `BLOCKED` | Phase 02 (Feature Engineering) | |
-| Appendix C — Hyperparameters | `BLOCKED` | Phase 04 (Model Training) | |
-| Appendix D — Additional results | `BLOCKED` | Phase 04 (Model Training) / Phase 05 (Evaluation & Analysis) | |
 | Appendix E — Code repository | `SKELETON` | — | Repo structure description |
+
+Remaining 4 appendices all `BLOCKED` — waiting on Phase 01–05 artifacts.

@@ -57,7 +57,7 @@ Empires II."
 4. The active dataset's ROADMAP.md (path determined from PHASE_STATUS)
 5. The active dataset's INVARIANTS.md (if it exists)
 6. `reports/research_log.md`
-7. `.claude/ml-protocol.md` — active from Phase 04 onward; read before planning any modelling or evaluation work.
+7. `.claude/ml-protocol.md` — active from Phase 02 onward; read before planning any feature engineering, modelling, or evaluation work.
 
 ## Data layout
 

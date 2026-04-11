@@ -8,6 +8,10 @@
 
 ---
 
+> **Role: PRIMARY.** This is the primary AoE2 dataset. It runs full
+> Phases 01–07. See `src/rts_predict/aoe2/reports/ROADMAP.md` for the
+> dataset strategy rationale.
+
 ## How to use this document
 
 This file decomposes Phases into Pipeline Sections and Steps for the aoe2companion
@@ -84,8 +88,8 @@ inputs:
     - ".claude/scientific-invariants.md"
 outputs:
   data_artifacts:
-    - "artifacts/01_01/01_01_01_file_inventory.json"
-  report: "artifacts/01_01/01_01_01_file_inventory.md"
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+  report: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md"
 reproducibility: "All counts produced by inventory_directory() from rts_predict.common.inventory. Code and output are in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
@@ -93,11 +97,11 @@ scientific_invariants_applied:
   - number: "7"
     how_upheld: "No thresholds used — pure counting."
 gate:
-  artifact_check: "artifacts/01_01/01_01_01_file_inventory.json and .md exist and are non-empty."
+  artifact_check: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json and .md exist and are non-empty."
   continue_predicate: "Inventory artifacts exist on disk."
   halt_predicate: "Raw directory does not exist or is empty."
 thesis_mapping:
-  - "Chapter 3 — Data & Methodology > 3.1 Data Sources > aoe2companion"
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."
 ```
 
@@ -105,83 +109,35 @@ research_log_entry: "Required on completion."
 
 ## Phase 02 — Feature Engineering (placeholder)
 
-Pipeline Sections per `docs/PHASES.md`:
-
-- `02_01` — Pre-Game vs In-Game Boundary
-- `02_02` — Symmetry & Difference Features
-- `02_03` — Temporal Features, Windows, Decay, Cold Starts
-- `02_04` — Feature Quality Assessment
-- `02_05` — Categorical Encoding & Interactions
-- `02_06` — Feature Selection
-- `02_07` — Rating Systems & Domain Features
-- `02_08` — Feature Documentation & Catalog
-
+Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 01 gate is met.
 
 ---
 
 ## Phase 03 — Splitting & Baselines (placeholder)
 
-Pipeline Sections per `docs/PHASES.md`:
-
-- `03_01` — Temporal Splitting Strategies
-- `03_02` — Purge & Embargo
-- `03_03` — Grouped Splits for Panel Data
-- `03_04` — Nested Cross-Validation
-- `03_05` — Split Validation
-- `03_06` — Baseline Definitions
-- `03_07` — Elo & Domain-Specific Baselines
-- `03_08` — Shared Evaluation Protocol
-- `03_09` — Statistical-Comparison Protocol
-
+Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 02 gate is met.
 
 ---
 
 ## Phase 04 — Model Training (placeholder)
 
-Pipeline Sections per `docs/PHASES.md`:
-
-- `04_01` — Training Pipelines (sklearn Pipeline + ColumnTransformer)
-- `04_02` — GNN Training
-- `04_03` — Loss Functions
-- `04_04` — Early Stopping
-- `04_05` — Learning Rate Scheduling
-- `04_06` — Hyperparameter Tuning
-- `04_07` — Nested Temporal Cross-Validation
-- `04_08` — Reproducibility
-
+Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 03 gate is met.
 
 ---
 
 ## Phase 05 — Evaluation & Analysis (placeholder)
 
-Pipeline Sections per `docs/PHASES.md`:
-
-- `05_01` — Evaluation Metrics (threshold, probabilistic, ROC/PR, calibration, sharpness)
-- `05_02` — Statistical Comparison of Classifiers
-- `05_03` — Error Analysis
-- `05_04` — Ablation Studies & Sensitivity Analysis
-
+Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 04 gate is met.
 
 ---
 
 ## Phase 06 — Cross-Domain Transfer (placeholder)
 
-Pipeline Sections per `docs/PHASES.md`:
-
-- `06_01` — Transfer Learning Taxonomy
-- `06_02` — Ben-David's Bound & Transfer Feasibility
-- `06_03` — Distribution Shift Between Domains
-- `06_04` — Shared Feature Space Construction
-- `06_05` — Negative Transfer
-- `06_06` — Three-Tier Experimental Design
-- `06_07` — Transfer Evaluation & Reporting
-- `06_08` — Honest Claims With Two Domains
-- `06_09` — Component Transferability Analysis
-
+Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 05 gate is met.
 
 ---
