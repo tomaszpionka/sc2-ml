@@ -14,7 +14,8 @@
 # -- File identity --
 file_path:
   value: "src/rts_predict/<game>/reports/<dataset>/PIPELINE_SECTION_STATUS.yaml"
-  required: true
+  required: false
+  # Inferred from directory structure; omitted in practice.
 
 game:
   value: "<sc2 | aoe2>"

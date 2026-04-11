@@ -23,7 +23,7 @@ name:
 
 # -- Source --
 source_manual:
-  value: "<docs/ml_experiment_lifecycle/NN_MANUAL_NAME.md>"
+  value: "<docs/ml_experiment_phases/NN_MANUAL_NAME.md>"
   required: true
 
 canonical_reference:
