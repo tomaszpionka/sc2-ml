@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [3.1.3] — 2026-04-12 (PR #116: chore/thesis-prep)
+
+### Changed
+- `writer-thesis` agent: added WebFetch/WebSearch tools, Polish language
+  instruction, `.claude/author-style-brief-pl.md` in Read First, argumentative
+  prose rules ("every method choice must present alternatives considered")
+- `reviewer-adversarial` agent: added voice audit for Category F against
+  Polish style brief, style brief added to Required Reading
+- `planner-science` agent: added Category F spec requirements (must-justify,
+  must-cite, must-contrast lists per section)
+- `reviewer-deep` agent: added cross-chapter voice consistency check against
+  Polish style brief for Category F
+- `thesis/WRITING_STATUS.md`: 16 sections moved from SKELETON to DRAFTABLE
+  (13 fully draftable literature-based + 3 with revision notes)
+
 ## [3.1.2] — 2026-04-12 (PR #115: chore/agent-efficiency)
 
 ### Added
