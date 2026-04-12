@@ -28,7 +28,7 @@
 # This notebook walks the sc2egset raw directory and counts everything.
 # It does NOT compare against any expected counts — it produces the counts
 # for the first time. The raw directory has a two-level structure:
-# `raw/TOURNAMENT_NAME/TOURNAMENT_NAME_data/*.SC2Replay.json`.
+# `raw/DIR/DIR_data/*.SC2Replay.json`.
 # The top level also contains metadata files (`.zip`, `.log`, `.json`, no-extension).
 # Both levels are inventoried.
 
@@ -56,27 +56,27 @@ logger.info("Source directory: %s", RAW_DIR)
 logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 
 # %%
-# Level 1 inventory: RAW_DIR -> tournament directories (metadata files only)
-# Each tournament dir contains: .zip, .log, .json metadata, and a _data/ subdir.
-# inventory_directory goes one level deep, so it counts metadata files per tournament.
+# Level 1 inventory: RAW_DIR -> top-level directories (metadata files only)
+# Each top-level dir contains: .zip, .log, .json metadata, and a _data/ subdir.
+# inventory_directory goes one level deep, so it counts metadata files per directory.
 meta_result = inventory_directory(RAW_DIR)
 
-logger.info("Tournament directories (level 1): %d", len(meta_result.subdirs))
-logger.info("Metadata files across all tournaments: %d", meta_result.total_files)
+logger.info("Top-level directories (level 1): %d", len(meta_result.subdirs))
+logger.info("Metadata files across all top-level directories: %d", meta_result.total_files)
 logger.info("Files at root: %d", len(meta_result.files_at_root))
 
 # %% [markdown]
 # ### Level 1 inventory
 #
-# The level 1 scan of the raw directory reveals the tournament directory structure
-# and metadata file counts. Each tournament directory contains auxiliary files
+# The level 1 scan of the raw directory reveals the top-level directory structure
+# and metadata file counts. Each top-level directory contains auxiliary files
 # (.zip archives, .log files, metadata .json) alongside a `_data/` subdirectory
 # holding the actual replay files. This cell establishes the top-level counts
 # before drilling into replay-level detail.
 
 # %%
-# Level 2 inventory: for each tournament, scan its _data/ subdir for replay files.
-# The _data/ subdir is named TOURNAMENT_NAME_data and contains *.SC2Replay.json files.
+# Level 2 inventory: for each top-level directory, scan its _data/ subdir for replay files.
+# The _data/ subdir is named DIR_data and contains *.SC2Replay.json files.
 replay_subdir_data = []
 total_replay_files = 0
 total_replay_bytes = 0
@@ -85,7 +85,7 @@ tournaments_missing_data_dir = []
 for sd in meta_result.subdirs:
     data_dir = RAW_DIR / sd.name / (sd.name + "_data")
     if not data_dir.exists():
-        logger.warning("No _data dir for tournament: %s", sd.name)
+        logger.warning("No _data dir for top-level directory: %s", sd.name)
         tournaments_missing_data_dir.append(sd.name)
         continue
     replay_inv = inventory_directory(data_dir)
@@ -105,45 +105,45 @@ for sd in meta_result.subdirs:
 logger.info("Total replay files (level 2): %d", total_replay_files)
 logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
 if tournaments_missing_data_dir:
-    logger.warning("Tournaments with no _data dir: %s", tournaments_missing_data_dir)
+    logger.warning("Top-level directories missing _data/: %s", tournaments_missing_data_dir)
 
 # %% [markdown]
 # ### Level 2 inventory — replay files
 #
-# The level 2 scan enters each tournament's `_data/` subdirectory and counts
+# The level 2 scan enters each top-level directory's `_data/` subdirectory and counts
 # replay files. The total replay file count and cumulative size establish the
-# authoritative source counts for all downstream steps. Any tournament missing
+# authoritative source counts for all downstream steps. Any top-level directory missing
 # its `_data/` directory is flagged as a warning — these gaps must be acknowledged
 # in the data cleaning phase.
 
 # %%
-# Summary statistics for replay file counts per tournament
+# Summary statistics for replay file counts per directory
 replay_counts = [sd["replay_file_count"] for sd in replay_subdir_data]
 if replay_counts:
     logger.info(
-        "Replays per tournament — min: %d, max: %d, median: %.1f, total: %d",
+        "Files per directory — min: %d, max: %d, median: %.1f, total: %d",
         min(replay_counts),
         max(replay_counts),
         statistics.median(replay_counts),
         sum(replay_counts),
     )
 
-# Flag tournaments with 0 replay files
+# Flag top-level directories with 0 replay files
 for sd in replay_subdir_data:
     if sd["replay_file_count"] == 0:
-        logger.warning("Tournament with 0 replay files: %s", sd["name"])
+        logger.warning("Top-level directory with 0 files: %s", sd["name"])
 
 # %% [markdown]
-# ### Replay distribution across tournaments
+# ### Replay distribution across top-level directories
 #
-# The summary statistics (min, max, median replays per tournament) characterise
-# the size distribution of the corpus. Tournaments with zero replay files are
+# The summary statistics (min, max, median files per directory) characterise
+# the size distribution of the corpus. Top-level directories with zero replay files are
 # flagged explicitly — these are not data errors but may indicate incomplete
 # extraction or metadata-only directories.
 
 # %%
 # Whole-tree filename pattern summary across both inventory levels.
-# Level 1 (meta_result): root files + tournament-level metadata files.
+# Level 1 (meta_result): root files + directory-level metadata files.
 all_files = list(meta_result.files_at_root)
 all_files.extend(f for sd in meta_result.subdirs for f in sd.files)
 # Level 2: re-scan each _data/ subdir to collect replay FileEntry objects.
@@ -166,7 +166,7 @@ for pattern, count in patterns.items():
 # ### Filename pattern summary
 #
 # The whole-tree pattern summary groups every file in the sc2egset `raw/`
-# tree by its abstract naming pattern — spanning both the tournament-level
+# tree by its abstract naming pattern — spanning both the directory-level
 # metadata files and the `_data/` subdirectory replay files. This reveals
 # the full file taxonomy: replay JSONs (`{hash}.SC2Replay.json`), metadata
 # archives, processing trackers, and any housekeeping files (`.gitkeep`).
@@ -197,25 +197,25 @@ logger.info("JSON artifact written: %s", json_path)
 lines = [
     "# Step 01_01_01 — File Inventory: sc2egset\n",
     f"**Raw directory:** `{RAW_DIR}`\n",
-    f"**Layout:** `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`\n",
-    f"**Tournament directories:** {len(meta_result.subdirs)}\n",
+    f"**Layout:** `raw/DIR/DIR_data/*.SC2Replay.json`\n",
+    f"**Top-level directories:** {len(meta_result.subdirs)}\n",
     f"**Total replay files:** {total_replay_files}\n",
     f"**Total replay size:** {total_replay_bytes / (1024**2):.2f} MB\n",
-    f"**Metadata files (zip/log/json at tournament level):** {meta_result.total_files}\n",
+    f"**Metadata files (zip/log/json at directory level):** {meta_result.total_files}\n",
     f"**Files at root level:** {len(meta_result.files_at_root)}\n",
 ]
 
 if replay_counts:
     lines.extend([
-        "\n## Summary statistics (replays per tournament)\n",
+        "\n## Summary statistics (files per top-level directory)\n",
         f"- Min: {min(replay_counts)}",
         f"- Max: {max(replay_counts)}",
         f"- Median: {statistics.median(replay_counts):.1f}",
     ])
 
 lines.extend([
-    "\n## Per-tournament breakdown\n",
-    "| Tournament | Replay Files | Size (MB) | Extensions |",
+    "\n## Per-directory breakdown\n",
+    "| Directory | Files | Size (MB) | Extensions |",
     "|---|---|---|---|",
 ])
 for sd in replay_subdir_data:
@@ -233,7 +233,7 @@ for pattern, count in patterns.items():
 
 if tournaments_missing_data_dir:
     lines.extend([
-        "\n## Tournaments with no _data directory\n",
+        "\n## Top-level directories missing _data/\n",
         *[f"- {t}" for t in tournaments_missing_data_dir],
     ])
 
@@ -253,7 +253,7 @@ logger.info("Markdown artifact written: %s", md_path)
 # ## Conclusion
 #
 # ### Artifacts produced
-# - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json` — structured inventory with per-tournament breakdown
+# - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json` — structured inventory with per-directory breakdown
 # - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md` — human-readable inventory report
 #
 # ### Thesis mapping
@@ -261,4 +261,4 @@ logger.info("Markdown artifact written: %s", md_path)
 #
 # ### Follow-ups
 # - Step 01_01_02 (if defined) or Step 01_02_01: profile the replay JSON schema and field completeness
-# - Any tournaments flagged with missing `_data/` directories need acknowledgement in data cleaning (Section 01_04)
+# - Any top-level directories flagged with missing `_data/` directories need acknowledgement in data cleaning (Section 01_04)
