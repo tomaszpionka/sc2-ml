@@ -12,8 +12,11 @@ merged to `master`.
 ## [Unreleased]
 
 ### Added
+- 3 per-dataset `research_log.md` files (sc2egset, aoe2companion, aoestats) with migrated Step 01_01_01 findings
 
 ### Changed
+- `reports/research_log.md` rewritten as index + CROSS entries
+- ~25 files updated to reference per-dataset logs instead of unified log
 
 ### Fixed
 
