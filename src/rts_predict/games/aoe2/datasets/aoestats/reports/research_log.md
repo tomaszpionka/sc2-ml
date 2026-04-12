@@ -78,7 +78,7 @@ patterns = summarize_filename_patterns(all_files)
 
 ### What this means
 
-The `players/` directory has one fewer file than `matches/`, with the extra gap at 2025-11-15 -> 2025-11-23 — this corresponds to the missing file `2025-11-16_2025-11-22_players.parquet` documented in ROADMAP. Both directories share the same temporal endpoints (2022-08-28 to 2026-02-07). All three gaps shared between directories (the 43-day gap in mid-2024 and two 8-day gaps) indicate missing week-blocks in both `matches/` and `players/`. These will need to be accounted for in downstream processing.
+The `players/` directory has one fewer file than `matches/`, with the extra gap at 2025-11-15 -> 2025-11-23 — this corresponds to the absent file `2025-11-16_2025-11-22_players.parquet`. Both directories share the same temporal endpoints (2022-08-28 to 2026-02-07). All three gaps shared between directories (the 43-day gap in mid-2024 and two 8-day gaps) indicate missing 7-day-interval filename blocks in both `matches/` and `players/`. These will need to be accounted for in downstream processing.
 
 ### Decisions taken
 
@@ -96,7 +96,7 @@ The `players/` directory has one fewer file than `matches/`, with the extra gap 
 ### Open questions / follow-ups
 
 - Confirm whether the three shared gaps (43-day gap and two 8-day gaps) represent data provider absences or collection failures — requires content-level inspection (Step 01_01_02).
-- The `overview/` subdirectory contains one `overview.json` file — its content and role relative to the weekly `.parquet` files is unknown at the filesystem level and must be established in Step 01_01_02.
+- The `overview/` subdirectory contains one `overview.json` file — its content and role relative to the `{date}_{date}_*.parquet` files is unknown at the filesystem level and must be established in Step 01_01_02.
 - The `.gitkeep` placeholder in each subdirectory is housekeeping and not a data file — confirmed by filename extension and zero content.
 
 ---

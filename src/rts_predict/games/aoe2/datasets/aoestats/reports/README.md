@@ -38,7 +38,7 @@ file_inventory:
 # Report filesystem-level facts only.
 
 known_issues:
-  - "171 files in players/ vs 172 in matches/"
+  - "171 files in players/ vs 172 in matches/. Source: _download_manifest.json, status='failed' for 2025-11-16_2025-11-22_players.parquet."
 
 # -- Section E: Reconciliation --------------------------------------------------
 # Source: acquisition script verification
