@@ -1,0 +1,58 @@
+dag_id: "dag_canary_multijob"
+plan_ref: "planning/current_plan.md"
+category: "C"
+branch: "chore/plan-template-rewrite"
+base_ref: "master"
+default_isolation: "shared_branch"
+
+jobs:
+  - job_id: "J01_alpha"
+    name: "Canary alpha dataset"
+
+    task_groups:
+      - group_id: "TG01_alpha"
+        name: "Write alpha canary"
+        depends_on: []
+        review_gate:
+          agent: "reviewer"
+          scope: "diff"
+          on_blocker: "halt"
+        tasks:
+          - task_id: "T01"
+            name: "Create alpha canary file"
+            agent: "executor"
+            spec_file: "planning/specs/spec_01_canary_alpha.md"
+            file_scope:
+              - "canary/alpha.txt"
+            parallel_safe: true
+            depends_on: []
+
+  - job_id: "J02_beta"
+    name: "Canary beta dataset"
+
+    task_groups:
+      - group_id: "TG01_beta"
+        name: "Write beta canary"
+        depends_on: []
+        review_gate:
+          agent: "reviewer"
+          scope: "diff"
+          on_blocker: "halt"
+        tasks:
+          - task_id: "T02"
+            name: "Create beta canary file"
+            agent: "executor"
+            spec_file: "planning/specs/spec_02_canary_beta.md"
+            file_scope:
+              - "canary/beta.txt"
+            parallel_safe: true
+            depends_on: []
+
+final_review:
+  agent: "reviewer"
+  scope: "all"
+  base_ref: "master"
+  on_blocker: "halt"
+
+failure_policy:
+  on_failure: "halt"
