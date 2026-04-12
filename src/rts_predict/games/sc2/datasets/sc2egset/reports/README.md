@@ -1,30 +1,26 @@
-# aoe2companion -- Dataset Reports Provenance
+# sc2egset -- Dataset Reports Provenance
 
-Permanent provenance record for the aoe2companion dataset. This file is
+Permanent provenance record for the sc2egset dataset. This file is
 independent of the phase system and is not archived when phases are reset.
 
 ---
 
 # -- Section A: Identity -------------------------------------------------------
 
-game: aoe2
-dataset: aoe2companion
-reports_dir: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/
+game: sc2
+dataset: sc2egset
+reports_dir: src/rts_predict/games/sc2/datasets/sc2egset/reports/
 
 # -- Section B: Acquisition provenance -----------------------------------------
 # Source: acquisition script execution (pre-Phase 01)
 
 acquisition:
-  date: "2026-04-06"
-  script: "poetry run aoe2 download aoe2companion"
-  branch: "feat/aoe2-phase0-acquisition"
-  source: "aoe2companion API (CDN-hosted parquet and CSV files)"
-  source_url: "https://www.aoe2companion.com/more/api"
-  method: cdn_download
-
-# Download results (from acquisition script logs):
-# - First run: 17 failures (3 stale manifest size, 11 truncated, 3 broken pipe)
-# - Retry run: all 17 resolved; 0 failures final
+  date: "2025-12-05"
+  script: "manual download from Zenodo"
+  branch: "feat/sc2egset-acquisition"
+  source: "SC2EGSet -- StarCraft II Esport Replay and Game-state Dataset"
+  source_url: "https://zenodo.org/records/17829625"
+  method: manual_download
 
 # -- Section C: File inventory summary -----------------------------------------
 # Source: Step 01_01_01 artifact
@@ -47,10 +43,10 @@ known_issues: []
 # Source: acquisition script verification
 
 reconciliation:
-  strength: DEGRADED
-  reason: "manifest lacks per-file row counts; limited to file-count match"
+  strength: FULL
+  reason: "Zenodo v2.1.0 release; manual download; no acquisition script used"
 
 # -- Section F: Provenance rule -------------------------------------------------
 
 provenance_rule: >
-  Raw data is immutable. The API download will not be repeated.
+  Raw data is immutable. The acquisition will not be repeated.

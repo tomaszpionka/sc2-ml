@@ -60,26 +60,12 @@ condition is met.
   the reviewer reads the diff itself, not the specs.
 - *Final review dispatch:* Dispatch the agent specified in the DAG's
   `final_review` section with: (a) `plan_ref` path from the DAG, (b) all
-  `spec_file` paths from the DAG, (c) `base_ref` for the diff, (d) the
-  session context header (see below). **Review agent by category:**
-  reviewer-adversarial for Cat A phase work and multi-job DAGs;
-  reviewer-deep for Cat B/D; **reviewer (Sonnet) for Cat C/E** — no
-  science reads needed for chores and docs. The final reviewer reads the
-  plan, all specs, and the full diff. The orchestrator passes these paths
-  from DAG metadata — it does NOT read them itself.
-- *Context injection:* Every subagent dispatch prompt (planner, executor,
-  reviewer, final reviewer) MUST include a session context header. This
-  lets agents skip redundant independent file reads:
-  ```
-  Category: [A/B/C/D/E/F]
-  Branch: [name]
-  Dataset: [name]  (Cat A/D-data/F only — omit for B/C/E)
-  Dataset path: src/rts_predict/games/<game>/datasets/<dataset>/  (same)
-  Phase: [NN] ([status])  (same)
-  ```
-  Agents receiving this header skip reading PHASE_STATUS.yaml and ROADMAP
-  path resolution independently. They still read methodology files (SI,
-  INDEX.md) when their category requires it.
+  `spec_file` paths from the DAG, (c) `base_ref` for the diff. Default is
+  reviewer-deep; for complex DAGs (Category A phase work, multi-job DAGs)
+  use reviewer-adversarial. The final reviewer reads the plan, all specs,
+  and the full diff to check plan-vs-reality alignment, spec compliance, and
+  scope drift. The orchestrator passes these paths from DAG metadata — it
+  does NOT read them itself.
 - *General:* "Execute the DAG" means: read `DAG.yaml`, dispatch per its graph,
   nothing more. The orchestrator does NOT read `current_plan.md` or spec
   files when dispatching.
@@ -135,8 +121,7 @@ code until instructed.
 ## Progress Tracking
 
 See `ARCHITECTURE.md` for the full tracking protocol. Key rules:
-- **Session start (Cat A/D-data/F):** Read active PHASE_STATUS.yaml, then scientific-invariants.md
-- **Session start (Cat B/C/E):** No mandatory pre-reads — rules auto-load on file touch
+- **Session start:** Read active STEP_STATUS.yaml and PHASE_STATUS.yaml, then scientific-invariants.md
 - **After Category A step:** Update the active dataset's `research_log.md`
 - **After phase gate:** Update PHASE_STATUS.yaml, check `thesis/WRITING_STATUS.md`
 - **After Category F:** Update `thesis/chapters/REVIEW_QUEUE.md`

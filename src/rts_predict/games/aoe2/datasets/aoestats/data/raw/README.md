@@ -24,66 +24,43 @@ acquisition_script: "src/rts_predict/games/aoe2/datasets/aoestats/data/acquisiti
 
 # -- Section C: Content and Layout ---------------------------------------------
 
-description: >
-  Weekly database dumps from aoestats.io. Contains paired weekly match and player
-  parquet files named by date range, plus a single overview JSON reference file.
-  172 non-zero match weeks downloaded (2022-08-28 to 2026-02-07).
-  16 zero-match weeks from the manifest were excluded during acquisition
-  (derived from manifest comparison; 188 total manifest entries - 172 downloaded = 16 excluded).
+description: # to be repopulated from 01_01_01 artifacts
 file_format: "parquet, JSON"
 
-# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# File counts and sizes to be repopulated from 01_01_01 artifacts after rerun.
 # Dotfiles excluded: .gitkeep x3 (one per subdir).
 subdirectory_layout:
   - directory: "matches/"
-    contents: "Weekly match parquet files named {start_date}_{end_date}_matches.parquet"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "{start_date}_{end_date}_matches.parquet"
-    file_count: 172
-    size_mb: 610.55
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "players/"
-    contents: "Weekly player parquet files named {start_date}_{end_date}_players.parquet"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "{start_date}_{end_date}_players.parquet"
-    file_count: 171
-    size_mb: 3162.86
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "overview/"
-    contents: "Overview JSON reference file with lookup tables (civilizations, maps, game modes)"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "overview.json"
-    file_count: 1
-    size_mb: 0.02
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
 
-total_files: 346  # excludes 3 dotfiles (.gitkeep x3)
-total_size_mb: 3773.6
+total_files: # to be repopulated from 01_01_01 artifacts
+total_size_mb: # to be repopulated from 01_01_01 artifacts
 
 # -- Section D: Temporal Coverage ----------------------------------------------
 
-temporal_grain: weekly
+temporal_grain: # to be populated from 01_01_01 artifact date_analysis
 # Dates from 01_01_01 artifact date_analysis.matches
-date_range_start: "2022-08-28"
-date_range_end: "2026-02-07"
+date_range_start: # to be repopulated from 01_01_01 artifacts
+date_range_end: # to be repopulated from 01_01_01 artifacts
 
-# Gaps identified in 01_01_01 artifact date_analysis. Matches and players share
-# the same first three gaps; players has one additional gap.
-known_gaps:
-  - gap_start: "2024-07-20"
-    gap_end: "2024-09-01"
-    reason: "43-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
-  - gap_start: "2024-09-28"
-    gap_end: "2024-10-06"
-    reason: "8-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
-  - gap_start: "2025-03-22"
-    gap_end: "2025-03-30"
-    reason: "8-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
-  - gap_start: "2025-11-15"
-    gap_end: "2025-11-23"
-    reason: "8-day gap in players dumps only; matches unaffected (01_01_01 artifact date_analysis.players)"
+# Gaps from 01_01_01 artifact -- to be repopulated after rerun
+known_gaps: # to be repopulated from 01_01_01 artifacts
 
-gap_analysis_status: complete
-coverage_notes: >
-  Per-directory file counts: matches/=172, players/=171 (each excludes 1 .gitkeep).
-  The 1-file count mismatch between matches and players is reflected in the
-  fourth gap entry above (players has one additional gap week).
-  16 zero-match weeks from the manifest were excluded during acquisition
-  (see acquisition_filters below).
+gap_analysis_status: not_started
+# coverage_notes: stripped -- forward references to Phase 01 profiling steps not yet complete
 
 # -- Section E: Acquisition Filtering ------------------------------------------
 
@@ -142,30 +119,26 @@ This directory holds the raw data layer and must never be modified.
 **Acquisition script:** `src/rts_predict/games/aoe2/datasets/aoestats/data/acquisition.py`
 **Manifest:** `src/rts_predict/games/aoe2/datasets/aoestats/data/api/db_dump_list.json`
 
-> **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
+> **File counts and sizes:** To be repopulated from 01_01_01 artifacts after rerun. Dotfiles excluded
 > (.gitkeep x3, one per subdir). Counts reflect data files only.
 
 ## Subdirectory Layout
 
 | Directory | Contents | Pattern | File count | Size (MB) |
 |-----------|----------|---------|-----------|-----------|
-| `matches/` | Weekly match parquet files | `{start}_{end}_matches.parquet` | 172 | 610.6 |
-| `players/` | Weekly player parquet files | `{start}_{end}_players.parquet` | 171 | 3,162.9 |
-| `overview/` | Overview JSON reference | `overview.json` | 1 | 0.02 |
+| `matches/` | to be repopulated from 01_01_01 artifacts | `{start}_{end}_matches.parquet` | — | — |
+| `players/` | to be repopulated from 01_01_01 artifacts | `{start}_{end}_players.parquet` | — | — |
+| `overview/` | to be repopulated from 01_01_01 artifacts | `overview.json` | — | — |
 
-**Total files:** 346 (excludes 3 dotfiles: .gitkeep x3)
-**Total size:** 3,773.6 MB (3.7 GB)
+**Total files:** to be repopulated from 01_01_01 artifacts
+**Total size:** to be repopulated from 01_01_01 artifacts
 
 ## Temporal Coverage
 
-- **Grain:** weekly
-- **Date range:** 2022-08-28 to 2026-02-07 (from 01_01_01 artifact)
-- **Gap analysis status:** complete
-- **Known gaps:**
-  - 2024-07-20 to 2024-09-01 (43 days, both matches and players)
-  - 2024-09-28 to 2024-10-06 (8 days, both matches and players)
-  - 2025-03-22 to 2025-03-30 (8 days, both matches and players)
-  - 2025-11-15 to 2025-11-23 (8 days, players only)
+- **Grain:** to be populated from 01_01_01 artifact date_analysis
+- **Date range:** to be repopulated from 01_01_01 artifacts
+- **Gap analysis status:** not_started
+- **Known gaps:** to be repopulated from 01_01_01 artifacts
 
 ## Acquisition Filtering
 

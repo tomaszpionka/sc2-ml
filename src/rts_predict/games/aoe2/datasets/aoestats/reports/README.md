@@ -1,29 +1,53 @@
-# aoestats -- Raw Data Provenance
+# aoestats -- Dataset Reports Provenance
 
-Permanent provenance record for the aoestats raw data. This file is
+Permanent provenance record for the aoestats dataset. This file is
 independent of the phase system and is not archived when phases are reset.
 
 ---
 
-## Acquisition
+# -- Section A: Identity -------------------------------------------------------
 
-- **Download date:** 2026-04-06
-- **Script:** `poetry run aoe2 download aoestats --force`
-- **Branch:** `feat/aoe2-phase0-acquisition`
-- **Source:** aoestats.io
+game: aoe2
+dataset: aoestats
+reports_dir: src/rts_predict/games/aoe2/datasets/aoestats/reports/
 
-## File inventory
+# -- Section B: Acquisition provenance -----------------------------------------
+# Source: acquisition script execution (pre-Phase 01)
 
-- **Total files:** 
+acquisition:
+  date: "2026-04-06"
+  script: "poetry run aoe2 download aoestats --force"
+  branch: "feat/aoe2-phase0-acquisition"
+  source: "aoestats.io"
+  source_url: "https://aoestats.io"
+  method: cdn_download
 
-## Known download failure
+# -- Section C: File inventory summary -----------------------------------------
+# Source: Step 01_01_01 artifact
+# Invariant #9: MUST NOT contain interpretive labels. Report file counts,
+# sizes, extensions, and filename patterns only.
 
-- `2025-11-16_2025-11-22_players.parquet`: missing_from_disk, documented in
-  manifest with status='failed'. This is a known gap, not silent corruption.
+file_inventory:
+  total_files:    # to be repopulated from 01_01_01 artifacts
+  total_size_mb:  # to be repopulated from 01_01_01 artifacts
+  subdirectories: # to be repopulated from 01_01_01 artifacts
+  artifact_ref:   # to be repopulated from 01_01_01 artifacts
 
-## Reconciliation
+# -- Section D: Known issues ----------------------------------------------------
+# Source: acquisition script logs or 01_01_01 artifact
+# Report filesystem-level facts only.
 
-- **Strength:** DEGRADED
-- **Reason:** manifest lacks per-file row counts; limited to file-count match
+known_issues:
+  - "171 files in players/ vs 172 in matches/"
 
-## Provenance rule
+# -- Section E: Reconciliation --------------------------------------------------
+# Source: acquisition script verification
+
+reconciliation:
+  strength: DEGRADED
+  reason: "manifest lacks per-file row counts; limited to file-count match"
+
+# -- Section F: Provenance rule -------------------------------------------------
+
+provenance_rule: >
+  Raw data is immutable. The weekly dump download will not be repeated.

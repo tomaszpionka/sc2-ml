@@ -27,387 +27,378 @@ acquisition_date: "2025-12-05"
 
 # -- Section C: Content and Layout ---------------------------------------------
 
-description: >
-  SC2EGSet contains StarCraft II tournament replay files exported as JSON.
-  Each subdirectory corresponds to one tournament and contains per-replay
-  JSON files alongside a map name mapping file. Coverage spans 70 major
-  esports tournaments from 2016 to 2024.
+description: # to be repopulated from 01_01_01 artifacts
 file_format: "JSON (SC2Replay export)"
 
-# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# File counts and sizes to be repopulated from 01_01_01 artifacts after rerun.
 # Dotfiles excluded (9 x .DS_Store). Counts reflect replay JSON files only;
 # metadata files (map_foreign_to_english_mapping.json per tournament) are
 # counted separately in total_files but sizes are not measured.
 subdirectory_layout:
   - directory: "2016_IEM_10_Taipei/"
-    contents: "Per-replay JSON files for the IEM Season 10 Taipei tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 30  # replay JSON files only; excludes metadata file
-    size_mb: 188.4  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2016_IEM_11_Shanghai/"
-    contents: "Per-replay JSON files for the IEM Season 11 Shanghai tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 60  # replay JSON files only; excludes metadata file
-    size_mb: 337.81  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2016_WCS_Winter/"
-    contents: "Per-replay JSON files for the 2016 WCS Winter tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 465  # replay JSON files only; excludes metadata file
-    size_mb: 2450.07  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_HomeStory_Cup_XV/"
-    contents: "Per-replay JSON files for the HomeStory Cup XV tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 107  # replay JSON files only; excludes metadata file
-    size_mb: 922.84  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_HomeStory_Cup_XVI/"
-    contents: "Per-replay JSON files for the HomeStory Cup XVI tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 249  # replay JSON files only; excludes metadata file
-    size_mb: 2267.4  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_IEM_Shanghai/"
-    contents: "Per-replay JSON files for the IEM Shanghai 2017 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 81  # replay JSON files only; excludes metadata file
-    size_mb: 704.23  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_IEM_XI_World_Championship_Katowice/"
-    contents: "Per-replay JSON files for the IEM XI World Championship Katowice"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 409  # replay JSON files only; excludes metadata file
-    size_mb: 2238.77  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WCS_Austin/"
-    contents: "Per-replay JSON files for the 2017 WCS Austin tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 399  # replay JSON files only; excludes metadata file
-    size_mb: 1992.3  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WCS_Global_Finals/"
-    contents: "Per-replay JSON files for the 2017 WCS Global Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 45  # replay JSON files only; excludes metadata file
-    size_mb: 450.1  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WCS_Jonkoping/"
-    contents: "Per-replay JSON files for the 2017 WCS Jonkoping tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 332  # replay JSON files only; excludes metadata file
-    size_mb: 2399.31  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WCS_Montreal/"
-    contents: "Per-replay JSON files for the 2017 WCS Montreal tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 242  # replay JSON files only; excludes metadata file
-    size_mb: 1437.9  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WESG_Barcelona/"
-    contents: "Per-replay JSON files for the 2017 WESG Barcelona tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 135  # replay JSON files only; excludes metadata file
-    size_mb: 1284.54  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2017_WESG_Haikou/"
-    contents: "Per-replay JSON files for the 2017 WESG Haikou tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 165  # replay JSON files only; excludes metadata file
-    size_mb: 1336.14  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_Cheeseadelphia_8/"
-    contents: "Per-replay JSON files for the Cheeseadelphia 8 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 64  # replay JSON files only; excludes metadata file
-    size_mb: 374.73  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_HomeStory_Cup_XVII/"
-    contents: "Per-replay JSON files for the HomeStory Cup XVII tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 343  # replay JSON files only; excludes metadata file
-    size_mb: 3219.66  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_HomeStory_Cup_XVIII/"
-    contents: "Per-replay JSON files for the HomeStory Cup XVIII tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 352  # replay JSON files only; excludes metadata file
-    size_mb: 2989.17  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice 2018 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 444  # replay JSON files only; excludes metadata file
-    size_mb: 3995.82  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_IEM_PyeongChang/"
-    contents: "Per-replay JSON files for the IEM PyeongChang 2018 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 62  # replay JSON files only; excludes metadata file
-    size_mb: 417.73  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WCS_Austin/"
-    contents: "Per-replay JSON files for the 2018 WCS Austin tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 406  # replay JSON files only; excludes metadata file
-    size_mb: 2491.81  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WCS_Global_Finals/"
-    contents: "Per-replay JSON files for the 2018 WCS Global Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 72  # replay JSON files only; excludes metadata file
-    size_mb: 669.02  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WCS_Leipzig/"
-    contents: "Per-replay JSON files for the 2018 WCS Leipzig tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 420  # replay JSON files only; excludes metadata file
-    size_mb: 2785.89  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WCS_Montreal/"
-    contents: "Per-replay JSON files for the 2018 WCS Montreal tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 442  # replay JSON files only; excludes metadata file
-    size_mb: 2984.34  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WCS_Valencia/"
-    contents: "Per-replay JSON files for the 2018 WCS Valencia tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 410  # replay JSON files only; excludes metadata file
-    size_mb: 3081.9  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2018_WESG_Grand_Finals/"
-    contents: "Per-replay JSON files for the 2018 WESG Grand Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 313  # replay JSON files only; excludes metadata file
-    size_mb: 1594.42  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_Assembly_Summer/"
-    contents: "Per-replay JSON files for the 2019 Assembly Summer tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 169  # replay JSON files only; excludes metadata file
-    size_mb: 1764.74  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_HomeStory_Cup_XIX/"
-    contents: "Per-replay JSON files for the HomeStory Cup XIX tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 330  # replay JSON files only; excludes metadata file
-    size_mb: 2705.63  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_HomeStory_Cup_XX/"
-    contents: "Per-replay JSON files for the HomeStory Cup XX tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 317  # replay JSON files only; excludes metadata file
-    size_mb: 3017.46  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice 2019 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 440  # replay JSON files only; excludes metadata file
-    size_mb: 4244.61  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_WCS_Fall/"
-    contents: "Per-replay JSON files for the 2019 WCS Fall tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 601  # replay JSON files only; excludes metadata file
-    size_mb: 4330.3  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_WCS_Grand_Finals/"
-    contents: "Per-replay JSON files for the 2019 WCS Grand Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 111  # replay JSON files only; excludes metadata file
-    size_mb: 973.58  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_WCS_Spring/"
-    contents: "Per-replay JSON files for the 2019 WCS Spring tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 540  # replay JSON files only; excludes metadata file
-    size_mb: 3643.61  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_WCS_Summer/"
-    contents: "Per-replay JSON files for the 2019 WCS Summer tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 596  # replay JSON files only; excludes metadata file
-    size_mb: 4747.79  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2019_WCS_Winter/"
-    contents: "Per-replay JSON files for the 2019 WCS Winter tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 469  # replay JSON files only; excludes metadata file
-    size_mb: 4947.48  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_05_Dreamhack_Last_Chance/"
-    contents: "Per-replay JSON files for the 2020 Dreamhack Last Chance tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 84  # replay JSON files only; excludes metadata file
-    size_mb: 1272.49  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_ASUS_ROG_Online/"
-    contents: "Per-replay JSON files for the 2020 ASUS ROG Online tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 107  # replay JSON files only; excludes metadata file
-    size_mb: 1193.32  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_Dreamhack_SC2_Masters_Fall/"
-    contents: "Per-replay JSON files for the 2020 Dreamhack SC2 Masters Fall"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 799  # replay JSON files only; excludes metadata file
-    size_mb: 10477.05  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_Dreamhack_SC2_Masters_Summer/"
-    contents: "Per-replay JSON files for the 2020 Dreamhack SC2 Masters Summer"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 783  # replay JSON files only; excludes metadata file
-    size_mb: 10006.92  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice 2020 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 438  # replay JSON files only; excludes metadata file
-    size_mb: 4062.9  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_StayAtHome_Story_Cup_1/"
-    contents: "Per-replay JSON files for the StayAtHome Story Cup 1 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 172  # replay JSON files only; excludes metadata file
-    size_mb: 2179.03  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_StayAtHome_Story_Cup_2/"
-    contents: "Per-replay JSON files for the StayAtHome Story Cup 2 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 237  # replay JSON files only; excludes metadata file
-    size_mb: 2521.89  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_TSL5/"
-    contents: "Per-replay JSON files for the 2020 TSL5 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 185  # replay JSON files only; excludes metadata file
-    size_mb: 2769.79  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2020_TSL6/"
-    contents: "Per-replay JSON files for the 2020 TSL6 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 121  # replay JSON files only; excludes metadata file
-    size_mb: 1272.12  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_ASUS_ROG_Fall/"
-    contents: "Per-replay JSON files for the 2021 ASUS ROG Fall tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 78  # replay JSON files only; excludes metadata file
-    size_mb: 1063.69  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_Cheeseadelphia_Winter_Championship/"
-    contents: "Per-replay JSON files for the Cheeseadelphia Winter Championship"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 73  # replay JSON files only; excludes metadata file
-    size_mb: 521.59  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_Dreamhack_SC2_Masters_Fall/"
-    contents: "Per-replay JSON files for the 2021 Dreamhack SC2 Masters Fall"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 786  # replay JSON files only; excludes metadata file
-    size_mb: 8767.36  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_Dreamhack_SC2_Masters_Summer/"
-    contents: "Per-replay JSON files for the 2021 Dreamhack SC2 Masters Summer"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 791  # replay JSON files only; excludes metadata file
-    size_mb: 8835.46  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_Dreamhack_SC2_Masters_Winter/"
-    contents: "Per-replay JSON files for the 2021 Dreamhack SC2 Masters Winter"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 802  # replay JSON files only; excludes metadata file
-    size_mb: 9062.53  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice 2021 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 261  # replay JSON files only; excludes metadata file
-    size_mb: 3176.94  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_StayAtHome_Story_Cup_3/"
-    contents: "Per-replay JSON files for the StayAtHome Story Cup 3 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 183  # replay JSON files only; excludes metadata file
-    size_mb: 1810.33  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_StayAtHome_Story_Cup_4/"
-    contents: "Per-replay JSON files for the StayAtHome Story Cup 4 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 210  # replay JSON files only; excludes metadata file
-    size_mb: 2601.73  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_TSL7/"
-    contents: "Per-replay JSON files for the 2021 TSL7 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 132  # replay JSON files only; excludes metadata file
-    size_mb: 1708.3  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2021_TSL8/"
-    contents: "Per-replay JSON files for the 2021 TSL8 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 165  # replay JSON files only; excludes metadata file
-    size_mb: 1598.09  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_03_DH_SC2_Masters_Atlanta/"
-    contents: "Per-replay JSON files for the 2022 DH SC2 Masters Atlanta"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 1296  # replay JSON files only; excludes metadata file
-    size_mb: 11846.84  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_Dreamhack_SC2_Masters_Last_Chance2021/"
-    contents: "Per-replay JSON files for the 2022 Dreamhack SC2 Masters Last Chance 2021"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 355  # replay JSON files only; excludes metadata file
-    size_mb: 3218.55  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_Dreamhack_SC2_Masters_Valencia/"
-    contents: "Per-replay JSON files for the 2022 Dreamhack SC2 Masters Valencia"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 1094  # replay JSON files only; excludes metadata file
-    size_mb: 11714.03  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_HomeStory_Cup_XXI/"
-    contents: "Per-replay JSON files for the HomeStory Cup XXI tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 91  # replay JSON files only; excludes metadata file
-    size_mb: 1200.75  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_HomeStory_Cup_XXII/"
-    contents: "Per-replay JSON files for the HomeStory Cup XXII tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 285  # replay JSON files only; excludes metadata file
-    size_mb: 2532.57  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice 2022 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 263  # replay JSON files only; excludes metadata file
-    size_mb: 3221.25  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2022_TSL9/"
-    contents: "Per-replay JSON files for the 2022 TSL9 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 181  # replay JSON files only; excludes metadata file
-    size_mb: 2177.43  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2023_01_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice January 2023 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 260  # replay JSON files only; excludes metadata file
-    size_mb: 2742.97  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2023_04_ESL_SC2_Masters_Summer_Finals/"
-    contents: "Per-replay JSON files for the 2023 ESL SC2 Masters Summer Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 698  # replay JSON files only; excludes metadata file
-    size_mb: 8764.88  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2023_05_Gamers8/"
-    contents: "Per-replay JSON files for the 2023 Gamers8 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 122  # replay JSON files only; excludes metadata file
-    size_mb: 1530.96  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2023_07_ESL_SC2_Masters_Winter_Finals/"
-    contents: "Per-replay JSON files for the 2023 ESL SC2 Masters Winter Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 270  # replay JSON files only; excludes metadata file
-    size_mb: 2911.21  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2023_HomeStory_Cup_XXIV/"
-    contents: "Per-replay JSON files for the HomeStory Cup XXIV tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 167  # replay JSON files only; excludes metadata file
-    size_mb: 1849.28  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_01_IEM_Katowice/"
-    contents: "Per-replay JSON files for the IEM Katowice January 2024 tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 422  # replay JSON files only; excludes metadata file
-    size_mb: 4346.6  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_03_ESL_SC2_Masters_Spring_Finals/"
-    contents: "Per-replay JSON files for the 2024 ESL SC2 Masters Spring Finals"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 264  # replay JSON files only; excludes metadata file
-    size_mb: 2329.11  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_05_EWC/"
-    contents: "Per-replay JSON files for the 2024 EWC tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 154  # replay JSON files only; excludes metadata file
-    size_mb: 1781.3  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_HomeStory_Cup_XXV/"
-    contents: "Per-replay JSON files for the HomeStory Cup XXV tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 175  # replay JSON files only; excludes metadata file
-    size_mb: 1554.85  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_HomeStory_Cup_XXVI/"
-    contents: "Per-replay JSON files for the HomeStory Cup XXVI tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 171  # replay JSON files only; excludes metadata file
-    size_mb: 1676.13  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "2024_StaraZagora_BellumGensElite/"
-    contents: "Per-replay JSON files for the 2024 StaraZagora BellumGensElite tournament"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "<sha256_hash>.SC2Replay.json"
-    file_count: 95  # replay JSON files only; excludes metadata file
-    size_mb: 770.87  # replay JSON files only; excludes metadata file
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
 
-total_files: 22813  # excludes 9 .DS_Store dotfiles; includes 22390 replay + 432 metadata + 4 root-level non-dot files
-total_size_mb: 214060.6  # replay JSON files only; metadata file sizes not measured
+total_files: # to be repopulated from 01_01_01 artifacts
+total_size_mb: # to be repopulated from 01_01_01 artifacts
 
 # -- Section D: Temporal Coverage ----------------------------------------------
 
-temporal_grain: per_game
-# date_range uses year-only from tournament directory name prefixes;
-# exact per-replay dates require 01_01_02 JSON parsing
-date_range_start: "2016"
-date_range_end: "2024"
+temporal_grain: # to be populated from 01_01_01 artifact date_analysis
+# date_range_start: # to be repopulated from 01_01_01 artifacts
+# date_range_end: # to be repopulated from 01_01_01 artifacts
+date_range_start: # to be repopulated from 01_01_01 artifacts
+date_range_end: # to be repopulated from 01_01_01 artifacts
 known_gaps: []
 gap_analysis_status: partial
-coverage_notes: >
-  Date range is year-only, derived from tournament directory name prefixes.
-  Exact per-replay timestamps require 01_01_02 JSON parsing (not yet complete).
-  No temporal gap analysis has been performed at the file level.
-  The 2020 calendar year is present (IEM Katowice, ASUS ROG Online, etc.) despite
-  COVID-19 -- the dataset includes online tournaments that ran during that period.
+# coverage_notes: stripped -- forward references to steps not yet complete
 
 # -- Section E: Acquisition Filtering ------------------------------------------
 
@@ -441,9 +432,9 @@ inventory_artifact: "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifac
 
 notes: >
   Acquired by manual download from Zenodo record 17829625 (v2.1.0, published
-  2025-12-05). Numeric fields populated from 01_01_01 artifact (step F.1) with
-  dotfiles excluded (9 x .DS_Store). Per-tournament sizes cover replay JSON
-  files only; metadata file sizes were not measured separately.
+  2025-12-05). Numeric fields will be repopulated from 01_01_01 artifact after
+  rerun. Dotfiles to be excluded (9 x .DS_Store). Per-tournament sizes cover
+  replay JSON files only; metadata file sizes not measured separately.
 
 # -- Section H: Known Limitations ----------------------------------------------
 
@@ -469,7 +460,7 @@ This directory holds the raw data layer and must never be modified.
 **License:** CC-BY-4.0
 **Acquisition date:** 2025-12-05 (manual download; date is Zenodo v2.1.0 publication date)
 
-> **File counts and sizes:** Populated from 01_01_01 artifact (step F.1). Dotfiles
+> **File counts and sizes:** To be repopulated from 01_01_01 artifacts after rerun. Dotfiles
 > excluded (9 x .DS_Store). Per-tournament sizes cover replay JSON files only;
 > metadata file (map_foreign_to_english_mapping.json) sizes not measured separately.
 
@@ -483,17 +474,17 @@ Each of the 70 tournament subdirectories contains:
 
 | Metric | Value |
 |--------|-------|
-| Tournament directories | 70 |
-| Total replay files | 22,390 |
-| Total metadata files | 432 |
-| **Total files** | **22,813** (excludes 9 dotfiles) |
-| Total size | 214061 MB (209 GB) (replay files only) |
+| Tournament directories | to be repopulated from 01_01_01 artifacts |
+| Total replay files | to be repopulated from 01_01_01 artifacts |
+| Total metadata files | to be repopulated from 01_01_01 artifacts |
+| **Total files** | to be repopulated from 01_01_01 artifacts |
+| Total size | to be repopulated from 01_01_01 artifacts |
 
 ## Temporal Coverage
 
-- **Grain:** per-game (one file per replay)
-- **Date range:** 2016 to 2024 (year-only from directory names; exact dates require 01_01_02)
-- **Gap analysis status:** partial -- no file-level temporal analysis completed
+- **Grain:** to be populated from 01_01_01 artifact date_analysis
+- **Date range:** to be repopulated from 01_01_01 artifacts
+- **Gap analysis status:** not_started
 
 ## Verification
 

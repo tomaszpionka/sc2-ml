@@ -24,58 +24,47 @@ acquisition_script: "src/rts_predict/games/aoe2/datasets/aoe2companion/data/acqu
 
 # -- Section C: Content and Layout ---------------------------------------------
 
-description: >
-  CDN dump from the aoe2companion service. Contains daily match parquet files,
-  leaderboard and profile snapshots, and daily rating CSV files. Mixed
-  granularity: match-level and player-level records in separate subdirectories.
-  Coverage spans 2020-08-01 to 2026-04-04.
+description: # to be repopulated from 01_01_01 artifacts
 file_format: "parquet, CSV"
 
-# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# File counts and sizes to be repopulated from 01_01_01 artifacts after rerun.
 # Dotfiles excluded: .gitkeep x4 (one per subdir), .DS_Store x1 at root.
 subdirectory_layout:
   - directory: "matches/"
-    contents: "Daily match parquet files"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "match-{date}.parquet"
-    file_count: 2073
-    size_mb: 6621.52
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "leaderboards/"
-    contents: "Leaderboard snapshot parquet file"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "leaderboard.parquet"
-    file_count: 1
-    size_mb: 83.32
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "profiles/"
-    contents: "Player profile snapshot parquet file"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "profile.parquet"
-    file_count: 1
-    size_mb: 161.84
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
   - directory: "ratings/"
-    contents: "Daily rating CSV files"
+    contents: # to be repopulated from 01_01_01 artifacts
     file_pattern: "rating-{date}.csv"
-    file_count: 2072
-    size_mb: 2519.59
+    file_count: # to be repopulated from 01_01_01 artifacts
+    size_mb: # to be repopulated from 01_01_01 artifacts
 
-total_files: 4149  # excludes 5 dotfiles (.gitkeep x4, .DS_Store x1)
-total_size_mb: 9387.8
+total_files: # to be repopulated from 01_01_01 artifacts
+total_size_mb: # to be repopulated from 01_01_01 artifacts
 
 # -- Section D: Temporal Coverage ----------------------------------------------
 
-temporal_grain: daily
+temporal_grain: # to be populated from 01_01_01 artifact date_analysis
 # Dates from 01_01_01 artifact date_analysis.matches
-date_range_start: "2020-08-01"
-date_range_end: "2026-04-04"
+date_range_start: # to be repopulated from 01_01_01 artifacts
+date_range_end: # to be repopulated from 01_01_01 artifacts
 
-known_gaps:
-  - gap_start: "2025-07-10"
-    gap_end: "2025-07-12"
-    reason: "Missing ratings file for 2025-07-11 (identified in 01_01_01 artifact date_analysis.ratings; matches file for that date is present)"
+known_gaps: # to be repopulated from 01_01_01 artifacts
 
-gap_analysis_status: complete
-coverage_notes: >
-  Files before 2025-06-27 are sparse (header-only); files from 2025-06-27
-  onward are substantive. This boundary was identified during Phase 01 profiling.
-  The one-day ratings gap (2025-07-11) affects ratings only; matches data has
-  no gaps across the full date range.
+gap_analysis_status: not_started
+# coverage_notes: stripped -- forward references to Phase 01 profiling steps not yet complete
 
 # -- Section E: Acquisition Filtering ------------------------------------------
 
@@ -127,28 +116,27 @@ This directory holds the raw data layer and must never be modified.
 **Acquisition script:** `src/rts_predict/games/aoe2/datasets/aoe2companion/data/acquisition.py`
 **Manifest:** `src/rts_predict/games/aoe2/datasets/aoe2companion/data/api/api_dump_list.json`
 
-> **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
+> **File counts and sizes:** To be repopulated from 01_01_01 artifacts after rerun. Dotfiles excluded
 > (.gitkeep x4, .DS_Store x1). Counts reflect data files only.
 
 ## Subdirectory Layout
 
 | Directory | Contents | Pattern | File count | Size (MB) |
 |-----------|----------|---------|-----------|-----------|
-| `matches/` | Daily match parquet files | `match-{date}.parquet` | 2073 | 6,621.5 |
-| `leaderboards/` | Leaderboard snapshot | `leaderboard.parquet` | 1 | 83.3 |
-| `profiles/` | Player profile snapshot | `profile.parquet` | 1 | 161.8 |
-| `ratings/` | Daily rating CSV files | `rating-{date}.csv` | 2072 | 2,519.6 |
+| `matches/` | to be repopulated from 01_01_01 artifacts | `match-{date}.parquet` | — | — |
+| `leaderboards/` | to be repopulated from 01_01_01 artifacts | `leaderboard.parquet` | — | — |
+| `profiles/` | to be repopulated from 01_01_01 artifacts | `profile.parquet` | — | — |
+| `ratings/` | to be repopulated from 01_01_01 artifacts | `rating-{date}.csv` | — | — |
 
-**Total files:** 4,149 (excludes 5 dotfiles: .gitkeep x4, .DS_Store x1)
-**Total size:** 9,387.8 MB (9.2 GB)
+**Total files:** to be repopulated from 01_01_01 artifacts
+**Total size:** to be repopulated from 01_01_01 artifacts
 
 ## Temporal Coverage
 
-- **Grain:** daily
-- **Date range:** 2020-08-01 to 2026-04-04 (from 01_01_01 artifact)
-- **Gap analysis status:** complete
-- **Known gaps:** One missing ratings file for 2025-07-11 (matches unaffected)
-- **Note:** Files before 2025-06-27 are sparse (header-only); substantive data starts 2025-06-27
+- **Grain:** to be populated from 01_01_01 artifact date_analysis
+- **Date range:** to be repopulated from 01_01_01 artifacts
+- **Gap analysis status:** not_started
+- **Known gaps:** to be repopulated from 01_01_01 artifacts
 
 ## Excluded Formats
 
