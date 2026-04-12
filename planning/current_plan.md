@@ -1,11 +1,11 @@
-# Category C Plan: Token Economy, Directory Indexing & Template Enforcement
-
-**Category:** C (chore)
-**Branch:** `chore/token-economy-indexing`
-**Date:** 2026-04-12
-**Prerequisite:** Research log split (PR #111) and DAG extraction plan (PR #112) merged
-
 ---
+category: "C"
+branch: "chore/token-economy-indexing"
+date: "2026-04-12"
+prerequisite: "Research log split (PR #111) and DAG extraction plan (PR #112) merged"
+---
+
+# Category C Plan: Token Economy, Directory Indexing & Template Enforcement
 
 ## Scope
 
