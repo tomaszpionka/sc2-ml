@@ -61,16 +61,18 @@ Gates).
 
 ---
 
-## 2026-04-09 — [CROSS / Phase 01 / Step 01_01_01] File Inventory Summary
+## 2026-04-12 — [CROSS / Phase 01 / Step 01_01_01] File Inventory Summary
 
-**Category:** C (chore — index-pointer entry, created during log migration)
+**Category:** A (phase work — rerun)
 **Datasets:** sc2egset, aoe2companion, aoestats
 
-Step 01_01_01 file inventory completed across all 3 datasets. Per-dataset
-findings migrated to each dataset's research_log.md. Cross-dataset
-observation: all three raw directories are non-empty and structurally sound.
+Step 01_01_01 file inventory rerun completed for all 3 datasets.
+Context leaks stripped, research log entries rewritten from artifacts.
+ROADMAP source data sections, raw/README.md, and reports/README.md
+repopulated strictly from 01_01_01 artifacts per Invariant #9.
+Per-dataset findings in each dataset's research_log.md.
 
 Per-dataset entries:
-- [sc2egset — 2026-04-09](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
-- [aoe2companion — 2026-04-09](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
-- [aoestats — 2026-04-09](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)
+- [sc2egset](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
+- [aoe2companion](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
+- [aoestats](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)
