@@ -63,7 +63,7 @@ Gates).
 
 ## 2026-04-09 — [CROSS / Phase 01 / Step 01_01_01] File Inventory Summary
 
-**Category:** A (science)
+**Category:** C (chore — index-pointer entry, created during log migration)
 **Datasets:** sc2egset, aoe2companion, aoestats
 
 Step 01_01_01 file inventory completed across all 3 datasets. Per-dataset

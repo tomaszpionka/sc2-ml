@@ -35,5 +35,5 @@ full Phases 01-07 independently with no scope restrictions.
 
 **Decision point:** Pipeline Section 01_06 (Decision Gates) for each dataset
 will produce the comparative evidence needed to formalize roles. The decision
-will be recorded in the dataset's `research_log.md` with full derivation per
+will be recorded in `reports/research_log.md` with full derivation per
 Invariant 6.
