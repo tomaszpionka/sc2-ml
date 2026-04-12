@@ -80,13 +80,13 @@ logger.info("Files at root: %d", len(meta_result.files_at_root))
 replay_subdir_data = []
 total_replay_files = 0
 total_replay_bytes = 0
-tournaments_missing_data_dir = []
+dirs_missing_data_subdir = []
 
 for sd in meta_result.subdirs:
     data_dir = RAW_DIR / sd.name / (sd.name + "_data")
     if not data_dir.exists():
         logger.warning("No _data dir for top-level directory: %s", sd.name)
-        tournaments_missing_data_dir.append(sd.name)
+        dirs_missing_data_subdir.append(sd.name)
         continue
     replay_inv = inventory_directory(data_dir)
     total_replay_files += replay_inv.total_files
@@ -104,8 +104,8 @@ for sd in meta_result.subdirs:
 
 logger.info("Total replay files (level 2): %d", total_replay_files)
 logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
-if tournaments_missing_data_dir:
-    logger.warning("Top-level directories missing _data/: %s", tournaments_missing_data_dir)
+if dirs_missing_data_subdir:
+    logger.warning("Top-level directories missing _data/: %s", dirs_missing_data_subdir)
 
 # %% [markdown]
 # ### Level 2 inventory — replay files
@@ -183,7 +183,7 @@ artifact = {
     "metadata_files_total": meta_result.total_files,
     "total_replay_files": total_replay_files,
     "total_replay_bytes": total_replay_bytes,
-    "dirs_missing_data_subdir": tournaments_missing_data_dir,
+    "dirs_missing_data_subdir": dirs_missing_data_subdir,
     "top_level_dirs": replay_subdir_data,
     "filename_patterns": dict(patterns),
     "total_files_scanned": len(all_files),
@@ -231,10 +231,10 @@ lines.append("|---|---|")
 for pattern, count in patterns.items():
     lines.append(f"| `{pattern}` | {count} |")
 
-if tournaments_missing_data_dir:
+if dirs_missing_data_subdir:
     lines.extend([
         "\n## Top-level directories missing _data/\n",
-        *[f"- {t}" for t in tournaments_missing_data_dir],
+        *[f"- {t}" for t in dirs_missing_data_subdir],
     ])
 
 md_path = ARTIFACTS_DIR / "01_01_01_file_inventory.md"
