@@ -26,6 +26,18 @@ repos:
         types: [python]
         pass_filenames: false
 
+  # ── Planning artifact validation ──────────────────────────────────────────
+  # Validates planning specs and DAG for structural integrity (required sections,
+  # valid spec_file refs). Runs when any file under planning/ is staged.
+  - repo: local
+    hooks:
+      - id: planning-drift
+        name: planning artifact validation
+        language: system
+        entry: python scripts/hooks/check_planning_drift.py
+        files: ^planning/
+        pass_filenames: false
+
   # ── Jupytext sync (notebook pairs in sandbox/) ─────────────────────────────
   # Keeps .py and .ipynb paired files in sync. Both files must be staged
   # together when committing a notebook change (sandbox/README.md rule 4).
