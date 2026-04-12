@@ -1,317 +1,387 @@
-# Category C Plan: Research Log Decentralization
+# Category C Plan: Token Economy, Directory Indexing & Template Enforcement
 
 **Category:** C (chore)
-**Branch:** `chore/research-log-split`
+**Branch:** `chore/token-economy-indexing`
 **Date:** 2026-04-12
+**Prerequisite:** Research log split (PR #111) and DAG extraction plan (PR #112) merged
 
 ---
 
 ## Scope
 
-Split the unified `reports/research_log.md` into per-dataset logs at
-`src/rts_predict/<game>/reports/<dataset>/research_log.md`. The root log
-becomes an index with pointers + CROSS-game entries only. Migrate existing
-2 entries. Update all ~25 files that reference `reports/research_log.md`.
+Three workstreams in one PR:
 
-**Source:** `research_log_decentralization.md` (design proposal)
+**A. Token economy** — trim inlined content in CLAUDE.md, ARCHITECTURE.md,
+and executor.md by replacing duplicated sections with pointers to their
+authoritative sources. Preserves dispatch rules and spec-first protocol.
+
+**B. Directory indexing** — add README.md to 8 directories that agents
+currently cannot navigate efficiently.
+
+**C. Template enforcement** — add `check_planning_drift.py` pre-commit hook
+that validates planning artifacts (plan frontmatter, spec sections, DAG
+schema, cross-file spec_file resolution).
 
 ---
 
 ## Problem Statement
 
-The research log is the only reporting artifact that doesn't follow the
-per-dataset pattern (ROADMAP, PHASE_STATUS, STEP_STATUS, artifacts/ are
-all per-dataset). With 3 datasets x 7 phases, the unified log will grow to
-hundreds of entries. Executors working on SC2 scan through AoE2 entries;
-parallel executors on different datasets conflict on the same file.
+1. CLAUDE.md (140 lines) contains ~35 lines of content duplicated from
+   planning/README.md, ARCHITECTURE.md, and agent definitions. Each
+   session loads all of it regardless of task type.
+2. ARCHITECTURE.md (206 lines) has a Progress Tracking section that
+   re-explains the status derivation chain already documented in tier 7.
+3. executor.md (143 lines) has a 21-line Data layout section and 24-line
+   Notebook workflow section that duplicate sandbox/README.md and config.py.
+4. 8 directories lack README.md files, forcing agents to explore blindly.
+5. No structural validation exists for planning artifacts — specs with
+   missing sections or DAGs with broken spec_file refs reach commit without
+   being caught.
 
 ---
 
 ## Execution Steps
 
-### T01 — Create sc2egset research_log.md
+### T01 — Trim CLAUDE.md
 
-**Objective:** Create per-dataset research log for sc2egset with migrated
-Entry 2 content.
+**Objective:** Remove redundant inline content while preserving dispatch
+rules and operational sections.
 
 **Instructions:**
-1. Read `reports/research_log.md` for Entry 2 content
-2. Read `docs/templates/research_log_template.yaml` for schema
-3. Create `src/rts_predict/sc2/reports/sc2egset/research_log.md`
-4. Header: thesis title, "SC2 / sc2egset findings. Reverse chronological."
-5. Migrate Entry 2's SC2-specific content: 22,390 files, ~214.1 GB,
-   70 tournaments, two-level layout, the corrected `_data/` scanning,
-   open questions about root files and no-extension files
-6. Keep full entry schema (Category, Artifacts, What, Why, How, Findings,
-   Decisions, Thesis mapping, Open questions) — filter to SC2 content only
-7. Artifacts pointer: reference sc2egset's own artifact paths
+1. Plan/Execute Workflow section (lines 40-91):
+   - KEEP line 40 (`## Plan / Execute Workflow`) — section header.
+   - KEEP lines 42-44 (`All non-trivial work...`) — context sentence.
+   - DELETE lines 46-54 (Planning session + Materialization paragraphs).
+     Replace with:
+     ```
+     See `planning/README.md` for the full planning and materialization protocol.
+     Key rule: execution MUST NOT begin until DAG + specs exist on disk.
+     ```
+   - KEEP lines 56-78 (Execution paragraph + Dispatch rules) — untouched.
+     These are empirically validated and must stay in CLAUDE.md.
+   - KEEP lines 80-88 (Category table) — agents need this every session.
+   - KEEP lines 89-91 (Category A/F content requirements) — these specify
+     what goes INSIDE plan sections (function signatures, SQL, test cases)
+     which is not covered by the output contract (which specifies which
+     sections to include, not their content).
+2. Key File Locations section: Delete line 99 (PIPELINE_SECTION_STATUS.yaml).
+   Add as the last bullet: `- Directory map: \`docs/INDEX.md\``
+3. Lines 110-113 (Parallel Executor Orchestration): Delete entirely — pure
+   pointer content already in AGENT_MANUAL.md.
+4. Lines 126-131 (Project Status): Keep the `processing.py` caution (still
+   exists at `src/rts_predict/sc2/data/processing.py`). Keep AoE2 warning.
+5. Lines 133-140 (Progress Tracking): Replace with:
+   ```
+   ## Progress Tracking
+   See `ARCHITECTURE.md` for the full tracking protocol.
+   Key: read active STEP_STATUS.yaml + PHASE_STATUS.yaml at session start.
+   ```
 
 **Verification:**
-- File exists at expected path
-- Contains SC2 findings from Entry 2
-- Follows research_log_entry_template.yaml schema
-- Does NOT contain aoe2companion or aoestats findings
+- CLAUDE.md under 125 lines (current: 140, ~16 lines net removed)
+- Dispatch rules (lines 61-78) intact
+- Critical Rules (lines 6-15) intact
+- Key File Locations includes `docs/INDEX.md` pointer as last bullet
+- No broken pointers
 
-**File scope:** `src/rts_predict/sc2/reports/sc2egset/research_log.md`
-**Read scope:** `reports/research_log.md`, `docs/templates/research_log_entry_template.yaml`
+**File scope:** `CLAUDE.md`
+**Read scope:** none
 
 ---
 
-### T02 — Create aoe2companion research_log.md
+### T02 — Trim ARCHITECTURE.md
 
-**Objective:** Create per-dataset research log for aoe2companion with
-migrated Entry 2 content.
+**Objective:** Deduplicate progress tracking and trim thesis/version sections.
 
 **Instructions:**
-1. Read `reports/research_log.md` for Entry 2 content
-2. Create `src/rts_predict/aoe2/reports/aoe2companion/research_log.md`
-3. Header: thesis title, "AoE2 / aoe2companion findings. Reverse chronological."
-4. Migrate Entry 2's aoe2companion content: 4,154 files, ~9.2 GB,
-   daily matches (no gaps), daily ratings (1 gap: 2025-07-10 to 2025-07-12),
-   leaderboards + profiles snapshots
-5. Full entry schema, filtered to aoe2companion content only
-6. Artifacts pointer: reference aoe2companion's own artifact paths
+1. Find the Progress Tracking section that re-explains the ROADMAP →
+   STEP_STATUS → PIPELINE_SECTION_STATUS → PHASE_STATUS derivation chain.
+   Replace with pointer to Source-of-Truth tier 7a-7c.
+2. Thesis writing workflow section: Replace with 2-line pointer to
+   `.claude/rules/thesis-writing.md`.
+3. Version management section: Replace with 1-line pointer to
+   `.claude/rules/git-workflow.md`.
 
 **Verification:**
-- File exists, contains aoe2companion findings, follows schema
-- Does NOT contain sc2egset or aoestats findings
+- ARCHITECTURE.md under 190 lines
+- All pointers resolve to existing files
 
-**File scope:** `src/rts_predict/aoe2/reports/aoe2companion/research_log.md`
-**Read scope:** `reports/research_log.md`
+**File scope:** `ARCHITECTURE.md`
+**Read scope:** none
 
 ---
 
-### T03 — Create aoestats research_log.md
+### T03 — Trim executor.md
 
-**Objective:** Create per-dataset research log for aoestats with migrated
-Entry 2 content.
+**Objective:** Replace data layout and notebook workflow bulk with pointers.
+Do NOT touch the Read first / Spec-first protocol section.
 
 **Instructions:**
-1. Read `reports/research_log.md` for Entry 2 content
-2. Create `src/rts_predict/aoe2/reports/aoestats/research_log.md`
-3. Header: thesis title, "AoE2 / aoestats findings. Reverse chronological."
-4. Migrate Entry 2's aoestats content: 349 files, ~3.7 GB, weekly data,
-   3 gaps (43-day, 8-day, 8-day), paired matches/players mismatch (172 vs 171),
-   known download failure
-5. Full entry schema, filtered to aoestats content only
-6. Artifacts pointer: reference aoestats's own artifact paths
+1. Line 40 (venv activation rule in Constraints): Delete — duplicates
+   CLAUDE.md line 10 which is auto-loaded into every session. Note: if
+   SDK behavior changes and subagents no longer inherit CLAUDE.md, this
+   rule would need to be restored. Acceptable risk for now.
+2. Notebook workflow (lines 82-105): Line 82 is the section header
+   (`## Notebook workflow (sandbox/)`). Line 84 is the sandbox/README.md
+   pointer. Keep lines 82-86 (header + sandbox pointer + artifact path
+   rule). Replace lines 87-105 with:
+   ```
+   See `sandbox/README.md` for cell caps, jupytext sync, nbconvert, and
+   DuckDB access rules.
+   ```
+3. Data layout (lines 124-142): Replace with:
+   ```
+   ## Data layout
+   Paths defined in `src/rts_predict/<game>/config.py`. See `ARCHITECTURE.md`
+   game package contract for the full directory structure.
+   ```
 
 **Verification:**
-- File exists, contains aoestats findings, follows schema
-- Does NOT contain sc2egset or aoe2companion findings
+- executor.md under 105 lines
+- Read first / Spec-first protocol (lines 108-122) untouched
+- No broken pointers
 
-**File scope:** `src/rts_predict/aoe2/reports/aoestats/research_log.md`
-**Read scope:** `reports/research_log.md`
+**File scope:** `.claude/agents/executor.md`
+**Read scope:** none
 
 ---
 
-### T04 — Rewrite root research_log.md as index
+### T04 — Delete phase derivative files + drift hook
 
-**Objective:** Transform root log into index + CROSS entries only.
+**Objective:** Eliminate drift between `docs/PHASES.md` (canonical, 264 lines,
+Tier 3) and its derivatives in `docs/ml_experiment_phases/`. The derivatives
+are subsets of canonical content with silent structural drift that the hook
+only partially detects.
 
 **Instructions:**
-1. Replace content of `reports/research_log.md` with:
-   - Header: thesis title, explanation of per-dataset structure
-   - Dataset log table with links to 3 per-dataset logs and last entry dates
-   - CROSS entries section header
-2. Keep Entry 1 ([CROSS] AoE2 Dataset Strategy Decision) verbatim including
-   the retraction
-3. Replace Entry 2 with a trimmed CROSS summary: "Step 01_01_01 file
-   inventory completed across all 3 datasets. Per-dataset findings migrated
-   to each dataset's research_log.md. Cross-dataset observation: all three
-   raw directories are non-empty and structurally sound." Link to the 3
-   per-dataset entries. Remove the full dataset-specific findings.
-4. Keep the Phase migration note
+1. Delete `docs/ml_experiment_phases/PHASES.md` — derivative subset of
+   `docs/PHASES.md`, adds no unique content.
+2. Delete `docs/ml_experiment_phases/PIPELINE_SECTIONS.md` — derivative copy
+   of Pipeline Section tables already in `docs/PHASES.md` lines 66-237.
+3. Keep `docs/ml_experiment_phases/STEPS.md` — contains unique content (Step
+   contract, schema, numbering convention) not found in `docs/PHASES.md`.
+4. Delete `scripts/hooks/check_phases_drift.py` — no longer needed (nothing
+   to drift against).
+5. Remove the `phases-drift` hook entry from `.pre-commit-config.yaml`.
+6. Add a 3-line README to `docs/ml_experiment_phases/`:
+   ```
+   # ML Experiment Phases — Supplementary Reference
+   Phase and Pipeline Section definitions live in `docs/PHASES.md` (Tier 3).
+   This directory contains only `STEPS.md` (Step contract and schema).
+   ```
 
 **Verification:**
-- Root log has links to 3 dataset logs
-- Entry 1 [CROSS] retained with retraction
-- Entry 2 removed
-- No dataset-specific findings remain in root
+- `docs/ml_experiment_phases/PHASES.md` does not exist
+- `docs/ml_experiment_phases/PIPELINE_SECTIONS.md` does not exist
+- `docs/ml_experiment_phases/STEPS.md` exists (untouched)
+- `scripts/hooks/check_phases_drift.py` does not exist
+- `pre-commit run --all-files` passes (no missing hook)
+- `docs/PHASES.md` unchanged (zero edits to the canonical source)
 
-**File scope:** `reports/research_log.md`
-**Read scope:** none (T01-T03 must complete first)
-
----
-
-### T05 — Update CLAUDE.md + executor.md
-
-**Objective:** Update orchestrator and executor research_log references.
-
-**Instructions:**
-1. CLAUDE.md: change "update `reports/research_log.md`" → "update the
-   active dataset's `research_log.md`"
-2. executor.md Category A rule (~line 70): change "Update `reports/research_log.md`
-   after each step" → "Update the active dataset's `research_log.md` after each step"
-3. executor.md notebook workflow (~line 102): change "Update `reports/research_log.md`
-   with a new entry" → "Update the active dataset's `research_log.md` with a new entry"
-4. executor.md: add rule: "If a finding has cross-game implications
-   (Invariant #8), also add a [CROSS] entry to `reports/research_log.md`"
-
-**Verification:** No bare `reports/research_log.md` as destination for
-dataset-specific entries in either file (CROSS context references are fine)
-**File scope:** `CLAUDE.md`, `.claude/agents/executor.md`
+**File scope:** `docs/ml_experiment_phases/PHASES.md` (delete),
+`docs/ml_experiment_phases/PIPELINE_SECTIONS.md` (delete),
+`scripts/hooks/check_phases_drift.py` (delete),
+`.pre-commit-config.yaml` (update),
+`docs/ml_experiment_phases/README.md` (create)
 **Read scope:** none
 
 ---
 
-### T06 — Update reviewer-deep.md + reviewer-adversarial.md
+### T05 — Create docs/templates/README.md + .claude/README.md
 
-**Objective:** Reviewers read the active dataset's log + root CROSS log.
+**Objective:** Add routing READMEs to the two highest-impact undocumented
+directories.
 
 **Instructions:**
-1. reviewer-deep.md Required Reading item 7: "Read `reports/research_log.md`
-   recent entries" → "Read the active dataset's `research_log.md` and
-   `reports/research_log.md` (CROSS entries) — check for contradictions
-   with prior findings in both"
-2. reviewer-adversarial.md: same pattern for its research_log reference
+1. `docs/templates/README.md`: Map each template to its consumer (table
+   format). Group by: Authoring templates, Status tracking templates,
+   Operational templates. 15-30 lines.
+2. `.claude/README.md`: Map agents, rules, commands, scientific-invariants,
+   ml-protocol, settings.json to their load triggers (table format).
 
-**Verification:** Both files reference dataset log + root CROSS log
-**File scope:** `.claude/agents/reviewer-deep.md`, `.claude/agents/reviewer-adversarial.md`
+**Verification:** Both files exist, contain routing tables.
+**File scope:** `docs/templates/README.md`, `.claude/README.md`
 **Read scope:** none
 
 ---
 
-### T07 — Update planner-science.md + ml-protocol.md
+### T06 — Create thesis/README.md + scripts/README.md
 
-**Objective:** Planner checks root CROSS log + sibling dataset logs for
-cross-dataset coordination.
+**Objective:** Add routing READMEs for thesis and scripts directories.
 
 **Instructions:**
-1. planner-science.md: "check `reports/research_log.md` for sibling
-   decisions" → "check `reports/research_log.md` (CROSS entries) for
-   cross-game decisions, and sibling dataset research logs if coordinating
-   across datasets"
-2. ml-protocol.md: update any research_log references to per-dataset pattern
+1. `thesis/README.md`: Key files table (THESIS_STRUCTURE.md,
+   WRITING_STATUS.md, chapters/, figures/, tables/, references.bib).
+   Mention Category F workflow.
+2. `scripts/README.md`: Map hooks/, sc2egset/, debug/,
+   check_mirror_drift.py, session_audit.py.
 
-**Verification:** Both files reference the new structure
-**File scope:** `.claude/agents/planner-science.md`, `.claude/ml-protocol.md`
+**Verification:** Both files exist with routing tables.
+**File scope:** `thesis/README.md`, `scripts/README.md`
 **Read scope:** none
 
 ---
 
-### T08 — Update reviewer.md + git-workflow.md + thesis-writing.md
+### T07 — Create ml_experiment_lifecycle/README.md + game READMEs
 
-**Objective:** Lightweight updates to remaining agent/rule files.
+**Objective:** Add routing READMEs for methodology manuals and game packages.
 
 **Instructions:**
-1. reviewer.md: "verify entry exists" → "verify entry exists in active
-   dataset's `research_log.md`"
-2. git-workflow.md: end-of-session checklist → "active dataset's
-   research_log.md updated (mandatory for Category A)"
-3. thesis-writing.md: "read relevant entry in `reports/research_log.md`"
-   → "read relevant entry in the active dataset's `research_log.md`"
+1. `docs/ml_experiment_lifecycle/README.md`: Note 6 manuals, one per Phase.
+2. `src/rts_predict/sc2/README.md`: CLI, config, data, reports paths.
+   Dataset table with ROADMAP link and status.
+3. `src/rts_predict/aoe2/README.md`: Same pattern. Note operational status.
 
-**Verification:** No bare `reports/research_log.md` as dataset-specific
-destination in any of the 3 files
-**File scope:** `.claude/agents/reviewer.md`, `.claude/rules/git-workflow.md`,
-`.claude/rules/thesis-writing.md`
+**Verification:** All 3 files exist with routing tables.
+**File scope:** `docs/ml_experiment_lifecycle/README.md`,
+`src/rts_predict/sc2/README.md`, `src/rts_predict/aoe2/README.md`
 **Read scope:** none
 
 ---
 
-### T09 — Update ARCHITECTURE.md + docs/INDEX.md
+### T08 — Create reports/README.md
 
-**Objective:** Update cross-cutting files tables.
+**Objective:** Add routing README for reports directory reflecting the
+per-dataset structure from the research log split.
 
 **Instructions:**
-1. ARCHITECTURE.md cross-cutting files table: research log entry →
-   "Index + CROSS entries at `reports/research_log.md`; per-dataset
-   findings at `<game>/reports/<dataset>/research_log.md`"
-2. docs/INDEX.md: same update to research log entry
+1. `reports/README.md`: Describe root as index + CROSS entries only.
+   Per-dataset reports at `src/rts_predict/<game>/reports/<dataset>/`.
+   Link to research_log_template.yaml.
 
-**Verification:** Both files describe the new structure
-**File scope:** `ARCHITECTURE.md`, `docs/INDEX.md`
+**Verification:** File exists. Describes the post-split structure.
+**File scope:** `reports/README.md`
 **Read scope:** none
 
 ---
 
-### T10 — Update TAXONOMY.md + PHASES.md + STEPS.md
+### T09 — Update docs/INDEX.md with directory map
 
-**Objective:** Update phase/step references to per-dataset logs.
+**Objective:** Make `docs/INDEX.md` the centralized routing hub — a single
+read that tells any agent where to find anything in the project.
 
 **Instructions:**
-1. docs/TAXONOMY.md: "one entry in `reports/research_log.md`" → "one entry
-   in the dataset's `research_log.md`"
-2. docs/PHASES.md: Phase 07 exit gate → "per-dataset `research_log.md`
-   entries are current and thesis-citable"; cross-dataset coordination →
-   "tracked in `reports/research_log.md` CROSS entries"
-3. docs/ml_experiment_phases/PHASES.md: same as docs/PHASES.md
-4. docs/ml_experiment_phases/STEPS.md: step output → "dataset's
-   `research_log.md`"
+1. Read the current `docs/INDEX.md`.
+2. Add a `## Directory Map` section with a table:
 
-**Verification:** All 4 files reference per-dataset logs for findings;
-CROSS coordination references root
-**File scope:** `docs/TAXONOMY.md`, `docs/PHASES.md`,
-`docs/ml_experiment_phases/PHASES.md`, `docs/ml_experiment_phases/STEPS.md`
+   | Directory | Index | Contents |
+   |-----------|-------|----------|
+   | `.claude/` | `.claude/README.md` | Agents, rules, commands, invariants |
+   | `docs/templates/` | `docs/templates/README.md` | Template schemas |
+   | `thesis/` | `thesis/README.md` | Chapters, writing workflow |
+   | `scripts/` | `scripts/README.md` | Hooks, utilities, diagnostics |
+   | `docs/ml_experiment_lifecycle/` | `...README.md` | Phase methodology manuals |
+   | `src/rts_predict/sc2/` | `...README.md` | SC2 game package |
+   | `src/rts_predict/aoe2/` | `...README.md` | AoE2 game package |
+   | `reports/` | `reports/README.md` | Research log index + CROSS entries |
+   | `planning/` | `planning/INDEX.md` | Active plan, DAG, specs |
+
+3. Verify all README paths in the table resolve to files created by T05-T08.
+
+**Verification:**
+- `docs/INDEX.md` has `## Directory Map` section
+- All 9 paths in the table resolve to existing files
+- CLAUDE.md Key File Locations points here (added by T01)
+
+**File scope:** `docs/INDEX.md`
 **Read scope:** none
 
 ---
 
-### T11 — Update templates + research docs
+### T10 — Write check_planning_drift.py + tests
 
-**Objective:** Update research log templates and specification docs.
+**Objective:** Create the pre-commit validation script for planning artifacts.
 
 **Instructions:**
-1. `docs/templates/research_log_template.yaml`: add note that per-dataset
-   logs follow this schema; root log is index-only with CROSS entries
-2. `docs/templates/step_template.yaml`: research_log_entry pointer →
-   dataset's log
-3. `docs/templates/research_log_entry_template.yaml`: note that entries
-   live in per-dataset logs
-4. `docs/templates/plan_template.md`: `research_log_ref` → clarify points
-   to dataset's log
-5. `docs/research/RESEARCH_LOG.md`: update to describe new structure
-6. `docs/research/RESEARCH_LOG_ENTRY.md`: update to reference per-dataset logs
+1. Create `scripts/hooks/check_planning_drift.py` (stdlib only, ~150 lines).
+2. Validation logic when `planning/` files are staged:
+   - `current_plan.md`: Parse YAML frontmatter (category, branch, date
+     required). Check required sections (case-insensitive heading match):
+     - Universal (all categories): `## Scope`, `## Execution Steps`,
+       `## File Manifest`, `## Suggested Execution Graph`
+     - Category A/F only: also `## Problem Statement`,
+       `## Assumptions & unknowns`, `## Literature context`,
+       `## Gate Condition`, `## Open questions`
+     - Category B/D: `## Problem Statement` recommended but not enforced
+     - Category C/E: `## Problem Statement` not enforced
+     (Match section names from `docs/templates/plan_template.md`.)
+     **Bootstrap tolerance:** If the plan has markdown-bold metadata instead
+     of YAML frontmatter (legacy format), warn but do not block. Add a
+     `# TODO: enforce strict YAML frontmatter after this PR` comment.
+   - `specs/spec_*.md`: Parse YAML frontmatter (task_id, task_name, agent,
+     dag_ref, group_id, file_scope, category). Check required sections:
+     `## Objective`, `## Instructions`, `## Verification`. (`## Context`
+     is optional — do not enforce, but document this in the script docstring.)
+   - `dags/DAG.yaml`: Valid YAML. Required fields: dag_id, plan_ref,
+     category, branch, base_ref. Every task has spec_file, file_scope,
+     depends_on. All spec_file refs resolve to files on disk.
+   - Cross-file: every spec_file in DAG has a matching spec; every spec on
+     disk is referenced in the DAG (no orphans).
+3. Follow `check_phases_drift.py` pattern: regex extraction, clear error
+   messages, exit 1 on failure, stdlib only.
+4. Add tests: `tests/infrastructure/test_check_planning_drift.py` — test
+   valid/invalid plan frontmatter, missing spec sections, broken DAG refs,
+   legacy (non-YAML) plan frontmatter warns but passes.
 
-**Verification:** All 6 files describe per-dataset structure
-**File scope:** `docs/templates/research_log_template.yaml`,
-`docs/templates/step_template.yaml`,
-`docs/templates/research_log_entry_template.yaml`,
-`docs/templates/plan_template.md`, `docs/research/RESEARCH_LOG.md`,
-`docs/research/RESEARCH_LOG_ENTRY.md`
+**Verification:**
+- Script catches missing sections in plans
+- Script catches broken spec_file refs in DAGs
+- Script catches orphaned spec files
+- Tests pass
+
+**File scope:** `scripts/hooks/check_planning_drift.py`,
+`tests/infrastructure/test_check_planning_drift.py`
+**Read scope:** `scripts/hooks/check_phases_drift.py` (pattern reference)
+
+---
+
+### T11 — Wire pre-commit hook + test
+
+**Objective:** Add the planning-drift hook to `.pre-commit-config.yaml`.
+
+**Instructions:**
+1. Add to `.pre-commit-config.yaml`:
+   ```yaml
+   - repo: local
+     hooks:
+       - id: planning-drift
+         name: planning artifact validation
+         language: system
+         entry: python scripts/hooks/check_planning_drift.py
+         files: ^planning/
+         pass_filenames: false
+   ```
+2. Test: stage a spec with missing `## Objective` section, verify the hook
+   blocks the commit. Restore the spec after testing.
+
+**Verification:** `pre-commit run planning-drift` passes on valid planning
+artifacts. Blocks on invalid ones.
+**File scope:** `.pre-commit-config.yaml`
 **Read scope:** none
 
 ---
 
-### T12 — Update AGENT_MANUAL.md + README.md + ROADMAPs
+### T12 — CHANGELOG
 
-**Objective:** Update remaining references.
-
-**Instructions:**
-1. `docs/agents/AGENT_MANUAL.md`: update research_log references to
-   per-dataset pattern
-2. `README.md`: update key document pointer to describe new structure
-3. 3 dataset ROADMAPs: add `research_log.md` to their contents/sibling
-   files listing (it's now a sibling file in the same directory)
-4. `src/rts_predict/aoe2/reports/ROADMAP.md` (game-level): change
-   "recorded in `reports/research_log.md`" → "recorded in the dataset's
-   `research_log.md`" (this file directs dataset-specific decision gate
-   findings, not CROSS entries)
-
-**Verification:** All 6 files reference per-dataset logs
-**File scope:** `docs/agents/AGENT_MANUAL.md`, `README.md`,
-`src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`,
-`src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md`,
-`src/rts_predict/aoe2/reports/aoestats/ROADMAP.md`,
-`src/rts_predict/aoe2/reports/ROADMAP.md`
-**Read scope:** none
-
----
-
-### T13 — CHANGELOG
-
-**Objective:** Document the research log decentralization.
+**Objective:** Document all three workstreams.
 
 **Instructions:**
 1. Under `[Unreleased]`, add:
-   - Added: 3 per-dataset `research_log.md` files (sc2egset, aoe2companion,
-     aoestats) with migrated Step 01_01_01 findings
-   - Changed: `reports/research_log.md` rewritten as index + CROSS entries
-   - Changed: ~25 files updated to reference per-dataset logs instead of
-     unified log
+   - Changed: CLAUDE.md trimmed (~16 lines removed, dispatch rules preserved)
+   - Changed: ARCHITECTURE.md trimmed (~18 lines, pointers replace duplication)
+   - Changed: executor.md trimmed (~40 lines, data layout + notebook workflow
+     replaced with pointers)
+   - Added: 8 directory README.md files (routing documents)
+   - Added: `docs/INDEX.md` directory map — centralized routing hub
+   - Added: `scripts/hooks/check_planning_drift.py` pre-commit hook for
+     planning artifact validation
+   - Added: `tests/infrastructure/test_check_planning_drift.py`
+   - Removed: `docs/ml_experiment_phases/PHASES.md` (derivative of canonical
+     `docs/PHASES.md`)
+   - Removed: `docs/ml_experiment_phases/PIPELINE_SECTIONS.md` (derivative)
+   - Removed: `scripts/hooks/check_phases_drift.py` (no longer needed)
 
-**Verification:** CHANGELOG has entries under `[Unreleased]`
+**Verification:** CHANGELOG has entries under `[Unreleased]`.
 **File scope:** `CHANGELOG.md`
 **Read scope:** none
 
@@ -321,97 +391,79 @@ CROSS coordination references root
 
 | File | Action |
 |------|--------|
-| `src/rts_predict/sc2/reports/sc2egset/research_log.md` | Create |
-| `src/rts_predict/aoe2/reports/aoe2companion/research_log.md` | Create |
-| `src/rts_predict/aoe2/reports/aoestats/research_log.md` | Create |
-| `reports/research_log.md` | Rewrite |
-| `CLAUDE.md` | Update |
-| `.claude/agents/executor.md` | Update |
-| `.claude/agents/reviewer-deep.md` | Update |
-| `.claude/agents/reviewer-adversarial.md` | Update |
-| `.claude/agents/planner-science.md` | Update |
-| `.claude/agents/reviewer.md` | Update |
-| `.claude/rules/git-workflow.md` | Update |
-| `.claude/rules/thesis-writing.md` | Update |
-| `.claude/ml-protocol.md` | Update |
-| `ARCHITECTURE.md` | Update |
+| `CLAUDE.md` | Trim |
+| `ARCHITECTURE.md` | Trim |
+| `.claude/agents/executor.md` | Trim |
+| `docs/ml_experiment_phases/PHASES.md` | Delete |
+| `docs/ml_experiment_phases/PIPELINE_SECTIONS.md` | Delete |
+| `scripts/hooks/check_phases_drift.py` | Delete |
+| `docs/ml_experiment_phases/README.md` | Create |
+| `docs/templates/README.md` | Create |
+| `.claude/README.md` | Create |
+| `thesis/README.md` | Create |
+| `scripts/README.md` | Create |
+| `docs/ml_experiment_lifecycle/README.md` | Create |
+| `src/rts_predict/sc2/README.md` | Create |
+| `src/rts_predict/aoe2/README.md` | Create |
+| `reports/README.md` | Create |
 | `docs/INDEX.md` | Update |
-| `docs/TAXONOMY.md` | Update |
-| `docs/PHASES.md` | Update |
-| `docs/ml_experiment_phases/PHASES.md` | Update |
-| `docs/ml_experiment_phases/STEPS.md` | Update |
-| `docs/templates/research_log_template.yaml` | Update |
-| `docs/templates/step_template.yaml` | Update |
-| `docs/templates/research_log_entry_template.yaml` | Update |
-| `docs/templates/plan_template.md` | Update |
-| `docs/research/RESEARCH_LOG.md` | Update |
-| `docs/research/RESEARCH_LOG_ENTRY.md` | Update |
-| `docs/agents/AGENT_MANUAL.md` | Update |
-| `README.md` | Update |
-| `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` | Update |
-| `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` | Update |
-| `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` | Update |
-| `src/rts_predict/aoe2/reports/ROADMAP.md` | Update |
+| `scripts/hooks/check_planning_drift.py` | Create |
+| `tests/infrastructure/test_check_planning_drift.py` | Create |
+| `.pre-commit-config.yaml` | Update |
 | `CHANGELOG.md` | Update |
 
 ---
 
 ## Gate Condition
 
-- 3 per-dataset `research_log.md` files exist with migrated Entry 2 content
-- Root `reports/research_log.md` is an index with CROSS entries only
-- Entry 1 [CROSS] retained in root with retraction
-- Entry 2's cross-dataset summary retained as trimmed CROSS entry in root
-- Full Entry 2 dataset-specific findings removed from root
-- Each per-dataset log follows `research_log_entry_template.yaml` schema
-- Machine-testable reference check:
-  ```
-  grep -rn "reports/research_log" --include="*.md" --include="*.yaml" \
-    | grep -v CHANGELOG.md \
-    | grep -v planning/current_plan.md \
-    | grep -v "CROSS" \
-    | grep -v "index" \
-    | grep -v "research_log_decentralization"
-  ```
-  Allowed matches: only lines that reference the root log in CROSS context
-  (e.g., "add a [CROSS] entry to `reports/research_log.md`") or describe the
-  new structure. Any line that says "update `reports/research_log.md`" for
-  dataset-specific findings is a failure.
+- CLAUDE.md under 125 lines; dispatch rules (current lines 61-78) intact
+- ARCHITECTURE.md under 190 lines
+- executor.md under 105 lines; Read first / Spec-first protocol untouched
+- 8 routing README.md files exist
+- `docs/INDEX.md` has `## Directory Map` with paths resolving to all 8 READMEs
+- CLAUDE.md Key File Locations includes `docs/INDEX.md` pointer
+- `pre-commit run planning-drift` passes on valid planning artifacts
+- `pre-commit run planning-drift` blocks on: missing plan sections, missing
+  spec frontmatter, broken DAG spec_file refs, orphaned specs
+- `check_planning_drift.py` tests pass
+- `processing.py` caution retained in CLAUDE.md (file still exists)
+- `docs/ml_experiment_phases/PHASES.md` does not exist (deleted derivative)
+- `docs/ml_experiment_phases/PIPELINE_SECTIONS.md` does not exist (deleted)
+- `docs/ml_experiment_phases/STEPS.md` exists (unique content, kept)
+- `scripts/hooks/check_phases_drift.py` does not exist (deleted)
+- `pre-commit run --all-files` passes (no missing hook reference)
 
 ---
 
 ## Out of Scope
 
-- Programmatic enforcement of research log location (future pre-commit hook)
-- Cross-game implication automation (manual for now — executor adds CROSS
-  entry when relevant)
-- Revision tracking for research log entries (git log suffices)
-
----
-
-## Open questions
-
-None.
+- `_current_plan.md` root relic (already deleted)
+- `planning/specs/README.md` ephemeral purge (already clean — 39 lines)
+- Zero-byte stubs in `docs/` (resolved during research log split)
+- Programmatic enforcement of research log location (separate future hook)
+- Token economy for `docs/agents/AGENT_MANUAL.md` (large file, separate chore)
+- Strict YAML frontmatter enforcement in `check_planning_drift.py` (currently
+  warns on legacy format; enforce after all plans use the new template)
 
 ---
 
 ## Suggested Execution Graph
 
 ```yaml
-dag_id: "dag_research_log_split"
+dag_id: "dag_token_economy_indexing"
 plan_ref: "planning/current_plan.md"
 category: "C"
-branch: "chore/research-log-split"
+branch: "chore/token-economy-indexing"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Research log decentralization"
+    name: "Token economy, directory indexing, template enforcement"
 
     task_groups:
       - group_id: "TG01"
-        name: "Create per-dataset logs + rewrite root"
+        name: "Token economy + phase consolidation"
         depends_on: []
         review_gate:
           agent: "reviewer"
@@ -419,157 +471,134 @@ jobs:
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Create sc2egset research_log.md"
-            spec_file: "planning/specs/spec_01_sc2_research_log.md"
+            name: "Trim CLAUDE.md"
+            spec_file: "planning/specs/spec_01_trim_claude.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "src/rts_predict/sc2/reports/sc2egset/research_log.md"
-            read_scope:
-              - "reports/research_log.md"
-              - "docs/templates/research_log_template.yaml"
+              - "CLAUDE.md"
             depends_on: []
           - task_id: "T02"
-            name: "Create aoe2companion research_log.md"
-            spec_file: "planning/specs/spec_02_aoe2c_research_log.md"
+            name: "Trim ARCHITECTURE.md"
+            spec_file: "planning/specs/spec_02_trim_architecture.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "src/rts_predict/aoe2/reports/aoe2companion/research_log.md"
-            read_scope:
-              - "reports/research_log.md"
+              - "ARCHITECTURE.md"
             depends_on: []
           - task_id: "T03"
-            name: "Create aoestats research_log.md"
-            spec_file: "planning/specs/spec_03_aoestats_research_log.md"
+            name: "Trim executor.md"
+            spec_file: "planning/specs/spec_03_trim_executor.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "src/rts_predict/aoe2/reports/aoestats/research_log.md"
-            read_scope:
-              - "reports/research_log.md"
+              - ".claude/agents/executor.md"
             depends_on: []
           - task_id: "T04"
-            name: "Rewrite root research_log.md as index"
-            spec_file: "planning/specs/spec_04_root_index.md"
+            name: "Delete phase derivatives + drift hook"
+            spec_file: "planning/specs/spec_04_phase_consolidation.md"
             agent: "executor"
-            parallel_safe: false
+            parallel_safe: true
             file_scope:
-              - "reports/research_log.md"
-            depends_on: ["T01", "T02", "T03"]
+              - "docs/ml_experiment_phases/PHASES.md"
+              - "docs/ml_experiment_phases/PIPELINE_SECTIONS.md"
+              - "docs/ml_experiment_phases/README.md"
+              - "scripts/hooks/check_phases_drift.py"
+              - ".pre-commit-config.yaml"
+            depends_on: []
 
       - group_id: "TG02"
-        name: "Update agent definitions + rules"
-        depends_on: ["TG01"]
+        name: "Directory indexing"
+        depends_on: []
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
           - task_id: "T05"
-            name: "Update CLAUDE.md + executor.md"
-            spec_file: "planning/specs/spec_05_orchestrator_agents.md"
+            name: "Create docs/templates + .claude READMEs"
+            spec_file: "planning/specs/spec_05_readmes_templates.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "CLAUDE.md"
-              - ".claude/agents/executor.md"
+              - "docs/templates/README.md"
+              - ".claude/README.md"
             depends_on: []
           - task_id: "T06"
-            name: "Update reviewer-deep.md + reviewer-adversarial.md"
-            spec_file: "planning/specs/spec_06_reviewer_agents.md"
+            name: "Create thesis + scripts READMEs"
+            spec_file: "planning/specs/spec_06_readmes_thesis_scripts.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/reviewer-deep.md"
-              - ".claude/agents/reviewer-adversarial.md"
+              - "thesis/README.md"
+              - "scripts/README.md"
             depends_on: []
           - task_id: "T07"
-            name: "Update planner-science.md + ml-protocol.md"
-            spec_file: "planning/specs/spec_07_planner_agents.md"
+            name: "Create lifecycle + game READMEs"
+            spec_file: "planning/specs/spec_07_readmes_lifecycle_games.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/planner-science.md"
-              - ".claude/ml-protocol.md"
+              - "docs/ml_experiment_lifecycle/README.md"
+              - "src/rts_predict/sc2/README.md"
+              - "src/rts_predict/aoe2/README.md"
             depends_on: []
           - task_id: "T08"
-            name: "Update reviewer.md + git-workflow.md + thesis-writing.md"
-            spec_file: "planning/specs/spec_08_rules.md"
+            name: "Create reports/README.md"
+            spec_file: "planning/specs/spec_08_readme_reports.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/reviewer.md"
-              - ".claude/rules/git-workflow.md"
-              - ".claude/rules/thesis-writing.md"
+              - "reports/README.md"
             depends_on: []
+          - task_id: "T09"
+            name: "Update docs/INDEX.md with directory map"
+            spec_file: "planning/specs/spec_09_index.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "docs/INDEX.md"
+            depends_on: ["T05", "T06", "T07", "T08"]
 
       - group_id: "TG03"
-        name: "Update documentation + templates"
+        name: "Template enforcement"
         depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T09"
-            name: "Update ARCHITECTURE.md + docs/INDEX.md"
-            spec_file: "planning/specs/spec_09_architecture.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "ARCHITECTURE.md"
-              - "docs/INDEX.md"
-            depends_on: []
           - task_id: "T10"
-            name: "Update TAXONOMY.md + PHASES.md + STEPS.md"
-            spec_file: "planning/specs/spec_10_phase_docs.md"
+            name: "Write check_planning_drift.py + tests"
+            spec_file: "planning/specs/spec_10_planning_drift.md"
             agent: "executor"
-            parallel_safe: true
+            parallel_safe: false
             file_scope:
-              - "docs/TAXONOMY.md"
-              - "docs/PHASES.md"
-              - "docs/ml_experiment_phases/PHASES.md"
-              - "docs/ml_experiment_phases/STEPS.md"
+              - "scripts/hooks/check_planning_drift.py"
+              - "tests/infrastructure/test_check_planning_drift.py"
+            read_scope:
+              - "scripts/hooks/check_phases_drift.py"
             depends_on: []
           - task_id: "T11"
-            name: "Update templates + research docs"
-            spec_file: "planning/specs/spec_11_templates.md"
+            name: "Wire pre-commit hook"
+            spec_file: "planning/specs/spec_11_precommit.md"
             agent: "executor"
-            parallel_safe: true
+            parallel_safe: false
             file_scope:
-              - "docs/templates/research_log_template.yaml"
-              - "docs/templates/step_template.yaml"
-              - "docs/templates/research_log_entry_template.yaml"
-              - "docs/templates/plan_template.md"
-              - "docs/research/RESEARCH_LOG.md"
-              - "docs/research/RESEARCH_LOG_ENTRY.md"
-            depends_on: []
-          - task_id: "T12"
-            name: "Update AGENT_MANUAL.md + README.md + ROADMAPs"
-            spec_file: "planning/specs/spec_12_remaining_refs.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "docs/agents/AGENT_MANUAL.md"
-              - "README.md"
-              - "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/aoestats/ROADMAP.md"
-              - "src/rts_predict/aoe2/reports/ROADMAP.md"
-            depends_on: []
+              - ".pre-commit-config.yaml"
+            depends_on: ["T10"]
 
       - group_id: "TG04"
         name: "CHANGELOG"
-        depends_on: ["TG02", "TG03"]
+        depends_on: ["TG01", "TG02", "TG03"]
         review_gate:
           agent: "reviewer"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T13"
+          - task_id: "T12"
             name: "Update CHANGELOG"
-            spec_file: "planning/specs/spec_13_changelog.md"
+            spec_file: "planning/specs/spec_12_changelog.md"
             agent: "executor"
             parallel_safe: false
             file_scope:
