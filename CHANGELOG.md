@@ -16,8 +16,7 @@ merged to `master`.
 - 9 directory `README.md` files (routing documents for key subdirectories)
 - `docs/INDEX.md` — centralized directory map and routing hub
 - `scripts/hooks/check_planning_drift.py` — pre-commit hook for planning artifact validation
-- `tests/infrastructure/test_check_planning_drift.py`
-- `tests/infrastructure/test_check_planning_drift.py` — 4 additional tests: `test_main_integration_clean`, `test_main_integration_errors`, `test_absolute_spec_file_path`, `test_legacy_heuristic_false_positive`
+- `tests/infrastructure/test_check_planning_drift.py` — 23 initial tests + 4 follow-up (`test_main_integration_clean`, `test_main_integration_errors`, `test_absolute_spec_file_path`, `test_legacy_heuristic_false_positive`)
 
 ### Changed
 
