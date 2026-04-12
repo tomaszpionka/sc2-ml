@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-11
+Last updated: 2026-04-12
 
 ---
 
@@ -30,39 +30,39 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §1.1 Background and motivation | `SKELETON` | — | Can write anytime |
-| §1.2 Problem statement | `SKELETON` | — | Can write anytime |
-| §1.3 Research questions | `SKELETON` | — | Can write anytime; finalise after experiments |
-| §1.4 Scope and limitations | `SKELETON` | — | Can write anytime; revise after AoE2 data assessment |
+| §1.1 Background and motivation | `DRAFTABLE` | — | Literature + framing |
+| §1.2 Problem statement | `DRAFTABLE` | — | Literature + framing |
+| §1.3 Research questions | `DRAFTABLE` | — | Draft now; finalize after experiments |
+| §1.4 Scope and limitations | `DRAFTABLE` | — | Draft now; revise after AoE2 assessment |
 | §1.5 Thesis outline | `BLOCKED` | All chapters | Write last |
 
 ## Chapter 2 — Theoretical Background
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §2.1 RTS game characteristics | `SKELETON` | — | Literature |
-| §2.2 StarCraft II | `SKELETON` | Phase 01 (Data Exploration — timing, mechanics) | Game loop derivation available from literature; Phase 01 will re-derive from data. |
+| §2.1 RTS game characteristics | `DRAFTABLE` | — | Literature |
+| §2.2 StarCraft II | `DRAFTABLE` | Phase 01 (Data Exploration — timing, mechanics) | Literature part draftable; data-derived details added after Phase 01 |
 | §2.3 Age of Empires II | `BLOCKED` | AoE2 roadmap | Future |
-| §2.4 ML methods for classification | `SKELETON` | — | Literature |
-| §2.5 Player skill rating systems | `SKELETON` | — | Literature; Glicko-2 refs ready |
-| §2.6 Evaluation metrics | `SKELETON` | — | Literature |
+| §2.4 ML methods for classification | `DRAFTABLE` | — | Literature |
+| §2.5 Player skill rating systems | `DRAFTABLE` | — | Literature; Glicko-2 refs ready |
+| §2.6 Evaluation metrics | `DRAFTABLE` | — | Literature |
 
 ## Chapter 3 — Related Work
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §3.1 Traditional sports prediction | `SKELETON` | — | Literature |
-| §3.2 StarCraft prediction literature | `SKELETON` | — | Key papers identified in research report |
-| §3.3 MOBA and other esports | `SKELETON` | — | Literature |
+| §3.1 Traditional sports prediction | `DRAFTABLE` | — | Literature |
+| §3.2 StarCraft prediction literature | `DRAFTABLE` | — | Key papers identified |
+| §3.3 MOBA and other esports | `DRAFTABLE` | — | Literature |
 | §3.4 AoE2 prediction | `BLOCKED` | AoE2 lit review | Future |
-| §3.5 Research gap | `SKELETON` | — | Can draft now |
+| §3.5 Research gap | `DRAFTABLE` | — | Literature + framing |
 
 ## Chapter 4 — Data and Methodology
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
 | §4.1.1 SC2EGSet description | `BLOCKED` | Phase 01 (Data Exploration) | Steps 01_01–01_07 done; awaiting Step 01_08 (game settings + field completeness audit) |
-| §4.4.4 Evaluation metrics | `SKELETON` | — | Can draft from literature |
+| §4.4.4 Evaluation metrics | `DRAFTABLE` | — | Literature |
 
 Remaining 11 sections all `BLOCKED` — waiting on Phase 01–04 (SC2) and AoE2 roadmap phases.
 
@@ -74,7 +74,7 @@ All 6 sections `BLOCKED` — waiting on Phases 03-05 (SC2) and AoE2 phases.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §6.5 Threats to validity | `SKELETON` | — | Can start listing now |
+| §6.5 Threats to validity | `DRAFTABLE` | — | Start listing known threats; expand after experiments |
 
 Remaining 4 sections all `BLOCKED` — waiting on Chapter 5.
 
@@ -82,7 +82,7 @@ Remaining 4 sections all `BLOCKED` — waiting on Chapter 5.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §7.3 Future work | `SKELETON` | — | Can accumulate ideas throughout |
+| §7.3 Future work | `DRAFTABLE` | — | Accumulate ideas; finalize last |
 
 Remaining 2 sections all `BLOCKED` — waiting on Chapters 5–6.
 
