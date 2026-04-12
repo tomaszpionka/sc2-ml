@@ -59,6 +59,9 @@ Determine the work category from the dispatch prompt's context header
     (CROSS entries) — check for contradictions with prior findings in both.
 11. `docs/templates/research_log_entry_template.yaml` if research log
     entries are in scope.
+12. `.claude/author-style-brief-pl.md` — if reviewing thesis chapters
+    (Category F). Check voice consistency across chapters — different
+    writer-thesis instances may drift in register.
 
 If any required file is missing or you cannot determine the category,
 HALT and report the gap. Do not review against assumed requirements.

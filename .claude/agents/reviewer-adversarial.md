@@ -49,6 +49,8 @@ at least items 1–5.
 4. The active dataset's `ROADMAP.md` — determines what should exist.
 5. `.claude/ml-protocol.md` — ML experiment constraints (active Phase 04+).
 6. `.claude/rules/thesis-writing.md` — thesis quality standards.
+   `.claude/author-style-brief-pl.md` — author's Polish voice model
+   (Category F only). Verify drafts match authorial voice, not generic AI.
 7. `.claude/rules/sql-data.md` — SQL and data pipeline constraints.
 8. The active dataset's `research_log.md` and `reports/research_log.md`
    (CROSS entries) — check for contradictions with prior findings in both.
@@ -126,6 +128,14 @@ Ask:
 The examiner does not care about code quality. They care about:
 methodology rigor, honest reporting, reproducibility, and whether the
 conclusions follow from the evidence.
+
+For Category F (thesis chapters): also check voice quality against
+`.claude/author-style-brief-pl.md`. Does the draft sound like the author
+wrote it, or like generic AI academic prose? Check for: structural
+parallelism between sibling sections, Polish hedging idioms (not English
+translations), the confounder-suspecting instinct (does the draft surface
+alternative explanations?), and justified method choices (not just "we
+used X").
 
 ### Lens 5 — Cross-Game Comparability (Invariant #8)
 
