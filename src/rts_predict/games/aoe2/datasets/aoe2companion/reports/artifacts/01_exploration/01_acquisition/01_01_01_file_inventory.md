@@ -1,6 +1,6 @@
 # Step 01_01_01 — File Inventory: aoe2companion
 
-**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoe2companion/raw`
+**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw`
 
 **Total files:** 4154
 

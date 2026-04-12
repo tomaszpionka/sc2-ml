@@ -13,7 +13,7 @@
 #
 # How to use:
 #   1. Copy the YAML block below into the relevant dataset ROADMAP at
-#      src/rts_predict/<game>/reports/<dataset>/ROADMAP.md inside a
+#      src/rts_predict/games/<game>/datasets/<dataset>/reports/ROADMAP.md inside a
 #      fenced YAML code block.
 #   2. Replace every <placeholder> with a concrete value.
 #   3. Fields marked required: true must be populated. Fields marked
@@ -26,7 +26,7 @@
 # Naming conventions:
 #   Step number       NN_NN_NN (Phase_Section_Step, zero-padded)
 #   Notebook path     sandbox/<game>/<dataset>/NN_<slug>/NN_<slug>/NN_NN_NN_<name>.py
-#   Artifact path     src/rts_predict/<game>/reports/<dataset>/artifacts/NN_<slug>/NN_<slug>/
+#   Artifact path     src/rts_predict/games/<game>/datasets/<dataset>/reports/artifacts/NN_<slug>/NN_<slug>/
 #
 # ---- TEMPLATE START (copy below this line) ----
 
@@ -156,5 +156,5 @@ thesis_mapping:
   # source Step.
 
 research_log_entry:
-  value: "<required on completion, following docs/templates/research_log_entry_template.yaml; must link back to this Step ID; entry goes into the per-dataset log at src/rts_predict/<game>/reports/<dataset>/research_log.md, NOT into reports/research_log.md>"
+  value: "<required on completion, following docs/templates/research_log_entry_template.yaml; must link back to this Step ID; entry goes into the per-dataset log at src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md, NOT into reports/research_log.md>"
   required: true

@@ -131,7 +131,7 @@ battery and produces a structured APPROVE / REQUEST_CHANGES verdict.
 
 **Invoke with scope when possible:**
 ```
-@reviewer review src/rts_predict/sc2/data/exploration.py
+@reviewer review src/rts_predict/games/sc2/data/exploration.py
 @reviewer review thesis/chapters/03_data.md
 @reviewer review changes                    ← reviews everything modified
 ```

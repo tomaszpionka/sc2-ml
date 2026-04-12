@@ -26,9 +26,9 @@ src/rts_predict/<game>/reports/<dataset>/ROADMAP.md
 
 Examples:
 
-- `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`
-- `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md`
-- `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md`
 
 ## Schema
 

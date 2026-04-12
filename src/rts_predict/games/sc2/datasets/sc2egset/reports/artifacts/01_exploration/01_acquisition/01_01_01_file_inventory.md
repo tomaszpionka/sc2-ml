@@ -1,6 +1,6 @@
 # Step 01_01_01 — File Inventory: sc2egset
 
-**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/raw`
+**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/sc2/datasets/sc2egset/data/raw`
 
 **Layout:** `raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json`
 

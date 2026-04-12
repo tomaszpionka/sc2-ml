@@ -34,7 +34,7 @@ a critique must be requested.
 | A | Scope, Problem Statement, Assumptions & unknowns, Literature context, Execution Steps, File Manifest, Gate Condition, Out of scope, Open questions, Suggested Execution Graph | yes — instruct parent to dispatch reviewer-adversarial, all sections |
 | B | Scope, Execution Steps, File Manifest, Suggested Execution Graph, Out of scope | yes — instruct parent to dispatch reviewer-adversarial; invariants + weaknesses sections only |
 | C | Scope, Execution Steps, File Manifest, Suggested Execution Graph | no |
-| D | Scope, Execution Steps, File Manifest, Suggested Execution Graph, Out of scope | yes if `file_scope` touches `src/rts_predict/<game>/` — instruct parent to dispatch reviewer-adversarial |
+| D | Scope, Execution Steps, File Manifest, Suggested Execution Graph, Out of scope | yes if `file_scope` touches `src/rts_predict/games/<game>/` — instruct parent to dispatch reviewer-adversarial |
 | E | Scope, Execution Steps, File Manifest, Suggested Execution Graph | no |
 | F | Scope, Problem Statement, Assumptions & unknowns, Literature context, Execution Steps, File Manifest, Gate Condition, Out of scope, Open questions, Suggested Execution Graph | yes — instruct parent to dispatch reviewer-adversarial, all sections |
 

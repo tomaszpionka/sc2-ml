@@ -5,7 +5,7 @@
 
 game: aoe2
 dataset: aoe2companion
-raw_directory: src/rts_predict/aoe2/data/aoe2companion/raw/
+raw_directory: src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw/
 
 # -- Section B: Provenance -----------------------------------------------------
 
@@ -16,11 +16,11 @@ data_creator: "aoe2companion (community-run API service)"
 sampling_mechanism: >
   exhaustive -- all matches recorded by the aoe2companion service for the
   covered date range; limited to players who use the aoe2companion application.
-manifest_path: "src/rts_predict/aoe2/data/aoe2companion/api/api_dump_list.json"
+manifest_path: "src/rts_predict/games/aoe2/datasets/aoe2companion/data/api/api_dump_list.json"
 citation: aoe2companion_cdn
 license: "Unknown -- no license file in source; check with data_creator before redistribution"
 acquisition_date: "2026-04-06"
-acquisition_script: "src/rts_predict/aoe2/data/aoe2companion/acquisition.py"
+acquisition_script: "src/rts_predict/games/aoe2/datasets/aoe2companion/data/acquisition.py"
 
 # -- Section C: Content and Layout ---------------------------------------------
 
@@ -101,7 +101,7 @@ immutability:
   status: true
   enforcement_mechanism: none_documented
 
-inventory_artifact: "src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+inventory_artifact: "src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
 
 # -- Section H: Known Limitations ----------------------------------------------
 
@@ -124,8 +124,8 @@ This directory holds the raw data layer and must never be modified.
 
 **License:** Unknown -- no license file in source
 **Acquisition date:** 2026-04-06
-**Acquisition script:** `src/rts_predict/aoe2/data/aoe2companion/acquisition.py`
-**Manifest:** `src/rts_predict/aoe2/data/aoe2companion/api/api_dump_list.json`
+**Acquisition script:** `src/rts_predict/games/aoe2/datasets/aoe2companion/data/acquisition.py`
+**Manifest:** `src/rts_predict/games/aoe2/datasets/aoe2companion/data/api/api_dump_list.json`
 
 > **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
 > (.gitkeep x4, .DS_Store x1). Counts reflect data files only.
@@ -163,4 +163,4 @@ Rating CSVs have no parquet equivalent and are downloaded.
 
 ## Inventory Artifact
 
-`src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+`src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`

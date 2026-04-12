@@ -13,7 +13,7 @@
 
 game: aoe2
 dataset: aoestats
-dataset_roadmap: src/rts_predict/aoe2/reports/aoestats/ROADMAP.md
+dataset_roadmap: src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md
 
 phases:
   "01":

@@ -88,8 +88,8 @@ draft vs revision, figures/tables, WRITING_STATUS.md update.
 See `ARCHITECTURE.md` for the full cross-cutting files table and source-of-truth
 hierarchy. Quick pointers for the most common lookups:
 
-- Step status: `src/rts_predict/<game>/reports/<dataset>/STEP_STATUS.yaml`
-- Phase status: `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`
+- Step status: `src/rts_predict/games/<game>/datasets/<dataset>/reports/STEP_STATUS.yaml`
+- Phase status: `src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml`
 - Scientific invariants: `.claude/scientific-invariants.md`
 - Canonical phase list: `docs/PHASES.md`
 - Directory map: `docs/INDEX.md`
@@ -115,7 +115,7 @@ usage, model assignments, and routing rules.
 
 Legacy code cleaned in v0.13.2. Surviving caution: `processing.py` →
 `create_temporal_split()` uses wrong split strategy (superseded by Phase 03, Splitting & Baselines — see docs/PHASES.md).
-AoE2 placeholder exists at `src/rts_predict/aoe2/` — do not add implementation
+AoE2 placeholder exists at `src/rts_predict/games/aoe2/` — do not add implementation
 code until instructed.
 
 ## Progress Tracking

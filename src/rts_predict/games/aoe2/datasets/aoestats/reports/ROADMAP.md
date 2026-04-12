@@ -49,7 +49,7 @@ acknowledge this gap.
 
 **Raw data is immutable. The weekly dump download will not be repeated.**
 Acquisition provenance is recorded in
-`src/rts_predict/aoe2/reports/aoestats/README.md`.
+`src/rts_predict/games/aoe2/datasets/aoestats/reports/README.md`.
 
 Row counts, schema, and column-level characteristics will be established
 by Phase 01 Steps 01_01_02 (schema discovery) and 01_03 (systematic profiling).

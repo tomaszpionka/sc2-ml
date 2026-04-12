@@ -5,7 +5,7 @@
 
 game: aoe2
 dataset: aoestats
-raw_directory: src/rts_predict/aoe2/data/aoestats/raw/
+raw_directory: src/rts_predict/games/aoe2/datasets/aoestats/data/raw/
 
 # -- Section B: Provenance -----------------------------------------------------
 
@@ -16,11 +16,11 @@ data_creator: "aoestats.io (community statistics service)"
 sampling_mechanism: >
   exhaustive -- all matches recorded by aoestats.io for the covered date range;
   selection criteria used by the source service are not publicly documented.
-manifest_path: "src/rts_predict/aoe2/data/aoestats/api/db_dump_list.json"
+manifest_path: "src/rts_predict/games/aoe2/datasets/aoestats/data/api/db_dump_list.json"
 citation: aoestats_io
 license: "Unknown -- no license file in source; check with data_creator before redistribution"
 acquisition_date: "2026-04-06"
-acquisition_script: "src/rts_predict/aoe2/data/aoestats/acquisition.py"
+acquisition_script: "src/rts_predict/games/aoe2/datasets/aoestats/data/acquisition.py"
 
 # -- Section C: Content and Layout ---------------------------------------------
 
@@ -114,7 +114,7 @@ immutability:
   status: true
   enforcement_mechanism: none_documented
 
-inventory_artifact: "src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+inventory_artifact: "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
 
 # -- Section H: Known Limitations ----------------------------------------------
 
@@ -139,8 +139,8 @@ This directory holds the raw data layer and must never be modified.
 
 **License:** Unknown -- no license file in source
 **Acquisition date:** 2026-04-06
-**Acquisition script:** `src/rts_predict/aoe2/data/aoestats/acquisition.py`
-**Manifest:** `src/rts_predict/aoe2/data/aoestats/api/db_dump_list.json`
+**Acquisition script:** `src/rts_predict/games/aoe2/datasets/aoestats/data/acquisition.py`
+**Manifest:** `src/rts_predict/games/aoe2/datasets/aoestats/data/api/db_dump_list.json`
 
 > **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
 > (.gitkeep x3, one per subdir). Counts reflect data files only.
@@ -187,4 +187,4 @@ re-downloads.
 
 ## Inventory Artifact
 
-`src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+`src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`

@@ -132,8 +132,8 @@ Violating them produces results that cannot be defended at examination.
 Empirical findings about specific datasets (field availability, derived
 constants, observed distributions) live in per-dataset invariants files,
 not here. See:
-  - src/rts_predict/sc2/reports/sc2egset/INVARIANTS.md (when created)
-  - src/rts_predict/aoe2/reports/<dataset>/INVARIANTS.md (when created)
+  - src/rts_predict/games/sc2/datasets/<dataset>/reports/INVARIANTS.md (when created)
+  - src/rts_predict/games/aoe2/datasets/<dataset>/reports/INVARIANTS.md (when created)
 
 These per-dataset files are populated as Phase 01 (Data Exploration) surfaces
 verifiable findings.

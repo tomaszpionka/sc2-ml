@@ -8,7 +8,7 @@
 #     reports/research_log.md
 #
 #   Per-dataset logs (dataset-specific entries):
-#     src/rts_predict/<game>/reports/<dataset>/research_log.md
+#     src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md
 #
 # Per-dataset logs follow the same schema described in this template.
 # Root log contains only CROSS entries (cross-dataset or game-agnostic)
@@ -28,7 +28,7 @@
 #   - docs/templates/research_log_entry_template.yaml -- entry-level schema
 
 document:
-  path: "src/rts_predict/<game>/reports/<dataset>/research_log.md"
+  path: "src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md"
   description: >
     Per-dataset chronological narrative of all research decisions and
     findings for one dataset. Newest entries first. For CROSS entries

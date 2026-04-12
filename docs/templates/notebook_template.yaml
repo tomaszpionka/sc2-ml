@@ -97,7 +97,7 @@ placeholders:
 
   roadmap_path:
     description: "Relative path to the dataset ROADMAP"
-    example: "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
+    example: "src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md"
     required: true
 
   description_paragraph:

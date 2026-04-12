@@ -381,7 +381,7 @@ representativeness_notes:
 #   required: true
 #
 # raw_directory:
-#   value: "src/rts_predict/sc2/data/sc2egset/raw/"
+#   value: "src/rts_predict/games/sc2/datasets/sc2egset/data/raw/"
 #   required: true
 #
 # source_name:
@@ -413,7 +413,7 @@ representativeness_notes:
 #   required: true
 #
 # manifest_path:
-#   value: "src/rts_predict/sc2/data/sc2egset/api/api_dump_list.json"
+#   value: "src/rts_predict/games/sc2/datasets/sc2egset/data/api/api_dump_list.json"
 #   required: false
 #
 # citation:
@@ -429,7 +429,7 @@ representativeness_notes:
 #   required: true
 #
 # acquisition_script:
-#   value: "src/rts_predict/sc2/acquisition/download_sc2egset.py"
+#   value: "src/rts_predict/games/sc2/acquisition/download_sc2egset.py"
 #   required: false
 #
 # description:
@@ -545,7 +545,7 @@ representativeness_notes:
 #   enforcement_mechanism: "none_documented"
 #
 # inventory_artifact:
-#   value: "src/rts_predict/sc2/reports/sc2egset/artifacts/01_data_exploration/01_source_inventory/01_01_01_source_inventory.csv"
+#   value: "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_data_exploration/01_source_inventory/01_01_01_source_inventory.csv"
 #   required: true
 #
 # known_biases:
@@ -573,7 +573,7 @@ representativeness_notes:
 #   required: true
 #
 # raw_directory:
-#   value: "src/rts_predict/aoe2/data/aoe2companion/raw/"
+#   value: "src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw/"
 #   required: true
 #
 # source_name:
@@ -597,7 +597,7 @@ representativeness_notes:
 #   required: true
 #
 # manifest_path:
-#   value: "src/rts_predict/aoe2/data/aoe2companion/api/api_dump_list.json"
+#   value: "src/rts_predict/games/aoe2/datasets/aoe2companion/data/api/api_dump_list.json"
 #   required: false
 #
 # citation:

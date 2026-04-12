@@ -13,7 +13,7 @@
 
 game: sc2
 dataset: sc2egset
-dataset_roadmap: src/rts_predict/sc2/reports/sc2egset/ROADMAP.md
+dataset_roadmap: src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md
 
 phases:
   "01":

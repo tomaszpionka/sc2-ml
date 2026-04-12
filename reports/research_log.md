@@ -9,9 +9,9 @@ live in per-dataset logs — one per game/dataset combination.
 
 | Dataset | Log | Last entry |
 |---------|-----|------------|
-| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/sc2/reports/sc2egset/research_log.md) | 2026-04-09 |
-| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/aoe2/reports/aoe2companion/research_log.md) | 2026-04-09 |
-| aoe2 / aoestats | [aoestats research log](../src/rts_predict/aoe2/reports/aoestats/research_log.md) | 2026-04-09 |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-09 |
+| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-09 |
+| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-09 |
 
 > **Phase migration note (2026-04-09):** This log was reset as part of the
 > Phase 01-07 migration. Prior entries were removed in v2.0.0 (archive
@@ -71,6 +71,6 @@ findings migrated to each dataset's research_log.md. Cross-dataset
 observation: all three raw directories are non-empty and structurally sound.
 
 Per-dataset entries:
-- [sc2egset — 2026-04-09](../src/rts_predict/sc2/reports/sc2egset/research_log.md)
-- [aoe2companion — 2026-04-09](../src/rts_predict/aoe2/reports/aoe2companion/research_log.md)
-- [aoestats — 2026-04-09](../src/rts_predict/aoe2/reports/aoestats/research_log.md)
+- [sc2egset — 2026-04-09](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
+- [aoe2companion — 2026-04-09](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
+- [aoestats — 2026-04-09](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)

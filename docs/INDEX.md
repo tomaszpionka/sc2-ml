@@ -48,7 +48,7 @@ Connected tracking files (outside `docs/`):
 | Tracker | Location | Purpose |
 |---------|----------|---------|
 | Research log (index) | `reports/research_log.md` | Cross-cutting (`[CROSS]`) entries and index of per-dataset logs |
-| Research log (per-dataset) | `src/rts_predict/<game>/reports/<dataset>/research_log.md` | Game/dataset-specific analytical findings per phase |
+| Research log (per-dataset) | `src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md` | Game/dataset-specific analytical findings per phase |
 | Chapter progress | `thesis/WRITING_STATUS.md` | Per-section SKELETON → FINAL status |
 | Chapter structure | `thesis/THESIS_STRUCTURE.md` | Section outline with scope definitions |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` | Pass 1 → Pass 2 handoff tracking |
@@ -75,8 +75,8 @@ Single lookup for any agent to find the index/README of a major project director
 | `thesis/` | `thesis/README.md` | Chapters, writing workflow |
 | `scripts/` | `scripts/README.md` | Hooks, utilities, diagnostics |
 | `docs/ml_experiment_lifecycle/` | `docs/ml_experiment_lifecycle/README.md` | Phase methodology manuals |
-| `src/rts_predict/sc2/` | `src/rts_predict/sc2/README.md` | SC2 game package |
-| `src/rts_predict/aoe2/` | `src/rts_predict/aoe2/README.md` | AoE2 game package |
+| `src/rts_predict/games/sc2/` | `src/rts_predict/games/sc2/README.md` | SC2 game package |
+| `src/rts_predict/games/aoe2/` | `src/rts_predict/games/aoe2/README.md` | AoE2 game package |
 | `reports/` | `reports/README.md` | Research log index + CROSS entries |
 | `planning/` | `planning/INDEX.md` | Active plan, DAG, specs |
 

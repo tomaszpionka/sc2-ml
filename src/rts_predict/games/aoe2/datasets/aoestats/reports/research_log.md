@@ -13,8 +13,8 @@ AoE2 / aoestats findings. Reverse chronological.
 **Category:** A (science)
 **Dataset:** aoestats
 **Artifacts produced:**
-- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
-- `src/rts_predict/aoe2/reports/aoestats/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
 
 ### What
 Ran `inventory_directory()` on the raw directory of the aoestats dataset.

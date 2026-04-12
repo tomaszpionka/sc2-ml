@@ -5,7 +5,7 @@
 
 game: sc2
 dataset: sc2egset
-raw_directory: src/rts_predict/sc2/data/sc2egset/raw/
+raw_directory: src/rts_predict/games/sc2/datasets/sc2egset/data/raw/
 
 # -- Section B: Provenance -----------------------------------------------------
 
@@ -437,7 +437,7 @@ immutability:
   status: true
   enforcement_mechanism: none_documented
 
-inventory_artifact: "src/rts_predict/sc2/reports/sc2egset/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+inventory_artifact: "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
 
 notes: >
   Acquired by manual download from Zenodo record 17829625 (v2.1.0, published

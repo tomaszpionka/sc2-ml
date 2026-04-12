@@ -16,10 +16,9 @@ tag `pre-roadmap-cleanup`.
 
 ## Data Layout
 All pipeline data lives under `data/<dataset>/` within each game's subpackage (gitignored contents, tracked skeleton):
-- `src/rts_predict/sc2/data/sc2egset/raw/` — raw JSON replays (NEVER modify)
-- `src/rts_predict/sc2/data/sc2egset/staging/in_game_events/` — in-game event Parquet files (reproducible)
-- `src/rts_predict/sc2/data/sc2egset/db/db.duckdb` — main DuckDB database (reproducible)
-- `src/rts_predict/sc2/data/sc2egset/tmp/` — DuckDB spill-to-disk temp directory
+- `src/rts_predict/games/<game>/datasets/<dataset>/data/raw/` — raw source files (NEVER modify)
+- `src/rts_predict/games/<game>/datasets/<dataset>/data/db/db.duckdb` — main DuckDB database (reproducible)
+- `src/rts_predict/games/<game>/datasets/<dataset>/data/tmp/` — DuckDB spill-to-disk temp directory
 
 ## Phase Work Execution
 

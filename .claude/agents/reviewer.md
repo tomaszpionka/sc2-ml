@@ -62,7 +62,7 @@ Your job is to find problems, not to praise.
 
 ## For thesis chapters:
 1. Run Critical Review Checklist (`.claude/rules/thesis-writing.md`)
-2. Every number traces to a report artifact in `src/rts_predict/sc2/reports/`
+2. Every number traces to a report artifact in `src/rts_predict/games/<game>/datasets/<dataset>/reports/`
 3. Claim-evidence alignment (hedge when merely suggestive)
 4. No threshold without empirical derivation or cited precedent
 5. Academic register (third person or first person plural)

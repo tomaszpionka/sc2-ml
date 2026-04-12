@@ -13,8 +13,8 @@ AoE2 / aoe2companion findings. Reverse chronological.
 **Category:** A (science)
 **Dataset:** aoe2companion
 **Artifacts produced:**
-- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
-- `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md`
 
 ### What
 Ran `inventory_directory()` on the aoe2companion raw directory. Produced

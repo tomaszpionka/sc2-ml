@@ -28,24 +28,24 @@ poetry run aoe2 --help
 
 | Constant | Path |
 |----------|------|
-| `GAME_DIR` | `src/rts_predict/aoe2/` |
-| `DATA_DIR` | `src/rts_predict/aoe2/data/` |
-| `REPORTS_DIR` | `src/rts_predict/aoe2/reports/` |
-| `AOE2COMPANION_DIR` | `src/rts_predict/aoe2/data/aoe2companion/` |
-| `AOE2COMPANION_DB_FILE` | `src/rts_predict/aoe2/data/aoe2companion/db/db.duckdb` |
-| `AOESTATS_DIR` | `src/rts_predict/aoe2/data/aoestats/` |
-| `AOESTATS_DB_FILE` | `src/rts_predict/aoe2/data/aoestats/db/db.duckdb` |
-| `AOE2COMPANION_REPORTS_DIR` | `src/rts_predict/aoe2/reports/aoe2companion/` |
-| `AOE2COMPANION_ARTIFACTS_DIR` | `src/rts_predict/aoe2/reports/aoe2companion/artifacts/` |
-| `AOESTATS_REPORTS_DIR` | `src/rts_predict/aoe2/reports/aoestats/` |
-| `AOESTATS_ARTIFACTS_DIR` | `src/rts_predict/aoe2/reports/aoestats/artifacts/` |
+| `GAME_DIR` | `src/rts_predict/games/aoe2/` |
+| `DATA_DIR` | `src/rts_predict/games/aoe2/datasets/` |
+| `REPORTS_DIR` | `src/rts_predict/games/aoe2/datasets/` |
+| `AOE2COMPANION_DIR` | `src/rts_predict/games/aoe2/datasets/aoe2companion/data/` |
+| `AOE2COMPANION_DB_FILE` | `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/db.duckdb` |
+| `AOESTATS_DIR` | `src/rts_predict/games/aoe2/datasets/aoestats/data/` |
+| `AOESTATS_DB_FILE` | `src/rts_predict/games/aoe2/datasets/aoestats/data/db/db.duckdb` |
+| `AOE2COMPANION_REPORTS_DIR` | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/` |
+| `AOE2COMPANION_ARTIFACTS_DIR` | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/` |
+| `AOESTATS_REPORTS_DIR` | `src/rts_predict/games/aoe2/datasets/aoestats/reports/` |
+| `AOESTATS_ARTIFACTS_DIR` | `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/` |
 
 ## Datasets
 
 | Dataset | ROADMAP | Phase status |
 |---------|---------|--------------|
-| aoe2companion | [ROADMAP.md](reports/aoe2companion/ROADMAP.md) | Phase 01 in progress |
-| aoestats | [ROADMAP.md](reports/aoestats/ROADMAP.md) | Phase 01 in progress |
+| aoe2companion | [ROADMAP.md](datasets/aoe2companion/reports/ROADMAP.md) | Phase 01 in progress |
+| aoestats | [ROADMAP.md](datasets/aoestats/reports/ROADMAP.md) | Phase 01 in progress |
 
 **aoe2companion** — daily API dumps from aoe2companion.com (matches, ratings,
 leaderboards, profiles).
@@ -56,19 +56,18 @@ files, directories must match).
 ## Reports layout
 
 ```
-reports/
-    aoe2companion/
-        PHASE_STATUS.yaml
-        PIPELINE_SECTION_STATUS.yaml
-        STEP_STATUS.yaml
-        ROADMAP.md
-        research_log.md
-        artifacts/          # machine-generated outputs (CSV, MD, PNG)
-    aoestats/
-        PHASE_STATUS.yaml
-        PIPELINE_SECTION_STATUS.yaml
-        STEP_STATUS.yaml
-        ROADMAP.md
-        research_log.md
-        artifacts/          # machine-generated outputs (CSV, MD, PNG)
+datasets/aoe2companion/reports/
+    PHASE_STATUS.yaml
+    PIPELINE_SECTION_STATUS.yaml
+    STEP_STATUS.yaml
+    ROADMAP.md
+    research_log.md
+    artifacts/          # machine-generated outputs (CSV, MD, PNG)
+datasets/aoestats/reports/
+    PHASE_STATUS.yaml
+    PIPELINE_SECTION_STATUS.yaml
+    STEP_STATUS.yaml
+    ROADMAP.md
+    research_log.md
+    artifacts/          # machine-generated outputs (CSV, MD, PNG)
 ```

@@ -1,6 +1,6 @@
 # Step 01_01_01 — File Inventory: aoestats
 
-**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoestats/raw`
+**Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/aoe2/datasets/aoestats/data/raw`
 
 **Total files:** 349
 
