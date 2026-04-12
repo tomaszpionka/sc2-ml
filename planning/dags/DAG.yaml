@@ -1,17 +1,17 @@
-dag_id: "dag_token_economy_followup"
+dag_id: "dag_package_restructure"
 plan_ref: "planning/current_plan.md"
-category: "C"
-branch: "chore/token-economy-indexing"
+category: "B"
+branch: "refactor/package-restructure"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Follow-up fixes for token economy PR"
+    name: "Package restructure"
 
     task_groups:
       - group_id: "TG01"
-        name: "Drift tests + aoe2 README + Strategy A/B"
+        name: "Safety + file moves"
         depends_on: []
         review_gate:
           agent: "reviewer"
@@ -19,54 +19,146 @@ jobs:
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Planning drift hook: main() integration tests + bug fixes"
-            spec_file: "planning/specs/spec_01_drift_tests.md"
+            name: "Update .gitignore + settings.json"
+            spec_file: "planning/specs/spec_01_gitignore.md"
             agent: "executor"
-            parallel_safe: true
+            parallel_safe: false
             file_scope:
-              - "scripts/hooks/check_planning_drift.py"
-              - "tests/infrastructure/test_check_planning_drift.py"
-            depends_on: []
-          - task_id: "T02"
-            name: "AoE2 README: add per-dataset report/artifact paths"
-            spec_file: "planning/specs/spec_02_aoe2_readme.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "src/rts_predict/aoe2/README.md"
-            depends_on: []
-          - task_id: "T03"
-            name: "Strategy A/B: formalize in TAXONOMY.md + update pointers"
-            spec_file: "planning/specs/spec_03_strategy_ab.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "docs/TAXONOMY.md"
-              - "docs/agents/AGENT_MANUAL.md"
-              - "planning/README.md"
+              - ".gitignore"
+              - ".claude/settings.json"
             depends_on: []
 
+          - task_id: "T02"
+            name: "git mv SC2 tracked files"
+            spec_file: "planning/specs/spec_02_mv_sc2.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "src/rts_predict/games/sc2/"
+            depends_on: ["T01"]
+
+          - task_id: "T03"
+            name: "git mv AoE2 tracked files"
+            spec_file: "planning/specs/spec_03_mv_aoe2.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "src/rts_predict/games/aoe2/"
+            depends_on: ["T01"]
+
+          - task_id: "T04"
+            name: "Filesystem mv raw data + verify"
+            spec_file: "planning/specs/spec_04_mv_data.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope: []
+            depends_on: ["T02", "T03"]
+
+          - task_id: "T05"
+            name: "Restructure test mirror"
+            spec_file: "planning/specs/spec_05_tests.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "tests/rts_predict/games/"
+            depends_on: ["T02", "T03"]
+
       - group_id: "TG02"
-        name: "CHANGELOG"
+        name: "Code updates"
         depends_on: ["TG01"]
+        review_gate:
+          agent: "reviewer"
+          scope: "diff"
+          on_blocker: "halt"
+        tasks:
+          - task_id: "T06"
+            name: "Rewrite config.py path constants"
+            spec_file: "planning/specs/spec_06_config.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "src/rts_predict/games/sc2/config.py"
+              - "src/rts_predict/games/aoe2/config.py"
+            depends_on: []
+
+          - task_id: "T07"
+            name: "Update imports + pyproject + notebooks + scripts"
+            spec_file: "planning/specs/spec_07_imports.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "pyproject.toml"
+              - "src/rts_predict/common/notebook_utils.py"
+              - "scripts/sc2egset/"
+              - "sandbox/"
+            depends_on: ["T06"]
+
+      - group_id: "TG03"
+        name: "Documentation + cleanup + CHANGELOG"
+        depends_on: ["TG02"]
         review_gate:
           agent: "reviewer"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T04"
-            name: "Update CHANGELOG for follow-up fixes"
-            spec_file: "planning/specs/spec_04_changelog.md"
+          - task_id: "T08"
+            name: "Update CLAUDE.md + agent defs + rules"
+            spec_file: "planning/specs/spec_08_claude_agents.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "CLAUDE.md"
+              - ".claude/"
+            depends_on: []
+
+          - task_id: "T09"
+            name: "Update docs + templates + reports"
+            spec_file: "planning/specs/spec_09_docs.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "docs/"
+              - "reports/"
+              - "thesis/"
+              - "LATER.md"
+            depends_on: []
+
+          - task_id: "T10"
+            name: "Clean up .gitignore + final verification"
+            spec_file: "planning/specs/spec_10_cleanup.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - ".gitignore"
+              - ".claude/settings.json"
+            depends_on: ["T08", "T09"]
+
+          - task_id: "T11"
+            name: "Update CHANGELOG"
+            spec_file: "planning/specs/spec_11_changelog.md"
             agent: "executor"
             parallel_safe: false
             file_scope:
               - "CHANGELOG.md"
-            depends_on: []
+            depends_on: ["T10"]
 
 final_review:
   agent: "reviewer-deep"
-  scope: "all"
+  plan_ref: "planning/current_plan.md"
+  spec_files:
+    - "planning/specs/spec_01_gitignore.md"
+    - "planning/specs/spec_02_mv_sc2.md"
+    - "planning/specs/spec_03_mv_aoe2.md"
+    - "planning/specs/spec_04_mv_data.md"
+    - "planning/specs/spec_05_tests.md"
+    - "planning/specs/spec_06_config.md"
+    - "planning/specs/spec_07_imports.md"
+    - "planning/specs/spec_08_claude_agents.md"
+    - "planning/specs/spec_09_docs.md"
+    - "planning/specs/spec_10_cleanup.md"
+    - "planning/specs/spec_11_changelog.md"
   base_ref: "master"
+  scope: "all"
   on_blocker: "halt"
 
 failure_policy:

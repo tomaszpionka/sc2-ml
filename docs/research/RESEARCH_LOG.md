@@ -31,15 +31,15 @@ Dataset-specific entries MUST NOT be written to the root log.
 ### Per-dataset logs
 
 ```
-src/rts_predict/<game>/reports/<dataset>/research_log.md
+src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md
 ```
 
 Each dataset has its own log. Examples:
 
 ```
-src/rts_predict/sc2/reports/sc2egset/research_log.md
-src/rts_predict/aoe2/reports/aoe2companion/research_log.md
-src/rts_predict/aoe2/reports/aoestats/research_log.md
+src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md
+src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md
+src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md
 ```
 
 All dataset-specific entries (sc2egset, aoe2companion, aoestats) are written
@@ -169,9 +169,9 @@ corresponding log entry.
 
 | Entry dataset tag | Write to |
 |---|---|
-| `sc2egset` | `src/rts_predict/sc2/reports/sc2egset/research_log.md` |
-| `aoe2companion` | `src/rts_predict/aoe2/reports/aoe2companion/research_log.md` |
-| `aoestats` | `src/rts_predict/aoe2/reports/aoestats/research_log.md` |
+| `sc2egset` | `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` |
+| `aoe2companion` | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md` |
+| `aoestats` | `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md` |
 | `CROSS` | `reports/research_log.md` (root index log) |
 
 Dataset-specific entries (any tag other than `CROSS`) MUST go into the
@@ -195,7 +195,7 @@ A research log entry for a step is required before that step can be marked
 `DONE` in:
 
 ```
-src/rts_predict/<game>/reports/<dataset>/STEP_STATUS.yaml
+src/rts_predict/games/<game>/datasets/<dataset>/reports/STEP_STATUS.yaml
 ```
 
 ### Scientific Invariants

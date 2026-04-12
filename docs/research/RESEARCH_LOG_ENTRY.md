@@ -11,9 +11,9 @@ Section requirements differ by category — see the per-section guidance below.
 
 | Dataset tag | Destination file |
 |---|---|
-| `sc2egset` | `src/rts_predict/sc2/reports/sc2egset/research_log.md` |
-| `aoe2companion` | `src/rts_predict/aoe2/reports/aoe2companion/research_log.md` |
-| `aoestats` | `src/rts_predict/aoe2/reports/aoestats/research_log.md` |
+| `sc2egset` | `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` |
+| `aoe2companion` | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md` |
+| `aoestats` | `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md` |
 | `CROSS` | `reports/research_log.md` (root index log — CROSS entries only) |
 
 Dataset-specific entries MUST NOT be written to `reports/research_log.md`.
@@ -59,7 +59,7 @@ motivations. Save the "why" for the next section.
 
 Example (Category A): "Computed ELO deltas for all 1-v-1 sc2egset replays
 using a rolling window of 50 prior games per player. Wrote results to
-`src/rts_predict/sc2/data/sc2egset/staging/elo_delta.parquet`."
+`src/rts_predict/games/sc2/datasets/sc2egset/data/staging/elo_delta.parquet`."
 
 Example (Category C): "Created `docs/templates/research_log_entry_template.yaml`
 and added a corresponding human-readable rendering at `docs/research/RESEARCH_LOG_ENTRY.md`."

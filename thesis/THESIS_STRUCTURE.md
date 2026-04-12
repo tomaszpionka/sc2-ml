@@ -21,7 +21,7 @@ document to understand **where** each piece of analysis will appear in the final
 thesis, ensuring that every phase artifact is produced with the right level of
 detail and narrative framing for its target section.
 
-Sections marked `[SC2]` are fed primarily by the SC2 roadmap phases (see `docs/PHASES.md` for the canonical 7-phase list; `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` is the sc2egset dataset execution plan).
+Sections marked `[SC2]` are fed primarily by the SC2 roadmap phases (see `docs/PHASES.md` for the canonical 7-phase list; `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md` is the sc2egset dataset execution plan).
 Sections marked `[AoE2]` will be fed by a future AoE2 roadmap (not yet written).
 Sections marked `[CROSS]` synthesise findings from both games.
 

@@ -28,7 +28,7 @@ its result) is contamination that makes results unreproducible in real inference
 ## Experiment Protocol
 
 1. **Hypothesis first** — before modifying any model or feature, document what you're changing and why it should help
-2. **Run and log** — after every experiment, log results in the game-specific reports directory (e.g. `src/rts_predict/sc2/reports/`) following the `XX_run.md` naming convention
+2. **Run and log** — after every experiment (Step), write a `research_log.md` entry in the active dataset's reports directory (`src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md`) following the template at `docs/templates/research_log_entry_template.yaml`
 3. **Compare baselines** — always compare against established results (~63-65% accuracy for classical models)
 4. **Temporal splits only** — no random shuffling. The correct split strategy is
 per-player leave-last-tournament-out (see the active dataset's ROADMAP.md, Phase 03 — Splitting & Baselines). The
@@ -49,7 +49,7 @@ not be used for any thesis experiment.
 - Updated every session that changes code
 
 ### research_log.md (thesis material)
-- **Per-dataset logs** live at `src/rts_predict/<game>/reports/<dataset>/research_log.md`.
+- **Per-dataset logs** live at `src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md`.
   Write all dataset-specific experiment entries there — never to the root `reports/research_log.md`.
 - **Root log** (`reports/research_log.md`) is for CROSS entries only: decisions that span multiple games or datasets (e.g. shared methodology choices, cross-game comparisons).
 - Reverse chronological, date-stamped entries

@@ -7,7 +7,7 @@
 # Run AFTER rezip_data.sh. Any directory that fails a guard is left untouched.
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TARGET="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
+TARGET="$REPO_ROOT/src/rts_predict/games/sc2/datasets/sc2egset/data/raw"
 
 if [[ ! -d "$TARGET" ]]; then
     echo "Error: $TARGET not found."

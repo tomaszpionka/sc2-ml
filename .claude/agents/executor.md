@@ -102,8 +102,8 @@ When dispatched without a spec file (manual step execution):
 
 Always (both paths):
 - For Category A or F work, also read the active dataset's `PHASE_STATUS.yaml`
-  (at `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`)
+  (at `src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml`)
 
 ## Data layout
-Paths defined in `src/rts_predict/<game>/config.py`. See `ARCHITECTURE.md`
+Paths defined in `src/rts_predict/games/<game>/config.py`. See `ARCHITECTURE.md`
 game package contract for the full directory structure.

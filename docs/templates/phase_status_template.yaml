@@ -1,7 +1,7 @@
 # Schema template for PHASE_STATUS.yaml files.
 #
 # One PHASE_STATUS.yaml exists per dataset, at:
-#   src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml
+#   src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml
 #
 # This file defines the authoritative schema for those status files.
 # See also: docs/templates/pipeline_section_status_template.yaml (upstream)
@@ -13,7 +13,7 @@
 
 # -- File identity --
 file_path:
-  value: "src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml"
+  value: "src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml"
   required: false
   # Inferred from directory structure; omitted in practice.
 
@@ -26,12 +26,12 @@ dataset:
   required: true
 
 dataset_roadmap:
-  value: "src/rts_predict/<game>/reports/<dataset>/ROADMAP.md"
+  value: "src/rts_predict/games/<game>/datasets/<dataset>/reports/ROADMAP.md"
   required: true
 
 # -- Derivation --
 derived_from:
-  value: "src/rts_predict/<game>/reports/<dataset>/PIPELINE_SECTION_STATUS.yaml"
+  value: "src/rts_predict/games/<game>/datasets/<dataset>/reports/PIPELINE_SECTION_STATUS.yaml"
   required: true
   # PHASE_STATUS is derived from PIPELINE_SECTION_STATUS, not directly from
   # STEP_STATUS. Full chain: STEP_STATUS -> PIPELINE_SECTION_STATUS -> this file.

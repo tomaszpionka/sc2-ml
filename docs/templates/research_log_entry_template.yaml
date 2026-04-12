@@ -6,7 +6,7 @@
 # -----------------
 # Dataset-specific entries (sc2egset, aoe2companion, aoestats) go into the
 # per-dataset log:
-#   src/rts_predict/<game>/reports/<dataset>/research_log.md
+#   src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md
 #
 # Cross-cutting entries (CROSS tag) go into the root index log:
 #   reports/research_log.md

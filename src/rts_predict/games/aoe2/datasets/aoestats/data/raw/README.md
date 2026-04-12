@@ -1,0 +1,190 @@
+---
+# raw_data_readme v2 -- conforms to docs/templates/raw_data_readme_template.yaml
+
+# -- Section A: Identity -------------------------------------------------------
+
+game: aoe2
+dataset: aoestats
+raw_directory: src/rts_predict/games/aoe2/datasets/aoestats/data/raw/
+
+# -- Section B: Provenance -----------------------------------------------------
+
+source_name: "aoestats.io weekly DB dumps"
+source_url: "https://aoestats.io"
+source_type: cdn_download
+data_creator: "aoestats.io (community statistics service)"
+sampling_mechanism: >
+  exhaustive -- all matches recorded by aoestats.io for the covered date range;
+  selection criteria used by the source service are not publicly documented.
+manifest_path: "src/rts_predict/games/aoe2/datasets/aoestats/data/api/db_dump_list.json"
+citation: aoestats_io
+license: "Unknown -- no license file in source; check with data_creator before redistribution"
+acquisition_date: "2026-04-06"
+acquisition_script: "src/rts_predict/games/aoe2/datasets/aoestats/data/acquisition.py"
+
+# -- Section C: Content and Layout ---------------------------------------------
+
+description: >
+  Weekly database dumps from aoestats.io. Contains paired weekly match and player
+  parquet files named by date range, plus a single overview JSON reference file.
+  172 non-zero match weeks downloaded (2022-08-28 to 2026-02-07).
+  16 zero-match weeks from the manifest were excluded during acquisition
+  (derived from manifest comparison; 188 total manifest entries - 172 downloaded = 16 excluded).
+file_format: "parquet, JSON"
+
+# File counts and sizes populated from 01_01_01 artifact (step F.1).
+# Dotfiles excluded: .gitkeep x3 (one per subdir).
+subdirectory_layout:
+  - directory: "matches/"
+    contents: "Weekly match parquet files named {start_date}_{end_date}_matches.parquet"
+    file_pattern: "{start_date}_{end_date}_matches.parquet"
+    file_count: 172
+    size_mb: 610.55
+  - directory: "players/"
+    contents: "Weekly player parquet files named {start_date}_{end_date}_players.parquet"
+    file_pattern: "{start_date}_{end_date}_players.parquet"
+    file_count: 171
+    size_mb: 3162.86
+  - directory: "overview/"
+    contents: "Overview JSON reference file with lookup tables (civilizations, maps, game modes)"
+    file_pattern: "overview.json"
+    file_count: 1
+    size_mb: 0.02
+
+total_files: 346  # excludes 3 dotfiles (.gitkeep x3)
+total_size_mb: 3773.6
+
+# -- Section D: Temporal Coverage ----------------------------------------------
+
+temporal_grain: weekly
+# Dates from 01_01_01 artifact date_analysis.matches
+date_range_start: "2022-08-28"
+date_range_end: "2026-02-07"
+
+# Gaps identified in 01_01_01 artifact date_analysis. Matches and players share
+# the same first three gaps; players has one additional gap.
+known_gaps:
+  - gap_start: "2024-07-20"
+    gap_end: "2024-09-01"
+    reason: "43-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
+  - gap_start: "2024-09-28"
+    gap_end: "2024-10-06"
+    reason: "8-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
+  - gap_start: "2025-03-22"
+    gap_end: "2025-03-30"
+    reason: "8-day gap in weekly dumps; present in both matches and players (01_01_01 artifact)"
+  - gap_start: "2025-11-15"
+    gap_end: "2025-11-23"
+    reason: "8-day gap in players dumps only; matches unaffected (01_01_01 artifact date_analysis.players)"
+
+gap_analysis_status: complete
+coverage_notes: >
+  Per-directory file counts: matches/=172, players/=171 (each excludes 1 .gitkeep).
+  The 1-file count mismatch between matches and players is reflected in the
+  fourth gap entry above (players has one additional gap week).
+  16 zero-match weeks from the manifest were excluded during acquisition
+  (see acquisition_filters below).
+
+# -- Section E: Acquisition Filtering ------------------------------------------
+
+acquisition_filters:
+  - rule: "Manifest entries with num_matches == 0 are skipped during download"
+    justification: >
+      Weeks with zero matches contain no usable data. Downloading them would
+      consume storage without adding information. The filter is implemented in
+      acquisition.py (filter_download_targets function).
+    excluded_count: 16
+    excluded_count_source: >
+      manifest comparison: 188 total manifest entries minus 172 downloaded
+      match files = 16 zero-match weeks excluded.
+
+# -- Section F: Verification ---------------------------------------------------
+
+checksum_status: full
+checksum_source: "db_dump_list.json manifest -- match_checksum and player_checksum fields (MD5)"
+checksum_verified: true
+# MD5 checksums are verified during download (acquisition.py download_file function
+# raises ValueError on checksum mismatch) and checked for idempotent re-runs
+# (acquisition.py is_already_downloaded function computes MD5 before skipping).
+verification_date: "2026-04-06"
+
+# -- Section G: Immutability and Artifact Link ---------------------------------
+
+immutability:
+  status: true
+  enforcement_mechanism: none_documented
+
+inventory_artifact: "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+
+# -- Section H: Known Limitations ----------------------------------------------
+
+known_biases: >
+  The selection criteria used by aoestats.io to include matches in its database
+  are not publicly documented. It is unknown whether all ranked or casual matches
+  are captured, or whether filtering is applied at the source. This limits claims
+  about population representativeness.
+
+representativeness_notes: >
+  Coverage is limited to matches recorded by the aoestats.io service. The
+  service audience and any server-side filters applied before publication are
+  not known, making it difficult to assess which parts of the AoE2 player
+  population are under- or over-represented.
+---
+
+# aoestats -- Raw Data
+
+Weekly database dumps from aoestats.io. Files downloaded on 2026-04-06 from
+[https://aoestats.io](https://aoestats.io).
+This directory holds the raw data layer and must never be modified.
+
+**License:** Unknown -- no license file in source
+**Acquisition date:** 2026-04-06
+**Acquisition script:** `src/rts_predict/games/aoe2/datasets/aoestats/data/acquisition.py`
+**Manifest:** `src/rts_predict/games/aoe2/datasets/aoestats/data/api/db_dump_list.json`
+
+> **File counts and sizes:** Populated from 01_01_01 artifact. Dotfiles excluded
+> (.gitkeep x3, one per subdir). Counts reflect data files only.
+
+## Subdirectory Layout
+
+| Directory | Contents | Pattern | File count | Size (MB) |
+|-----------|----------|---------|-----------|-----------|
+| `matches/` | Weekly match parquet files | `{start}_{end}_matches.parquet` | 172 | 610.6 |
+| `players/` | Weekly player parquet files | `{start}_{end}_players.parquet` | 171 | 3,162.9 |
+| `overview/` | Overview JSON reference | `overview.json` | 1 | 0.02 |
+
+**Total files:** 346 (excludes 3 dotfiles: .gitkeep x3)
+**Total size:** 3,773.6 MB (3.7 GB)
+
+## Temporal Coverage
+
+- **Grain:** weekly
+- **Date range:** 2022-08-28 to 2026-02-07 (from 01_01_01 artifact)
+- **Gap analysis status:** complete
+- **Known gaps:**
+  - 2024-07-20 to 2024-09-01 (43 days, both matches and players)
+  - 2024-09-28 to 2024-10-06 (8 days, both matches and players)
+  - 2025-03-22 to 2025-03-30 (8 days, both matches and players)
+  - 2025-11-15 to 2025-11-23 (8 days, players only)
+
+## Acquisition Filtering
+
+16 zero-match weeks from the manifest were excluded during download.
+These correspond to manifest entries with `num_matches == 0`. The manifest
+contained 188 total entries; 172 non-zero entries were downloaded.
+
+## Verification
+
+MD5 checksums are available in the manifest (`match_checksum` and
+`player_checksum` fields) and were verified during download. The acquisition
+script raises an error on checksum mismatch and checks MD5 for idempotent
+re-downloads.
+
+## Known Limitations
+
+- Source selection criteria not documented; representativeness unknown
+- players/ has one fewer file than matches/ (172 vs 171: one additional gap week in players)
+
+## Inventory Artifact
+
+`src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json`

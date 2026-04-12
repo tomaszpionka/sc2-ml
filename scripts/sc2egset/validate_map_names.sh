@@ -5,7 +5,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-BASE_DIR="$REPO_ROOT/src/rts_predict/sc2/data/sc2egset/raw"
+BASE_DIR="$REPO_ROOT/src/rts_predict/games/sc2/datasets/sc2egset/data/raw"
 TARGET_NAME="map_foreign_to_english_mapping.json"
 
 tmp_file="$(mktemp)"

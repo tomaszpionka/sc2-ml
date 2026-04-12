@@ -157,7 +157,7 @@ The sandbox and artifacts trees have the same Phase and Pipeline Section
 directory structure. When a notebook at
 `sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_source_inventory.py`
 runs, its artifacts land under
-`src/rts_predict/sc2/reports/sc2egset/artifacts/01_exploration/01_acquisition/`.
+`src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/`.
 The mirror is enforced by the notebook helpers in `rts_predict.common`, not
 by convention alone.
 

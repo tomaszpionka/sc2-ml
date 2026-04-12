@@ -13,8 +13,9 @@ truth for vocabulary used throughout this repository.
 rts-outcome-prediction/
 ├── src/rts_predict/
 │   ├── __init__.py          # Docstring only — no __version__
-│   ├── sc2/                 # StarCraft II — complete game package
-│   ├── aoe2/                # Age of Empires II — placeholder, mirrors sc2/ when populated
+│   ├── games/
+│   │   ├── sc2/             # StarCraft II — complete game package
+│   │   └── aoe2/            # Age of Empires II — placeholder, mirrors sc2/ when populated
 │   └── common/              # Shared evaluation code — see common/CONTRACT.md
 ├── sandbox/                 # Jupyter notebook exploration — see sandbox/README.md
 │   ├── sc2/sc2egset/        # SC2EGSet notebooks (all dataset-scoped Phases)
@@ -33,30 +34,27 @@ Phase work code execution happens in `sandbox/<game>/<dataset>/` notebooks — n
 
 ## Game package contract
 
-Every game package (`sc2/`, `aoe2/`, ...) must contain:
+Every game package (`games/sc2/`, `games/aoe2/`, ...) must contain:
 
 | Item | Purpose | Required? |
 |------|---------|-----------|
 | `__init__.py` | Docstring identifying the game. NO `__version__`. | Yes |
 | `cli.py` | CLI entry point registered in `pyproject.toml` | Yes |
-| `config.py` | `GAME_DIR`, `ROOT_DIR`, `REPORTS_DIR`, DB paths, constants | Yes |
-| `reports/<dataset>/STEP_STATUS.yaml` | Machine-readable step progress (dataset-scoped) | Per dataset |
-| `reports/<dataset>/PIPELINE_SECTION_STATUS.yaml` | Machine-readable pipeline section progress (dataset-scoped) | Per dataset |
-| `reports/<dataset>/PHASE_STATUS.yaml` | Machine-readable phase progress (dataset-scoped) | Per dataset |
-| `data/` | Processing module (Phase 01 minimal subset) | Yes |
-| `data/<dataset>/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
-| `data/<dataset>/staging/` | Intermediate artifacts by type (gitignored, README tracked) | When extraction exists |
-| `data/<dataset>/db/` | DuckDB database file (gitignored, `.gitkeep` tracked) | Yes |
-| `data/<dataset>/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
+| `config.py` | `GAME_DIR`, `ROOT_DIR`, `DATASETS_REPORTS`, DB paths, constants | Yes |
+| `datasets/<dataset>/reports/STEP_STATUS.yaml` | Machine-readable step progress (dataset-scoped) | Per dataset |
+| `datasets/<dataset>/reports/PIPELINE_SECTION_STATUS.yaml` | Machine-readable pipeline section progress (dataset-scoped) | Per dataset |
+| `datasets/<dataset>/reports/PHASE_STATUS.yaml` | Machine-readable phase progress (dataset-scoped) | Per dataset |
+| `datasets/<dataset>/data/raw/` | Raw source data (gitignored contents, README tracked) | Yes |
+| `datasets/<dataset>/data/db/` | DuckDB database file (gitignored, `.gitkeep` tracked) | Yes |
+| `datasets/<dataset>/data/tmp/` | DuckDB spill-to-disk directory (gitignored, `.gitkeep` tracked) | Yes |
 | — | Tests live in mirrored `tests/rts_predict/` tree, not inside game packages | — |
-| `reports/` | Phase artifacts (tracked in git) | Yes |
-| `reports/ROADMAP.md` | Game-level navigation (lists datasets, points to docs/PHASES.md) | Yes |
-| `reports/<dataset>/ROADMAP.md` | Dataset-level execution plan (all Phases — see docs/PHASES.md) | Per dataset |
-| `reports/<dataset>/` | Named documentation files (`ROADMAP.md`, `INVARIANTS.md`, etc.) | Per dataset |
-| `reports/<dataset>/artifacts/` | Machine-generated step outputs (`XX_XX_*`, any extension) | Per dataset |
+| `ROADMAP.md` | Game-level navigation (lists datasets, points to docs/PHASES.md) | Yes |
+| `datasets/<dataset>/reports/ROADMAP.md` | Dataset-level execution plan (all Phases — see docs/PHASES.md) | Per dataset |
+| `datasets/<dataset>/reports/` | Named documentation files (`ROADMAP.md`, `INVARIANTS.md`, etc.) | Per dataset |
+| `datasets/<dataset>/reports/artifacts/` | Machine-generated step outputs (`XX_XX_*`, any extension) | Per dataset |
 | `models/` | Serialised model artifacts (gitignored) | When modelling begins |
 | `logs/` | Pipeline logs (gitignored) | When pipeline exists |
-| — | CLI tests live in `tests/rts_predict/<game>/test_cli.py` | — |
+| — | CLI tests live in `tests/rts_predict/games/<game>/test_cli.py` | — |
 
 > **Test location:** All tests live under the root `tests/` directory in a tree
 > that exactly mirrors `src/rts_predict/`. See `.claude/rules/python-code.md` for
@@ -64,12 +62,12 @@ Every game package (`sc2/`, `aoe2/`, ...) must contain:
 
 ## Adding a new game
 
-1. Create `src/rts_predict/<game>/` mirroring the `sc2/` structure above
-2. Create `reports/<dataset>/PHASE_STATUS.yaml` per dataset (see schema in docs/PHASES.md)
-3. Create `reports/ROADMAP.md` (game-level placeholder)
-4. Create `reports/<dataset>/ROADMAP.md` per dataset
+1. Create `src/rts_predict/games/<game>/` mirroring the `games/sc2/` structure above
+2. Create `datasets/<dataset>/reports/PHASE_STATUS.yaml` per dataset (see schema in docs/PHASES.md)
+3. Create `ROADMAP.md` (game-level placeholder)
+4. Create `datasets/<dataset>/reports/ROADMAP.md` per dataset
 5. Register the CLI entry point in `pyproject.toml`
-6. Update `.gitignore` patterns (already use `rts_predict/*/` wildcards)
+6. Update `.gitignore` patterns (already use `datasets/*/data/` wildcards)
 7. Do NOT create shared abstractions until the second game's implementation
    reveals genuine code overlap (see `common/CONTRACT.md`)
 
@@ -98,12 +96,12 @@ the lower-precedence file is edited to match, never the reverse.
    `docs/templates/step_template.yaml` for the Step definition schema used
    in dataset ROADMAPs.
 
-5. **`src/rts_predict/<game>/reports/ROADMAP.md`** — game-level roadmap.
+5. **`src/rts_predict/games/<game>/ROADMAP.md`** — game-level roadmap.
    Navigation document listing datasets and pointing to docs/PHASES.md.
    Does not own phase numbering (that is tier 4, docs/PHASES.md). Does
    not define Steps.
 
-6. **`src/rts_predict/<game>/reports/<dataset>/ROADMAP.md`** — dataset-level
+6. **`src/rts_predict/games/<game>/datasets/<dataset>/reports/ROADMAP.md`** — dataset-level
    roadmap. Owns Pipeline Section and Step numbering within the dataset's
    in-scope Phases. Cannot invent Phases; can only decompose Phases into
    Pipeline Sections and Steps per `docs/TAXONOMY.md`.
@@ -145,7 +143,7 @@ file that contradicts a higher-precedence file is a bug and gets reverted
 or rewritten, not ratified.
 
 **Out of scope for this hierarchy.** Per-dataset empirical findings (e.g.,
-`src/rts_predict/<game>/reports/<dataset>/INVARIANTS.md`) are not listed
+`src/rts_predict/games/<game>/datasets/<dataset>/reports/INVARIANTS.md`) are not listed
 above because the convention governing them has not yet been formalised.
 They will be added to this hierarchy in a future PR alongside the convention
 section.
@@ -156,7 +154,7 @@ section.
 |------|----------|---------|
 | Project taxonomy | `docs/TAXONOMY.md` | Single source of truth for all project terminology (see file for full list) |
 | Methodology manuals | `docs/INDEX.md` → `docs/ml_experiment_lifecycle/` | ML experiment lifecycle reference (01–06) |
-| Research log | `reports/research_log.md` (index + `[CROSS]` entries); `src/rts_predict/<game>/reports/<dataset>/research_log.md` (per-dataset findings) | Chronological narrative: index holds cross-cutting entries, per-dataset files hold game/dataset-specific findings |
+| Research log | `reports/research_log.md` (index + `[CROSS]` entries); `src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md` (per-dataset findings) | Chronological narrative: index holds cross-cutting entries, per-dataset files hold game/dataset-specific findings |
 | Thesis | `thesis/` | Chapters, figures, tables, bibliography |
 | Review queue | `thesis/chapters/REVIEW_QUEUE.md` | Pass 1→2 handoff for thesis writing |
 | Scientific invariants | `.claude/scientific-invariants.md` | Methodology constraints (apply to all games) |

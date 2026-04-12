@@ -19,7 +19,7 @@ paths:
 - No bare `except:` — always catch specific exceptions
 - Constants in `config.py` or module-level UPPER_SNAKE_CASE — no magic numbers
 - Use `logging.getLogger(__name__)`, not `print()`
-- Imports: `from rts_predict.sc2.* import ...`
+- Imports: `from rts_predict.games.<game>.* import ...`
 
 ## SQL in Python
 - Named module-level constants with `_QUERY` suffix
@@ -32,7 +32,7 @@ paths:
 - Infrastructure tests (MPS, DuckDB connectivity): `tests/infrastructure/`
 - Integration tests (cross-module): `tests/integration/`
 - Root `tests/conftest.py` for cross-cutting fixtures
-- Per-subtree `conftest.py` for scoped fixtures (e.g., `tests/rts_predict/sc2/data/conftest.py`)
+- Per-subtree `conftest.py` for scoped fixtures (e.g., `tests/rts_predict/games/<game>/datasets/<dataset>/data/conftest.py`)
 - Test with: empty DataFrames, single rows, NaN handling, boundary conditions
 - NEVER train models on real data inside tests — use synthetic fixtures
 - Test temporal leakage: for sample target games, assert no feature uses data >= T
@@ -44,18 +44,23 @@ tests/
 ├── conftest.py
 ├── infrastructure/        # MPS, connectivity, mirror-drift checker
 └── rts_predict/           # Mirrors src/rts_predict/ exactly
-    ├── sc2/
-    │   ├── test_cli.py
-    │   └── data/
-    │       ├── conftest.py
-    │       └── test_*.py
-    ├── aoe2/
-    │   ├── test_cli.py
-    │   └── data/
-    │       ├── aoe2companion/
-    │       │   └── test_*.py
-    │       └── aoestats/
-    │           └── test_*.py
+    ├── games/
+    │   ├── sc2/
+    │   │   ├── test_cli.py
+    │   │   └── datasets/
+    │   │       └── sc2egset/
+    │   │           └── data/
+    │   │               ├── conftest.py
+    │   │               └── test_*.py
+    │   └── aoe2/
+    │       ├── test_cli.py
+    │       └── datasets/
+    │           ├── aoe2companion/
+    │           │   └── data/
+    │           │       └── test_*.py
+    │           └── aoestats/
+    │               └── data/
+    │                   └── test_*.py
     └── common/
         └── test_*.py
 ```
