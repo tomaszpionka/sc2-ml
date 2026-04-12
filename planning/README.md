@@ -12,7 +12,7 @@ Task), see [`docs/TAXONOMY.md`](../docs/TAXONOMY.md).
 | `INDEX.md` | Permanent (reset after merge) | Agent routing table — which agent reads what |
 | `README.md` | Permanent | This file |
 | `current_plan.md` | Ephemeral | The authoritative Spec for the active PR |
-| `current_plan.critique.md` | Ephemeral | Adversarial critique produced by reviewer-adversarial (Category A/F mandatory; B/D conditional); not produced by the planner |
+| `current_plan.critique.md` | Ephemeral | Adversarial critique produced by reviewer-adversarial (Category A/B/F mandatory; D conditional on file_scope touching game src); not produced by the planner |
 | `specs/README.md` | Permanent | Parallel execution guide (Strategy A/B) |
 | `specs/spec_*.md` | Ephemeral | Individual task specs, one per DAG task |
 | `dags/README.md` | Permanent | DAG format documentation |

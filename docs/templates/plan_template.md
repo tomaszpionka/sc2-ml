@@ -41,6 +41,8 @@ structural change is being made (Category B-E). Must be a single logical unit.>
 
 ## Problem Statement
 
+<!-- Required for category A and F. Recommended for category B and D. Omit for category C and E. -->
+
 <What is being solved and why now. 1–3 paragraphs of prose.
 Describe the current state, the gap, and why this work is needed.
 No solution proposed here — that belongs in Execution Steps.>
