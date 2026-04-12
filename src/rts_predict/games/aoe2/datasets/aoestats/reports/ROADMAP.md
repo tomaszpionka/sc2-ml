@@ -36,16 +36,9 @@ Step 01_01_01 (file inventory).
 
 | Subdirectory | Files | Size | Notes |
 |---|---|---|---|
-| `matches/` | 172 `.parquet` | 611 MB | Weekly, 2022-08-28 to 2026-02-07, 3 gaps (43, 8, 8 days) |
-| `players/` | 171 `.parquet` | 3,163 MB | Weekly, same range; 1 known missing file (see below) |
-| `overview/` | 1 `.json` | <1 MB | Single-file snapshot |
 
-**Total:** 349 files in subdirectories, ~3.8 GB.
 
-**WARNING — known file gap:** `2025-11-16_2025-11-22_players.parquet` is
-missing from disk. This is a documented download failure (status='failed' in
-manifest), not silent corruption. All Steps that depend on players data MUST
-acknowledge this gap.
+**Total:**
 
 **Raw data is immutable. The weekly dump download will not be repeated.**
 Acquisition provenance is recorded in

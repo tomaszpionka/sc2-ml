@@ -2,8 +2,6 @@
 
 Permanent provenance record for the aoe2companion raw data. This file is
 independent of the phase system and is not archived when phases are reset.
-For full details, see `archive/` (original INVARIANTS.md, download report,
-and Phase 0 artifacts).
 
 ---
 
@@ -16,12 +14,8 @@ and Phase 0 artifacts).
 
 ## File inventory
 
-- **Total files:** 4,147
-  - 2,073 match parquets
-  - 2,072 rating CSVs
-  - 1 leaderboard parquet
-  - 1 profile parquet
-- **Final on-disk size:** ~9.3 GB
+- **Total files:** 
+- **Final on-disk size:**
 
 ## Download failures and resolution
 
@@ -34,7 +28,3 @@ and Phase 0 artifacts).
 - **Reason:** manifest lacks per-file row counts; limited to file-count match
 
 ## Provenance rule
-
-Every raw table has a `filename` column populated by `filename = true` on the
-source read. Removing or aliasing this column in any downstream view is
-forbidden.

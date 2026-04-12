@@ -16,9 +16,7 @@ artifacts).
 
 ## File inventory
 
-- **Weekly entries:** 188 (2022-08-28 to 2026-04-04)
-- **Non-zero weeks:** 172 (16 zero-match weeks skipped)
-- **Total files:** 344 (172 match parquets + 172 player parquets, minus 1 known failure = 343 on disk)
+- **Total files:** 
 
 ## Known download failure
 
@@ -31,7 +29,3 @@ artifacts).
 - **Reason:** manifest lacks per-file row counts; limited to file-count match
 
 ## Provenance rule
-
-Every raw table has a `filename` column populated by `filename = true` on the
-source read. Removing or aliasing this column in any downstream view is
-forbidden.

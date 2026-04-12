@@ -36,12 +36,9 @@ Step 01_01_01 (file inventory).
 
 | Subdirectory | Files | Size | Notes |
 |---|---|---|---|
-| `matches/` | 2,073 `.parquet` | 6,622 MB | Daily, 2020-08-01 to 2026-04-04, no gaps |
-| `ratings/` | 2,072 `.csv` | 2,520 MB | Daily, 2020-08-01 to 2026-04-04, 1 gap (2 days, 2025-07-10–2025-07-12) |
-| `leaderboards/` | 1 `.parquet` | 83 MB | Single-file snapshot |
-| `profiles/` | 1 `.parquet` | 162 MB | Single-file snapshot |
+|   |   |   |   |
 
-**Total:** 4,154 files, ~9.3 GB.
+**Total:**
 
 **Raw data is immutable. The API download will not be repeated.**
 Acquisition provenance is recorded in
