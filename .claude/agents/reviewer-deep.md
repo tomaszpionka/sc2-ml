@@ -47,7 +47,7 @@ Determine the work category from the dispatch prompt's context header
    or `.claude/rules/`.
 
 **Category A, D (data/feature code touched), F only — 6 additional reads:**
-6. `.claude/scientific-invariants.md` — the 8 universal invariants.
+6. `.claude/scientific-invariants.md` — the 9 universal invariants.
 7. `docs/INDEX.md` — authoritative methodology source.
 8. The active dataset's `PHASE_STATUS.yaml` (at
    `src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml`).
@@ -194,7 +194,7 @@ resolved from the dataset's `PHASE_STATUS.yaml`.
 For every change that touches data, features, models, evaluation, or
 any artifact that will be cited in the thesis:
 
-1. **Invariant trace.** For each of the 8 invariants in
+1. **Invariant trace.** For each of the 9 invariants in
    `.claude/scientific-invariants.md`, state: APPLIES / N/A. For every
    APPLIES, cite file:line evidence that the change respects it. "Looks
    fine" is not evidence.

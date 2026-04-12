@@ -30,7 +30,7 @@ Empires II."
 
 ## Your role
 - Plan Phase work using the methodology defined in docs/INDEX.md, scoped to the active dataset indicated by PHASE_STATUS.yaml.
-- Evaluate scientific methodology against the 8 invariants
+- Evaluate scientific methodology against the 9 invariants
 - Design data exploration, cleaning, feature engineering, evaluation strategies
 - Ensure temporal discipline: no data from game T or later for predicting T
 - Maintain cross-game comparability (SC2 ↔ AoE2)

@@ -125,6 +125,44 @@ Violating them produces results that cannot be defended at examination.
    See docs/ml_experiment_lifecycle/06_CROSS_DOMAIN_TRANSFER_MANUAL.md for
    the authoritative cross-domain methodology.
 
+### Research pipeline discipline
+
+9. **A step's conclusions must derive only from its own artifacts and all
+   prior steps' artifacts.** Step XX_YY_ZZ may reference:
+   - Artifacts it produces during its own execution
+   - Artifacts produced by any completed predecessor step (any step with a
+     lower number whose artifacts exist on disk)
+   - External source documentation (paper citations, acquisition provenance,
+     Zenodo metadata)
+
+   It must NOT reference:
+   - Knowledge that would be produced by a future step
+   - Implicit domain knowledge not grounded in an existing artifact
+   - Content-level understanding of data not yet established by a completed
+     step's artifact
+
+   This applies to all downstream documents that inherit from a step's
+   findings: research log entries, ROADMAP source data summaries, and
+   raw/README.md files. If a document states a fact derived from the data,
+   the artifact that established that fact must already exist on disk.
+
+   **External source documentation** means information traceable to a
+   specific sentence in a cited publication, API documentation page, or
+   dataset metadata record. Use exact source titles and descriptions
+   (e.g., "SC2EGSet: StarCraft II Esport Replay and Game-state Dataset")
+   rather than paraphrased interpretive labels (e.g., "tournament replay
+   files"). Exact citations are deferred to thesis chapters; in pipeline
+   documents, use the source's own title verbatim.
+
+   **Example:** Step 01_01_01 (file inventory) sees filenames and sizes. It
+   cannot call files "daily match dumps" because "daily" and "match" are
+   content-level conclusions -- "daily" requires confirming filename-date
+   patterns against actual content cadence (01_01_02+), and "match" requires
+   reading file schemas (01_01_02). It can report: "2,073 `.parquet` files
+   in `matches/` named `match-{YYYY-MM-DD}.parquet`."
+
+   See Invariant #3 for the analogous rule applied to feature computation.
+
 ---
 
 ## Per-dataset findings

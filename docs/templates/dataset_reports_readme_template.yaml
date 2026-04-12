@@ -1,0 +1,65 @@
+# Dataset Reports README Template (v1)
+#
+# Canonical schema for reports/README.md files across all datasets:
+#   src/rts_predict/games/<game>/datasets/<dataset>/reports/README.md
+#
+# Purpose: permanent provenance record for the dataset. Independent of
+# the phase system -- not archived when phases are reset.
+#
+# Invariant #9 compliance: each field is annotated with the step or
+# source that populates it. A field MUST NOT be populated until that
+# step's artifacts exist on disk.
+#
+# Authoritative sources:
+#   Scientific Invariants  .claude/scientific-invariants.md
+#   Raw Data Template      docs/templates/raw_data_readme_template.yaml
+#   Phase definitions      docs/PHASES.md
+
+# -- Section A: Identity -----------------------------------------------
+
+game:          # <sc2 | aoe2>
+dataset:       # <dataset_name>
+reports_dir:   # <repo-relative path to this reports/ directory>
+
+# -- Section B: Acquisition provenance ----------------------------------
+# Source: acquisition script execution (pre-Phase 01)
+
+acquisition:
+  date:         # <YYYY-MM-DD>
+  script:       # <CLI command or "manual download">
+  branch:       # <branch name where acquisition was committed>
+  source:       # <source name>
+  source_url:   # <URL>
+  method:       # <cdn_download | api_download | manual_download>
+
+# -- Section C: File inventory summary ----------------------------------
+# Source: Step 01_01_01 artifact
+# Invariant #9: MUST NOT contain interpretive labels (daily, weekly,
+# snapshot, replay, match, etc.). Report file counts, sizes, extensions,
+# and filename patterns only.
+
+file_inventory:
+  total_files:    # <integer from 01_01_01 artifact, excluding dotfiles>
+  total_size_mb:  # <number from 01_01_01 artifact>
+  subdirectories: # <count of subdirectories>
+  artifact_ref:   # <repo-relative path to 01_01_01_file_inventory.json>
+
+# -- Section D: Known issues --------------------------------------------
+# Source: acquisition script logs or 01_01_01 artifact
+# Report filesystem-level facts only. Do NOT interpret cause or meaning.
+# Example: "171 files in players/ vs 172 in matches/" (fact)
+# Not: "documented download failure" (provenance claim beyond filesystem)
+
+known_issues: []
+
+# -- Section E: Reconciliation ------------------------------------------
+# Source: acquisition script verification
+
+reconciliation:
+  strength:   # <FULL | DEGRADED | NONE>
+  reason:     # <one-line explanation>
+
+# -- Section F: Provenance rule -----------------------------------------
+
+provenance_rule: >
+  Raw data is immutable. The acquisition will not be repeated.

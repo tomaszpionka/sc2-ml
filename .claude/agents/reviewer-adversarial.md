@@ -39,7 +39,7 @@ You MUST read these files before producing any output. This list is
 ordered by priority — if you run out of context, you must have read
 at least items 1–5.
 
-1. `.claude/scientific-invariants.md` — the 8 universal methodology invariants.
+1. `.claude/scientific-invariants.md` — the 9 universal methodology invariants.
    Every review maps findings to these. "Not applicable" is acceptable;
    "not checked" is not.
 2. `docs/INDEX.md` → the methodology manual for the active Phase.
@@ -218,6 +218,7 @@ Invariant compliance:
   #6 (reproducibility):     RESPECTED / VIOLATED / N/A — <evidence>
   #7 (no magic numbers):    RESPECTED / VIOLATED / N/A — <evidence>
   #8 (cross-game protocol): RESPECTED / VIOLATED / N/A — <evidence>
+  #9 (research pipeline discipline): RESPECTED / VIOLATED / N/A — <evidence>
 
 Lens assessments:
   Temporal discipline: <SOUND / AT RISK / FLAWED> — <reasoning>

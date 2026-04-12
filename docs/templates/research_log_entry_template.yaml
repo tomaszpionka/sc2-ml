@@ -41,6 +41,20 @@ dataset:
   format: "**Dataset:** sc2egset | aoe2companion | aoestats | CROSS"
   required: true
 
+step_scope:
+  format: "**Step scope:** filesystem | content | query | model"
+  required: true
+  condition: "Required for Category A entries."
+  notes: >
+    Per Invariant #9, a step's conclusions must derive only from its own
+    artifacts and all prior steps' artifacts. The step_scope field declares
+    what level of observation this step operates at, so reviewers can
+    verify that findings do not exceed scope. Values:
+    - filesystem: file tree, counts, sizes, filename patterns (01_01_01)
+    - content: file headers, schemas, sample rows (01_01_02)
+    - query: DuckDB queries on ingested data (01_01_03+)
+    - model: feature engineering, model training (Phase 02+)
+
 artifacts_produced:
   format: "**Artifacts produced:** list of artifact paths (repo-relative)"
   required: false
@@ -76,6 +90,7 @@ sections:
     description: "Bullet list of factual observations. Numbers with units. No interpretation."
     required: true
     condition: "Required for Category A. Optional for Category C."
+    notes: "Per Invariant #9, findings must not exceed the declared step_scope."
 
   interpretation:
     heading: "### What this means"
