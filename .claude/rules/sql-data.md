@@ -1,6 +1,6 @@
 ---
 paths:
-  - "src/rts_predict/*/data/**/*.py"
+  - "src/rts_predict/games/*/datasets/*/data/**/*.py"
 ---
 
 # SQL & Data Pipeline Constraints

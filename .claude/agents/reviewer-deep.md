@@ -42,7 +42,7 @@ review.
    Non-negotiable methodology rules.
 4. `docs/INDEX.md` — authoritative methodology source.
 5. The active dataset's `PHASE_STATUS.yaml` (at
-   `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`) — tells
+   `src/rts_predict/games/<game>/datasets/<dataset>/reports/PHASE_STATUS.yaml`) — tells
    you which dataset and phase the change belongs to. Resolve the active
    dataset's ROADMAP.md path from this.
 6. The active dataset's `ROADMAP.md` and, if it exists, its
@@ -90,7 +90,7 @@ Extra commits sneaking in unrelated changes is a process smell.
 
 ## Data layout
 
-All data for a game package lives under `src/rts_predict/<game>/data/<dataset>/`:
+All data for a game package lives under `src/rts_predict/games/<game>/datasets/<dataset>/data/`:
 - `raw/` — immutable source files. NEVER modified. Any diff touching
   this path is an automatic blocker.
 - `staging/` — reproducible intermediate artifacts (Parquet, etc.).
@@ -221,7 +221,7 @@ any artifact that will be cited in the thesis:
 ## Mandatory checks — thesis chapters
 
 1. Every numerical claim traces to an artifact in
-   `src/rts_predict/<game>/reports/`.
+   `src/rts_predict/games/<game>/datasets/<dataset>/reports/`.
 2. Every threshold has empirical derivation or `references.bib` citation.
 3. Claim-evidence alignment: hedged language for suggestive findings,
    confident only for replicated effects.

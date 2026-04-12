@@ -10,7 +10,7 @@ raw_directory: src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw/
 # -- Section B: Provenance -----------------------------------------------------
 
 source_name: "aoe2companion CDN dump"
-source_url: "https://dump.cdn.aoe2companion.com/"
+source_url: "https://www.aoe2companion.com/more/api"
 source_type: cdn_download
 data_creator: "aoe2companion (community-run API service)"
 sampling_mechanism: >
