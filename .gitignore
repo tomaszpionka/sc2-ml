@@ -217,11 +217,13 @@ tmp/
 **/data/samples/raw/*
 !**/data/samples/raw/
 !**/data/samples/raw/.gitkeep
+**/datasets/*/data/samples/raw/*
 
 # Game-scoped artifacts (per-game models, logs, manifests)
 src/rts_predict/*/models/*.joblib
 src/rts_predict/*/models/*.pt
 src/rts_predict/*/logs/
+src/rts_predict/games/*/logs/
 src/rts_predict/*/in_game_processing_manifest.json
 
 # DuckDB temp files
@@ -264,5 +266,25 @@ src/rts_predict/*/in_game_processing_manifest.json
 
 # Notebook sandbox — checkpoint artifacts
 sandbox/**/.ipynb_checkpoints/
+
+# New structure: datasets/*/data/{raw,staging,db,tmp}
+**/datasets/*/data/raw/**/*
+!**/datasets/*/data/raw/*/
+!**/datasets/*/data/raw/.gitkeep
+!**/datasets/*/data/raw/**/.gitkeep
+!**/datasets/*/data/raw/README.md
+**/datasets/*/data/staging/*
+!**/datasets/*/data/staging/README.md
+!**/datasets/*/data/staging/*/
+**/datasets/*/data/staging/*/*
+!**/datasets/*/data/staging/*/.gitkeep
+**/datasets/*/data/db/*
+!**/datasets/*/data/db/.gitkeep
+!**/datasets/*/data/db/schemas/
+!**/datasets/*/data/db/schemas/*.yaml
+**/datasets/*/data/tmp/*
+!**/datasets/*/data/tmp/.gitkeep
+**/datasets/*/api/*
+!**/datasets/*/api/.gitkeep
 
 # Working planning and review artifacts (not tracked) - TBD
