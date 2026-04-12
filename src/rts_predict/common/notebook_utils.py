@@ -119,38 +119,30 @@ def get_notebook_db(
 
 
 def get_reports_dir(game: str, dataset: str) -> Path:
-    """Return the absolute path to the dataset's reports directory.
+    """Return the absolute path to the dataset's ``reports/`` directory.
 
-    Both game config modules export a ``REPORTS_DIR`` constant.  The
-    returned path is ``REPORTS_DIR / dataset``.
-
-    For single-dataset games (SC2) ``REPORTS_DIR`` points to the
-    ``reports/`` subdirectory inside the dataset tree.  For multi-dataset
-    games (AoE2) ``REPORTS_DIR`` is the parent ``datasets/`` directory so
-    that ``REPORTS_DIR / dataset`` resolves to the per-dataset directory;
-    callers are responsible for appending the ``reports/`` segment when
-    needed (e.g. ``get_reports_dir("aoe2", "aoestats") / "reports" /
-    "artifacts"``).
+    Each game config module exports a ``DATASETS_REPORTS`` dict that maps
+    dataset name to its canonical ``reports/`` path. The returned path always
+    ends in ``…/<dataset>/reports`` regardless of game.
 
     Args:
         game: Game identifier ("sc2" or "aoe2").
         dataset: Dataset identifier (e.g. "sc2egset", "aoe2companion").
 
     Returns:
-        Absolute Path to the per-dataset directory (``REPORTS_DIR / dataset``).
+        Absolute Path to the dataset's ``reports/`` directory.
 
     Raises:
         ValueError: If game or dataset is not recognized, or if the
-            game's config module does not export REPORTS_DIR.
+            game's config module does not export DATASETS_REPORTS.
     """
     config_module = _load_game_config(game)
     _validate_dataset_known(config_module, game, dataset)
-    reports_dir = getattr(config_module, "REPORTS_DIR", None)
-    if reports_dir is None:
+    datasets_reports = getattr(config_module, "DATASETS_REPORTS", None)
+    if datasets_reports is None:
         raise ValueError(
-            f"Config module for game {game!r} does not export REPORTS_DIR"
+            f"Config module for game {game!r} does not export DATASETS_REPORTS"
         )
-    assert isinstance(reports_dir, Path)  # for the type checker
-    resolved: Path = reports_dir / dataset
+    resolved: Path = datasets_reports[dataset]
     logger.debug("Resolved reports dir: %s", resolved)
     return resolved

@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 from rts_predict.games.aoe2.config import AOE2COMPANION_RAW_DIR
 
 RAW_DIR: Path = AOE2COMPANION_RAW_DIR
-ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoe2companion") / "reports" / "artifacts" / "01_exploration" / "01_acquisition"
+ARTIFACTS_DIR: Path = get_reports_dir("aoe2", "aoe2companion") / "artifacts" / "01_exploration" / "01_acquisition"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 logger.info("Source directory: %s", RAW_DIR)

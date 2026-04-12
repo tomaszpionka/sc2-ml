@@ -32,7 +32,7 @@ def _make_fake_config_module(
     datasets: dict[str, DatasetConfig] | None = None,
     reports_dir: Path | None = None,
 ) -> ModuleType:
-    """Return a minimal fake config module with DATASETS and REPORTS_DIR."""
+    """Return a minimal fake config module with DATASETS and DATASETS_REPORTS."""
     if datasets is None:
         db_file = tmp_path / "db" / "db.duckdb"
         temp_dir = tmp_path / "tmp"
@@ -49,7 +49,7 @@ def _make_fake_config_module(
 
     module = MagicMock(spec=ModuleType)
     module.DATASETS = datasets
-    module.REPORTS_DIR = reports_dir
+    module.DATASETS_REPORTS = {"testset": reports_dir}
     return module
 
 
@@ -264,22 +264,21 @@ def test_get_reports_dir_unknown_dataset_raises() -> None:
         get_reports_dir("sc2", "nonexistent_dataset")
 
 
-def test_get_reports_dir_missing_reports_dir_raises(tmp_path: Path) -> None:
-    """get_reports_dir must raise ValueError if config module lacks REPORTS_DIR."""
+def test_get_reports_dir_missing_datasets_reports_raises(tmp_path: Path) -> None:
+    """get_reports_dir must raise ValueError if config module lacks DATASETS_REPORTS."""
     fake_module = _make_fake_config_module(tmp_path)
-    # Remove REPORTS_DIR from the module so getattr returns None
-    del fake_module.REPORTS_DIR
+    del fake_module.DATASETS_REPORTS
 
     with patch(
         "rts_predict.common.notebook_utils._load_game_config",
         return_value=fake_module,
     ):
-        with pytest.raises(ValueError, match="does not export REPORTS_DIR"):
+        with pytest.raises(ValueError, match="does not export DATASETS_REPORTS"):
             get_reports_dir("sc2", "testset")
 
 
 def test_get_reports_dir_returns_path(tmp_path: Path) -> None:
-    """get_reports_dir must return REPORTS_DIR / dataset for a known pair."""
+    """get_reports_dir must return the path registered in DATASETS_REPORTS."""
     reports_dir = tmp_path / "reports"
     fake_module = _make_fake_config_module(tmp_path, reports_dir=reports_dir)
 
@@ -289,27 +288,29 @@ def test_get_reports_dir_returns_path(tmp_path: Path) -> None:
     ):
         result = get_reports_dir("sc2", "testset")
 
-    assert result == reports_dir / "testset"
+    assert result == reports_dir
     assert isinstance(result, Path)
 
 
 def test_get_reports_dir_sc2_egset_real() -> None:
-    """get_reports_dir must return the correct path for sc2/sc2egset without mocking."""
+    """get_reports_dir must return the canonical reports/ path for sc2/sc2egset."""
     result = get_reports_dir("sc2", "sc2egset")
-    # Must end with the expected suffix
-    assert result.name == "sc2egset"
     assert result.is_absolute()
+    assert result.name == "reports"
+    assert str(result).endswith("games/sc2/datasets/sc2egset/reports")
 
 
 def test_get_reports_dir_aoe2_companion_real() -> None:
-    """get_reports_dir must return the correct path for aoe2/aoe2companion."""
+    """get_reports_dir must return the canonical reports/ path for aoe2/aoe2companion."""
     result = get_reports_dir("aoe2", "aoe2companion")
-    assert result.name == "aoe2companion"
     assert result.is_absolute()
+    assert result.name == "reports"
+    assert str(result).endswith("games/aoe2/datasets/aoe2companion/reports")
 
 
 def test_get_reports_dir_aoe2_aoestats_real() -> None:
-    """get_reports_dir must return the correct path for aoe2/aoestats."""
+    """get_reports_dir must return the canonical reports/ path for aoe2/aoestats."""
     result = get_reports_dir("aoe2", "aoestats")
-    assert result.name == "aoestats"
     assert result.is_absolute()
+    assert result.name == "reports"
+    assert str(result).endswith("games/aoe2/datasets/aoestats/reports")

@@ -7,7 +7,6 @@ from rts_predict.common.db import DatasetConfig
 GAME_DIR: Path = Path(__file__).resolve().parent                # games/aoe2/
 ROOT_DIR: Path = GAME_DIR.parent.parent.parent.parent           # 4 levels to repo root
 DATASETS_DIR: Path = GAME_DIR / "datasets"
-REPORTS_DIR: Path = DATASETS_DIR  # parent of per-dataset dirs; resolved via / dataset / "reports"
 
 # ── aoe2companion dataset ──────────────────────────────────────────────────────
 AOE2COMPANION_DIR: Path = DATASETS_DIR / "aoe2companion"
@@ -59,3 +58,9 @@ DATASETS: dict[str, DatasetConfig] = {
     ),
 }
 DEFAULT_DATASET: str = "aoe2companion"
+
+# ── Reports registry (used by notebook_utils.get_reports_dir) ─────────────────
+DATASETS_REPORTS: dict[str, Path] = {
+    "aoe2companion": AOE2COMPANION_REPORTS_DIR,
+    "aoestats": AOESTATS_REPORTS_DIR,
+}

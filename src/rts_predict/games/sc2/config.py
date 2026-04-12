@@ -10,6 +10,9 @@ DATASET_DIR: Path = DATASETS_DIR / "sc2egset"
 DATA_DIR: Path = DATASET_DIR / "data"
 REPORTS_DIR: Path = DATASET_DIR / "reports"
 DATASET_ARTIFACTS_DIR: Path = REPORTS_DIR / "artifacts"
+
+# ── Reports registry (used by notebook_utils.get_reports_dir) ─────────────────
+DATASETS_REPORTS: dict[str, Path] = {"sc2egset": REPORTS_DIR}
 DB_FILE: Path = DATA_DIR / "db" / "db.duckdb"
 
 # DuckDB configuration
