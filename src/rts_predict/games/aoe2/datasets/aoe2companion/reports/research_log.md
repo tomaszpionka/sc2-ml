@@ -8,6 +8,86 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-12 — [Phase 01 / Step 01_01_02] Schema discovery of aoe2companion raw files
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** content
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md`
+
+### What
+
+Applied full census schema discovery across all 4 file types in the aoe2companion dataset. `discover_parquet_schemas()` was run on all 2,073 `matches/` Parquet files (metadata-only read). `discover_csv_schema(sample_rows=50)` was run on all 2,072 `ratings/` CSV files (header + 50 rows per file). `discover_parquet_schema()` was run on the singleton `leaderboard.parquet` and `profile.parquet` files. Schema consistency was checked within each subdirectory.
+
+### Why
+
+Step 01_01_02 establishes column-level structure of all raw files before any DuckDB ingestion design. Per Invariant #9, this step is limited to structure — not row counts, distributions, or semantic interpretation. Full census is used because `pyarrow.parquet.read_schema()` is metadata-only (sub-second per file) and `pd.read_csv(nrows=50)` reads only header + 50 rows.
+
+### How (reproducibility)
+
+```python
+from rts_predict.common.parquet_utils import discover_parquet_schema, discover_parquet_schemas, discover_csv_schema
+
+# matches/: full census Parquet
+matches_result = discover_parquet_schemas(matches_parquet_files)
+
+# ratings/: full census CSV (header + 50 rows each)
+ratings_schemas = [discover_csv_schema(fp, sample_rows=50) for fp in ratings_csv_files]
+
+# Singletons
+leaderboard_schema = discover_parquet_schema(leaderboard_file)
+profile_schema = discover_parquet_schema(profile_file)
+```
+
+Full derivation: `sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_02_schema_discovery.ipynb`
+
+### Findings
+
+**matches/ (Parquet):**
+- Total columns: 54
+- Files checked: 2,073 of 2,073
+- Schema consistency: True — all 2,073 files share identical schema
+- Arrow types present: `int32`, `timestamp[ms, tz=UTC]`, `binary`, `bool`, `float`
+
+**ratings/ (CSV):**
+- Total columns: 7
+- Column names: `profile_id`, `games`, `rating`, `date`, `leaderboard_id`, `rating_diff`, `season`
+- Files checked: 2,072 of 2,072
+- Schema consistency: True — all 2,072 files share identical schema
+- Inferred types: all 7 columns inferred as `object` from 50-row sample
+
+**leaderboards/leaderboard.parquet (singleton):**
+- Total columns: 18
+- Arrow types present: `int32`, `binary`, `timestamp[ms, tz=UTC]`, `bool`
+
+**profiles/profile.parquet (singleton):**
+- Total columns: 13
+- Arrow types present: `int32`, `binary`, `bool`
+
+### Decisions taken
+
+- None — observation only.
+
+### Decisions deferred
+
+- CSV type inference yielded `object` for all 7 ratings columns (pandas default for heterogeneous or string-typed columns with 50-row sample). Concrete type assignment deferred to DuckDB ingestion step.
+- DuckDB type proposals for all file types deferred to ingestion design.
+- Whether `binary` Arrow type in Parquet files represents encoded strings or byte arrays requires content-level inspection (Step 01_03).
+
+### Thesis mapping
+
+- Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data: column schemas for matches, ratings, leaderboards, and profiles.
+
+### Open questions / follow-ups
+
+- The `ratings/` CSV columns are all inferred as `object` from 50-row sampling; whether the actual types are numeric or string across the full population requires Step 01_03 profiling.
+- The `binary` type for many `matches/` Parquet columns (e.g., `name`, `server`, `map`, `civ`) may indicate variable-length byte encoding; actual encoding must be established at content-level inspection.
+- The `won` column is present in `matches/` (not in ratings); its relationship to outcome labeling must be established in Step 01_02/01_03.
+
+---
+
 ## 2026-04-12 — [Phase 01 / Step 01_01_01] File inventory of aoe2companion raw directory
 
 **Category:** A (science)

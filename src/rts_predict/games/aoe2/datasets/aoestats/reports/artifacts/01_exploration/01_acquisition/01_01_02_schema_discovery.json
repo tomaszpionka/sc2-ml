@@ -1,0 +1,340 @@
+{
+  "step": "01_01_02",
+  "dataset": "aoestats",
+  "sampling": {
+    "strategy": "census",
+    "total_files_in_dataset": 349,
+    "files_checked": 344,
+    "method": "Full census for all Parquet files (metadata-only read via pyarrow.parquet.read_schema). Full census for overview.json (1 file, discover_json_schema)."
+  },
+  "file_types": [
+    {
+      "type": "parquet",
+      "subdirectory": "matches",
+      "files_in_subdirectory": 172,
+      "files_checked": 172,
+      "schema": {
+        "columns": [
+          {
+            "name": "map",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "started_timestamp",
+            "physical_type": "timestamp[us, tz=UTC]",
+            "nullable": true
+          },
+          {
+            "name": "duration",
+            "physical_type": "duration[ns]",
+            "nullable": true
+          },
+          {
+            "name": "irl_duration",
+            "physical_type": "duration[ns]",
+            "nullable": true
+          },
+          {
+            "name": "game_id",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "avg_elo",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "num_players",
+            "physical_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "team_0_elo",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "team_1_elo",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "replay_enhanced",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "leaderboard",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "mirror",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "patch",
+            "physical_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "raw_match_type",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "game_type",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "game_speed",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "starting_age",
+            "physical_type": "string",
+            "nullable": true
+          }
+        ],
+        "total_columns": 17
+      },
+      "consistency": {
+        "all_files_same_schema": false,
+        "variant_columns": [
+          "raw_match_type",
+          "started_timestamp"
+        ]
+      }
+    },
+    {
+      "type": "parquet",
+      "subdirectory": "players",
+      "files_in_subdirectory": 171,
+      "files_checked": 171,
+      "schema": {
+        "columns": [
+          {
+            "name": "winner",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "game_id",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "team",
+            "physical_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "feudal_age_uptime",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "castle_age_uptime",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "imperial_age_uptime",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "old_rating",
+            "physical_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "new_rating",
+            "physical_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "match_rating_diff",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "replay_summary_raw",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "profile_id",
+            "physical_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "civ",
+            "physical_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "opening",
+            "physical_type": "string",
+            "nullable": true
+          }
+        ],
+        "total_columns": 13
+      },
+      "consistency": {
+        "all_files_same_schema": false,
+        "variant_columns": [
+          "castle_age_uptime",
+          "feudal_age_uptime",
+          "imperial_age_uptime",
+          "opening",
+          "profile_id"
+        ]
+      }
+    },
+    {
+      "type": "json",
+      "subdirectory": "overview",
+      "files_in_subdirectory": 1,
+      "files_checked": 1,
+      "schema": {
+        "columns": [
+          {
+            "name": "changelog",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          },
+          {
+            "name": "civs",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          },
+          {
+            "name": "groupings",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          },
+          {
+            "name": "last_updated",
+            "physical_type": "str",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "2026-04-09T11:12:40.159034Z"
+            ]
+          },
+          {
+            "name": "openings",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          },
+          {
+            "name": "patches",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          },
+          {
+            "name": "total_match_count",
+            "physical_type": "int",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              32979710
+            ]
+          },
+          {
+            "name": "tournament_stages",
+            "physical_type": "list",
+            "nullable": false,
+            "frequency": 1,
+            "total_samples": 1,
+            "sample_values": [
+              "<list>"
+            ]
+          }
+        ],
+        "total_columns": 8,
+        "nesting_depth": 1
+      },
+      "consistency": {
+        "all_files_same_schema": true,
+        "variant_columns": []
+      }
+    }
+  ],
+  "cross_comparison": {
+    "matches_vs_players_column_name_overlap": {
+      "shared_column_names": [
+        "game_id"
+      ],
+      "shared_count": 1,
+      "matches_only_count": 16,
+      "players_only_count": 12,
+      "matches_only_column_names": [
+        "avg_elo",
+        "duration",
+        "game_speed",
+        "game_type",
+        "irl_duration",
+        "leaderboard",
+        "map",
+        "mirror",
+        "num_players",
+        "patch",
+        "raw_match_type",
+        "replay_enhanced",
+        "started_timestamp",
+        "starting_age",
+        "team_0_elo",
+        "team_1_elo"
+      ],
+      "players_only_column_names": [
+        "castle_age_uptime",
+        "civ",
+        "feudal_age_uptime",
+        "imperial_age_uptime",
+        "match_rating_diff",
+        "new_rating",
+        "old_rating",
+        "opening",
+        "profile_id",
+        "replay_summary_raw",
+        "team",
+        "winner"
+      ],
+      "method": "raw string comparison of column names only \u2014 no semantic interpretation"
+    }
+  }
+}

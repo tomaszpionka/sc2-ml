@@ -19,4 +19,9 @@ steps:
     pipeline_section: "01_01"
     status: complete
     completed_at: "2026-04-09"
+  "01_01_02":
+    name: "Schema Discovery"
+    pipeline_section: "01_01"
+    status: complete
+    completed_at: "2026-04-12"
   # Future steps will be added here as they are defined in the ROADMAP.

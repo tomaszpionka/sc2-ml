@@ -8,6 +8,87 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-12 — [Phase 01 / Step 01_01_02] Schema discovery of aoestats raw files
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** content
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md`
+
+### What
+
+Applied full census schema discovery across all 3 subdirectories. `discover_parquet_schemas()` on all 172 `matches/` Parquet files and all 171 `players/` Parquet files (metadata-only read). `discover_json_schema()` on `overview/overview.json` (1 file). Cross-compared `matches/` and `players/` column names as a raw string comparison. Schema consistency checked within each subdirectory.
+
+### Why
+
+Step 01_01_02 establishes column-level structure before ingestion design. Per Invariant #9, limited to structure. Full census used because `pyarrow.parquet.read_schema()` is metadata-only (sub-second).
+
+### How (reproducibility)
+
+```python
+from rts_predict.common.parquet_utils import discover_parquet_schemas
+from rts_predict.common.json_utils import discover_json_schema
+
+matches_result = discover_parquet_schemas(matches_files)
+players_result = discover_parquet_schemas(players_files)
+overview_profiles = discover_json_schema([overview_file], max_sample_values=3)
+
+# Cross-column name comparison (raw string only)
+shared = sorted({c['name'] for c in matches_schema['columns']} & {c['name'] for c in players_schema['columns']})
+```
+
+Full derivation: `sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_02_schema_discovery.ipynb`
+
+### Findings
+
+**matches/ (Parquet):**
+- Total columns: 17
+- Files checked: 172 of 172
+- Schema consistency: False — 2 variant columns: `raw_match_type`, `started_timestamp`
+- Arrow types present: `string`, `timestamp[us, tz=UTC]`, `duration[ns]`, `double`, `int64`, `bool`
+
+**players/ (Parquet):**
+- Total columns: 13
+- Files checked: 171 of 171
+- Schema consistency: False — 5 variant columns: `castle_age_uptime`, `feudal_age_uptime`, `imperial_age_uptime`, `opening`, `profile_id`
+- Arrow types present: `bool`, `string`, `int64`, `double`
+
+**overview/overview.json (singleton):**
+- Total root keys: 8
+- Root key names: `changelog`, `civs`, `groupings`, `last_updated`, `openings`, `patches`, `total_match_count`, `tournament_stages`
+- Key types: 7 `list`, 1 `str`, 1 `int`
+- Nesting depth: 1 (root-level only)
+
+**Cross-column name comparison (matches vs players):**
+- Shared column names: 1 — `game_id`
+- matches-only column names: 16
+- players-only column names: 12
+- Comparison is raw string matching only — no semantic interpretation
+
+### Decisions taken
+
+- None — observation only.
+
+### Decisions deferred
+
+- The 2 variant columns in `matches/` (`raw_match_type`, `started_timestamp`) and 5 in `players/` indicate schema evolution across the temporal range. Whether this affects ingestion requires investigation at Step 01_03.
+- DuckDB type proposals deferred to ingestion design.
+- The `overview.json` lists structure (7 list keys, 1 string key, 1 int key) is not interpretable at this step — contents require content-level profiling.
+
+### Thesis mapping
+
+- Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data: column schemas for matches and players files, schema consistency, cross-file structural comparison.
+
+### Open questions / follow-ups
+
+- The schema inconsistency in `matches/` (2 variant columns) and `players/` (5 variant columns) requires temporal investigation — at which point in the date range did the schema change? Needs content-level profiling at Step 01_03.
+- The single shared column name `game_id` between `matches/` and `players/` is the only structurally identified join key at this step; whether it is sufficient for linking records is deferred to Step 01_03.
+- The `winner` column is present in `players/` only (not `matches/`); its relationship to outcome labeling must be verified at content-level.
+
+---
+
 ## 2026-04-12 — [Phase 01 / Step 01_01_01] File inventory of aoestats raw directory
 
 **Category:** A (science)

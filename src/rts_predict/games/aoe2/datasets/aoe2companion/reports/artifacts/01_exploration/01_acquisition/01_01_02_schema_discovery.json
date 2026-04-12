@@ -1,0 +1,532 @@
+{
+  "step": "01_01_02",
+  "dataset": "aoe2companion",
+  "sampling": {
+    "strategy": "census",
+    "total_files_in_dataset": 4153,
+    "files_checked": 4147,
+    "method": "Full census for all file types: Parquet metadata-only read (pyarrow.parquet.read_schema); CSV header + 50 rows per file."
+  },
+  "file_types": [
+    {
+      "type": "parquet",
+      "subdirectory": "matches",
+      "files_in_subdirectory": 2073,
+      "files_checked": 2073,
+      "schema": {
+        "columns": [
+          {
+            "name": "matchId",
+            "physical_type": "int32",
+            "nullable": false
+          },
+          {
+            "name": "started",
+            "physical_type": "timestamp[ms, tz=UTC]",
+            "nullable": false
+          },
+          {
+            "name": "finished",
+            "physical_type": "timestamp[ms, tz=UTC]",
+            "nullable": false
+          },
+          {
+            "name": "leaderboard",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "name",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "server",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "internalLeaderboardId",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "privacy",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "mod",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "map",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "difficulty",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "startingAge",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "fullTechTree",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "allowCheats",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "empireWarsMode",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "endingAge",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "gameMode",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "lockSpeed",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "lockTeams",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "mapSize",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "population",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "hideCivs",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "recordGame",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "regicideMode",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "gameVariant",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "resources",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "sharedExploration",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "speed",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "speedFactor",
+            "physical_type": "float",
+            "nullable": true
+          },
+          {
+            "name": "suddenDeathMode",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "antiquityMode",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "civilizationSet",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "teamPositions",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "teamTogether",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "treatyLength",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "turboMode",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "victory",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "revealMap",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "scenario",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "password",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "modDataset",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "profileId",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "rating",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "ratingDiff",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "color",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "colorHex",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "slot",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "status",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "team",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "won",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "country",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "shared",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "verified",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "civ",
+            "physical_type": "binary",
+            "nullable": true
+          }
+        ],
+        "total_columns": 54
+      },
+      "consistency": {
+        "all_files_same_schema": true,
+        "variant_columns": []
+      }
+    },
+    {
+      "type": "csv",
+      "subdirectory": "ratings",
+      "files_in_subdirectory": 2072,
+      "files_checked": 2072,
+      "schema": {
+        "columns": [
+          {
+            "name": "profile_id",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "games",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "rating",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "date",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "leaderboard_id",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "rating_diff",
+            "physical_type": "object",
+            "nullable": false
+          },
+          {
+            "name": "season",
+            "physical_type": "object",
+            "nullable": false
+          }
+        ],
+        "total_columns": 7
+      },
+      "consistency": {
+        "all_files_same_schema": true,
+        "variant_columns": []
+      }
+    },
+    {
+      "type": "parquet",
+      "subdirectory": "leaderboards",
+      "files_in_subdirectory": 1,
+      "files_checked": 1,
+      "schema": {
+        "columns": [
+          {
+            "name": "leaderboard",
+            "physical_type": "binary",
+            "nullable": false
+          },
+          {
+            "name": "profileId",
+            "physical_type": "int32",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "physical_type": "binary",
+            "nullable": false
+          },
+          {
+            "name": "rank",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "rating",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "lastMatchTime",
+            "physical_type": "timestamp[ms, tz=UTC]",
+            "nullable": true
+          },
+          {
+            "name": "drops",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "losses",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "streak",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "wins",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "games",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "updatedAt",
+            "physical_type": "timestamp[ms, tz=UTC]",
+            "nullable": true
+          },
+          {
+            "name": "rankCountry",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "active",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "season",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "rankLevel",
+            "physical_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "steamId",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "country",
+            "physical_type": "binary",
+            "nullable": true
+          }
+        ],
+        "total_columns": 18
+      },
+      "consistency": {
+        "all_files_same_schema": true,
+        "variant_columns": []
+      }
+    },
+    {
+      "type": "parquet",
+      "subdirectory": "profiles",
+      "files_in_subdirectory": 1,
+      "files_checked": 1,
+      "schema": {
+        "columns": [
+          {
+            "name": "profileId",
+            "physical_type": "int32",
+            "nullable": false
+          },
+          {
+            "name": "steamId",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "name",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "clan",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "country",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "avatarhash",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "sharedHistory",
+            "physical_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "twitchChannel",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "youtubeChannel",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "youtubeChannelName",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "discordId",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "discordName",
+            "physical_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "discordInvitation",
+            "physical_type": "binary",
+            "nullable": true
+          }
+        ],
+        "total_columns": 13
+      },
+      "consistency": {
+        "all_files_same_schema": true,
+        "variant_columns": []
+      }
+    }
+  ]
+}

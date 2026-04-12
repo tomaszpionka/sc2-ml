@@ -101,6 +101,50 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_01_02 — Schema Discovery
+
+```yaml
+step_number: "01_01_02"
+name: "Schema Discovery"
+description: "Read Parquet metadata from aoestats matches and players files. Read overview.json structure. Check schema consistency across the temporal range and compare matches/players schemas for structural overlap."
+phase: "01 — Data Exploration"
+pipeline_section: "01_01 — Data Acquisition & Source Inventory"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
+dataset: "aoestats"
+question: "What columns exist in each file type, what are their data types, is the schema consistent across the temporal range, and do matches and players share structurally overlapping columns?"
+method: "Full census: pyarrow.parquet.read_schema() on all 172 matches + 171 players files (metadata-only). discover_json_schema() on overview.json (1 file). Compare schemas within each subdirectory for consistency. Cross-compare matches and players column names for structural overlap (raw string comparison). Report column catalogs, Arrow types, consistency verdicts, and column name overlap. No DuckDB type proposals."
+stratification: "By subdirectory. Full census within each."
+predecessors:
+  - "01_01_01"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_02_schema_discovery.py"
+inputs:
+  duckdb_tables: "none — reads raw file metadata directly"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md, Section 1"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
+reproducibility: "Parquet schemas via pyarrow.parquet.read_schema() (full census on all files). JSON schema via discover_json_schema() (census, 1 file). Code and output in the paired notebook per Invariant #6."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
+  - number: "7"
+    how_upheld: "Full census for Parquet (metadata-only, zero cost) and JSON (1 file). Census eliminates sample-size justification requirement."
+  - number: "9"
+    how_upheld: "Conclusions limited to column-level structural observations. Cross-subdirectory comparison is structural (column name overlap as raw string comparison), not content-level. No DuckDB type proposals."
+gate:
+  artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
+  continue_predicate: "Schema artifacts exist and report a consistency verdict for all subdirectories."
+  halt_predicate: "Any Parquet file fails to open."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

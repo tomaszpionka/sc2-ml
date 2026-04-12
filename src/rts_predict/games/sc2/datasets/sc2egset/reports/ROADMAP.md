@@ -97,6 +97,50 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_01_02 — Schema Discovery
+
+```yaml
+step_number: "01_01_02"
+name: "Schema Discovery"
+description: "Sample sc2egset JSON files across all 70 directories. Discover root-level keys, nested keypaths, data types, and schema consistency across eras."
+phase: "01 — Data Exploration"
+pipeline_section: "01_01 — Data Acquisition & Source Inventory"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
+dataset: "sc2egset"
+question: "What is the internal structure of the SC2EGSet JSON files, and is this structure consistent across all 70 directories?"
+method: "Select 1 file from each of the 70 _data/ subdirectories (first alphabetically) for root-level schema via discover_json_schema(). Select 3 files from each directory for full keypath enumeration via get_json_keypaths(). Compare schemas across directories to detect era-dependent variation. Report root-level key catalog, full keypath tree, observed types, and consistency verdict. No DuckDB type proposals (deferred to ingestion design)."
+stratification: "By directory (all 70 represented; temporal range 2016-2024)."
+predecessors:
+  - "01_01_01"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_02_schema_discovery.py"
+inputs:
+  duckdb_tables: "none — reads raw JSON files directly"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md, Section 1"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
+reproducibility: "All schema profiles produced by discover_json_schema() and get_json_keypaths() from rts_predict.common.json_utils. File selection is deterministic (first N alphabetically per directory). Code and output in the paired notebook per Invariant #6."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
+  - number: "7"
+    how_upheld: "Sample size (1 per directory for root schema, 3 for keypaths) justified by temporal stratification in the report."
+  - number: "9"
+    how_upheld: "Conclusions limited to structural observations. No row counts, value distributions, or semantic interpretation."
+gate:
+  artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
+  continue_predicate: "Schema artifacts exist and report a consistency verdict for all 70 directories."
+  halt_predicate: "More than 30% of sampled files fail to parse."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

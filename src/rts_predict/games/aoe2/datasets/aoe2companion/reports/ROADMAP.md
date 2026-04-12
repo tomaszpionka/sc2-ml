@@ -102,6 +102,50 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_01_02 — Schema Discovery
+
+```yaml
+step_number: "01_01_02"
+name: "Schema Discovery"
+description: "Read Parquet metadata and CSV headers from aoe2companion raw files. Discover column schemas for matches, ratings, leaderboards, and profiles. Check schema consistency across the temporal range."
+phase: "01 — Data Exploration"
+pipeline_section: "01_01 — Data Acquisition & Source Inventory"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
+dataset: "aoe2companion"
+question: "What columns exist in each file type, what are their data types, and is the schema consistent across the temporal range?"
+method: "Full census: pyarrow.parquet.read_schema() on all 2,073 files in matches/ (metadata-only, sub-second). Full census: pd.read_csv(nrows=50) on all 2,072 files in ratings/ (header + 50 rows for type inference). Read schema from singleton leaderboard.parquet and profile.parquet. Compare schemas within each subdirectory for consistency. Report column catalogs, Arrow/inferred types, and consistency verdicts. No DuckDB type proposals."
+stratification: "By subdirectory. Full census within each — no sampling needed for Parquet metadata or CSV headers."
+predecessors:
+  - "01_01_01"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_02_schema_discovery.py"
+inputs:
+  duckdb_tables: "none — reads raw file metadata directly"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md, Section 1"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
+reproducibility: "Parquet schemas via pyarrow.parquet.read_schema() (full census on all files). CSV schemas via pd.read_csv(nrows=50) (full census, 50 rows per file for type inference — sufficient to detect type variation without full content read). Code and output in the paired notebook per Invariant #6."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
+  - number: "7"
+    how_upheld: "Full census for Parquet (metadata-only, zero cost) and CSV (header + 50 rows). Census eliminates sample-size justification requirement."
+  - number: "9"
+    how_upheld: "Conclusions limited to column-level structural observations. No row counts or value distributions. No DuckDB type proposals."
+gate:
+  artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
+  continue_predicate: "Schema artifacts exist and report a consistency verdict for all subdirectories."
+  halt_predicate: "Any Parquet file fails to open."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
