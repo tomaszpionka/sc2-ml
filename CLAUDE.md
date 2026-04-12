@@ -48,24 +48,26 @@ Key rule: execution MUST NOT begin until DAG + specs exist on disk.
 
 **Execution:** Read `planning/dags/DAG.yaml` → dispatch agents per task groups →
 agents read their assigned spec file, not the full plan → review gates after
-each task group → run tests after each logical unit → report which gate
-condition is met.
+groups that configure one (optional) → run tests after each logical unit →
+report which gate condition is met.
 
 **Dispatch rules:**
 - *Executor dispatch:* The prompt MUST be a pointer — the `spec_file` path +
   at most a 1-2 line context summary. MUST NOT restate spec content. The spec
   is the sole source of truth and the executor reads it via tool call.
-- *Review gate dispatch:* After each task group, dispatch the reviewer agent
-  specified in the group's `review_gate`. The prompt passes the diff scope —
-  the reviewer reads the diff itself, not the specs.
+- *Review gate dispatch:* After each task group, check if the group has a
+  `review_gate` configured. If yes, dispatch the specified agent — the prompt
+  passes the diff scope and the reviewer reads the diff itself, not the specs.
+  If no `review_gate` is present, proceed to the next task group without review.
 - *Final review dispatch:* Dispatch the agent specified in the DAG's
   `final_review` section with: (a) `plan_ref` path from the DAG, (b) all
-  `spec_file` paths from the DAG, (c) `base_ref` for the diff. Default is
-  reviewer-deep; for complex DAGs (Category A phase work, multi-job DAGs)
-  use reviewer-adversarial. The final reviewer reads the plan, all specs,
-  and the full diff to check plan-vs-reality alignment, spec compliance, and
-  scope drift. The orchestrator passes these paths from DAG metadata — it
-  does NOT read them itself.
+  `spec_file` paths from the DAG, (c) `base_ref` for the diff, (d) the
+  session context header (see below). **Review agent by category:**
+  reviewer-adversarial for Cat A phase work and multi-job DAGs;
+  reviewer-deep for Cat B/D; **reviewer (Sonnet) for Cat C/E** — no
+  science reads needed for chores and docs. The final reviewer reads the
+  plan, all specs, and the full diff. The orchestrator passes these paths
+  from DAG metadata — it does NOT read them itself.
 - *General:* "Execute the DAG" means: read `DAG.yaml`, dispatch per its graph,
   nothing more. The orchestrator does NOT read `current_plan.md` or spec
   files when dispatching.

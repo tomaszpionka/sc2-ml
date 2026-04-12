@@ -79,10 +79,17 @@ The template is the dataclass. Every spec is an instance of it.
 
 **Rules:**
 - Content is extracted from the plan, not invented
+- Every spec MUST be self-contained. If the plan says "Same as TXX" or
+  "Same pattern as spec_XX", inline the full instructions with substituted
+  paths. Never produce a spec that references another spec.
 - If the plan's Execution Steps section for a task lacks detail, copy what
   exists and flag it: "NOTE: plan underspecified — agent should read
   plan section for additional context"
 - Do NOT add scope, files, or instructions that the plan does not define
+- If the plan's Suggested Execution Graph includes a `model` field on a task,
+  include it in the spec's YAML frontmatter.
+- When the plan marks tasks for consolidation (shared read_scope, parameterized
+  dataset table), produce one combined spec with all instructions inlined.
 
 After generating all specs, verify:
 ```bash

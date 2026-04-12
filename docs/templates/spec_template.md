@@ -2,12 +2,14 @@
 task_id: "<T01, T02, etc.>"
 task_name: "<descriptive name>"
 agent: "<executor | reviewer | reviewer-deep | reviewer-adversarial | writer-thesis>"
+model: "<haiku | sonnet | opus — optional, omit to inherit>"
 dag_ref: "planning/dags/DAG.yaml"
 group_id: "<TG01, TG02, etc.>"
 file_scope:
   - "<files this task writes>"
 read_scope:
   - "<files this task reads from other tasks>"
+datasets: []  # Optional — for parameterized multi-dataset specs
 category: "<A-F>"
 ---
 

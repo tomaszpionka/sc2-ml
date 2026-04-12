@@ -29,8 +29,9 @@ If no arguments, default to `planning/dags/DAG.yaml`.
 From the DAG, extract:
 - `jobs` — list of independent execution streams
 - Within each job: `task_groups` in dependency order
-- Within each group: `tasks` with `spec_file`, `agent`, `parallel_safe`, `depends_on`
-- `review_gate` per group
+- Within each group: `tasks` with `spec_file`, `agent`, `model` (optional),
+  `parallel_safe`, `depends_on`
+- `review_gate` per group (optional — may be absent)
 - `final_review` configuration
 
 ### Step 2: Execute jobs
@@ -56,19 +57,23 @@ For each job, execute task groups in dependency order:
      ```
      Do NOT add context, instructions, or summaries from the plan or spec.
      The spec is the sole source of truth — the executor reads it via tool call.
+   - **Model dispatch:** Read the task's `model` field. If present, pass it
+     as the `model` parameter to the Agent tool. If absent, omit (inherits
+     from parent session).
 
-2. **Review gate.**
-   After all tasks in the group complete, dispatch the review gate agent
-   specified in `review_gate.agent` with:
+2. **Review gate (conditional).**
+   If the task group has a `review_gate` configured, dispatch the review gate
+   agent specified in `review_gate.agent` with:
    - Scope: `review_gate.scope` ("diff" = changes from this group only,
      "cumulative" = all changes since DAG start)
    - Base ref: `review_gate.base_ref` ("auto" = SHA before first task started)
    - If the reviewer returns a BLOCKER: HALT and report to the user.
      Do not proceed to the next task group.
    - If the reviewer returns APPROVE or non-blocking issues: proceed.
+   If no `review_gate` is present, skip to the next task group.
 
-3. **Report group completion.** State which tasks completed, which gates
-   passed, and any issues flagged.
+3. **Report group completion.** State which tasks completed, which gate ran
+   (or "skipped — no review_gate configured"), and any issues flagged.
 
 ### Step 3: Final review
 
@@ -89,7 +94,7 @@ Print a summary:
 - Jobs executed: count
 - Task groups completed: count
 - Tasks completed: count
-- Review gates: PASS/FAIL per group
+- Review gates: PASS/FAIL per group, or "skipped" for groups without a gate
 - Final review: verdict
 - Any blockers or issues
 

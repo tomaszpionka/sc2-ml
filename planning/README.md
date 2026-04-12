@@ -45,7 +45,8 @@ Task), see [`docs/TAXONOMY.md`](../docs/TAXONOMY.md).
 3. **Execution (only after materialization is committed):** Parent reads
    `dags/DAG.yaml` and dispatches agents per task group. Agents read their
    assigned spec file, not the full plan. Updates `DAG_STATUS.yaml` (if
-   used). Commits per task group. Review gates after each group.
+   used). Commits per task group. Review gates after groups that configure
+   one (optional).
 4. **PR wrap-up:** All planning artifacts committed on the feature branch.
 5. **After merge:** Purge protocol runs (see below).
 

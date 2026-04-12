@@ -211,8 +211,8 @@ user approval. The canonical location for the active DAG is
 
 A DAG contains Jobs. Jobs contain Task Groups. Task Groups contain Tasks.
 The graph edges represent execution dependencies: a Task Group that
-depends on another cannot begin until the dependency completes and its
-review gate passes.
+depends on another cannot begin until the dependency completes (and its
+review gate passes, if one is configured).
 
 **Relationship to the science hierarchy:** A DAG may execute part of a
 Step, one Step, or multiple Steps. The DAG's `step_refs` field links to
@@ -233,13 +233,15 @@ the Step numbering convention (`NN_NN_NN`) to prevent confusion.
 
 An ordered group of Tasks within a Job. Task Groups execute sequentially
 when they have dependencies (`depends_on`), or in parallel when they do
-not. A review gate runs automatically after every Task Group completes.
+not. A review gate MAY run after a Task Group completes, if configured.
+Review gates are optional and omitted by default. The DAG-level
+final_review is the standard quality gate.
 
 Task Groups are identified by `TG01`, `TG02`, etc.
 
-The review gate is the natural unit of git commits: the parent session
-commits all changes from a Task Group as a single commit after the
-review gate passes. This produces an auditable PR with one commit per
+Commits happen per task group regardless of whether a review gate is
+configured: the parent session commits all changes from a Task Group as
+a single commit. This produces an auditable PR with one commit per
 Task Group.
 
 **Relationship to Pipeline Section:** A Task Group is NOT a synonym for
@@ -255,6 +257,10 @@ dispatch. Tasks within a Task Group MAY run in parallel if their
 `file_scope` declarations do not overlap.
 
 Tasks are identified by `T01`, `T02`, etc.
+
+A Task MAY include a `model` field: specifies which model tier the
+orchestrator uses when dispatching this task's agent. When omitted, the
+task inherits the parent session's model.
 
 **Relationship to Step:** A Task is NOT a synonym for Step. A Step is the
 atomic leaf unit of the science hierarchy; it produces one notebook and

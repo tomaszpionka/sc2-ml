@@ -13,14 +13,12 @@ jobs:
       - group_id: "TG01_alpha"
         name: "Write alpha canary"
         depends_on: []
-        review_gate:
-          agent: "reviewer"
-          scope: "diff"
-          on_blocker: "halt"
+        # review_gate: omitted — final_review is the quality gate
         tasks:
           - task_id: "T01"
             name: "Create alpha canary file"
             agent: "executor"
+            model: "haiku"
             spec_file: "planning/specs/spec_01_canary_alpha.md"
             file_scope:
               - "canary/alpha.txt"
@@ -34,14 +32,12 @@ jobs:
       - group_id: "TG01_beta"
         name: "Write beta canary"
         depends_on: []
-        review_gate:
-          agent: "reviewer"
-          scope: "diff"
-          on_blocker: "halt"
+        # review_gate: omitted — final_review is the quality gate
         tasks:
           - task_id: "T02"
             name: "Create beta canary file"
             agent: "executor"
+            model: "haiku"
             spec_file: "planning/specs/spec_02_canary_beta.md"
             file_scope:
               - "canary/beta.txt"

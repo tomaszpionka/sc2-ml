@@ -10,7 +10,7 @@
 #   Job        -- a named logical unit within a DAG. Contains task_groups.
 #   Task Group -- an ordered group of tasks within a job. Execution order
 #                 is sequential across groups within a job. A review gate
-#                 follows every task_group automatically.
+#                 MAY follow a task_group if one is configured (optional).
 #   Task       -- a single agent invocation. Tasks within a task_group MAY
 #                 run in parallel if their file scopes do not overlap.
 #
@@ -28,6 +28,13 @@ plan_ref: "planning/current_plan.md"        # The plan this DAG was derived from
 category: "A"                               # A-F per TAXONOMY.md Category system
 branch: "<branch name per Category convention>"
 base_ref: "master"                          # Branch point SHA or name
+
+# -- Spec consolidation guidance --
+# Combine tasks into fewer specs when they share read_scope or
+# operate on the same logical pattern (e.g., 3 datasets).
+# One executor with a bigger spec is cheaper than three executors
+# that each re-read the same files. Use parameterized dataset
+# tables for multi-dataset work. See plan_template.md for rules.
 
 # Optional: link to the science hierarchy (informational, not authoritative)
 phase_ref: "01"                             # Which Phase this DAG executes within
@@ -55,18 +62,17 @@ jobs:
         description: "<what this group accomplishes as a unit>"
         depends_on: []                      # List of group_ids that must complete first
 
-        # -- Review gate (auto-injected after this group completes) --
-        # The orchestrator automatically runs a review agent after every
-        # task_group. This section configures that review.
-        review_gate:
-          agent: "reviewer-deep"              # Default: reviewer-deep (Opus).
-                                            # Override to "reviewer" (Sonnet) for lightweight
-                                            # groups (all file_scope entries are non-code:
-                                            # .md, .yaml, status files only).
-          base_ref: "auto"                  # "auto" = SHA before first task in group started
-          scope: "diff"                     # "diff" = only changes from this group
-                                            # "cumulative" = all changes since DAG start
-          on_blocker: "halt"                # Always halt and wait for user decision.
+        # -- Review gate (OPTIONAL — omit for most task groups) --
+        # Add a review_gate only when a bad result from this group would
+        # cascade into downstream groups and the final review would catch
+        # it too late (after wasted execution). Most groups do not need one.
+        # When omitted, only the DAG-level final_review runs.
+        #
+        # review_gate:
+        #   agent: "reviewer"
+        #   base_ref: "auto"
+        #   scope: "diff"
+        #   on_blocker: "halt"
 
         tasks:
           - task_id: "T01"
@@ -79,6 +85,18 @@ jobs:
                                             # Read-only agents (planner-science,
                                             # planner) return output to orchestrator
                                             # — they cannot write files directly.
+            model: "sonnet"                 # OPTIONAL — omit to inherit from parent session.
+              # "haiku"  — ONLY when ALL of these hold:
+              #   1. All content is provided verbatim in the spec (no synthesis)
+              #   2. No judgment calls (no "decide if X is interpretive")
+              #   3. No negative constraints ("don't use words like...")
+              #   4. No artifact reading + prose writing
+              #   5. No code changes
+              # "sonnet" — DEFAULT for most executor tasks
+              # "opus"   — when task requires:
+              #   1. Multi-file reasoning across >5 files
+              #   2. Novel methodology decisions
+              #   3. Complex constraint satisfaction (thesis chapters)
             isolation: "inherit"            # "inherit" from default_isolation, or override
             parallel_safe: true             # Can this run in parallel with sibling tasks?
             file_scope:                     # Files this task is expected to WRITE
@@ -102,11 +120,11 @@ jobs:
         name: "<second group, runs after TG01>"
         depends_on: ["TG01"]               # Sequential dependency
 
-        review_gate:
-          agent: "reviewer-deep"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
+        # review_gate:                      # OPTIONAL — see TG01 guidance above
+        #   agent: "reviewer"
+        #   base_ref: "auto"
+        #   scope: "diff"
+        #   on_blocker: "halt"
 
         tasks:
           - task_id: "T03"

@@ -152,6 +152,27 @@ write and what it MAY read from sibling tasks.
 
 - <Question — resolves by: <agent | user decision | experiment>>
 
+## Spec Design Rules
+
+1. **Self-contained.** Every spec must inline its full instructions.
+   Never use "Same as spec_XX" or "Same pattern as spec_XX." If the
+   plan's Execution Steps for a task reference another task, the
+   materializer inlines the full instructions with substituted paths.
+
+2. **Consolidate by read_scope.** Tasks that share the same read_scope
+   (invariants, templates) should be combined into one spec to avoid
+   redundant context loads. Each dispatch pays ~5-10K tokens in overhead.
+
+3. **Parameterize by dataset.** When N tasks do the same thing to N
+   datasets, write one spec with a dataset table. The executor iterates
+   the table. Instructions appear once.
+
+4. **Don't mix model tiers.** A haiku task and a sonnet task need
+   separate specs. The combined spec runs at the higher tier.
+
+5. **Cap at ~15 files.** Very large specs become hard to track. Split
+   at natural boundaries.
+
 ## Suggested Execution Graph
 
 <!--
@@ -181,20 +202,16 @@ jobs:
         description: "<what this group accomplishes as a unit>"
         depends_on: []
 
-        # review_gate runs automatically after this group completes.
-        # Use agent: "reviewer" (Sonnet) for .md/.yaml-only changes.
-        # Use agent: "reviewer-deep" (Opus) for any code changes.
-        review_gate:
-          agent: "reviewer"                    # or "reviewer-deep" for code
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
+        # review_gate: omitted — see dag_template.yaml
+        # Add only at cascade risk boundaries where a bad result would
+        # contaminate downstream groups. Most groups do not need one.
 
         tasks:
           - task_id: "T01"
             name: "<task name>"
             spec_file: "planning/specs/spec_01_<slug>.md"
             agent: "executor"
+            model: "sonnet"                    # sonnet (default) | haiku | opus
             isolation: "inherit"
             parallel_safe: true                # true if file_scope doesn't overlap siblings
             file_scope:
@@ -206,6 +223,7 @@ jobs:
             name: "<task name>"
             spec_file: "planning/specs/spec_02_<slug>.md"
             agent: "executor"
+            model: "sonnet"
             isolation: "inherit"
             parallel_safe: false               # false if reads T01 output
             file_scope:
@@ -218,17 +236,14 @@ jobs:
         name: "<second group name — runs after TG01>"
         depends_on: ["TG01"]
 
-        review_gate:
-          agent: "reviewer-deep"
-          base_ref: "auto"
-          scope: "diff"
-          on_blocker: "halt"
+        # review_gate: omitted — see dag_template.yaml
 
         tasks:
           - task_id: "T03"
             name: "<task name>"
             spec_file: "planning/specs/spec_03_<slug>.md"
             agent: "executor"
+            model: "sonnet"
             isolation: "inherit"
             parallel_safe: false
             file_scope:
@@ -238,7 +253,8 @@ jobs:
             depends_on: []
 
 final_review:
-  agent: "reviewer-adversarial"                # Use "reviewer-deep" for category C/E
+  agent: "reviewer-adversarial"                # Cat A/F: reviewer-adversarial
+                                               # Cat B/C/D/E: reviewer (Sonnet)
   scope: "all"
   base_ref: "master"
   on_blocker: "halt"

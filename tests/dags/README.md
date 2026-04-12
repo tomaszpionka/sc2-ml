@@ -33,7 +33,7 @@ when dispatched with pointer-style prompts via the DAG.
 | 1 | Orchestrator reads specs before dispatching? | NO — only reads DAG |
 | 2 | Executor creates canary files? | YES |
 | 3 | Canary file content matches spec? | YES (random suffixes prove spec was read) |
-| 4 | Review gate runs? | YES |
+| 4 | Final review runs? | YES |
 
 **Results (2026-04-12):**
 
@@ -73,7 +73,7 @@ jobs (simulating parallel dataset work) and that multi-job orchestration works.
 | 2 | Orchestrator sees 2 jobs and dispatches them? | YES |
 | 3 | Pointer dispatch (no spec reading)? | YES |
 | 4 | Both canary files created with correct content? | YES |
-| 5 | Review gates run per job? | YES |
+| 5 | Review gates run per job? | YES (when configured; now opt-in) |
 | 6 | Final review runs across all jobs? | YES |
 
 **Results (2026-04-12):**

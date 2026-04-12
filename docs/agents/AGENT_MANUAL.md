@@ -503,17 +503,36 @@ for the DAG format.
 2. Parent reads `DAG.yaml` and dispatches agents per task group:
    - Parallel-safe tasks within a group run simultaneously.
    - Sequential tasks run one at a time.
-3. After each task group: parent stages, commits, dispatches review gate.
-4. After all groups: final adversarial review.
+3. After each task group: parent stages, commits. If the group has a
+   `review_gate` configured, dispatches the specified review agent
+   (optional — most groups do not need one).
+4. After all groups: final review (reviewer-adversarial for Cat A/F;
+   reviewer for Cat B/C/D/E).
 5. PR wrap-up.
 
 ### Review gates
 
+Review gates are opt-in per task group. Most groups do not need one —
+the DAG-level `final_review` is the standard quality gate. Add a
+per-group review gate only when a bad result would cascade into downstream
+groups before the final review could catch it.
+
 | Gate | Agent | When |
 |------|-------|------|
-| Per-group (heavyweight) | `reviewer-deep` | Any `.py`, `.ipynb`, SQL, or `src/`/`sandbox/` in scope |
-| Per-group (lightweight) | `reviewer` | All scope is `.md`, `.yaml`, status files only |
-| Final | `reviewer-adversarial` | After all groups complete |
+| Per-group (optional) | configured in `review_gate.agent` | Only if `review_gate` is present in the task group |
+| Final | `reviewer-adversarial` (Cat A/F) or `reviewer` (Cat B/C/D/E) | After all groups complete |
+
+### Model assignment
+
+Tasks in a DAG MAY include a `model` field to control the model tier:
+
+- **`"haiku"`** — Only for fully mechanical tasks: all content verbatim
+  in spec, no judgment calls, no code changes.
+- **`"sonnet"`** — Default for most executor tasks.
+- **`"opus"`** — Multi-file reasoning across >5 files, novel methodology
+  decisions, complex constraint satisfaction (thesis chapters).
+
+Omit `model` to inherit from the parent session.
 
 ### Failure handling
 
