@@ -37,7 +37,6 @@ You are an implementation agent for a Python ML thesis codebase.
   (`ruff` and `mypy` run automatically as pre-commit hooks — no manual run needed.)
 - Do NOT mark a step complete until verification passes.
 - Do NOT open PRs or bump versions unless explicitly asked.
-- Use `source .venv/bin/activate && poetry run` always. Never bare `python3` or `pip`.
 
 ## Parallel execution rules
 When spawned as one of multiple parallel executors:
@@ -85,25 +84,8 @@ When spawned with `isolation: "worktree"`:
 2. Save all report artifacts to `get_reports_dir(game, dataset) / "artifacts"` —
    never to the dataset report root directly. The `artifacts/` subdirectory is
    the only valid target for machine-generated outputs (CSV, MD, PNG).
-3. All functions and classes must live in `src/rts_predict/` and be imported.
-   Cells are capped at `[cells] max_lines` from `sandbox/notebook_config.toml`.
-   Notebooks are thin orchestration only — SQL strings, function calls, and
-   display logic.
-4. After completing the notebook, run fresh-kernel execution:
-   `source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 {path}`
-5. **Immediately after `nbconvert --inplace`**, run `source .venv/bin/activate && poetry run jupytext --sync {path}`.
-   `nbconvert` writes `execution_count` and `language_info` back into the `.ipynb`.
-   The jupytext metadata filter strips `language_info` on the next sync, and the
-   pre-commit hook nullifies `execution_count`. If you skip the sync before staging,
-   the working tree will be dirty after the next sync and the pre-commit hook will
-   fail on subsequent operations. Alternative: use `--output executed.ipynb` to
-   write to a sibling file instead of `--inplace`, never modifying the canonical
-   notebook — but follow exactly one pattern consistently per notebook.
-6. Verify both `.ipynb` and `.py` pair files are present and synced.
-7. Update the active dataset's `research_log.md` with a new entry.
-8. DuckDB connections are read-only by default. Document any write-access need
-   in the front-matter.
-9. Do NOT import from `processing.py` in any notebook.
+See `sandbox/README.md` for cell caps, jupytext sync, nbconvert, and
+DuckDB access rules.
 
 ## Read first
 When dispatched with a `spec_file` reference (DAG execution):
@@ -121,23 +103,6 @@ Always (both paths):
 - For Category A or F work, also read the active dataset's `PHASE_STATUS.yaml`
   (at `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`)
 
-## Data layout (for reference)
-
-**StarCraft II — sc2egset** (`src/rts_predict/sc2/data/sc2egset/`):
-- `raw/` — NEVER modify (deny rule enforced in settings.json)
-- `staging/in_game_events/` — reproducible Parquet files
-- `db/db.duckdb` — main DuckDB database
-- `tmp/` — DuckDB spill-to-disk
-- Paths defined in `src/rts_predict/sc2/config.py` via DATASET_DIR
-
-**Age of Empires II — aoe2companion** (`src/rts_predict/aoe2/data/aoe2companion/`):
-- `matches/` — daily Parquet files
-- `ratings/` — daily Parquet files
-- `leaderboards/` — snapshot Parquet files
-- `profiles/` — snapshot Parquet files
-- Paths defined in `src/rts_predict/aoe2/config.py`
-
-**Age of Empires II — aoestats** (`src/rts_predict/aoe2/data/aoestats/`):
-- `matches/` — weekly Parquet files (paired with `players/`, directories must match)
-- `players/` — weekly Parquet files (paired with `matches/`, directories must match)
-- Paths defined in `src/rts_predict/aoe2/config.py`
+## Data layout
+Paths defined in `src/rts_predict/<game>/config.py`. See `ARCHITECTURE.md`
+game package contract for the full directory structure.

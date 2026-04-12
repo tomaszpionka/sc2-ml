@@ -26,19 +26,6 @@ repos:
         types: [python]
         pass_filenames: false
 
-  # ── Phase-table drift check ────────────────────────────────────────────────
-  # Runs only when docs/PHASES.md or docs/ml_experiment_phases/PHASES.md is
-  # staged. Compares phase number + name pairs and fails if they diverge.
-  # No dependencies — stdlib only.
-  - repo: local
-    hooks:
-      - id: phases-drift
-        name: phases table drift check
-        entry: python scripts/hooks/check_phases_drift.py
-        language: system
-        files: ^docs/(PHASES\.md|ml_experiment_phases/PHASES\.md)$
-        pass_filenames: false
-
   # ── Jupytext sync (notebook pairs in sandbox/) ─────────────────────────────
   # Keeps .py and .ipynb paired files in sync. Both files must be staged
   # together when committing a notebook change (sandbox/README.md rule 4).

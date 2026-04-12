@@ -43,15 +43,8 @@ All non-trivial work uses three phases. `planning/current_plan.md` is the
 handoff artifact; `planning/dags/DAG.yaml` and `planning/specs/spec_*.md`
 are the execution contract.
 
-**Planning session:** Identify category (A–F), read required context, write plan
-to `planning/current_plan.md`. Plan MUST include a Suggested Execution Graph.
-No code changes. End by asking for approval.
-
-**Materialization (first action after approval):** (a) Purge old `specs/spec_*.md`
-(keep README.md). (b) Generate new `specs/spec_NN_<name>.md` from the plan —
-numbering always starts at 01. (c) Generate `dags/DAG.yaml` with `spec_file`
-pointing to (b). (d) Update `planning/INDEX.md`. (e) Commit together. Execution
-MUST NOT begin until DAG + specs exist on disk — no exceptions.
+See `planning/README.md` for the full planning and materialization protocol.
+Key rule: execution MUST NOT begin until DAG + specs exist on disk.
 
 **Execution:** Read `planning/dags/DAG.yaml` → dispatch agents per task groups →
 agents read their assigned spec file, not the full plan → review gates after
@@ -96,21 +89,16 @@ See `ARCHITECTURE.md` for the full cross-cutting files table and source-of-truth
 hierarchy. Quick pointers for the most common lookups:
 
 - Step status: `src/rts_predict/<game>/reports/<dataset>/STEP_STATUS.yaml`
-- Pipeline section status: `src/rts_predict/<game>/reports/<dataset>/PIPELINE_SECTION_STATUS.yaml`
 - Phase status: `src/rts_predict/<game>/reports/<dataset>/PHASE_STATUS.yaml`
 - Scientific invariants: `.claude/scientific-invariants.md`
 - Canonical phase list: `docs/PHASES.md`
+- Directory map: `docs/INDEX.md`
 
 ## Phase Work Execution
 
 See `sandbox/README.md` for the full notebook contract. Key rule:
 all Category A code execution happens in jupytext-paired notebooks under
 `sandbox/<game>/<dataset>/`.
-
-## Parallel Executor Orchestration
-
-See `ARCHITECTURE.md` or `docs/agents/AGENT_MANUAL.md` for Strategy A
-(shared branch) vs Strategy B (worktree isolation) details.
 
 ## Agent Architecture
 
@@ -132,9 +120,5 @@ code until instructed.
 
 ## Progress Tracking
 
-See `ARCHITECTURE.md` for the full tracking protocol. Key rules:
-- **Session start:** Read active STEP_STATUS.yaml and PHASE_STATUS.yaml, then scientific-invariants.md
-- **After Category A step:** Update the active dataset's `research_log.md`
-- **After phase gate:** Update PHASE_STATUS.yaml, check `thesis/WRITING_STATUS.md`
-- **After Category F:** Update `thesis/chapters/REVIEW_QUEUE.md`
-- **Session end:** See git-workflow rule (loads on PR/commit operations)
+See `ARCHITECTURE.md` for the full tracking protocol.
+Key: read active STEP_STATUS.yaml + PHASE_STATUS.yaml at session start.

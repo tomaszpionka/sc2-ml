@@ -165,42 +165,16 @@ section.
 
 ## Progress tracking
 
-Phase progress per dataset is tracked through a three-tier derivation chain
-of machine-readable status files, all at the dataset level:
-
-1. `STEP_STATUS.yaml` — step-level status, derived from the dataset ROADMAP.
-   Each step entry includes a `pipeline_section` upward link.
-2. `PIPELINE_SECTION_STATUS.yaml` — pipeline section status, derived from
-   STEP_STATUS.yaml. Only lists pipeline sections for active phases.
-3. `PHASE_STATUS.yaml` — phase-level status, derived from
-   PIPELINE_SECTION_STATUS.yaml. Lists all 7 phases.
-
-Claude Code reads the active dataset's PHASE_STATUS.yaml at session start to
-determine the current phase without parsing full roadmaps. At session start,
-also read STEP_STATUS.yaml to determine the most recent step completed.
-
-Thesis section progress is tracked in `thesis/WRITING_STATUS.md` (per-section status)
-and `thesis/chapters/REVIEW_QUEUE.md` (Pass 2 review queue).
-
-The changelog (`CHANGELOG.md`) tracks code changes per version. The research log
-tracks analytical findings per phase: `reports/research_log.md` is the index and
-holds cross-cutting (`[CROSS]`) entries; per-dataset findings live at
-`src/rts_predict/<game>/reports/<dataset>/research_log.md`.
+Progress is tracked via the three-tier derivation chain described in
+Source-of-Truth tier 7a-7c above (STEP_STATUS.yaml → PIPELINE_SECTION_STATUS.yaml
+→ PHASE_STATUS.yaml). See that section for the full derivation chain and
+authoritative definitions.
 
 ## Version management
 
-- Single version source: `pyproject.toml`
-- No `__version__` in any `__init__.py` (neither top-level nor game packages)
-- Version is bumped at PR creation time (see `.claude/git-workflow.md`)
-- Bumped atomically in two places: `pyproject.toml` and `CHANGELOG.md`
+See `.claude/rules/git-workflow.md` for version bump rules and changelog protocol.
 
-## Thesis writing workflow (two-pass)
+## Thesis writing workflow
 
-See `.claude/rules/thesis-writing.md` for full details. Summary:
-
-- **Pass 1 (Claude Code):** Draft section, run critical review checklist,
-  plant `[REVIEW: ...]` flags, update `REVIEW_QUEUE.md`
-- **Pass 2 (Claude Chat):** External validation against literature, resolve
-  flags, check methodology alignment with field norms
-
-The handoff protocol is defined in `.claude/rules/thesis-writing.md`.
+See `.claude/rules/thesis-writing.md` for the full two-pass workflow, critical
+review checklist, and Chat handoff protocol.
