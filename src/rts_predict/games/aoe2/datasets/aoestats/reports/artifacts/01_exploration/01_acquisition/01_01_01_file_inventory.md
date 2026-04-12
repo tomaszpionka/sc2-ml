@@ -4,7 +4,7 @@
 
 **Total files:** 349
 
-**Total size:** 3773.62 MB
+**Total size:** 3773.61 MB
 
 **Subdirectories:** 3
 

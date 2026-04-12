@@ -1,9 +1,9 @@
 {
   "step": "01_01_01",
   "dataset": "aoestats",
-  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoestats/raw",
+  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/aoe2/datasets/aoestats/data/raw",
   "total_files": 349,
-  "total_bytes": 3956922158,
+  "total_bytes": 3956920062,
   "num_subdirs": 3,
   "files_at_root": 2,
   "subdirs": [

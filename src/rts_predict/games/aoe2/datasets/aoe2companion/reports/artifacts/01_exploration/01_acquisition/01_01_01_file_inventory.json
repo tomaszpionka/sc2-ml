@@ -1,11 +1,11 @@
 {
   "step": "01_01_01",
   "dataset": "aoe2companion",
-  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/aoe2/data/aoe2companion/raw",
-  "total_files": 4154,
-  "total_bytes": 9843827819,
+  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw",
+  "total_files": 4153,
+  "total_bytes": 9843818592,
   "num_subdirs": 4,
-  "files_at_root": 3,
+  "files_at_root": 2,
   "subdirs": [
     {
       "name": "leaderboards",
@@ -72,11 +72,10 @@
     "match-{date}.parquet": 2073,
     "rating-{date}.csv": 2072,
     ".gitkeep": 4,
-    ".DS_Store": 1,
     "README.md": 1,
     "_download_manifest.json": 1,
     "leaderboard.parquet": 1,
     "profile.parquet": 1
   },
-  "total_files_scanned": 4154
+  "total_files_scanned": 4153
 }

@@ -10,9 +10,9 @@
 
 **Total replay size:** 214060.62 MB
 
-**Metadata files (zip/log/json at tournament level):** 432
+**Metadata files (zip/log/json at tournament level):** 431
 
-**Files at root level:** 4
+**Files at root level:** 3
 
 
 ## Summary statistics (replays per tournament)
@@ -98,13 +98,13 @@
 
 ## Filename patterns
 
-Total files scanned: 22822
+Total files scanned: 22821
 
 | Pattern | Count |
 |---|---|
 | `{hash}.SC2Replay.json` | 22390 |
 | `map_foreign_to_english_mapping.json` | 70 |
-| `.DS_Store` | 9 |
+| `.DS_Store` | 8 |
 | `{N}_IEM_Katowice_data.zip` | 5 |
 | `{N}_IEM_Katowice_main_log.log` | 5 |
 | `{N}_IEM_Katowice_processed_failed.log` | 5 |

@@ -2,13 +2,13 @@
 
 **Raw directory:** `/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/aoe2/datasets/aoe2companion/data/raw`
 
-**Total files:** 4154
+**Total files:** 4153
 
-**Total size:** 9387.81 MB
+**Total size:** 9387.80 MB
 
 **Subdirectories:** 4
 
-**Files at root level:** 3
+**Files at root level:** 2
 
 
 ## Per-subdirectory breakdown
@@ -38,14 +38,13 @@
 
 ## Filename patterns
 
-Total files scanned: 4154
+Total files scanned: 4153
 
 | Pattern | Count |
 |---|---|
 | `match-{date}.parquet` | 2073 |
 | `rating-{date}.csv` | 2072 |
 | `.gitkeep` | 4 |
-| `.DS_Store` | 1 |
 | `README.md` | 1 |
 | `_download_manifest.json` | 1 |
 | `leaderboard.parquet` | 1 |

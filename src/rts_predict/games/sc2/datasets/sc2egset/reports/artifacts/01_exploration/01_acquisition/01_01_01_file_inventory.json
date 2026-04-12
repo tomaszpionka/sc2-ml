@@ -1,11 +1,11 @@
 {
   "step": "01_01_01",
   "dataset": "sc2egset",
-  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/sc2/data/sc2egset/raw",
+  "raw_dir": "/Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/sc2/datasets/sc2egset/data/raw",
   "layout": "two-level: raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json",
   "num_tournament_dirs": 70,
-  "files_at_root": 4,
-  "metadata_files_total": 432,
+  "files_at_root": 3,
+  "metadata_files_total": 431,
   "total_replay_files": 22390,
   "total_replay_bytes": 224458832476,
   "tournaments_missing_data_dir": [],
@@ -644,7 +644,7 @@
   "filename_patterns": {
     "{hash}.SC2Replay.json": 22390,
     "map_foreign_to_english_mapping.json": 70,
-    ".DS_Store": 9,
+    ".DS_Store": 8,
     "{N}_IEM_Katowice_data.zip": 5,
     "{N}_IEM_Katowice_main_log.log": 5,
     "{N}_IEM_Katowice_processed_failed.log": 5,
@@ -909,5 +909,5 @@
     "{N}_StaraZagora_BellumGensElite_processed_mapping.json": 1,
     "{N}_StaraZagora_BellumGensElite_summary.json": 1
   },
-  "total_files_scanned": 22822
+  "total_files_scanned": 22821
 }
