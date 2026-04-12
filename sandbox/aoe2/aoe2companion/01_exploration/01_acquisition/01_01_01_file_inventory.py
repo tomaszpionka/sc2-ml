@@ -22,7 +22,7 @@
 # **Dataset:** aoe2companion
 # **Question:** What files exist on disk, how many are there, and how are they organized?
 # **Invariants applied:** #6 (reproducibility), #7 (no magic numbers)
-# **ROADMAP reference:** `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` Step 01_01_01
+# **ROADMAP reference:** `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` Step 01_01_01
 # **Commit:** 0a77634
 #
 # This notebook walks the aoe2companion raw directory and counts everything.
@@ -234,8 +234,8 @@ logger.info("Markdown artifact written: %s", md_path)
 # ## Conclusion
 #
 # ### Artifacts produced
-# - `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown and date analysis
-# - `src/rts_predict/aoe2/reports/aoe2companion/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md` — human-readable inventory report
+# - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json` — structured inventory with per-subdirectory breakdown and date analysis
+# - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md` — human-readable inventory report
 #
 # ### Thesis mapping
 # - Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data

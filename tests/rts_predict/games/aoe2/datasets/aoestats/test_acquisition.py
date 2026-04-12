@@ -1,4 +1,4 @@
-"""Tests for src/rts_predict/aoe2/data/aoestats/acquisition.py."""
+"""Tests for src/rts_predict/games/aoe2/datasets/aoestats/acquisition.py."""
 
 import hashlib
 import json

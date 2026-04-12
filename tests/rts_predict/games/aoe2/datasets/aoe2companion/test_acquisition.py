@@ -1,4 +1,4 @@
-"""Tests for src/rts_predict/aoe2/data/aoe2companion/acquisition.py."""
+"""Tests for src/rts_predict/games/aoe2/datasets/aoe2companion/acquisition.py."""
 
 import json
 import urllib.error
