@@ -3,24 +3,24 @@ from pathlib import Path
 from rts_predict.common.db import DatasetConfig
 
 # ── Project paths ──────────────────────────────────────────────────────────────
-GAME_DIR: Path = Path(__file__).resolve().parent                # src/rts_predict/sc2/
-ROOT_DIR: Path = GAME_DIR.parent.parent.parent                  # repo root
-DATA_DIR: Path = GAME_DIR / "data"                              # src/rts_predict/sc2/data/
-DATASET_DIR: Path = DATA_DIR / "sc2egset"                       # src/rts_predict/sc2/data/sc2egset/
-REPORTS_DIR: Path = GAME_DIR / "reports"
-DATASET_REPORTS_DIR: Path = REPORTS_DIR / "sc2egset"
-DATASET_ARTIFACTS_DIR: Path = DATASET_REPORTS_DIR / "artifacts"
-DB_FILE: Path = DATASET_DIR / "db" / "db.duckdb"
+GAME_DIR: Path = Path(__file__).resolve().parent                # games/sc2/
+ROOT_DIR: Path = GAME_DIR.parent.parent.parent.parent           # 4 levels to repo root
+DATASETS_DIR: Path = GAME_DIR / "datasets"
+DATASET_DIR: Path = DATASETS_DIR / "sc2egset"
+DATA_DIR: Path = DATASET_DIR / "data"
+REPORTS_DIR: Path = DATASET_DIR / "reports"
+DATASET_ARTIFACTS_DIR: Path = REPORTS_DIR / "artifacts"
+DB_FILE: Path = DATA_DIR / "db" / "db.duckdb"
 
 # DuckDB configuration
-DUCKDB_TEMP_DIR: Path = DATASET_DIR / "tmp"
+DUCKDB_TEMP_DIR: Path = DATA_DIR / "tmp"
 
 # Raw replay files location
-REPLAYS_SOURCE_DIR: Path = DATASET_DIR / "raw"
+REPLAYS_SOURCE_DIR: Path = DATA_DIR / "raw"
 
 # ── In-game data (Path B) ─────────────────────────────────────────────────────
-IN_GAME_PARQUET_DIR: Path = DATASET_DIR / "staging" / "in_game_events"
-IN_GAME_MANIFEST_PATH: Path = DATASET_DIR / "staging" / "in_game_processing_manifest.json"
+IN_GAME_PARQUET_DIR: Path = DATA_DIR / "staging" / "in_game_events"
+IN_GAME_MANIFEST_PATH: Path = DATA_DIR / "staging" / "in_game_processing_manifest.json"
 IN_GAME_WORKERS: int = 8
 IN_GAME_BATCH_SIZE: int = 50  # Files accumulated before Parquet flush
 
