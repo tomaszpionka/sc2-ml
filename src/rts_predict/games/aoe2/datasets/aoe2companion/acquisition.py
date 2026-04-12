@@ -21,7 +21,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rts_predict.aoe2.config import (
+from rts_predict.games.aoe2.config import (
     AOE2COMPANION_MANIFEST,
     AOE2COMPANION_RAW_DIR,
     AOE2COMPANION_RAW_LEADERBOARDS_DIR,

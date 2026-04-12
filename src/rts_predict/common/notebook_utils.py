@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 _SUPPORTED_GAMES: frozenset[str] = frozenset({"sc2", "aoe2"})
 
 # ── Config module path template ────────────────────────────────────────────────
-_CONFIG_MODULE_TEMPLATE: str = "rts_predict.{game}.config"
+_CONFIG_MODULE_TEMPLATE: str = "rts_predict.games.{game}.config"
 
 
 def _load_game_config(game: str) -> ModuleType:

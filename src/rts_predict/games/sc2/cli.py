@@ -7,7 +7,7 @@ from pathlib import Path
 
 from rts_predict.common.db_cli import add_db_subparser, handle_db_command
 from rts_predict.common.schema_export import export_schemas
-from rts_predict.sc2.config import DATASETS, DEFAULT_DATASET
+from rts_predict.games.sc2.config import DATASETS, DEFAULT_DATASET
 
 logger = logging.getLogger("SC2_Pipeline")
 

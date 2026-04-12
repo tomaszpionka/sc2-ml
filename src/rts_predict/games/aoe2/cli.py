@@ -5,8 +5,8 @@ import logging
 import sys
 from pathlib import Path
 
-from rts_predict.aoe2.config import DATASETS, DEFAULT_DATASET
 from rts_predict.common.db_cli import add_db_subparser, handle_db_command
+from rts_predict.games.aoe2.config import DATASETS, DEFAULT_DATASET
 
 logger = logging.getLogger("AoE2_Pipeline")
 
@@ -22,11 +22,11 @@ def _handle_download(args: argparse.Namespace) -> None:
         kwargs["log_interval"] = args.log_interval
 
     if args.source == "aoe2companion":
-        import rts_predict.aoe2.data.aoe2companion.acquisition as _companion
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as _companion
 
         result = _companion.run_download(**kwargs)
     else:
-        import rts_predict.aoe2.data.aoestats.acquisition as _aoestats
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as _aoestats
 
         kwargs["force"] = args.force
         result = _aoestats.run_download(**kwargs)

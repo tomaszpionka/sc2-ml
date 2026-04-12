@@ -19,7 +19,7 @@ from pathlib import Path
 
 import duckdb
 
-from rts_predict.aoe2.data.aoe2companion.types import DtypeDecision
+from rts_predict.games.aoe2.datasets.aoe2companion.types import DtypeDecision
 
 logger = logging.getLogger(__name__)
 

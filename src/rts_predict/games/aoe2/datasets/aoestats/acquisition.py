@@ -18,7 +18,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rts_predict.aoe2.config import (
+from rts_predict.games.aoe2.config import (
     AOESTATS_MANIFEST,
     AOESTATS_RAW_DIR,
     AOESTATS_RAW_MATCHES_DIR,
