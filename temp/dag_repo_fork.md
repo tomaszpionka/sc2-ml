@@ -3,10 +3,17 @@
 ## 1. What This Is
 
 The thesis repo (`rts-outcome-prediction`) contains a mature, battle-tested
-DAG-based orchestration system for Claude Code. It manages the full lifecycle:
-plan → critique → materialize → execute → review → ship. This document plans
-the extraction of that system into a standalone, repo-agnostic framework that
-anyone can install into their Claude Code project.
+orchestration system for Claude Code. It manages the **full software delivery
+lifecycle**: plan → critique → materialize → execute → review → commit →
+changelog → PR → ship. This document plans the extraction of that system into
+a standalone, repo-agnostic framework that anyone can install into their
+Claude Code project.
+
+The system is not just a "DAG executor" — it's a complete delivery workflow.
+The DAG is the most novel piece, but the commit conventions, changelog
+automation, and PR templating are what make it end-to-end. Extracting only
+the middle (plan → execute) without the bookends (commit → ship) would leave
+adopters to reinvent the same patterns the thesis repo already solved.
 
 **Non-goal:** destroying or degrading the thesis repo. The extraction is
 additive — the thesis repo keeps working as-is. The standalone repo is built
@@ -29,6 +36,10 @@ no thesis concepts, no ML phases, no scientific invariants, no dataset paths.
 | `/materialize_plan` | `.claude/commands/materialize_plan.md` | Plan → specs + DAG.yaml (mechanical extraction) |
 | `/dag` | `.claude/commands/dag.md` | DAG executor (parse graph, dispatch agents, review gates) |
 | `/pr` | `.claude/commands/pr.md` | PR wrap-up (checks, version bump, CHANGELOG, create PR) |
+| Commit formatting | `.github/tmp/commit.txt` convention | Temp-file commit messages (avoids zsh heredoc breakage) |
+| CHANGELOG automation | `CHANGELOG.md` `[Unreleased]` protocol | Keep-a-Changelog with automated version promotion |
+| PR templating | `.github/tmp/pr.txt` convention | Human-reviewable PR body before creation |
+| PR body template | `.github/pull_request_template.md` | Summary / Motivation / Test plan structure |
 | Planning scaffold | `planning/{README.md, INDEX.md, dags/, specs/}` | Directory structure + lifecycle rules |
 | `log-subagent.sh` | `scripts/hooks/log-subagent.sh` | Agent audit trail (session/start/stop/tokens) |
 | `log-bash.sh` | `scripts/hooks/log-bash.sh` | Bash command audit trail |
@@ -103,7 +114,8 @@ claude-dag/
 │   ├── commands/                     # Claude Code slash commands
 │   │   ├── dag.md                    # DAG executor
 │   │   ├── materialize_plan.md       # Plan → specs + DAG
-│   │   └── pr.md                     # PR wrap-up
+│   │   ├── pr.md                     # PR wrap-up (full delivery pipeline)
+│   │   └── commit.md                 # Commit helper (optional standalone use)
 │   │
 │   ├── agents/                       # Generic agent definitions
 │   │   ├── executor.md               # Implementation agent (generic)
@@ -113,16 +125,25 @@ claude-dag/
 │   │   └── lookup.md                 # Quick Q&A agent (generic)
 │   │
 │   ├── rules/                        # CLAUDE.md injectable snippets
-│   │   └── dag-workflow.md           # Plan/execute/dispatch rules
+│   │   ├── dag-workflow.md           # Plan/execute/dispatch rules
+│   │   └── delivery-workflow.md      # Commit/changelog/PR conventions
+│   │
+│   ├── delivery/                     # Delivery pipeline assets
+│   │   ├── CHANGELOG_TEMPLATE.md     # Seed CHANGELOG with [Unreleased] headers
+│   │   ├── pull_request_template.md  # PR body structure (Summary/Motivation/Test plan)
+│   │   └── commit_conventions.md     # Conventional commit reference + temp-file protocol
 │   │
 │   └── scaffold/                     # Planning directory structure
-│       └── planning/
-│           ├── README.md
-│           ├── INDEX.md
-│           ├── dags/
-│           │   └── README.md
-│           └── specs/
-│               └── README.md
+│       ├── planning/
+│       │   ├── README.md
+│       │   ├── INDEX.md
+│       │   ├── dags/
+│       │   │   └── README.md
+│       │   └── specs/
+│       │       └── README.md
+│       └── .github/
+│           ├── tmp/.gitkeep          # Ephemeral commit/PR body staging area
+│           └── pull_request_template.md
 │
 ├── hooks/                            # Observability & safety hooks
 │   ├── log-subagent.sh               # Agent session lifecycle + tokens
@@ -164,6 +185,7 @@ claude-dag/
 └── docs/
     ├── GETTING_STARTED.md
     ├── CONFIGURATION.md
+    ├── DELIVERY_WORKFLOW.md          # Commit, changelog, PR conventions
     ├── OBSERVABILITY.md
     ├── ARCHITECTURE.md               # How the orchestration protocol works
     └── MIGRATION.md                  # Migrating from embedded to standalone
@@ -241,14 +263,60 @@ review_gate:
   lightweight_agent: "reviewer"
   on_blocker: "halt"
 
-# --- PR workflow ---
+# --- Delivery workflow ---
+# Covers the full commit → changelog → PR pipeline.
+
+commit:
+  # Temp-file protocol: write message to this path, then `git commit -F <path>`.
+  # Avoids zsh heredoc breakage and gives Claude Code a reliable commit path.
+  staging_file: ".github/tmp/commit.txt"
+  # Conventional commit format: type(scope): description
+  # The framework maps branch prefixes to types automatically.
+  prefix_to_type:
+    "feat/":      "feat"
+    "refactor/":  "refactor"
+    "chore/":     "chore"
+    "fix/":       "fix"
+    "docs/":      "docs"
+    "test/":      "test"
+  # Co-author line appended to every commit (set null to disable)
+  co_author: "Claude <noreply@anthropic.com>"
+
+changelog:
+  # Path to CHANGELOG.md (relative to repo root)
+  file: "CHANGELOG.md"
+  # Format: "keep-a-changelog" (only supported format for now)
+  format: "keep-a-changelog"
+  # Section headers under [Unreleased]
+  sections: ["Added", "Changed", "Fixed", "Removed"]
+  # Version heading format. Placeholders: {version}, {date}, {pr_number}, {branch}
+  version_heading: "[{version}] — {date} (PR #{pr_number}: {branch})"
+
 pr:
+  # Temp-file protocol: write PR body here for human review before creation.
+  # Human reads it, approves/edits, then `gh pr create --body-file <path>`.
+  staging_file: ".github/tmp/pr.txt"
+  # PR body template sections
+  body_sections:
+    - "## Summary"        # 1-5 bullets, auto-generated from diff + commit log
+    - "## Motivation"     # optional — include only when reason is non-obvious
+    - "## Test plan"      # concrete steps: commands run, artifacts verified
+  # Footer appended to every PR body
+  footer: "Generated with [Claude Code](https://claude.com/claude-code)"
+  # Cleanup: delete staging files after PR creation
+  cleanup_after_create: true
+  # Version bump configuration
   version_file: "pyproject.toml"         # or package.json, Cargo.toml, VERSION
   version_path: "tool.poetry.version"    # TOML path / JSON path to version string
+  # Branch prefix → bump type mapping
+  bump_rules:
+    minor: ["feat/", "refactor/", "docs/"]
+    patch: ["fix/", "test/", "chore/"]
+  # Pre-PR checks (project-specific commands)
   checks: []                             # populated per-project, e.g.:
     # - "npm test"
     # - "cargo test"
-    # - "poetry run pytest tests/ -v --cov"
+    # - "source .venv/bin/activate && poetry run pytest tests/ -v --cov"
   coverage_threshold: null               # integer or null to skip
 
 # --- Observability ---
@@ -318,7 +386,29 @@ install:
 	# 4. Install slash commands
 	@mkdir -p $(TARGET)/.claude/commands
 	@cp $(CLAUDE_DAG_ROOT)/core/commands/* $(TARGET)/.claude/commands/
-	@echo "  + commands: dag.md, materialize_plan.md, pr.md"
+	@echo "  + commands: dag.md, materialize_plan.md, pr.md, commit.md"
+
+	# 4b. Install delivery workflow assets
+	@mkdir -p $(TARGET)/.github/tmp
+	@touch $(TARGET)/.github/tmp/.gitkeep
+	@if [ ! -f "$(TARGET)/.github/pull_request_template.md" ]; then \
+	  cp $(CLAUDE_DAG_ROOT)/core/delivery/pull_request_template.md $(TARGET)/.github/; \
+	  echo "  + .github/pull_request_template.md"; \
+	else \
+	  echo "  ~ .github/pull_request_template.md (exists, skipped)"; \
+	fi
+	@if [ ! -f "$(TARGET)/CHANGELOG.md" ]; then \
+	  cp $(CLAUDE_DAG_ROOT)/core/delivery/CHANGELOG_TEMPLATE.md $(TARGET)/CHANGELOG.md; \
+	  echo "  + CHANGELOG.md (seeded from template)"; \
+	else \
+	  echo "  ~ CHANGELOG.md (exists, skipped)"; \
+	fi
+	@# Add .github/tmp/* to .gitignore (commit.txt and pr.txt are ephemeral)
+	@if [ -f "$(TARGET)/.gitignore" ]; then \
+	  grep -qF '.github/tmp/' $(TARGET)/.gitignore || \
+	    echo '.github/tmp/*' >> $(TARGET)/.gitignore && \
+	    echo '!.github/tmp/.gitkeep' >> $(TARGET)/.gitignore; \
+	fi
 
 	# 5. Install hooks
 	@mkdir -p $(TARGET)/scripts/hooks
@@ -355,8 +445,10 @@ status:
 	@echo "Framework files in $(TARGET):"
 	@for f in planning/README.md planning/INDEX.md dagrc.yaml \
 	          .claude/commands/dag.md .claude/commands/materialize_plan.md \
+	          .claude/commands/pr.md .claude/commands/commit.md \
 	          .claude/agents/executor.md scripts/hooks/log-subagent.sh \
-	          scripts/audit/cli.py; do \
+	          scripts/audit/cli.py CHANGELOG.md .github/tmp/.gitkeep \
+	          .github/pull_request_template.md; do \
 	  [ -f "$(TARGET)/$$f" ] && echo "  OK  $$f" || echo "  MISSING $$f"; \
 	done
 
@@ -398,19 +490,129 @@ uninstall:
 
 **Extraction effort:** Small — one conditional to generalize.
 
-### 4.3 `/pr` Wrap-Up (`.claude/commands/pr.md`)
+### 4.3 Delivery Workflow (commit + changelog + PR)
+
+The thesis repo solved three problems that every Claude Code project hits.
+These get promoted from "buried inside `/pr`" to first-class framework
+features with their own config, conventions, and documentation.
+
+#### 4.3.1 Commit Formatting
+
+**The problem solved:** zsh heredocs break with Claude Code. Multiline commit
+messages via `git commit -m "$(cat <<'EOF' ... EOF)"` fail silently or
+mangle content in zsh. The thesis repo discovered a reliable alternative:
+write the message to a temp file, then `git commit -F <path>`.
+
+**Current implementation:**
+- Write message to `.github/tmp/commit.txt` (the Write tool, not echo/heredoc)
+- `git commit -F .github/tmp/commit.txt`
+- Delete after commit succeeds
+- Used by both `/materialize_plan` (for materialization commits) and `/pr`
+  (for release commits)
+
+**What the framework provides:**
+- `commit.staging_file` config in dagrc.yaml (default: `.github/tmp/commit.txt`)
+- `commit.prefix_to_type` mapping: branch prefix → conventional commit type
+- `commit.co_author` config for the `Co-Authored-By` trailer
+- Optional `/commit` slash command for standalone use (outside DAG flow)
+- The `delivery-workflow.md` CLAUDE.md rule snippet that teaches Claude Code
+  the temp-file protocol
+
+**Extraction effort:** Low — the convention is already generic. Just needs
+config reads instead of hardcoded paths.
+
+#### 4.3.2 CHANGELOG Automation
+
+**The problem solved:** manual CHANGELOG maintenance is error-prone and gets
+skipped. The thesis repo automates it: an `[Unreleased]` section accumulates
+changes, and at PR time the `/pr` command promotes it to a versioned heading.
+
+**Current implementation:**
+- CHANGELOG.md follows Keep-a-Changelog format
+- `[Unreleased]` section has four headers: Added, Changed, Fixed, Removed
+- On version bump: contents move to `[X.Y.Z] — YYYY-MM-DD (PR #N: branch)]`
+- `[Unreleased]` is left empty with the standard headers
+
+**What the framework provides:**
+- `changelog.file` config (default: `CHANGELOG.md`)
+- `changelog.sections` config (customizable section headers)
+- `changelog.version_heading` format string with placeholders
+- A seed `CHANGELOG_TEMPLATE.md` that `make install` copies if no CHANGELOG
+  exists
+- The `/pr` command reads changelog config from dagrc.yaml instead of
+  hardcoding the format
+
+**Extraction effort:** Low — the format is already Keep-a-Changelog standard.
+The heading format string is the only parameterization needed.
+
+#### 4.3.3 PR Templating
+
+**The problem solved:** PR bodies generated by Claude Code go directly to
+GitHub with no human review. The thesis repo adds a staging step: write the
+body to a temp file, let the human read and approve it, then create the PR.
+This prevents "oops, wrong PR body" and gives veto power.
+
+**Current implementation:**
+- Write PR body to `.github/tmp/pr.txt` using the Write tool
+- Tell the user: "PR body written — please review"
+- User reads, approves (or edits)
+- `gh pr create --body-file .github/tmp/pr.txt`
+- Delete `.github/tmp/pr.txt` after creation
+- PR body follows `.github/pull_request_template.md`: Summary, Motivation
+  (optional), Test plan
+
+**What the framework provides:**
+- `pr.staging_file` config (default: `.github/tmp/pr.txt`)
+- `pr.body_sections` config (customizable section list)
+- `pr.footer` config (customizable footer line)
+- `pr.cleanup_after_create` flag
+- A seed `pull_request_template.md` that `make install` places in `.github/`
+- The `.github/tmp/` directory is scaffolded with a `.gitkeep` (the directory
+  must exist for the Write tool to succeed; the temp files themselves are
+  gitignored)
+
+**Extraction effort:** Low — already generic. Just needs config reads.
+
+#### 4.3.4 `/pr` Command (the orchestrator)
 
 **Current state:** 113 lines. ~70% generic.
 
-**What changes:**
-- Step 1 checks (lines 22-24): hardcodes `ruff`, `mypy`, `pytest`. Generalize
-  to read `pr.checks` from `dagrc.yaml`.
-- Step 2 version bump (lines 37-46): hardcodes `pyproject.toml` and branch
-  prefix mapping. Generalize to read `pr.version_file` and
-  `categories.*.branch_prefix` from config.
-- Step 2 branch prefix → bump type mapping: make configurable.
+The `/pr` command ties all three together into a single delivery pipeline:
 
-**Extraction effort:** Medium — needs config reads.
+```
+checks → version bump → changelog promotion → release commit → PR body → PR create → cleanup
+```
+
+**What changes for the standalone repo:**
+- Step 1 checks: reads `pr.checks` list from dagrc.yaml instead of hardcoding
+  `ruff`, `mypy`, `pytest`
+- Step 2 version bump: reads `pr.version_file`, `pr.version_path`, and
+  `pr.bump_rules` from config instead of hardcoding `pyproject.toml` and
+  branch prefix mapping
+- Step 3 changelog: reads `changelog.*` config instead of hardcoding format
+- Step 4 commit: reads `commit.*` config instead of hardcoding path
+- Step 5/6 PR: reads `pr.*` config instead of hardcoding template/staging path
+- Step 7 cleanup: reads `pr.cleanup_after_create` flag
+
+**Extraction effort:** Medium — needs config reads for each step. The
+structure is unchanged; only the hardcoded values become config lookups.
+
+#### 4.3.5 Version Bump Strategy
+
+**Current implementation:** The branch prefix determines the bump type:
+- `feat/`, `refactor/`, `docs/` → minor bump
+- `fix/`, `test/`, `chore/` → patch bump
+
+**What the framework provides:**
+- `pr.bump_rules` config: maps bump types (major/minor/patch) to lists of
+  branch prefixes
+- `pr.version_file` + `pr.version_path`: where to read/write the version
+- Support for multiple version file formats:
+  - TOML (`pyproject.toml` via `tool.poetry.version` or `project.version`)
+  - JSON (`package.json` via `version`)
+  - Plain text (`VERSION` file)
+  - TOML with Cargo conventions (`Cargo.toml` via `package.version`)
+- The bump is always proposed to the user for confirmation — never automatic
 
 ### 4.4 Executor Agent (`executor.md`)
 
@@ -695,6 +897,12 @@ For each mixed component (§2.3), perform the surgery:
 7. **`log-subagent.sh`:** Replace hardcoded model map with generated config.
 8. **CLAUDE.md rules:** Extract Plan/Execute/Dispatch rules into a standalone
    `dag-workflow.md` snippet. Strip category table and phase references.
+9. **Delivery workflow:** Extract commit/changelog/PR conventions into:
+   - `delivery-workflow.md` CLAUDE.md rule snippet
+   - `commit.md` optional slash command
+   - Config-driven `/pr` command reading from dagrc.yaml
+   - Seed templates: `CHANGELOG_TEMPLATE.md`, `pull_request_template.md`,
+     `commit_conventions.md`
 
 ### Phase 2: Harden (week 2)
 
@@ -769,7 +977,27 @@ the framework provides extension points:
 
 This keeps the core framework small and avoids the "1000-line config" antipattern.
 
-### 7.5 Non-destructive migration
+### 7.5 Delivery workflow is not optional
+
+The commit/changelog/PR pipeline ships as a core framework feature, not an
+add-on. Rationale: every project that uses DAG orchestration eventually needs
+to ship the results. The conventions are battle-tested (the thesis repo has
+used them across 110+ PRs), and they solve real problems:
+
+- **Commit temp file:** zsh heredoc breakage is a universal Claude Code issue.
+  The temp-file protocol is the only reliable cross-shell approach discovered
+  so far. Every user will hit this.
+- **CHANGELOG automation:** without it, changelogs drift or get skipped
+  entirely. The `[Unreleased]` promotion pattern is mechanical — no reason
+  for humans to do it manually.
+- **PR staging:** Claude Code generating a PR body and immediately pushing it
+  to GitHub is a footgun. The staging step (write to file → human reviews →
+  then create) prevents embarrassment and gives the human a clean veto point.
+
+Projects can disable or customize each piece via dagrc.yaml, but the defaults
+are opinionated: temp-file commits, Keep-a-Changelog, staged PR bodies.
+
+### 7.6 Non-destructive migration
 
 The thesis repo is never modified by the extraction process. The standalone
 repo is built from clean copies. Re-integration is opt-in and reversible
@@ -807,6 +1035,16 @@ and project rules).
 6. **Settings.json merging:** `make install` can't safely merge hooks into an
    existing `settings.json`. Options: (a) print instructions, (b) provide a
    merge script, (c) use `jq` to merge.
+7. **Commit command scope:** Should `/commit` be a standalone slash command
+   (useful outside DAG flow for manual commits) or just an internal protocol
+   used by `/materialize_plan` and `/pr`? The thesis repo uses it as an
+   internal protocol only. Standalone use adds value for any Claude Code project.
+8. **CHANGELOG format extensibility:** Keep-a-Changelog is the only supported
+   format. Should the framework support other formats (e.g., conventional-
+   changelog, GitHub releases only, no changelog)? Start with one, add later.
+9. **Version file auto-detection:** Should `make install` auto-detect the
+   version file format (`pyproject.toml` vs `package.json` vs `Cargo.toml`)
+   and pre-populate dagrc.yaml? Nice for onboarding.
 
 ---
 
@@ -817,6 +1055,9 @@ If you approve this plan, the immediate next actions are:
 1. Create the `claude-dag` repo with the directory structure from §3.2
 2. Copy the generic components (§2.1 table) — raw, unmodified
 3. Perform the surgery on mixed components (§4.1–4.8)
-4. Write `dagrc.example.yaml` and the Makefile
-5. Test: install into a scratch repo, verify plan → materialize → execute works
-6. Circle back to observability (§5) once the core is solid
+4. Extract delivery workflow (§4.3): commit conventions, CHANGELOG template,
+   PR template, `/commit` command, config-driven `/pr` command
+5. Write `dagrc.example.yaml` and the Makefile
+6. Test: install into a fresh repo, run the full lifecycle:
+   plan → materialize → execute → commit → changelog → PR
+7. Circle back to observability (§5) once the core is solid
