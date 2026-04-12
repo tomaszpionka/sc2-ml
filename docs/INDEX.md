@@ -64,6 +64,24 @@ Connected tracking files (outside `docs/`):
 
 ---
 
+## Directory Map
+
+Single lookup for any agent to find the index/README of a major project directory.
+
+| Directory | Index | Contents |
+|-----------|-------|----------|
+| `.claude/` | `.claude/README.md` | Agents, rules, commands, invariants |
+| `docs/templates/` | `docs/templates/README.md` | Template schemas |
+| `thesis/` | `thesis/README.md` | Chapters, writing workflow |
+| `scripts/` | `scripts/README.md` | Hooks, utilities, diagnostics |
+| `docs/ml_experiment_lifecycle/` | `docs/ml_experiment_lifecycle/README.md` | Phase methodology manuals |
+| `src/rts_predict/sc2/` | `src/rts_predict/sc2/README.md` | SC2 game package |
+| `src/rts_predict/aoe2/` | `src/rts_predict/aoe2/README.md` | AoE2 game package |
+| `reports/` | `reports/README.md` | Research log index + CROSS entries |
+| `planning/` | `planning/INDEX.md` | Active plan, DAG, specs |
+
+---
+
 ## Citation Convention
 
 All manuals use **reference-style markdown links** with a `## References` section
