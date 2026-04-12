@@ -29,5 +29,5 @@
 
 | Template | Consumer |
 |---|---|
-| `dataset_roadmap_template.yaml` | Planner agent — fills `docs/<game>/<dataset>/ROADMAP.md` |
+| `dataset_roadmap_template.yaml` | Planner agent — fills `src/rts_predict/<game>/reports/<dataset>/ROADMAP.md` |
 | `step_template.yaml` | Planner agent — documents individual pipeline steps |

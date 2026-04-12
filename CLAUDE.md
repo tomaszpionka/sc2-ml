@@ -120,5 +120,9 @@ code until instructed.
 
 ## Progress Tracking
 
-See `ARCHITECTURE.md` for the full tracking protocol.
-Key: read active STEP_STATUS.yaml + PHASE_STATUS.yaml at session start.
+See `ARCHITECTURE.md` for the full tracking protocol. Key rules:
+- **Session start:** Read active STEP_STATUS.yaml and PHASE_STATUS.yaml, then scientific-invariants.md
+- **After Category A step:** Update the active dataset's `research_log.md`
+- **After phase gate:** Update PHASE_STATUS.yaml, check `thesis/WRITING_STATUS.md`
+- **After Category F:** Update `thesis/chapters/REVIEW_QUEUE.md`
+- **Session end:** See git-workflow rule (loads on PR/commit operations)
