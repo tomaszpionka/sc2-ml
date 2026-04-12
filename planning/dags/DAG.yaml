@@ -1,4 +1,4 @@
-dag_id: "dag_token_economy_indexing"
+dag_id: "dag_token_economy_followup"
 plan_ref: "planning/current_plan.md"
 category: "C"
 branch: "chore/token-economy-indexing"
@@ -7,11 +7,11 @@ default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Token economy, directory indexing, template enforcement"
+    name: "Follow-up fixes for token economy PR"
 
     task_groups:
       - group_id: "TG01"
-        name: "Token economy + phase consolidation"
+        name: "Drift tests + aoe2 README + Strategy A/B"
         depends_on: []
         review_gate:
           agent: "reviewer"
@@ -19,134 +19,44 @@ jobs:
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Trim CLAUDE.md"
-            spec_file: "planning/specs/spec_01_trim_claude.md"
+            name: "Planning drift hook: main() integration tests + bug fixes"
+            spec_file: "planning/specs/spec_01_drift_tests.md"
             agent: "executor"
             parallel_safe: true
-            file_scope:
-              - "CLAUDE.md"
-            depends_on: []
-          - task_id: "T02"
-            name: "Trim ARCHITECTURE.md"
-            spec_file: "planning/specs/spec_02_trim_architecture.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "ARCHITECTURE.md"
-            depends_on: []
-          - task_id: "T03"
-            name: "Trim executor.md"
-            spec_file: "planning/specs/spec_03_trim_executor.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - ".claude/agents/executor.md"
-            depends_on: []
-          - task_id: "T04"
-            name: "Delete phase derivatives + drift hook"
-            spec_file: "planning/specs/spec_04_phase_consolidation.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "docs/ml_experiment_phases/PHASES.md"
-              - "docs/ml_experiment_phases/PIPELINE_SECTIONS.md"
-              - "docs/ml_experiment_phases/README.md"
-              - "scripts/hooks/check_phases_drift.py"
-              - ".pre-commit-config.yaml"
-            depends_on: []
-
-      - group_id: "TG02"
-        name: "Directory indexing"
-        depends_on: []
-        review_gate:
-          agent: "reviewer"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T05"
-            name: "Create docs/templates + .claude READMEs"
-            spec_file: "planning/specs/spec_05_readmes_templates.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "docs/templates/README.md"
-              - ".claude/README.md"
-            depends_on: []
-          - task_id: "T06"
-            name: "Create thesis + scripts READMEs"
-            spec_file: "planning/specs/spec_06_readmes_thesis_scripts.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "thesis/README.md"
-              - "scripts/README.md"
-            depends_on: []
-          - task_id: "T07"
-            name: "Create lifecycle + game READMEs"
-            spec_file: "planning/specs/spec_07_readmes_lifecycle_games.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "docs/ml_experiment_lifecycle/README.md"
-              - "src/rts_predict/sc2/README.md"
-              - "src/rts_predict/aoe2/README.md"
-            depends_on: []
-          - task_id: "T08"
-            name: "Create reports/README.md"
-            spec_file: "planning/specs/spec_08_readme_reports.md"
-            agent: "executor"
-            parallel_safe: true
-            file_scope:
-              - "reports/README.md"
-            depends_on: []
-          - task_id: "T09"
-            name: "Update docs/INDEX.md with directory map"
-            spec_file: "planning/specs/spec_09_index.md"
-            agent: "executor"
-            parallel_safe: false
-            file_scope:
-              - "docs/INDEX.md"
-            depends_on: ["T05", "T06", "T07", "T08"]
-
-      - group_id: "TG03"
-        name: "Template enforcement"
-        depends_on: ["TG01"]
-        review_gate:
-          agent: "reviewer"
-          scope: "diff"
-          on_blocker: "halt"
-        tasks:
-          - task_id: "T10"
-            name: "Write check_planning_drift.py + tests"
-            spec_file: "planning/specs/spec_10_planning_drift.md"
-            agent: "executor"
-            parallel_safe: false
             file_scope:
               - "scripts/hooks/check_planning_drift.py"
               - "tests/infrastructure/test_check_planning_drift.py"
-            read_scope:
-              - "scripts/hooks/check_phases_drift.py"
             depends_on: []
-          - task_id: "T11"
-            name: "Wire pre-commit hook"
-            spec_file: "planning/specs/spec_11_precommit.md"
+          - task_id: "T02"
+            name: "AoE2 README: add per-dataset report/artifact paths"
+            spec_file: "planning/specs/spec_02_aoe2_readme.md"
             agent: "executor"
-            parallel_safe: false
+            parallel_safe: true
             file_scope:
-              - ".pre-commit-config.yaml"
-            depends_on: ["T10"]
+              - "src/rts_predict/aoe2/README.md"
+            depends_on: []
+          - task_id: "T03"
+            name: "Strategy A/B: formalize in TAXONOMY.md + update pointers"
+            spec_file: "planning/specs/spec_03_strategy_ab.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "docs/TAXONOMY.md"
+              - "docs/agents/AGENT_MANUAL.md"
+              - "planning/README.md"
+            depends_on: []
 
-      - group_id: "TG04"
+      - group_id: "TG02"
         name: "CHANGELOG"
-        depends_on: ["TG01", "TG02", "TG03"]
+        depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T12"
-            name: "Update CHANGELOG"
-            spec_file: "planning/specs/spec_12_changelog.md"
+          - task_id: "T04"
+            name: "Update CHANGELOG for follow-up fixes"
+            spec_file: "planning/specs/spec_04_changelog.md"
             agent: "executor"
             parallel_safe: false
             file_scope:
