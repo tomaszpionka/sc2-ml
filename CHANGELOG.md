@@ -14,23 +14,56 @@ merged to `master`.
 ### Added
 
 ### Changed
-- Package structure: `src/rts_predict/<game>/data/<dataset>/` and
-  `src/rts_predict/<game>/reports/<dataset>/` replaced by
-  `src/rts_predict/games/<game>/datasets/<dataset>/{data,reports}`
-- All imports updated (68 statements across ~18 files) to new `rts_predict.games.*` namespace
-- Both `config.py` files rewritten with new `__file__`-relative path derivation (4 levels to root)
-- `.gitignore` patterns updated for new `datasets/*/data/` paths
-- `.claude/settings.json` deny rules updated for new data paths
-- 6 shell scripts in `scripts/sc2egset/` updated with new hardcoded paths
-- 3 sandbox notebooks updated (imports + jupytext sync)
-- ~42 documentation files updated (~126 path references)
-- `pyproject.toml` entry points updated to `rts_predict.games.*`
 
 ### Fixed
 
 ### Removed
+
+## [3.1.2] — 2026-04-12 (PR #115: chore/agent-efficiency)
+
+### Added
+- `scripts/hooks/check_status_chain.py` — pre-commit hook validating Tier 7
+  consistency (STEP_STATUS → PIPELINE_SECTION_STATUS → PHASE_STATUS); uses
+  contradiction-only logic to avoid false positives on partially-filled status files
+- `scripts/hooks/check_rule_triggers.py` — pre-commit hook validating that all
+  `.claude/rules/` path globs match at least one real file; catches silent rule
+  death after path restructures; `EXPECTED_EMPTY` set for forward-declared globs
+- Both hooks registered in `.pre-commit-config.yaml`
+
+### Changed
+- `CLAUDE.md` — session-start reads now category-gated: Cat A/D-data/F reads
+  PHASE_STATUS + SI; Cat B/C/E skips (rules auto-load on file touch)
+- `CLAUDE.md` — context injection protocol added to dispatch rules: every
+  subagent prompt must include `Category/Branch/Dataset/Phase` header so agents
+  skip redundant independent reads of PHASE_STATUS and ROADMAP
+- `CLAUDE.md` — final review routing by category: reviewer-adversarial for Cat A,
+  reviewer-deep for Cat B/D, reviewer (Sonnet) for Cat C/E
+- `reviewer-deep.md` — Required reading is now category-gated: 5 always-reads for
+  all categories; 6 additional science reads only for Cat A/D-data/F; saves ~18s
+  startup latency per Cat B/C review
+- Package structure: `src/rts_predict/<game>/data/<dataset>/` and
+  `src/rts_predict/<game>/reports/<dataset>/` replaced by
+  `src/rts_predict/games/<game>/datasets/<dataset>/{data,reports}` (PR #114)
+- All imports updated (68 statements across ~18 files) to new `rts_predict.games.*`
+  namespace (PR #114)
+- Both `config.py` files rewritten with new `__file__`-relative path derivation
+  (PR #114)
+- `.gitignore`, `.claude/settings.json`, 6 shell scripts, 3 sandbox notebooks,
+  ~42 documentation files updated for new path layout (PR #114)
+
+### Fixed
+- `executor.md` — PHASE_STATUS path and config.py path updated to new
+  `games/<game>/datasets/<dataset>/` layout (missed by T08 in PR #114)
+- `reviewer-deep.md` — 3 stale paths updated (PHASE_STATUS, data layout,
+  thesis artifact reports); missed by T08 in PR #114
+- `sql-data.md` — trigger glob deepened from `src/rts_predict/*/data/**/*.py`
+  to `src/rts_predict/games/*/datasets/*/data/**/*.py`; rule was silently
+  dead post-restructure
+
+### Removed
 - Colocated test directories inside `src/` (were empty): `src/rts_predict/sc2/data/tests/`,
   `src/rts_predict/aoe2/data/aoestats/tests/`, `src/rts_predict/common/tests/`
+  (PR #114)
 
 ## [3.1.1] — 2026-04-12 (PR #113: chore/token-economy-indexing)
 
