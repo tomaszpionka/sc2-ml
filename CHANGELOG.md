@@ -13,7 +13,7 @@ merged to `master`.
 
 ### Added
 
-- 8 directory `README.md` files (routing documents for key subdirectories)
+- 9 directory `README.md` files (routing documents for key subdirectories)
 - `docs/INDEX.md` — centralized directory map and routing hub
 - `scripts/hooks/check_planning_drift.py` — pre-commit hook for planning artifact validation
 - `tests/infrastructure/test_check_planning_drift.py`

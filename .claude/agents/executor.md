@@ -32,6 +32,7 @@ You are an implementation agent for a Python ML thesis codebase.
 - Report concisely: what was done, what passed, what failed
 
 ## Constraints
+- Use `source .venv/bin/activate && poetry run` always. Never bare `python3` or `pip`.
 - Execute ONLY the steps the user specifies. Do not skip ahead.
 - After every code change, run the relevant pytest subset.
   (`ruff` and `mypy` run automatically as pre-commit hooks — no manual run needed.)

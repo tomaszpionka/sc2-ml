@@ -19,7 +19,6 @@ poetry run sc2 --help
 |------|---------|
 | `config.py` | All path constants and dataset registry |
 | `cli.py` | Entry point for the `sc2` CLI |
-| `data/processing.py` | Low-level data helpers (see caution in CLAUDE.md) |
 
 ## Paths (from `config.py`)
 
