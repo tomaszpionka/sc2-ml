@@ -19,6 +19,27 @@ merged to `master`.
 
 ### Removed
 
+## [3.2.1] — 2026-04-12 (PR #TBD: chore/dag-token-economy)
+
+### Changed
+- DAG intermediate review gates are now optional (omitted by default);
+  `final_review` is the standard quality gate
+- DAG task schema: added `model` field (haiku/sonnet/opus) for per-task
+  model dispatch; orchestrator passes to Agent tool when present
+- Spec template: added `model` and `datasets` optional frontmatter fields
+- Plan template: added Spec Design Rules section (self-contained specs,
+  consolidation by read_scope, parameterized dataset tables, no model
+  mixing, 15-file cap)
+- `/materialize_plan` command: self-contained spec enforcement and
+  consolidation rules
+- `/dag` command: conditional review gate dispatch, model override dispatch
+- CLAUDE.md dispatch rules: conditional review gates, final reviewer
+  by category (reviewer-adversarial for Cat A/F, reviewer for Cat B/C/D/E)
+- TAXONOMY.md: Task Group definition updated (review gates MAY run if
+  configured); Task definition updated (model field)
+- Agent manual: review gates opt-in, model assignment guidance
+- Test DAGs: review gates removed, model fields added
+
 ## [3.2.0] — 2026-04-12 (PR #117: feat/rerun-01-01-01)
 
 ### Added
