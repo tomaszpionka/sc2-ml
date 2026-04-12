@@ -19,6 +19,50 @@ merged to `master`.
 
 ### Removed
 
+## [3.2.0] — 2026-04-12 (PR #117: feat/rerun-01-01-01)
+
+### Added
+- Scientific Invariant #9 (research pipeline discipline) codified in
+  `.claude/scientific-invariants.md`: step conclusions may only reference
+  own-step artifacts, prior completed-step artifacts, and external source docs
+- `docs/templates/dataset_reports_readme_template.yaml` — new template for
+  dataset reports READMEs with per-section Source annotations and Invariant #9
+  compliance notes
+- `docs/templates/research_log_entry_template.yaml` — extended with `step_scope`
+  field and Invariant #9 annotation on the `findings` section
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/README.md` — new reports
+  README populated from 01_01_01 artifacts
+
+### Changed
+- Step 01_01_01 file inventory notebooks re-run (fresh kernel) for sc2egset,
+  aoe2companion, and aoestats; JSON and Markdown artifacts regenerated
+- ROADMAs and reports/READMEs for all three datasets populated with artifact-
+  derived counts; research logs stripped of context leaks and rewritten per
+  Invariant #9 (filesystem-scoped findings only)
+- Root `reports/research_log.md` CROSS entry for 01_01_01 updated
+- SC2-specific "tournament" vocabulary replaced with neutral cross-game terms
+  across all shared methodology files (`.claude/scientific-invariants.md`,
+  `.claude/ml-protocol.md`, `executor.md`, `reviewer-adversarial.md`); split
+  strategy renamed to "per-player chronological hold-out" with per-dataset
+  hold-out unit deferred to each dataset's ROADMAP.md Phase 03
+- sc2egset 01_01_01 notebook: JSON artifact keys renamed
+  (`num_tournament_dirs` → `num_top_level_dirs`,
+  `tournaments_missing_data_dir` → `dirs_missing_data_subdir`,
+  `tournaments` → `top_level_dirs`); all "tournament" prose, comments, variable
+  names, and artifact output replaced with neutral structural terms
+- Agent files updated to reference 9 invariants (was 8); `reviewer-adversarial`
+  output template extended with Invariant #9 compliance row
+- `.claude/settings.json` raw/ deny rule tightened from `data/raw/**` to
+  `data/raw/**/!(README.md)` to allow README writes while protecting data files
+
+### Fixed
+- sc2egset research log: semantic label violations ("tournament", "replay" as
+  content-level descriptors) replaced with filesystem-neutral phrasing
+- aoestats research log: "weekly" cadence label removed; "documented in ROADMAP"
+  cross-reference removed (beyond filesystem step scope)
+- aoestats `reports/README.md`: missing-file provenance note restored with
+  explicit `_download_manifest.json` source annotation per Invariant #9
+
 ## [3.1.3] — 2026-04-12 (PR #116: chore/thesis-prep)
 
 ### Changed
