@@ -19,8 +19,6 @@
       "Bash(git reset --hard*)",
       "Bash(git clean*)",
       "Bash(git rebase -i*)",
-      "Write(src/**/data/*/raw/**)",
-      "Edit(src/**/data/*/raw/**)",
       "Write(src/**/datasets/*/data/raw/**)",
       "Edit(src/**/datasets/*/data/raw/**)",
       "Write(docs/thesis/**)",
