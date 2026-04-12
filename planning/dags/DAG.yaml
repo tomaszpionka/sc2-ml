@@ -1,17 +1,17 @@
-dag_id: "dag_plan_template_rewrite"
+dag_id: "dag_research_log_split"
 plan_ref: "planning/current_plan.md"
 category: "C"
-branch: "chore/plan-template-rewrite"
+branch: "chore/research-log-split"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Plan template rewrite"
+    name: "Research log decentralization"
 
     task_groups:
       - group_id: "TG01"
-        name: "Rewrite plan + critique templates"
+        name: "Create per-dataset logs + rewrite root"
         depends_on: []
         review_gate:
           agent: "reviewer"
@@ -19,100 +19,157 @@ jobs:
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Rewrite plan_template.md"
-            spec_file: "planning/specs/spec_01_plan_template.md"
+            name: "Create sc2egset research_log.md"
+            spec_file: "planning/specs/spec_01_sc2_research_log.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "docs/templates/plan_template.md"
+              - "src/rts_predict/sc2/reports/sc2egset/research_log.md"
             read_scope:
-              - "docs/templates/dag_template.yaml"
-              - "planning/current_plan.md"
+              - "reports/research_log.md"
+              - "docs/templates/research_log_entry_template.yaml"
             depends_on: []
           - task_id: "T02"
-            name: "Rewrite plan_critique_template.md"
-            spec_file: "planning/specs/spec_02_critique_template.md"
+            name: "Create aoe2companion research_log.md"
+            spec_file: "planning/specs/spec_02_aoe2c_research_log.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "docs/templates/plan_critique_template.md"
+              - "src/rts_predict/aoe2/reports/aoe2companion/research_log.md"
             read_scope:
-              - ".claude/scientific-invariants.md"
+              - "reports/research_log.md"
             depends_on: []
+          - task_id: "T03"
+            name: "Create aoestats research_log.md"
+            spec_file: "planning/specs/spec_03_aoestats_research_log.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "src/rts_predict/aoe2/reports/aoestats/research_log.md"
+            read_scope:
+              - "reports/research_log.md"
+            depends_on: []
+          - task_id: "T04"
+            name: "Rewrite root research_log.md as index"
+            spec_file: "planning/specs/spec_04_root_index.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "reports/research_log.md"
+            depends_on: ["T01", "T02", "T03"]
 
       - group_id: "TG02"
-        name: "Rewrite planner output contract"
+        name: "Update agent definitions + rules"
         depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T03"
-            name: "Rewrite planner_output_contract.md"
-            spec_file: "planning/specs/spec_03_output_contract.md"
+          - task_id: "T05"
+            name: "Update CLAUDE.md + executor.md"
+            spec_file: "planning/specs/spec_05_orchestrator_agents.md"
             agent: "executor"
-            parallel_safe: false
+            parallel_safe: true
             file_scope:
-              - "docs/templates/planner_output_contract.md"
-            read_scope:
-              - "docs/templates/plan_template.md"
-              - "docs/templates/plan_critique_template.md"
-              - "docs/TAXONOMY.md"
+              - "CLAUDE.md"
+              - ".claude/agents/executor.md"
+            depends_on: []
+          - task_id: "T06"
+            name: "Update reviewer-deep.md + reviewer-adversarial.md"
+            spec_file: "planning/specs/spec_06_reviewer_agents.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/reviewer-deep.md"
+              - ".claude/agents/reviewer-adversarial.md"
+            depends_on: []
+          - task_id: "T07"
+            name: "Update planner-science.md + ml-protocol.md"
+            spec_file: "planning/specs/spec_07_planner_agents.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/planner-science.md"
+              - ".claude/ml-protocol.md"
+            depends_on: []
+          - task_id: "T08"
+            name: "Update reviewer.md + git-workflow.md + thesis-writing.md"
+            spec_file: "planning/specs/spec_08_rules.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/reviewer.md"
+              - ".claude/rules/git-workflow.md"
+              - ".claude/rules/thesis-writing.md"
             depends_on: []
 
       - group_id: "TG03"
-        name: "Update lifecycle, agents, and materialization"
-        depends_on: ["TG02"]
+        name: "Update documentation + templates"
+        depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T04"
-            name: "Update planning/README.md"
-            spec_file: "planning/specs/spec_04_planning_readme.md"
+          - task_id: "T09"
+            name: "Update ARCHITECTURE.md + docs/INDEX.md"
+            spec_file: "planning/specs/spec_09_architecture.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "planning/README.md"
+              - "ARCHITECTURE.md"
+              - "docs/INDEX.md"
             depends_on: []
-          - task_id: "T05"
-            name: "Update planner-science.md"
-            spec_file: "planning/specs/spec_05_planner_science.md"
+          - task_id: "T10"
+            name: "Update TAXONOMY.md + PHASES.md + STEPS.md"
+            spec_file: "planning/specs/spec_10_phase_docs.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/planner-science.md"
+              - "docs/TAXONOMY.md"
+              - "docs/PHASES.md"
+              - "docs/ml_experiment_phases/PHASES.md"
+              - "docs/ml_experiment_phases/STEPS.md"
             depends_on: []
-          - task_id: "T06"
-            name: "Update planner.md"
-            spec_file: "planning/specs/spec_06_planner.md"
+          - task_id: "T11"
+            name: "Update templates + research docs"
+            spec_file: "planning/specs/spec_11_templates.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/planner.md"
+              - "docs/templates/research_log_template.yaml"
+              - "docs/templates/step_template.yaml"
+              - "docs/templates/research_log_entry_template.yaml"
+              - "docs/templates/plan_template.md"
+              - "docs/research/RESEARCH_LOG.md"
+              - "docs/research/RESEARCH_LOG_ENTRY.md"
             depends_on: []
-          - task_id: "T07"
-            name: "Update materialize_plan.md"
-            spec_file: "planning/specs/spec_07_materialize.md"
+          - task_id: "T12"
+            name: "Update AGENT_MANUAL.md + README.md + ROADMAPs"
+            spec_file: "planning/specs/spec_12_remaining_refs.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/commands/materialize_plan.md"
+              - "docs/agents/AGENT_MANUAL.md"
+              - "README.md"
+              - "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/aoestats/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/ROADMAP.md"
             depends_on: []
 
       - group_id: "TG04"
         name: "CHANGELOG"
-        depends_on: ["TG03"]
+        depends_on: ["TG02", "TG03"]
         review_gate:
           agent: "reviewer"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T08"
+          - task_id: "T13"
             name: "Update CHANGELOG"
-            spec_file: "planning/specs/spec_08_changelog.md"
+            spec_file: "planning/specs/spec_13_changelog.md"
             agent: "executor"
             parallel_safe: false
             file_scope:

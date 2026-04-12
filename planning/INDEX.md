@@ -10,14 +10,19 @@
 ## Task specs
 - [Parallel execution guide](specs/README.md)
 
-- [spec_01](specs/spec_01_plan_template.md) — rewrite plan_template.md (DAG-compatible)
-- [spec_02](specs/spec_02_critique_template.md) — rewrite plan_critique_template.md (8 invariants, citations)
-- [spec_03](specs/spec_03_output_contract.md) — rewrite planner_output_contract.md (agent-agnostic, plan-only)
-- [spec_04](specs/spec_04_planning_readme.md) — add critique to lifecycle and purge
-- [spec_05](specs/spec_05_planner_science.md) — add contract ref, critique-flagging
-- [spec_06](specs/spec_06_planner.md) — add contract ref, critique-flagging
-- [spec_07](specs/spec_07_materialize.md) — add critique pre-flight for A/F
-- [spec_08](specs/spec_08_changelog.md) — CHANGELOG update
+- [spec_01](specs/spec_01_sc2_research_log.md) — create sc2egset per-dataset research log
+- [spec_02](specs/spec_02_aoe2c_research_log.md) — create aoe2companion per-dataset research log
+- [spec_03](specs/spec_03_aoestats_research_log.md) — create aoestats per-dataset research log
+- [spec_04](specs/spec_04_root_index.md) — rewrite root research_log.md as index + CROSS
+- [spec_05](specs/spec_05_orchestrator_agents.md) — update CLAUDE.md + executor.md
+- [spec_06](specs/spec_06_reviewer_agents.md) — update reviewer-deep + reviewer-adversarial
+- [spec_07](specs/spec_07_planner_agents.md) — update planner-science + ml-protocol
+- [spec_08](specs/spec_08_rules.md) — update reviewer + git-workflow + thesis-writing
+- [spec_09](specs/spec_09_architecture.md) — update ARCHITECTURE.md + INDEX.md
+- [spec_10](specs/spec_10_phase_docs.md) — update TAXONOMY + PHASES + STEPS
+- [spec_11](specs/spec_11_templates.md) — update templates + research docs
+- [spec_12](specs/spec_12_remaining_refs.md) — update AGENT_MANUAL + README + ROADMAPs
+- [spec_13](specs/spec_13_changelog.md) — CHANGELOG update
 
 ## Agent routing
 

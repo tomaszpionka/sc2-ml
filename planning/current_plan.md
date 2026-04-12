@@ -1,341 +1,317 @@
-# Category C Plan: Plan Template Rewrite & Planner Output Contract
+# Category C Plan: Research Log Decentralization
 
 **Category:** C (chore)
-**Branch:** `chore/plan-template-rewrite`
-**Date:** 2026-04-11 (revised 2026-04-12)
+**Branch:** `chore/research-log-split`
+**Date:** 2026-04-12
 
 ---
 
 ## Scope
 
-Rewrite `plan_template.md`, `plan_critique_template.md`, and
-`planner_output_contract.md` to be compatible with the existing
-DAG/spec/materialization pipeline. The current drafts (authored by ChatGPT)
-are structurally incompatible — a plan conforming to them would fail
-`/materialize_plan`. This chore makes them production-ready.
+Split the unified `reports/research_log.md` into per-dataset logs at
+`src/rts_predict/<game>/reports/<dataset>/research_log.md`. The root log
+becomes an index with pointers + CROSS-game entries only. Migrate existing
+2 entries. Update all ~25 files that reference `reports/research_log.md`.
 
-Additionally, update the materialization pre-flight to enforce critique
-existence for Category A/F, and update planner agents to reference the
-new contract.
-
-**Source documents for this plan:**
-- `plan_templating.md` — adversarial review with 18 findings (6 blockers)
-- `templating_plan_review.md` — plan review with 1 blocker, 5 warnings
-- `spec_mechanics_audit.md` — DAG execution mechanics investigation
+**Source:** `research_log_decentralization.md` (design proposal)
 
 ---
 
 ## Problem Statement
 
-The three draft templates have 7 blocking incompatibilities with the
-materialization pipeline:
-
-1. The plan template's DAG uses a flat `nodes:` list instead of the real
-   `jobs > task_groups > tasks` hierarchy
-2. The plan template is missing `## Execution Steps`, `## Suggested Execution
-   Graph`, and `## File Manifest` — the three sections `/materialize_plan`
-   consumes
-3. No `spec_file` field in the DAG tasks
-4. The contract forbids the word "task" — which the taxonomy defines and every
-   DAG requires
-5. The contract cites a non-existent "section 4.1"
-6. The contract is scoped only to planner-science, not planner
-7. The contract requires the planner to produce both plan AND critique
-   (self-review), when the critique should be produced by reviewer-adversarial
-   for independent external review
-
-Beyond compatibility, the critique template lacks:
-- A Citations section (scientific claims must be traceable)
-- Explicit enumeration of all 8 invariants (partial example invites skipping)
-- A temporal discipline assessment (the single most fatal thesis flaw)
-
----
-
-## Design Decisions
-
-Three decisions made during the planning session (2026-04-12), validated
-by adversarial review:
-
-**D1 — Critique producer split.** The planner produces the plan only.
-Reviewer-adversarial produces the critique as a separate step for Category
-A/B(optional)/D(conditional)/F. Enforcement: `/materialize_plan` pre-flight
-checks critique existence for A/F.
-
-**D2 — Mechanical per-task structure.** Each step in `## Execution Steps`
-uses rigid structure (Objective / Instructions / Verification / File scope /
-Read scope) that maps directly to the spec template. File scope and Read scope
-map to spec YAML frontmatter, not to markdown sections. `/materialize_plan`
-extracts each block into a spec file with minimal interpretation.
-
-**D3 — Frontmatter disposition.** `plan_id` dropped (linked by filename
-convention). `planner_model` and `source_artifacts` kept. `review_gates`
-dropped (redundant with DAG). `scope` system replaced with `category` A-F.
-`revision` tracking deferred. `research_log_ref` added as optional A/F field.
+The research log is the only reporting artifact that doesn't follow the
+per-dataset pattern (ROADMAP, PHASE_STATUS, STEP_STATUS, artifacts/ are
+all per-dataset). With 3 datasets x 7 phases, the unified log will grow to
+hundreds of entries. Executors working on SC2 scan through AoE2 entries;
+parallel executors on different datasets conflict on the same file.
 
 ---
 
 ## Execution Steps
 
-### T01 — Rewrite `docs/templates/plan_template.md`
+### T01 — Create sc2egset research_log.md
 
-**Objective:** Replace the entire file with a DAG-compatible template
-derived from the working plan at `planning/current_plan.md`, not the
-ChatGPT draft.
+**Objective:** Create per-dataset research log for sc2egset with migrated
+Entry 2 content.
 
 **Instructions:**
-1. Read `docs/templates/dag_template.yaml` for the real DAG schema
-2. Read `planning/current_plan.md` for real-world precedent
-3. Replace the entire file with the new template structure:
-
-   Frontmatter fields:
-   - `category` (A-F), `branch`, `date`, `planner_model`, `dataset`,
-     `phase`, `pipeline_section`, `invariants_touched`,
-     `source_artifacts` (required A/F, optional B/D, omit C/E),
-     `critique_required` (true A/F, optional B/D, false C/E),
-     `research_log_ref` (optional, A/F only)
-
-   Sections (with conditional markers):
-   - `## Scope` (required all)
-   - `## Problem Statement` (required all)
-   - `## Assumptions & unknowns` (required A/F, optional B/D, omit C/E)
-   - `## Literature context` (required A/F, omit B-E)
-   - `## Execution Steps` (required all — per-task structure, see below)
-   - `## File Manifest` (required all)
-   - `## Gate Condition` (required A, recommended all)
-   - `## Out of scope` (required A/F, recommended all)
-   - `## Open questions` (required A/F, optional all)
-   - `## Suggested Execution Graph` (required all — YAML per dag_template.yaml)
-
-4. Document the per-task structure for `## Execution Steps`:
-   ```
-   ### TNN — <task name>
-   **Objective:** <1-3 sentences>
-   **Instructions:** <numbered steps>
-   **Verification:** <commands, conditions>
-   **File scope:** <files this task writes>
-   **Read scope:** <files this task reads>
-   ```
-   Add a note: "File scope and Read scope map to spec YAML frontmatter
-   (`file_scope`, `read_scope`), not to markdown sections."
-
-5. Replace `## Proposed DAG` with `## Suggested Execution Graph` using
-   `jobs > task_groups > tasks` hierarchy. Every task must include
-   `spec_file`, `file_scope`, `parallel_safe`, `depends_on`.
+1. Read `reports/research_log.md` for Entry 2 content
+2. Read `docs/templates/research_log_template.yaml` for schema
+3. Create `src/rts_predict/sc2/reports/sc2egset/research_log.md`
+4. Header: thesis title, "SC2 / sc2egset findings. Reverse chronological."
+5. Migrate Entry 2's SC2-specific content: 22,390 files, ~214.1 GB,
+   70 tournaments, two-level layout, the corrected `_data/` scanning,
+   open questions about root files and no-extension files
+6. Keep full entry schema (Category, Artifacts, What, Why, How, Findings,
+   Decisions, Thesis mapping, Open questions) — filter to SC2 content only
+7. Artifacts pointer: reference sc2egset's own artifact paths
 
 **Verification:**
-- Template contains `## Suggested Execution Graph` (not `## Proposed DAG`)
-- YAML uses `jobs > task_groups > tasks` hierarchy
-- Template contains `## Execution Steps` and `## File Manifest`
-- Template uses `category:` A-F (not `scope:`)
-- Frontmatter includes `planner_model` and `source_artifacts`
-- Per-task structure documented with mapping note
+- File exists at expected path
+- Contains SC2 findings from Entry 2
+- Follows research_log_entry_template.yaml schema
+- Does NOT contain aoe2companion or aoestats findings
 
-**File scope:** `docs/templates/plan_template.md`
-**Read scope:** `docs/templates/dag_template.yaml`, `planning/current_plan.md`
+**File scope:** `src/rts_predict/sc2/reports/sc2egset/research_log.md`
+**Read scope:** `reports/research_log.md`, `docs/templates/research_log_entry_template.yaml`
 
 ---
 
-### T02 — Rewrite `docs/templates/plan_critique_template.md`
+### T02 — Create aoe2companion research_log.md
 
-**Objective:** Replace the entire file with a critique template that
-enumerates all 8 invariants, adds temporal discipline assessment, adds
-citations, and clarifies the critique is produced by reviewer-adversarial.
+**Objective:** Create per-dataset research log for aoe2companion with
+migrated Entry 2 content.
 
 **Instructions:**
-1. Read `.claude/scientific-invariants.md` for invariant names
-2. Replace the entire file with new template structure:
-
-   Frontmatter: `plan_ref` (planning/current_plan.md), `created`,
-   `reviewer_model`, `category` (mirrors plan)
-
-   Header note: "Produced by reviewer-adversarial. Audience: Tomasz +
-   viva preparation. Not consumed by executors or materialization."
-
-   Sections:
-   - `## Invariants check` — ALL 8 enumerated by number and name:
-     `#1 (per-player split)` through `#8 (cross-game protocol)`,
-     each with yes/no/n-a + evidence pointer
-   - `## Temporal discipline assessment` (required A/F, omit C/E)
-   - `## Defensibility check`
-   - `## Likely supervisor / committee questions`
-   - `## Known weaknesses`
-   - `## Alternatives considered and rejected`
-   - `## Citations` — every scientific claim must cite source;
-     uncited claims labeled `[OPINION]`
+1. Read `reports/research_log.md` for Entry 2 content
+2. Create `src/rts_predict/aoe2/reports/aoe2companion/research_log.md`
+3. Header: thesis title, "AoE2 / aoe2companion findings. Reverse chronological."
+4. Migrate Entry 2's aoe2companion content: 4,154 files, ~9.2 GB,
+   daily matches (no gaps), daily ratings (1 gap: 2025-07-10 to 2025-07-12),
+   leaderboards + profiles snapshots
+5. Full entry schema, filtered to aoe2companion content only
+6. Artifacts pointer: reference aoe2companion's own artifact paths
 
 **Verification:**
-- Template enumerates all 8 invariants by number and name
-- Template has `## Citations` and `## Temporal discipline assessment`
-- Header clarifies "Produced by reviewer-adversarial"
-- Uses `plan_ref` (not `plan_id`) and `category` (not `scope`)
+- File exists, contains aoe2companion findings, follows schema
+- Does NOT contain sc2egset or aoestats findings
 
-**File scope:** `docs/templates/plan_critique_template.md`
-**Read scope:** `.claude/scientific-invariants.md`
+**File scope:** `src/rts_predict/aoe2/reports/aoe2companion/research_log.md`
+**Read scope:** `reports/research_log.md`
 
 ---
 
-### T03 — Rewrite `docs/templates/planner_output_contract.md`
+### T03 — Create aoestats research_log.md
 
-**Objective:** Replace the entire file with an agent-agnostic contract
-that produces plans only (no self-critique) and uses correct terminology.
+**Objective:** Create per-dataset research log for aoestats with migrated
+Entry 2 content.
 
 **Instructions:**
-1. Read `docs/templates/plan_template.md` (after T01 rewrites it)
-2. Read `docs/templates/plan_critique_template.md` (after T02)
-3. Read `docs/TAXONOMY.md` for forbidden/required terms
-4. Replace the entire file. Key changes:
-
-   a. Agent-agnostic: "You are a planner agent" (not "planner-science")
-   b. Required output: ONE file (`planning/current_plan.md`) — not two.
-      The critique is NOT the planner's responsibility.
-   c. After producing the plan, the planner must instruct the parent
-      session: "For Category A/F, adversarial critique is required
-      before materialization. Dispatch reviewer-adversarial to produce
-      `planning/current_plan.critique.md`."
-   d. Forbidden terms from TAXONOMY.md: Stage, Experiment (formal),
-      Milestone, Workstream, Track, Initiative, Epic, Component (work
-      unit), Section (unqualified). "Task" is NOT forbidden.
-   e. Remove "section 4.1" reference
-   f. Replace `scope` system with `category` A-F
-   g. Conditional requirements by category:
-
-      | Category | Plan sections | Critique? |
-      |----------|--------------|-----------|
-      | A | all | yes — reviewer-adversarial, all sections |
-      | B | Scope, Execution Steps, File Manifest, DAG, Out of scope | yes — invariants + weaknesses |
-      | C | Scope, Execution Steps, File Manifest, DAG | no |
-      | D | Scope, Execution Steps, File Manifest, DAG, Out of scope | yes if file_scope touches `src/rts_predict/<game>/` |
-      | E | Scope, Execution Steps, File Manifest, DAG | no |
-      | F | all | yes — reviewer-adversarial, all sections |
-
-   h. Document per-task Execution Steps structure (matching T01)
-   i. Self-check: category A-F, DAG uses correct schema, every task
-      has spec_file/file_scope/parallel_safe/depends_on, every TNN maps
-      to a task in the graph, File Manifest complete, no forbidden terms,
-      invariants_touched populated
+1. Read `reports/research_log.md` for Entry 2 content
+2. Create `src/rts_predict/aoe2/reports/aoestats/research_log.md`
+3. Header: thesis title, "AoE2 / aoestats findings. Reverse chronological."
+4. Migrate Entry 2's aoestats content: 349 files, ~3.7 GB, weekly data,
+   3 gaps (43-day, 8-day, 8-day), paired matches/players mismatch (172 vs 171),
+   known download failure
+5. Full entry schema, filtered to aoestats content only
+6. Artifacts pointer: reference aoestats's own artifact paths
 
 **Verification:**
-- Contract does NOT forbid the word "task"
-- Contract does NOT cite "section 4.1"
-- Contract addresses both planner agents
-- Contract uses Category A-F
-- Contract says planner produces plan ONLY (not critique)
-- Contract tells planner to flag critique need for A/F
+- File exists, contains aoestats findings, follows schema
+- Does NOT contain sc2egset or aoe2companion findings
 
-**File scope:** `docs/templates/planner_output_contract.md`
-**Read scope:** `docs/templates/plan_template.md`, `docs/templates/plan_critique_template.md`, `docs/TAXONOMY.md`
+**File scope:** `src/rts_predict/aoe2/reports/aoestats/research_log.md`
+**Read scope:** `reports/research_log.md`
 
 ---
 
-### T04 — Update `planning/README.md`
+### T04 — Rewrite root research_log.md as index
 
-**Objective:** Add critique to the planning lifecycle and purge protocol.
+**Objective:** Transform root log into index + CROSS entries only.
 
 **Instructions:**
-1. Add `current_plan.critique.md` to the contents table (ephemeral,
-   sibling to plan). Note: produced by reviewer-adversarial for
-   Category A/B/D/F, not by the planner.
-2. Add to purge protocol: delete after merge alongside specs and DAG.
-3. Add to lifecycle: after plan written, before materialization,
-   reviewer-adversarial produces critique for A/F.
+1. Replace content of `reports/research_log.md` with:
+   - Header: thesis title, explanation of per-dataset structure
+   - Dataset log table with links to 3 per-dataset logs and last entry dates
+   - CROSS entries section header
+2. Keep Entry 1 ([CROSS] AoE2 Dataset Strategy Decision) verbatim including
+   the retraction
+3. Replace Entry 2 with a trimmed CROSS summary: "Step 01_01_01 file
+   inventory completed across all 3 datasets. Per-dataset findings migrated
+   to each dataset's research_log.md. Cross-dataset observation: all three
+   raw directories are non-empty and structurally sound." Link to the 3
+   per-dataset entries. Remove the full dataset-specific findings.
+4. Keep the Phase migration note
 
 **Verification:**
-- `current_plan.critique.md` listed in contents table
-- `current_plan.critique.md` listed in purge protocol
+- Root log has links to 3 dataset logs
+- Entry 1 [CROSS] retained with retraction
+- Entry 2 removed
+- No dataset-specific findings remain in root
 
-**File scope:** `planning/README.md`
+**File scope:** `reports/research_log.md`
+**Read scope:** none (T01-T03 must complete first)
+
+---
+
+### T05 — Update CLAUDE.md + executor.md
+
+**Objective:** Update orchestrator and executor research_log references.
+
+**Instructions:**
+1. CLAUDE.md: change "update `reports/research_log.md`" → "update the
+   active dataset's `research_log.md`"
+2. executor.md Category A rule (~line 70): change "Update `reports/research_log.md`
+   after each step" → "Update the active dataset's `research_log.md` after each step"
+3. executor.md notebook workflow (~line 102): change "Update `reports/research_log.md`
+   with a new entry" → "Update the active dataset's `research_log.md` with a new entry"
+4. executor.md: add rule: "If a finding has cross-game implications
+   (Invariant #8), also add a [CROSS] entry to `reports/research_log.md`"
+
+**Verification:** No bare `reports/research_log.md` as destination for
+dataset-specific entries in either file (CROSS context references are fine)
+**File scope:** `CLAUDE.md`, `.claude/agents/executor.md`
 **Read scope:** none
 
 ---
 
-### T05 — Update `.claude/agents/planner-science.md`
+### T06 — Update reviewer-deep.md + reviewer-adversarial.md
 
-**Objective:** Add output contract reference and critique-flagging
-instruction. Do NOT instruct the planner to produce the critique itself.
+**Objective:** Reviewers read the active dataset's log + root CROSS log.
 
 **Instructions:**
-1. Add to constraints: "Plan output must conform to
-   `docs/templates/planner_output_contract.md`. Read it before producing
-   output."
-2. Add: "For Category A/F, after producing the plan, instruct the parent
-   session that adversarial critique is required before materialization.
-   Do NOT produce the critique yourself — reviewer-adversarial handles it."
+1. reviewer-deep.md Required Reading item 7: "Read `reports/research_log.md`
+   recent entries" → "Read the active dataset's `research_log.md` and
+   `reports/research_log.md` (CROSS entries) — check for contradictions
+   with prior findings in both"
+2. reviewer-adversarial.md: same pattern for its research_log reference
 
-**Verification:**
-- Agent references output contract
-- Agent does NOT claim to produce critique
-- Agent flags critique need for A/F
-
-**File scope:** `.claude/agents/planner-science.md`
+**Verification:** Both files reference dataset log + root CROSS log
+**File scope:** `.claude/agents/reviewer-deep.md`, `.claude/agents/reviewer-adversarial.md`
 **Read scope:** none
 
 ---
 
-### T06 — Update `.claude/agents/planner.md`
+### T07 — Update planner-science.md + ml-protocol.md
 
-**Objective:** Same contract reference addition as T05.
+**Objective:** Planner checks root CROSS log + sibling dataset logs for
+cross-dataset coordination.
 
 **Instructions:**
-1. Add to constraints: "Plan output must conform to
-   `docs/templates/planner_output_contract.md`. Read it before producing
-   output."
-2. Add: "For Category B/D where critique is applicable, instruct the
-   parent session that adversarial review is available. Do NOT produce
-   the critique yourself."
+1. planner-science.md: "check `reports/research_log.md` for sibling
+   decisions" → "check `reports/research_log.md` (CROSS entries) for
+   cross-game decisions, and sibling dataset research logs if coordinating
+   across datasets"
+2. ml-protocol.md: update any research_log references to per-dataset pattern
 
-**Verification:**
-- Agent references output contract
-- Agent does NOT claim to produce critique
-
-**File scope:** `.claude/agents/planner.md`
+**Verification:** Both files reference the new structure
+**File scope:** `.claude/agents/planner-science.md`, `.claude/ml-protocol.md`
 **Read scope:** none
 
 ---
 
-### T07 — Update `.claude/commands/materialize_plan.md`
+### T08 — Update reviewer.md + git-workflow.md + thesis-writing.md
 
-**Objective:** Add pre-flight check requiring critique existence for
-Category A/F before materialization proceeds.
+**Objective:** Lightweight updates to remaining agent/rule files.
 
 **Instructions:**
-1. Read the plan's frontmatter to extract `category` and
-   `critique_required`
-2. Add to pre-flight checks (after existing checks):
-   "If `category` is A or F (or `critique_required: true`), verify
-   `planning/current_plan.critique.md` exists and is non-empty.
-   If missing, HALT: 'Category A/F requires adversarial critique
-   before materialization. Dispatch reviewer-adversarial first.'"
+1. reviewer.md: "verify entry exists" → "verify entry exists in active
+   dataset's `research_log.md`"
+2. git-workflow.md: end-of-session checklist → "active dataset's
+   research_log.md updated (mandatory for Category A)"
+3. thesis-writing.md: "read relevant entry in `reports/research_log.md`"
+   → "read relevant entry in the active dataset's `research_log.md`"
 
-**Verification:**
-- Pre-flight section includes critique existence check
-- Check references correct file path
-- Check halts with actionable message
-
-**File scope:** `.claude/commands/materialize_plan.md`
+**Verification:** No bare `reports/research_log.md` as dataset-specific
+destination in any of the 3 files
+**File scope:** `.claude/agents/reviewer.md`, `.claude/rules/git-workflow.md`,
+`.claude/rules/thesis-writing.md`
 **Read scope:** none
 
 ---
 
-### T08 — Update CHANGELOG
+### T09 — Update ARCHITECTURE.md + docs/INDEX.md
 
-**Objective:** Add entries for all template rewrites, agent updates,
-and materialization update.
+**Objective:** Update cross-cutting files tables.
 
 **Instructions:**
-1. Under `[Unreleased]`, add Changed entries:
-   - Rewrite `plan_template.md` — DAG-compatible, per-task structure
-   - Rewrite `plan_critique_template.md` — all 8 invariants, citations,
-     temporal discipline, produced by reviewer-adversarial
-   - Rewrite `planner_output_contract.md` — agent-agnostic, plan-only
-     output, Category A-F
-   - Update `planning/README.md` — critique in lifecycle and purge
-   - Update `planner-science.md` and `planner.md` — contract reference
-   - Update `materialize_plan.md` — critique pre-flight for A/F
+1. ARCHITECTURE.md cross-cutting files table: research log entry →
+   "Index + CROSS entries at `reports/research_log.md`; per-dataset
+   findings at `<game>/reports/<dataset>/research_log.md`"
+2. docs/INDEX.md: same update to research log entry
 
-**Verification:**
-- CHANGELOG has entries under `[Unreleased]`
-- All 7 modified files mentioned
+**Verification:** Both files describe the new structure
+**File scope:** `ARCHITECTURE.md`, `docs/INDEX.md`
+**Read scope:** none
 
+---
+
+### T10 — Update TAXONOMY.md + PHASES.md + STEPS.md
+
+**Objective:** Update phase/step references to per-dataset logs.
+
+**Instructions:**
+1. docs/TAXONOMY.md: "one entry in `reports/research_log.md`" → "one entry
+   in the dataset's `research_log.md`"
+2. docs/PHASES.md: Phase 07 exit gate → "per-dataset `research_log.md`
+   entries are current and thesis-citable"; cross-dataset coordination →
+   "tracked in `reports/research_log.md` CROSS entries"
+3. docs/ml_experiment_phases/PHASES.md: same as docs/PHASES.md
+4. docs/ml_experiment_phases/STEPS.md: step output → "dataset's
+   `research_log.md`"
+
+**Verification:** All 4 files reference per-dataset logs for findings;
+CROSS coordination references root
+**File scope:** `docs/TAXONOMY.md`, `docs/PHASES.md`,
+`docs/ml_experiment_phases/PHASES.md`, `docs/ml_experiment_phases/STEPS.md`
+**Read scope:** none
+
+---
+
+### T11 — Update templates + research docs
+
+**Objective:** Update research log templates and specification docs.
+
+**Instructions:**
+1. `docs/templates/research_log_template.yaml`: add note that per-dataset
+   logs follow this schema; root log is index-only with CROSS entries
+2. `docs/templates/step_template.yaml`: research_log_entry pointer →
+   dataset's log
+3. `docs/templates/research_log_entry_template.yaml`: note that entries
+   live in per-dataset logs
+4. `docs/templates/plan_template.md`: `research_log_ref` → clarify points
+   to dataset's log
+5. `docs/research/RESEARCH_LOG.md`: update to describe new structure
+6. `docs/research/RESEARCH_LOG_ENTRY.md`: update to reference per-dataset logs
+
+**Verification:** All 6 files describe per-dataset structure
+**File scope:** `docs/templates/research_log_template.yaml`,
+`docs/templates/step_template.yaml`,
+`docs/templates/research_log_entry_template.yaml`,
+`docs/templates/plan_template.md`, `docs/research/RESEARCH_LOG.md`,
+`docs/research/RESEARCH_LOG_ENTRY.md`
+**Read scope:** none
+
+---
+
+### T12 — Update AGENT_MANUAL.md + README.md + ROADMAPs
+
+**Objective:** Update remaining references.
+
+**Instructions:**
+1. `docs/agents/AGENT_MANUAL.md`: update research_log references to
+   per-dataset pattern
+2. `README.md`: update key document pointer to describe new structure
+3. 3 dataset ROADMAPs: add `research_log.md` to their contents/sibling
+   files listing (it's now a sibling file in the same directory)
+4. `src/rts_predict/aoe2/reports/ROADMAP.md` (game-level): change
+   "recorded in `reports/research_log.md`" → "recorded in the dataset's
+   `research_log.md`" (this file directs dataset-specific decision gate
+   findings, not CROSS entries)
+
+**Verification:** All 6 files reference per-dataset logs
+**File scope:** `docs/agents/AGENT_MANUAL.md`, `README.md`,
+`src/rts_predict/sc2/reports/sc2egset/ROADMAP.md`,
+`src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md`,
+`src/rts_predict/aoe2/reports/aoestats/ROADMAP.md`,
+`src/rts_predict/aoe2/reports/ROADMAP.md`
+**Read scope:** none
+
+---
+
+### T13 — CHANGELOG
+
+**Objective:** Document the research log decentralization.
+
+**Instructions:**
+1. Under `[Unreleased]`, add:
+   - Added: 3 per-dataset `research_log.md` files (sc2egset, aoe2companion,
+     aoestats) with migrated Step 01_01_01 findings
+   - Changed: `reports/research_log.md` rewritten as index + CROSS entries
+   - Changed: ~25 files updated to reference per-dataset logs instead of
+     unified log
+
+**Verification:** CHANGELOG has entries under `[Unreleased]`
 **File scope:** `CHANGELOG.md`
 **Read scope:** none
 
@@ -345,74 +321,97 @@ and materialization update.
 
 | File | Action |
 |------|--------|
-| `docs/templates/plan_template.md` | Rewrite |
-| `docs/templates/plan_critique_template.md` | Rewrite |
-| `docs/templates/planner_output_contract.md` | Rewrite |
-| `planning/README.md` | Update |
+| `src/rts_predict/sc2/reports/sc2egset/research_log.md` | Create |
+| `src/rts_predict/aoe2/reports/aoe2companion/research_log.md` | Create |
+| `src/rts_predict/aoe2/reports/aoestats/research_log.md` | Create |
+| `reports/research_log.md` | Rewrite |
+| `CLAUDE.md` | Update |
+| `.claude/agents/executor.md` | Update |
+| `.claude/agents/reviewer-deep.md` | Update |
+| `.claude/agents/reviewer-adversarial.md` | Update |
 | `.claude/agents/planner-science.md` | Update |
-| `.claude/agents/planner.md` | Update |
-| `.claude/commands/materialize_plan.md` | Update |
+| `.claude/agents/reviewer.md` | Update |
+| `.claude/rules/git-workflow.md` | Update |
+| `.claude/rules/thesis-writing.md` | Update |
+| `.claude/ml-protocol.md` | Update |
+| `ARCHITECTURE.md` | Update |
+| `docs/INDEX.md` | Update |
+| `docs/TAXONOMY.md` | Update |
+| `docs/PHASES.md` | Update |
+| `docs/ml_experiment_phases/PHASES.md` | Update |
+| `docs/ml_experiment_phases/STEPS.md` | Update |
+| `docs/templates/research_log_template.yaml` | Update |
+| `docs/templates/step_template.yaml` | Update |
+| `docs/templates/research_log_entry_template.yaml` | Update |
+| `docs/templates/plan_template.md` | Update |
+| `docs/research/RESEARCH_LOG.md` | Update |
+| `docs/research/RESEARCH_LOG_ENTRY.md` | Update |
+| `docs/agents/AGENT_MANUAL.md` | Update |
+| `README.md` | Update |
+| `src/rts_predict/sc2/reports/sc2egset/ROADMAP.md` | Update |
+| `src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md` | Update |
+| `src/rts_predict/aoe2/reports/aoestats/ROADMAP.md` | Update |
+| `src/rts_predict/aoe2/reports/ROADMAP.md` | Update |
 | `CHANGELOG.md` | Update |
 
 ---
 
 ## Gate Condition
 
-- `plan_template.md` contains `## Suggested Execution Graph` (not `## Proposed DAG`)
-- `plan_template.md` DAG example uses `jobs > task_groups > tasks` hierarchy
-- `plan_template.md` contains `## Execution Steps` and `## File Manifest`
-- `plan_template.md` uses `category:` A-F (not `scope:`)
-- `plan_template.md` frontmatter includes `planner_model` and `source_artifacts`
-- `plan_critique_template.md` enumerates all 8 invariants by number and name
-- `plan_critique_template.md` has `## Citations` and `## Temporal discipline assessment`
-- `plan_critique_template.md` header says "Produced by reviewer-adversarial"
-- `planner_output_contract.md` does NOT forbid the word "task"
-- `planner_output_contract.md` does NOT cite "section 4.1"
-- `planner_output_contract.md` addresses both planner agents
-- `planner_output_contract.md` says planner produces plan ONLY
-- `planner_output_contract.md` uses Category A-F
-- `planning/README.md` lists `current_plan.critique.md` in contents and purge
-- Both planner agents reference the output contract in constraints
-- Both planner agents do NOT claim to produce critique
-- `materialize_plan.md` has critique pre-flight check for A/F
+- 3 per-dataset `research_log.md` files exist with migrated Entry 2 content
+- Root `reports/research_log.md` is an index with CROSS entries only
+- Entry 1 [CROSS] retained in root with retraction
+- Entry 2's cross-dataset summary retained as trimmed CROSS entry in root
+- Full Entry 2 dataset-specific findings removed from root
+- Each per-dataset log follows `research_log_entry_template.yaml` schema
+- Machine-testable reference check:
+  ```
+  grep -rn "reports/research_log" --include="*.md" --include="*.yaml" \
+    | grep -v CHANGELOG.md \
+    | grep -v planning/current_plan.md \
+    | grep -v "CROSS" \
+    | grep -v "index" \
+    | grep -v "research_log_decentralization"
+  ```
+  Allowed matches: only lines that reference the root log in CROSS context
+  (e.g., "add a [CROSS] entry to `reports/research_log.md`") or describe the
+  new structure. Any line that says "update `reports/research_log.md`" for
+  dataset-specific findings is a failure.
 
 ---
 
 ## Out of Scope
 
-Deferred for future work:
-- Programmatic template enforcement (linting plans against templates)
-- `revision:` / `prior_revision_sha:` frontmatter tracking (git log suffices
-  for Category C; revisit before first Category A plan uses this template)
-- Research log entry enforcement (field added but not validated)
-- Dispatch rules in CLAUDE.md and executor.md (already implemented on this
-  branch — see `spec_mechanics_audit.md` Sections 11-13)
+- Programmatic enforcement of research log location (future pre-commit hook)
+- Cross-game implication automation (manual for now — executor adds CROSS
+  entry when relevant)
+- Revision tracking for research log entries (git log suffices)
 
 ---
 
 ## Open questions
 
-None remaining — all 5 calls from `templating_plan_review.md` resolved.
+None.
 
 ---
 
 ## Suggested Execution Graph
 
 ```yaml
-dag_id: "dag_plan_template_rewrite"
+dag_id: "dag_research_log_split"
 plan_ref: "planning/current_plan.md"
 category: "C"
-branch: "chore/plan-template-rewrite"
+branch: "chore/research-log-split"
 base_ref: "master"
 default_isolation: "shared_branch"
 
 jobs:
   - job_id: "J01"
-    name: "Plan template rewrite"
+    name: "Research log decentralization"
 
     task_groups:
       - group_id: "TG01"
-        name: "Rewrite plan + critique templates"
+        name: "Create per-dataset logs + rewrite root"
         depends_on: []
         review_gate:
           agent: "reviewer"
@@ -420,100 +419,157 @@ jobs:
           on_blocker: "halt"
         tasks:
           - task_id: "T01"
-            name: "Rewrite plan_template.md"
-            spec_file: "planning/specs/spec_01_plan_template.md"
+            name: "Create sc2egset research_log.md"
+            spec_file: "planning/specs/spec_01_sc2_research_log.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "docs/templates/plan_template.md"
+              - "src/rts_predict/sc2/reports/sc2egset/research_log.md"
             read_scope:
-              - "docs/templates/dag_template.yaml"
-              - "planning/current_plan.md"
+              - "reports/research_log.md"
+              - "docs/templates/research_log_template.yaml"
             depends_on: []
           - task_id: "T02"
-            name: "Rewrite plan_critique_template.md"
-            spec_file: "planning/specs/spec_02_critique_template.md"
+            name: "Create aoe2companion research_log.md"
+            spec_file: "planning/specs/spec_02_aoe2c_research_log.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "docs/templates/plan_critique_template.md"
+              - "src/rts_predict/aoe2/reports/aoe2companion/research_log.md"
             read_scope:
-              - ".claude/scientific-invariants.md"
+              - "reports/research_log.md"
             depends_on: []
+          - task_id: "T03"
+            name: "Create aoestats research_log.md"
+            spec_file: "planning/specs/spec_03_aoestats_research_log.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - "src/rts_predict/aoe2/reports/aoestats/research_log.md"
+            read_scope:
+              - "reports/research_log.md"
+            depends_on: []
+          - task_id: "T04"
+            name: "Rewrite root research_log.md as index"
+            spec_file: "planning/specs/spec_04_root_index.md"
+            agent: "executor"
+            parallel_safe: false
+            file_scope:
+              - "reports/research_log.md"
+            depends_on: ["T01", "T02", "T03"]
 
       - group_id: "TG02"
-        name: "Rewrite planner output contract"
+        name: "Update agent definitions + rules"
         depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T03"
-            name: "Rewrite planner_output_contract.md"
-            spec_file: "planning/specs/spec_03_output_contract.md"
+          - task_id: "T05"
+            name: "Update CLAUDE.md + executor.md"
+            spec_file: "planning/specs/spec_05_orchestrator_agents.md"
             agent: "executor"
-            parallel_safe: false
+            parallel_safe: true
             file_scope:
-              - "docs/templates/planner_output_contract.md"
-            read_scope:
-              - "docs/templates/plan_template.md"
-              - "docs/templates/plan_critique_template.md"
-              - "docs/TAXONOMY.md"
+              - "CLAUDE.md"
+              - ".claude/agents/executor.md"
+            depends_on: []
+          - task_id: "T06"
+            name: "Update reviewer-deep.md + reviewer-adversarial.md"
+            spec_file: "planning/specs/spec_06_reviewer_agents.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/reviewer-deep.md"
+              - ".claude/agents/reviewer-adversarial.md"
+            depends_on: []
+          - task_id: "T07"
+            name: "Update planner-science.md + ml-protocol.md"
+            spec_file: "planning/specs/spec_07_planner_agents.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/planner-science.md"
+              - ".claude/ml-protocol.md"
+            depends_on: []
+          - task_id: "T08"
+            name: "Update reviewer.md + git-workflow.md + thesis-writing.md"
+            spec_file: "planning/specs/spec_08_rules.md"
+            agent: "executor"
+            parallel_safe: true
+            file_scope:
+              - ".claude/agents/reviewer.md"
+              - ".claude/rules/git-workflow.md"
+              - ".claude/rules/thesis-writing.md"
             depends_on: []
 
       - group_id: "TG03"
-        name: "Update lifecycle, agents, and materialization"
-        depends_on: ["TG02"]
+        name: "Update documentation + templates"
+        depends_on: ["TG01"]
         review_gate:
           agent: "reviewer"
           scope: "diff"
           on_blocker: "halt"
         tasks:
-          - task_id: "T04"
-            name: "Update planning/README.md"
-            spec_file: "planning/specs/spec_04_planning_readme.md"
+          - task_id: "T09"
+            name: "Update ARCHITECTURE.md + docs/INDEX.md"
+            spec_file: "planning/specs/spec_09_architecture.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - "planning/README.md"
+              - "ARCHITECTURE.md"
+              - "docs/INDEX.md"
             depends_on: []
-          - task_id: "T05"
-            name: "Update planner-science.md"
-            spec_file: "planning/specs/spec_05_planner_science.md"
+          - task_id: "T10"
+            name: "Update TAXONOMY.md + PHASES.md + STEPS.md"
+            spec_file: "planning/specs/spec_10_phase_docs.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/planner-science.md"
+              - "docs/TAXONOMY.md"
+              - "docs/PHASES.md"
+              - "docs/ml_experiment_phases/PHASES.md"
+              - "docs/ml_experiment_phases/STEPS.md"
             depends_on: []
-          - task_id: "T06"
-            name: "Update planner.md"
-            spec_file: "planning/specs/spec_06_planner.md"
+          - task_id: "T11"
+            name: "Update templates + research docs"
+            spec_file: "planning/specs/spec_11_templates.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/agents/planner.md"
+              - "docs/templates/research_log_template.yaml"
+              - "docs/templates/step_template.yaml"
+              - "docs/templates/research_log_entry_template.yaml"
+              - "docs/templates/plan_template.md"
+              - "docs/research/RESEARCH_LOG.md"
+              - "docs/research/RESEARCH_LOG_ENTRY.md"
             depends_on: []
-          - task_id: "T07"
-            name: "Update materialize_plan.md"
-            spec_file: "planning/specs/spec_07_materialize.md"
+          - task_id: "T12"
+            name: "Update AGENT_MANUAL.md + README.md + ROADMAPs"
+            spec_file: "planning/specs/spec_12_remaining_refs.md"
             agent: "executor"
             parallel_safe: true
             file_scope:
-              - ".claude/commands/materialize_plan.md"
+              - "docs/agents/AGENT_MANUAL.md"
+              - "README.md"
+              - "src/rts_predict/sc2/reports/sc2egset/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/aoe2companion/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/aoestats/ROADMAP.md"
+              - "src/rts_predict/aoe2/reports/ROADMAP.md"
             depends_on: []
 
       - group_id: "TG04"
         name: "CHANGELOG"
-        depends_on: ["TG03"]
+        depends_on: ["TG02", "TG03"]
         review_gate:
           agent: "reviewer"
           scope: "cumulative"
           on_blocker: "halt"
         tasks:
-          - task_id: "T08"
+          - task_id: "T13"
             name: "Update CHANGELOG"
-            spec_file: "planning/specs/spec_08_changelog.md"
+            spec_file: "planning/specs/spec_13_changelog.md"
             agent: "executor"
             parallel_safe: false
             file_scope:
