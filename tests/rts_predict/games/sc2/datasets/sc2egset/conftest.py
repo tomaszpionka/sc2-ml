@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rts_predict.sc2.config import DATA_DIR
+from rts_predict.games.sc2.config import DATA_DIR
 
 SYNTHETIC_REPLAY_IDS = [
     "aabbccdd11223344556677889900aa00",

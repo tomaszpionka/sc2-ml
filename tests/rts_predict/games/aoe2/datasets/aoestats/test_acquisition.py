@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from rts_predict.aoe2.config import AOESTATS_RAW_MATCHES_DIR, AOESTATS_RAW_PLAYERS_DIR
-from rts_predict.aoe2.data.aoestats.acquisition import (
+from rts_predict.games.aoe2.config import AOESTATS_RAW_MATCHES_DIR, AOESTATS_RAW_PLAYERS_DIR
+from rts_predict.games.aoe2.datasets.aoestats.acquisition import (
     _compute_md5,
     download_file,
     download_overview,
@@ -196,7 +196,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """dry_run=True works even without force (shows what would happen)."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
         monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
@@ -213,7 +213,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """force=True allows actual downloads to proceed."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
         monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
@@ -236,7 +236,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """Files with matching MD5 are skipped."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         matches_dir = tmp_path / "matches"
         matches_dir.mkdir()
@@ -273,7 +273,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """Download manifest JSON is written after completion."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
         monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
@@ -292,7 +292,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """Each non-zero entry produces two download attempts (matches + players)."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
         monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
@@ -309,7 +309,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Pre-existing .tmp file is removed after mid-read OSError (lines 181-184)."""
-        from rts_predict.aoe2.data.aoestats.acquisition import download_file
+        from rts_predict.games.aoe2.datasets.aoestats.acquisition import download_file
 
         target = tmp_path / "file.parquet"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -335,7 +335,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoestats_manifest_file: Path
     ) -> None:
         """Failed download is logged with status='failed' in log (lines 336-339)."""
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         monkeypatch.setattr(mod, "AOESTATS_MANIFEST", aoestats_manifest_file)
         monkeypatch.setattr(mod, "AOESTATS_RAW_DIR", tmp_path)
@@ -365,7 +365,7 @@ class TestRunDownload:
         """Progress log fires every log_interval entries (line 346)."""
         import json as _json
 
-        import rts_predict.aoe2.data.aoestats.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoestats.acquisition as mod
 
         # Build a 2-entry manifest so we have 2 targets
         entries = {

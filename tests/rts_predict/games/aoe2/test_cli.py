@@ -1,4 +1,4 @@
-"""Tests for :mod:`rts_predict.aoe2.cli` — AoE2 CLI routing."""
+"""Tests for :mod:`rts_predict.games.aoe2.cli` — AoE2 CLI routing."""
 
 from __future__ import annotations
 
@@ -6,14 +6,14 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
-_CLI = "rts_predict.aoe2.cli"
+_CLI = "rts_predict.games.aoe2.cli"
 
 
 class TestAoE2CLI:
     def test_main_no_command_exits_with_help(self) -> None:
         """Calling main() with no arguments must print help (SystemExit not raised
         because argparse prints help and returns for the top-level parser)."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         # Parsing empty args — no subcommand means `args.command` is None
@@ -27,7 +27,7 @@ class TestAoE2CLI:
             patch(f"{_CLI}.handle_db_command") as mock_handle,
             patch("sys.argv", ["aoe2", "db", "tables"]),
         ):
-            from rts_predict.aoe2.cli import main
+            from rts_predict.games.aoe2.cli import main
 
             main()
 
@@ -35,14 +35,14 @@ class TestAoE2CLI:
 
     def test_db_default_dataset_is_aoe2companion(self) -> None:
         """The default dataset for the AoE2 CLI must be 'aoe2companion'."""
-        from rts_predict.aoe2.config import DEFAULT_DATASET
+        from rts_predict.games.aoe2.config import DEFAULT_DATASET
 
         assert DEFAULT_DATASET == "aoe2companion"
 
     def test_setup_logging_creates_handlers(self, tmp_path: Path) -> None:
         """setup_logging() must register at least one handler on the root logger."""
         with patch(f"{_CLI}.Path", return_value=tmp_path / "logs"):
-            from rts_predict.aoe2.cli import setup_logging
+            from rts_predict.games.aoe2.cli import setup_logging
 
             setup_logging()
 
@@ -57,7 +57,7 @@ class TestAoE2CLI:
             patch(f"{_CLI}.setup_logging"),
             patch("sys.argv", ["aoe2"]),
         ):
-            from rts_predict.aoe2.cli import main
+            from rts_predict.games.aoe2.cli import main
 
             main()
 
@@ -71,7 +71,7 @@ class TestCLIDownload:
 
     def test_download_subcommand_exists(self) -> None:
         """'download' is a recognised subcommand."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoe2companion", "--dry-run"])
@@ -81,7 +81,7 @@ class TestCLIDownload:
 
     def test_aoestats_force_flag(self) -> None:
         """--force flag is parsed for aoestats source."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoestats", "--force"])
@@ -92,7 +92,7 @@ class TestCLIDownload:
         """Unrecognised source name causes parser error."""
         import pytest
 
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         with pytest.raises(SystemExit):
@@ -100,7 +100,7 @@ class TestCLIDownload:
 
     def test_dry_run_defaults_to_false(self) -> None:
         """--dry-run defaults to False when not specified."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoe2companion"])
@@ -108,7 +108,7 @@ class TestCLIDownload:
 
     def test_force_defaults_to_false(self) -> None:
         """--force defaults to False when not specified."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoestats"])
@@ -116,7 +116,7 @@ class TestCLIDownload:
 
     def test_log_interval_parsed(self) -> None:
         """--log-interval is parsed as int."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoe2companion", "--log-interval", "50"])
@@ -124,7 +124,7 @@ class TestCLIDownload:
 
     def test_log_interval_defaults_to_none(self) -> None:
         """--log-interval defaults to None when not specified."""
-        from rts_predict.aoe2.cli import build_parser
+        from rts_predict.games.aoe2.cli import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["download", "aoe2companion"])
@@ -140,11 +140,11 @@ class TestCLIDownloadDispatch:
             patch("sys.argv", ["aoe2", "download", "aoe2companion", "--dry-run"]),
             patch(f"{_CLI}.setup_logging"),
             patch(
-                "rts_predict.aoe2.data.aoe2companion.acquisition.run_download",
+                "rts_predict.games.aoe2.datasets.aoe2companion.acquisition.run_download",
                 return_value={"downloaded": 0},
             ) as mock_dl,
         ):
-            from rts_predict.aoe2.cli import main
+            from rts_predict.games.aoe2.cli import main
 
             main()
 
@@ -159,11 +159,11 @@ class TestCLIDownloadDispatch:
             ),
             patch(f"{_CLI}.setup_logging"),
             patch(
-                "rts_predict.aoe2.data.aoestats.acquisition.run_download",
+                "rts_predict.games.aoe2.datasets.aoestats.acquisition.run_download",
                 return_value={"downloaded": 0},
             ) as mock_dl,
         ):
-            from rts_predict.aoe2.cli import main
+            from rts_predict.games.aoe2.cli import main
 
             main()
 

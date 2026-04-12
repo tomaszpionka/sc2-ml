@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 # Helpers
 # ---------------------------------------------------------------------------
 
-_CLI = "rts_predict.sc2.cli"
+_CLI = "rts_predict.games.sc2.cli"
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ _CLI = "rts_predict.sc2.cli"
 class TestSetupLogging:
     def test_setup_logging_creates_handlers(self, tmp_path: Path) -> None:
         with patch(f"{_CLI}.Path", return_value=tmp_path / "logs"):
-            from rts_predict.sc2.cli import setup_logging
+            from rts_predict.games.sc2.cli import setup_logging
 
             setup_logging()
 
@@ -47,7 +47,7 @@ class TestMainRouting:
     @patch(f"{_CLI}.handle_db_command")
     def test_main_db_routes_to_handler(self, mock_handle, m_log) -> None:
         """main() with 'db tables' must call handle_db_command once."""
-        from rts_predict.sc2.cli import main
+        from rts_predict.games.sc2.cli import main
 
         with patch("sys.argv", ["sc2", "db", "tables"]):
             main()
@@ -56,7 +56,7 @@ class TestMainRouting:
 
     def test_db_default_dataset_is_sc2egset(self) -> None:
         """The default dataset for the SC2 CLI must be 'sc2egset'."""
-        from rts_predict.sc2.config import DEFAULT_DATASET
+        from rts_predict.games.sc2.config import DEFAULT_DATASET
 
         assert DEFAULT_DATASET == "sc2egset"
 
@@ -64,7 +64,7 @@ class TestMainRouting:
 class TestMainNoCommand:
     @patch(f"{_CLI}.setup_logging")
     def test_main_no_command_prints_help(self, m_log, capsys) -> None:
-        from rts_predict.sc2.cli import main
+        from rts_predict.games.sc2.cli import main
 
         with patch("sys.argv", ["sc2"]):
             main()
@@ -84,7 +84,7 @@ class TestMainExportSchemasRouting:
         self, m_export: MagicMock, m_log: MagicMock, tmp_path: Path
     ) -> None:
         """main() with 'export-schemas --out DIR' calls _run_export_schemas_command."""
-        from rts_predict.sc2.cli import main
+        from rts_predict.games.sc2.cli import main
 
         out_dir = str(tmp_path / "schemas")
         with patch("sys.argv", ["sc2", "export-schemas", "--out", out_dir]):
@@ -98,7 +98,7 @@ class TestMainExportSchemasRouting:
         self, m_export: MagicMock, m_log: MagicMock, tmp_path: Path
     ) -> None:
         """--no-preserve flag is forwarded correctly."""
-        from rts_predict.sc2.cli import main
+        from rts_predict.games.sc2.cli import main
 
         out_dir = str(tmp_path / "schemas")
         with patch("sys.argv", ["sc2", "export-schemas", "--out", out_dir, "--no-preserve"]):
@@ -117,7 +117,7 @@ class TestRunExportSchemasCommand:
         self, m_export: MagicMock, tmp_path: Path
     ) -> None:
         """_run_export_schemas_command delegates to export_schemas with correct args."""
-        from rts_predict.sc2.cli import _run_export_schemas_command
+        from rts_predict.games.sc2.cli import _run_export_schemas_command
 
         db = tmp_path / "db.duckdb"
         out = tmp_path / "schemas"
@@ -132,7 +132,7 @@ class TestRunExportSchemasCommand:
         self, m_export: MagicMock, tmp_path: Path
     ) -> None:
         """no_preserve=True inverts preserve_comments to False."""
-        from rts_predict.sc2.cli import _run_export_schemas_command
+        from rts_predict.games.sc2.cli import _run_export_schemas_command
 
         db = tmp_path / "db.duckdb"
         out = tmp_path / "schemas"

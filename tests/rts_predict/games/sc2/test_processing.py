@@ -9,7 +9,7 @@ import re
 import duckdb
 import pytest
 
-from rts_predict.sc2.data.processing import create_raw_enriched_view
+from rts_predict.games.sc2.processing import create_raw_enriched_view
 
 
 class TestCreateRawEnrichedView:

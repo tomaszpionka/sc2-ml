@@ -5,14 +5,14 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from rts_predict.aoe2.data.aoe2companion.ingestion import (
+from rts_predict.games.aoe2.datasets.aoe2companion.ingestion import (
     load_all_raw_tables,
     load_raw_leaderboard,
     load_raw_matches,
     load_raw_profiles,
     load_raw_ratings,
 )
-from rts_predict.aoe2.data.aoe2companion.types import DtypeDecision
+from rts_predict.games.aoe2.datasets.aoe2companion.types import DtypeDecision
 
 # ── load_raw_matches ──────────────────────────────────────────────────────────
 

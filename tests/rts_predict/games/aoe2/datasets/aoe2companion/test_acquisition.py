@@ -7,13 +7,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from rts_predict.aoe2.config import (
+from rts_predict.games.aoe2.config import (
     AOE2COMPANION_RAW_LEADERBOARDS_DIR,
     AOE2COMPANION_RAW_MATCHES_DIR,
     AOE2COMPANION_RAW_PROFILES_DIR,
     AOE2COMPANION_RAW_RATINGS_DIR,
 )
-from rts_predict.aoe2.data.aoe2companion.acquisition import (
+from rts_predict.games.aoe2.datasets.aoe2companion.acquisition import (
     _classify_entry,
     download_file,
     filter_download_targets,
@@ -255,7 +255,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
     ) -> None:
         """dry_run=True: no HTTP calls, all targets logged as 'dry_run'."""
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
@@ -274,7 +274,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
     ) -> None:
         """Files already on disk with matching size are skipped."""
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         matches_dir = tmp_path / "matches"
         matches_dir.mkdir()
@@ -295,7 +295,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
     ) -> None:
         """Download manifest JSON is written after run_download completes."""
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
@@ -320,7 +320,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
     ) -> None:
         """Network failure for one file does not abort the entire run."""
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
@@ -351,7 +351,7 @@ class TestRunDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, aoe2companion_manifest_file: Path
     ) -> None:
         """Temporary file already on disk is removed after mid-read OSError (line 217)."""
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         monkeypatch.setattr(mod, "AOE2COMPANION_MANIFEST", aoe2companion_manifest_file)
         monkeypatch.setattr(mod, "AOE2COMPANION_RAW_DIR", tmp_path)
@@ -391,7 +391,7 @@ class TestRunDownload:
         """
         import json as _json
 
-        import rts_predict.aoe2.data.aoe2companion.acquisition as mod
+        import rts_predict.games.aoe2.datasets.aoe2companion.acquisition as mod
 
         # Build a 2-entry manifest so we have 2 targets
         entries = [

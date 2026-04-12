@@ -5,7 +5,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from rts_predict.aoe2.data.aoestats.ingestion import (
+from rts_predict.games.aoe2.datasets.aoestats.ingestion import (
     load_all_raw_tables,
     load_raw_matches,
     load_raw_players,
