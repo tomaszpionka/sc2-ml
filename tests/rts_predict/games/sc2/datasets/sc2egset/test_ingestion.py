@@ -288,7 +288,7 @@ class TestExtractEventsToParquet:
     def test_parquet_has_expected_columns(
         self, sc2_raw_dir: Path, tmp_path: Path
     ) -> None:
-        """Each Parquet file must have replay_id, loop, evtTypeName, event_data."""
+        """Each Parquet file must have filename, loop, evtTypeName, event_data."""
         import pyarrow.parquet as pq
 
         output_dir = tmp_path / "events"
@@ -297,7 +297,7 @@ class TestExtractEventsToParquet:
         for et in ("gameEvents", "trackerEvents", "messageEvents"):
             schema = pq.read_schema(output_dir / f"{et}.parquet")
             col_names = set(schema.names)
-            assert {"replay_id", "loop", "evtTypeName", "event_data"} <= col_names
+            assert {"filename", "loop", "evtTypeName", "event_data"} <= col_names
 
     def test_returns_correct_counts(
         self, sc2_raw_dir: Path, tmp_path: Path

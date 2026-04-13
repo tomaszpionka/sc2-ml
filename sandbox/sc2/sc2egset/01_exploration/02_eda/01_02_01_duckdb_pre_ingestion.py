@@ -67,6 +67,35 @@ for s in samples:
     print(f"  {s.parent.parent.name}/{s.name} ({mb:.1f} MB)")
 
 # %% [markdown]
+# ## 1b. Filename uniqueness across tournaments
+#
+# The replay files are named `<hash>.SC2Replay.json`. If the same hash appears
+# in multiple `*_data` directories, using just the basename as a provenance key
+# would be ambiguous. Check whether basenames are unique across all tournaments
+# before committing to a filename-only join key.
+
+# %%
+all_replays = sorted(REPLAYS_SOURCE_DIR.glob("*/*_data/*.SC2Replay.json"))
+print(f"Total replay files: {len(all_replays):,}")
+
+basenames = [f.name for f in all_replays]
+unique_basenames = set(basenames)
+print(f"Unique basenames:   {len(unique_basenames):,}")
+print(f"Duplicates:         {len(basenames) - len(unique_basenames):,}")
+
+if len(basenames) != len(unique_basenames):
+    from collections import Counter
+    dupes = [name for name, count in Counter(basenames).items() if count > 1]
+    print(f"\nDuplicate basenames ({len(dupes)}):")
+    for name in dupes[:10]:
+        locations = [f.parent.parent.name for f in all_replays if f.name == name]
+        print(f"  {name} -> {locations}")
+    if len(dupes) > 10:
+        print(f"  ... and {len(dupes) - 10} more")
+else:
+    print("\nAll basenames are unique — safe to use filename as join key.")
+
+# %% [markdown]
 # ## 2. Test read_json_auto on each sample
 
 # %%
@@ -380,6 +409,89 @@ if tpdm:
         print(f"  {k}: {type(v).__name__} = {repr(v)[:80]}")
 
 # %% [markdown]
+# ### 8d. Smoke test — extract_events_to_parquet on a single replay
+#
+# Validate that the Parquet extraction pipeline works end-to-end on one file
+# before committing to the full 22,390-file run. Uses a temp raw directory
+# with a single replay, then verifies the output with in-memory DuckDB.
+
+# %%
+import shutil
+import tempfile
+
+from rts_predict.games.sc2.config import DUCKDB_TEMP_DIR
+from rts_predict.games.sc2.datasets.sc2egset.ingestion import extract_events_to_parquet
+
+sample = samples[0]
+smoke_output = DUCKDB_TEMP_DIR / "events_smoke_test"
+
+# Build a temp raw dir matching the glob pattern: */*_data/*.SC2Replay.json
+with tempfile.TemporaryDirectory() as tmp_raw:
+    mirror = Path(tmp_raw) / sample.parent.parent.name / sample.parent.name
+    mirror.mkdir(parents=True)
+    shutil.copy2(sample, mirror / sample.name)
+
+    counts = extract_events_to_parquet(Path(tmp_raw), smoke_output)
+
+print("Extraction results:")
+for event_type, count in counts.items():
+    print(f"  {event_type}: {count:,} rows")
+
+# %%
+# Verify Parquet output with in-memory DuckDB
+con_smoke = duckdb.connect(":memory:")
+
+for event_type in ("gameEvents", "trackerEvents", "messageEvents"):
+    pq_path = smoke_output / f"{event_type}.parquet"
+    if not pq_path.exists():
+        print(f"{event_type}: no Parquet file (0 events)")
+        continue
+
+    size_kb = pq_path.stat().st_size / 1024
+    print(f"\n{'='*60}")
+    print(f"  {event_type}.parquet ({size_kb:.1f} KB)")
+    print(f"{'='*60}")
+
+    con_smoke.sql(f"DESCRIBE SELECT * FROM '{pq_path}'").show()
+
+    row_count = con_smoke.sql(f"SELECT COUNT(*) FROM '{pq_path}'").fetchone()[0]
+    print(f"  Rows: {row_count:,} (expected: {counts[event_type]:,})")
+    assert row_count == counts[event_type], "Row count mismatch!"
+
+    nulls = con_smoke.sql(f"""
+        SELECT
+            SUM(CASE WHEN filename IS NULL THEN 1 ELSE 0 END) AS null_filename,
+            SUM(CASE WHEN loop IS NULL THEN 1 ELSE 0 END) AS null_loop,
+            SUM(CASE WHEN "evtTypeName" IS NULL THEN 1 ELSE 0 END) AS null_evt_type
+        FROM '{pq_path}'
+    """).fetchone()
+    print(f"  NULLs: filename={nulls[0]}, loop={nulls[1]}, evtTypeName={nulls[2]}")
+
+    con_smoke.sql(f"""
+        SELECT "evtTypeName", COUNT(*) AS n
+        FROM '{pq_path}'
+        GROUP BY "evtTypeName"
+        ORDER BY n DESC
+    """).show()
+
+con_smoke.close()
+
+# %%
+# Compression ratio
+raw_bytes = sample.stat().st_size
+parquet_bytes = sum(
+    (smoke_output / f"{et}.parquet").stat().st_size
+    for et in ("gameEvents", "trackerEvents", "messageEvents")
+    if (smoke_output / f"{et}.parquet").exists()
+)
+print(f"Raw JSON:      {raw_bytes / 1024:.1f} KB")
+print(f"Parquet total: {parquet_bytes / 1024:.1f} KB")
+print(f"Compression:   {raw_bytes / parquet_bytes:.1f}x")
+
+shutil.rmtree(smoke_output)
+print("\nSmoke test passed — output cleaned up.")
+
+# %% [markdown]
 # ## 9. Findings and ingestion strategy recommendation
 #
 # Summarize all findings from sections 1-8 here after execution.
@@ -390,7 +502,9 @@ if tpdm:
 # - **ToonPlayerDescMap:** unnest to per-player columns or keep as MAP?
 # - **Mapping files:** single reference table (all 70 identical)?
 # - **Sub-field types:** any surprises in nested struct fields?
-# - **Proposed DDL** for each table
+# - **Raw layer strategy:** `SELECT *` with `filename=true` for all `*_raw`
+#   tables — no explicit DDL at this stage. DDL is deferred to staging tables
+#   after exploration, analysis, and cleaning.
 
 # %%
 con.close()

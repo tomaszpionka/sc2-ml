@@ -326,7 +326,7 @@ def extract_events_to_parquet(
     """Extract event arrays from SC2Replay.json files to zstd-compressed Parquet.
 
     Writes one Parquet file per event type (gameEvents, trackerEvents,
-    messageEvents) with columns: replay_id (filename), loop (game tick),
+    messageEvents) with columns: filename, loop (game tick),
     evtTypeName, and the full event data as a JSON VARCHAR.
 
     Files are partitioned by evtTypeName within each Parquet file.
@@ -372,10 +372,10 @@ def extract_events_to_parquet(
                         continue
 
                     events = data.get(et, [])
-                    replay_id = fpath.name
+                    fname = fpath.name
                     for evt in events:
                         batch_rows.append({
-                            "replay_id": replay_id,
+                            "filename": fname,
                             "loop": evt.get("loop", 0),
                             "evtTypeName": evt.get("evtTypeName", ""),
                             "event_data": json.dumps(evt),
@@ -383,8 +383,8 @@ def extract_events_to_parquet(
 
                 if batch_rows:
                     table = pa.table({
-                        "replay_id": pa.array(
-                            [r["replay_id"] for r in batch_rows], type=pa.string()
+                        "filename": pa.array(
+                            [r["filename"] for r in batch_rows], type=pa.string()
                         ),
                         "loop": pa.array(
                             [r["loop"] for r in batch_rows], type=pa.int64()

@@ -253,6 +253,101 @@ if variant_directories:
     print(f"Variant directories: {variant_directories[:10]}")
 
 # %% [markdown]
+# ## Cell 5b — Mapping file schema discovery
+#
+# Each tournament directory contains a `map_foreign_to_english_mapping.json`.
+# These were inventoried in 01_01_01 but never schema-checked. What is the
+# internal structure? Is it consistent across all 70 tournaments?
+
+# %%
+mapping_files = sorted(RAW_DIR.glob("*/map_foreign_to_english_mapping.json"))
+print(f"Mapping files found: {len(mapping_files)}")
+
+mapping_schemas: list[dict] = []
+mapping_errors: list[str] = []
+
+for mf in mapping_files:
+    tournament = mf.parent.name
+    try:
+        with mf.open() as fh:
+            data = json.load(fh)
+    except (json.JSONDecodeError, OSError) as e:
+        mapping_errors.append(f"{tournament}: {e}")
+        continue
+
+    entry_count = len(data) if isinstance(data, dict) else None
+    key_types = set(type(k).__name__ for k in data.keys()) if isinstance(data, dict) else set()
+    val_types = set(type(v).__name__ for v in data.values()) if isinstance(data, dict) else set()
+    is_flat = all(not isinstance(v, (dict, list)) for v in data.values()) if isinstance(data, dict) else False
+
+    mapping_schemas.append({
+        "tournament": tournament,
+        "top_level_type": type(data).__name__,
+        "entry_count": entry_count,
+        "key_types": sorted(key_types),
+        "value_types": sorted(val_types),
+        "is_flat": is_flat,
+    })
+
+print(f"Successfully parsed: {len(mapping_schemas)}")
+print(f"Parse errors: {len(mapping_errors)}")
+if mapping_errors:
+    for e in mapping_errors:
+        print(f"  ERROR: {e}")
+
+# %%
+# Schema consistency across all mapping files
+top_types = set(m["top_level_type"] for m in mapping_schemas)
+all_flat = all(m["is_flat"] for m in mapping_schemas)
+key_type_union = set()
+val_type_union = set()
+entry_counts = []
+
+for m in mapping_schemas:
+    key_type_union.update(m["key_types"])
+    val_type_union.update(m["value_types"])
+    if m["entry_count"] is not None:
+        entry_counts.append(m["entry_count"])
+
+print(f"Top-level types: {sorted(top_types)}")
+print(f"All flat (no nesting): {all_flat}")
+print(f"Key types across all files: {sorted(key_type_union)}")
+print(f"Value types across all files: {sorted(val_type_union)}")
+print(f"Entries per file: min={min(entry_counts)}, max={max(entry_counts)}, "
+      f"mean={sum(entry_counts)/len(entry_counts):.1f}")
+
+# Check if all files share the same structure
+ref = mapping_schemas[0] if mapping_schemas else None
+variant_mappings = [
+    m for m in mapping_schemas
+    if (m["top_level_type"] != ref["top_level_type"]
+        or m["key_types"] != ref["key_types"]
+        or m["value_types"] != ref["value_types"]
+        or m["is_flat"] != ref["is_flat"])
+] if ref else []
+
+if variant_mappings:
+    print(f"\nVariant files ({len(variant_mappings)}):")
+    for m in variant_mappings:
+        print(f"  {m['tournament']}: type={m['top_level_type']}, flat={m['is_flat']}, "
+              f"keys={m['key_types']}, vals={m['value_types']}")
+else:
+    print(f"\nAll {len(mapping_schemas)} files share the same structure: "
+          f"type={ref['top_level_type']}, flat={ref['is_flat']}, "
+          f"keys={ref['key_types']}, vals={ref['value_types']}")
+
+# %%
+# Sample content from first and last mapping files (temporal span)
+for mf in [mapping_files[0], mapping_files[-1]]:
+    with mf.open() as fh:
+        data = json.load(fh)
+    print(f"\n{mf.parent.name} ({len(data)} entries):")
+    for k, v in list(data.items())[:5]:
+        print(f"  {k!r} -> {v!r}")
+    if len(data) > 5:
+        print(f"  ... ({len(data) - 5} more)")
+
+# %% [markdown]
 # ## Cell 6 — Write JSON artifact
 
 # %%
@@ -299,7 +394,30 @@ artifact = {
                 "variant_directories": variant_directories if not all_files_same_schema else [],
             },
             "event_array_deep_structure": event_deep_structure,
-        }
+        },
+        {
+            "type": "json",
+            "subdirectory": "TOURNAMENT (root level)",
+            "filename_pattern": "map_foreign_to_english_mapping.json",
+            "files_found": len(mapping_schemas),
+            "files_with_errors": len(mapping_errors),
+            "schema": {
+                "top_level_type": sorted(top_types),
+                "all_flat": all_flat,
+                "key_types": sorted(key_type_union),
+                "value_types": sorted(val_type_union),
+                "entry_counts": {
+                    "min": min(entry_counts) if entry_counts else None,
+                    "max": max(entry_counts) if entry_counts else None,
+                    "mean": round(sum(entry_counts) / len(entry_counts), 1) if entry_counts else None,
+                },
+            },
+            "consistency": {
+                "all_same_schema": len(variant_mappings) == 0,
+                "variant_files": [m["tournament"] for m in variant_mappings],
+            },
+            "per_file": mapping_schemas,
+        },
     ],
 }
 
@@ -392,6 +510,26 @@ for ek in EVENT_KEYS:
         md_lines.append(
             f"| {et['event_type']} | {et['count']:,} | {et['field_count']} | {nested_str} |"
         )
+    md_lines.append("")
+
+md_lines += [
+    "## Mapping file schema (`map_foreign_to_english_mapping.json`)",
+    "",
+    f"- Files found: {len(mapping_schemas)} / {len(mapping_files)}",
+    f"- Parse errors: {len(mapping_errors)}",
+    f"- Top-level type: {sorted(top_types)}",
+    f"- All flat (no nesting): {all_flat}",
+    f"- Key types: {sorted(key_type_union)}, Value types: {sorted(val_type_union)}",
+    f"- Entries per file: min={min(entry_counts)}, max={max(entry_counts)}, "
+    f"mean={sum(entry_counts)/len(entry_counts):.1f}",
+    f"- Schema consistent across all files: {len(variant_mappings) == 0}",
+    "",
+]
+if variant_mappings:
+    md_lines.append(f"**Variant files ({len(variant_mappings)}):**")
+    for m in variant_mappings:
+        md_lines.append(f"- {m['tournament']}: type={m['top_level_type']}, "
+                        f"flat={m['is_flat']}, keys={m['key_types']}, vals={m['value_types']}")
     md_lines.append("")
 
 md_lines += [
