@@ -16,7 +16,7 @@ that need external validation in Claude Chat (Pass 2).
 
 | Section | Chapter file | Drafted date | Flag count | Key artifacts | Pass 2 status |
 |---------|-------------|-------------|------------|---------------|---------------|
-| *(none yet)* | | | | | |
+| §1.1 Background and motivation | thesis/chapters/01_introduction.md | 2026-04-13 | 0 | — (literature section, no data artifacts) | Pending — Pass 2 blocking items resolved |
 
 ## Completed Pass 2 reviews
 

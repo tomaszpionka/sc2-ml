@@ -30,7 +30,7 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §1.1 Background and motivation | `DRAFTABLE` | — | Literature + framing |
+| §1.1 Background and motivation | `DRAFTED` | — | Literature + framing. Gate 0 voice calibration draft. |
 | §1.2 Problem statement | `DRAFTABLE` | — | Literature + framing |
 | §1.3 Research questions | `DRAFTABLE` | — | Draft now; finalize after experiments |
 | §1.4 Scope and limitations | `DRAFTABLE` | — | Draft now; revise after AoE2 assessment |
@@ -55,7 +55,7 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 | §3.2 StarCraft prediction literature | `DRAFTABLE` | — | Key papers identified |
 | §3.3 MOBA and other esports | `DRAFTABLE` | — | Literature |
 | §3.4 AoE2 prediction | `BLOCKED` | AoE2 lit review | Future |
-| §3.5 Research gap | `DRAFTABLE` | — | Literature + framing |
+| §3.5 Research gap | `BLOCKED` | §3.1-§3.4 | Skeleton draftable from §3.1-§3.3; full draft blocked on §3.4 (AoE2 lit review) |
 
 ## Chapter 4 — Data and Methodology
 
