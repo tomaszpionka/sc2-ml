@@ -126,6 +126,38 @@ Violating them produces results that cannot be defended at examination.
    See docs/ml_experiment_lifecycle/06_CROSS_DOMAIN_TRANSFER_MANUAL.md for
    the authoritative cross-domain methodology.
 
+### Raw data provenance
+
+10. **Every raw ingestion output — `*_raw` DuckDB tables and Parquet event
+    files — must carry a `filename` column storing the source file's path
+    relative to that dataset's `raw_dir` root.** Absolute paths and bare
+    basenames (`fpath.name`) are both forbidden.
+
+    **Rationale:** DuckDB's `filename=true` parameter and Python `pathlib`
+    resolve paths independently; storing absolute paths creates a cross-stream
+    join hazard (symlink resolution, mount-point variation, machine portability).
+    Bare basenames (`fpath.name`) are ambiguous when the same filename appears
+    in multiple subdirectories (e.g., two tournament folders in sc2egset).
+    Stripping the common `raw_dir` prefix guarantees filenames are identical
+    strings across all streams, unambiguous within a dataset, and portable
+    across machines.
+
+    **Implementation per stream:**
+    - DuckDB CTAS (`read_json_auto`/`read_parquet`/`read_csv_auto` with
+      `filename=true`): strip prefix in SQL via
+      `substr(filename, {raw_dir_prefix_len}) AS filename` where
+      `raw_dir_prefix_len = len(str(raw_dir)) + 2`.
+    - Python-loop extraction (DuckDB or Parquet): use
+      `str(fpath.relative_to(raw_dir))` instead of `str(fpath)` or
+      `fpath.name`.
+
+    **Applies to:** all datasets (sc2egset, aoe2companion, aoestats) and all
+    output formats (DuckDB tables, Parquet event files).
+
+    **Verification:** For every dataset's ingestion tests, assert that no
+    `filename` value in any `*_raw` table or Parquet output starts with `/`
+    or lacks a `/` (i.e., is a bare basename).
+
 ### Research pipeline discipline
 
 9. **A step's conclusions must derive only from its own artifacts and all
