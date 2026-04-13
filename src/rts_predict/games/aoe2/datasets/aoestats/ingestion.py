@@ -1,10 +1,11 @@
 """Raw CTAS ingestion for aoestats into DuckDB.
 
-Materialises two append-only raw tables from the weekly dump files:
-- raw_matches  — one row per match per week, from weekly match parquets
-- raw_players  — one row per player per match per week, from weekly player parquets
+Materialises three append-only raw tables from the weekly dump files:
+- raw_matches   — one row per match per week, from weekly match parquets
+- raw_players   — one row per player per match per week, from weekly player parquets
+- raw_overviews — singleton snapshot from overview/overview.json
 
-Both tables carry a ``filename`` provenance column populated by
+All tables carry a ``filename`` provenance column populated by
 ``filename = true`` on the source read. Removing this column in any
 downstream view is forbidden (INVARIANT I7).
 
@@ -38,6 +39,11 @@ SELECT * FROM read_parquet(
     union_by_name = true,
     filename = true
 )
+"""
+
+_RAW_OVERVIEWS_QUERY = """
+CREATE TABLE raw_overviews AS
+SELECT * FROM read_json_auto('{path}', filename = true)
 """
 
 _COUNT_QUERY = "SELECT count(*) FROM {table}"
@@ -112,13 +118,40 @@ def load_raw_players(
     return n
 
 
+def load_raw_overviews(
+    con: duckdb.DuckDBPyConnection,
+    raw_dir: Path,
+    *,
+    should_drop: bool = True,
+) -> int:
+    """Materialise raw_overviews from the singleton overview JSON.
+
+    Args:
+        con: Active DuckDB connection.
+        raw_dir: Path to the raw data directory (contains overview/ subdir).
+        should_drop: If True, drop existing raw_overviews before creating.
+
+    Returns:
+        Row count in raw_overviews after ingestion.
+    """
+    if should_drop:
+        con.execute(_DROP_IF_EXISTS_QUERY.format(table="raw_overviews"))
+        logger.info("Dropped existing raw_overviews table.")
+
+    path = str(raw_dir / "overview" / "overview.json")
+    con.execute(_RAW_OVERVIEWS_QUERY.format(path=path))
+    n = _count_rows(con, "raw_overviews")
+    logger.info("raw_overviews: %d rows from %s", n, path)
+    return n
+
+
 def load_all_raw_tables(
     con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
     *,
     should_drop: bool = True,
 ) -> dict[str, int]:
-    """Materialise both raw tables in the aoestats DuckDB.
+    """Materialise all three raw tables in the aoestats DuckDB.
 
     Args:
         con: Active DuckDB connection.
@@ -131,5 +164,6 @@ def load_all_raw_tables(
     counts: dict[str, int] = {}
     counts["raw_matches"] = load_raw_matches(con, raw_dir, should_drop=should_drop)
     counts["raw_players"] = load_raw_players(con, raw_dir, should_drop=should_drop)
+    counts["raw_overviews"] = load_raw_overviews(con, raw_dir, should_drop=should_drop)
     logger.info("load_all_raw_tables complete: %s", counts)
     return counts

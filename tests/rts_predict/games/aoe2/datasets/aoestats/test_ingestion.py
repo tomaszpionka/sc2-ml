@@ -8,6 +8,7 @@ import pytest
 from rts_predict.games.aoe2.datasets.aoestats.ingestion import (
     load_all_raw_tables,
     load_raw_matches,
+    load_raw_overviews,
     load_raw_players,
 )
 
@@ -57,13 +58,24 @@ def test_load_raw_players_creates_table_with_filename(
     assert "filename" in cols
 
 
+def test_load_raw_overviews_creates_table_with_filename(
+    db_con: duckdb.DuckDBPyConnection,
+    raw_dir: Path,
+) -> None:
+    """raw_overviews table must exist and have a 'filename' column."""
+    n = load_raw_overviews(db_con, raw_dir)
+    assert n > 0
+    cols = [row[0] for row in db_con.execute("DESCRIBE raw_overviews").fetchall()]
+    assert "filename" in cols
+
+
 def test_load_all_raw_tables_returns_per_table_counts(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    """load_all_raw_tables must return a dict with both table names."""
+    """load_all_raw_tables must return a dict with all three table names."""
     counts = load_all_raw_tables(db_con, raw_dir)
-    assert set(counts.keys()) == {"raw_matches", "raw_players"}
+    assert set(counts.keys()) == {"raw_matches", "raw_players", "raw_overviews"}
     tables = [row[0] for row in db_con.execute("SHOW TABLES").fetchall()]
     for table in counts:
         assert table in tables

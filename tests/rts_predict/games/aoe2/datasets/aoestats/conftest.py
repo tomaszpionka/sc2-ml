@@ -44,6 +44,16 @@ def _write_players_parquet(path: Path, n_rows: int = 10) -> None:
 # ── Raw directory layout fixture ─────────────────────────────────────────────
 
 
+def _write_overview_json(path: Path) -> None:
+    """Write a minimal synthetic overview.json."""
+    data = [
+        {"leaderboard_id": 3, "total_matches": 150000, "total_players": 80000},
+        {"leaderboard_id": 4, "total_matches": 120000, "total_players": 60000},
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data))
+
+
 @pytest.fixture()
 def raw_dir(tmp_path: Path) -> Path:
     """Create a minimal synthetic aoestats raw directory.
@@ -56,6 +66,8 @@ def raw_dir(tmp_path: Path) -> Path:
             players/
                 2024-01-01_2024-01-07_players.parquet  (10 rows)
                 2024-01-08_2024-01-14_players.parquet  (10 rows)
+            overview/
+                overview.json  (2 rows)
     """
     raw = tmp_path / "raw"
 
@@ -63,6 +75,7 @@ def raw_dir(tmp_path: Path) -> Path:
     _write_matches_parquet(raw / "matches" / "2024-01-08_2024-01-14_matches.parquet")
     _write_players_parquet(raw / "players" / "2024-01-01_2024-01-07_players.parquet")
     _write_players_parquet(raw / "players" / "2024-01-08_2024-01-14_players.parquet")
+    _write_overview_json(raw / "overview" / "overview.json")
 
     return raw
 
