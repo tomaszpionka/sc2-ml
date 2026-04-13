@@ -152,6 +152,142 @@ con.sql(
 ).show()
 
 # %% [markdown]
+# ## 6b. Event array struct analysis
+#
+# The batch DESCRIBE (section 6) shows gameEvents, trackerEvents, messageEvents
+# as STRUCT[] — arrays of structs. But each event type within an array has a
+# different set of fields. DuckDB's read_json_auto unions all event structs
+# into one wide STRUCT with NULLs for missing fields, which is why the batch
+# DESCRIBE shows a single massive STRUCT type per array.
+#
+# This section examines the actual event struct heterogeneity by reading
+# the raw JSON directly — how many distinct event struct shapes exist within
+# each array, and what are the common vs rare fields?
+
+# %%
+from collections import Counter
+from rts_predict.common.json_utils import classify_value
+
+EVENT_KEYS = ["gameEvents", "trackerEvents", "messageEvents"]
+
+# Use 3 sample files spanning the size distribution
+event_probe_files = [samples[0], samples[len(samples) // 2], samples[-1]]
+
+for event_key in EVENT_KEYS:
+    print(f"\n{'='*70}")
+    print(f"  {event_key} — struct heterogeneity analysis")
+    print(f"{'='*70}")
+
+    type_counter: Counter[str] = Counter()
+    type_shapes: dict[str, set[str]] = {}
+    type_field_types: dict[str, dict[str, set[str]]] = {}
+    total_events = 0
+
+    for fp in event_probe_files:
+        with fp.open() as fh:
+            data = json.load(fh)
+        events = data.get(event_key, [])
+        total_events += len(events)
+
+        for evt in events:
+            if not isinstance(evt, dict):
+                continue
+            evt_type = evt.get("evtTypeName", evt.get("id", "UNKNOWN"))
+            if isinstance(evt_type, int):
+                evt_type = f"id={evt_type}"
+            type_counter[evt_type] += 1
+
+            if evt_type not in type_shapes:
+                type_shapes[evt_type] = set()
+                type_field_types[evt_type] = {}
+            type_shapes[evt_type].update(evt.keys())
+
+            for k, v in evt.items():
+                tag = classify_value(v)
+                if k not in type_field_types[evt_type]:
+                    type_field_types[evt_type][k] = set()
+                type_field_types[evt_type][k].add(tag)
+
+    print(f"  Total events across {len(event_probe_files)} files: {total_events:,}")
+    print(f"  Unique event types: {len(type_counter)}")
+
+    all_fields: set[str] = set()
+    for shape in type_shapes.values():
+        all_fields.update(shape)
+    print(f"  Union of all fields (what DuckDB STRUCT[] becomes): {len(all_fields)} fields")
+    print()
+
+    for evt_type, count in type_counter.most_common():
+        shape = sorted(type_shapes[evt_type])
+        nested = [
+            f for f in shape
+            if any("struct" in t or "list" in t
+                   for t in type_field_types[evt_type].get(f, set()))
+        ]
+        print(f"  [{count:>7,}x] {evt_type}  ({len(shape)} fields)")
+        if nested:
+            print(f"           nested: {nested}")
+            for nf in nested:
+                print(f"             {nf}: {type_field_types[evt_type][nf]}")
+        print()
+
+# %% [markdown]
+# ### 6c. Event array — DuckDB STRUCT[] field explosion
+#
+# When DuckDB reads heterogeneous event structs with union_by_name, it creates
+# one STRUCT type with ALL fields from ALL event types. This means each array
+# element carries NULLs for every field not present in its event type.
+#
+# Show the actual DuckDB STRUCT[] column types to see how wide they become.
+
+# %%
+for event_key in EVENT_KEYS:
+    print(f"\n{'='*60}")
+    print(f"  typeof({event_key}) from batch load")
+    print(f"{'='*60}")
+    try:
+        result = con.sql(f"""
+            SELECT typeof("{event_key}") AS col_type
+            FROM read_json_auto('{batch_glob}',
+                union_by_name=true, maximum_object_size=536870912)
+            LIMIT 1
+        """).fetchone()
+        type_str = result[0] if result else "N/A"
+        # Print first 200 chars + total length to show the explosion
+        print(f"  Length: {len(type_str)} chars")
+        print(f"  Preview: {type_str[:300]}...")
+    except Exception as e:
+        print(f"  Error: {e}")
+
+# %% [markdown]
+# ### 6d. Alternative: UNNEST event arrays for per-event-type exploration
+#
+# Instead of loading the wide STRUCT[], unnest the arrays and group by
+# evtTypeName to see the actual data shape per event type.
+
+# %%
+for event_key in EVENT_KEYS:
+    print(f"\n{'='*60}")
+    print(f"  UNNEST {event_key} — top event types with field counts")
+    print(f"{'='*60}")
+    try:
+        con.sql(f"""
+            WITH events AS (
+                SELECT UNNEST("{event_key}") AS evt
+                FROM read_json_auto('{batch_glob}',
+                    union_by_name=true, maximum_object_size=536870912)
+            )
+            SELECT
+                evt.evtTypeName AS event_type,
+                COUNT(*) AS count
+            FROM events
+            GROUP BY evt.evtTypeName
+            ORDER BY count DESC
+        """).show()
+    except Exception as e:
+        print(f"  Error: {e}")
+
+# %% [markdown]
 # ## 7. Mapping file census
 
 # %%
