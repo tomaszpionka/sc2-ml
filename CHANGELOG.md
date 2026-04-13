@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [3.4.0] — 2026-04-13 (PR #TBD: feat/sc2-phase01-duckdb-ingestion)
+
+### Added
+- Phase 01 / Step 01_02_02: DuckDB ingestion for sc2egset — three-stream strategy
+  materialising `replays_meta_raw` (22,390 rows), `replay_players_raw` (44,817 rows),
+  and `map_aliases_raw` (104,160 rows) in `data/db/db.duckdb`
+- Invariant I10 in `.claude/scientific-invariants.md`: every `*_raw` table and Parquet
+  event file must carry a `filename` column relative to `raw_dir`; absolute paths and
+  bare basenames both forbidden
+- `ingestion.py`: `load_replays_meta_raw`, `load_replay_players_raw`,
+  `load_map_aliases_raw`, `load_all_raw_tables`, `extract_events_to_parquet`
+  with per-tournament batch loading for replays_meta to avoid OOM
+- All three dataset ROADMAPs updated to `*_raw` suffix naming convention (I10)
+- Draft of thesis Chapter 1 Introduction (Polish)
+
 ## [3.3.0] — 2026-04-13 (PR #TBD: chore/dag-decommission-and-cleanup)
 
 ### Changed
