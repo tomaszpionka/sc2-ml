@@ -1,62 +1,69 @@
-dag_id: "dag_schema_discovery"
+dag_id: "dag_duckdb_ingestion"
 plan_ref: "planning/current_plan.md"
 category: "A"
-branch: "feat/phase01-schema-discovery"
+branch: "feat/phase01-duckdb-ingestion"
 base_ref: "master"
 default_isolation: "shared_branch"
 phase_ref: "01"
-pipeline_section_ref: "01_01"
+pipeline_section_ref: "01_02"
 step_refs:
-  - "01_01_02"
+  - "01_02_01"
 
 jobs:
   - job_id: "J01"
-    name: "Schema discovery — all datasets"
+    name: "01_02_01 — DuckDB ingestion, all datasets"
     task_groups:
       - group_id: "TG01"
-        name: "Utility code"
+        name: "ROADMAP step definitions"
         depends_on: []
         tasks:
           - task_id: "T01"
-            name: "Create parquet_utils + tests"
-            spec_file: "planning/specs/spec_01_parquet_utils.md"
+            name: "Add 01_02_01 step defs to all 3 ROADMAPs"
+            spec_file: "planning/specs/spec_01_roadmaps.md"
             agent: "executor"
-            model: "sonnet"
+            model: "haiku"
             parallel_safe: false
             file_scope:
-              - "src/rts_predict/common/parquet_utils.py"
-              - "tests/rts_predict/common/test_parquet_utils.py"
+              - "src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md"
+              - "src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md"
+              - "src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md"
             read_scope:
-              - "src/rts_predict/common/json_utils.py"
+              - "docs/templates/step_template.yaml"
             depends_on: []
 
       - group_id: "TG02"
-        name: "Notebooks + artifacts + docs (all 3 datasets)"
+        name: "Notebooks + ingestion + docs"
         depends_on: ["TG01"]
         tasks:
           - task_id: "T02"
-            name: "Schema discovery — all 3 datasets (parameterized)"
-            spec_file: "planning/specs/spec_02_schema_discovery.md"
+            name: "DuckDB ingestion for all 3 datasets (parameterized)"
+            spec_file: "planning/specs/spec_02_ingestion.md"
             agent: "executor"
-            model: "sonnet"
+            model: "opus"
             parallel_safe: false
             file_scope:
-              - "sandbox/sc2/sc2egset/01_exploration/01_acquisition/"
-              - "sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/"
-              - "sandbox/aoe2/aoestats/01_exploration/01_acquisition/"
+              - "sandbox/sc2/sc2egset/01_exploration/01_eda/"
+              - "sandbox/aoe2/aoe2companion/01_exploration/01_eda/"
+              - "sandbox/aoe2/aoestats/01_exploration/01_eda/"
+              - "src/rts_predict/games/sc2/datasets/sc2egset/pre_ingestion.py"
               - "src/rts_predict/games/sc2/datasets/sc2egset/reports/"
+              - "src/rts_predict/games/sc2/datasets/sc2egset/data/db/"
+              - "src/rts_predict/games/aoe2/datasets/aoe2companion/pre_ingestion.py"
               - "src/rts_predict/games/aoe2/datasets/aoe2companion/reports/"
+              - "src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/"
+              - "src/rts_predict/games/aoe2/datasets/aoestats/pre_ingestion.py"
               - "src/rts_predict/games/aoe2/datasets/aoestats/reports/"
+              - "src/rts_predict/games/aoe2/datasets/aoestats/data/db/"
               - "reports/research_log.md"
             read_scope:
               - ".claude/scientific-invariants.md"
               - "docs/templates/research_log_entry_template.yaml"
-              - "docs/templates/step_template.yaml"
-              - "src/rts_predict/common/json_utils.py"
-              - "src/rts_predict/common/parquet_utils.py"
               - "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+              - "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
               - "src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+              - "src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
               - "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+              - "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
             depends_on: []
 
 final_review:

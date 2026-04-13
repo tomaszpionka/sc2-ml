@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- [Current Plan](current_plan.md) — Phase 01 Step 01_01_02 Schema Discovery
+- [Current Plan](current_plan.md) — Phase 01 Step 01_02_01 DuckDB Ingestion
 
 ## Execution schedule
 - [DAG](dags/DAG.yaml) — machine-readable execution graph
@@ -10,13 +10,13 @@
 ## Task specs
 - [Parallel execution guide](specs/README.md)
 
-### J01 — Schema discovery (all datasets)
+### J01 — DuckDB ingestion, all datasets
 
-#### TG01 — Utility code
-- [spec_01](specs/spec_01_parquet_utils.md) — Create parquet_utils + tests
+#### TG01 — ROADMAP step definitions
+- [spec_01](specs/spec_01_roadmaps.md) — Add 01_02_01 step defs to all 3 ROADMAPs
 
-#### TG02 — Notebooks + artifacts + docs (depends on TG01)
-- [spec_02](specs/spec_02_schema_discovery.md) — Schema discovery — all 3 datasets (parameterized)
+#### TG02 — Notebooks + ingestion + docs (depends on TG01)
+- [spec_02](specs/spec_02_ingestion.md) — DuckDB ingestion — all 3 datasets (parameterized)
 
 ## Agent routing
 
