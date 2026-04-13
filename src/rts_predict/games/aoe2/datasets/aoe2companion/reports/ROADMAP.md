@@ -193,6 +193,51 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_02 — DuckDB Ingestion
+
+```yaml
+step_number: "01_02_02"
+name: "DuckDB Ingestion"
+description: "Materialise raw aoe2companion data into persistent DuckDB tables: raw_matches (2,073 daily Parquet), raw_ratings (2,072 daily CSV with dtype decision from 01_02_01), raw_leaderboard (singleton Parquet), raw_profiles (singleton Parquet). All tables carry filename provenance."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "aoe2companion"
+question: "Can we materialise all four raw tables with correct types and provenance, applying the dtype decision from 01_02_01?"
+method: "Call ingestion module functions against the persistent DuckDB. Validate with DESCRIBE, row counts, NULL rates on key fields. Verify filename column exists in all tables."
+stratification: "By table (raw_matches, raw_ratings, raw_leaderboard, raw_profiles)."
+predecessors:
+  - "01_02_01"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_02_duckdb_ingestion.py"
+inputs:
+  duckdb_tables:
+    - "none — creates tables"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json"
+  report: "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "All ingestion SQL in the module, validation SQL in the notebook."
+  - number: "7"
+    how_upheld: "All tables carry filename provenance column."
+  - number: "9"
+    how_upheld: "Conclusions limited to ingestion success, row counts, column types, and NULL rates."
+gate:
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "All four DuckDB tables created with expected row counts. All tables have filename column."
+  halt_predicate: "Any table creation fails OR row count is zero."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

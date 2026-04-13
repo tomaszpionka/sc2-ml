@@ -188,6 +188,51 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_02 — DuckDB Ingestion
+
+```yaml
+step_number: "01_02_02"
+name: "DuckDB Ingestion"
+description: "Materialise raw sc2egset data into persistent DuckDB tables using the three-stream strategy determined by 01_02_01. Stream 1 (replays_meta): one row per replay with metadata STRUCT columns and ToonPlayerDescMap as VARCHAR. Stream 2 (replay_players): normalised from ToonPlayerDescMap, one row per (replay, player). Stream 3 (events): optional Parquet extraction for gameEvents, trackerEvents, messageEvents. Also: map_aliases table from all 70 tournament mapping files."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "sc2egset"
+question: "Can we materialise the three-stream ingestion strategy into persistent tables and verify row counts, column types, and NULL rates?"
+method: "Call ingestion module functions against the persistent DuckDB. Validate with DESCRIBE, row counts, NULL rates on key fields. Verify ToonPlayerDescMap is VARCHAR, event arrays are excluded from replays_meta, and map_aliases has tournament provenance."
+stratification: "By table (replays_meta, replay_players, map_aliases)."
+predecessors:
+  - "01_02_01"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_02_duckdb_ingestion.py"
+inputs:
+  duckdb_tables:
+    - "none — creates tables"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json"
+  report: "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "All ingestion SQL in the module, validation SQL in the notebook."
+  - number: "7"
+    how_upheld: "All tables carry filename provenance column."
+  - number: "9"
+    how_upheld: "Conclusions limited to ingestion success, row counts, column types, and NULL rates."
+gate:
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "All three DuckDB tables created with expected row counts. ToonPlayerDescMap is VARCHAR. All tables have filename column."
+  halt_predicate: "Any table creation fails OR row count is zero."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
