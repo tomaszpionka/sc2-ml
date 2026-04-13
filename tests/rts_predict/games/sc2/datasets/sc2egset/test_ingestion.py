@@ -7,11 +7,12 @@ import duckdb
 import pytest
 
 from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
+    _extract_player_row,
     extract_events_to_parquet,
     load_all_raw_tables,
-    load_map_aliases,
-    load_replay_players,
-    load_replays_meta,
+    load_map_aliases_raw,
+    load_replay_players_raw,
+    load_replays_meta_raw,
 )
 
 # ── Synthetic fixture helpers ────────────────────────────────────────────────
@@ -131,47 +132,47 @@ def sc2_db_con() -> duckdb.DuckDBPyConnection:
     return duckdb.connect(":memory:")
 
 
-# ── Tests: load_replays_meta ─────────────────────────────────────────────────
+# ── Tests: load_replays_meta_raw ──────────────────────────────────────────────
 
 
 class TestLoadReplaysMeta:
-    """Tests for load_replays_meta."""
+    """Tests for load_replays_meta_raw."""
 
     def test_creates_table_with_filename(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replays_meta table must exist and contain a 'filename' column."""
-        n = load_replays_meta(sc2_db_con, sc2_raw_dir)
+        """replays_meta_raw table must exist and contain a 'filename' column."""
+        n = load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
         assert n > 0
         tables = [row[0] for row in sc2_db_con.execute("SHOW TABLES").fetchall()]
-        assert "replays_meta" in tables
-        cols = [row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta").fetchall()]
+        assert "replays_meta_raw" in tables
+        cols = [row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta_raw").fetchall()]
         assert "filename" in cols
 
     def test_row_count_matches_files(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """Should have one row per replay file (2 tournaments x 3 files = 6)."""
-        n = load_replays_meta(sc2_db_con, sc2_raw_dir)
+        n = load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
         assert n == 6  # noqa: PLR2004
 
     def test_tpdm_is_varchar(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """ToonPlayerDescMap column must be VARCHAR (JSON text blob)."""
-        load_replays_meta(sc2_db_con, sc2_raw_dir)
+        load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
         type_map = {
             row[0]: row[1]
-            for row in sc2_db_con.execute("DESCRIBE replays_meta").fetchall()
+            for row in sc2_db_con.execute("DESCRIBE replays_meta_raw").fetchall()
         }
         assert type_map["ToonPlayerDescMap"] == "VARCHAR"
 
     def test_excludes_event_arrays(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replays_meta must NOT contain gameEvents/trackerEvents/messageEvents columns."""
-        load_replays_meta(sc2_db_con, sc2_raw_dir)
-        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta").fetchall()}
+        """replays_meta_raw must NOT contain gameEvents/trackerEvents/messageEvents."""
+        load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
+        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta_raw").fetchall()}
         assert "gameEvents" not in cols
         assert "trackerEvents" not in cols
         assert "messageEvents" not in cols
@@ -179,59 +180,70 @@ class TestLoadReplaysMeta:
     def test_contains_metadata_struct_columns(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replays_meta must contain details, header, initData, metadata columns."""
-        load_replays_meta(sc2_db_con, sc2_raw_dir)
-        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta").fetchall()}
+        """replays_meta_raw must contain details, header, initData, metadata columns."""
+        load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
+        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replays_meta_raw").fetchall()}
         for expected in ("details", "header", "initData", "metadata"):
             assert expected in cols
 
     def test_idempotent(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """Running load_replays_meta twice with should_drop=True gives same count."""
-        n1 = load_replays_meta(sc2_db_con, sc2_raw_dir, should_drop=True)
-        n2 = load_replays_meta(sc2_db_con, sc2_raw_dir, should_drop=True)
+        """Running load_replays_meta_raw twice with should_drop=True gives same count."""
+        n1 = load_replays_meta_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
+        n2 = load_replays_meta_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
         assert n1 == n2
 
+    def test_skips_empty_tournament(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """Tournaments with no SC2Replay.json files should be silently skipped."""
+        # Create an empty tournament directory (no data files)
+        empty_dir = sc2_raw_dir / "2099_Empty_Tournament"
+        (empty_dir / "2099_Empty_Tournament_data").mkdir(parents=True)
+        n = load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
+        # Still 6 rows from the 2 real tournaments
+        assert n == 6  # noqa: PLR2004
 
-# ── Tests: load_replay_players ───────────────────────────────────────────────
+
+# ── Tests: load_replay_players_raw ────────────────────────────────────────────
 
 
 class TestLoadReplayPlayers:
-    """Tests for load_replay_players."""
+    """Tests for load_replay_players_raw."""
 
     def test_creates_table_with_filename(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replay_players table must exist and contain a 'filename' column."""
-        n = load_replay_players(sc2_db_con, sc2_raw_dir)
+        """replay_players_raw table must exist and contain a 'filename' column."""
+        n = load_replay_players_raw(sc2_db_con, sc2_raw_dir)
         assert n > 0
         tables = [row[0] for row in sc2_db_con.execute("SHOW TABLES").fetchall()]
-        assert "replay_players" in tables
-        cols = [row[0] for row in sc2_db_con.execute("DESCRIBE replay_players").fetchall()]
+        assert "replay_players_raw" in tables
+        cols = [row[0] for row in sc2_db_con.execute("DESCRIBE replay_players_raw").fetchall()]
         assert "filename" in cols
 
     def test_normalises_to_one_row_per_player(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """Each replay has 2 players, 6 replays -> 12 rows."""
-        n = load_replay_players(sc2_db_con, sc2_raw_dir)
+        n = load_replay_players_raw(sc2_db_con, sc2_raw_dir)
         assert n == 12  # noqa: PLR2004
 
     def test_has_toon_id_column(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replay_players must have a toon_id column (MAP key from ToonPlayerDescMap)."""
-        load_replay_players(sc2_db_con, sc2_raw_dir)
-        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replay_players").fetchall()}
+        """replay_players_raw must have a toon_id column (MAP key from ToonPlayerDescMap)."""
+        load_replay_players_raw(sc2_db_con, sc2_raw_dir)
+        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replay_players_raw").fetchall()}
         assert "toon_id" in cols
 
     def test_has_all_player_fields(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """replay_players must have all expected player fields."""
-        load_replay_players(sc2_db_con, sc2_raw_dir)
-        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replay_players").fetchall()}
+        """replay_players_raw must have all expected player fields."""
+        load_replay_players_raw(sc2_db_con, sc2_raw_dir)
+        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE replay_players_raw").fetchall()}
         expected_fields = {
             "toon_id", "nickname", "playerID", "userID", "isInClan", "clanTag",
             "MMR", "race", "selectedRace", "handicap", "region", "realm",
@@ -246,9 +258,9 @@ class TestLoadReplayPlayers:
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """Spot-check that extracted player data values are correct."""
-        load_replay_players(sc2_db_con, sc2_raw_dir)
+        load_replay_players_raw(sc2_db_con, sc2_raw_dir)
         df = sc2_db_con.execute(
-            "SELECT * FROM replay_players WHERE toon_id = '1-S2-1-100' LIMIT 1"
+            "SELECT * FROM replay_players_raw WHERE toon_id = '1-S2-1-100' LIMIT 1"
         ).df()
         assert len(df) == 1
         row = df.iloc[0]
@@ -260,9 +272,9 @@ class TestLoadReplayPlayers:
     def test_idempotent(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """Running load_replay_players twice with should_drop=True gives same count."""
-        n1 = load_replay_players(sc2_db_con, sc2_raw_dir, should_drop=True)
-        n2 = load_replay_players(sc2_db_con, sc2_raw_dir, should_drop=True)
+        """Running load_replay_players_raw twice with should_drop=True gives same count."""
+        n1 = load_replay_players_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
+        n2 = load_replay_players_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
         assert n1 == n2
 
 
@@ -314,19 +326,19 @@ class TestExtractEventsToParquet:
         assert counts["messageEvents"] == 6  # noqa: PLR2004
 
 
-# ── Tests: load_map_aliases ──────────────────────────────────────────────────
+# ── Tests: load_map_aliases_raw ───────────────────────────────────────────────
 
 
 class TestLoadMapAliases:
-    """Tests for load_map_aliases."""
+    """Tests for load_map_aliases_raw."""
 
     def test_creates_table_with_tournament_column(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """map_aliases table must exist and contain tournament + filename columns."""
-        n = load_map_aliases(sc2_db_con, sc2_raw_dir)
+        """map_aliases_raw table must exist and contain tournament + filename columns."""
+        n = load_map_aliases_raw(sc2_db_con, sc2_raw_dir)
         assert n > 0
-        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE map_aliases").fetchall()}
+        cols = {row[0] for row in sc2_db_con.execute("DESCRIBE map_aliases_raw").fetchall()}
         assert "tournament" in cols
         assert "foreign_name" in cols
         assert "english_name" in cols
@@ -336,16 +348,16 @@ class TestLoadMapAliases:
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """2 tournaments x 3 keys each = 6 rows."""
-        n = load_map_aliases(sc2_db_con, sc2_raw_dir)
+        n = load_map_aliases_raw(sc2_db_con, sc2_raw_dir)
         assert n == 6  # noqa: PLR2004
 
     def test_tournament_provenance(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
         """Each row must have the correct tournament name."""
-        load_map_aliases(sc2_db_con, sc2_raw_dir)
+        load_map_aliases_raw(sc2_db_con, sc2_raw_dir)
         tournaments = sc2_db_con.execute(
-            "SELECT DISTINCT tournament FROM map_aliases ORDER BY tournament"
+            "SELECT DISTINCT tournament FROM map_aliases_raw ORDER BY tournament"
         ).fetchall()
         assert [t[0] for t in tournaments] == [
             "2020_Tournament_A",
@@ -355,9 +367,9 @@ class TestLoadMapAliases:
     def test_idempotent(
         self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
     ) -> None:
-        """Running load_map_aliases twice with should_drop=True gives same count."""
-        n1 = load_map_aliases(sc2_db_con, sc2_raw_dir, should_drop=True)
-        n2 = load_map_aliases(sc2_db_con, sc2_raw_dir, should_drop=True)
+        """Running load_map_aliases_raw twice with should_drop=True gives same count."""
+        n1 = load_map_aliases_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
+        n2 = load_map_aliases_raw(sc2_db_con, sc2_raw_dir, should_drop=True)
         assert n1 == n2
 
 
@@ -372,7 +384,7 @@ class TestLoadAllRawTables:
     ) -> None:
         """load_all_raw_tables must return a dict with all three table names."""
         counts = load_all_raw_tables(sc2_db_con, sc2_raw_dir)
-        assert set(counts.keys()) == {"replays_meta", "replay_players", "map_aliases"}
+        assert set(counts.keys()) == {"replays_meta_raw", "replay_players_raw", "map_aliases_raw"}
         tables = [row[0] for row in sc2_db_con.execute("SHOW TABLES").fetchall()]
         for table in counts:
             assert table in tables
@@ -384,3 +396,93 @@ class TestLoadAllRawTables:
         counts = load_all_raw_tables(sc2_db_con, sc2_raw_dir)
         for table, count in counts.items():
             assert count > 0, f"Table {table} has no rows"
+
+
+# ── Tests: _extract_player_row edge cases ───────────────────────────────────
+
+
+class TestExtractPlayerRow:
+    """Tests for _extract_player_row edge cases."""
+
+    def test_missing_color_subdict(self) -> None:
+        """_extract_player_row must handle absent 'color' key gracefully."""
+        row = _extract_player_row(
+            "TournamentX/TournamentX_data/test.SC2Replay.json",
+            "1-S2-1-999",
+            {"nickname": "TestPlayer", "playerID": 99},
+        )
+        # color_a, color_b, color_g, color_r are last 4 positional values
+        assert row[-4:] == (None, None, None, None)
+
+    def test_returns_filename_and_toon_id(self) -> None:
+        """First two tuple elements must be filename and toon_id."""
+        row = _extract_player_row(
+            "T/T_data/replay.SC2Replay.json",
+            "3-S2-1-42",
+            {"nickname": "Bob"},
+        )
+        assert row[0] == "T/T_data/replay.SC2Replay.json"
+        assert row[1] == "3-S2-1-42"
+
+
+# ── Tests: relative filename (Invariant I10) ────────────────────────────────
+
+
+class TestRelativeFilenames:
+    """Assert that all three tables store relative, not absolute, filenames."""
+
+    def test_replays_meta_raw_filename_is_relative(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """replays_meta_raw.filename must be relative (no leading /)."""
+        load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
+        filenames = sc2_db_con.execute(
+            "SELECT DISTINCT filename FROM replays_meta_raw"
+        ).fetchall()
+        assert len(filenames) > 0
+        assert all(not f[0].startswith("/") for f in filenames), (
+            "replays_meta_raw.filename must be relative, not absolute"
+        )
+
+    def test_replay_players_raw_filename_is_relative(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """replay_players_raw.filename must be relative (no leading /)."""
+        load_replay_players_raw(sc2_db_con, sc2_raw_dir)
+        filenames = sc2_db_con.execute(
+            "SELECT DISTINCT filename FROM replay_players_raw"
+        ).fetchall()
+        assert len(filenames) > 0
+        assert all(not f[0].startswith("/") for f in filenames), (
+            "replay_players_raw.filename must be relative, not absolute"
+        )
+
+    def test_map_aliases_raw_filename_is_relative(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """map_aliases_raw.filename must be relative (no leading /)."""
+        load_map_aliases_raw(sc2_db_con, sc2_raw_dir)
+        filenames = sc2_db_con.execute(
+            "SELECT DISTINCT filename FROM map_aliases_raw"
+        ).fetchall()
+        assert len(filenames) > 0
+        assert all(not f[0].startswith("/") for f in filenames), (
+            "map_aliases_raw.filename must be relative, not absolute"
+        )
+
+    def test_cross_table_filename_match(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """Filenames in replay_players_raw must exist in replays_meta_raw."""
+        load_replays_meta_raw(sc2_db_con, sc2_raw_dir)
+        load_replay_players_raw(sc2_db_con, sc2_raw_dir)
+        orphans = sc2_db_con.execute("""
+            SELECT COUNT(DISTINCT rp.filename) AS orphans
+            FROM replay_players_raw rp
+            LEFT JOIN replays_meta_raw rm ON rp.filename = rm.filename
+            WHERE rm.filename IS NULL
+        """).fetchone()
+        assert orphans is not None
+        assert orphans[0] == 0, (
+            "All replay_players_raw filenames must have matching replays_meta_raw entries"
+        )

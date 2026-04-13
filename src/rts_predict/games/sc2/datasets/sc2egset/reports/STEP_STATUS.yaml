@@ -32,5 +32,6 @@ steps:
   "01_02_02":
     name: "DuckDB Ingestion"
     pipeline_section: "01_02"
-    status: not_started
+    status: complete
+    completed_at: "2026-04-13"
   # Future steps will be added here as they are defined in the ROADMAP.

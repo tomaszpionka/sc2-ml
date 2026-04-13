@@ -1,18 +1,19 @@
 """Raw CTAS ingestion for sc2egset into DuckDB.
 
 Three-stream extraction strategy:
-- Stream 1 (replays_meta): DuckDB table, one row per replay with metadata
+- Stream 1 (replays_meta_raw): DuckDB table, one row per replay with metadata
   STRUCT columns and ToonPlayerDescMap stored as VARCHAR (JSON text blob).
   Event arrays EXCLUDED.
-- Stream 2 (replay_players): DuckDB table normalised from ToonPlayerDescMap.
+- Stream 2 (replay_players_raw): DuckDB table normalised from ToonPlayerDescMap.
   One row per (replay, player).
 - Stream 3 (events): Parquet files for gameEvents, trackerEvents,
   messageEvents — NOT loaded into DuckDB.
 
-Also: map_aliases DuckDB table from tournament-level mapping files.
+Also: map_aliases_raw DuckDB table from tournament-level mapping files.
 
-Every table carries a ``filename`` provenance column. Removing this column
-in any downstream view is forbidden (INVARIANT I7).
+Every table carries a ``filename`` provenance column storing a path relative
+to ``raw_dir`` (no absolute paths). Removing this column in any downstream
+view is forbidden (INVARIANT I7, I10).
 """
 
 from __future__ import annotations
@@ -32,13 +33,19 @@ _DROP_IF_EXISTS_QUERY = "DROP TABLE IF EXISTS {table}"
 
 _COUNT_QUERY = "SELECT count(*) FROM {table}"
 
-# Stream 1: replays_meta — scalar metadata per replay, events excluded.
+# Stream 1: replays_meta_raw — scalar metadata per replay, events excluded.
 # ToonPlayerDescMap is stored as VARCHAR (JSON text) because its keys are
 # dynamic player toon IDs that vary per replay.
-_REPLAYS_META_QUERY = """
-CREATE TABLE replays_meta AS
+# filename is stripped to a relative path from raw_dir via substr (I10).
+#
+# Loaded per-tournament to keep DuckDB memory usage within safe limits.
+# A single CTAS over all 22,390 files (209 GB) exceeds ~22 GB RSS and
+# triggers OS OOM kills on 36 GB machines. Per-tournament batching keeps
+# peak RSS under 3 GB.
+_REPLAYS_META_CREATE_QUERY = """
+CREATE TABLE replays_meta_raw AS
 SELECT
-    filename,
+    substr(filename, {raw_dir_prefix_len}) AS filename,
     details,
     header,
     initData,
@@ -55,7 +62,27 @@ FROM read_json_auto(
 )
 """
 
-# Stream 2: replay_players — normalised from ToonPlayerDescMap.
+_REPLAYS_META_INSERT_QUERY = """
+INSERT INTO replays_meta_raw
+SELECT
+    substr(filename, {raw_dir_prefix_len}) AS filename,
+    details,
+    header,
+    initData,
+    metadata,
+    CAST(ToonPlayerDescMap AS VARCHAR) AS ToonPlayerDescMap,
+    gameEventsErr,
+    messageEventsErr,
+    trackerEvtsErr
+FROM read_json_auto(
+    '{glob}',
+    union_by_name = true,
+    filename = true,
+    maximum_object_size = {max_object_size}
+)
+"""
+
+# Stream 2: replay_players_raw — normalised from ToonPlayerDescMap.
 # Reads each JSON file in Python, extracts ToonPlayerDescMap entries,
 # and batch-inserts into DuckDB. Pure SQL unnesting is infeasible because
 # DuckDB infers ToonPlayerDescMap as a STRUCT with per-replay dynamic
@@ -68,7 +95,7 @@ FROM read_json_auto(
 #             startLocX, startLocY, race
 
 _REPLAY_PLAYERS_CREATE_QUERY = """
-CREATE TABLE replay_players (
+CREATE TABLE replay_players_raw (
     filename VARCHAR NOT NULL,
     toon_id VARCHAR NOT NULL,
     nickname VARCHAR,
@@ -98,7 +125,7 @@ CREATE TABLE replay_players (
 """
 
 _REPLAY_PLAYERS_INSERT_QUERY = """
-INSERT INTO replay_players VALUES (
+INSERT INTO replay_players_raw VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 )
 """
@@ -107,7 +134,7 @@ INSERT INTO replay_players VALUES (
 # Each tournament has a map_foreign_to_english_mapping.json with
 # {foreign_name: english_name} entries.
 _MAP_ALIASES_CREATE_QUERY = """
-CREATE TABLE map_aliases (
+CREATE TABLE map_aliases_raw (
     tournament VARCHAR NOT NULL,
     foreign_name VARCHAR NOT NULL,
     english_name VARCHAR NOT NULL,
@@ -115,20 +142,13 @@ CREATE TABLE map_aliases (
 )
 """
 
-_MAP_ALIASES_INSERT_QUERY = """
-INSERT INTO map_aliases
-SELECT
-    ? AS tournament,
-    u.key AS foreign_name,
-    TRIM(BOTH '"' FROM CAST(u.value AS VARCHAR)) AS english_name,
-    ? AS filename
-FROM json_each(?) u
-"""
-
 
 # ── Max object size ──────────────────────────────────────────────────────────
-# SC2 replay JSONs can be very large (up to 512 MB) due to event arrays.
-_DEFAULT_MAX_OBJECT_SIZE: int = 536_870_912  # 512 MB
+# SC2 replay JSONs can be very large due to event arrays. Largest file in the
+# full 22,390-file corpus: 143.1 MB (observed during 01_02_02 execution).
+# 160 MB provides 1.12x headroom while keeping DuckDB memory pressure
+# manageable during the 209 GB single-CTAS read_json_auto scan (I7 derivation).
+_DEFAULT_MAX_OBJECT_SIZE: int = 167_772_160  # 160 MB
 
 
 def _count_rows(con: duckdb.DuckDBPyConnection, table: str) -> int:
@@ -161,50 +181,63 @@ def _discover_tournament_dirs(raw_dir: Path) -> list[Path]:
     )
 
 
-def _build_replay_glob(raw_dir: Path) -> str:
-    """Build a DuckDB glob pattern matching all SC2Replay.json files.
-
-    Args:
-        raw_dir: Path to sc2egset raw/ directory.
-
-    Returns:
-        Glob string for DuckDB read_json_auto.
-    """
-    return str(raw_dir / "*" / "*_data" / "*.SC2Replay.json")
-
-
-def load_replays_meta(
+def load_replays_meta_raw(
     con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
     *,
     should_drop: bool = True,
     max_object_size: int = _DEFAULT_MAX_OBJECT_SIZE,
 ) -> int:
-    """Materialise replays_meta from all SC2Replay.json files.
+    """Materialise replays_meta_raw from all SC2Replay.json files.
 
     Creates one row per replay with metadata STRUCT columns (details,
     header, initData, metadata) and ToonPlayerDescMap as VARCHAR (JSON
-    text blob). Event arrays are excluded from this table.
+    text blob). Event arrays are excluded from this table. The filename
+    column stores paths relative to raw_dir (Invariant I10).
+
+    Loads per-tournament to avoid OOM: a single CTAS over all 22,390
+    files (209 GB) exceeds 22 GB RSS. Per-tournament batching keeps
+    peak RSS under 3 GB per batch.
 
     Args:
         con: Active DuckDB connection (read-write).
         raw_dir: Path to the sc2egset raw/ directory.
-        should_drop: If True, drop existing replays_meta before creating.
+        should_drop: If True, drop existing replays_meta_raw before creating.
         max_object_size: DuckDB maximum_object_size for large JSONs.
 
     Returns:
-        Row count in replays_meta after ingestion.
+        Row count in replays_meta_raw after ingestion.
     """
     if should_drop:
-        con.execute(_DROP_IF_EXISTS_QUERY.format(table="replays_meta"))
-        logger.info("Dropped existing replays_meta table.")
+        con.execute(_DROP_IF_EXISTS_QUERY.format(table="replays_meta_raw"))
+        logger.info("Dropped existing replays_meta_raw table.")
 
-    glob = _build_replay_glob(raw_dir)
-    con.execute(
-        _REPLAYS_META_QUERY.format(glob=glob, max_object_size=max_object_size)
-    )
-    n = _count_rows(con, "replays_meta")
-    logger.info("replays_meta: %d rows from %s", n, glob)
+    # raw_dir_prefix_len: len(raw_dir) + 1 for trailing '/' + 1 for 1-based substr
+    raw_dir_prefix_len = len(str(raw_dir)) + 2
+    fmt_params: dict[str, int | str] = {
+        "max_object_size": max_object_size,
+        "raw_dir_prefix_len": raw_dir_prefix_len,
+    }
+
+    tournament_dirs = _discover_tournament_dirs(raw_dir)
+    table_created = False
+
+    for t_dir in tournament_dirs:
+        glob = str(t_dir / f"{t_dir.name}_data" / "*.SC2Replay.json")
+        # Skip tournaments with no replay files
+        if not list(t_dir.glob(f"{t_dir.name}_data/*.SC2Replay.json")):
+            continue
+
+        fmt_params["glob"] = glob
+        if not table_created:
+            con.execute(_REPLAYS_META_CREATE_QUERY.format(**fmt_params))
+            table_created = True
+        else:
+            con.execute(_REPLAYS_META_INSERT_QUERY.format(**fmt_params))
+        logger.info("replays_meta_raw: loaded %s", t_dir.name)
+
+    n = _count_rows(con, "replays_meta_raw")
+    logger.info("replays_meta_raw: %d total rows from %d tournaments", n, len(tournament_dirs))
     return n
 
 
@@ -221,7 +254,7 @@ def _extract_player_row(
         player: Player data dictionary.
 
     Returns:
-        Tuple matching the replay_players table column order.
+        Tuple matching the replay_players_raw table column order.
     """
     color = player.get("color", {})
     return (
@@ -253,40 +286,43 @@ def _extract_player_row(
     )
 
 
-def load_replay_players(
+def load_replay_players_raw(
     con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
     *,
     should_drop: bool = True,
     batch_size: int = 500,
 ) -> int:
-    """Materialise replay_players normalised from ToonPlayerDescMap.
+    """Materialise replay_players_raw normalised from ToonPlayerDescMap.
 
     Reads each JSON file in Python, extracts ToonPlayerDescMap entries,
     and batch-inserts into DuckDB. This avoids DuckDB's auto-inference
     of the dynamic-key ToonPlayerDescMap as a STRUCT type.
 
-    The toon_id column contains the MAP key (e.g. "3-S2-1-4842177")
-    and the filename column provides replay provenance.
+    The toon_id column contains the MAP key (e.g. "3-S2-1-4842177"),
+    and the filename column stores the replay's path relative to raw_dir
+    (Invariant I10).
 
     Args:
         con: Active DuckDB connection (read-write).
         raw_dir: Path to the sc2egset raw/ directory.
-        should_drop: If True, drop existing replay_players before creating.
+        should_drop: If True, drop existing replay_players_raw before creating.
         batch_size: Number of replay files to process per INSERT batch.
+            Chosen to balance memory overhead and DuckDB insert throughput;
+            ~1,000 player tuples per batch at typical 2-player replays.
 
     Returns:
-        Row count in replay_players after ingestion.
+        Row count in replay_players_raw after ingestion.
     """
     if should_drop:
-        con.execute(_DROP_IF_EXISTS_QUERY.format(table="replay_players"))
-        logger.info("Dropped existing replay_players table.")
+        con.execute(_DROP_IF_EXISTS_QUERY.format(table="replay_players_raw"))
+        logger.info("Dropped existing replay_players_raw table.")
 
     con.execute(_REPLAY_PLAYERS_CREATE_QUERY)
 
     replay_files = sorted(raw_dir.glob("*/*_data/*.SC2Replay.json"))
     total_files = len(replay_files)
-    logger.info("load_replay_players: found %d replay files", total_files)
+    logger.info("load_replay_players_raw: found %d replay files", total_files)
 
     rows_inserted = 0
     batch_rows: list[tuple[Any, ...]] = []
@@ -302,7 +338,7 @@ def load_replay_players(
         tpdm = data.get("ToonPlayerDescMap", {})
         for toon_id, player_data in tpdm.items():
             batch_rows.append(
-                _extract_player_row(str(fpath), toon_id, player_data)
+                _extract_player_row(str(fpath.relative_to(raw_dir)), toon_id, player_data)
             )
 
         if len(batch_rows) >= batch_size or i == total_files - 1:
@@ -311,8 +347,8 @@ def load_replay_players(
                 rows_inserted += len(batch_rows)
                 batch_rows = []
 
-    n = _count_rows(con, "replay_players")
-    logger.info("replay_players: %d rows from %d files", n, total_files)
+    n = _count_rows(con, "replay_players_raw")
+    logger.info("replay_players_raw: %d rows from %d files", n, total_files)
     return n
 
 
@@ -420,29 +456,31 @@ def extract_events_to_parquet(
     return counts
 
 
-def load_map_aliases(
+def load_map_aliases_raw(
     con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
     *,
     should_drop: bool = True,
 ) -> int:
-    """Materialise map_aliases from all tournament mapping files.
+    """Materialise map_aliases_raw from all tournament mapping files.
 
     Each tournament directory may contain a map_foreign_to_english_mapping.json
     file mapping foreign map names to English map names. This function loads
     all such files into a single table with a tournament provenance column.
+    The filename column stores the mapping file's path relative to raw_dir
+    (Invariant I10).
 
     Args:
         con: Active DuckDB connection (read-write).
         raw_dir: Path to the sc2egset raw/ directory.
-        should_drop: If True, drop existing map_aliases before creating.
+        should_drop: If True, drop existing map_aliases_raw before creating.
 
     Returns:
-        Row count in map_aliases after ingestion.
+        Row count in map_aliases_raw after ingestion.
     """
     if should_drop:
-        con.execute(_DROP_IF_EXISTS_QUERY.format(table="map_aliases"))
-        logger.info("Dropped existing map_aliases table.")
+        con.execute(_DROP_IF_EXISTS_QUERY.format(table="map_aliases_raw"))
+        logger.info("Dropped existing map_aliases_raw table.")
 
     con.execute(_MAP_ALIASES_CREATE_QUERY)
 
@@ -456,14 +494,18 @@ def load_map_aliases(
 
         tournament_name = t_dir.name
         json_content = mapping_file.read_text()
-        con.execute(
-            _MAP_ALIASES_INSERT_QUERY,
-            [tournament_name, str(mapping_file), json_content],
+        data = json.loads(json_content)
+        rows = [
+            (tournament_name, foreign, english, str(mapping_file.relative_to(raw_dir)))
+            for foreign, english in data.items()
+        ]
+        con.executemany(
+            "INSERT INTO map_aliases_raw VALUES (?, ?, ?, ?)", rows
         )
         files_loaded += 1
 
-    n = _count_rows(con, "map_aliases")
-    logger.info("map_aliases: %d rows from %d tournament files", n, files_loaded)
+    n = _count_rows(con, "map_aliases_raw")
+    logger.info("map_aliases_raw: %d rows from %d tournament files", n, files_loaded)
     return n
 
 
@@ -476,9 +518,9 @@ def load_all_raw_tables(
 ) -> dict[str, int]:
     """Materialise all DuckDB tables for sc2egset.
 
-    Convenience wrapper that calls load_replays_meta, load_replay_players,
-    and load_map_aliases. Does NOT extract events to Parquet (call
-    extract_events_to_parquet separately).
+    Convenience wrapper that calls load_replays_meta_raw,
+    load_replay_players_raw, and load_map_aliases_raw. Does NOT extract
+    events to Parquet (call extract_events_to_parquet separately).
 
     Args:
         con: Active DuckDB connection (read-write).
@@ -490,13 +532,13 @@ def load_all_raw_tables(
         Dict mapping table name to row count.
     """
     counts: dict[str, int] = {}
-    counts["replays_meta"] = load_replays_meta(
+    counts["replays_meta_raw"] = load_replays_meta_raw(
         con, raw_dir, should_drop=should_drop, max_object_size=max_object_size
     )
-    counts["replay_players"] = load_replay_players(
+    counts["replay_players_raw"] = load_replay_players_raw(
         con, raw_dir, should_drop=should_drop
     )
-    counts["map_aliases"] = load_map_aliases(
+    counts["map_aliases_raw"] = load_map_aliases_raw(
         con, raw_dir, should_drop=should_drop
     )
     logger.info("load_all_raw_tables complete: %s", counts)

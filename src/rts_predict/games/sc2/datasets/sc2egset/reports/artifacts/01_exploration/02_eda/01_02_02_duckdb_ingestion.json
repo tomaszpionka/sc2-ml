@@ -1,0 +1,396 @@
+{
+  "step": "01_02_02",
+  "dataset": "sc2egset",
+  "ingestion_strategy": "three-stream; see 01_02_01",
+  "tables_created": {
+    "replays_meta_raw": {
+      "row_count": 22390,
+      "schema": [
+        {
+          "column_name": "filename",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "details",
+          "column_type": "STRUCT(gameSpeed VARCHAR, isBlizzardMap BOOLEAN, timeUTC VARCHAR)",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "header",
+          "column_type": "STRUCT(elapsedGameLoops BIGINT, \"version\" VARCHAR)",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "initData",
+          "column_type": "STRUCT(gameDescription STRUCT(gameOptions STRUCT(advancedSharedControl BOOLEAN, amm BOOLEAN, battleNet BOOLEAN, clientDebugFlags BIGINT, competitive BOOLEAN, cooperative BOOLEAN, fog BIGINT, heroDuplicatesAllowed BOOLEAN, lockTeams BOOLEAN, noVictoryOrDefeat BOOLEAN, observers BIGINT, practice BOOLEAN, randomRaces BOOLEAN, teamsTogether BOOLEAN, userDifficulty BIGINT), gameSpeed VARCHAR, isBlizzardMap BOOLEAN, mapAuthorName VARCHAR, mapFileSyncChecksum BIGINT, mapSizeX BIGINT, mapSizeY BIGINT, maxPlayers BIGINT))",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "metadata",
+          "column_type": "STRUCT(baseBuild VARCHAR, dataBuild VARCHAR, gameVersion VARCHAR, mapName VARCHAR)",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "ToonPlayerDescMap",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "gameEventsErr",
+          "column_type": "BOOLEAN",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "messageEventsErr",
+          "column_type": "BOOLEAN",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "trackerEvtsErr",
+          "column_type": "BOOLEAN",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        }
+      ]
+    },
+    "replay_players_raw": {
+      "row_count": 44817,
+      "schema": [
+        {
+          "column_name": "filename",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "toon_id",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "nickname",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "playerID",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "userID",
+          "column_type": "BIGINT",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "isInClan",
+          "column_type": "BOOLEAN",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "clanTag",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "MMR",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "race",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "selectedRace",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "handicap",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "region",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "realm",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "highestLeague",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "result",
+          "column_type": "VARCHAR",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "APM",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "SQ",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "supplyCappedPercent",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "startDir",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "startLocX",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "startLocY",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "color_a",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "color_b",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "color_g",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "color_r",
+          "column_type": "INTEGER",
+          "null": "YES",
+          "key": null,
+          "default": null,
+          "extra": null
+        }
+      ]
+    },
+    "map_aliases_raw": {
+      "row_count": 104160,
+      "schema": [
+        {
+          "column_name": "tournament",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "foreign_name",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "english_name",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        },
+        {
+          "column_name": "filename",
+          "column_type": "VARCHAR",
+          "null": "NO",
+          "key": null,
+          "default": null,
+          "extra": null
+        }
+      ]
+    }
+  },
+  "null_rates": {
+    "replays_meta_raw": {
+      "total_rows": 22390,
+      "details_null": 0,
+      "header_null": 0,
+      "initData_null": 0,
+      "metadata_null": 0,
+      "tpdm_null": 0,
+      "filename_null": 0
+    },
+    "replay_players_raw": {
+      "total_rows": 44817,
+      "toon_id_null": 0,
+      "nickname_null": 0,
+      "MMR_null": 0,
+      "race_null": 0,
+      "result_null": 0,
+      "APM_null": 0,
+      "filename_null": 0
+    },
+    "map_aliases_raw": {
+      "total_rows": 104160,
+      "tournament_null": 0,
+      "foreign_name_null": 0,
+      "english_name_null": 0,
+      "distinct_tournaments": 70
+    }
+  },
+  "cross_table_integrity": {
+    "player_files": 22390,
+    "meta_files": 22390,
+    "orphan_player_files": 0,
+    "orphan_meta_files": 0
+  },
+  "players_per_replay_distribution": [
+    {
+      "players_per_replay": 1,
+      "replay_count": 3
+    },
+    {
+      "players_per_replay": 2,
+      "replay_count": 22379
+    },
+    {
+      "players_per_replay": 4,
+      "replay_count": 2
+    },
+    {
+      "players_per_replay": 6,
+      "replay_count": 1
+    },
+    {
+      "players_per_replay": 8,
+      "replay_count": 3
+    },
+    {
+      "players_per_replay": 9,
+      "replay_count": 2
+    }
+  ],
+  "map_aliases_dedup": {
+    "unique_foreign": 1488,
+    "unique_english": 215,
+    "unique_tournaments": 70,
+    "total_rows": 104160
+  },
+  "tpdm_type": {
+    "column_name": "ToonPlayerDescMap",
+    "data_type": "VARCHAR"
+  }
+}
