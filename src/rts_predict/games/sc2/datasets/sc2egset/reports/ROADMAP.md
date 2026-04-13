@@ -141,6 +141,53 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_01 — DuckDB Ingestion Investigation
+
+```yaml
+step_number: "01_02_01"
+name: "DuckDB Ingestion Investigation"
+description: "Investigate how DuckDB 1.5.1 read_json_auto handles sc2egset nested JSON. Test on 5-10 sample files spanning the file-size distribution. Determine table split strategy, JSON column behavior, and event array storage feasibility. Full census of all 70 map_foreign_to_english_mapping.json files. Produce a design artifact — no full ingestion."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "sc2egset"
+question: "How does DuckDB 1.5.1 read_json_auto handle sc2egset's nested JSON structure (11 root keys, 7,350 keypaths, dynamic-key ToonPlayerDescMap, 3 event arrays), what table split strategy is needed, what is the estimated DuckDB storage for event arrays, and what is the schema/consistency of all 70 map_foreign_to_english_mapping.json files?"
+method: "Compute per-directory avg MB/file from 01_01_01 data (total_bytes / file_count). Select 5-10 .SC2Replay.json files: 1 from smallest-avg dir, 1 from largest-avg dir, the largest individual file by byte size, and 2-3 from mid-distribution. Test read_json_auto on each: record DuckDB types per root key, check ToonPlayerDescMap (dynamic keys) preservation vs flattening, note parse errors. Event array assessment on ALL sampled files: measure JSON byte size of gameEvents/trackerEvents/messageEvents, count elements, report stats (mean/median/min/max), extrapolate to 22,390 files for SSD feasibility. Test batch ingestion on 1 mid-size tournament directory (~100-300 files). Test single-table vs split-table approaches. Full census of all 70 map_foreign_to_english_mapping.json files (at raw/TOURNAMENT/map_foreign_to_english_mapping.json, NOT inside _data/): read all 70, record root type/key count/value types per file, check cross-file schema consistency, test read_json_auto on 1 file, propose table DDL if uniform. Produce design artifact with proposed DDL for a future full-ingestion step."
+stratification: "By root key group (metadata vs events vs player desc map); by tournament directory for map alias files."
+predecessors:
+  - "01_01_01"
+  - "01_01_02"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+inputs:
+  duckdb_tables:
+    - "none — investigation uses temporary in-memory DB"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
+  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
+reproducibility: "Investigation code on sample files in the notebook. File selection derived from 01_01_01 per-directory size data. Storage estimates derived from measured JSON sizes with extrapolation formula shown. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "Sample read_json_auto tests, storage measurements, and map alias census code in the notebook."
+  - number: "7"
+    how_upheld: "Sample file selection thresholds derived from 01_01_01 per-directory size data (computed, not assumed)."
+  - number: "9"
+    how_upheld: "Investigation reads sample file content for table design feasibility. Event array sizes measured for storage estimation (design input), not content profiling. Map alias census is structural (schema, key counts), not semantic."
+gate:
+  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "Design artifact documents: (1) read_json_auto behavior for all 11 root keys with DuckDB types, (2) proposed table split strategy with rationale, (3) event array storage estimate with SSD feasibility verdict, (4) full census of all 70 map_foreign_to_english_mapping.json files with cross-file consistency assessment and proposed DDL."
+  halt_predicate: "read_json_auto cannot parse any sample file, OR batch ingestion of a single directory fails."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

@@ -146,6 +146,56 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_01 — DuckDB Ingestion
+
+```yaml
+step_number: "01_02_01"
+name: "DuckDB Ingestion"
+description: "Load aoe2companion Parquet and CSV files into DuckDB tables. Inspect pyarrow logical types for binary columns across all 3 Parquet subdirectories to determine whether binary_as_string=true is required. Validate CSV type inference for ratings. Verify row and column counts. Investigate matches/ratings file count gap (2073/2072)."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "aoe2companion"
+question: "Can all aoe2companion files be loaded into DuckDB tables with correct type mappings, are binary columns unannotated BYTE_ARRAY requiring binary_as_string=true, are CSV types inferred correctly for ratings, do row counts align with file inventory, and what explains the 2073/2072 file count gap?"
+method: "PYARROW INSPECTION: Run pyarrow.parquet.ParquetFile.schema on sample files from each subdirectory (matches, leaderboards, profiles) to determine binary column annotation status (parquet_logical, converted_type). If unannotated BYTE_ARRAY, binary_as_string=true is required; if annotated STRING/UTF8, DuckDB handles natively. Record per-subdirectory binary column counts and annotation status. Smoke test and pre-ingestion functions live in pre_ingestion.py. SMOKE TEST: ingest 3-5 Parquet files from matches/ (earliest, middle, latest by date) + 3-5 CSV from ratings/ into temp tables with binary_as_string=true (if justified by pyarrow inspection). Verify DESCRIBE: binary columns are VARCHAR (not BLOB), CSV-inferred types are reasonable (profile_id numeric, date parsed). Cross-check column schemas across smoke-test files to assess cross-file consistency. FULL INGESTION: CREATE TABLE matches_raw AS ...; CREATE TABLE ratings_raw AS ...; CREATE TABLE leaderboards_raw/profiles_raw from singletons with binary_as_string=true and filename=true (every raw table carries filename for provenance). POST-INGESTION: DESCRIBE all 4 tables — record full DuckDB-assigned types. GATE for ratings_raw: profile_id must be INTEGER/BIGINT, date must be DATE/TIMESTAMP, games/rating/rating_diff must be INTEGER — if any is VARCHAR, re-ingest with explicit types=. Row counts per table. Column count verification (matches_raw: 54+1 filename=55, ratings_raw: 7+1=8, leaderboards_raw: 18+1=19, profiles_raw: 13+1=14). NULL count for won. Investigate 2073/2072 file gap (identify which date(s) have matches but no ratings, or vice versa)."
+stratification: "By subdirectory (matches, ratings, leaderboards, profiles)."
+predecessors:
+  - "01_01_01"
+  - "01_01_02"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "ratings_raw"
+    - "leaderboards_raw"
+    - "profiles_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
+  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
+reproducibility: "DuckDB SQL in the notebook. Parquet logical type inspection via pyarrow.parquet.ParquetFile.schema on sample files to determine binary column annotation status. Row counts verified against 01_01_01 file counts. Smoke test and pre-ingestion functions in pre_ingestion.py. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "DDL, ingestion SQL, DESCRIBE output, and row counts in the notebook."
+  - number: "7"
+    how_upheld: "binary_as_string=true justified by in-notebook pyarrow logical type inspection. File counts from 01_01_01 used as verification baseline."
+  - number: "9"
+    how_upheld: "Conclusions limited to: tables created, types assigned, row counts, file-count reconciliation. Binary column justification cites Parquet metadata (structural), not content."
+gate:
+  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "DuckDB tables (matches_raw, ratings_raw, leaderboards_raw, profiles_raw) exist with non-zero row counts AND full DESCRIBE output recorded for all 4 tables AND ratings_raw DESCRIBE shows profile_id as INTEGER/BIGINT, date as DATE/TIMESTAMP, and games/rating/rating_diff as INTEGER (not VARCHAR) AND smoke test passed before full ingestion."
+  halt_predicate: "DuckDB cannot read any Parquet or CSV files, OR smoke test shows binary columns as BLOB (not VARCHAR), OR ratings_raw type gate fails after re-ingestion attempt."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

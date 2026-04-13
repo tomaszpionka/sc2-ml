@@ -145,6 +145,55 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_01 — DuckDB Ingestion
+
+```yaml
+step_number: "01_02_01"
+name: "DuckDB Ingestion"
+description: "Load aoestats Parquet files into DuckDB with union_by_name=true. Pre-ingestion variant column census determines the actual type distribution of the 7 variant columns identified by 01_01_02 across all source files. Smoke test confirms DuckDB auto-promotion handles each variant pattern correctly. Load overview.json as reference table. Document missing-week asymmetry (171 vs 172 files)."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "aoestats"
+question: "What are the actual type distributions of the 7 variant columns across all source files, can DuckDB union_by_name handle them correctly via auto-promotion (preserving native types rather than forcing VARCHAR), and do post-ingestion NULL patterns for presence/absence columns match the file-level census?"
+method: "PRE-INGESTION VARIANT CENSUS: Run pyarrow.parquet.read_schema on ALL 172 matches + 171 players files. For each of the 7 variant columns identified by 01_01_02, record the type distribution across files (e.g., how many files have int64 vs double for a given column, how many have null-typed columns). This census is the authoritative source for variant column patterns — its results determine the ingestion strategy and provide the baseline for post-ingestion NULL verification. Smoke test and pre-ingestion functions live in pre_ingestion.py. SMOKE TEST: ingest 3-5 files from each subdirectory (earliest, middle, latest) into temp tables with union_by_name=true and filename=true. Verify DESCRIBE: variant columns have correct promoted types (not VARCHAR), duration/irl_duration are INTERVAL, column counts correct (matches_raw: 17+1 filename=18, players_raw: 13+1=14). FULL INGESTION: CREATE TABLE matches_raw AS ...; CREATE TABLE players_raw AS ...; CREATE TABLE overviews_raw AS SELECT * FROM read_json_auto('raw/overview/overview.json', filename=true) — produces table with filename provenance column. POST-INGESTION: DESCRIBE ALL 3 tables. Verify duration/irl_duration → INTERVAL, test EXTRACT(EPOCH FROM duration) for reasonable values. For each variant column: SELECT COUNT(*) FILTER (WHERE col IS NULL) — NULL counts must correspond to file-level absence pattern from census. Note on profile_id: if promoted to DOUBLE from mixed int64/double sources, player IDs as float64 may cause join precision issues for IDs > 2^53; flag for EDA investigation, do not alter at bronze layer. Investigate missing-week asymmetry (171 players vs 172 matches files)."
+stratification: "By subdirectory (matches, players, overview)."
+predecessors:
+  - "01_01_01"
+  - "01_01_02"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "players_raw"
+    - "overviews_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
+    - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
+  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
+reproducibility: "Pre-ingestion pyarrow census code and DuckDB SQL in the notebook. Variant column type distributions established by full pyarrow census in the notebook. NULL counts verified against file-level absence pattern from same census. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "DDL, ingestion SQL, census code, DESCRIBE output, and NULL counts in the notebook."
+  - number: "7"
+    how_upheld: "No type-forcing thresholds — DuckDB auto-promotion is deterministic. Variant column type distributions from full pyarrow census (not sampled)."
+  - number: "9"
+    how_upheld: "Conclusions limited to: tables created, types assigned (including auto-promotion results), row counts, NULL patterns matching file-level census. profile_id precision flag is structural, not semantic."
+gate:
+  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "DuckDB tables exist with non-zero row counts AND full DESCRIBE output recorded for all 3 tables AND variant columns have expected promoted types (raw_match_type: DOUBLE, started_timestamp: TIMESTAMP, profile_id: DOUBLE, opening: VARCHAR, age uptimes: DOUBLE) AND duration/irl_duration are INTERVAL AND NULL counts for presence/absence columns match file census AND smoke test passed."
+  halt_predicate: "DuckDB cannot read Parquet files with union_by_name, OR smoke test shows unexpected types (e.g., variant column auto-widened to VARCHAR when numeric promotion was expected), OR overviews_raw fails to parse from overview.json."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
