@@ -139,5 +139,122 @@ con.sql("""
     ORDER BY file_week
 """.format(glob=str(AOESTATS_RAW_DIR / "players" / "*.parquet"))).show()
 
+# %% [markdown]
+# ## 7. Ingestion readiness checks
+#
+# Targeted queries against the full file corpus to resolve open questions
+# from the smoke test. Each query reads raw files directly (no persistent DB).
+
+# %% [markdown]
+# ### 7a. profile_id precision -- is DOUBLE safe or do we need BIGINT?
+
+# %%
+con.sql("""
+    SELECT
+        MIN(profile_id) AS min_id,
+        MAX(profile_id) AS max_id,
+        COUNT(*) FILTER (WHERE profile_id IS NULL) AS null_count,
+        COUNT(*) FILTER (
+            WHERE profile_id IS NOT NULL
+              AND profile_id != CAST(CAST(profile_id AS BIGINT) AS DOUBLE)
+        ) AS lossy_cast_count,
+        COUNT(*) AS total
+    FROM read_parquet(
+        '{glob}', union_by_name=true
+    )
+""".format(glob=str(AOESTATS_RAW_DIR / "players" / "*.parquet"))).show()
+
+# %% [markdown]
+# ### 7b. duration / irl_duration value range -- any negatives or extremes?
+
+# %%
+con.sql("""
+    SELECT
+        MIN(duration) AS min_dur_ns,
+        MAX(duration) AS max_dur_ns,
+        MIN(duration / 1e9) AS min_dur_sec,
+        MAX(duration / 1e9) AS max_dur_sec,
+        COUNT(*) FILTER (WHERE duration < 0) AS negative_dur,
+        COUNT(*) FILTER (WHERE duration IS NULL) AS null_dur,
+        MIN(irl_duration) AS min_irl_ns,
+        MAX(irl_duration) AS max_irl_ns,
+        MIN(irl_duration / 1e9) AS min_irl_sec,
+        MAX(irl_duration / 1e9) AS max_irl_sec,
+        COUNT(*) FILTER (WHERE irl_duration < 0) AS negative_irl,
+        COUNT(*) FILTER (WHERE irl_duration IS NULL) AS null_irl
+    FROM read_parquet(
+        '{glob}', union_by_name=true
+    )
+""".format(glob=str(AOESTATS_RAW_DIR / "matches" / "*.parquet"))).show()
+
+# %% [markdown]
+# ### 7c. Join key (game_id) and prediction target (winner) NULL rates
+
+# %%
+con.sql("""
+    SELECT
+        'matches' AS source,
+        COUNT(*) AS total,
+        COUNT(game_id) AS game_id_nn,
+        COUNT(*) - COUNT(game_id) AS game_id_null
+    FROM read_parquet('{matches_glob}', union_by_name=true)
+    UNION ALL
+    SELECT
+        'players' AS source,
+        COUNT(*) AS total,
+        COUNT(game_id) AS game_id_nn,
+        COUNT(*) - COUNT(game_id) AS game_id_null
+    FROM read_parquet('{players_glob}', union_by_name=true)
+""".format(
+    matches_glob=str(AOESTATS_RAW_DIR / "matches" / "*.parquet"),
+    players_glob=str(AOESTATS_RAW_DIR / "players" / "*.parquet"),
+)).show()
+
+# %%
+con.sql("""
+    SELECT
+        COUNT(*) AS total_players,
+        COUNT(winner) AS winner_nn,
+        COUNT(*) - COUNT(winner) AS winner_null,
+        ROUND(100.0 * (COUNT(*) - COUNT(winner)) / COUNT(*), 2) AS winner_null_pct
+    FROM read_parquet('{glob}', union_by_name=true)
+""".format(glob=str(AOESTATS_RAW_DIR / "players" / "*.parquet"))).show()
+
+# %% [markdown]
+# ### 7d. game_id uniqueness -- duplicates in matches?
+
+# %%
+con.sql("""
+    SELECT
+        COUNT(*) AS total_rows,
+        COUNT(DISTINCT game_id) AS distinct_game_ids,
+        COUNT(*) - COUNT(DISTINCT game_id) AS duplicate_rows
+    FROM read_parquet('{glob}', union_by_name=true)
+""".format(glob=str(AOESTATS_RAW_DIR / "matches" / "*.parquet"))).show()
+
+# %% [markdown]
+# ### 7e. overview.json -- DESCRIBE and preview
+
+# %%
+con.sql("""
+    DESCRIBE SELECT * FROM read_json_auto('{path}')
+""".format(path=str(AOESTATS_RAW_DIR / "overview" / "overview.json"))).show()
+
+con.sql("""
+    SELECT * FROM read_json_auto('{path}')
+""".format(path=str(AOESTATS_RAW_DIR / "overview" / "overview.json"))).show()
+
+# %% [markdown]
+# ## 8. Findings and ingestion strategy recommendation
+#
+# Summarize all findings from sections 1-7 here after execution.
+# Key decisions to record:
+#
+# - **profile_id:** BIGINT or DOUBLE? (based on 7a lossy_cast_count)
+# - **duration/irl_duration:** keep as BIGINT nanoseconds or convert? (based on 7b range)
+# - **game_id:** needs dedup at ingestion? (based on 7d)
+# - **winner NULLs:** acceptable rate? (based on 7c)
+# - **Proposed DDL** for matches_raw, players_raw, overviews_raw
+
 # %%
 con.close()

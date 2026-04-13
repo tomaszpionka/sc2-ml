@@ -142,5 +142,114 @@ con.sql("""
     ORDER BY file_date
 """.format(glob=str(AOE2COMPANION_RAW_DIR / "ratings" / "*.csv"))).show()
 
+# %% [markdown]
+# ## 7. Ingestion readiness checks
+
+# %% [markdown]
+# ### 7a. CSV type validation -- can ratings columns actually be parsed as numeric/temporal?
+
+# %%
+import pandas as pd
+
+# Stratified sample: early, middle, late
+ratings_dir = AOE2COMPANION_RAW_DIR / "ratings"
+csv_files = sorted(ratings_dir.glob("*.csv"))
+sample_csvs = [csv_files[0], csv_files[len(csv_files) // 2], csv_files[-1]]
+
+for fp in sample_csvs:
+    df = pd.read_csv(fp, nrows=500)
+    print(f"\n--- {fp.name} ({len(df)} rows) ---")
+    for col in df.columns:
+        numeric_ok = pd.to_numeric(df[col], errors="coerce").notna().sum()
+        print(f"  {col}: {numeric_ok}/{len(df)} parseable as numeric")
+    date_ok = pd.to_datetime(df["date"], errors="coerce").notna().sum()
+    print(f"  date as datetime: {date_ok}/{len(df)} parseable")
+
+# %% [markdown]
+# ### 7b. Singleton tables -- DESCRIBE and preview (leaderboard, profiles)
+
+# %%
+con = duckdb.connect(":memory:")
+
+for name, path in [
+    ("leaderboard", AOE2COMPANION_RAW_DIR / "leaderboards" / "leaderboard.parquet"),
+    ("profiles", AOE2COMPANION_RAW_DIR / "profiles" / "profile.parquet"),
+]:
+    print(f"\n{'='*60}")
+    print(f"  DESCRIBE {name}")
+    print(f"{'='*60}")
+    con.sql(f"DESCRIBE SELECT * FROM read_parquet('{path}', binary_as_string=true)").show()
+    print(f"\n  {name} -- first 5 rows:")
+    con.sql(f"SELECT * FROM read_parquet('{path}', binary_as_string=true) LIMIT 5").show()
+
+# %% [markdown]
+# ### 7c. Join key (matchId, profileId) and prediction target (won) NULL rates
+
+# %%
+matches_glob = str(AOE2COMPANION_RAW_DIR / "matches" / "*.parquet")
+
+con.sql("""
+    SELECT
+        COUNT(*) AS total,
+        COUNT(matchId) AS matchId_nn,
+        COUNT(*) - COUNT(matchId) AS matchId_null,
+        COUNT(profileId) AS profileId_nn,
+        COUNT(*) - COUNT(profileId) AS profileId_null,
+        COUNT(won) AS won_nn,
+        COUNT(*) - COUNT(won) AS won_null,
+        ROUND(100.0 * (COUNT(*) - COUNT(won)) / COUNT(*), 2) AS won_null_pct
+    FROM read_parquet('{glob}', binary_as_string=true, union_by_name=true)
+""".format(glob=matches_glob)).show()
+
+# %% [markdown]
+# ### 7d. matchId uniqueness -- is each row a player-in-match?
+
+# %%
+con.sql("""
+    SELECT
+        COUNT(*) AS total_rows,
+        COUNT(DISTINCT matchId) AS distinct_matches,
+        ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT matchId), 2) AS avg_rows_per_match
+    FROM read_parquet('{glob}', binary_as_string=true, union_by_name=true)
+""".format(glob=matches_glob)).show()
+
+# %% [markdown]
+# ### 7e. Ratings -- full corpus type check (does read_csv_auto fail on all files?)
+
+# %%
+ratings_glob = str(AOE2COMPANION_RAW_DIR / "ratings" / "*.csv")
+
+print("read_csv_auto DESCRIBE on full corpus:")
+try:
+    con.sql("""
+        DESCRIBE SELECT * FROM read_csv_auto('{glob}', filename=true)
+    """.format(glob=ratings_glob)).show()
+    print("read_csv_auto: SUCCEEDED on full corpus")
+except Exception as e:
+    print(f"read_csv_auto: FAILED -- {e}")
+
+print("\nread_csv with explicit types DESCRIBE:")
+con.sql("""
+    DESCRIBE SELECT * FROM read_csv(
+        '{glob}', filename=true, header=true,
+        types={{'profile_id':'BIGINT','games':'BIGINT','rating':'BIGINT',
+               'date':'TIMESTAMP','leaderboard_id':'BIGINT',
+               'rating_diff':'BIGINT','season':'BIGINT'}}
+    )
+""".format(glob=ratings_glob)).show()
+
+# %% [markdown]
+# ## 8. Findings and ingestion strategy recommendation
+#
+# Summarize all findings from sections 1-7 here after execution.
+# Key decisions to record:
+#
+# - **Binary columns:** binary_as_string=true confirmed? (based on section 1)
+# - **Schema evolution:** which columns appear/disappear over time? (based on section 5)
+# - **CSV types:** explicit types validated? (based on 7a, 7e)
+# - **won NULLs:** acceptable rate? (based on 7c)
+# - **Data structure:** player-in-match rows confirmed? (based on 7d)
+# - **Proposed DDL** for matches_raw, ratings_raw, leaderboards_raw, profiles_raw
+
 # %%
 con.close()

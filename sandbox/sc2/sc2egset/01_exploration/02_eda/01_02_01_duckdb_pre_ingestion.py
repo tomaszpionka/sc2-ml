@@ -169,5 +169,92 @@ mapping_test = probe_mapping_read_json_auto(con, first_mf)
 print(f"read_json_auto: success={mapping_test['success']}")
 print(f"DuckDB type: {mapping_test.get('columns', [{}])[0].get('column_type')}")
 
+# %% [markdown]
+# ## 8. Ingestion readiness checks
+
+# %% [markdown]
+# ### 8a. Sub-field DESCRIBE for metadata structs
+#
+# The root-level DESCRIBE (section 3) shows `details`, `header`, `initData`,
+# `metadata` as STRUCT. We need the sub-field types to write correct DDL.
+
+# %%
+con = duckdb.connect(":memory:")
+con.execute("SET memory_limit = '24GB'")
+
+# Use the batch glob (64 files) for richer union_by_name coverage
+batch_glob = str(batch_dir / "*.SC2Replay.json")
+
+for struct_col in ("details", "header", "initData", "metadata"):
+    print(f"\n{'='*60}")
+    print(f"  DESCRIBE {struct_col}.*")
+    print(f"{'='*60}")
+    try:
+        con.sql(f"""
+            DESCRIBE SELECT "{struct_col}".* FROM read_json_auto(
+                '{batch_glob}', union_by_name=true,
+                maximum_object_size=536870912
+            )
+        """).show()
+    except Exception as e:
+        print(f"  Cannot unnest {struct_col}: {e}")
+        con.sql(f"""
+            SELECT typeof("{struct_col}") AS type
+            FROM read_json_auto('{batch_glob}',
+                union_by_name=true, maximum_object_size=536870912)
+            LIMIT 1
+        """).show()
+
+# %% [markdown]
+# ### 8b. Storage estimate -- median vs mean (skew correction)
+
+# %%
+print("Storage estimates -- mean vs median (7-file sample):\n")
+print(f"{'Array':<20} {'Mean (GB)':>10} {'Median (GB)':>12} {'Ratio':>8}")
+print("-" * 55)
+for key in ("gameEvents", "trackerEvents", "messageEvents"):
+    bytes_ = [r[key]["json_bytes"] for r in ea_results]
+    mean_gb = statistics.mean(bytes_) * 22390 / 1024**3
+    median_gb = statistics.median(bytes_) * 22390 / 1024**3
+    ratio = mean_gb / median_gb if median_gb > 0 else float("inf")
+    print(f"{key:<20} {mean_gb:>10.1f} {median_gb:>12.1f} {ratio:>8.1f}x")
+
+total_mean = sum(statistics.mean([r[k]["json_bytes"] for r in ea_results]) for k in ("gameEvents", "trackerEvents", "messageEvents")) * 22390 / 1024**3
+total_median = sum(statistics.median([r[k]["json_bytes"] for r in ea_results]) for k in ("gameEvents", "trackerEvents", "messageEvents")) * 22390 / 1024**3
+print(f"{'TOTAL':<20} {total_mean:>10.1f} {total_median:>12.1f} {total_mean/total_median:>8.1f}x")
+print(f"\nNote: n=7, highly right-skewed. Median is the conservative estimate.")
+
+# %% [markdown]
+# ### 8c. ToonPlayerDescMap -- per-player fields catalog
+#
+# Enumerate the actual per-player fields inside ToonPlayerDescMap to assess
+# whether these are prediction-relevant (race, MMR, APM, etc.)
+
+# %%
+with open(samples[0]) as f:
+    sample_data = json.load(f)
+
+tpdm = sample_data.get("ToonPlayerDescMap", {})
+if tpdm:
+    first_player_key = next(iter(tpdm))
+    player_data = tpdm[first_player_key]
+    print(f"ToonPlayerDescMap: {len(tpdm)} players in sample file")
+    print(f"Per-player fields ({len(player_data)} total):")
+    for k, v in sorted(player_data.items()):
+        print(f"  {k}: {type(v).__name__} = {repr(v)[:80]}")
+
+# %% [markdown]
+# ## 9. Findings and ingestion strategy recommendation
+#
+# Summarize all findings from sections 1-8 here after execution.
+# Key decisions to record:
+#
+# - **Table split strategy:** metadata-only vs include events?
+# - **Event ingestion:** defer all, or ingest specific trackerEvent types?
+# - **ToonPlayerDescMap:** unnest to per-player columns or keep as MAP?
+# - **Mapping files:** single reference table (all 70 identical)?
+# - **Sub-field types:** any surprises in nested struct fields?
+# - **Proposed DDL** for each table
+
 # %%
 con.close()
