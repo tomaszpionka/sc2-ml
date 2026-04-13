@@ -9,9 +9,9 @@ live in per-dataset logs — one per game/dataset combination.
 
 | Dataset | Log | Last entry |
 |---------|-----|------------|
-| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-13 (01_02_01) |
-| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-13 (01_02_01) |
-| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-13 (01_02_01) |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | — |
+| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | — |
+| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | — |
 
 > **Phase migration note (2026-04-09):** This log was reset as part of the
 > Phase 01-07 migration. Prior entries were removed in v2.0.0 (archive
@@ -22,122 +22,4 @@ live in per-dataset logs — one per game/dataset combination.
 
 ## CROSS-Dataset Entries
 
-## 2026-04-13 — [CROSS / Phase 01 / Step 01_02_01] DuckDB Ingestion Cross-Dataset Summary
-
-**Category:** A (science)
-**Datasets:** sc2egset, aoe2companion, aoestats
-
-### Ingestion complexity comparison
-
-| Dataset | Complexity | Approach | Result |
-|---------|-----------|----------|--------|
-| sc2egset | Hard | Investigation only | read_json_auto works; 367.6 GB event arrays; split-table proposed |
-| aoe2companion | Easy | Full ingestion | 4 tables; binary_as_string required; CSV types need explicit spec |
-| aoestats | Medium | Full ingestion with variant census | 3 tables; union_by_name handles all variants automatically |
-
-### Tables created per dataset
-
-| Dataset | Tables | Total rows |
-|---------|--------|-----------|
-| sc2egset | 0 (investigation only) | -- |
-| aoe2companion | 4 (matches_raw, ratings_raw, leaderboards_raw, profiles_raw) | 341,407,405 |
-| aoestats | 3 (matches_raw, players_raw, overviews_raw) | 138,318,236 |
-
-### Row counts
-
-| Table | aoe2companion | aoestats |
-|-------|--------------|---------|
-| matches_raw | 277,099,059 | 30,690,651 |
-| ratings_raw | 58,317,433 | -- |
-| leaderboards_raw | 2,381,227 | -- |
-| profiles_raw | 3,609,686 | -- |
-| players_raw | -- | 107,627,584 |
-| overviews_raw | -- | 1 |
-
-### Cross-dataset timestamp precision
-
-- aoe2companion: `started`/`finished` columns use `timestamp[ms, tz=UTC]` in source Parquet -> DuckDB TIMESTAMP
-- aoestats: `started_timestamp` uses mixed `timestamp[us, tz=UTC]` (68 files) and `timestamp[ns, tz=UTC]` (104 files) -> DuckDB TIMESTAMP WITH TIME ZONE
-
-This precision asymmetry is a structural fact for downstream join awareness. No semantic comparison of data content.
-
-Per-dataset entries:
-- [sc2egset](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
-- [aoe2companion](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
-- [aoestats](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)
-
----
-
-## 2026-04-12 — [CROSS / Phase 01 / Step 01_01_02] Schema Discovery Structural Summary
-
-**Category:** A (science)
-**Datasets:** sc2egset, aoe2companion, aoestats
-
-Structural comparison across all 3 datasets following Step 01_01_02 completion.
-
-**File formats per dataset:**
-
-| Dataset | File types |
-|---------|-----------|
-| sc2egset | JSON only |
-| aoe2companion | Parquet, CSV |
-| aoestats | Parquet, JSON |
-
-**Column counts per file type:**
-
-| Dataset | File type | Subdirectory | Columns |
-|---------|-----------|-------------|---------|
-| sc2egset | JSON | TOURNAMENT_data | 11 root keys |
-| aoe2companion | Parquet | matches/ | 54 |
-| aoe2companion | CSV | ratings/ | 7 |
-| aoe2companion | Parquet | leaderboards/ | 18 |
-| aoe2companion | Parquet | profiles/ | 13 |
-| aoestats | Parquet | matches/ | 17 |
-| aoestats | Parquet | players/ | 13 |
-| aoestats | JSON | overview/ | 8 root keys |
-
-**Nesting depth per file type:**
-
-| Dataset | File type | Nesting depth |
-|---------|-----------|---------------|
-| sc2egset | JSON | 5 |
-| aoe2companion | Parquet | 0 (flat) |
-| aoe2companion | CSV | 0 (flat) |
-| aoestats | Parquet | 0 (flat) |
-| aoestats | JSON | 1 |
-
-**Column name overlap across datasets (raw string comparison):**
-
-Exact column name matches across all file types (literal string equality only):
-
-- `sc2egset` (11 root keys) vs `aoe2companion` (all file types): 0 shared column names
-- `sc2egset` (11 root keys) vs `aoestats` (all file types): 0 shared column names
-- `aoe2companion` (all file types) vs `aoestats` (all file types): 5 shared column names — `civ`, `leaderboard`, `map`, `profile_id`, `team`
-
-Per-subdirectory breakdown:
-- `aoe2companion/matches/` vs `aoestats/matches/`: 2 shared — `leaderboard`, `map`
-- `aoe2companion/matches/` vs `aoestats/players/`: 2 shared — `civ`, `team`
-- `aoe2companion/ratings/` vs `aoestats/players/`: 1 shared — `profile_id`
-
-Per-dataset entries:
-- [sc2egset](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
-- [aoe2companion](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
-- [aoestats](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)
-
----
-
-## 2026-04-12 — [CROSS / Phase 01 / Step 01_01_01] File Inventory Summary
-
-**Category:** A (phase work — rerun)
-**Datasets:** sc2egset, aoe2companion, aoestats
-
-Step 01_01_01 file inventory rerun completed for all 3 datasets.
-Context leaks stripped, research log entries rewritten from artifacts.
-ROADMAP source data sections, raw/README.md, and reports/README.md
-repopulated strictly from 01_01_01 artifacts per Invariant #9.
-Per-dataset findings in each dataset's research_log.md.
-
-Per-dataset entries:
-- [sc2egset](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md)
-- [aoe2companion](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md)
-- [aoestats](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md)
+*(No entries yet — will be populated after notebooks are re-executed.)*

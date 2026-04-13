@@ -68,7 +68,7 @@ with PRIOR_ARTIFACT.open() as fh:
     inventory = json.load(fh)
 
 subdir_info = {sd["name"]: sd for sd in inventory["subdirs"]}
-logger.info("Subdirectories from inventory: %s", list(subdir_info.keys()))
+print(f"Subdirectories from inventory: {list(subdir_info.keys())}")
 
 # %% [markdown]
 # ## Cell 3 — File selection (full census for all file types)
@@ -84,9 +84,9 @@ players_files = sorted(
 )
 overview_file = AOESTATS_RAW_OVERVIEW_DIR / "overview.json"
 
-logger.info("matches Parquet files: %d", len(matches_files))
-logger.info("players Parquet files: %d", len(players_files))
-logger.info("overview.json exists: %s", overview_file.exists())
+print(f"matches Parquet files: {len(matches_files)}")
+print(f"players Parquet files: {len(players_files)}")
+print(f"overview.json exists: {overview_file.exists()}")
 
 # %% [markdown]
 # ## Cell 4 — Schema discovery
@@ -95,29 +95,27 @@ logger.info("overview.json exists: %s", overview_file.exists())
 # JSON: `discover_json_schema()` on `overview.json`.
 
 # %%
-logger.info("Running discover_parquet_schemas() on %d matches files...", len(matches_files))
+print(f"Running discover_parquet_schemas() on {len(matches_files)} matches files...")
 matches_result = discover_parquet_schemas(matches_files)
-logger.info(
-    "matches: all_same=%s, files_checked=%d, variant_cols=%s",
-    matches_result["all_files_same_schema"],
-    matches_result["files_checked"],
-    matches_result["variant_columns"],
+print(
+    f"matches: all_same={matches_result['all_files_same_schema']}, "
+    f"files_checked={matches_result['files_checked']}, "
+    f"variant_cols={matches_result['variant_columns']}"
 )
 
 # %%
-logger.info("Running discover_parquet_schemas() on %d players files...", len(players_files))
+print(f"Running discover_parquet_schemas() on {len(players_files)} players files...")
 players_result = discover_parquet_schemas(players_files)
-logger.info(
-    "players: all_same=%s, files_checked=%d, variant_cols=%s",
-    players_result["all_files_same_schema"],
-    players_result["files_checked"],
-    players_result["variant_columns"],
+print(
+    f"players: all_same={players_result['all_files_same_schema']}, "
+    f"files_checked={players_result['files_checked']}, "
+    f"variant_cols={players_result['variant_columns']}"
 )
 
 # %%
-logger.info("Running discover_json_schema() on overview.json...")
+print("Running discover_json_schema() on overview.json...")
 overview_profiles = discover_json_schema([overview_file], max_sample_values=3) if overview_file.exists() else []
-logger.info("overview.json root keys: %d", len(overview_profiles))
+print(f"overview.json root keys: {len(overview_profiles)}")
 
 # %% [markdown]
 # ## Cell 5 — Schema consistency check + cross-column name comparison
@@ -133,12 +131,12 @@ shared_col_names = sorted(matches_col_names & players_col_names)
 matches_only_names = sorted(matches_col_names - players_col_names)
 players_only_names = sorted(players_col_names - matches_col_names)
 
-logger.info("matches columns: %d", len(matches_col_names))
-logger.info("players columns: %d", len(players_col_names))
-logger.info("shared column names: %d", len(shared_col_names))
-logger.info("matches-only column names: %d", len(matches_only_names))
-logger.info("players-only column names: %d", len(players_only_names))
-logger.info("shared names: %s", shared_col_names)
+print(f"matches columns: {len(matches_col_names)}")
+print(f"players columns: {len(players_col_names)}")
+print(f"shared column names: {len(shared_col_names)}")
+print(f"matches-only column names: {len(matches_only_names)}")
+print(f"players-only column names: {len(players_only_names)}")
+print(f"shared names: {shared_col_names}")
 
 # %% [markdown]
 # ## Cell 6 — Write JSON artifact

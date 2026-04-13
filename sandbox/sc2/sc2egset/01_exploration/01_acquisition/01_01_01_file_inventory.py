@@ -61,9 +61,9 @@ logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 # inventory_directory goes one level deep, so it counts metadata files per directory.
 meta_result = inventory_directory(RAW_DIR)
 
-logger.info("Top-level directories (level 1): %d", len(meta_result.subdirs))
-logger.info("Metadata files across all top-level directories: %d", meta_result.total_files)
-logger.info("Files at root: %d", len(meta_result.files_at_root))
+print(f"Top-level directories (level 1): {len(meta_result.subdirs)}")
+print(f"Metadata files across all top-level directories: {meta_result.total_files}")
+print(f"Files at root: {len(meta_result.files_at_root)}")
 
 # %% [markdown]
 # ### Level 1 inventory
@@ -102,8 +102,8 @@ for sd in meta_result.subdirs:
         "extensions": ext_dist,
     })
 
-logger.info("Total replay files (level 2): %d", total_replay_files)
-logger.info("Total replay size: %.2f MB", total_replay_bytes / (1024 * 1024))
+print(f"Total replay files (level 2): {total_replay_files}")
+print(f"Total replay size: {total_replay_bytes / (1024 * 1024):.2f} MB")
 if dirs_missing_data_subdir:
     logger.warning("Top-level directories missing _data/: %s", dirs_missing_data_subdir)
 
@@ -120,12 +120,9 @@ if dirs_missing_data_subdir:
 # Summary statistics for replay file counts per directory
 replay_counts = [sd["replay_file_count"] for sd in replay_subdir_data]
 if replay_counts:
-    logger.info(
-        "Files per directory — min: %d, max: %d, median: %.1f, total: %d",
-        min(replay_counts),
-        max(replay_counts),
-        statistics.median(replay_counts),
-        sum(replay_counts),
+    print(
+        f"Files per directory — min: {min(replay_counts)}, max: {max(replay_counts)}, "
+        f"median: {statistics.median(replay_counts):.1f}, total: {sum(replay_counts)}"
     )
 
 # Flag top-level directories with 0 replay files
@@ -158,9 +155,9 @@ for sd in meta_result.subdirs:
 
 patterns = summarize_filename_patterns(all_files)
 
-logger.info("Total files scanned for patterns: %d", len(all_files))
+print(f"Total files scanned for patterns: {len(all_files)}")
 for pattern, count in patterns.items():
-    logger.info("  %s: %d", pattern, count)
+    print(f"  {pattern}: {count}")
 
 # %% [markdown]
 # ### Filename pattern summary

@@ -69,13 +69,13 @@ Pipeline Sections per `docs/PHASES.md`:
 ```yaml
 step_number: "01_01_01"
 name: "File Inventory"
-description: "Walk the aoe2companion raw directory, count files, measure sizes, group by subdirectory."
+description: "Establish a complete filesystem-level census of the aoe2companion raw data. This grounds all subsequent steps in verified file counts, sizes, date ranges, and directory structure."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "aoe2companion"
-question: "What files exist on disk, how many are there, and how are they organized?"
-method: "Call inventory_directory() on the raw directory. Report totals, per-subdirectory breakdown, extension distribution. Extract dates from filenames using regex and report date range and gaps per subdirectory."
+question: "How many files exist in each subdirectory, what date range do they span, and are there any temporal gaps between the matched file series (matches vs ratings)?"
+method: "Full census of the raw directory tree. Count files, measure sizes, group by subdirectory. Extract dates from filenames to establish the temporal range and identify gaps."
 stratification: "By subdirectory (matches, ratings, leaderboards, profiles)."
 predecessors: "none — independent"
 notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/01_acquisition/01_01_01_file_inventory.py"
@@ -87,12 +87,12 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md"
-reproducibility: "All counts produced by inventory_directory() from rts_predict.common.inventory. Code and output are in the paired notebook."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "Inventory counts are produced by code in the notebook, saved alongside the report."
+    how_upheld: "Inventory counts produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "No thresholds used — pure counting."
+    how_upheld: "Full census — no sampling or thresholds."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json and .md exist and are non-empty."
   continue_predicate: "Inventory artifacts exist on disk."
@@ -107,13 +107,13 @@ research_log_entry: "Required on completion."
 ```yaml
 step_number: "01_01_02"
 name: "Schema Discovery"
-description: "Read Parquet metadata and CSV headers from aoe2companion raw files. Discover column schemas for matches, ratings, leaderboards, and profiles. Check schema consistency across the temporal range."
+description: "Map the column-level structure of all four aoe2companion file types (Parquet matches, CSV ratings, singleton leaderboards and profiles). Determine whether schemas are consistent across the full temporal range."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "aoe2companion"
-question: "What columns exist in each file type, what are their data types, and is the schema consistent across the temporal range?"
-method: "Full census: pyarrow.parquet.read_schema() on all 2,073 files in matches/ (metadata-only, sub-second). Full census: pd.read_csv(nrows=50) on all 2,072 files in ratings/ (header + 50 rows for type inference). Read schema from singleton leaderboard.parquet and profile.parquet. Compare schemas within each subdirectory for consistency. Report column catalogs, Arrow/inferred types, and consistency verdicts. No DuckDB type proposals."
+question: "What columns exist in each file type, what are their data types, and does the schema remain stable across the temporal range or evolve over time?"
+method: "Full census of Parquet file metadata for matches (2,073 files) and CSV headers for ratings (2,072 files). Read singleton leaderboard and profile schemas. Compare within each subdirectory for consistency and report column catalogs, types, and consistency verdicts. No DuckDB type proposals — deferred to ingestion design."
 stratification: "By subdirectory. Full census within each — no sampling needed for Parquet metadata or CSV headers."
 predecessors:
   - "01_01_01"
@@ -129,14 +129,14 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
-reproducibility: "Parquet schemas via pyarrow.parquet.read_schema() (full census on all files). CSV schemas via pd.read_csv(nrows=50) (full census, 50 rows per file for type inference — sufficient to detect type variation without full content read). Code and output in the paired notebook per Invariant #6."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
     how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "Full census for Parquet (metadata-only, zero cost) and CSV (header + 50 rows). Census eliminates sample-size justification requirement."
+    how_upheld: "Full census — no sampling or thresholds."
   - number: "9"
-    how_upheld: "Conclusions limited to column-level structural observations. No row counts or value distributions. No DuckDB type proposals."
+    how_upheld: "Conclusions limited to column-level structural observations — no value distributions or DuckDB type proposals."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
   continue_predicate: "Schema artifacts exist and report a consistency verdict for all subdirectories."
@@ -146,29 +146,26 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
-### Step 01_02_01 — DuckDB Ingestion
+### Step 01_02_01 — DuckDB Pre-Ingestion
 
 ```yaml
 step_number: "01_02_01"
-name: "DuckDB Ingestion"
-description: "Load aoe2companion Parquet and CSV files into DuckDB tables. Inspect pyarrow logical types for binary columns across all 3 Parquet subdirectories to determine whether binary_as_string=true is required. Validate CSV type inference for ratings. Verify row and column counts. Investigate matches/ratings file count gap (2073/2072)."
+name: "DuckDB Pre-Ingestion"
+description: "Determine whether aoe2companion's four file types (Parquet matches, CSV ratings, singleton leaderboards and profiles) can be loaded into DuckDB with correct type mappings, and surface any traps (binary column encoding, CSV type inference, file-count asymmetry) before committing to full ingestion."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
 dataset: "aoe2companion"
-question: "Can all aoe2companion files be loaded into DuckDB tables with correct type mappings, are binary columns unannotated BYTE_ARRAY requiring binary_as_string=true, are CSV types inferred correctly for ratings, do row counts align with file inventory, and what explains the 2073/2072 file count gap?"
-method: "PYARROW INSPECTION: Run pyarrow.parquet.ParquetFile.schema on sample files from each subdirectory (matches, leaderboards, profiles) to determine binary column annotation status (parquet_logical, converted_type). If unannotated BYTE_ARRAY, binary_as_string=true is required; if annotated STRING/UTF8, DuckDB handles natively. Record per-subdirectory binary column counts and annotation status. Smoke test and pre-ingestion functions live in pre_ingestion.py. SMOKE TEST: ingest 3-5 Parquet files from matches/ (earliest, middle, latest by date) + 3-5 CSV from ratings/ into temp tables with binary_as_string=true (if justified by pyarrow inspection). Verify DESCRIBE: binary columns are VARCHAR (not BLOB), CSV-inferred types are reasonable (profile_id numeric, date parsed). Cross-check column schemas across smoke-test files to assess cross-file consistency. FULL INGESTION: CREATE TABLE matches_raw AS ...; CREATE TABLE ratings_raw AS ...; CREATE TABLE leaderboards_raw/profiles_raw from singletons with binary_as_string=true and filename=true (every raw table carries filename for provenance). POST-INGESTION: DESCRIBE all 4 tables — record full DuckDB-assigned types. GATE for ratings_raw: profile_id must be INTEGER/BIGINT, date must be DATE/TIMESTAMP, games/rating/rating_diff must be INTEGER — if any is VARCHAR, re-ingest with explicit types=. Row counts per table. Column count verification (matches_raw: 54+1 filename=55, ratings_raw: 7+1=8, leaderboards_raw: 18+1=19, profiles_raw: 13+1=14). NULL count for won. Investigate 2073/2072 file gap (identify which date(s) have matches but no ratings, or vice versa)."
+question: "What does the raw data look like before we commit to an ingestion strategy — are there type inference traps, binary column encoding issues, or NULL patterns that need handling?"
+method: "Inspect Parquet binary column annotations to determine encoding strategy. Smoke-test temporally-stratified file samples into in-memory DuckDB. DESCRIBE schemas, preview rows, and assess NULL counts. Investigate the matches/ratings file-count asymmetry (2073 vs 2072). Produce a design artifact for the full-ingestion step."
 stratification: "By subdirectory (matches, ratings, leaderboards, profiles)."
 predecessors:
   - "01_01_01"
   - "01_01_02"
-notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.py"
 inputs:
   duckdb_tables:
-    - "matches_raw"
-    - "ratings_raw"
-    - "leaderboards_raw"
-    - "profiles_raw"
+    - "none — investigation uses temporary in-memory DB"
   prior_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
     - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
@@ -177,20 +174,20 @@ inputs:
     - "DuckDB 1.5.1 (pinned in pyproject.toml)"
 outputs:
   data_artifacts:
-    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
-  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
-reproducibility: "DuckDB SQL in the notebook. Parquet logical type inspection via pyarrow.parquet.ParquetFile.schema on sample files to determine binary column annotation status. Row counts verified against 01_01_01 file counts. Smoke test and pre-ingestion functions in pre_ingestion.py. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  report: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.md"
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "DDL, ingestion SQL, DESCRIBE output, and row counts in the notebook."
+    how_upheld: "All smoke-test SQL, type inspection, and DESCRIBE output in the notebook."
   - number: "7"
-    how_upheld: "binary_as_string=true justified by in-notebook pyarrow logical type inspection. File counts from 01_01_01 used as verification baseline."
+    how_upheld: "Binary column encoding strategy justified by in-notebook Parquet metadata inspection."
   - number: "9"
-    how_upheld: "Conclusions limited to: tables created, types assigned, row counts, file-count reconciliation. Binary column justification cites Parquet metadata (structural), not content."
+    how_upheld: "Conclusions limited to type mappings, row counts, and file-count reconciliation — no content profiling."
 gate:
-  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
-  continue_predicate: "DuckDB tables (matches_raw, ratings_raw, leaderboards_raw, profiles_raw) exist with non-zero row counts AND full DESCRIBE output recorded for all 4 tables AND ratings_raw DESCRIBE shows profile_id as INTEGER/BIGINT, date as DATE/TIMESTAMP, and games/rating/rating_diff as INTEGER (not VARCHAR) AND smoke test passed before full ingestion."
-  halt_predicate: "DuckDB cannot read any Parquet or CSV files, OR smoke test shows binary columns as BLOB (not VARCHAR), OR ratings_raw type gate fails after re-ingestion attempt."
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "Design artifact documents DuckDB types for all 4 table types AND smoke test passed AND type inference traps identified and mitigation proposed."
+  halt_predicate: "DuckDB cannot read any Parquet or CSV files, OR smoke test reveals unresolvable type conflicts."
 thesis_mapping:
   - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."

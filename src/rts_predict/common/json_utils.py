@@ -188,12 +188,84 @@ def get_json_keypaths(path: str | Path) -> list[str]:
     return sorted(paths)
 
 
-if __name__ == "__main__":
-    _sample = (
-        "/Users/tomaszpionka/Projects/rts-outcome-prediction"
-        "/src/rts_predict/sc2/data/samples/raw"
-        "/0e0b1a550447f0b0a616e48224b31bd9.SC2Replay.json"
-    )
-    keypaths = get_json_keypaths(_sample)
-    for path in keypaths:
-        print(path)
+def classify_value(v: object) -> str:
+    """Return a short type tag for a JSON value, distinguishing nested structures.
+
+    Scalars return their type name ("null", "bool", "int", "float", "str").
+    Dicts return "struct(N keys)" with the key count.
+    Lists return "list(<inner_type>)" by inspecting the first element,
+    or "list(empty)" if the list is empty.
+
+    Args:
+        v: A Python value deserialized from JSON.
+
+    Returns:
+        Human-readable type tag string.
+    """
+    if v is None:
+        return "null"
+    if isinstance(v, bool):
+        return "bool"
+    if isinstance(v, int):
+        return "int"
+    if isinstance(v, float):
+        return "float"
+    if isinstance(v, str):
+        return "str"
+    if isinstance(v, dict):
+        return f"struct({len(v)} keys)"
+    if isinstance(v, list):
+        if not v:
+            return "list(empty)"
+        inner = classify_value(v[0])
+        return f"list({inner})"
+    return type(v).__name__
+
+
+def build_column_list(
+    schema_dict: dict[str, Any],
+    col_type_key: str = "arrow_type",
+) -> list[dict[str, Any]]:
+    """Extract a normalized column list from a schema discovery dict.
+
+    Args:
+        schema_dict: Dict with a "columns" key containing column metadata.
+            Each column dict should have "name" and a type key.
+        col_type_key: Key to use for the physical type. Falls back to
+            "inferred_type" if the primary key is absent.
+
+    Returns:
+        List of dicts with keys: name, physical_type, nullable.
+    """
+    return [
+        {
+            "name": c["name"],
+            "physical_type": c.get(col_type_key, c.get("inferred_type", "")),
+            "nullable": c.get("nullable", False),
+        }
+        for c in schema_dict.get("columns", [])
+    ]
+
+
+def build_schema_table(
+    columns: list[dict[str, Any]],
+    type_key: str = "physical_type",
+) -> list[str]:
+    """Build a Markdown table of column names, types, and nullability.
+
+    Args:
+        columns: List of column dicts (as returned by :func:`build_column_list`).
+        type_key: Key to read the type from each column dict.
+
+    Returns:
+        List of Markdown lines (header + separator + one row per column).
+    """
+    lines = [
+        "| Column | Type | Nullable |",
+        "|--------|------|----------|",
+    ]
+    for c in columns:
+        lines.append(
+            f"| `{c['name']}` | {c.get(type_key, '')} | {c.get('nullable', '')} |"
+        )
+    return lines

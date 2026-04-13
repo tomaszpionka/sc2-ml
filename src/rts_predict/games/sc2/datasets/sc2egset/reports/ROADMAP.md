@@ -64,13 +64,13 @@ Pipeline Sections per `docs/PHASES.md`:
 ```yaml
 step_number: "01_01_01"
 name: "File Inventory"
-description: "Walk the sc2egset raw directory, count files, measure sizes, group by subdirectory."
+description: "Establish a complete filesystem-level census of the sc2egset raw data. This grounds all subsequent steps in verified file counts, sizes, and directory structure."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "sc2egset"
-question: "What files exist on disk, how many are there, and how are they organized?"
-method: "Call inventory_directory() on the raw directory and on each tournament's _data/ subdirectory. The sc2egset layout is two-level: raw/TOURNAMENT/TOURNAMENT_data/*.SC2Replay.json. Report tournament-level metadata counts, per-_data/ replay counts, total replay files, total size, and summary statistics (min/max/median replays per tournament). Flag tournaments with missing _data/ dirs."
+question: "How many replay files exist, how large are they, and how are they distributed across the two-level tournament directory structure?"
+method: "Full census of the raw directory tree. Count files, measure sizes, and group by tournament subdirectory. Report summary statistics (min/max/median replays per tournament) and flag structural anomalies (e.g., missing subdirectories)."
 stratification: "By tournament directory (each tournament has its own _data/ subdir)."
 predecessors: "none — independent"
 notebook_path: "sandbox/sc2/sc2egset/01_exploration/01_acquisition/01_01_01_file_inventory.py"
@@ -82,12 +82,12 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md"
-reproducibility: "All counts produced by inventory_directory() from rts_predict.common.inventory. Code and output are in the paired notebook."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "Inventory counts are produced by code in the notebook, saved alongside the report."
+    how_upheld: "Inventory counts produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "No thresholds used — pure counting."
+    how_upheld: "Full census — no sampling or thresholds."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json and .md exist and are non-empty."
   continue_predicate: "Inventory artifacts exist on disk."
@@ -102,13 +102,13 @@ research_log_entry: "Required on completion."
 ```yaml
 step_number: "01_01_02"
 name: "Schema Discovery"
-description: "Sample sc2egset JSON files across all 70 directories. Discover root-level keys, nested keypaths, data types, and schema consistency across eras."
+description: "Map the internal structure of sc2egset JSON replay files — root-level keys, nested keypaths, data types — and determine whether the schema is consistent across all 70 tournament directories (spanning 2016-2024)."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "sc2egset"
-question: "What is the internal structure of the SC2EGSet JSON files, and is this structure consistent across all 70 directories?"
-method: "Select 1 file from each of the 70 _data/ subdirectories (first alphabetically) for root-level schema via discover_json_schema(). Select 3 files from each directory for full keypath enumeration via get_json_keypaths(). Compare schemas across directories to detect era-dependent variation. Report root-level key catalog, full keypath tree, observed types, and consistency verdict. No DuckDB type proposals (deferred to ingestion design)."
+question: "What is the internal structure of the replay JSON files, and does it remain stable across tournament eras or evolve over time?"
+method: "Sample files from each of the 70 directories (deterministic selection, stratified by tournament). Enumerate root-level keys and full keypath trees. Compare schemas across directories to detect era-dependent variation and report a consistency verdict. No DuckDB type proposals — deferred to ingestion design."
 stratification: "By directory (all 70 represented; temporal range 2016-2024)."
 predecessors:
   - "01_01_01"
@@ -124,14 +124,14 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
-reproducibility: "All schema profiles produced by discover_json_schema() and get_json_keypaths() from rts_predict.common.json_utils. File selection is deterministic (first N alphabetically per directory). Code and output in the paired notebook per Invariant #6."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
     how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "Sample size (1 per directory for root schema, 3 for keypaths) justified by temporal stratification in the report."
+    how_upheld: "Sample size per directory justified by temporal stratification in the report."
   - number: "9"
-    how_upheld: "Conclusions limited to structural observations. No row counts, value distributions, or semantic interpretation."
+    how_upheld: "Conclusions limited to structural observations — no value distributions or semantic interpretation."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
   continue_predicate: "Schema artifacts exist and report a consistency verdict for all 70 directories."
@@ -141,23 +141,23 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
-### Step 01_02_01 — DuckDB Ingestion Investigation
+### Step 01_02_01 — DuckDB Pre-Ingestion Investigation
 
 ```yaml
 step_number: "01_02_01"
-name: "DuckDB Ingestion Investigation"
-description: "Investigate how DuckDB 1.5.1 read_json_auto handles sc2egset nested JSON. Test on 5-10 sample files spanning the file-size distribution. Determine table split strategy, JSON column behavior, and event array storage feasibility. Full census of all 70 map_foreign_to_english_mapping.json files. Produce a design artifact — no full ingestion."
+name: "DuckDB Pre-Ingestion Investigation"
+description: "Determine how sc2egset's deeply nested JSON (11 root keys, dynamic-key maps, 3 large event arrays) behaves when loaded into DuckDB, and decide on a table split strategy before committing to full ingestion."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
 dataset: "sc2egset"
-question: "How does DuckDB 1.5.1 read_json_auto handle sc2egset's nested JSON structure (11 root keys, 7,350 keypaths, dynamic-key ToonPlayerDescMap, 3 event arrays), what table split strategy is needed, what is the estimated DuckDB storage for event arrays, and what is the schema/consistency of all 70 map_foreign_to_english_mapping.json files?"
-method: "Compute per-directory avg MB/file from 01_01_01 data (total_bytes / file_count). Select 5-10 .SC2Replay.json files: 1 from smallest-avg dir, 1 from largest-avg dir, the largest individual file by byte size, and 2-3 from mid-distribution. Test read_json_auto on each: record DuckDB types per root key, check ToonPlayerDescMap (dynamic keys) preservation vs flattening, note parse errors. Event array assessment on ALL sampled files: measure JSON byte size of gameEvents/trackerEvents/messageEvents, count elements, report stats (mean/median/min/max), extrapolate to 22,390 files for SSD feasibility. Test batch ingestion on 1 mid-size tournament directory (~100-300 files). Test single-table vs split-table approaches. Full census of all 70 map_foreign_to_english_mapping.json files (at raw/TOURNAMENT/map_foreign_to_english_mapping.json, NOT inside _data/): read all 70, record root type/key count/value types per file, check cross-file schema consistency, test read_json_auto on 1 file, propose table DDL if uniform. Produce design artifact with proposed DDL for a future full-ingestion step."
+question: "What does the raw data look like before we commit to an ingestion strategy — are there type inference traps, storage feasibility concerns for event arrays, or structural irregularities in the mapping files that need handling?"
+method: "Smoke-test size-stratified file samples into in-memory DuckDB. DESCRIBE schemas, preview rows, and assess event array storage cost (extrapolated to full corpus). Test single-table vs split-table approaches on a mid-size tournament directory. Census all 70 tournament-level mapping files for schema consistency. Produce a design artifact with proposed DDL for a future full-ingestion step."
 stratification: "By root key group (metadata vs events vs player desc map); by tournament directory for map alias files."
 predecessors:
   - "01_01_01"
   - "01_01_02"
-notebook_path: "sandbox/sc2/sc2egset/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.py"
 inputs:
   duckdb_tables:
     - "none — investigation uses temporary in-memory DB"
@@ -169,18 +169,18 @@ inputs:
     - "DuckDB 1.5.1 (pinned in pyproject.toml)"
 outputs:
   data_artifacts:
-    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
-  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
-reproducibility: "Investigation code on sample files in the notebook. File selection derived from 01_01_01 per-directory size data. Storage estimates derived from measured JSON sizes with extrapolation formula shown. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  report: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.md"
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "Sample read_json_auto tests, storage measurements, and map alias census code in the notebook."
+    how_upheld: "All smoke-test SQL, storage measurements, and census code in the notebook."
   - number: "7"
-    how_upheld: "Sample file selection thresholds derived from 01_01_01 per-directory size data (computed, not assumed)."
+    how_upheld: "File sample selection derived from 01_01_01 per-directory size data."
   - number: "9"
-    how_upheld: "Investigation reads sample file content for table design feasibility. Event array sizes measured for storage estimation (design input), not content profiling. Map alias census is structural (schema, key counts), not semantic."
+    how_upheld: "Conclusions limited to type mappings, storage estimates, and structural consistency — no content profiling."
 gate:
-  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json and .md exist and are non-empty."
   continue_predicate: "Design artifact documents: (1) read_json_auto behavior for all 11 root keys with DuckDB types, (2) proposed table split strategy with rationale, (3) event array storage estimate with SSD feasibility verdict, (4) full census of all 70 map_foreign_to_english_mapping.json files with cross-file consistency assessment and proposed DDL."
   halt_predicate: "read_json_auto cannot parse any sample file, OR batch ingestion of a single directory fails."
 thesis_mapping:

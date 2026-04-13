@@ -36,6 +36,7 @@ import json
 import logging
 from pathlib import Path
 
+from rts_predict.common.json_utils import build_column_list, build_schema_table
 from rts_predict.common.parquet_utils import discover_parquet_schema, discover_parquet_schemas, discover_csv_schema, discover_csv_schemas
 from rts_predict.common.notebook_utils import get_reports_dir
 from rts_predict.games.aoe2.config import (
@@ -68,7 +69,7 @@ with PRIOR_ARTIFACT.open() as fh:
     inventory = json.load(fh)
 
 subdir_counts = {sd["name"]: sd["file_count"] for sd in inventory["subdirs"]}
-logger.info("Subdirectories: %s", subdir_counts)
+print(f"Subdirectories: {subdir_counts}")
 
 # %% [markdown]
 # ## Cell 3 — File selection (full census for all file types)
@@ -85,10 +86,10 @@ ratings_csv_files = sorted(
 leaderboard_file = AOE2COMPANION_RAW_LEADERBOARDS_DIR / "leaderboard.parquet"
 profile_file = AOE2COMPANION_RAW_PROFILES_DIR / "profile.parquet"
 
-logger.info("matches Parquet files: %d", len(matches_parquet_files))
-logger.info("ratings CSV files: %d", len(ratings_csv_files))
-logger.info("leaderboard.parquet exists: %s", leaderboard_file.exists())
-logger.info("profile.parquet exists: %s", profile_file.exists())
+print(f"matches Parquet files: {len(matches_parquet_files)}")
+print(f"ratings CSV files: {len(ratings_csv_files)}")
+print(f"leaderboard.parquet exists: {leaderboard_file.exists()}")
+print(f"profile.parquet exists: {profile_file.exists()}")
 
 # %% [markdown]
 # ## Cell 4 — Schema discovery
@@ -98,34 +99,32 @@ logger.info("profile.parquet exists: %s", profile_file.exists())
 # Singletons: `discover_parquet_schema()`.
 
 # %%
-logger.info("Running discover_parquet_schemas() on %d matches files...", len(matches_parquet_files))
+print(f"Running discover_parquet_schemas() on {len(matches_parquet_files)} matches files...")
 matches_result = discover_parquet_schemas(matches_parquet_files)
-logger.info(
-    "matches: all_same=%s, files_checked=%d, variant_cols=%s",
-    matches_result["all_files_same_schema"],
-    matches_result["files_checked"],
-    matches_result["variant_columns"],
+print(
+    f"matches: all_same={matches_result['all_files_same_schema']}, "
+    f"files_checked={matches_result['files_checked']}, "
+    f"variant_cols={matches_result['variant_columns']}"
 )
 
 # %%
-logger.info("Running discover_csv_schemas() on %d ratings files...", len(ratings_csv_files))
+print(f"Running discover_csv_schemas() on {len(ratings_csv_files)} ratings files...")
 ratings_result = discover_csv_schemas(ratings_csv_files, sample_rows=50)
 ratings_schemas = ratings_result["schemas"]
 ratings_all_same = ratings_result["all_files_same_schema"]
 ratings_variant_cols: list[str] = ratings_result["variant_columns"]
 
-logger.info(
-    "ratings CSV files processed: %d, all_same=%s, variant_cols=%s",
-    ratings_result["files_checked"],
-    ratings_all_same,
-    ratings_variant_cols[:5],
+print(
+    f"ratings CSV files processed: {ratings_result['files_checked']}, "
+    f"all_same={ratings_all_same}, "
+    f"variant_cols={ratings_variant_cols[:5]}"
 )
 
 # %%
 leaderboard_schema = discover_parquet_schema(leaderboard_file) if leaderboard_file.exists() else {}
 profile_schema = discover_parquet_schema(profile_file) if profile_file.exists() else {}
-logger.info("leaderboard columns: %d", leaderboard_schema.get("total_columns", 0))
-logger.info("profile columns: %d", profile_schema.get("total_columns", 0))
+print(f"leaderboard columns: {leaderboard_schema.get('total_columns', 0)}")
+print(f"profile columns: {profile_schema.get('total_columns', 0)}")
 
 # %% [markdown]
 # ## Cell 5 — Schema consistency check (summary)
@@ -134,24 +133,13 @@ logger.info("profile columns: %d", profile_schema.get("total_columns", 0))
 matches_representative = matches_result["schemas"][0] if matches_result["schemas"] else {}
 ratings_representative = ratings_schemas[0] if ratings_schemas else {}
 
-logger.info("matches representative schema columns: %d", matches_representative.get("total_columns", 0))
-logger.info("ratings representative schema columns: %d", ratings_representative.get("total_columns", 0))
+print(f"matches representative schema columns: {matches_representative.get('total_columns', 0)}")
+print(f"ratings representative schema columns: {ratings_representative.get('total_columns', 0)}")
 
 # %% [markdown]
 # ## Cell 6 — Write JSON artifact
 
 # %%
-def build_column_list(schema_dict: dict, col_type_key: str = "arrow_type") -> list[dict]:
-    return [
-        {
-            "name": c["name"],
-            "physical_type": c.get(col_type_key, c.get("inferred_type", "")),
-            "nullable": c.get("nullable", False),
-        }
-        for c in schema_dict.get("columns", [])
-    ]
-
-
 artifact = {
     "step": "01_01_02",
     "dataset": "aoe2companion",
@@ -238,16 +226,6 @@ logger.info("Wrote JSON artifact: %s", out_json)
 # ## Cell 7 — Write Markdown artifact
 
 # %%
-def build_schema_table(columns: list[dict], type_key: str = "physical_type") -> list[str]:
-    lines = [
-        "| Column | Type | Nullable |",
-        "|--------|------|----------|",
-    ]
-    for c in columns:
-        lines.append(f"| `{c['name']}` | {c.get(type_key, '')} | {c.get('nullable', '')} |")
-    return lines
-
-
 md_lines = [
     "# Step 01_01_02 — Schema Discovery: aoe2companion",
     "",

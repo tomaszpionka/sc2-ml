@@ -59,10 +59,10 @@ logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 # %%
 result = inventory_directory(RAW_DIR)
 
-logger.info("Total files: %d", result.total_files)
-logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
-logger.info("Subdirectories: %d", len(result.subdirs))
-logger.info("Files at root: %d", len(result.files_at_root))
+print(f"Total files: {result.total_files}")
+print(f"Total size: {result.total_bytes / (1024 * 1024):.2f} MB")
+print(f"Subdirectories: {len(result.subdirs)}")
+print(f"Files at root: {len(result.files_at_root)}")
 
 # %% [markdown]
 # ### Top-level inventory
@@ -85,8 +85,7 @@ for sd in result.subdirs:
 
 file_counts = [sd.file_count for sd in result.subdirs]
 if file_counts:
-    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
-                min(file_counts), max(file_counts), statistics.median(file_counts))
+    print(f"Files per subdir — min: {min(file_counts)}, max: {max(file_counts)}, median: {statistics.median(file_counts):.1f}")
 
 # %% [markdown]
 # ### Per-subdirectory file counts
@@ -135,8 +134,7 @@ for sd in result.subdirs:
             "week_count": len(weeks),
             "gaps": gaps,
         }
-        logger.info("Subdir %s: %s to %s (%d weeks, %d gaps)",
-                     sd.name, starts[0], ends[-1], len(weeks), len(gaps))
+        print(f"Subdir {sd.name}: {starts[0]} to {ends[-1]} ({len(weeks)} weeks, {len(gaps)} gaps)")
 
 # %% [markdown]
 # ### Weekly date range and gap analysis
@@ -170,8 +168,7 @@ for name_a in subdir_names:
             }
 
 for pair, info in paired_report.items():
-    logger.info("Pair %s: count_match=%s, date_range_match=%s",
-                pair, info["count_match"], info["date_range_match"])
+    print(f"Pair {pair}: count_match={info['count_match']}, date_range_match={info['date_range_match']}")
 
 # %% [markdown]
 # ### Paired directory comparison
@@ -188,9 +185,9 @@ for pair, info in paired_report.items():
 all_files = result.files_at_root + [f for sd in result.subdirs for f in sd.files]
 patterns = summarize_filename_patterns(all_files)
 
-logger.info("Total files scanned for patterns: %d", len(all_files))
+print(f"Total files scanned for patterns: {len(all_files)}")
 for pattern, count in patterns.items():
-    logger.info("  %s: %d", pattern, count)
+    print(f"  {pattern}: {count}")
 
 # %% [markdown]
 # ### Filename pattern summary

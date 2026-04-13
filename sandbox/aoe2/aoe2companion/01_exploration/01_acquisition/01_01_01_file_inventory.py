@@ -9,7 +9,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -58,10 +58,10 @@ logger.info("Artifacts directory: %s", ARTIFACTS_DIR)
 # %%
 result = inventory_directory(RAW_DIR)
 
-logger.info("Total files: %d", result.total_files)
-logger.info("Total size: %.2f MB", result.total_bytes / (1024 * 1024))
-logger.info("Subdirectories: %d", len(result.subdirs))
-logger.info("Files at root: %d", len(result.files_at_root))
+print(f"Total files: {result.total_files}")
+print(f"Total size: {result.total_bytes / (1024 * 1024):.2f} MB")
+print(f"Subdirectories: {len(result.subdirs)}")
+print(f"Files at root: {len(result.files_at_root)}")
 
 # %% [markdown]
 # ### Top-level inventory
@@ -84,8 +84,7 @@ for sd in result.subdirs:
 
 file_counts = [sd.file_count for sd in result.subdirs]
 if file_counts:
-    logger.info("Files per subdir — min: %d, max: %d, median: %.1f",
-                min(file_counts), max(file_counts), statistics.median(file_counts))
+    print(f"Files per subdir — min: {min(file_counts)}, max: {max(file_counts)}, median: {statistics.median(file_counts):.1f}")
 
 # %% [markdown]
 # ### Per-subdirectory file counts
@@ -128,11 +127,9 @@ for sd in result.subdirs:
             "count": len(dates_found),
             "gaps": gaps,
         }
-        logger.info("Subdir %s: %s to %s (%d files, %d gaps)",
-                     sd.name, dates_found[0], dates_found[-1],
-                     len(dates_found), len(gaps))
+        print(f"Subdir {sd.name}: {dates_found[0]} to {dates_found[-1]} ({len(dates_found)} files, {len(gaps)} gaps)")
     else:
-        logger.info("Subdir %s: no dates extracted from filenames", sd.name)
+        print(f"Subdir {sd.name}: no dates extracted from filenames")
 
 # %% [markdown]
 # ### Date range and gap analysis
@@ -149,9 +146,9 @@ for sd in result.subdirs:
 all_files = result.files_at_root + [f for sd in result.subdirs for f in sd.files]
 patterns = summarize_filename_patterns(all_files)
 
-logger.info("Total files scanned for patterns: %d", len(all_files))
+print(f"Total files scanned for patterns: {len(all_files)}")
 for pattern, count in patterns.items():
-    logger.info("  %s: %d", pattern, count)
+    print(f"  {pattern}: {count}")
 
 # %% [markdown]
 # ### Filename pattern summary

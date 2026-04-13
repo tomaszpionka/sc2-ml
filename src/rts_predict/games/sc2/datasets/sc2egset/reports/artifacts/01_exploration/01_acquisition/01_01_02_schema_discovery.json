@@ -7506,8 +7506,7 @@
       },
       "consistency": {
         "all_files_same_schema": true,
-        "variant_directories": [],
-        "note": "For JSON files compared per-directory, schema consistency is reported at the directory level rather than column level."
+        "variant_directories": []
       }
     }
   ]

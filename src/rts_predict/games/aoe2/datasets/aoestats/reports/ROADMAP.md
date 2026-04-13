@@ -68,13 +68,13 @@ Pipeline Sections per `docs/PHASES.md`:
 ```yaml
 step_number: "01_01_01"
 name: "File Inventory"
-description: "Walk the aoestats raw directory, count files, measure sizes, group by subdirectory."
+description: "Establish a complete filesystem-level census of the aoestats raw data. This grounds all subsequent steps in verified file counts, sizes, date ranges, and directory structure — including alignment between paired directories (matches vs players)."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "aoestats"
-question: "What files exist on disk, how many are there, and how are they organized?"
-method: "Call inventory_directory() on the raw directory. Report totals, per-subdirectory breakdown, extension distribution. Extract weekly date ranges from filenames using regex. Compare paired directories (matches vs players) for count and date-range alignment."
+question: "How many files exist in each subdirectory, what weekly date range do they span, and are the matches and players file series temporally aligned?"
+method: "Full census of the raw directory tree. Count files, measure sizes, group by subdirectory. Extract weekly dates from filenames and compare paired directories for count and date-range alignment."
 stratification: "By subdirectory (matches, players, overview)."
 predecessors: "none — independent"
 notebook_path: "sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py"
@@ -86,12 +86,12 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md"
-reproducibility: "All counts produced by inventory_directory() from rts_predict.common.inventory. Code and output are in the paired notebook."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "Inventory counts are produced by code in the notebook, saved alongside the report."
+    how_upheld: "Inventory counts produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "No thresholds used — pure counting."
+    how_upheld: "Full census — no sampling or thresholds."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json and .md exist and are non-empty."
   continue_predicate: "Inventory artifacts exist on disk."
@@ -106,13 +106,13 @@ research_log_entry: "Required on completion."
 ```yaml
 step_number: "01_01_02"
 name: "Schema Discovery"
-description: "Read Parquet metadata from aoestats matches and players files. Read overview.json structure. Check schema consistency across the temporal range and compare matches/players schemas for structural overlap."
+description: "Map the column-level structure of all three aoestats file types (Parquet matches, Parquet players, JSON overview). Determine whether schemas are consistent across the weekly temporal range and whether matches and players share structurally overlapping columns."
 phase: "01 — Data Exploration"
 pipeline_section: "01_01 — Data Acquisition & Source Inventory"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 1"
 dataset: "aoestats"
-question: "What columns exist in each file type, what are their data types, is the schema consistent across the temporal range, and do matches and players share structurally overlapping columns?"
-method: "Full census: pyarrow.parquet.read_schema() on all 172 matches + 171 players files (metadata-only). discover_json_schema() on overview.json (1 file). Compare schemas within each subdirectory for consistency. Cross-compare matches and players column names for structural overlap (raw string comparison). Report column catalogs, Arrow types, consistency verdicts, and column name overlap. No DuckDB type proposals."
+question: "What columns exist in each file type, what are their data types, does the schema remain stable across the weekly temporal range, and do matches and players share overlapping column names?"
+method: "Full census of Parquet file metadata for matches (172 files) and players (171 files). Read overview.json structure. Compare schemas within each subdirectory for consistency and cross-compare matches/players for structural overlap. Report column catalogs, types, and consistency verdicts. No DuckDB type proposals — deferred to ingestion design."
 stratification: "By subdirectory. Full census within each."
 predecessors:
   - "01_01_01"
@@ -128,14 +128,14 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
   report: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.md"
-reproducibility: "Parquet schemas via pyarrow.parquet.read_schema() (full census on all files). JSON schema via discover_json_schema() (census, 1 file). Code and output in the paired notebook per Invariant #6."
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
     how_upheld: "Schema profiles produced by code in the notebook, saved alongside the report."
   - number: "7"
-    how_upheld: "Full census for Parquet (metadata-only, zero cost) and JSON (1 file). Census eliminates sample-size justification requirement."
+    how_upheld: "Full census — no sampling or thresholds."
   - number: "9"
-    how_upheld: "Conclusions limited to column-level structural observations. Cross-subdirectory comparison is structural (column name overlap as raw string comparison), not content-level. No DuckDB type proposals."
+    how_upheld: "Conclusions limited to column-level structural observations — no value distributions or DuckDB type proposals."
 gate:
   artifact_check: "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json and .md exist and are non-empty."
   continue_predicate: "Schema artifacts exist and report a consistency verdict for all subdirectories."
@@ -145,28 +145,26 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
-### Step 01_02_01 — DuckDB Ingestion
+### Step 01_02_01 — DuckDB Pre-Ingestion
 
 ```yaml
 step_number: "01_02_01"
-name: "DuckDB Ingestion"
-description: "Load aoestats Parquet files into DuckDB with union_by_name=true. Pre-ingestion variant column census determines the actual type distribution of the 7 variant columns identified by 01_01_02 across all source files. Smoke test confirms DuckDB auto-promotion handles each variant pattern correctly. Load overview.json as reference table. Document missing-week asymmetry (171 vs 172 files)."
+name: "DuckDB Pre-Ingestion"
+description: "Determine how aoestats's variant-typed columns (7 columns whose Parquet type differs across weekly files) behave under DuckDB type promotion, and whether NULL patterns in the ingested tables match the file-level column presence/absence census."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
 dataset: "aoestats"
-question: "What are the actual type distributions of the 7 variant columns across all source files, can DuckDB union_by_name handle them correctly via auto-promotion (preserving native types rather than forcing VARCHAR), and do post-ingestion NULL patterns for presence/absence columns match the file-level census?"
-method: "PRE-INGESTION VARIANT CENSUS: Run pyarrow.parquet.read_schema on ALL 172 matches + 171 players files. For each of the 7 variant columns identified by 01_01_02, record the type distribution across files (e.g., how many files have int64 vs double for a given column, how many have null-typed columns). This census is the authoritative source for variant column patterns — its results determine the ingestion strategy and provide the baseline for post-ingestion NULL verification. Smoke test and pre-ingestion functions live in pre_ingestion.py. SMOKE TEST: ingest 3-5 files from each subdirectory (earliest, middle, latest) into temp tables with union_by_name=true and filename=true. Verify DESCRIBE: variant columns have correct promoted types (not VARCHAR), duration/irl_duration are INTERVAL, column counts correct (matches_raw: 17+1 filename=18, players_raw: 13+1=14). FULL INGESTION: CREATE TABLE matches_raw AS ...; CREATE TABLE players_raw AS ...; CREATE TABLE overviews_raw AS SELECT * FROM read_json_auto('raw/overview/overview.json', filename=true) — produces table with filename provenance column. POST-INGESTION: DESCRIBE ALL 3 tables. Verify duration/irl_duration → INTERVAL, test EXTRACT(EPOCH FROM duration) for reasonable values. For each variant column: SELECT COUNT(*) FILTER (WHERE col IS NULL) — NULL counts must correspond to file-level absence pattern from census. Note on profile_id: if promoted to DOUBLE from mixed int64/double sources, player IDs as float64 may cause join precision issues for IDs > 2^53; flag for EDA investigation, do not alter at bronze layer. Investigate missing-week asymmetry (171 players vs 172 matches files)."
+question: "What does the raw data look like before we commit to an ingestion strategy — are there type promotion traps for variant columns, interval-type handling issues, or NULL patterns that need handling?"
+method: "Full census of Parquet metadata across all weekly files to establish per-column type distributions for the 7 variant columns. Smoke-test temporally-stratified file samples into in-memory DuckDB. DESCRIBE schemas, verify type promotions and interval handling, and cross-check NULL counts against file-level column presence. Investigate the matches/players file-count asymmetry (172 vs 171). Produce a design artifact for the full-ingestion step."
 stratification: "By subdirectory (matches, players, overview)."
 predecessors:
   - "01_01_01"
   - "01_01_02"
-notebook_path: "sandbox/aoe2/aoestats/01_exploration/01_eda/01_02_01_duckdb_ingestion.py"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.py"
 inputs:
   duckdb_tables:
-    - "matches_raw"
-    - "players_raw"
-    - "overviews_raw"
+    - "none — investigation uses temporary in-memory DB"
   prior_artifacts:
     - "artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.json"
     - "artifacts/01_exploration/01_acquisition/01_01_02_schema_discovery.json"
@@ -175,20 +173,20 @@ inputs:
     - "DuckDB 1.5.1 (pinned in pyproject.toml)"
 outputs:
   data_artifacts:
-    - "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json"
-  report: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.md"
-reproducibility: "Pre-ingestion pyarrow census code and DuckDB SQL in the notebook. Variant column type distributions established by full pyarrow census in the notebook. NULL counts verified against file-level absence pattern from same census. All code and output paired per Invariant #6. DuckDB version 1.5.1 noted."
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  report: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.md"
+reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "6"
-    how_upheld: "DDL, ingestion SQL, census code, DESCRIBE output, and NULL counts in the notebook."
+    how_upheld: "All census code, smoke-test SQL, DESCRIBE output, and NULL counts in the notebook."
   - number: "7"
-    how_upheld: "No type-forcing thresholds — DuckDB auto-promotion is deterministic. Variant column type distributions from full pyarrow census (not sampled)."
+    how_upheld: "Variant column type distributions from full Parquet metadata census."
   - number: "9"
-    how_upheld: "Conclusions limited to: tables created, types assigned (including auto-promotion results), row counts, NULL patterns matching file-level census. profile_id precision flag is structural, not semantic."
+    how_upheld: "Conclusions limited to type mappings, NULL patterns, and file-count reconciliation — no content profiling."
 gate:
-  artifact_check: "artifacts/01_exploration/01_eda/01_02_01_duckdb_ingestion.json and .md exist and are non-empty."
-  continue_predicate: "DuckDB tables exist with non-zero row counts AND full DESCRIBE output recorded for all 3 tables AND variant columns have expected promoted types (raw_match_type: DOUBLE, started_timestamp: TIMESTAMP, profile_id: DOUBLE, opening: VARCHAR, age uptimes: DOUBLE) AND duration/irl_duration are INTERVAL AND NULL counts for presence/absence columns match file census AND smoke test passed."
-  halt_predicate: "DuckDB cannot read Parquet files with union_by_name, OR smoke test shows unexpected types (e.g., variant column auto-widened to VARCHAR when numeric promotion was expected), OR overviews_raw fails to parse from overview.json."
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json and .md exist and are non-empty."
+  continue_predicate: "Design artifact documents DuckDB types for all 3 table types AND variant columns have expected promoted types AND NULL patterns match file-level census AND smoke test passed."
+  halt_predicate: "DuckDB cannot read Parquet files with union_by_name, OR smoke test reveals unresolvable type conflicts."
 thesis_mapping:
   - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."

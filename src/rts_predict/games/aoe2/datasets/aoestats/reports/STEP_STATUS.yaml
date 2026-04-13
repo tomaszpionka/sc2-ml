@@ -25,7 +25,7 @@ steps:
     status: complete
     completed_at: "2026-04-12"
   "01_02_01":
-    name: "DuckDB Ingestion"
+    name: "DuckDB Pre-Ingestion"
     pipeline_section: "01_02"
     status: complete
     completed_at: "2026-04-13"

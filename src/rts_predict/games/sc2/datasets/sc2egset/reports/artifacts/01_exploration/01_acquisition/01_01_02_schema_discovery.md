@@ -250,4 +250,3 @@ ToonPlayerDescMap.1-S2-1-10463877.region
 - No DuckDB type proposals in this step (deferred to ingestion design).
 - Sample values in the JSON artifact are for type-inference validation only.
 - Step scope: `content` (file headers/schemas/sample root keys).
-- For JSON files compared per-directory, schema consistency is reported at the directory level rather than column level. The JSON artifact uses `variant_directories` (not `variant_columns`) to reflect this deviation from the Parquet/CSV consistency key name.

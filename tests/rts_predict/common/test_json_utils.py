@@ -5,6 +5,9 @@ from pathlib import Path
 
 from rts_predict.common.json_utils import (
     _propose_duckdb_type,
+    build_column_list,
+    build_schema_table,
+    classify_value,
     discover_json_schema,
     get_json_keypaths,
 )
@@ -181,6 +184,113 @@ class TestDiscoverJsonSchema:
         f.write_text(json.dumps({"a": {"x": 1}}))
         result = discover_json_schema([f])
         assert result[0].sample_values == ["<dict>"]
+
+
+class TestClassifyValue:
+    """Tests for classify_value()."""
+
+    def test_none(self) -> None:
+        assert classify_value(None) == "null"
+
+    def test_bool(self) -> None:
+        assert classify_value(True) == "bool"
+        assert classify_value(False) == "bool"
+
+    def test_int(self) -> None:
+        assert classify_value(42) == "int"
+
+    def test_float(self) -> None:
+        assert classify_value(3.14) == "float"
+
+    def test_str(self) -> None:
+        assert classify_value("hello") == "str"
+
+    def test_dict(self) -> None:
+        assert classify_value({"a": 1, "b": 2}) == "struct(2 keys)"
+
+    def test_empty_dict(self) -> None:
+        assert classify_value({}) == "struct(0 keys)"
+
+    def test_list_of_ints(self) -> None:
+        assert classify_value([1, 2, 3]) == "list(int)"
+
+    def test_list_of_dicts(self) -> None:
+        assert classify_value([{"a": 1}]) == "list(struct(1 keys))"
+
+    def test_empty_list(self) -> None:
+        assert classify_value([]) == "list(empty)"
+
+    def test_nested_list(self) -> None:
+        assert classify_value([[1, 2]]) == "list(list(int))"
+
+    def test_bool_before_int(self) -> None:
+        """bool is a subclass of int in Python — must be checked first."""
+        assert classify_value(True) == "bool"
+        assert classify_value(1) == "int"
+
+
+class TestBuildColumnList:
+    """Tests for build_column_list()."""
+
+    def test_basic(self) -> None:
+        schema = {
+            "columns": [
+                {"name": "id", "arrow_type": "int64", "nullable": False},
+                {"name": "name", "arrow_type": "string", "nullable": True},
+            ]
+        }
+        result = build_column_list(schema)
+        assert len(result) == 2
+        assert result[0] == {"name": "id", "physical_type": "int64", "nullable": False}
+        assert result[1] == {"name": "name", "physical_type": "string", "nullable": True}
+
+    def test_custom_type_key(self) -> None:
+        schema = {
+            "columns": [
+                {"name": "x", "inferred_type": "VARCHAR"},
+            ]
+        }
+        result = build_column_list(schema, col_type_key="inferred_type")
+        assert result[0]["physical_type"] == "VARCHAR"
+
+    def test_fallback_to_inferred_type(self) -> None:
+        schema = {
+            "columns": [
+                {"name": "x", "inferred_type": "BIGINT"},
+            ]
+        }
+        result = build_column_list(schema)
+        assert result[0]["physical_type"] == "BIGINT"
+
+    def test_empty_columns(self) -> None:
+        assert build_column_list({"columns": []}) == []
+
+    def test_missing_columns_key(self) -> None:
+        assert build_column_list({}) == []
+
+
+class TestBuildSchemaTable:
+    """Tests for build_schema_table()."""
+
+    def test_basic(self) -> None:
+        columns = [
+            {"name": "id", "physical_type": "int64", "nullable": False},
+            {"name": "val", "physical_type": "string", "nullable": True},
+        ]
+        lines = build_schema_table(columns)
+        assert lines[0] == "| Column | Type | Nullable |"
+        assert lines[1] == "|--------|------|----------|"
+        assert lines[2] == "| `id` | int64 | False |"
+        assert lines[3] == "| `val` | string | True |"
+
+    def test_custom_type_key(self) -> None:
+        columns = [{"name": "x", "arrow_type": "float64"}]
+        lines = build_schema_table(columns, type_key="arrow_type")
+        assert "float64" in lines[2]
+
+    def test_empty_columns(self) -> None:
+        lines = build_schema_table([])
+        assert len(lines) == 2  # header + separator only
 
 
 class TestGetJsonKeypaths:

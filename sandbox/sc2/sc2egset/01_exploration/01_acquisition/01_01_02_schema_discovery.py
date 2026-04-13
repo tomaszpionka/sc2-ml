@@ -9,7 +9,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -36,7 +36,7 @@ import json
 import logging
 from pathlib import Path
 
-from rts_predict.common.json_utils import discover_json_schema, get_json_keypaths
+from rts_predict.common.json_utils import classify_value, discover_json_schema, get_json_keypaths
 from rts_predict.common.notebook_utils import get_reports_dir
 from rts_predict.games.sc2.config import REPLAYS_SOURCE_DIR
 
@@ -64,8 +64,8 @@ with PRIOR_ARTIFACT.open() as fh:
     inventory = json.load(fh)
 
 top_level_dirs = [d["name"] for d in inventory["top_level_dirs"]]
-logger.info("Loaded %d top-level directories from prior artifact", len(top_level_dirs))
-logger.info("First 3 dirs: %s", top_level_dirs[:3])
+print(f"Loaded {len(top_level_dirs)} top-level directories from prior artifact")
+print(f"First 3 dirs: {top_level_dirs[:3]}")
 
 # %% [markdown]
 # ## Cell 3 — Sampling / file selection (deterministic)
@@ -89,8 +89,8 @@ for dir_name in sorted(top_level_dirs):
     root_schema_files.append(json_files[0])
     keypath_files.extend(json_files[:3])
 
-logger.info("root_schema_files selected: %d", len(root_schema_files))
-logger.info("keypath_files selected: %d", len(keypath_files))
+print(f"root_schema_files selected: {len(root_schema_files)}")
+print(f"keypath_files selected: {len(keypath_files)}")
 
 # %% [markdown]
 # ## Cell 4 — Schema discovery
@@ -99,12 +99,12 @@ logger.info("keypath_files selected: %d", len(keypath_files))
 # Full keypath enumeration via `get_json_keypaths()` on the keypath sample.
 
 # %%
-logger.info("Running discover_json_schema() on %d files...", len(root_schema_files))
+print(f"Running discover_json_schema() on {len(root_schema_files)} files...")
 key_profiles = discover_json_schema(root_schema_files, max_sample_values=3)
-logger.info("Root-level keys discovered: %d", len(key_profiles))
+print(f"Root-level keys discovered: {len(key_profiles)}")
 
 # %%
-logger.info("Running get_json_keypaths() on %d files...", len(keypath_files))
+print(f"Running get_json_keypaths() on {len(keypath_files)} files...")
 all_keypaths: set[str] = set()
 keypath_parse_errors = 0
 for fp in keypath_files:
@@ -116,7 +116,108 @@ for fp in keypath_files:
         logger.warning("Keypath parse error for %s: %s", fp, exc)
 
 sorted_keypaths = sorted(all_keypaths)
-logger.info("Unique keypaths discovered: %d (parse errors: %d)", len(sorted_keypaths), keypath_parse_errors)
+print(f"Unique keypaths discovered: {len(sorted_keypaths)} (parse errors: {keypath_parse_errors})")
+
+# %% [markdown]
+# ## Cell 4b — Event array deep structure
+#
+# The three event arrays (`messageEvents`, `gameEvents`, `trackerEvents`)
+# contain arrays of heterogeneous structs. Different event types carry
+# different fields. This cell examines:
+# - Unique event types (by `evtTypeName` / `id`)
+# - Per-type struct shapes (which keys are present)
+# - Nested sub-structures (dicts, arrays of dicts) inside events
+#
+# This is critical for ingestion strategy: do we need per-event-type
+# tables, or can a single wide table with NULLs work?
+
+# %%
+from collections import Counter
+
+EVENT_KEYS = ["messageEvents", "gameEvents", "trackerEvents"]
+
+# Sample 5 files across the size distribution
+sample_indices = [0, len(root_schema_files) // 4, len(root_schema_files) // 2,
+                  3 * len(root_schema_files) // 4, -1]
+event_sample_files = [root_schema_files[i] for i in sample_indices]
+print(f"Event deep-structure sample: {len(event_sample_files)} files")
+
+
+# %%
+event_deep_structure: dict[str, dict] = {}
+
+for event_key in EVENT_KEYS:
+    print(f"\n{'='*70}")
+    print(f"  {event_key}")
+    print(f"{'='*70}")
+
+    type_counter: Counter[str] = Counter()
+    type_shapes: dict[str, set[str]] = {}        # event_type -> union of all keys
+    type_field_types: dict[str, dict[str, set[str]]] = {}  # event_type -> field -> {types}
+    total_events = 0
+
+    for fp in event_sample_files:
+        with fp.open() as fh:
+            data = json.load(fh)
+        events = data.get(event_key, [])
+        total_events += len(events)
+
+        for evt in events:
+            if not isinstance(evt, dict):
+                continue
+            evt_type = evt.get("evtTypeName", evt.get("id", "UNKNOWN"))
+            if isinstance(evt_type, int):
+                evt_type = f"id={evt_type}"
+            type_counter[evt_type] += 1
+
+            if evt_type not in type_shapes:
+                type_shapes[evt_type] = set()
+                type_field_types[evt_type] = {}
+            type_shapes[evt_type].update(evt.keys())
+
+            for k, v in evt.items():
+                tag = classify_value(v)
+                if k not in type_field_types[evt_type]:
+                    type_field_types[evt_type][k] = set()
+                type_field_types[evt_type][k].add(tag)
+
+    print(f"  Total events across {len(event_sample_files)} files: {total_events:,}")
+    print(f"  Unique event types: {len(type_counter)}")
+    print()
+
+    # Build serializable summary for artifact
+    event_types_summary = []
+    for evt_type, count in type_counter.most_common():
+        shape = sorted(type_shapes[evt_type])
+        field_types = {
+            f: sorted(type_field_types[evt_type][f]) for f in shape
+        }
+        nested = [
+            f for f in shape
+            if any("struct" in t or "list" in t for t in type_field_types[evt_type].get(f, set()))
+        ]
+        event_types_summary.append({
+            "event_type": evt_type,
+            "count": count,
+            "fields": shape,
+            "field_count": len(shape),
+            "field_types": field_types,
+            "nested_fields": nested,
+        })
+
+        print(f"  [{count:>7,}x] {evt_type}  ({len(shape)} fields)")
+        if nested:
+            print(f"           nested: {nested}")
+            for nf in nested:
+                print(f"             {nf}: {type_field_types[evt_type][nf]}")
+        print()
+
+    event_deep_structure[event_key] = {
+        "total_events_sampled": total_events,
+        "files_sampled": len(event_sample_files),
+        "unique_event_types": len(type_counter),
+        "event_types": event_types_summary,
+    }
 
 # %% [markdown]
 # ## Cell 5 — Schema consistency check
@@ -147,13 +248,9 @@ else:
     all_files_same_schema = True
     variant_directories = []
 
-logger.info(
-    "Schema consistency: all_same=%s, variant_directories_count=%d",
-    all_files_same_schema,
-    len(variant_directories),
-)
+print(f"Schema consistency: all_same={all_files_same_schema}, variant_directories_count={len(variant_directories)}")
 if variant_directories:
-    logger.info("Variant directories: %s", variant_directories[:10])
+    print(f"Variant directories: {variant_directories[:10]}")
 
 # %% [markdown]
 # ## Cell 6 — Write JSON artifact
@@ -201,6 +298,7 @@ artifact = {
                 "all_files_same_schema": all_files_same_schema,
                 "variant_directories": variant_directories if not all_files_same_schema else [],
             },
+            "event_array_deep_structure": event_deep_structure,
         }
     ],
 }
@@ -273,11 +371,36 @@ if not all_files_same_schema:
     md_lines.append("")
 
 md_lines += [
+    "## Event array deep structure",
+    "",
+    f"Sampled {len(event_sample_files)} files across the size distribution.",
+    "",
+]
+for ek in EVENT_KEYS:
+    ds = event_deep_structure[ek]
+    md_lines += [
+        f"### {ek}",
+        "",
+        f"- Total events sampled: {ds['total_events_sampled']:,}",
+        f"- Unique event types: {ds['unique_event_types']}",
+        "",
+        "| Event type | Count | Fields | Nested fields |",
+        "|------------|-------|--------|---------------|",
+    ]
+    for et in ds["event_types"]:
+        nested_str = ", ".join(et["nested_fields"]) if et["nested_fields"] else "none"
+        md_lines.append(
+            f"| {et['event_type']} | {et['count']:,} | {et['field_count']} | {nested_str} |"
+        )
+    md_lines.append("")
+
+md_lines += [
     "## Notes",
     "",
     "- No DuckDB type proposals in this step (deferred to ingestion design).",
     "- Sample values in the JSON artifact are for type-inference validation only.",
     "- Step scope: `content` (file headers/schemas/sample root keys).",
+    "- Event deep structure in JSON artifact has full per-field type breakdown.",
 ]
 
 out_md = ARTIFACTS_DIR / "01_01_02_schema_discovery.md"
