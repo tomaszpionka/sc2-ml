@@ -1,0 +1,3033 @@
+{
+  "step": "01_02_04",
+  "dataset": "sc2egset",
+  "db_memory_footprint_bytes": 12333056,
+  "null_census": {
+    "replay_players_raw": {
+      "total_rows": 44817,
+      "columns": [
+        {
+          "column": "filename",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "highestLeague",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "color_g",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "color_b",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "color_a",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "startLocY",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "startLocX",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "startDir",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "supplyCappedPercent",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "SQ",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "APM",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "result",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "realm",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "toon_id",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "region",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "handicap",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "selectedRace",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "race",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "MMR",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "clanTag",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "isInClan",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "userID",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "playerID",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "nickname",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "color_r",
+          "null_count": 0,
+          "null_pct": 0.0
+        }
+      ]
+    },
+    "replays_meta_raw_filename": {
+      "total_rows": 22390,
+      "filename_null": 0,
+      "filename_null_pct": 0.0
+    },
+    "struct_flat": {
+      "total_rows": 22390,
+      "columns": [
+        {
+          "column": "time_utc",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "game_speed_init",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "messageEventsErr",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "gameEventsErr",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "map_size_y",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "map_size_x",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "is_blizzard_map_init",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "is_blizzard_map",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "game_speed",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "elapsed_game_loops",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "max_players",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "map_name",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "game_version_meta",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "data_build",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "base_build",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "game_version_header",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "trackerEvtsErr",
+          "null_count": 0,
+          "null_pct": 0.0
+        }
+      ]
+    }
+  },
+  "result_distribution": [
+    {
+      "result": "Loss",
+      "cnt": 22409,
+      "pct": 50.0
+    },
+    {
+      "result": "Win",
+      "cnt": 22382,
+      "pct": 49.94
+    },
+    {
+      "result": "Undecided",
+      "cnt": 24,
+      "pct": 0.05
+    },
+    {
+      "result": "Tie",
+      "cnt": 2,
+      "pct": 0.0
+    }
+  ],
+  "non_2p_results": [
+    {
+      "result": "Loss",
+      "cnt": 444
+    },
+    {
+      "result": "Win",
+      "cnt": 417
+    }
+  ],
+  "categorical_profiles": {
+    "race": [
+      {
+        "race": "Prot",
+        "cnt": 16228,
+        "pct": 36.21
+      },
+      {
+        "race": "Zerg",
+        "cnt": 15695,
+        "pct": 35.02
+      },
+      {
+        "race": "Terr",
+        "cnt": 12891,
+        "pct": 28.76
+      },
+      {
+        "race": "BWTe",
+        "cnt": 1,
+        "pct": 0.0
+      },
+      {
+        "race": "BWZe",
+        "cnt": 1,
+        "pct": 0.0
+      },
+      {
+        "race": "BWPr",
+        "cnt": 1,
+        "pct": 0.0
+      }
+    ],
+    "selectedRace": [
+      {
+        "selectedRace": "Prot",
+        "cnt": 15948,
+        "pct": 35.58
+      },
+      {
+        "selectedRace": "Zerg",
+        "cnt": 15123,
+        "pct": 33.74
+      },
+      {
+        "selectedRace": "Terr",
+        "cnt": 12623,
+        "pct": 28.17
+      },
+      {
+        "selectedRace": "",
+        "cnt": 1110,
+        "pct": 2.48
+      },
+      {
+        "selectedRace": "Rand",
+        "cnt": 10,
+        "pct": 0.02
+      },
+      {
+        "selectedRace": "BWTe",
+        "cnt": 1,
+        "pct": 0.0
+      },
+      {
+        "selectedRace": "BWZe",
+        "cnt": 1,
+        "pct": 0.0
+      },
+      {
+        "selectedRace": "BWPr",
+        "cnt": 1,
+        "pct": 0.0
+      }
+    ],
+    "highestLeague": [
+      {
+        "highestLeague": "Unknown",
+        "cnt": 32338,
+        "pct": 72.16
+      },
+      {
+        "highestLeague": "Master",
+        "cnt": 6458,
+        "pct": 14.41
+      },
+      {
+        "highestLeague": "Grandmaster",
+        "cnt": 4745,
+        "pct": 10.59
+      },
+      {
+        "highestLeague": "Diamond",
+        "cnt": 718,
+        "pct": 1.6
+      },
+      {
+        "highestLeague": "Unranked",
+        "cnt": 224,
+        "pct": 0.5
+      },
+      {
+        "highestLeague": "Platinum",
+        "cnt": 131,
+        "pct": 0.29
+      },
+      {
+        "highestLeague": "Gold",
+        "cnt": 119,
+        "pct": 0.27
+      },
+      {
+        "highestLeague": "Bronze",
+        "cnt": 73,
+        "pct": 0.16
+      },
+      {
+        "highestLeague": "Silver",
+        "cnt": 9,
+        "pct": 0.02
+      },
+      {
+        "highestLeague": "",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "region": [
+      {
+        "region": "Europe",
+        "cnt": 21022,
+        "pct": 46.91
+      },
+      {
+        "region": "US",
+        "cnt": 12699,
+        "pct": 28.34
+      },
+      {
+        "region": "Unknown",
+        "cnt": 5748,
+        "pct": 12.83
+      },
+      {
+        "region": "Korea",
+        "cnt": 3604,
+        "pct": 8.04
+      },
+      {
+        "region": "China",
+        "cnt": 1742,
+        "pct": 3.89
+      },
+      {
+        "region": "",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "realm": [
+      {
+        "realm": "Europe",
+        "cnt": 20777,
+        "pct": 46.36
+      },
+      {
+        "realm": "North America",
+        "cnt": 12490,
+        "pct": 27.87
+      },
+      {
+        "realm": "Unknown",
+        "cnt": 5748,
+        "pct": 12.83
+      },
+      {
+        "realm": "Korea",
+        "cnt": 2835,
+        "pct": 6.33
+      },
+      {
+        "realm": "China",
+        "cnt": 1742,
+        "pct": 3.89
+      },
+      {
+        "realm": "Taiwan",
+        "cnt": 769,
+        "pct": 1.72
+      },
+      {
+        "realm": "Russia",
+        "cnt": 245,
+        "pct": 0.55
+      },
+      {
+        "realm": "Latin America",
+        "cnt": 209,
+        "pct": 0.47
+      },
+      {
+        "realm": "",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "game_speed": [
+      {
+        "game_speed": "Faster",
+        "cnt": 22390,
+        "pct": 100.0
+      }
+    ],
+    "game_speed_init": [
+      {
+        "game_speed_init": "Faster",
+        "cnt": 22390,
+        "pct": 100.0
+      }
+    ],
+    "map_name": [
+      {
+        "map_name": "2000 Atmospheres LE",
+        "cnt": 966
+      },
+      {
+        "map_name": "Acid Plant LE",
+        "cnt": 667
+      },
+      {
+        "map_name": "Catalyst LE",
+        "cnt": 586
+      },
+      {
+        "map_name": "Oxide LE",
+        "cnt": 570
+      },
+      {
+        "map_name": "Romanticide LE",
+        "cnt": 568
+      },
+      {
+        "map_name": "Eternal Empire LE",
+        "cnt": 528
+      },
+      {
+        "map_name": "King's Cove LE",
+        "cnt": 509
+      },
+      {
+        "map_name": "Lightshade LE",
+        "cnt": 508
+      },
+      {
+        "map_name": "Kairos Junction LE",
+        "cnt": 496
+      },
+      {
+        "map_name": "Abyssal Reef LE",
+        "cnt": 481
+      },
+      {
+        "map_name": "Ever Dream LE",
+        "cnt": 471
+      },
+      {
+        "map_name": "Lost and Found LE",
+        "cnt": 461
+      },
+      {
+        "map_name": "Jagannatha LE",
+        "cnt": 440
+      },
+      {
+        "map_name": "Deathaura LE",
+        "cnt": 438
+      },
+      {
+        "map_name": "Acropolis LE",
+        "cnt": 419
+      },
+      {
+        "map_name": "Pillars of Gold LE",
+        "cnt": 390
+      },
+      {
+        "map_name": "[ESL] Data-C",
+        "cnt": 387
+      },
+      {
+        "map_name": "Port Aleksander LE",
+        "cnt": 381
+      },
+      {
+        "map_name": "Blackpink LE",
+        "cnt": 370
+      },
+      {
+        "map_name": "Cyber Forest LE",
+        "cnt": 364
+      }
+    ],
+    "game_version_meta": [
+      {
+        "game_version_meta": "5.0.7.84643",
+        "cnt": 2511,
+        "pct": 11.21
+      },
+      {
+        "game_version_meta": "5.0.9.87702",
+        "cnt": 1094,
+        "pct": 4.89
+      },
+      {
+        "game_version_meta": "5.0.8.86383",
+        "cnt": 1071,
+        "pct": 4.78
+      },
+      {
+        "game_version_meta": "5.0.10.88500",
+        "cnt": 988,
+        "pct": 4.41
+      },
+      {
+        "game_version_meta": "4.8.3.72282",
+        "cnt": 933,
+        "pct": 4.17
+      },
+      {
+        "game_version_meta": "5.0.10.89165",
+        "cnt": 865,
+        "pct": 3.86
+      },
+      {
+        "game_version_meta": "5.0.12.91115",
+        "cnt": 859,
+        "pct": 3.84
+      },
+      {
+        "game_version_meta": "5.0.11.90136",
+        "cnt": 820,
+        "pct": 3.66
+      },
+      {
+        "game_version_meta": "5.0.2.81433",
+        "cnt": 799,
+        "pct": 3.57
+      },
+      {
+        "game_version_meta": "4.11.4.78285",
+        "cnt": 795,
+        "pct": 3.55
+      },
+      {
+        "game_version_meta": "4.12.0.80188",
+        "cnt": 783,
+        "pct": 3.5
+      },
+      {
+        "game_version_meta": "4.9.3.75025",
+        "cnt": 765,
+        "pct": 3.42
+      },
+      {
+        "game_version_meta": "4.4.0.65895",
+        "cnt": 753,
+        "pct": 3.36
+      },
+      {
+        "game_version_meta": "4.10.2.76052",
+        "cnt": 601,
+        "pct": 2.68
+      },
+      {
+        "game_version_meta": "4.8.6.73620",
+        "cnt": 540,
+        "pct": 2.41
+      },
+      {
+        "game_version_meta": "4.1.4.61545",
+        "cnt": 482,
+        "pct": 2.15
+      },
+      {
+        "game_version_meta": "5.0.6.83830",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "game_version_meta": "4.2.0.62347",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "game_version_meta": "4.6.0.67926",
+        "cnt": 442,
+        "pct": 1.97
+      },
+      {
+        "game_version_meta": "5.0.13.92174",
+        "cnt": 439,
+        "pct": 1.96
+      },
+      {
+        "game_version_meta": "4.10.4.76811",
+        "cnt": 428,
+        "pct": 1.91
+      },
+      {
+        "game_version_meta": "4.7.1.70326",
+        "cnt": 416,
+        "pct": 1.86
+      },
+      {
+        "game_version_meta": "3.10.1.49957",
+        "cnt": 409,
+        "pct": 1.83
+      },
+      {
+        "game_version_meta": "4.3.2.65384",
+        "cnt": 406,
+        "pct": 1.81
+      },
+      {
+        "game_version_meta": "3.12.0.51702",
+        "cnt": 405,
+        "pct": 1.81
+      },
+      {
+        "game_version_meta": "3.14.0.53644",
+        "cnt": 332,
+        "pct": 1.48
+      },
+      {
+        "game_version_meta": "4.9.2.74741",
+        "cnt": 330,
+        "pct": 1.47
+      },
+      {
+        "game_version_meta": "3.19.1.58600",
+        "cnt": 294,
+        "pct": 1.31
+      },
+      {
+        "game_version_meta": "4.8.2.71663",
+        "cnt": 289,
+        "pct": 1.29
+      },
+      {
+        "game_version_meta": "5.0.5.82893",
+        "cnt": 278,
+        "pct": 1.24
+      },
+      {
+        "game_version_meta": "5.0.11.89720",
+        "cnt": 260,
+        "pct": 1.16
+      },
+      {
+        "game_version_meta": "5.0.13.92440",
+        "cnt": 249,
+        "pct": 1.11
+      },
+      {
+        "game_version_meta": "3.1.2.40384",
+        "cnt": 241,
+        "pct": 1.08
+      },
+      {
+        "game_version_meta": "4.12.0.79998",
+        "cnt": 237,
+        "pct": 1.06
+      },
+      {
+        "game_version_meta": "3.17.1.57218",
+        "cnt": 236,
+        "pct": 1.05
+      },
+      {
+        "game_version_meta": "3.16.0.55505",
+        "cnt": 188,
+        "pct": 0.84
+      },
+      {
+        "game_version_meta": "5.0.14.93272",
+        "cnt": 171,
+        "pct": 0.76
+      },
+      {
+        "game_version_meta": "4.2.1.62848",
+        "cnt": 165,
+        "pct": 0.74
+      },
+      {
+        "game_version_meta": "4.0.2.59877",
+        "cnt": 135,
+        "pct": 0.6
+      },
+      {
+        "game_version_meta": "5.0.4.82457",
+        "cnt": 107,
+        "pct": 0.48
+      },
+      {
+        "game_version_meta": "3.1.1.39948",
+        "cnt": 105,
+        "pct": 0.47
+      },
+      {
+        "game_version_meta": "4.6.2.69232",
+        "cnt": 72,
+        "pct": 0.32
+      },
+      {
+        "game_version_meta": "3.4.0.44401",
+        "cnt": 60,
+        "pct": 0.27
+      },
+      {
+        "game_version_meta": "3.1.3.41128",
+        "cnt": 58,
+        "pct": 0.26
+      },
+      {
+        "game_version_meta": "3.1.0.39576",
+        "cnt": 49,
+        "pct": 0.22
+      },
+      {
+        "game_version_meta": "3.1.4.41219",
+        "cnt": 42,
+        "pct": 0.19
+      }
+    ],
+    "base_build": [
+      {
+        "base_build": "Base84643",
+        "cnt": 2511,
+        "pct": 11.21
+      },
+      {
+        "base_build": "Base87702",
+        "cnt": 1094,
+        "pct": 4.89
+      },
+      {
+        "base_build": "Base86383",
+        "cnt": 1071,
+        "pct": 4.78
+      },
+      {
+        "base_build": "Base88500",
+        "cnt": 988,
+        "pct": 4.41
+      },
+      {
+        "base_build": "Base72282",
+        "cnt": 933,
+        "pct": 4.17
+      },
+      {
+        "base_build": "Base89165",
+        "cnt": 865,
+        "pct": 3.86
+      },
+      {
+        "base_build": "Base91115",
+        "cnt": 859,
+        "pct": 3.84
+      },
+      {
+        "base_build": "Base90136",
+        "cnt": 820,
+        "pct": 3.66
+      },
+      {
+        "base_build": "Base81433",
+        "cnt": 799,
+        "pct": 3.57
+      },
+      {
+        "base_build": "Base78285",
+        "cnt": 795,
+        "pct": 3.55
+      },
+      {
+        "base_build": "Base80188",
+        "cnt": 783,
+        "pct": 3.5
+      },
+      {
+        "base_build": "Base75025",
+        "cnt": 765,
+        "pct": 3.42
+      },
+      {
+        "base_build": "Base65895",
+        "cnt": 753,
+        "pct": 3.36
+      },
+      {
+        "base_build": "Base76052",
+        "cnt": 601,
+        "pct": 2.68
+      },
+      {
+        "base_build": "Base73620",
+        "cnt": 540,
+        "pct": 2.41
+      },
+      {
+        "base_build": "Base60321",
+        "cnt": 482,
+        "pct": 2.15
+      },
+      {
+        "base_build": "Base62347",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "base_build": "Base83830",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "base_build": "Base67926",
+        "cnt": 442,
+        "pct": 1.97
+      },
+      {
+        "base_build": "Base92174",
+        "cnt": 439,
+        "pct": 1.96
+      },
+      {
+        "base_build": "Base76811",
+        "cnt": 428,
+        "pct": 1.91
+      },
+      {
+        "base_build": "Base70154",
+        "cnt": 416,
+        "pct": 1.86
+      },
+      {
+        "base_build": "Base49716",
+        "cnt": 409,
+        "pct": 1.83
+      },
+      {
+        "base_build": "Base65384",
+        "cnt": 406,
+        "pct": 1.81
+      },
+      {
+        "base_build": "Base51702",
+        "cnt": 405,
+        "pct": 1.81
+      },
+      {
+        "base_build": "Base53644",
+        "cnt": 332,
+        "pct": 1.48
+      },
+      {
+        "base_build": "Base74741",
+        "cnt": 330,
+        "pct": 1.47
+      },
+      {
+        "base_build": "Base58400",
+        "cnt": 294,
+        "pct": 1.31
+      },
+      {
+        "base_build": "Base71663",
+        "cnt": 289,
+        "pct": 1.29
+      },
+      {
+        "base_build": "Base82893",
+        "cnt": 278,
+        "pct": 1.24
+      },
+      {
+        "base_build": "Base89720",
+        "cnt": 260,
+        "pct": 1.16
+      },
+      {
+        "base_build": "Base92440",
+        "cnt": 249,
+        "pct": 1.11
+      },
+      {
+        "base_build": "Base40384",
+        "cnt": 241,
+        "pct": 1.08
+      },
+      {
+        "base_build": "Base79998",
+        "cnt": 237,
+        "pct": 1.06
+      },
+      {
+        "base_build": "Base56787",
+        "cnt": 236,
+        "pct": 1.05
+      },
+      {
+        "base_build": "Base55505",
+        "cnt": 188,
+        "pct": 0.84
+      },
+      {
+        "base_build": "Base93272",
+        "cnt": 171,
+        "pct": 0.76
+      },
+      {
+        "base_build": "Base62848",
+        "cnt": 165,
+        "pct": 0.74
+      },
+      {
+        "base_build": "Base59587",
+        "cnt": 135,
+        "pct": 0.6
+      },
+      {
+        "base_build": "Base82457",
+        "cnt": 107,
+        "pct": 0.48
+      },
+      {
+        "base_build": "Base39948",
+        "cnt": 105,
+        "pct": 0.47
+      },
+      {
+        "base_build": "Base69232",
+        "cnt": 72,
+        "pct": 0.32
+      },
+      {
+        "base_build": "Base44401",
+        "cnt": 60,
+        "pct": 0.27
+      },
+      {
+        "base_build": "Base41128",
+        "cnt": 58,
+        "pct": 0.26
+      },
+      {
+        "base_build": "Base39576",
+        "cnt": 49,
+        "pct": 0.22
+      },
+      {
+        "base_build": "Base41219",
+        "cnt": 42,
+        "pct": 0.19
+      }
+    ],
+    "data_build": [
+      {
+        "data_build": "84643",
+        "cnt": 2511,
+        "pct": 11.21
+      },
+      {
+        "data_build": "87702",
+        "cnt": 1094,
+        "pct": 4.89
+      },
+      {
+        "data_build": "86383",
+        "cnt": 1071,
+        "pct": 4.78
+      },
+      {
+        "data_build": "88500",
+        "cnt": 988,
+        "pct": 4.41
+      },
+      {
+        "data_build": "72282",
+        "cnt": 933,
+        "pct": 4.17
+      },
+      {
+        "data_build": "89165",
+        "cnt": 865,
+        "pct": 3.86
+      },
+      {
+        "data_build": "91115",
+        "cnt": 859,
+        "pct": 3.84
+      },
+      {
+        "data_build": "90136",
+        "cnt": 820,
+        "pct": 3.66
+      },
+      {
+        "data_build": "81433",
+        "cnt": 799,
+        "pct": 3.57
+      },
+      {
+        "data_build": "78285",
+        "cnt": 795,
+        "pct": 3.55
+      },
+      {
+        "data_build": "80188",
+        "cnt": 783,
+        "pct": 3.5
+      },
+      {
+        "data_build": "75025",
+        "cnt": 765,
+        "pct": 3.42
+      },
+      {
+        "data_build": "65895",
+        "cnt": 753,
+        "pct": 3.36
+      },
+      {
+        "data_build": "76052",
+        "cnt": 601,
+        "pct": 2.68
+      },
+      {
+        "data_build": "73620",
+        "cnt": 540,
+        "pct": 2.41
+      },
+      {
+        "data_build": "61545",
+        "cnt": 482,
+        "pct": 2.15
+      },
+      {
+        "data_build": "62347",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "data_build": "83830",
+        "cnt": 444,
+        "pct": 1.98
+      },
+      {
+        "data_build": "67926",
+        "cnt": 442,
+        "pct": 1.97
+      },
+      {
+        "data_build": "92174",
+        "cnt": 439,
+        "pct": 1.96
+      },
+      {
+        "data_build": "76811",
+        "cnt": 428,
+        "pct": 1.91
+      },
+      {
+        "data_build": "70326",
+        "cnt": 416,
+        "pct": 1.86
+      },
+      {
+        "data_build": "49957",
+        "cnt": 409,
+        "pct": 1.83
+      },
+      {
+        "data_build": "65384",
+        "cnt": 406,
+        "pct": 1.81
+      },
+      {
+        "data_build": "51702",
+        "cnt": 405,
+        "pct": 1.81
+      },
+      {
+        "data_build": "53644",
+        "cnt": 332,
+        "pct": 1.48
+      },
+      {
+        "data_build": "74741",
+        "cnt": 330,
+        "pct": 1.47
+      },
+      {
+        "data_build": "58600",
+        "cnt": 294,
+        "pct": 1.31
+      },
+      {
+        "data_build": "71663",
+        "cnt": 289,
+        "pct": 1.29
+      },
+      {
+        "data_build": "82893",
+        "cnt": 278,
+        "pct": 1.24
+      },
+      {
+        "data_build": "89720",
+        "cnt": 260,
+        "pct": 1.16
+      },
+      {
+        "data_build": "92440",
+        "cnt": 249,
+        "pct": 1.11
+      },
+      {
+        "data_build": "40384",
+        "cnt": 241,
+        "pct": 1.08
+      },
+      {
+        "data_build": "79998",
+        "cnt": 237,
+        "pct": 1.06
+      },
+      {
+        "data_build": "57218",
+        "cnt": 236,
+        "pct": 1.05
+      },
+      {
+        "data_build": "55505",
+        "cnt": 188,
+        "pct": 0.84
+      },
+      {
+        "data_build": "93272",
+        "cnt": 171,
+        "pct": 0.76
+      },
+      {
+        "data_build": "62848",
+        "cnt": 165,
+        "pct": 0.74
+      },
+      {
+        "data_build": "59877",
+        "cnt": 135,
+        "pct": 0.6
+      },
+      {
+        "data_build": "82457",
+        "cnt": 107,
+        "pct": 0.48
+      },
+      {
+        "data_build": "39948",
+        "cnt": 105,
+        "pct": 0.47
+      },
+      {
+        "data_build": "69232",
+        "cnt": 72,
+        "pct": 0.32
+      },
+      {
+        "data_build": "44401",
+        "cnt": 60,
+        "pct": 0.27
+      },
+      {
+        "data_build": "41128",
+        "cnt": 58,
+        "pct": 0.26
+      },
+      {
+        "data_build": "39576",
+        "cnt": 49,
+        "pct": 0.22
+      },
+      {
+        "data_build": "41219",
+        "cnt": 42,
+        "pct": 0.19
+      }
+    ]
+  },
+  "numeric_stats": {
+    "MMR": {
+      "min_val": -36400,
+      "max_val": 7464,
+      "mean_val": 738.71,
+      "median_val": 0.0,
+      "stddev_val": 3035.53,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p95": 6493.0
+    },
+    "APM": {
+      "min_val": 0,
+      "max_val": 1248,
+      "mean_val": 355.57,
+      "median_val": 349.0,
+      "stddev_val": 104.87,
+      "p05": 219.0,
+      "p25": 303.0,
+      "p75": 410.0,
+      "p95": 523.0
+    },
+    "SQ": {
+      "min_val": -2147483648,
+      "max_val": 187,
+      "mean_val": -95711.06,
+      "median_val": 123.0,
+      "stddev_val": 14345597.84,
+      "p05": 91.0,
+      "p25": 110.0,
+      "p75": 136.0,
+      "p95": 152.0
+    },
+    "supplyCappedPercent": {
+      "min_val": 0,
+      "max_val": 100,
+      "mean_val": 7.24,
+      "median_val": 6.0,
+      "stddev_val": 4.71,
+      "p05": 2.0,
+      "p25": 4.0,
+      "p75": 9.0,
+      "p95": 16.0
+    },
+    "handicap": {
+      "min_val": 0,
+      "max_val": 100,
+      "mean_val": 100.0,
+      "median_val": 100.0,
+      "stddev_val": 0.67,
+      "p05": 100.0,
+      "p25": 100.0,
+      "p75": 100.0,
+      "p95": 100.0
+    }
+  },
+  "temporal_range": {
+    "earliest": "2016-01-07T02:21:46.002Z",
+    "latest": "2024-12-01T23:48:45.2511615Z",
+    "distinct_months": 76
+  },
+  "monthly_counts": [
+    {
+      "month": "2016-01",
+      "cnt": 139
+    },
+    {
+      "month": "2016-02",
+      "cnt": 256
+    },
+    {
+      "month": "2016-03",
+      "cnt": 100
+    },
+    {
+      "month": "2016-07",
+      "cnt": 60
+    },
+    {
+      "month": "2017-02",
+      "cnt": 222
+    },
+    {
+      "month": "2017-03",
+      "cnt": 187
+    },
+    {
+      "month": "2017-04",
+      "cnt": 391
+    },
+    {
+      "month": "2017-05",
+      "cnt": 14
+    },
+    {
+      "month": "2017-06",
+      "cnt": 332
+    },
+    {
+      "month": "2017-07",
+      "cnt": 188
+    },
+    {
+      "month": "2017-09",
+      "cnt": 236
+    },
+    {
+      "month": "2017-10",
+      "cnt": 30
+    },
+    {
+      "month": "2017-11",
+      "cnt": 399
+    },
+    {
+      "month": "2018-01",
+      "cnt": 420
+    },
+    {
+      "month": "2018-02",
+      "cnt": 315
+    },
+    {
+      "month": "2018-03",
+      "cnt": 356
+    },
+    {
+      "month": "2018-06",
+      "cnt": 709
+    },
+    {
+      "month": "2018-07",
+      "cnt": 450
+    },
+    {
+      "month": "2018-09",
+      "cnt": 442
+    },
+    {
+      "month": "2018-10",
+      "cnt": 44
+    },
+    {
+      "month": "2018-11",
+      "cnt": 380
+    },
+    {
+      "month": "2018-12",
+      "cnt": 64
+    },
+    {
+      "month": "2019-01",
+      "cnt": 2
+    },
+    {
+      "month": "2019-02",
+      "cnt": 612
+    },
+    {
+      "month": "2019-03",
+      "cnt": 562
+    },
+    {
+      "month": "2019-04",
+      "cnt": 46
+    },
+    {
+      "month": "2019-05",
+      "cnt": 540
+    },
+    {
+      "month": "2019-06",
+      "cnt": 330
+    },
+    {
+      "month": "2019-07",
+      "cnt": 596
+    },
+    {
+      "month": "2019-08",
+      "cnt": 169
+    },
+    {
+      "month": "2019-09",
+      "cnt": 601
+    },
+    {
+      "month": "2019-10",
+      "cnt": 82
+    },
+    {
+      "month": "2019-11",
+      "cnt": 346
+    },
+    {
+      "month": "2020-02",
+      "cnt": 423
+    },
+    {
+      "month": "2020-03",
+      "cnt": 15
+    },
+    {
+      "month": "2020-04",
+      "cnt": 172
+    },
+    {
+      "month": "2020-05",
+      "cnt": 157
+    },
+    {
+      "month": "2020-06",
+      "cnt": 547
+    },
+    {
+      "month": "2020-07",
+      "cnt": 501
+    },
+    {
+      "month": "2020-08",
+      "cnt": 250
+    },
+    {
+      "month": "2020-09",
+      "cnt": 549
+    },
+    {
+      "month": "2020-11",
+      "cnt": 107
+    },
+    {
+      "month": "2020-12",
+      "cnt": 121
+    },
+    {
+      "month": "2021-01",
+      "cnt": 157
+    },
+    {
+      "month": "2021-02",
+      "cnt": 261
+    },
+    {
+      "month": "2021-03",
+      "cnt": 183
+    },
+    {
+      "month": "2021-05",
+      "cnt": 587
+    },
+    {
+      "month": "2021-06",
+      "cnt": 258
+    },
+    {
+      "month": "2021-07",
+      "cnt": 297
+    },
+    {
+      "month": "2021-08",
+      "cnt": 495
+    },
+    {
+      "month": "2021-09",
+      "cnt": 272
+    },
+    {
+      "month": "2021-10",
+      "cnt": 812
+    },
+    {
+      "month": "2021-11",
+      "cnt": 143
+    },
+    {
+      "month": "2021-12",
+      "cnt": 371
+    },
+    {
+      "month": "2022-01",
+      "cnt": 84
+    },
+    {
+      "month": "2022-02",
+      "cnt": 263
+    },
+    {
+      "month": "2022-05",
+      "cnt": 592
+    },
+    {
+      "month": "2022-06",
+      "cnt": 107
+    },
+    {
+      "month": "2022-07",
+      "cnt": 541
+    },
+    {
+      "month": "2022-08",
+      "cnt": 68
+    },
+    {
+      "month": "2022-09",
+      "cnt": 212
+    },
+    {
+      "month": "2022-10",
+      "cnt": 562
+    },
+    {
+      "month": "2022-11",
+      "cnt": 580
+    },
+    {
+      "month": "2022-12",
+      "cnt": 285
+    },
+    {
+      "month": "2023-02",
+      "cnt": 260
+    },
+    {
+      "month": "2023-05",
+      "cnt": 441
+    },
+    {
+      "month": "2023-06",
+      "cnt": 257
+    },
+    {
+      "month": "2023-08",
+      "cnt": 122
+    },
+    {
+      "month": "2023-12",
+      "cnt": 672
+    },
+    {
+      "month": "2024-02",
+      "cnt": 187
+    },
+    {
+      "month": "2024-05",
+      "cnt": 72
+    },
+    {
+      "month": "2024-06",
+      "cnt": 367
+    },
+    {
+      "month": "2024-08",
+      "cnt": 154
+    },
+    {
+      "month": "2024-09",
+      "cnt": 95
+    },
+    {
+      "month": "2024-11",
+      "cnt": 133
+    },
+    {
+      "month": "2024-12",
+      "cnt": 38
+    }
+  ],
+  "error_census": {
+    "total": 22390,
+    "game_err": 0,
+    "msg_err": 0,
+    "tracker_err": 0
+  },
+  "cardinality": [
+    {
+      "table": "replay_players_raw",
+      "column": "filename",
+      "cardinality": 22390,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.499587
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "toon_id",
+      "cardinality": 2495,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.055671
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "nickname",
+      "cardinality": 1106,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.024678
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "playerID",
+      "cardinality": 9,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000201
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "userID",
+      "cardinality": 16,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000357
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "isInClan",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "clanTag",
+      "cardinality": 257,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.005734
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "MMR",
+      "cardinality": 1031,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.023005
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "race",
+      "cardinality": 6,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000134
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "selectedRace",
+      "cardinality": 8,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000179
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "handicap",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "region",
+      "cardinality": 6,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000134
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "realm",
+      "cardinality": 9,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000201
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "highestLeague",
+      "cardinality": 10,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000223
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "result",
+      "cardinality": 4,
+      "total_rows": 44817,
+      "uniqueness_ratio": 8.9e-05
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "APM",
+      "cardinality": 556,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.012406
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "SQ",
+      "cardinality": 171,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.003816
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "supplyCappedPercent",
+      "cardinality": 51,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.001138
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "startDir",
+      "cardinality": 13,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.00029
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "startLocX",
+      "cardinality": 117,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.002611
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "startLocY",
+      "cardinality": 115,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.002566
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_a",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_b",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_g",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_r",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_speed",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "is_blizzard_map",
+      "cardinality": 2,
+      "total_rows": 22390,
+      "uniqueness_ratio": 8.9e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "time_utc",
+      "cardinality": 22344,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.997946
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "elapsed_game_loops",
+      "cardinality": 14045,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.627289
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_version_header",
+      "cardinality": 46,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.002054
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "base_build",
+      "cardinality": 46,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.002054
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "data_build",
+      "cardinality": 46,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.002054
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_version_meta",
+      "cardinality": 46,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.002054
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "map_name",
+      "cardinality": 188,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.008397
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "max_players",
+      "cardinality": 5,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000223
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_speed_init",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "is_blizzard_map_init",
+      "cardinality": 2,
+      "total_rows": 22390,
+      "uniqueness_ratio": 8.9e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "map_size_x",
+      "cardinality": 14,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000625
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "map_size_y",
+      "cardinality": 13,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000581
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "gameEventsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "messageEventsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "trackerEvtsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "filename",
+      "cardinality": 22390,
+      "total_rows": 22390,
+      "uniqueness_ratio": 1.0
+    }
+  ],
+  "flagged_columns": [
+    {
+      "table": "replay_players_raw",
+      "column": "playerID",
+      "cardinality": 9,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000201,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "userID",
+      "cardinality": 16,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000357,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "isInClan",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "race",
+      "cardinality": 6,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000134,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "selectedRace",
+      "cardinality": 8,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000179,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "handicap",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "region",
+      "cardinality": 6,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000134,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "realm",
+      "cardinality": 9,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000201,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "highestLeague",
+      "cardinality": 10,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000223,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "result",
+      "cardinality": 4,
+      "total_rows": 44817,
+      "uniqueness_ratio": 8.9e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "startDir",
+      "cardinality": 13,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.00029,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_a",
+      "cardinality": 2,
+      "total_rows": 44817,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_b",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_g",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replay_players_raw",
+      "column": "color_r",
+      "cardinality": 18,
+      "total_rows": 44817,
+      "uniqueness_ratio": 0.000402,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_speed",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "is_blizzard_map",
+      "cardinality": 2,
+      "total_rows": 22390,
+      "uniqueness_ratio": 8.9e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "max_players",
+      "cardinality": 5,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000223,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "game_speed_init",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "is_blizzard_map_init",
+      "cardinality": 2,
+      "total_rows": 22390,
+      "uniqueness_ratio": 8.9e-05,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "map_size_x",
+      "cardinality": 14,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000625,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "map_size_y",
+      "cardinality": 13,
+      "total_rows": 22390,
+      "uniqueness_ratio": 0.000581,
+      "flag": "near-constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "gameEventsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "messageEventsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "constant"
+    },
+    {
+      "table": "replays_meta_raw (struct_flat)",
+      "column": "trackerEvtsErr",
+      "cardinality": 1,
+      "total_rows": 22390,
+      "uniqueness_ratio": 4.5e-05,
+      "flag": "constant"
+    }
+  ],
+  "struct_flat_shape": [
+    22390,
+    18
+  ],
+  "game_speed_assertion": "PASSED -- all Faster",
+  "duration_stats": {
+    "min_val": 12,
+    "max_val": 136028,
+    "mean_val": 16105.26,
+    "median_val": 14580.0,
+    "stddev_val": 7795.59,
+    "p05": 6640.45,
+    "p25": 11111.25,
+    "p75": 19390.75,
+    "p95": 30270.1,
+    "min_seconds": 0.54,
+    "max_seconds": 6072.68,
+    "mean_seconds": 718.98,
+    "median_seconds": 650.89
+  },
+  "map_dimensions": [
+    {
+      "map_size_x": 168,
+      "map_size_y": 184,
+      "cnt": 1624
+    },
+    {
+      "map_size_x": 176,
+      "map_size_y": 176,
+      "cnt": 1615
+    },
+    {
+      "map_size_x": 176,
+      "map_size_y": 184,
+      "cnt": 1052
+    },
+    {
+      "map_size_x": 160,
+      "map_size_y": 168,
+      "cnt": 1030
+    },
+    {
+      "map_size_x": 224,
+      "map_size_y": 224,
+      "cnt": 966
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 208,
+      "cnt": 886
+    },
+    {
+      "map_size_x": 216,
+      "map_size_y": 216,
+      "cnt": 868
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 168,
+      "cnt": 858
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 184,
+      "cnt": 800
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 176,
+      "cnt": 783
+    },
+    {
+      "map_size_x": 152,
+      "map_size_y": 168,
+      "cnt": 765
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 184,
+      "cnt": 754
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 176,
+      "cnt": 727
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 176,
+      "cnt": 617
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 176,
+      "cnt": 612
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 192,
+      "cnt": 583
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 192,
+      "cnt": 528
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 216,
+      "cnt": 471
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 168,
+      "cnt": 465
+    },
+    {
+      "map_size_x": 144,
+      "map_size_y": 160,
+      "cnt": 459
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 200,
+      "cnt": 449
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 200,
+      "cnt": 441
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 144,
+      "cnt": 394
+    },
+    {
+      "map_size_x": 176,
+      "map_size_y": 160,
+      "cnt": 384
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 168,
+      "cnt": 362
+    },
+    {
+      "map_size_x": 176,
+      "map_size_y": 152,
+      "cnt": 309
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 184,
+      "cnt": 308
+    },
+    {
+      "map_size_x": 208,
+      "map_size_y": 208,
+      "cnt": 304
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 192,
+      "cnt": 287
+    },
+    {
+      "map_size_x": 216,
+      "map_size_y": 192,
+      "cnt": 276
+    },
+    {
+      "map_size_x": 0,
+      "map_size_y": 0,
+      "cnt": 273
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 160,
+      "cnt": 260
+    },
+    {
+      "map_size_x": 160,
+      "map_size_y": 176,
+      "cnt": 209
+    },
+    {
+      "map_size_x": 160,
+      "map_size_y": 184,
+      "cnt": 208
+    },
+    {
+      "map_size_x": 152,
+      "map_size_y": 152,
+      "cnt": 197
+    },
+    {
+      "map_size_x": 224,
+      "map_size_y": 168,
+      "cnt": 169
+    },
+    {
+      "map_size_x": 248,
+      "map_size_y": 224,
+      "cnt": 160
+    },
+    {
+      "map_size_x": 208,
+      "map_size_y": 168,
+      "cnt": 155
+    },
+    {
+      "map_size_x": 152,
+      "map_size_y": 160,
+      "cnt": 154
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 168,
+      "cnt": 113
+    },
+    {
+      "map_size_x": 224,
+      "map_size_y": 192,
+      "cnt": 81
+    },
+    {
+      "map_size_x": 144,
+      "map_size_y": 176,
+      "cnt": 69
+    },
+    {
+      "map_size_x": 184,
+      "map_size_y": 208,
+      "cnt": 66
+    },
+    {
+      "map_size_x": 152,
+      "map_size_y": 184,
+      "cnt": 39
+    },
+    {
+      "map_size_x": 224,
+      "map_size_y": 184,
+      "cnt": 38
+    },
+    {
+      "map_size_x": 176,
+      "map_size_y": 168,
+      "cnt": 32
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 192,
+      "cnt": 31
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 152,
+      "cnt": 30
+    },
+    {
+      "map_size_x": 224,
+      "map_size_y": 160,
+      "cnt": 27
+    },
+    {
+      "map_size_x": 192,
+      "map_size_y": 128,
+      "cnt": 24
+    },
+    {
+      "map_size_x": 152,
+      "map_size_y": 208,
+      "cnt": 18
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 0,
+      "cnt": 17
+    },
+    {
+      "map_size_x": 160,
+      "map_size_y": 152,
+      "cnt": 17
+    },
+    {
+      "map_size_x": 208,
+      "map_size_y": 200,
+      "cnt": 7
+    },
+    {
+      "map_size_x": 136,
+      "map_size_y": 208,
+      "cnt": 6
+    },
+    {
+      "map_size_x": 168,
+      "map_size_y": 144,
+      "cnt": 4
+    },
+    {
+      "map_size_x": 160,
+      "map_size_y": 208,
+      "cnt": 3
+    },
+    {
+      "map_size_x": 136,
+      "map_size_y": 160,
+      "cnt": 3
+    },
+    {
+      "map_size_x": 248,
+      "map_size_y": 0,
+      "cnt": 2
+    },
+    {
+      "map_size_x": 200,
+      "map_size_y": 224,
+      "cnt": 1
+    }
+  ],
+  "plots": [
+    "01_02_04_apm_histogram.png",
+    "01_02_04_duration_histogram.png",
+    "01_02_04_highestleague_bar.png",
+    "01_02_04_mmr_histogram.png",
+    "01_02_04_race_bar.png",
+    "01_02_04_region_bar.png",
+    "01_02_04_replays_over_time.png",
+    "01_02_04_result_bar.png",
+    "01_02_04_selectedrace_bar.png",
+    "01_02_04_sq_histogram.png",
+    "01_02_04_supplycapped_histogram.png"
+  ],
+  "zero_counts": {
+    "replay_players_raw": {
+      "MMR_zero": 37489,
+      "APM_zero": 1132,
+      "SQ_zero": 0,
+      "SQ_sentinel": 2,
+      "supplyCappedPercent_zero": 298,
+      "handicap_zero": 2,
+      "startDir_zero": 5,
+      "startLocX_zero": 5,
+      "startLocY_zero": 5,
+      "color_a_zero": 2,
+      "color_b_zero": 21191,
+      "color_g_zero": 547,
+      "color_r_zero": 530,
+      "playerID_zero": 0,
+      "userID_zero": 8611
+    },
+    "replays_meta_raw": {
+      "elapsed_game_loops_zero": 0
+    }
+  },
+  "duplicate_check": {
+    "total_rows": 44817,
+    "distinct_player_rows": 44817,
+    "duplicate_rows": 0
+  },
+  "field_classification": {
+    "replay_players_raw": {
+      "identifier": [
+        "filename",
+        "toon_id",
+        "nickname",
+        "playerID",
+        "userID"
+      ],
+      "pre_game": [
+        "MMR",
+        "race",
+        "selectedRace",
+        "handicap",
+        "region",
+        "realm",
+        "highestLeague",
+        "isInClan",
+        "clanTag",
+        "startDir",
+        "startLocX",
+        "startLocY",
+        "color_a",
+        "color_b",
+        "color_g",
+        "color_r"
+      ],
+      "in_game": [
+        "APM",
+        "SQ",
+        "supplyCappedPercent"
+      ],
+      "target": [
+        "result"
+      ]
+    },
+    "replays_meta_raw_struct_flat": {
+      "identifier": [
+        "filename"
+      ],
+      "pre_game": [
+        "time_utc",
+        "game_version_header",
+        "base_build",
+        "data_build",
+        "game_version_meta",
+        "map_name",
+        "max_players",
+        "map_size_x",
+        "map_size_y",
+        "is_blizzard_map",
+        "is_blizzard_map_init"
+      ],
+      "in_game": [
+        "elapsed_game_loops"
+      ],
+      "constant": [
+        "game_speed",
+        "game_speed_init",
+        "gameEventsErr",
+        "messageEventsErr",
+        "trackerEvtsErr"
+      ]
+    },
+    "classification_notes": {
+      "pre_game": "Available before match start. Usable as prediction features without temporal leakage.",
+      "in_game": "Computed from replay actions; available only post-game. Using these as features requires in-game prediction framing (Phase 02 decision).",
+      "identifier": "Player/replay identity columns. Not features.",
+      "target": "Prediction target. Never a feature.",
+      "constant": "Single-value columns. No predictive information."
+    }
+  },
+  "undecided_tie_context": [
+    {
+      "result": "Tie",
+      "filename": "2022_Dreamhack_SC2_Masters_Valencia/2022_Dreamhack_SC2_Masters_Valencia_data/cab0125665bd7ccf10270d10cf214463.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Tie",
+      "filename": "2022_Dreamhack_SC2_Masters_Valencia/2022_Dreamhack_SC2_Masters_Valencia_data/cab0125665bd7ccf10270d10cf214463.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2017_WESG_Barcelona/2017_WESG_Barcelona_data/d71ff1dbe2f741f150d9baeee55346b9.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2017_WESG_Barcelona/2017_WESG_Barcelona_data/d71ff1dbe2f741f150d9baeee55346b9.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_HomeStory_Cup_XVII/2018_HomeStory_Cup_XVII_data/5f058ca29de7ffa86d82064bc990834f.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_HomeStory_Cup_XVII/2018_HomeStory_Cup_XVII_data/5f058ca29de7ffa86d82064bc990834f.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_IEM_Katowice/2018_IEM_Katowice_data/6b31fbc28a82b0f86468ff4bd2f1b805.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_IEM_Katowice/2018_IEM_Katowice_data/6b31fbc28a82b0f86468ff4bd2f1b805.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_WCS_Leipzig/2018_WCS_Leipzig_data/f259535a56778d1e8bf0a1929a385beb.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_WCS_Leipzig/2018_WCS_Leipzig_data/f259535a56778d1e8bf0a1929a385beb.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_WCS_Valencia/2018_WCS_Valencia_data/2cac85d113fa17f1d93f205cd0761200.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2018_WCS_Valencia/2018_WCS_Valencia_data/2cac85d113fa17f1d93f205cd0761200.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2019_HomeStory_Cup_XIX/2019_HomeStory_Cup_XIX_data/6dfa603380ce2b5a7519fb930f95722f.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2019_HomeStory_Cup_XIX/2019_HomeStory_Cup_XIX_data/6dfa603380ce2b5a7519fb930f95722f.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2019_IEM_Katowice/2019_IEM_Katowice_data/ca15f60729b21ff6d79d3d50d83126e9.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2019_IEM_Katowice/2019_IEM_Katowice_data/ca15f60729b21ff6d79d3d50d83126e9.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2020_Dreamhack_SC2_Masters_Fall/2020_Dreamhack_SC2_Masters_Fall_data/ed7d0c672db2e16c3780886a8dab8425.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2020_Dreamhack_SC2_Masters_Fall/2020_Dreamhack_SC2_Masters_Fall_data/ed7d0c672db2e16c3780886a8dab8425.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2020_Dreamhack_SC2_Masters_Summer/2020_Dreamhack_SC2_Masters_Summer_data/8c32501ae0ec4cfaecd8d1b44faeeea3.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2020_Dreamhack_SC2_Masters_Summer/2020_Dreamhack_SC2_Masters_Summer_data/8c32501ae0ec4cfaecd8d1b44faeeea3.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2021_ASUS_ROG_Fall/2021_ASUS_ROG_Fall_data/0b659be670879662b5f2c4fd6f17a528.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2021_ASUS_ROG_Fall/2021_ASUS_ROG_Fall_data/0b659be670879662b5f2c4fd6f17a528.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2021_Cheeseadelphia_Winter_Championship/2021_Cheeseadelphia_Winter_Championship_data/1b5eefedd2d017fa8ff8bacbd1bc51fb.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2021_Cheeseadelphia_Winter_Championship/2021_Cheeseadelphia_Winter_Championship_data/1b5eefedd2d017fa8ff8bacbd1bc51fb.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2022_Dreamhack_SC2_Masters_Last_Chance2021/2022_Dreamhack_SC2_Masters_Last_Chance2021_data/07ac0d02e1ae65efb2c08f04066d2212.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    },
+    {
+      "result": "Undecided",
+      "filename": "2022_Dreamhack_SC2_Masters_Last_Chance2021/2022_Dreamhack_SC2_Masters_Last_Chance2021_data/07ac0d02e1ae65efb2c08f04066d2212.SC2Replay.json",
+      "max_players": 2,
+      "player_row_count": 2
+    }
+  ],
+  "skew_kurtosis": {
+    "MMR": {
+      "skewness": -5.759,
+      "kurtosis": 77.8914
+    },
+    "APM": {
+      "skewness": -0.2024,
+      "kurtosis": 3.6247
+    },
+    "SQ": {
+      "skewness": -149.6897,
+      "kurtosis": 22405.9998
+    },
+    "supplyCappedPercent": {
+      "skewness": 2.2456,
+      "kurtosis": 18.1756
+    },
+    "handicap": {
+      "skewness": -149.6897,
+      "kurtosis": 22405.9998
+    },
+    "startDir": {
+      "skewness": -0.0206,
+      "kurtosis": -1.3235
+    },
+    "startLocX": {
+      "skewness": 0.0563,
+      "kurtosis": -1.7766
+    },
+    "startLocY": {
+      "skewness": 0.0527,
+      "kurtosis": -1.7663
+    },
+    "color_a": {
+      "skewness": -149.6897,
+      "kurtosis": 22405.9998
+    },
+    "color_b": {
+      "skewness": 0.0025,
+      "kurtosis": -1.9367
+    },
+    "color_g": {
+      "skewness": 2.1054,
+      "kurtosis": 7.8214
+    },
+    "color_r": {
+      "skewness": 0.0429,
+      "kurtosis": -1.9807
+    },
+    "playerID": {
+      "skewness": 0.6305,
+      "kurtosis": 5.2759
+    },
+    "userID": {
+      "skewness": 1.2019,
+      "kurtosis": 1.6383
+    },
+    "elapsed_game_loops": {
+      "skewness": 2.0331,
+      "kurtosis": 10.6597
+    }
+  },
+  "numeric_stats_SQ_no_sentinel": {
+    "min_val": -51,
+    "max_val": 187,
+    "mean_val": 122.38,
+    "median_val": 123.0,
+    "stddev_val": 18.91,
+    "p05": 91.0,
+    "p25": 110.0,
+    "p75": 136.0,
+    "p95": 152.0,
+    "n_rows": 44815
+  },
+  "mmr_zero_interpretation": {
+    "by_result": [
+      {
+        "result": "Loss",
+        "mmr_zero_cnt": 18597,
+        "total_cnt": 22409,
+        "mmr_zero_pct": 82.99
+      },
+      {
+        "result": "Win",
+        "mmr_zero_cnt": 18876,
+        "total_cnt": 22382,
+        "mmr_zero_pct": 84.34
+      },
+      {
+        "result": "Undecided",
+        "mmr_zero_cnt": 14,
+        "total_cnt": 24,
+        "mmr_zero_pct": 58.33
+      },
+      {
+        "result": "Tie",
+        "mmr_zero_cnt": 2,
+        "total_cnt": 2,
+        "mmr_zero_pct": 100.0
+      }
+    ],
+    "by_highestLeague": [
+      {
+        "highestLeague": "Unknown",
+        "mmr_zero_cnt": 30116,
+        "total_cnt": 32338,
+        "mmr_zero_pct": 93.13
+      },
+      {
+        "highestLeague": "Master",
+        "mmr_zero_cnt": 3743,
+        "total_cnt": 6458,
+        "mmr_zero_pct": 57.96
+      },
+      {
+        "highestLeague": "Grandmaster",
+        "mmr_zero_cnt": 2860,
+        "total_cnt": 4745,
+        "mmr_zero_pct": 60.27
+      },
+      {
+        "highestLeague": "Diamond",
+        "mmr_zero_cnt": 376,
+        "total_cnt": 718,
+        "mmr_zero_pct": 52.37
+      },
+      {
+        "highestLeague": "Unranked",
+        "mmr_zero_cnt": 224,
+        "total_cnt": 224,
+        "mmr_zero_pct": 100.0
+      },
+      {
+        "highestLeague": "Platinum",
+        "mmr_zero_cnt": 60,
+        "total_cnt": 131,
+        "mmr_zero_pct": 45.8
+      },
+      {
+        "highestLeague": "Gold",
+        "mmr_zero_cnt": 64,
+        "total_cnt": 119,
+        "mmr_zero_pct": 53.78
+      },
+      {
+        "highestLeague": "Bronze",
+        "mmr_zero_cnt": 41,
+        "total_cnt": 73,
+        "mmr_zero_pct": 56.16
+      },
+      {
+        "highestLeague": "Silver",
+        "mmr_zero_cnt": 3,
+        "total_cnt": 9,
+        "mmr_zero_pct": 33.33
+      },
+      {
+        "highestLeague": "",
+        "mmr_zero_cnt": 2,
+        "total_cnt": 2,
+        "mmr_zero_pct": 100.0
+      }
+    ]
+  },
+  "struct_flat_completeness_note": "All 17 columns 0% NULL. No missingness co-occurrence.",
+  "isInClan_distribution": [
+    {
+      "isInClan": false,
+      "cnt": 33210,
+      "pct": 74.1
+    },
+    {
+      "isInClan": true,
+      "cnt": 11607,
+      "pct": 25.9
+    }
+  ],
+  "clanTag_top20": [
+    {
+      "clanTag": "\u03b1X",
+      "cnt": 778,
+      "pct_of_total": 6.7,
+      "pct_of_non_empty": 6.7
+    },
+    {
+      "clanTag": "PSISTM",
+      "cnt": 532,
+      "pct_of_total": 4.58,
+      "pct_of_non_empty": 4.58
+    },
+    {
+      "clanTag": "mouz",
+      "cnt": 513,
+      "pct_of_total": 4.42,
+      "pct_of_non_empty": 4.42
+    },
+    {
+      "clanTag": "RBLN",
+      "cnt": 466,
+      "pct_of_total": 4.01,
+      "pct_of_non_empty": 4.01
+    },
+    {
+      "clanTag": "QLASH",
+      "cnt": 454,
+      "pct_of_total": 3.91,
+      "pct_of_non_empty": 3.91
+    },
+    {
+      "clanTag": "ENCE",
+      "cnt": 443,
+      "pct_of_total": 3.82,
+      "pct_of_non_empty": 3.82
+    },
+    {
+      "clanTag": "Ex0n",
+      "cnt": 322,
+      "pct_of_total": 2.77,
+      "pct_of_non_empty": 2.77
+    },
+    {
+      "clanTag": "Kaizi",
+      "cnt": 219,
+      "pct_of_total": 1.89,
+      "pct_of_non_empty": 1.89
+    },
+    {
+      "clanTag": "mlem",
+      "cnt": 214,
+      "pct_of_total": 1.84,
+      "pct_of_non_empty": 1.84
+    },
+    {
+      "clanTag": "xkom",
+      "cnt": 212,
+      "pct_of_total": 1.83,
+      "pct_of_non_empty": 1.83
+    },
+    {
+      "clanTag": "TeamNV",
+      "cnt": 197,
+      "pct_of_total": 1.7,
+      "pct_of_non_empty": 1.7
+    },
+    {
+      "clanTag": "\u0441S\u0441\u01c3",
+      "cnt": 188,
+      "pct_of_total": 1.62,
+      "pct_of_non_empty": 1.62
+    },
+    {
+      "clanTag": "Mkers",
+      "cnt": 179,
+      "pct_of_total": 1.54,
+      "pct_of_non_empty": 1.54
+    },
+    {
+      "clanTag": "IxGeu",
+      "cnt": 170,
+      "pct_of_total": 1.46,
+      "pct_of_non_empty": 1.46
+    },
+    {
+      "clanTag": "ROOT",
+      "cnt": 162,
+      "pct_of_total": 1.4,
+      "pct_of_non_empty": 1.4
+    },
+    {
+      "clanTag": "Ting",
+      "cnt": 160,
+      "pct_of_total": 1.38,
+      "pct_of_non_empty": 1.38
+    },
+    {
+      "clanTag": "BASKGG",
+      "cnt": 157,
+      "pct_of_total": 1.35,
+      "pct_of_non_empty": 1.35
+    },
+    {
+      "clanTag": "ASTsc",
+      "cnt": 139,
+      "pct_of_total": 1.2,
+      "pct_of_non_empty": 1.2
+    },
+    {
+      "clanTag": "St0rmG",
+      "cnt": 138,
+      "pct_of_total": 1.19,
+      "pct_of_non_empty": 1.19
+    },
+    {
+      "clanTag": "GGGSC2",
+      "cnt": 128,
+      "pct_of_total": 1.1,
+      "pct_of_non_empty": 1.1
+    }
+  ]
+}
