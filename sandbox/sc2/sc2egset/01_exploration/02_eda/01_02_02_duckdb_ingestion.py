@@ -244,6 +244,91 @@ for et, n in event_counts.items():
     print(f"  {et}: {n:,} rows")
 
 # %% [markdown]
+# ## 6. Register event Parquets as DuckDB views
+#
+# Creates three views over the per-type Parquet subdirectories.
+# Views not tables: the Parquet files are authoritative; no data is duplicated.
+# Views persist in the DuckDB file so downstream steps can SQL over events.
+
+# %%
+from rts_predict.games.sc2.datasets.sc2egset.ingestion import load_event_views
+
+view_counts = load_event_views(db.con, IN_GAME_PARQUET_DIR)
+print("Event view row counts:")
+for view_name, n in view_counts.items():
+    print(f"  {view_name}: {n:,} rows")
+
+# %% [markdown]
+# ## 7. Event view health checks
+#
+# NULL rates, filename coverage, and event type distribution for all three
+# event views. SQL inlined for reproducibility (Invariant I6).
+
+# %%
+# NULL rates per event view
+event_null_query_template = """
+SELECT
+    COUNT(*)                       AS total_rows,
+    COUNT(*) - COUNT(filename)     AS filename_null,
+    COUNT(*) - COUNT(loop)         AS loop_null,
+    COUNT(*) - COUNT(evtTypeName)  AS evtTypeName_null,
+    COUNT(*) - COUNT(event_data)   AS event_data_null
+FROM {view_name}
+"""
+event_null_results: dict = {}
+for view_name in view_counts:
+    if view_counts[view_name] == 0:
+        print(f"=== {view_name}: no rows — skipping NULL check ===")
+        continue
+    q = event_null_query_template.format(view_name=view_name)
+    df = db.fetch_df(q)
+    print(f"=== {view_name} NULL rates ===")
+    print(df.to_string(index=False))
+    event_null_results[view_name] = df.to_dict(orient="records")[0]
+
+# %%
+# Filename coverage: distinct replay files contributing to each event view
+# vs total files in replays_meta_raw (orphan detection)
+event_coverage_query_template = """
+SELECT
+    COUNT(DISTINCT e.filename)  AS event_files,
+    COUNT(DISTINCT rm.filename) AS meta_files,
+    COUNT(DISTINCT e.filename)
+        - COUNT(DISTINCT CASE WHEN rm.filename IS NOT NULL
+                              THEN e.filename END) AS orphan_event_files
+FROM {view_name} e
+LEFT JOIN replays_meta_raw rm ON e.filename = rm.filename
+"""
+event_coverage_results: dict = {}
+for view_name in view_counts:
+    if view_counts[view_name] == 0:
+        continue
+    q = event_coverage_query_template.format(view_name=view_name)
+    df = db.fetch_df(q)
+    print(f"=== {view_name} filename coverage ===")
+    print(df.to_string(index=False))
+    event_coverage_results[view_name] = df.to_dict(orient="records")[0]
+
+# %%
+# Top-10 evtTypeName distribution per event view
+event_type_query_template = """
+SELECT evtTypeName, COUNT(*) AS event_count
+FROM {view_name}
+GROUP BY evtTypeName
+ORDER BY event_count DESC
+LIMIT 10
+"""
+event_type_dist: dict = {}
+for view_name in view_counts:
+    if view_counts[view_name] == 0:
+        continue
+    q = event_type_query_template.format(view_name=view_name)
+    df = db.fetch_df(q)
+    print(f"=== {view_name} top-10 evtTypeName ===")
+    print(df.to_string(index=False))
+    event_type_dist[view_name] = df.to_dict(orient="records")
+
+# %% [markdown]
 # ## 8. Write artifacts
 
 # %%
@@ -277,6 +362,15 @@ artifact_data = {
     "map_aliases_dedup": dedup_df.to_dict(orient="records")[0],
     "tpdm_type": tpdm_type_df.to_dict(orient="records")[0],
     "event_extraction_counts": event_counts,
+    "event_views_created": view_counts,
+    "event_views_health": {
+        view_name: {
+            "null_rates": event_null_results.get(view_name, {}),
+            "filename_coverage": event_coverage_results.get(view_name, {}),
+            "top10_evt_types": event_type_dist.get(view_name, []),
+        }
+        for view_name in view_counts
+    },
 }
 
 artifact_path = artifacts_dir / "01_02_02_duckdb_ingestion.json"
@@ -308,8 +402,9 @@ md_lines.extend([
     "  filename stores relative path from raw_dir.",
     "- **map_aliases_raw**: DuckDB table, all tournament mapping files with",
     "  tournament provenance column. filename stores relative path from raw_dir.",
-    "- **Events**: Parquet extracted to IN_GAME_PARQUET_DIR; view registration",
-    "  deferred to a dedicated step.",
+    "- **game_events_raw / tracker_events_raw / message_events_raw**: DuckDB",
+    "  views over per-type Parquet subdirectories. Single-pass extraction;",
+    "  columns: filename (relative, I10), loop, evtTypeName, event_data.",
 ])
 
 # %%
@@ -396,16 +491,58 @@ md_lines.extend([
 ])
 
 # %%
-# Event extraction counts
+# Event extraction counts + view registration
 md_lines.extend([
     "",
     "## Event extraction\n",
     "",
-    "| Event type | Rows extracted |",
-    "|------------|---------------|",
+    "| Event type | Rows extracted | DuckDB view |",
+    "|------------|---------------|-------------|",
 ])
+_et_to_view = {"gameEvents": "game_events_raw", "trackerEvents": "tracker_events_raw",
+               "messageEvents": "message_events_raw"}
 for et, n in event_counts.items():
-    md_lines.append(f"| {et} | {n:,} |")
+    md_lines.append(f"| {et} | {n:,} | {_et_to_view[et]} |")
+
+# %%
+# Event view health checks (Invariant I6)
+for view_name in view_counts:
+    if view_name not in event_null_results:
+        continue
+    md_lines.extend([
+        "",
+        f"## {view_name} health checks\n",
+        "",
+        "### NULL rates\n",
+        "",
+        "```sql",
+        event_null_query_template.format(view_name=view_name).strip(),
+        "```\n",
+        "",
+        db.fetch_df(event_null_query_template.format(view_name=view_name)).to_markdown(
+            index=False
+        ),
+        "",
+        "### Filename coverage\n",
+        "",
+        "```sql",
+        event_coverage_query_template.format(view_name=view_name).strip(),
+        "```\n",
+        "",
+        db.fetch_df(
+            event_coverage_query_template.format(view_name=view_name)
+        ).to_markdown(index=False),
+        "",
+        "### Top-10 evtTypeName\n",
+        "",
+        "```sql",
+        event_type_query_template.format(view_name=view_name).strip(),
+        "```\n",
+        "",
+        db.fetch_df(
+            event_type_query_template.format(view_name=view_name)
+        ).to_markdown(index=False),
+    ])
 
 md_path = artifacts_dir / "01_02_02_duckdb_ingestion.md"
 md_path.write_text("\n".join(md_lines))
