@@ -1,0 +1,61 @@
+table: ratings_raw
+dataset: aoe2companion
+game: aoe2
+object_type: table
+step: 4226
+row_count: 0
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
+generated_date: '2026-04-14'
+columns:
+- name: profile_id
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: games
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: rating
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: date
+  type: TIMESTAMP
+  nullable: true
+  description: 'TODO: fill'
+- name: leaderboard_id
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: rating_diff
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: season
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Rating CSV file path relative to raw_dir.
+  notes: Invariant I10.
+provenance:
+  source_files_pattern: data/raw/ratings/rating-YYYY-MM-DD.csv
+  duckdb_read_function: read_csv
+  duckdb_read_options:
+    union_by_name: true
+    filename: true
+    dtypes: '{profile_id: BIGINT, games: BIGINT, rating: BIGINT, date: TIMESTAMP, leaderboard_id: BIGINT, rating_diff: BIGINT,
+      season: BIGINT}'
+  ingestion_module: src/rts_predict/games/aoe2/datasets/aoe2companion/ingestion.py
+  ingestion_function: load_ratings_raw
+  notes: '2,072 daily CSV files. read_csv_auto infers all 7 columns as VARCHAR at scale — explicit dtypes required. Missing
+    file: rating-2025-07-11.csv.'
+invariants:
+- id: I6
+  description: 'Reproducibility: describe_artifact field cross-references the DESCRIBE run.'
+- id: I7
+  description: 'No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed.'
+- id: I10
+  description: 'Relative filename: filename column stores paths relative to raw_dir, not absolute paths.'

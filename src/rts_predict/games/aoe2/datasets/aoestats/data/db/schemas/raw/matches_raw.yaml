@@ -1,0 +1,99 @@
+table: matches_raw
+dataset: aoestats
+game: aoe2
+object_type: table
+step: 4225
+row_count: 30690651
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
+generated_date: '2026-04-14'
+columns:
+- name: map
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: started_timestamp
+  type: TIMESTAMP WITH TIME ZONE
+  nullable: true
+  description: 'TODO: fill'
+- name: duration
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: irl_duration
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: game_id
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: avg_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: num_players
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: team_0_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: team_1_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: replay_enhanced
+  type: BOOLEAN
+  nullable: true
+  description: 'TODO: fill'
+- name: leaderboard
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: mirror
+  type: BOOLEAN
+  nullable: true
+  description: 'TODO: fill'
+- name: patch
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: raw_match_type
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: game_type
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: game_speed
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: starting_age
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Weekly match Parquet file path relative to raw_dir.
+  notes: Invariant I10.
+provenance:
+  source_files_pattern: data/raw/matches/*.parquet
+  duckdb_read_function: read_parquet
+  duckdb_read_options:
+    union_by_name: true
+    filename: true
+  ingestion_module: src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py
+  ingestion_function: load_matches_raw
+  notes: 172 weekly files. Two variant columns with mixed Parquet types across files — handled by union_by_name type promotion.
+    No NULLs introduced.
+invariants:
+- id: I6
+  description: 'Reproducibility: describe_artifact field cross-references the DESCRIBE run.'
+- id: I7
+  description: 'No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed.'
+- id: I10
+  description: 'Relative filename: filename column stores paths relative to raw_dir, not absolute paths.'

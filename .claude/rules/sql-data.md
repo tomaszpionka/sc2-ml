@@ -38,6 +38,19 @@ pending re-validation in Phase 01 Step 01_01_02. Must be persistent column on `r
 - NEVER load full raw tables into pandas (`SELECT * FROM large_table` → `.df()` is prohibited)
 - All SQL that produces a reported result must appear verbatim in the markdown artifact (Invariant #6)
 
+## Schema Source of Truth
+
+`*_raw` table and view schemas are documented as YAML files at:
+```
+src/rts_predict/games/<game>/datasets/<dataset>/data/db/schemas/raw/<table>.yaml
+```
+
+- **Always read the YAML** when you need column names, types, or nullability for a `*_raw` object — do not infer from notebooks, artifacts, or prior documentation.
+- Column `type` and `nullable` fields are sourced verbatim from `DESCRIBE` (via the `01_02_03_raw_schema_describe` notebook artifact). They are ground truth.
+- `description` and `notes` fields are `TODO: fill` pre-analysis — do not treat them as authoritative and do not hallucinate values for them.
+- The canonical template is at `docs/templates/duckdb_schema_template.yaml`.
+- If a schema YAML does not exist yet for a table you need, run or re-run the `01_02_03_raw_schema_describe` notebook for that dataset to produce it.
+
 ## Data Handling
 - NEVER silently drop rows — log count and reason
 - Assert shapes and dtypes after every major transformation

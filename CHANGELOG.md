@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [3.6.2] — 2026-04-14 (PR #TBD: chore/raw-schema-docs)
+
+### Added
+- `docs/templates/duckdb_schema_template.yaml` — canonical template for `*_raw` schema YAMLs;
+  enforces `describe_artifact` cross-reference, verbatim DESCRIBE types, and column-count gate condition
+- `01_02_03_raw_schema_describe` notebooks for sc2egset, aoe2companion, aoestats — run DESCRIBE on
+  every `*_raw` table/view and save results to artifacts
+- 13 `*_raw` schema YAML files across all three datasets, sourced verbatim from 01_02_03 DESCRIBE artifacts:
+  sc2egset (6), aoe2companion (4), aoestats (3)
+
 ## [3.6.1] — 2026-04-14 (PR #TBD: chore/sandbox-logging-timestamp)
 
 ### Added

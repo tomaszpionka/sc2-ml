@@ -119,13 +119,21 @@ the lower-precedence file is edited to match, never the reverse.
    it is wrong and gets regenerated. Full chain: ROADMAP → STEP_STATUS →
    PIPELINE_SECTION_STATUS → PHASE_STATUS.
 
-8. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
+8. **`*_raw` schema YAML files** — per-dataset DuckDB layer documentation at
+   `src/rts_predict/games/<game>/datasets/<dataset>/data/db/schemas/raw/<table>.yaml`.
+   Column names, types, and nullability are sourced verbatim from the `01_02_03`
+   `DESCRIBE` artifact (see `.claude/rules/sql-data.md § Schema Source of Truth`).
+   These are the authoritative schema reference for `*_raw` tables and views — never
+   infer schema from notebooks, JSON artifacts, or prior documentation when a YAML exists.
+   Template: `docs/templates/duckdb_schema_template.yaml`.
+
+9. **Operational files** — `CLAUDE.md`, `.claude/ml-protocol.md`,
    `.claude/agents/*.md`, and any other file that instructs Claude agents
    how to work. These reference phase numbers and terminology only via
    pointers into tiers (3), (4), (5), and (6). They never inline-encode a numbered
    Phase list and never redefine terminology.
 
-   **8b. Planning artifacts** — `planning/current_plan.md` (the active Spec),
+   **9b. Planning artifacts** — `planning/current_plan.md` (the active Spec),
    `planning/dags/DAG.yaml` (the active execution schedule),
    `planning/specs/spec_*.md` (task-level instructions). Within this sub-tier,
    precedence is: plan (authoritative) > DAG (derived execution order) >
@@ -134,7 +142,7 @@ the lower-precedence file is edited to match, never the reverse.
    ephemeral: committed on the feature branch for PR auditability, then purged
    after merge (see `planning/README.md`). Permanent documentation files
    (`planning/INDEX.md`, `planning/README.md`, `planning/*/README.md`) are
-   tier 8 operational files, not ephemeral planning artifacts.
+   tier 9 operational files, not ephemeral planning artifacts.
 
 **The rule.** Higher-precedence tiers are sources; lower-precedence tiers
 are derivations. A change in a high-precedence file propagates downward
