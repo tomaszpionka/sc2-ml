@@ -313,6 +313,17 @@ class TestLoadReplayPlayers:
         # 6 valid replays × 2 + 1 empty = still 12
         assert n == 12  # noqa: PLR2004
 
+    def test_null_tpdm_treated_as_empty(
+        self, sc2_db_con: duckdb.DuckDBPyConnection, sc2_raw_dir: Path
+    ) -> None:
+        """A replay with ToonPlayerDescMap: null must not raise TypeError."""
+        null_file = (
+            sc2_raw_dir / "2020_Tournament_A" / "2020_Tournament_A_data" / "null.SC2Replay.json"
+        )
+        null_file.write_text(json.dumps({"ToonPlayerDescMap": None}))
+        n = load_replay_players_raw(sc2_db_con, sc2_raw_dir)
+        assert n == 12  # noqa: PLR2004
+
 
 # ── Tests: extract_events_to_parquet ─────────────────────────────────────────
 
@@ -371,6 +382,40 @@ class TestExtractEventsToParquet:
         counts = extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
         # Same counts as without the bad file — it's skipped
         assert counts["gameEvents"] == 90  # noqa: PLR2004
+
+    def test_null_event_array_treated_as_empty(
+        self, sc2_raw_dir: Path, tmp_path: Path
+    ) -> None:
+        """A replay with a null event array (e.g. messageEvents: null) must not raise."""
+        null_evt_dir = sc2_raw_dir / "2020_Tournament_A" / "2020_Tournament_A_data"
+        null_file = null_evt_dir / "null_events.SC2Replay.json"
+        null_file.write_text(json.dumps({
+            "ToonPlayerDescMap": {},
+            "gameEvents": None,
+            "trackerEvents": None,
+            "messageEvents": None,
+        }))
+        output_dir = tmp_path / "events"
+        # Must not raise TypeError: 'NoneType' object is not iterable
+        counts = extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
+        assert counts["messageEvents"] == 6  # noqa: PLR2004  # null file contributes 0
+
+    def test_parquet_filename_is_relative(
+        self, sc2_raw_dir: Path, tmp_path: Path
+    ) -> None:
+        """Parquet filename column must be relative to raw_dir (Invariant I10)."""
+        import pyarrow.parquet as pq
+
+        output_dir = tmp_path / "events"
+        extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
+        tbl = pq.read_table(output_dir / "gameEvents.parquet", columns=["filename"])
+        filenames = tbl.column("filename").to_pylist()
+        assert all(not f.startswith("/") for f in filenames), (
+            "gameEvents.parquet filename column must be relative, not absolute"
+        )
+        assert all("/" in f for f in filenames), (
+            "gameEvents.parquet filename must not be a bare basename"
+        )
 
     def test_empty_raw_dir(
         self, tmp_path: Path

@@ -335,7 +335,7 @@ def load_replay_players_raw(
             logger.warning("Skipping %s: %s", fpath.name, e)
             continue
 
-        tpdm = data.get("ToonPlayerDescMap", {})
+        tpdm = data.get("ToonPlayerDescMap") or {}
         for toon_id, player_data in tpdm.items():
             batch_rows.append(
                 _extract_player_row(str(fpath.relative_to(raw_dir)), toon_id, player_data)
@@ -407,8 +407,8 @@ def extract_events_to_parquet(
                         logger.warning("Skipping %s: %s", fpath.name, e)
                         continue
 
-                    events = data.get(et, [])
-                    fname = fpath.name
+                    events = data.get(et) or []
+                    fname = str(fpath.relative_to(raw_dir))
                     for evt in events:
                         batch_rows.append({
                             "filename": fname,
