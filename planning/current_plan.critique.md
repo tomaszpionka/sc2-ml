@@ -110,3 +110,88 @@ Section B's NULL census SQL computes raw null counts but not null percentages. E
 7. **`SUBSTR(details.timeUTC, 1, 7)` for month extraction is robust.** Given confirmed ISO 8601 format, this produces correct `YYYY-MM` keys that sort lexicographically. MIN/MAX on raw VARCHAR is also correct.
 
 8. **`get_notebook_db("sc2", "sc2egset")` read-only access is correct.** No DDL/DML needed; the step only queries existing tables.
+
+---
+reviewer: reviewer-adversarial
+plan: planning/plan_aoe2companion_01_02_03.md
+date: 2026-04-14
+verdict: APPROVE_WITH_CHANGES
+---
+
+# Adversarial Critique: plan_aoe2companion_01_02_03.md
+
+## Verdict
+**APPROVE WITH REVISIONS** — The plan is scientifically sound in scope and structure, but has a blocking prerequisite (01_02_02 not yet run), partial SQL sketches in the auxiliary table census that contradict the "full census" claim, two missing columns in the categorical analysis (`name`, `colorHex`), and a vague cross-game target encoding documentation requirement.
+
+---
+
+## Critical Issues (must fix before execution)
+
+### 1. Prerequisite 01_02_02 is not_started — execution is blocked
+
+STEP_STATUS.yaml lists `01_02_02` as `status: not_started`. No ingestion artifact exists and no DuckDB tables have been materialised. The plan acknowledges this in a "Prerequisite Dependency" section below the task definitions, but T01's instructions do not gate on this explicitly.
+
+**Fix:** Add to T01 instructions, item 0 (before item 1): "HALT: Before proceeding, verify that `STEP_STATUS.yaml` shows `01_02_02: complete` AND that artifact `01_02_02_duckdb_ingestion.json` exists on disk. If either is false, abort."
+
+---
+
+## Moderate Issues (should fix)
+
+### 1. Section H claims "full NULL census" but SQL sketches are partial
+
+- **`leaderboards_raw`** (18 columns): plan SQL covers only 7. Missing: `name`, `lastMatchTime`, `drops`, `losses`, `streak`, `wins`, `games`, `updatedAt`, `rankCountry`, `active`, `season`, `rankLevel` — including `wins`, `losses`, `games`, `streak` relevant to pre-game feature engineering.
+- **`profiles_raw`** (13 columns): plan SQL covers only 6. Missing: `avatarhash`, `sharedHistory`, `twitchChannel`, `youtubeChannel`, `youtubeChannelName`, `discordId`, `discordName`, `discordInvitation`.
+- **`ratings_raw`** (8 columns): plan SQL misses `date`, `season`, `filename`. `date` NULL rate is needed for Section G temporal analysis.
+
+**Fix:** Either (a) use the `DESCRIBE` + iterate approach for auxiliary tables the same as Section A, or (b) explicitly rename "full NULL census" to "key-column NULL census" and list deferred columns.
+
+### 2. Section D categorical list missing `name` and `colorHex`
+
+`name` (in-game player name) is the foundational field for Invariant #2 identity resolution in Phase 02. Its cardinality and NULL rate must be profiled at this step. `colorHex` (hex string) also absent. Both appear in the schema but are not in Section D's column list.
+
+**Fix:** Add `name` (with note: cardinality + top-k needed for Phase 02 identity resolution baseline) and `colorHex` to Section D.
+
+### 3. `matchId` and `profileId` not in Section F numerics
+
+These are INT32 identifiers. `profileId` cardinality = distinct player count — a prominent thesis-citable number that should be in the artifact explicitly, not buried in Section A's cardinality column.
+
+**Fix:** Add `matchId` and `profileId` to Section F's numeric list with a note that these are identifiers profiled for structural characterisation.
+
+### 4. Cross-game target encoding documentation is vague
+
+The plan states "Target variable encoding documented (BOOLEAN won vs VARCHAR result in SC2)" but does not specify what the artifact must record to enable future cross-game mapping. sc2egset has `'Tie'` and `'Undecided'` values with no aoe2companion equivalent. The artifact should explicitly document the mapping gap.
+
+**Fix:** Add to T02 decisions deferred: "Cross-game target alignment: sc2egset `result` includes 'Tie' and 'Undecided' which have no aoe2companion equivalent. Binary target definition must be harmonised before Phase 03."
+
+---
+
+## Minor Issues (consider fixing)
+
+### 1. Section A iteration must include `filename` column
+
+If the executor uses a hardcoded 54-column list from the schema discovery artifact rather than `DESCRIBE matches_raw` output, `filename` (column 55, added by ingestion) will be missed. Add a note: "Use `DESCRIBE matches_raw` output, not a hardcoded column list."
+
+### 2. `SUMMARIZE` uses approximate cardinality (`approx_unique`)
+
+If `SUMMARIZE` is used for the NULL census, all cardinality values reported in the artifact must come from exact `COUNT(DISTINCT ...)` queries — not `approx_unique`. `SUMMARIZE` may be used as a fast sanity check only.
+
+### 3. Uniqueness ratio definition ambiguous at 277M rows
+
+At 277M rows, a column with 277 distinct values has uniqueness ratio 0.000001 — near-constant by the 0.001 threshold. Moderate-cardinality categoricals may be false-flagged. Add a note: at this scale, near-constant flagging requires domain judgment.
+
+### 4. Boolean census is 18 separate full-table scans
+
+Section E's loop approach produces 18 sequential scans of 277M rows. A single query with all 18 `FILTER` clauses is more efficient. Suggest a batch approach matching Section A's philosophy.
+
+---
+
+## Confirmed Correct
+
+1. **Table names match `ingestion.py` exactly** — `matches_raw`, `ratings_raw`, `leaderboards_raw`, `profiles_raw` all verified.
+2. **Column names in Sections B, C, D, E, F match the schema discovery artifact** (with exceptions noted above).
+3. **`ratings_raw` underscore vs camelCase convention correctly handled** — `profile_id`, `leaderboard_id`, `rating_diff` for ratings vs `profileId`, `ratingDiff` for matches.
+4. **`won` is per-player, not per-match** — the plan correctly treats `matches_raw` as one-row-per-player-per-match.
+5. **`avg_rows_per_match = 3.71` interpretation is sound** — correctly identified as evidence of team-game data; Section C decomposes by leaderboard.
+6. **Section G needs no speed conversion** — `started`/`finished` are real-world timestamps unlike sc2egset's game loops.
+7. **Invariant #9 compliance correctly scoped** — bivariate analysis, cleaning, filtering all deferred explicitly.
+8. **Invariant #7 thresholds cited correctly** — dead field (cardinality=1) and near-constant (0.001) both trace to EDA Manual Section 3.3.
