@@ -19,6 +19,25 @@ merged to `master`.
 
 ### Removed
 
+## [3.5.0] — 2026-04-14 (PR #TBD: chore/aoe2companion-ingestion-fix)
+
+### Changed
+- `aoe2companion/ingestion.py`: renamed all tables from `raw_*` to `*_raw` suffix
+  (`matches_raw`, `ratings_raw`, `leaderboards_raw`, `profiles_raw`) and functions
+  from `load_raw_*` to `load_*_raw`, consistent with Invariant I10
+- Added `binary_as_string=true` to all three Parquet reads (required for
+  unannotated BYTE_ARRAY columns confirmed in Step 01_02_01)
+- Fixed notebook `01_02_02`: DtypeDecision corrected to `explicit` strategy,
+  NULL queries fixed (`matchId` not `match_id`), artifact now inlines SQL (I6),
+  adds `won` NULL count and I10 filename assertions
+- Added `HH:MM:SS` timestamp to `logging.basicConfig` across all 12 sandbox notebooks
+
+### Changed
+
+### Fixed
+
+### Removed
+
 ## [3.4.0] — 2026-04-13 (PR #TBD: feat/sc2-phase01-duckdb-ingestion)
 
 ### Added

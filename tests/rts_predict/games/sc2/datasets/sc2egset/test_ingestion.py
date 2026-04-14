@@ -331,30 +331,32 @@ class TestLoadReplayPlayers:
 class TestExtractEventsToParquet:
     """Tests for extract_events_to_parquet."""
 
-    def test_creates_parquet_files(
+    def test_creates_subdir_per_event_type(
         self, sc2_raw_dir: Path, tmp_path: Path
     ) -> None:
-        """Should create Parquet files for all 3 event types."""
+        """Each event type gets its own subdir with at least one batch file."""
         output_dir = tmp_path / "events"
         counts = extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
 
         for et in ("gameEvents", "trackerEvents", "messageEvents"):
             assert et in counts
             assert counts[et] > 0
-            parquet_path = output_dir / f"{et}.parquet"
-            assert parquet_path.exists()
+            et_dir = output_dir / et
+            assert et_dir.is_dir()
+            assert len(list(et_dir.glob("batch_*.parquet"))) > 0
 
     def test_parquet_has_expected_columns(
         self, sc2_raw_dir: Path, tmp_path: Path
     ) -> None:
-        """Each Parquet file must have filename, loop, evtTypeName, event_data."""
+        """Each batch Parquet must have filename, loop, evtTypeName, event_data."""
         import pyarrow.parquet as pq
 
         output_dir = tmp_path / "events"
         extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
 
         for et in ("gameEvents", "trackerEvents", "messageEvents"):
-            schema = pq.read_schema(output_dir / f"{et}.parquet")
+            first_batch = sorted((output_dir / et).glob("batch_*.parquet"))[0]
+            schema = pq.read_schema(first_batch)
             col_names = set(schema.names)
             assert {"filename", "loop", "evtTypeName", "event_data"} <= col_names
 
@@ -408,19 +410,20 @@ class TestExtractEventsToParquet:
 
         output_dir = tmp_path / "events"
         extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
-        tbl = pq.read_table(output_dir / "gameEvents.parquet", columns=["filename"])
+        first_batch = sorted((output_dir / "gameEvents").glob("batch_*.parquet"))[0]
+        tbl = pq.read_table(first_batch, columns=["filename"])
         filenames = tbl.column("filename").to_pylist()
         assert all(not f.startswith("/") for f in filenames), (
-            "gameEvents.parquet filename column must be relative, not absolute"
+            "gameEvents batch filename column must be relative, not absolute"
         )
         assert all("/" in f for f in filenames), (
-            "gameEvents.parquet filename must not be a bare basename"
+            "gameEvents batch filename must not be a bare basename"
         )
 
     def test_empty_raw_dir(
         self, tmp_path: Path
     ) -> None:
-        """An empty raw directory should produce zero-count results (no Parquet files)."""
+        """An empty raw directory should produce zero-count results (no batch files)."""
         empty_raw = tmp_path / "empty_raw"
         empty_raw.mkdir()
         output_dir = tmp_path / "events"
@@ -428,9 +431,9 @@ class TestExtractEventsToParquet:
         assert counts["gameEvents"] == 0
         assert counts["trackerEvents"] == 0
         assert counts["messageEvents"] == 0
-        # No Parquet files written when there are zero events
+        # Subdirs are created but contain no batch files
         for et in ("gameEvents", "trackerEvents", "messageEvents"):
-            assert not (output_dir / f"{et}.parquet").exists()
+            assert len(list((output_dir / et).glob("batch_*.parquet"))) == 0
 
 
 # ── Tests: load_map_aliases_raw ───────────────────────────────────────────────

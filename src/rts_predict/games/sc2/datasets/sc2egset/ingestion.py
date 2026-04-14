@@ -361,18 +361,25 @@ def extract_events_to_parquet(
 ) -> dict[str, int]:
     """Extract event arrays from SC2Replay.json files to zstd-compressed Parquet.
 
-    Writes one Parquet file per event type (gameEvents, trackerEvents,
-    messageEvents) with columns: filename, loop (game tick),
-    evtTypeName, and the full event data as a JSON VARCHAR.
+    Writes one numbered Parquet file per batch per event type, each under its
+    own subdirectory:
+        output_dir/gameEvents/batch_000000.parquet
+        output_dir/trackerEvents/batch_000000.parquet
+        output_dir/messageEvents/batch_000000.parquet
 
-    Files are partitioned by evtTypeName within each Parquet file.
+    Read the full event type with DuckDB:
+        read_parquet('output_dir/gameEvents/*.parquet')
+
+    Columns per file: filename (relative to raw_dir, Invariant I10), loop
+    (game tick), evtTypeName, event_data (full event as JSON VARCHAR).
+
     NOT loaded into DuckDB — preserved on disk for potential Phase 02 use.
 
     Args:
         raw_dir: Path to the sc2egset raw/ directory.
-        output_dir: Directory to write Parquet files to.
-        batch_size: Number of replay files to process per batch.
-        max_object_size: DuckDB maximum_object_size for large JSONs.
+        output_dir: Root directory; each event type gets its own subdir.
+        batch_size: Number of replay files to process per batch file.
+        max_object_size: Unused — reserved for future DuckDB path.
 
     Returns:
         Dict mapping event type name to total row count extracted.
@@ -380,78 +387,68 @@ def extract_events_to_parquet(
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-
     event_types = ["gameEvents", "trackerEvents", "messageEvents"]
     counts: dict[str, int] = {et: 0 for et in event_types}
 
-    # Collect all replay files
+    # Create one subdir per event type up front
+    for et in event_types:
+        (output_dir / et).mkdir(parents=True, exist_ok=True)
+
     replay_files = sorted(raw_dir.glob("*/*_data/*.SC2Replay.json"))
     total_files = len(replay_files)
     logger.info("extract_events_to_parquet: found %d replay files", total_files)
 
     for et in event_types:
-        writer: pq.ParquetWriter | None = None
-        parquet_path = output_dir / f"{et}.parquet"
+        et_dir = output_dir / et
 
-        try:
-            for batch_start in range(0, total_files, batch_size):
-                batch_files = replay_files[batch_start:batch_start + batch_size]
-                batch_rows: list[dict[str, Any]] = []
+        for batch_start in range(0, total_files, batch_size):
+            batch_files = replay_files[batch_start:batch_start + batch_size]
+            batch_rows: list[dict[str, Any]] = []
 
-                for fpath in batch_files:
-                    try:
-                        with open(fpath) as f:
-                            data = json.load(f)
-                    except (json.JSONDecodeError, OSError) as e:
-                        logger.warning("Skipping %s: %s", fpath.name, e)
-                        continue
+            for fpath in batch_files:
+                try:
+                    with open(fpath) as f:
+                        data = json.load(f)
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.warning("Skipping %s: %s", fpath.name, e)
+                    continue
 
-                    events = data.get(et) or []
-                    fname = str(fpath.relative_to(raw_dir))
-                    for evt in events:
-                        batch_rows.append({
-                            "filename": fname,
-                            "loop": evt.get("loop", 0),
-                            "evtTypeName": evt.get("evtTypeName", ""),
-                            "event_data": json.dumps(evt),
-                        })
-
-                if batch_rows:
-                    table = pa.table({
-                        "filename": pa.array(
-                            [r["filename"] for r in batch_rows], type=pa.string()
-                        ),
-                        "loop": pa.array(
-                            [r["loop"] for r in batch_rows], type=pa.int64()
-                        ),
-                        "evtTypeName": pa.array(
-                            [r["evtTypeName"] for r in batch_rows], type=pa.string()
-                        ),
-                        "event_data": pa.array(
-                            [r["event_data"] for r in batch_rows], type=pa.string()
-                        ),
+                events = data.get(et) or []
+                fname = str(fpath.relative_to(raw_dir))
+                for evt in events:
+                    batch_rows.append({
+                        "filename": fname,
+                        "loop": evt.get("loop", 0),
+                        "evtTypeName": evt.get("evtTypeName", ""),
+                        "event_data": json.dumps(evt),
                     })
 
-                    if writer is None:
-                        writer = pq.ParquetWriter(
-                            parquet_path,
-                            table.schema,
-                            compression="zstd",
-                        )
-                    writer.write_table(table)
-                    counts[et] += len(batch_rows)
+            if batch_rows:
+                table = pa.table({
+                    "filename": pa.array(
+                        [r["filename"] for r in batch_rows], type=pa.string()
+                    ),
+                    "loop": pa.array(
+                        [r["loop"] for r in batch_rows], type=pa.int64()
+                    ),
+                    "evtTypeName": pa.array(
+                        [r["evtTypeName"] for r in batch_rows], type=pa.string()
+                    ),
+                    "event_data": pa.array(
+                        [r["event_data"] for r in batch_rows], type=pa.string()
+                    ),
+                })
+                batch_path = et_dir / f"batch_{batch_start:06d}.parquet"
+                pq.write_table(table, batch_path, compression="zstd")
+                counts[et] += len(batch_rows)
 
-                if batch_start % (batch_size * 10) == 0 and batch_start > 0:
-                    logger.info(
-                        "%s: processed %d/%d files, %d rows so far",
-                        et, batch_start, total_files, counts[et],
-                    )
-        finally:
-            if writer is not None:
-                writer.close()
+            if batch_start % (batch_size * 10) == 0 and batch_start > 0:
+                logger.info(
+                    "%s: processed %d/%d files, %d rows so far",
+                    et, batch_start, total_files, counts[et],
+                )
 
-        logger.info("%s: %d total rows -> %s", et, counts[et], parquet_path)
+        logger.info("%s: %d total rows -> %s/", et, counts[et], et_dir)
 
     return counts
 

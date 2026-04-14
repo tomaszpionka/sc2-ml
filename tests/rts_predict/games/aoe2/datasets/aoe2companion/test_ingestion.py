@@ -7,73 +7,73 @@ import pytest
 
 from rts_predict.games.aoe2.datasets.aoe2companion.ingestion import (
     load_all_raw_tables,
-    load_raw_leaderboard,
-    load_raw_matches,
-    load_raw_profiles,
-    load_raw_ratings,
+    load_leaderboards_raw,
+    load_matches_raw,
+    load_profiles_raw,
+    load_ratings_raw,
 )
 from rts_predict.games.aoe2.datasets.aoe2companion.types import DtypeDecision
 
-# ── load_raw_matches ──────────────────────────────────────────────────────────
+# ── load_matches_raw ──────────────────────────────────────────────────────────
 
 
-def test_load_raw_matches_creates_table_with_filename(
+def test_load_matches_raw_creates_table_with_filename(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    """raw_matches table must exist and contain a 'filename' column."""
-    n = load_raw_matches(db_con, raw_dir)
+    """matches_raw table must exist and contain a 'filename' column."""
+    n = load_matches_raw(db_con, raw_dir)
     assert n > 0
     tables = [row[0] for row in db_con.execute("SHOW TABLES").fetchall()]
-    assert "raw_matches" in tables
-    cols = [row[0] for row in db_con.execute("DESCRIBE raw_matches").fetchall()]
+    assert "matches_raw" in tables
+    cols = [row[0] for row in db_con.execute("DESCRIBE matches_raw").fetchall()]
     assert "filename" in cols
 
 
-def test_load_raw_matches_idempotent(
+def test_load_matches_raw_idempotent(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    """Running load_raw_matches twice with should_drop=True gives same row count."""
-    n1 = load_raw_matches(db_con, raw_dir, should_drop=True)
-    n2 = load_raw_matches(db_con, raw_dir, should_drop=True)
+    """Running load_matches_raw twice with should_drop=True gives same row count."""
+    n1 = load_matches_raw(db_con, raw_dir, should_drop=True)
+    n2 = load_matches_raw(db_con, raw_dir, should_drop=True)
     assert n1 == n2
     assert n1 > 0
 
 
-def test_load_raw_matches_no_drop_raises_on_existing(
+def test_load_matches_raw_no_drop_raises_on_existing(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
     """With should_drop=False, a second call raises because table already exists."""
-    load_raw_matches(db_con, raw_dir, should_drop=True)
+    load_matches_raw(db_con, raw_dir, should_drop=True)
     with pytest.raises(Exception):
-        load_raw_matches(db_con, raw_dir, should_drop=False)
+        load_matches_raw(db_con, raw_dir, should_drop=False)
 
 
-# ── load_raw_ratings ──────────────────────────────────────────────────────────
+# ── load_ratings_raw ──────────────────────────────────────────────────────────
 
 
-def test_load_raw_ratings_auto_detect(
+def test_load_ratings_raw_auto_detect(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    """auto_detect strategy must produce a raw_ratings table with filename column."""
+    """auto_detect strategy must produce a ratings_raw table with filename column."""
     decision = DtypeDecision(
         strategy="auto_detect",
         rationale="test: auto_detect",
     )
-    n = load_raw_ratings(db_con, raw_dir, decision=decision)
+    n = load_ratings_raw(db_con, raw_dir, decision=decision)
     assert n >= 0  # sparse file may contribute 0 rows
-    cols = [row[0] for row in db_con.execute("DESCRIBE raw_ratings").fetchall()]
+    cols = [row[0] for row in db_con.execute("DESCRIBE ratings_raw").fetchall()]
     assert "filename" in cols
 
 
-def test_load_raw_ratings_explicit_map_applied(
+def test_load_ratings_raw_explicit_map_applied(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    """Explicit dtype map is applied to raw_ratings without error."""
+    """Explicit dtype map is applied to ratings_raw without error."""
     decision = DtypeDecision(
         strategy="explicit",
         rationale="test: explicit",
@@ -87,50 +87,50 @@ def test_load_raw_ratings_explicit_map_applied(
             "season": "INTEGER",
         },
     )
-    n = load_raw_ratings(db_con, raw_dir, decision=decision)
+    n = load_ratings_raw(db_con, raw_dir, decision=decision)
     assert n >= 0
-    cols = [row[0] for row in db_con.execute("DESCRIBE raw_ratings").fetchall()]
+    cols = [row[0] for row in db_con.execute("DESCRIBE ratings_raw").fetchall()]
     assert "filename" in cols
     # Verify the explicit type was applied to profile_id
     type_map = {
-        row[0]: row[1] for row in db_con.execute("DESCRIBE raw_ratings").fetchall()
+        row[0]: row[1] for row in db_con.execute("DESCRIBE ratings_raw").fetchall()
     }
     assert type_map.get("profile_id") is not None
 
 
-def test_load_raw_ratings_invalid_strategy_raises(
+def test_load_ratings_raw_invalid_strategy_raises(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
     """Unknown dtype strategy must raise ValueError."""
     decision = DtypeDecision(strategy="magic", rationale="invalid")
     with pytest.raises(ValueError, match="Unknown dtype strategy"):
-        load_raw_ratings(db_con, raw_dir, decision=decision)
+        load_ratings_raw(db_con, raw_dir, decision=decision)
 
 
-# ── load_raw_leaderboard ─────────────────────────────────────────────────────
+# ── load_leaderboards_raw ─────────────────────────────────────────────────────
 
 
-def test_load_raw_leaderboard_creates_table_with_filename(
+def test_load_leaderboards_raw_creates_table_with_filename(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    n = load_raw_leaderboard(db_con, raw_dir)
+    n = load_leaderboards_raw(db_con, raw_dir)
     assert n > 0
-    cols = [row[0] for row in db_con.execute("DESCRIBE raw_leaderboard").fetchall()]
+    cols = [row[0] for row in db_con.execute("DESCRIBE leaderboards_raw").fetchall()]
     assert "filename" in cols
 
 
-# ── load_raw_profiles ─────────────────────────────────────────────────────────
+# ── load_profiles_raw ─────────────────────────────────────────────────────────
 
 
-def test_load_raw_profiles_creates_table_with_filename(
+def test_load_profiles_raw_creates_table_with_filename(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
 ) -> None:
-    n = load_raw_profiles(db_con, raw_dir)
+    n = load_profiles_raw(db_con, raw_dir)
     assert n > 0
-    cols = [row[0] for row in db_con.execute("DESCRIBE raw_profiles").fetchall()]
+    cols = [row[0] for row in db_con.execute("DESCRIBE profiles_raw").fetchall()]
     assert "filename" in cols
 
 
@@ -145,10 +145,10 @@ def test_load_all_raw_tables_returns_per_table_counts(
     decision = DtypeDecision(strategy="auto_detect", rationale="test")
     counts = load_all_raw_tables(db_con, raw_dir, decision=decision)
     assert set(counts.keys()) == {
-        "raw_matches",
-        "raw_ratings",
-        "raw_leaderboard",
-        "raw_profiles",
+        "matches_raw",
+        "ratings_raw",
+        "leaderboards_raw",
+        "profiles_raw",
     }
     # All tables must have been created
     tables = [row[0] for row in db_con.execute("SHOW TABLES").fetchall()]
@@ -185,10 +185,10 @@ def test_rating_csv_union_real_sparse_and_dense_files(
     decision = DtypeDecision(strategy="auto_detect", rationale="real fixture test")
     # Use a fresh connection per this test
     con = duckdb.connect(":memory:")
-    load_raw_ratings(con, raw_root, decision=decision)
+    load_ratings_raw(con, raw_root, decision=decision)
 
     row = con.execute(
-        "SELECT count(DISTINCT filename) AS files FROM raw_ratings"
+        "SELECT count(DISTINCT filename) AS files FROM ratings_raw"
     ).fetchone()
     assert row is not None
     assert row[0] == 2, f"Expected 2 distinct filenames, got {row[0]}"

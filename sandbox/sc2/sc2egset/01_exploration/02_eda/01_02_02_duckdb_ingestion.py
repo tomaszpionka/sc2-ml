@@ -9,7 +9,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -54,23 +54,23 @@ db = get_notebook_db("sc2", "sc2egset", read_only=False)
 # Reduce threads for the 209 GB read_json_auto CTAS to limit memory pressure.
 # DuckDB default is 4 threads; 2 halves the peak concurrent file-buffer RSS.
 # Restored to default after ingestion completes.
-db.con.execute("SET threads = 2")
-counts = load_all_raw_tables(db.con, REPLAYS_SOURCE_DIR)
-db.con.execute("SET threads = 4")
-print("Ingestion counts:")
-for table, n in counts.items():
-    print(f"  {table}: {n:,} rows")
+# db.con.execute("SET threads = 2")
+# counts = load_all_raw_tables(db.con, REPLAYS_SOURCE_DIR)
+db.con.execute("SET threads = 8")
+# print("Ingestion counts:")
+# for table, n in counts.items():
+#     print(f"  {table}: {n:,} rows")
 
 # %% [markdown]
 # ## 2. Post-ingestion validation: DESCRIBE tables
 
 # %%
-describe_results = {}
-for table in counts:
-    print(f"\n=== DESCRIBE {table} ===")
-    desc_df = db.fetch_df(f'DESCRIBE "{table}"')
-    print(desc_df.to_string(index=False))
-    describe_results[table] = desc_df.to_dict(orient="records")
+# describe_results = {}
+# for table in counts:
+#     print(f"\n=== DESCRIBE {table} ===")
+#     desc_df = db.fetch_df(f'DESCRIBE "{table}"')
+#     print(desc_df.to_string(index=False))
+#     describe_results[table] = desc_df.to_dict(orient="records")
 
 # %% [markdown]
 # ## 3. NULL rates on key fields
@@ -226,18 +226,18 @@ print(dedup_df.to_string(index=False))
 
 # %%
 # Uncomment to run event extraction:
-# from rts_predict.games.sc2.config import IN_GAME_PARQUET_DIR
-# from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
-#     extract_events_to_parquet,
-# )
-# event_counts = extract_events_to_parquet(
-#     REPLAYS_SOURCE_DIR,
-#     IN_GAME_PARQUET_DIR,
-#     batch_size=100,
-# )
-# print("Event extraction counts:")
-# for et, n in event_counts.items():
-#     print(f"  {et}: {n:,} rows")
+from rts_predict.games.sc2.config import IN_GAME_PARQUET_DIR
+from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
+    extract_events_to_parquet,
+)
+event_counts = extract_events_to_parquet(
+    REPLAYS_SOURCE_DIR,
+    IN_GAME_PARQUET_DIR,
+    batch_size=100,
+)
+print("Event extraction counts:")
+for et, n in event_counts.items():
+    print(f"  {et}: {n:,} rows")
 
 # %% [markdown]
 # ## 6. Write artifacts
