@@ -1,0 +1,277 @@
+table: matches_raw
+dataset: aoe2companion
+game: aoe2
+object_type: table
+step: 01_02_02
+row_count: 0  # pending 01_02_02 execution; pre-ingestion row count: 277,099,059 (direct Parquet scan in 01_02_01)
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
+generated_date: "2026-04-14"
+
+columns:
+  - name: matchId
+    type: INTEGER
+    nullable: true
+    description: Unique match identifier. Join key across tables.
+    notes: "0 NULLs confirmed in 01_02_01 full-corpus scan."
+  - name: started
+    type: TIMESTAMP
+    nullable: true
+    description: Match start timestamp.
+  - name: finished
+    type: TIMESTAMP
+    nullable: true
+    description: Match end timestamp.
+  - name: leaderboard
+    type: VARCHAR
+    nullable: true
+    description: Leaderboard identifier (e.g. ranked 1v1, ranked team).
+    notes: "BYTE_ARRAY → VARCHAR via binary_as_string=true."
+  - name: name
+    type: VARCHAR
+    nullable: true
+    description: Player display name.
+    notes: "BYTE_ARRAY → VARCHAR via binary_as_string=true."
+  - name: server
+    type: VARCHAR
+    nullable: true
+    description: Server/datacenter where the match was played.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: internalLeaderboardId
+    type: INTEGER
+    nullable: true
+    description: Internal leaderboard numeric ID.
+  - name: privacy
+    type: VARCHAR
+    nullable: true
+    description: Match privacy setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: mod
+    type: BOOLEAN
+    nullable: true
+    description: Whether a mod was active.
+  - name: map
+    type: VARCHAR
+    nullable: true
+    description: Map name.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: difficulty
+    type: VARCHAR
+    nullable: true
+    description: Difficulty setting (relevant for scenarios).
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: startingAge
+    type: VARCHAR
+    nullable: true
+    description: Starting age setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: fullTechTree
+    type: BOOLEAN
+    nullable: true
+    description: Full tech tree enabled.
+  - name: allowCheats
+    type: BOOLEAN
+    nullable: true
+    description: Cheats allowed.
+  - name: empireWarsMode
+    type: BOOLEAN
+    nullable: true
+    description: Empire Wars mode active.
+  - name: endingAge
+    type: VARCHAR
+    nullable: true
+    description: Ending age cap setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: gameMode
+    type: VARCHAR
+    nullable: true
+    description: Game mode label.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: lockSpeed
+    type: BOOLEAN
+    nullable: true
+    description: Speed lock enabled.
+  - name: lockTeams
+    type: BOOLEAN
+    nullable: true
+    description: Team lock enabled.
+  - name: mapSize
+    type: VARCHAR
+    nullable: true
+    description: Map size category.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: population
+    type: INTEGER
+    nullable: true
+    description: Population cap setting.
+  - name: hideCivs
+    type: BOOLEAN
+    nullable: true
+    description: Civilisations hidden from opponents.
+  - name: recordGame
+    type: BOOLEAN
+    nullable: true
+    description: Game recording enabled.
+  - name: regicideMode
+    type: BOOLEAN
+    nullable: true
+    description: Regicide mode active.
+  - name: gameVariant
+    type: VARCHAR
+    nullable: true
+    description: Game variant label.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: resources
+    type: VARCHAR
+    nullable: true
+    description: Starting resources setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: sharedExploration
+    type: BOOLEAN
+    nullable: true
+    description: Shared exploration enabled.
+  - name: speed
+    type: VARCHAR
+    nullable: true
+    description: Game speed setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: speedFactor
+    type: FLOAT
+    nullable: true
+    description: Game speed multiplier.
+  - name: suddenDeathMode
+    type: BOOLEAN
+    nullable: true
+    description: Sudden death mode active.
+  - name: antiquityMode
+    type: BOOLEAN
+    nullable: true
+    description: Antiquity mode active.
+  - name: civilizationSet
+    type: VARCHAR
+    nullable: true
+    description: Civilisation set restriction.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: teamPositions
+    type: BOOLEAN
+    nullable: true
+    description: Fixed team positions.
+  - name: teamTogether
+    type: BOOLEAN
+    nullable: true
+    description: Team together spawn setting.
+  - name: treatyLength
+    type: INTEGER
+    nullable: true
+    description: Treaty length in minutes (0 = no treaty).
+  - name: turboMode
+    type: BOOLEAN
+    nullable: true
+    description: Turbo mode active.
+  - name: victory
+    type: VARCHAR
+    nullable: true
+    description: Victory condition.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: revealMap
+    type: VARCHAR
+    nullable: true
+    description: Map reveal setting.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: scenario
+    type: VARCHAR
+    nullable: true
+    description: Scenario name, if applicable.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: password
+    type: BOOLEAN
+    nullable: true
+    description: Password-protected lobby.
+  - name: modDataset
+    type: VARCHAR
+    nullable: true
+    description: Mod dataset identifier.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: profileId
+    type: INTEGER
+    nullable: true
+    description: Player profile ID. Join key to leaderboards_raw and profiles_raw.
+    notes: "0 NULLs confirmed in 01_02_01 full-corpus scan."
+  - name: rating
+    type: INTEGER
+    nullable: true
+    description: Player rating at match time.
+    notes: "Pre-game feature."
+  - name: ratingDiff
+    type: INTEGER
+    nullable: true
+    description: Rating change from this match.
+    notes: "Post-game feature."
+  - name: color
+    type: INTEGER
+    nullable: true
+    description: Player colour index.
+  - name: colorHex
+    type: VARCHAR
+    nullable: true
+    description: Player colour as hex string.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: slot
+    type: INTEGER
+    nullable: true
+    description: Player slot number in the lobby.
+  - name: status
+    type: VARCHAR
+    nullable: true
+    description: Match status (e.g. finished, in-progress).
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: team
+    type: INTEGER
+    nullable: true
+    description: Team number this player belongs to.
+  - name: won
+    type: BOOLEAN
+    nullable: true
+    description: Whether this player won the match.
+    notes: "Prediction target. 12,985,561 NULLs (4.69% of rows) — genuine API recording gaps, not type promotion artefacts (H1 rejected, H2 confirmed in 01_02_01 won-NULL root-cause investigation 2026-04-14). Spans entire 5.7-year corpus."
+  - name: country
+    type: VARCHAR
+    nullable: true
+    description: Player country code.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: shared
+    type: BOOLEAN
+    nullable: true
+    description: Match shared on aoe2companion.
+  - name: verified
+    type: BOOLEAN
+    nullable: true
+    description: Match verified flag.
+  - name: civ
+    type: VARCHAR
+    nullable: true
+    description: Civilisation played.
+    notes: "BYTE_ARRAY → VARCHAR."
+  - name: filename
+    type: VARCHAR
+    nullable: true
+    description: Match Parquet file path relative to raw_dir.
+    notes: "Invariant I10."
+
+provenance:
+  source_files_pattern: "data/raw/matches/match-YYYY-MM-DD.parquet"
+  duckdb_read_function: read_parquet
+  duckdb_read_options:
+    union_by_name: true
+    filename: true
+    binary_as_string: true
+  ingestion_module: "src/rts_predict/games/aoe2/datasets/aoe2companion/ingestion.py"
+  ingestion_function: load_matches_raw
+  notes: "54 source columns + filename = 55 total. 22 unannotated BYTE_ARRAY columns resolved to VARCHAR via binary_as_string=true. 2,073 daily files spanning 2020-08-01 to 2026-04-04. avg_rows_per_match=3.71 indicates team-game data beyond 1v1."
+
+invariants:
+  - id: I6
+    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
+  - id: I7
+    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
+  - id: I10
+    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."

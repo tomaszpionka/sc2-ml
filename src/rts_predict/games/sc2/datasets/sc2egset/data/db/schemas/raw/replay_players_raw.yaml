@@ -1,0 +1,137 @@
+table: replay_players_raw
+dataset: sc2egset
+game: sc2
+object_type: table
+step: 01_02_02
+row_count: 44817
+describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
+generated_date: "2026-04-14"
+
+columns:
+  - name: filename
+    type: VARCHAR
+    nullable: false
+    description: Replay file path relative to raw_dir.
+    notes: "Invariant I10."
+  - name: toon_id
+    type: VARCHAR
+    nullable: false
+    description: "Player toon ID (MAP key from ToonPlayerDescMap, e.g. '3-S2-1-4842177')."
+    notes: "Pre-game feature."
+  - name: nickname
+    type: VARCHAR
+    nullable: true
+    description: Player in-game nickname.
+    notes: "Pre-game feature."
+  - name: playerID
+    type: INTEGER
+    nullable: true
+    description: Player slot ID within the replay (1 or 2 for standard 1v1).
+  - name: userID
+    type: BIGINT
+    nullable: true
+    description: Blizzard user ID.
+  - name: isInClan
+    type: BOOLEAN
+    nullable: true
+    description: Whether the player belongs to a clan.
+  - name: clanTag
+    type: VARCHAR
+    nullable: true
+    description: Clan tag string, null if not in a clan.
+  - name: MMR
+    type: INTEGER
+    nullable: true
+    description: Matchmaking Rating at game time.
+    notes: "Pre-game feature."
+  - name: race
+    type: VARCHAR
+    nullable: true
+    description: "Actual race played (after random resolution). Values: Terran, Protoss, Zerg."
+  - name: selectedRace
+    type: VARCHAR
+    nullable: true
+    description: Race selected in lobby (may be 'Random').
+    notes: "Pre-game feature."
+  - name: handicap
+    type: INTEGER
+    nullable: true
+    description: Handicap percentage (100 = no handicap).
+    notes: "Pre-game feature."
+  - name: region
+    type: VARCHAR
+    nullable: true
+    description: "Battle.net region (US, EU, KR, etc.)."
+    notes: "Pre-game feature."
+  - name: realm
+    type: VARCHAR
+    nullable: true
+    description: Battle.net realm within region.
+    notes: "Pre-game feature."
+  - name: highestLeague
+    type: VARCHAR
+    nullable: true
+    description: "Highest league achieved (e.g. Grandmaster, Master, Diamond)."
+    notes: "Pre-game feature."
+  - name: result
+    type: VARCHAR
+    nullable: true
+    description: "Match result for this player (Win, Loss)."
+    notes: "Post-game. Prediction target."
+  - name: APM
+    type: INTEGER
+    nullable: true
+    description: Actions Per Minute over the full game.
+    notes: "Post-game feature."
+  - name: SQ
+    type: INTEGER
+    nullable: true
+    description: Spending Quotient — resource efficiency metric.
+    notes: "Post-game feature."
+  - name: supplyCappedPercent
+    type: INTEGER
+    nullable: true
+    description: Percentage of game time spent supply-capped.
+    notes: "Post-game feature."
+  - name: startDir
+    type: INTEGER
+    nullable: true
+    description: Starting direction on the map (compass encoding).
+  - name: startLocX
+    type: INTEGER
+    nullable: true
+    description: Starting location X coordinate.
+  - name: startLocY
+    type: INTEGER
+    nullable: true
+    description: Starting location Y coordinate.
+  - name: color_a
+    type: INTEGER
+    nullable: true
+    description: Player colour alpha channel.
+  - name: color_b
+    type: INTEGER
+    nullable: true
+    description: Player colour blue channel.
+  - name: color_g
+    type: INTEGER
+    nullable: true
+    description: Player colour green channel.
+  - name: color_r
+    type: INTEGER
+    nullable: true
+    description: Player colour red channel.
+
+provenance:
+  source_files_pattern: "data/raw/<tournament>/<tournament>_data/*.SC2Replay.json"
+  extraction_method: "Python-side extraction from ToonPlayerDescMap JSON blobs in replays_meta_raw. Rows batch-inserted via executemany()."
+  ingestion_module: "src/rts_predict/games/sc2/datasets/sc2egset/ingestion.py"
+  ingestion_function: load_replay_players_raw
+
+invariants:
+  - id: I6
+    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
+  - id: I7
+    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
+  - id: I10
+    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."
