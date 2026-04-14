@@ -2,44 +2,40 @@ table: tracker_events_raw
 dataset: sc2egset
 game: sc2
 object_type: view
-step: 01_02_02
+step: 4226
 row_count: 62003411
 describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
-generated_date: "2026-04-14"
-
+generated_date: '2026-04-14'
 columns:
-  - name: filename
-    type: VARCHAR
-    nullable: true
-    description: Replay file path relative to raw_dir.
-    notes: "Invariant I10."
-  - name: loop
-    type: BIGINT
-    nullable: true
-    description: Game tick at which this event occurred.
-  - name: evtTypeName
-    type: VARCHAR
-    nullable: true
-    description: Event type name.
-    notes: "Top types: UnitBorn (22M), UnitDied (16M), UnitTypeChange (11M), PlayerStats (4.6M)."
-  - name: event_data
-    type: VARCHAR
-    nullable: true
-    description: Full event payload serialised as JSON VARCHAR.
-
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Replay file path relative to raw_dir.
+  notes: Invariant I10.
+- name: loop
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: evtTypeName
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: event_data
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
 provenance:
-  source_files_pattern: "data/db/events/trackerEvents/batch_*.parquet"
+  source_files_pattern: data/db/events/trackerEvents/batch_*.parquet
   duckdb_read_function: read_parquet
   duckdb_read_options:
     filename: true
-  ingestion_module: "src/rts_predict/games/sc2/datasets/sc2egset/ingestion.py"
+  ingestion_module: src/rts_predict/games/sc2/datasets/sc2egset/ingestion.py
   ingestion_function: load_event_views
-  notes: "Same extraction pipeline as game_events_raw."
-
+  notes: Same extraction pipeline as game_events_raw.
 invariants:
-  - id: I6
-    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
-  - id: I7
-    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
-  - id: I10
-    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."
+- id: I6
+  description: 'Reproducibility: describe_artifact field cross-references the DESCRIBE run.'
+- id: I7
+  description: 'No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed.'
+- id: I10
+  description: 'Relative filename: filename column stores paths relative to raw_dir, not absolute paths.'

@@ -2,94 +2,82 @@ table: players_raw
 dataset: aoestats
 game: aoe2
 object_type: table
-step: 01_02_01
+step: 4225
 row_count: 107627584
 describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
-generated_date: "2026-04-14"
-
+generated_date: '2026-04-14'
 columns:
-  - name: winner
-    type: BOOLEAN
-    nullable: true
-    description: Whether this player won the match.
-    notes: "Prediction target. NULL rate not yet quantified for aoestats."
-  - name: game_id
-    type: VARCHAR
-    nullable: true
-    description: Match identifier. Join key to matches_raw.
-  - name: team
-    type: BIGINT
-    nullable: true
-    description: Team number this player belongs to.
-  - name: feudal_age_uptime
-    type: DOUBLE
-    nullable: true
-    description: Time to reach Feudal Age in seconds.
-    notes: "93,726,448 NULLs (87% of rows) — games ending before Feudal Age or schema gap in 89 of 171 player files (null-typed → DOUBLE with NULL fill via union_by_name)."
-  - name: castle_age_uptime
-    type: DOUBLE
-    nullable: true
-    description: Time to reach Castle Age in seconds.
-    notes: "94,641,831 NULLs (88% of rows) — same cause as feudal_age_uptime."
-  - name: imperial_age_uptime
-    type: DOUBLE
-    nullable: true
-    description: Time to reach Imperial Age in seconds.
-    notes: "98,468,904 NULLs (91% of rows) — same cause as feudal_age_uptime."
-  - name: old_rating
-    type: BIGINT
-    nullable: true
-    description: Player Elo rating before this match.
-    notes: "Pre-game feature."
-  - name: new_rating
-    type: BIGINT
-    nullable: true
-    description: Player Elo rating after this match.
-    notes: "Post-game feature."
-  - name: match_rating_diff
-    type: DOUBLE
-    nullable: true
-    description: Rating change from this match.
-    notes: "Post-game feature."
-  - name: replay_summary_raw
-    type: VARCHAR
-    nullable: true
-    description: Raw replay summary JSON string (contents TBD — investigate in 01_03).
-  - name: profile_id
-    type: DOUBLE
-    nullable: true
-    description: Player profile ID.
-    notes: "FLAGGED: DOUBLE due to mixed int64 (135 files) / double (36 files) source types. Precision loss risk for IDs > 2^53. 1,185 NULLs. Cast to BIGINT deferred to cleaning step 01_04."
-  - name: civ
-    type: VARCHAR
-    nullable: true
-    description: Civilisation played.
-    notes: "Pre-game feature."
-  - name: opening
-    type: VARCHAR
-    nullable: true
-    description: Opening strategy label.
-    notes: "92,616,290 NULLs (86% of rows) — null-typed in 89 of 171 player files. May represent a schema change around mid-dataset."
-  - name: filename
-    type: VARCHAR
-    nullable: true
-    description: Weekly player Parquet file path relative to raw_dir.
-    notes: "Invariant I10."
-
+- name: winner
+  type: BOOLEAN
+  nullable: true
+  description: 'TODO: fill'
+- name: game_id
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: team
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: feudal_age_uptime
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: castle_age_uptime
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: imperial_age_uptime
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: old_rating
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: new_rating
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: match_rating_diff
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: replay_summary_raw
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: profile_id
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: civ
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: opening
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Weekly player Parquet file path relative to raw_dir.
+  notes: Invariant I10.
 provenance:
-  source_files_pattern: "data/raw/players/*.parquet"
+  source_files_pattern: data/raw/players/*.parquet
   duckdb_read_function: read_parquet
   duckdb_read_options:
     union_by_name: true
     filename: true
-  ingestion_module: "src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py"
+  ingestion_module: src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py
   ingestion_function: load_players_raw
-  notes: "171 weekly files. Five variant columns — profile_id, age uptimes, and opening all have mixed types. Missing week: 2025-11-16_2025-11-22 has matches but no player data."
-
+  notes: '171 weekly files. Five variant columns — profile_id, age uptimes, and opening all have mixed types. Missing week:
+    2025-11-16_2025-11-22 has matches but no player data.'
 invariants:
-  - id: I6
-    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
-  - id: I7
-    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
-  - id: I10
-    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."
+- id: I6
+  description: 'Reproducibility: describe_artifact field cross-references the DESCRIBE run.'
+- id: I7
+  description: 'No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed.'
+- id: I10
+  description: 'Relative filename: filename column stores paths relative to raw_dir, not absolute paths.'

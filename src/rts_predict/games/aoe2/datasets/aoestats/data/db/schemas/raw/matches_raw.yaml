@@ -2,107 +2,98 @@ table: matches_raw
 dataset: aoestats
 game: aoe2
 object_type: table
-step: 01_02_01
+step: 4225
 row_count: 30690651
 describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json
-generated_date: "2026-04-14"
-
+generated_date: '2026-04-14'
 columns:
-  - name: map
-    type: VARCHAR
-    nullable: true
-    description: Map name.
-  - name: started_timestamp
-    type: TIMESTAMP WITH TIME ZONE
-    nullable: true
-    description: Match start timestamp.
-    notes: "Promoted from mixed us/ns Parquet types (68 files timestamp[us], 104 files timestamp[ns]) via union_by_name. Both resolve to TIMESTAMP WITH TIME ZONE in DuckDB."
-  - name: duration
-    type: BIGINT
-    nullable: true
-    description: Match duration in nanoseconds (Arrow duration[ns] → BIGINT).
-    notes: "Divide by 1e9 for seconds. NOT INTERVAL — DuckDB 1.5.1 maps duration[ns] to BIGINT."
-  - name: irl_duration
-    type: BIGINT
-    nullable: true
-    description: Real-world match duration in nanoseconds.
-    notes: "Same BIGINT nanoseconds caveat as duration."
-  - name: game_id
-    type: VARCHAR
-    nullable: true
-    description: Unique match identifier. Join key to players_raw.
-  - name: avg_elo
-    type: DOUBLE
-    nullable: true
-    description: Average Elo rating of all players in the match.
-    notes: "Pre-game feature."
-  - name: num_players
-    type: BIGINT
-    nullable: true
-    description: Number of players in the match.
-  - name: team_0_elo
-    type: DOUBLE
-    nullable: true
-    description: Average Elo of team 0.
-    notes: "Pre-game feature."
-  - name: team_1_elo
-    type: DOUBLE
-    nullable: true
-    description: Average Elo of team 1.
-    notes: "Pre-game feature."
-  - name: replay_enhanced
-    type: BOOLEAN
-    nullable: true
-    description: Whether the match has replay data attached.
-  - name: leaderboard
-    type: VARCHAR
-    nullable: true
-    description: Leaderboard identifier.
-  - name: mirror
-    type: BOOLEAN
-    nullable: true
-    description: Whether both players chose the same civilisation.
-  - name: patch
-    type: BIGINT
-    nullable: true
-    description: Game patch number at match time.
-  - name: raw_match_type
-    type: DOUBLE
-    nullable: true
-    description: Raw match type numeric code.
-    notes: "Promoted from mixed int64 (106 files) / double (66 files) via union_by_name. No NULLs introduced by promotion."
-  - name: game_type
-    type: VARCHAR
-    nullable: true
-    description: Game type label.
-  - name: game_speed
-    type: VARCHAR
-    nullable: true
-    description: Game speed setting.
-  - name: starting_age
-    type: VARCHAR
-    nullable: true
-    description: Starting age setting.
-  - name: filename
-    type: VARCHAR
-    nullable: true
-    description: Weekly match Parquet file path relative to raw_dir.
-    notes: "Invariant I10."
-
+- name: map
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: started_timestamp
+  type: TIMESTAMP WITH TIME ZONE
+  nullable: true
+  description: 'TODO: fill'
+- name: duration
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: irl_duration
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: game_id
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: avg_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: num_players
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: team_0_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: team_1_elo
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: replay_enhanced
+  type: BOOLEAN
+  nullable: true
+  description: 'TODO: fill'
+- name: leaderboard
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: mirror
+  type: BOOLEAN
+  nullable: true
+  description: 'TODO: fill'
+- name: patch
+  type: BIGINT
+  nullable: true
+  description: 'TODO: fill'
+- name: raw_match_type
+  type: DOUBLE
+  nullable: true
+  description: 'TODO: fill'
+- name: game_type
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: game_speed
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: starting_age
+  type: VARCHAR
+  nullable: true
+  description: 'TODO: fill'
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Weekly match Parquet file path relative to raw_dir.
+  notes: Invariant I10.
 provenance:
-  source_files_pattern: "data/raw/matches/*.parquet"
+  source_files_pattern: data/raw/matches/*.parquet
   duckdb_read_function: read_parquet
   duckdb_read_options:
     union_by_name: true
     filename: true
-  ingestion_module: "src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py"
+  ingestion_module: src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py
   ingestion_function: load_matches_raw
-  notes: "172 weekly files. Two variant columns with mixed Parquet types across files — handled by union_by_name type promotion. No NULLs introduced."
-
+  notes: 172 weekly files. Two variant columns with mixed Parquet types across files — handled by union_by_name type promotion.
+    No NULLs introduced.
 invariants:
-  - id: I6
-    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
-  - id: I7
-    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
-  - id: I10
-    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."
+- id: I6
+  description: 'Reproducibility: describe_artifact field cross-references the DESCRIBE run.'
+- id: I7
+  description: 'No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed.'
+- id: I10
+  description: 'Relative filename: filename column stores paths relative to raw_dir, not absolute paths.'
