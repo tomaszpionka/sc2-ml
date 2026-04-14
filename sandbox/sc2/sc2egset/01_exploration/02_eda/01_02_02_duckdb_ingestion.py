@@ -217,15 +217,19 @@ dedup_df = db.fetch_df(dedup_query)
 print(dedup_df.to_string(index=False))
 
 # %% [markdown]
-# ## 5. Extract events to Parquet (optional -- SSD-dependent)
+# ## 5. Extract events to Parquet
 #
-# This step extracts gameEvents, trackerEvents, messageEvents to
-# zstd-compressed Parquet. If SSD space is insufficient, skip this step.
-# NOTE: When implemented, `extract_events_to_parquet` must use
-# `str(fpath.relative_to(raw_dir))` for the filename column (I10).
+# Extracts gameEvents, trackerEvents, messageEvents from all 22,390
+# SC2Replay.json files to zstd-compressed Parquet under:
+#   IN_GAME_PARQUET_DIR/gameEvents/batch_*.parquet
+#   IN_GAME_PARQUET_DIR/trackerEvents/batch_*.parquet
+#   IN_GAME_PARQUET_DIR/messageEvents/batch_*.parquet
+#
+# Single-pass: each file is read once; events routed to all three
+# accumulators in the same batch loop (I/O: 3× reduction vs sequential).
+# Columns: filename (relative to raw_dir, I10), loop, evtTypeName, event_data.
 
 # %%
-# Uncomment to run event extraction:
 from rts_predict.games.sc2.config import IN_GAME_PARQUET_DIR
 from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
     extract_events_to_parquet,
@@ -240,7 +244,7 @@ for et, n in event_counts.items():
     print(f"  {et}: {n:,} rows")
 
 # %% [markdown]
-# ## 6. Write artifacts
+# ## 8. Write artifacts
 
 # %%
 reports_dir = get_reports_dir("sc2", "sc2egset")
@@ -272,6 +276,7 @@ artifact_data = {
     "players_per_replay_distribution": player_count_df.to_dict(orient="records"),
     "map_aliases_dedup": dedup_df.to_dict(orient="records")[0],
     "tpdm_type": tpdm_type_df.to_dict(orient="records")[0],
+    "event_extraction_counts": event_counts,
 }
 
 artifact_path = artifacts_dir / "01_02_02_duckdb_ingestion.json"
@@ -303,7 +308,8 @@ md_lines.extend([
     "  filename stores relative path from raw_dir.",
     "- **map_aliases_raw**: DuckDB table, all tournament mapping files with",
     "  tournament provenance column. filename stores relative path from raw_dir.",
-    "- **Events**: Parquet extraction (optional, SSD-dependent, deferred).",
+    "- **Events**: Parquet extracted to IN_GAME_PARQUET_DIR; view registration",
+    "  deferred to a dedicated step.",
 ])
 
 # %%
@@ -388,6 +394,18 @@ md_lines.extend([
     "",
     dedup_df.to_markdown(index=False),
 ])
+
+# %%
+# Event extraction counts
+md_lines.extend([
+    "",
+    "## Event extraction\n",
+    "",
+    "| Event type | Rows extracted |",
+    "|------------|---------------|",
+])
+for et, n in event_counts.items():
+    md_lines.append(f"| {et} | {n:,} |")
 
 md_path = artifacts_dir / "01_02_02_duckdb_ingestion.md"
 md_path.write_text("\n".join(md_lines))
