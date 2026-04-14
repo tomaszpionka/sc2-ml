@@ -33,15 +33,13 @@
 
 # %%
 import json
-import logging
 from pathlib import Path
 
 from rts_predict.common.json_utils import classify_value, discover_json_schema, get_json_keypaths
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.sc2.config import REPLAYS_SOURCE_DIR
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
 
 RAW_DIR: Path = REPLAYS_SOURCE_DIR
 ARTIFACTS_DIR: Path = (

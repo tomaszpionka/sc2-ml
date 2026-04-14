@@ -28,7 +28,6 @@
 
 # %%
 import json
-import logging
 from pathlib import Path
 
 from rts_predict.common.notebook_utils import get_notebook_db, get_reports_dir, setup_notebook_logging
@@ -37,7 +36,8 @@ from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
     load_all_raw_tables,
 )
 
-setup_notebook_logging()
+logger = setup_notebook_logging()
+logger.info("Source: %s", REPLAYS_SOURCE_DIR)
 
 # %% [markdown]
 # ## 1. Ingest all DuckDB tables
@@ -276,7 +276,7 @@ artifact_data = {
 
 artifact_path = artifacts_dir / "01_02_02_duckdb_ingestion.json"
 artifact_path.write_text(json.dumps(artifact_data, indent=2, default=str))
-print(f"Artifact written: {artifact_path}")
+logger.info("Artifact written: %s", artifact_path)
 
 # %%
 md_lines = [
@@ -391,7 +391,7 @@ md_lines.extend([
 
 md_path = artifacts_dir / "01_02_02_duckdb_ingestion.md"
 md_path.write_text("\n".join(md_lines))
-print(f"Report written: {md_path}")
+logger.info("Report written: %s", md_path)
 
 # %%
 db.close()

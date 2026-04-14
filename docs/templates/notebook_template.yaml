@@ -175,8 +175,7 @@ cells:
       from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
       # ... other imports from src/rts_predict/ ...
 
-      setup_notebook_logging()
-      logger = logging.getLogger(__name__)
+      logger = setup_notebook_logging()
     notes: |
       - All imports from src/rts_predict/. No inline definitions.
       - logging setup is mandatory for auditability (all counts and

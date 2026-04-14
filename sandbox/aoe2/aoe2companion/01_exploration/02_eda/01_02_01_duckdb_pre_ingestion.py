@@ -27,19 +27,19 @@
 # **Step scope:** query
 
 # %%
-import logging
 
 import duckdb
+import json
 
-from rts_predict.common.notebook_utils import setup_notebook_logging
+from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOE2COMPANION_RAW_DIR
 from rts_predict.games.aoe2.datasets.aoe2companion.pre_ingestion import (
     inspect_binary_columns,
     run_smoke_test,
 )
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
+logger.info("Source: %s", AOE2COMPANION_RAW_DIR)
 
 # %% [markdown]
 # ## 1. Pyarrow binary column inspection
@@ -251,6 +251,95 @@ con.sql("""
 # - **won NULLs:** acceptable rate? (based on 7c)
 # - **Data structure:** player-in-match rows confirmed? (based on 7d)
 # - **Proposed DDL** for matches_raw, ratings_raw, leaderboards_raw, profiles_raw
+
+# %% [markdown]
+# ## Write artifact
+
+# %%
+artifacts_dir = (
+    get_reports_dir("aoe2", "aoe2companion")
+    / "artifacts" / "01_exploration" / "02_eda"
+)
+artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+matches_glob = str(AOE2COMPANION_RAW_DIR / "matches" / "*.parquet")
+null_rates_df = con.sql("""
+    SELECT
+        COUNT(*) AS total,
+        COUNT(matchId) AS matchId_nn,
+        COUNT(profileId) AS profileId_nn,
+        COUNT(won) AS won_nn,
+        ROUND(100.0 * (COUNT(*) - COUNT(won)) / COUNT(*), 2) AS won_null_pct
+    FROM read_parquet('{glob}', binary_as_string=true, union_by_name=true)
+""".format(glob=matches_glob)).fetchdf()
+
+uniqueness_df = con.sql("""
+    SELECT
+        COUNT(*) AS total_rows,
+        COUNT(DISTINCT matchId) AS distinct_matches,
+        ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT matchId), 2) AS avg_rows_per_match
+    FROM read_parquet('{glob}', binary_as_string=true, union_by_name=true)
+""".format(glob=matches_glob)).fetchdf()
+
+artifact_data = {
+    "step": "01_02_01",
+    "dataset": "aoe2companion",
+    "binary_column_inspection": binary_info,
+    "smoke_test": {
+        "matches": {
+            "row_count": smoke["matches"]["row_count"],
+            "column_count": smoke["matches"]["column_count"],
+        },
+        "ratings": {
+            "row_count": smoke["ratings"]["row_count"],
+            "column_count": smoke["ratings"]["column_count"],
+        },
+    },
+    "matches_null_rates": null_rates_df.to_dict(orient="records")[0],
+    "match_id_uniqueness": uniqueness_df.to_dict(orient="records")[0],
+}
+
+artifact_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.json"
+artifact_path.write_text(json.dumps(artifact_data, indent=2, default=str))
+logger.info("Artifact written: %s", artifact_path)
+
+# %%
+null_row = null_rates_df.iloc[0]
+uniq_row = uniqueness_df.iloc[0]
+
+md_lines = [
+    "# Step 01_02_01 -- DuckDB Pre-Ingestion: aoe2companion\n",
+    "",
+    "## Binary column inspection\n",
+    "",
+]
+for subdir, info in binary_info.items():
+    md_lines.append(f"- `{subdir}`: {info['binary_column_count']} binary columns")
+md_lines.extend([
+    "",
+    "## Smoke test\n",
+    "",
+    f"- matches: {smoke['matches']['row_count']:,} rows, {smoke['matches']['column_count']} cols",
+    f"- ratings: {smoke['ratings']['row_count']:,} rows, {smoke['ratings']['column_count']} cols",
+    "",
+    "## matches NULL rates\n",
+    "",
+    f"- Total rows: {int(null_row['total']):,}",
+    f"- won NULLs: {int(null_row['total']) - int(null_row['won_nn']):,}"
+    f" ({float(null_row['won_null_pct']):.2f}%)",
+    f"- matchId NULLs: {int(null_row['total']) - int(null_row['matchId_nn']):,}",
+    "",
+    "## matchId uniqueness\n",
+    "",
+    f"- Total rows: {int(uniq_row['total_rows']):,}",
+    f"- Distinct matchIds: {int(uniq_row['distinct_matches']):,}",
+    f"- Avg rows/match: {float(uniq_row['avg_rows_per_match']):.2f}"
+    " (expected ~2 for player-in-match)",
+])
+
+md_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.md"
+md_path.write_text("\n".join(md_lines))
+logger.info("Report written: %s", md_path)
 
 # %%
 con.close()

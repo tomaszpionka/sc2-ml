@@ -33,7 +33,6 @@
 
 # %%
 import json
-import logging
 from pathlib import Path
 
 from rts_predict.common.json_utils import build_column_list, build_schema_table
@@ -47,8 +46,7 @@ from rts_predict.games.aoe2.config import (
     AOE2COMPANION_RAW_RATINGS_DIR,
 )
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
 
 ARTIFACTS_DIR: Path = (
     get_reports_dir("aoe2", "aoe2companion")

@@ -29,7 +29,6 @@
 
 # %%
 import json
-import logging
 
 from rts_predict.common.notebook_utils import get_notebook_db, get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOE2COMPANION_RAW_DIR
@@ -38,7 +37,8 @@ from rts_predict.games.aoe2.datasets.aoe2companion.ingestion import (
 )
 from rts_predict.games.aoe2.datasets.aoe2companion.types import DtypeDecision
 
-setup_notebook_logging()
+logger = setup_notebook_logging()
+logger.info("Source: %s", AOE2COMPANION_RAW_DIR)
 
 # %% [markdown]
 # ## 1. Configure dtype decision
@@ -222,7 +222,7 @@ artifact_data = {
 
 artifact_path = artifacts_dir / "01_02_02_duckdb_ingestion.json"
 artifact_path.write_text(json.dumps(artifact_data, indent=2))
-print(f"Artifact written: {artifact_path}")
+logger.info("Artifact written: %s", artifact_path)
 
 # %%
 md_lines = [
@@ -255,4 +255,4 @@ md_lines.extend([
 
 md_path = artifacts_dir / "01_02_02_duckdb_ingestion.md"
 md_path.write_text("\n".join(md_lines))
-print(f"Report written: {md_path}")
+logger.info("Report written: %s", md_path)

@@ -28,7 +28,6 @@
 
 # %%
 import json
-import logging
 import statistics
 from pathlib import Path
 
@@ -45,8 +44,8 @@ from rts_predict.games.sc2.datasets.sc2egset.pre_ingestion import (
     probe_mapping_read_json_auto,
 )
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
+logger.info("Source: %s", REPLAYS_SOURCE_DIR)
 
 # %% [markdown]
 # ## 1. Select sample files
@@ -505,6 +504,75 @@ print("\nSmoke test passed — output cleaned up.")
 # - **Raw layer strategy:** `SELECT *` with `filename=true` for all `*_raw`
 #   tables — no explicit DDL at this stage. DDL is deferred to staging tables
 #   after exploration, analysis, and cleaning.
+
+# %% [markdown]
+# ## Write artifact
+
+# %%
+artifacts_dir = (
+    get_reports_dir("sc2", "sc2egset")
+    / "artifacts" / "01_exploration" / "02_eda"
+)
+artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+storage_estimates: dict[str, dict[str, float]] = {}
+for _key in ("gameEvents", "trackerEvents", "messageEvents"):
+    _bytes = [r[_key]["json_bytes"] for r in ea_results]
+    storage_estimates[_key] = {
+        "mean_gb": round(statistics.mean(_bytes) * 22390 / 1024**3, 2),
+        "median_gb": round(statistics.median(_bytes) * 22390 / 1024**3, 2),
+    }
+
+artifact_data = {
+    "step": "01_02_01",
+    "dataset": "sc2egset",
+    "total_replay_files": len(all_replays),
+    "sample_files": [str(s.relative_to(REPLAYS_SOURCE_DIR)) for s in samples],
+    "rja_probe_results": rja_results,
+    "event_array_storage_estimates_22390_files": storage_estimates,
+    "batch_ingestion_probe": {
+        k: v for k, v in batch_result.items() if k != "directory"
+    },
+    "mapping_file_census": {
+        "total_files_found": census["total_files_found"],
+        "total_combined_bytes": census["total_combined_bytes"],
+        "cross_file_consistency": census["cross_file_consistency"],
+    },
+}
+
+artifact_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.json"
+artifact_path.write_text(json.dumps(artifact_data, indent=2, default=str))
+logger.info("Artifact written: %s", artifact_path)
+
+# %%
+md_lines = [
+    "# Step 01_02_01 -- DuckDB Pre-Ingestion Investigation: sc2egset\n",
+    "",
+    "## Storage estimates (22,390 files)\n",
+    "",
+    "| Event type | Mean (GB) | Median (GB) |",
+    "|-----------|-----------|-------------|",
+]
+for _key, est in storage_estimates.items():
+    md_lines.append(f"| {_key} | {est['mean_gb']} | {est['median_gb']} |")
+md_lines.extend([
+    "",
+    "## Batch ingestion probe\n",
+    "",
+    f"- Files: {batch_result.get('file_count', 'N/A')}",
+    f"- Success: {batch_result.get('success', 'N/A')}",
+    f"- Elapsed: {batch_result.get('elapsed_seconds', 'N/A')} seconds",
+    "",
+    "## Mapping file census\n",
+    "",
+    f"- Total files: {census['total_files_found']}",
+    f"- Combined bytes: {census['total_combined_bytes']:,}",
+    f"- Cross-file consistency: {census['cross_file_consistency']}",
+])
+
+md_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.md"
+md_path.write_text("\n".join(md_lines))
+logger.info("Report written: %s", md_path)
 
 # %%
 con.close()

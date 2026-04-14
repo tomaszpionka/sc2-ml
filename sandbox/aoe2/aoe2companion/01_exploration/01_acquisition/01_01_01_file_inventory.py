@@ -32,7 +32,6 @@
 
 # %%
 import json
-import logging
 import re
 import statistics
 from datetime import date
@@ -42,8 +41,7 @@ from rts_predict.common.filename_patterns import summarize_filename_patterns
 from rts_predict.common.inventory import inventory_directory
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
 
 # %%
 from rts_predict.games.aoe2.config import AOE2COMPANION_RAW_DIR

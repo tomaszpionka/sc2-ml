@@ -27,19 +27,19 @@
 # **Step scope:** query
 
 # %%
-import logging
 
 import duckdb
+import json
 
-from rts_predict.common.notebook_utils import setup_notebook_logging
+from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOESTATS_RAW_DIR
 from rts_predict.games.aoe2.datasets.aoestats.pre_ingestion import (
     run_variant_census,
     run_smoke_test,
 )
 
-setup_notebook_logging()
-logger = logging.getLogger(__name__)
+logger = setup_notebook_logging()
+logger.info("Source: %s", AOESTATS_RAW_DIR)
 
 # %% [markdown]
 # ## 1. Pre-ingestion variant census (pyarrow)
@@ -256,6 +256,91 @@ con.sql("""
 # - **game_id:** needs dedup at ingestion? (based on 7d)
 # - **winner NULLs:** acceptable rate? (based on 7c)
 # - **Proposed DDL** for matches_raw, players_raw, overviews_raw
+
+# %% [markdown]
+# ## Write artifact
+
+# %%
+artifacts_dir = (
+    get_reports_dir("aoe2", "aoestats")
+    / "artifacts" / "01_exploration" / "02_eda"
+)
+artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+winner_null_df = con.sql("""
+    SELECT
+        COUNT(*) AS total_players,
+        COUNT(winner) AS winner_nn,
+        ROUND(100.0 * (COUNT(*) - COUNT(winner)) / COUNT(*), 2) AS winner_null_pct
+    FROM read_parquet('{glob}', union_by_name=true)
+""".format(glob=str(AOESTATS_RAW_DIR / "players" / "*.parquet"))).fetchdf()
+
+game_id_dedup_df = con.sql("""
+    SELECT
+        COUNT(*) AS total_rows,
+        COUNT(DISTINCT game_id) AS distinct_game_ids,
+        COUNT(*) - COUNT(DISTINCT game_id) AS duplicate_rows
+    FROM read_parquet('{glob}', union_by_name=true)
+""".format(glob=str(AOESTATS_RAW_DIR / "matches" / "*.parquet"))).fetchdf()
+
+artifact_data = {
+    "step": "01_02_01",
+    "dataset": "aoestats",
+    "variant_column_census": {
+        "matches": {"variant_columns": census["matches"]["variant_columns"]},
+        "players": {"variant_columns": census["players"]["variant_columns"]},
+    },
+    "smoke_test": {
+        "matches": {
+            "row_count": smoke["matches"]["row_count"],
+            "column_count": smoke["matches"]["column_count"],
+        },
+        "players": {
+            "row_count": smoke["players"]["row_count"],
+            "column_count": smoke["players"]["column_count"],
+        },
+    },
+    "winner_null_rates": winner_null_df.to_dict(orient="records")[0],
+    "game_id_dedup": game_id_dedup_df.to_dict(orient="records")[0],
+}
+
+artifact_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.json"
+artifact_path.write_text(json.dumps(artifact_data, indent=2, default=str))
+logger.info("Artifact written: %s", artifact_path)
+
+# %%
+winner_row = winner_null_df.iloc[0]
+dedup_row = game_id_dedup_df.iloc[0]
+
+md_lines = [
+    "# Step 01_02_01 -- DuckDB Pre-Ingestion: aoestats\n",
+    "",
+    "## Variant column census\n",
+    "",
+    f"- Matches variant columns: {list(census['matches']['variant_columns'].keys())}",
+    f"- Players variant columns: {list(census['players']['variant_columns'].keys())}",
+    "",
+    "## Smoke test\n",
+    "",
+    f"- matches: {smoke['matches']['row_count']:,} rows, {smoke['matches']['column_count']} cols",
+    f"- players: {smoke['players']['row_count']:,} rows, {smoke['players']['column_count']} cols",
+    "",
+    "## winner NULL rates\n",
+    "",
+    f"- Total players: {int(winner_row['total_players']):,}",
+    f"- winner NULLs: {int(winner_row['total_players']) - int(winner_row['winner_nn']):,}"
+    f" ({float(winner_row['winner_null_pct']):.2f}%)",
+    "",
+    "## game_id dedup\n",
+    "",
+    f"- Total rows: {int(dedup_row['total_rows']):,}",
+    f"- Distinct game_ids: {int(dedup_row['distinct_game_ids']):,}",
+    f"- Duplicate rows: {int(dedup_row['duplicate_rows']):,}",
+]
+
+md_path = artifacts_dir / "01_02_01_duckdb_pre_ingestion.md"
+md_path.write_text("\n".join(md_lines))
+logger.info("Report written: %s", md_path)
 
 # %%
 con.close()
