@@ -42,9 +42,9 @@ logger.info("Source: %s", AOESTATS_RAW_DIR)
 # ## 1. Ingest all DuckDB tables
 #
 # Calls `load_all_raw_tables` which creates:
-# - `raw_matches` -- from 172 weekly match Parquet files (union_by_name)
-# - `raw_players` -- from 171 weekly player Parquet files (union_by_name)
-# - `raw_overviews` -- singleton overview.json
+# - `matches_raw` -- from 172 weekly match Parquet files (union_by_name)
+# - `players_raw` -- from 171 weekly player Parquet files (union_by_name)
+# - `overviews_raw` -- singleton overview.json
 
 # %%
 db = get_notebook_db("aoe2", "aoestats", read_only=False)
@@ -66,36 +66,36 @@ for table in counts:
 # ## 3. NULL rates on key fields
 
 # %%
-# raw_matches NULL rates
+# matches_raw NULL rates
 match_null_query = """
 SELECT
     COUNT(*) AS total_rows,
-    COUNT(*) - COUNT(match_id) AS match_id_null,
-    COUNT(*) - COUNT(map_name) AS map_name_null,
-    COUNT(*) - COUNT(started) AS started_null,
+    COUNT(*) - COUNT(game_id) AS game_id_null,
+    COUNT(*) - COUNT(map) AS map_null,
+    COUNT(*) - COUNT(started_timestamp) AS started_timestamp_null,
     COUNT(*) - COUNT(filename) AS filename_null
-FROM raw_matches
+FROM matches_raw
 """
-print("=== raw_matches NULL rates ===")
+print("=== matches_raw NULL rates ===")
 print(db.fetch_df(match_null_query).to_string(index=False))
 
 # %%
-# raw_players NULL rates
+# players_raw NULL rates
 player_null_query = """
 SELECT
     COUNT(*) AS total_rows,
-    COUNT(*) - COUNT(match_id) AS match_id_null,
+    COUNT(*) - COUNT(game_id) AS game_id_null,
     COUNT(*) - COUNT(profile_id) AS profile_id_null,
-    COUNT(*) - COUNT(rating) AS rating_null,
+    COUNT(*) - COUNT(winner) AS winner_null,
     COUNT(*) - COUNT(filename) AS filename_null
-FROM raw_players
+FROM players_raw
 """
-print("=== raw_players NULL rates ===")
+print("=== players_raw NULL rates ===")
 print(db.fetch_df(player_null_query).to_string(index=False))
 
 # %%
-# raw_overviews row count
-print(f"raw_overviews: {counts.get('raw_overviews', 'N/A'):,} rows")
+# overviews_raw row count
+print(f"overviews_raw: {counts.get('overviews_raw', 'N/A'):,} rows")
 
 # %%
 db.close()
@@ -135,9 +135,9 @@ md_lines.extend([
     "",
     "## Ingestion strategy\n",
     "",
-    "- `raw_matches` and `raw_players`: `union_by_name = true` to handle",
+    "- `matches_raw` and `players_raw`: `union_by_name = true` to handle",
     "  variant columns across weekly files.",
-    "- `raw_overviews`: `read_json_auto` on singleton overview.json.",
+    "- `overviews_raw`: `read_json_auto` on singleton overview.json.",
     "- All tables include `filename` provenance column.",
     "",
     "## SQL used\n",
