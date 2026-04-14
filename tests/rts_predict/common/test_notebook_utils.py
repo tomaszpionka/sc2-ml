@@ -20,6 +20,7 @@ from rts_predict.common.notebook_utils import (
     _resolve_dataset_config,
     get_notebook_db,
     get_reports_dir,
+    setup_notebook_logging,
 )
 
 # ---------------------------------------------------------------------------
@@ -56,6 +57,35 @@ def _make_fake_config_module(
 # ---------------------------------------------------------------------------
 # _load_game_config
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# setup_notebook_logging
+# ---------------------------------------------------------------------------
+
+
+def test_setup_notebook_logging_configures_root_logger() -> None:
+    """setup_notebook_logging must set the root logger level to INFO."""
+    import logging
+    root = logging.getLogger()
+    original_level = root.level
+    original_handlers = root.handlers[:]
+    # Remove any existing handlers so basicConfig actually fires
+    root.handlers.clear()
+    try:
+        setup_notebook_logging()
+        assert root.level == logging.INFO
+    finally:
+        # Restore original state to avoid polluting other tests
+        root.handlers.clear()
+        root.handlers.extend(original_handlers)
+        root.setLevel(original_level)
+
+
+def test_setup_notebook_logging_is_idempotent() -> None:
+    """Calling setup_notebook_logging twice must not raise."""
+    setup_notebook_logging()
+    setup_notebook_logging()  # second call is a no-op; must not raise
 
 
 def test_load_game_config_unknown_game_raises() -> None:

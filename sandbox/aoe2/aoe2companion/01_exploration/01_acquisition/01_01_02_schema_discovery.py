@@ -38,7 +38,7 @@ from pathlib import Path
 
 from rts_predict.common.json_utils import build_column_list, build_schema_table
 from rts_predict.common.parquet_utils import discover_parquet_schema, discover_parquet_schemas, discover_csv_schema, discover_csv_schemas
-from rts_predict.common.notebook_utils import get_reports_dir
+from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import (
     AOE2COMPANION_RAW_DIR,
     AOE2COMPANION_RAW_MATCHES_DIR,
@@ -47,7 +47,7 @@ from rts_predict.games.aoe2.config import (
     AOE2COMPANION_RAW_RATINGS_DIR,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
+setup_notebook_logging()
 logger = logging.getLogger(__name__)
 
 ARTIFACTS_DIR: Path = (

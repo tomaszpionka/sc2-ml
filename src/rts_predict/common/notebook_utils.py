@@ -77,6 +77,25 @@ def _resolve_dataset_config(config_module: ModuleType, game: str, dataset: str) 
     return datasets[dataset]
 
 
+def setup_notebook_logging() -> None:
+    """Configure the root logger for notebook use with a timestamp format.
+
+    Sets level=INFO and formats lines as ``HH:MM:SS LEVEL name: message``.
+    Safe to call multiple times — ``logging.basicConfig`` is a no-op when
+    handlers are already configured, so re-running a cell is harmless.
+
+    Call once in the imports cell of every notebook::
+
+        from rts_predict.common.notebook_utils import setup_notebook_logging
+        setup_notebook_logging()
+    """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+
 def get_notebook_db(
     game: str,
     dataset: str,

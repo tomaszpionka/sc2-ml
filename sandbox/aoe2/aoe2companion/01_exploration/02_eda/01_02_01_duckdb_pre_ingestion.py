@@ -31,13 +31,14 @@ import logging
 
 import duckdb
 
+from rts_predict.common.notebook_utils import setup_notebook_logging
 from rts_predict.games.aoe2.config import AOE2COMPANION_RAW_DIR
 from rts_predict.games.aoe2.datasets.aoe2companion.pre_ingestion import (
     inspect_binary_columns,
     run_smoke_test,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
+setup_notebook_logging()
 logger = logging.getLogger(__name__)
 
 # %% [markdown]

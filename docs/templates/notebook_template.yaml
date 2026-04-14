@@ -172,15 +172,18 @@ cells:
       import logging
       from pathlib import Path
 
-      from rts_predict.common.notebook_utils import get_reports_dir
+      from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
       # ... other imports from src/rts_predict/ ...
 
-      logging.basicConfig(level=logging.INFO)
+      setup_notebook_logging()
       logger = logging.getLogger(__name__)
     notes: |
       - All imports from src/rts_predict/. No inline definitions.
       - logging setup is mandatory for auditability (all counts and
         computations must be traceable via logger output).
+      - Use setup_notebook_logging() — never bare logging.basicConfig().
+        The centralised helper sets level=INFO and the HH:MM:SS timestamp
+        format. It is idempotent (safe to re-run cells).
       - Do NOT import get_notebook_db here unless this is a DuckDB notebook.
       - Additional standard library imports (json, statistics, re, etc.)
         are allowed in this cell.
@@ -514,10 +517,12 @@ hard_rules:
   - rule: "Logging mandatory"
     source: "This template (cell_02_imports)"
     description: >
-      logging.basicConfig(level=logging.INFO) and
-      logger = logging.getLogger(__name__) are required in every
-      notebook. All counts, file paths, and key intermediate results
-      must be logged at INFO level for auditability.
+      setup_notebook_logging() (from rts_predict.common.notebook_utils)
+      and logger = logging.getLogger(__name__) are required in every
+      notebook. Never use bare logging.basicConfig() — the centralised
+      helper ensures consistent HH:MM:SS timestamp format. All counts,
+      file paths, and key intermediate results must be logged at INFO
+      level for auditability.
 
   - rule: "Commit field in front-matter"
     source: "This template (cell_01_frontmatter)"

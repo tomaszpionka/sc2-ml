@@ -30,13 +30,13 @@
 import json
 import logging
 
-from rts_predict.common.notebook_utils import get_notebook_db, get_reports_dir
+from rts_predict.common.notebook_utils import get_notebook_db, get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOESTATS_RAW_DIR
 from rts_predict.games.aoe2.datasets.aoestats.ingestion import (
     load_all_raw_tables,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
+setup_notebook_logging()
 
 # %% [markdown]
 # ## 1. Ingest all DuckDB tables

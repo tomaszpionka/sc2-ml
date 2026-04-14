@@ -40,10 +40,10 @@ from datetime import date
 from pathlib import Path
 
 from rts_predict.common.inventory import inventory_directory
-from rts_predict.common.notebook_utils import get_reports_dir
+from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.common.filename_patterns import summarize_filename_patterns
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
+setup_notebook_logging()
 logger = logging.getLogger(__name__)
 
 # %%

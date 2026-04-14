@@ -34,7 +34,7 @@ from pathlib import Path
 
 import duckdb
 
-from rts_predict.common.notebook_utils import get_reports_dir
+from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.sc2.config import REPLAYS_SOURCE_DIR
 from rts_predict.games.sc2.datasets.sc2egset.pre_ingestion import (
     select_sample_files,
@@ -45,7 +45,7 @@ from rts_predict.games.sc2.datasets.sc2egset.pre_ingestion import (
     probe_mapping_read_json_auto,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
+setup_notebook_logging()
 logger = logging.getLogger(__name__)
 
 # %% [markdown]
