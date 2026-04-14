@@ -1,0 +1,4973 @@
+{
+  "db_memory_footprint_bytes": 22429839360,
+  "matches_raw_null_census": [
+    {
+      "column_name": "matchId",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 61799126
+    },
+    {
+      "column_name": "started",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 52689164
+    },
+    {
+      "column_name": "finished",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 55139738
+    },
+    {
+      "column_name": "leaderboard",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 22
+    },
+    {
+      "column_name": "name",
+      "total_rows": 277099059,
+      "null_count": 27710,
+      "null_pct": 0.01,
+      "approx_cardinality": 2308187
+    },
+    {
+      "column_name": "server",
+      "total_rows": 277099059,
+      "null_count": 271529368,
+      "null_pct": 97.99,
+      "approx_cardinality": 11
+    },
+    {
+      "column_name": "internalLeaderboardId",
+      "total_rows": 277099059,
+      "null_count": 1330075,
+      "null_pct": 0.48,
+      "approx_cardinality": 122
+    },
+    {
+      "column_name": "privacy",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3
+    },
+    {
+      "column_name": "mod",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "map",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 261
+    },
+    {
+      "column_name": "difficulty",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 7
+    },
+    {
+      "column_name": "startingAge",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 12
+    },
+    {
+      "column_name": "fullTechTree",
+      "total_rows": 277099059,
+      "null_count": 443358,
+      "null_pct": 0.16,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "allowCheats",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "empireWarsMode",
+      "total_rows": 277099059,
+      "null_count": 2937250,
+      "null_pct": 1.06,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "endingAge",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 11
+    },
+    {
+      "column_name": "gameMode",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 16
+    },
+    {
+      "column_name": "lockSpeed",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "lockTeams",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "mapSize",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 14
+    },
+    {
+      "column_name": "population",
+      "total_rows": 277099059,
+      "null_count": 443358,
+      "null_pct": 0.16,
+      "approx_cardinality": 21
+    },
+    {
+      "column_name": "hideCivs",
+      "total_rows": 277099059,
+      "null_count": 136609836,
+      "null_pct": 49.3,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "recordGame",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "regicideMode",
+      "total_rows": 277099059,
+      "null_count": 20477620,
+      "null_pct": 7.39,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "gameVariant",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3
+    },
+    {
+      "column_name": "resources",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 9
+    },
+    {
+      "column_name": "sharedExploration",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "speed",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 5
+    },
+    {
+      "column_name": "speedFactor",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 4
+    },
+    {
+      "column_name": "suddenDeathMode",
+      "total_rows": 277099059,
+      "null_count": 2881830,
+      "null_pct": 1.04,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "antiquityMode",
+      "total_rows": 277099059,
+      "null_count": 190256214,
+      "null_pct": 68.66,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "civilizationSet",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3
+    },
+    {
+      "column_name": "teamPositions",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "teamTogether",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "treatyLength",
+      "total_rows": 277099059,
+      "null_count": 249389,
+      "null_pct": 0.09,
+      "approx_cardinality": 30
+    },
+    {
+      "column_name": "turboMode",
+      "total_rows": 277099059,
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "victory",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 6
+    },
+    {
+      "column_name": "revealMap",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 4
+    },
+    {
+      "column_name": "scenario",
+      "total_rows": 277099059,
+      "null_count": 272305245,
+      "null_pct": 98.27,
+      "approx_cardinality": 30484
+    },
+    {
+      "column_name": "password",
+      "total_rows": 277099059,
+      "null_count": 229715120,
+      "null_pct": 82.9,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "modDataset",
+      "total_rows": 277099059,
+      "null_count": 276323182,
+      "null_pct": 99.72,
+      "approx_cardinality": 955
+    },
+    {
+      "column_name": "profileId",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3387273
+    },
+    {
+      "column_name": "rating",
+      "total_rows": 277099059,
+      "null_count": 117656260,
+      "null_pct": 42.46,
+      "approx_cardinality": 4196
+    },
+    {
+      "column_name": "ratingDiff",
+      "total_rows": 277099059,
+      "null_count": 117656260,
+      "null_pct": 42.46,
+      "approx_cardinality": 353
+    },
+    {
+      "column_name": "color",
+      "total_rows": 277099059,
+      "null_count": 27710,
+      "null_pct": 0.01,
+      "approx_cardinality": 43
+    },
+    {
+      "column_name": "colorHex",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 10
+    },
+    {
+      "column_name": "slot",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 9
+    },
+    {
+      "column_name": "status",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "team",
+      "total_rows": 277099059,
+      "null_count": 13577854,
+      "null_pct": 4.9,
+      "approx_cardinality": 31
+    },
+    {
+      "column_name": "won",
+      "total_rows": 277099059,
+      "null_count": 12985561,
+      "null_pct": 4.69,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "country",
+      "total_rows": 277099059,
+      "null_count": 34914481,
+      "null_pct": 12.6,
+      "approx_cardinality": 222
+    },
+    {
+      "column_name": "shared",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "verified",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "civ",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 68
+    },
+    {
+      "column_name": "filename",
+      "total_rows": 277099059,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2210
+    }
+  ],
+  "matches_raw_total_rows": 277099059,
+  "empty_string_investigation": [
+    {
+      "column_name": "difficulty",
+      "null_count": 0,
+      "empty_string_count": 0,
+      "non_empty_count": 277099059,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "colorHex",
+      "null_count": 0,
+      "empty_string_count": 0,
+      "non_empty_count": 277099059,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "startingAge",
+      "null_count": 0,
+      "empty_string_count": 0,
+      "non_empty_count": 277099059,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "endingAge",
+      "null_count": 0,
+      "empty_string_count": 0,
+      "non_empty_count": 277099059,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "civilizationSet",
+      "null_count": 0,
+      "empty_string_count": 0,
+      "non_empty_count": 277099059,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "scenario",
+      "null_count": 272304136,
+      "empty_string_count": 114850,
+      "non_empty_count": 4680073,
+      "total_rows": 277099059
+    },
+    {
+      "column_name": "modDataset",
+      "null_count": 276312213,
+      "empty_string_count": 0,
+      "non_empty_count": 786846,
+      "total_rows": 277099059
+    }
+  ],
+  "won_distribution": [
+    {
+      "won": false,
+      "cnt": 132150323,
+      "pct": 47.69
+    },
+    {
+      "won": true,
+      "cnt": 131963175,
+      "pct": 47.62
+    },
+    {
+      "won": null,
+      "cnt": 12985561,
+      "pct": 4.69
+    }
+  ],
+  "exact_won_null_note": {
+    "column": "won",
+    "summarize_derived_null_count": 12995946,
+    "group_by_exact_null_count": 12985561,
+    "discrepancy": 10385,
+    "resolution": "GROUP BY count is authoritative for the prediction target.",
+    "approximation_note": "SUMMARIZE approximate counts are used for all columns except 'won', where the exact GROUP BY value is authoritative for the prediction target."
+  },
+  "won_by_leaderboard": [
+    {
+      "leaderboard": "dm_1v1",
+      "won": false,
+      "cnt": 47254,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "dm_1v1",
+      "won": true,
+      "cnt": 47254,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "won": false,
+      "cnt": 96700,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "won": true,
+      "cnt": 96700,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "won": false,
+      "cnt": 971932,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "won": true,
+      "cnt": 971928,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "won": null,
+      "cnt": 111,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "won": false,
+      "cnt": 3761,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "won": true,
+      "cnt": 3761,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "won": false,
+      "cnt": 297425,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "won": true,
+      "cnt": 297431,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "won": null,
+      "cnt": 34,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "won": false,
+      "cnt": 325,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "won": true,
+      "cnt": 325,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "won": false,
+      "cnt": 1678178,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "won": true,
+      "cnt": 1678173,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "won": null,
+      "cnt": 259,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "won": false,
+      "cnt": 2906,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "won": true,
+      "cnt": 2906,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "won": false,
+      "cnt": 146986,
+      "pct": 87.5
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "won": true,
+      "cnt": 20998,
+      "pct": 12.5
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "won": false,
+      "cnt": 24737,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "won": true,
+      "cnt": 24738,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "won": null,
+      "cnt": 2,
+      "pct": 0.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "won": false,
+      "cnt": 22358,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "won": true,
+      "cnt": 22358,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "won": false,
+      "cnt": 3688480,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "won": true,
+      "cnt": 3688285,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "won": null,
+      "cnt": 511,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "won": false,
+      "cnt": 9853085,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "won": true,
+      "cnt": 9852483,
+      "pct": 49.99
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "won": null,
+      "cnt": 1587,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "won": false,
+      "cnt": 26846188,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "won": true,
+      "cnt": 26844483,
+      "pct": 49.99
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "won": null,
+      "cnt": 3852,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "won": false,
+      "cnt": 800184,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "won": true,
+      "cnt": 800164,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "won": null,
+      "cnt": 129,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "rm_team",
+      "won": false,
+      "cnt": 51354070,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_team",
+      "won": true,
+      "cnt": 51349069,
+      "pct": 49.99
+    },
+    {
+      "leaderboard": "rm_team",
+      "won": null,
+      "cnt": 8025,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "won": false,
+      "cnt": 1736072,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "won": true,
+      "cnt": 1736027,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "won": null,
+      "cnt": 284,
+      "pct": 0.01
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "won": false,
+      "cnt": 7893,
+      "pct": 50.03
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "won": true,
+      "cnt": 7882,
+      "pct": 49.97
+    },
+    {
+      "leaderboard": "ror_team",
+      "won": false,
+      "cnt": 11654,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "ror_team",
+      "won": true,
+      "cnt": 11654,
+      "pct": 50.0
+    },
+    {
+      "leaderboard": "unknown",
+      "won": false,
+      "cnt": 1463211,
+      "pct": 38.68
+    },
+    {
+      "leaderboard": "unknown",
+      "won": true,
+      "cnt": 1668570,
+      "pct": 44.11
+    },
+    {
+      "leaderboard": "unknown",
+      "won": null,
+      "cnt": 650945,
+      "pct": 17.21
+    },
+    {
+      "leaderboard": "unranked",
+      "won": false,
+      "cnt": 33096924,
+      "pct": 42.29
+    },
+    {
+      "leaderboard": "unranked",
+      "won": true,
+      "cnt": 32837986,
+      "pct": 41.96
+    },
+    {
+      "leaderboard": "unranked",
+      "won": null,
+      "cnt": 12319822,
+      "pct": 15.74
+    }
+  ],
+  "won_consistency_2row": [
+    {
+      "total_2row_matches": 40062975,
+      "consistent_complement": 35479656,
+      "both_null": 1885,
+      "one_true_one_null": 66642,
+      "one_false_one_null": 116065,
+      "both_true": 2499163,
+      "both_false": 1899564,
+      "other_inconsistent": 0
+    }
+  ],
+  "match_structure_by_leaderboard": [
+    {
+      "leaderboard": "rm_team",
+      "distinct_matches": 17379984,
+      "total_rows": 102711164,
+      "avg_rows_per_match": 5.91
+    },
+    {
+      "leaderboard": "unranked",
+      "distinct_matches": 18783620,
+      "total_rows": 78254732,
+      "avg_rows_per_match": 4.17
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "distinct_matches": 26847572,
+      "total_rows": 53694523,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "distinct_matches": 3611539,
+      "total_rows": 19707155,
+      "avg_rows_per_match": 5.46
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "distinct_matches": 3688676,
+      "total_rows": 7377276,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "unknown",
+      "distinct_matches": 930658,
+      "total_rows": 3782726,
+      "avg_rows_per_match": 4.06
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "distinct_matches": 721688,
+      "total_rows": 3472383,
+      "avg_rows_per_match": 4.81
+    },
+    {
+      "leaderboard": "ew_team",
+      "distinct_matches": 600507,
+      "total_rows": 3356610,
+      "avg_rows_per_match": 5.59
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "distinct_matches": 972000,
+      "total_rows": 1943971,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "distinct_matches": 800244,
+      "total_rows": 1600477,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "distinct_matches": 297445,
+      "total_rows": 594890,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "distinct_matches": 36144,
+      "total_rows": 193400,
+      "avg_rows_per_match": 5.35
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "distinct_matches": 20998,
+      "total_rows": 167984,
+      "avg_rows_per_match": 8.0
+    },
+    {
+      "leaderboard": "dm_1v1",
+      "distinct_matches": 47254,
+      "total_rows": 94508,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "distinct_matches": 24739,
+      "total_rows": 49477,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "distinct_matches": 9266,
+      "total_rows": 44716,
+      "avg_rows_per_match": 4.83
+    },
+    {
+      "leaderboard": "ror_team",
+      "distinct_matches": 3353,
+      "total_rows": 23308,
+      "avg_rows_per_match": 6.95
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "distinct_matches": 7888,
+      "total_rows": 15775,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "distinct_matches": 3761,
+      "total_rows": 7522,
+      "avg_rows_per_match": 2.0
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "distinct_matches": 1328,
+      "total_rows": 5812,
+      "avg_rows_per_match": 4.38
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "distinct_matches": 325,
+      "total_rows": 650,
+      "avg_rows_per_match": 2.0
+    }
+  ],
+  "categorical_profiles": {
+    "leaderboard": [
+      {
+        "value": "rm_team",
+        "cnt": 102711164,
+        "pct": 37.07
+      },
+      {
+        "value": "unranked",
+        "cnt": 78254732,
+        "pct": 28.24
+      },
+      {
+        "value": "rm_1v1",
+        "cnt": 53694523,
+        "pct": 19.38
+      },
+      {
+        "value": "qp_rm_team",
+        "cnt": 19707155,
+        "pct": 7.11
+      },
+      {
+        "value": "qp_rm_1v1",
+        "cnt": 7377276,
+        "pct": 2.66
+      },
+      {
+        "value": "unknown",
+        "cnt": 3782726,
+        "pct": 1.37
+      },
+      {
+        "value": "rm_team_console",
+        "cnt": 3472383,
+        "pct": 1.25
+      },
+      {
+        "value": "ew_team",
+        "cnt": 3356610,
+        "pct": 1.21
+      },
+      {
+        "value": "ew_1v1",
+        "cnt": 1943971,
+        "pct": 0.7
+      },
+      {
+        "value": "rm_1v1_console",
+        "cnt": 1600477,
+        "pct": 0.58
+      },
+      {
+        "value": "ew_1v1_redbullwololo",
+        "cnt": 594890,
+        "pct": 0.21
+      },
+      {
+        "value": "dm_team",
+        "cnt": 193400,
+        "pct": 0.07
+      },
+      {
+        "value": "qp_br_ffa",
+        "cnt": 167984,
+        "pct": 0.06
+      },
+      {
+        "value": "dm_1v1",
+        "cnt": 94508,
+        "pct": 0.03
+      },
+      {
+        "value": "qp_ew_1v1",
+        "cnt": 49477,
+        "pct": 0.02
+      },
+      {
+        "value": "qp_ew_team",
+        "cnt": 44716,
+        "pct": 0.02
+      },
+      {
+        "value": "ror_team",
+        "cnt": 23308,
+        "pct": 0.01
+      },
+      {
+        "value": "ror_1v1",
+        "cnt": 15775,
+        "pct": 0.01
+      },
+      {
+        "value": "ew_1v1_console",
+        "cnt": 7522,
+        "pct": 0.0
+      },
+      {
+        "value": "ew_team_console",
+        "cnt": 5812,
+        "pct": 0.0
+      },
+      {
+        "value": "ew_1v1_redbullwololo_console",
+        "cnt": 650,
+        "pct": 0.0
+      }
+    ],
+    "civ": [
+      {
+        "value": "franks",
+        "cnt": 15745563,
+        "pct": 5.68
+      },
+      {
+        "value": "mongols",
+        "cnt": 12320535,
+        "pct": 4.45
+      },
+      {
+        "value": "britons",
+        "cnt": 11814240,
+        "pct": 4.26
+      },
+      {
+        "value": "persians",
+        "cnt": 10762563,
+        "pct": 3.88
+      },
+      {
+        "value": "spanish",
+        "cnt": 10455030,
+        "pct": 3.77
+      },
+      {
+        "value": "khmer",
+        "cnt": 10350344,
+        "pct": 3.74
+      },
+      {
+        "value": "huns",
+        "cnt": 9475018,
+        "pct": 3.42
+      },
+      {
+        "value": "teutons",
+        "cnt": 8727584,
+        "pct": 3.15
+      },
+      {
+        "value": "goths",
+        "cnt": 8453800,
+        "pct": 3.05
+      },
+      {
+        "value": "turks",
+        "cnt": 7535597,
+        "pct": 2.72
+      },
+      {
+        "value": "ethiopians",
+        "cnt": 7308930,
+        "pct": 2.64
+      },
+      {
+        "value": "byzantines",
+        "cnt": 7231564,
+        "pct": 2.61
+      },
+      {
+        "value": "magyars",
+        "cnt": 7207859,
+        "pct": 2.6
+      },
+      {
+        "value": "lithuanians",
+        "cnt": 6918321,
+        "pct": 2.5
+      },
+      {
+        "value": "portuguese",
+        "cnt": 6719457,
+        "pct": 2.42
+      },
+      {
+        "value": "mayans",
+        "cnt": 6308353,
+        "pct": 2.28
+      },
+      {
+        "value": "japanese",
+        "cnt": 6291559,
+        "pct": 2.27
+      },
+      {
+        "value": "vietnamese",
+        "cnt": 6127900,
+        "pct": 2.21
+      },
+      {
+        "value": "cumans",
+        "cnt": 6126789,
+        "pct": 2.21
+      },
+      {
+        "value": "celts",
+        "cnt": 6046451,
+        "pct": 2.18
+      },
+      {
+        "value": "chinese",
+        "cnt": 5752126,
+        "pct": 2.08
+      },
+      {
+        "value": "italians",
+        "cnt": 5700089,
+        "pct": 2.06
+      },
+      {
+        "value": "saracens",
+        "cnt": 5603514,
+        "pct": 2.02
+      },
+      {
+        "value": "hindustanis",
+        "cnt": 5472128,
+        "pct": 1.97
+      },
+      {
+        "value": "vikings",
+        "cnt": 5356311,
+        "pct": 1.93
+      },
+      {
+        "value": "bohemians",
+        "cnt": 5162562,
+        "pct": 1.86
+      },
+      {
+        "value": "burgundians",
+        "cnt": 4930876,
+        "pct": 1.78
+      },
+      {
+        "value": "bulgarians",
+        "cnt": 4768844,
+        "pct": 1.72
+      },
+      {
+        "value": "poles",
+        "cnt": 4752593,
+        "pct": 1.72
+      },
+      {
+        "value": "slavs",
+        "cnt": 4654425,
+        "pct": 1.68
+      }
+    ],
+    "map": [
+      {
+        "value": "rm_arabia",
+        "cnt": 54118272,
+        "pct": 19.53
+      },
+      {
+        "value": "rm_arena",
+        "cnt": 46540790,
+        "pct": 16.8
+      },
+      {
+        "value": "rm_black-forest",
+        "cnt": 34421288,
+        "pct": 12.42
+      },
+      {
+        "value": "rm_nomad",
+        "cnt": 18932603,
+        "pct": 6.83
+      },
+      {
+        "value": "unknown",
+        "cnt": 14792062,
+        "pct": 5.34
+      },
+      {
+        "value": "rm_megarandom",
+        "cnt": 14292224,
+        "pct": 5.16
+      },
+      {
+        "value": "rm_amazon_tunnels",
+        "cnt": 7273441,
+        "pct": 2.62
+      },
+      {
+        "value": "rm_african_clearing",
+        "cnt": 6568294,
+        "pct": 2.37
+      },
+      {
+        "value": "rm_land_nomad",
+        "cnt": 5476005,
+        "pct": 1.98
+      },
+      {
+        "value": "rm_michi",
+        "cnt": 4299160,
+        "pct": 1.55
+      },
+      {
+        "value": "rm_oasis",
+        "cnt": 3571412,
+        "pct": 1.29
+      },
+      {
+        "value": "rm_hideout",
+        "cnt": 3546713,
+        "pct": 1.28
+      },
+      {
+        "value": "rm_lombardia",
+        "cnt": 3216877,
+        "pct": 1.16
+      },
+      {
+        "value": "rm_coastal",
+        "cnt": 2791794,
+        "pct": 1.01
+      },
+      {
+        "value": "rm_fortress",
+        "cnt": 2549602,
+        "pct": 0.92
+      },
+      {
+        "value": "rm_enclosed",
+        "cnt": 2447904,
+        "pct": 0.88
+      },
+      {
+        "value": "rm_yucatan",
+        "cnt": 2194472,
+        "pct": 0.79
+      },
+      {
+        "value": "rm_four-lakes",
+        "cnt": 2192085,
+        "pct": 0.79
+      },
+      {
+        "value": "rm_golden-pit",
+        "cnt": 1874722,
+        "pct": 0.68
+      },
+      {
+        "value": "rm_gold-rush",
+        "cnt": 1761039,
+        "pct": 0.64
+      },
+      {
+        "value": "rm_coastal_forest",
+        "cnt": 1756840,
+        "pct": 0.63
+      },
+      {
+        "value": "rm_team-islands",
+        "cnt": 1632668,
+        "pct": 0.59
+      },
+      {
+        "value": "rm_steppe",
+        "cnt": 1577116,
+        "pct": 0.57
+      },
+      {
+        "value": "rm_highland",
+        "cnt": 1547839,
+        "pct": 0.56
+      },
+      {
+        "value": "rm_runestones",
+        "cnt": 1503197,
+        "pct": 0.54
+      },
+      {
+        "value": "rm_socotra",
+        "cnt": 1254094,
+        "pct": 0.45
+      },
+      {
+        "value": "rm_mediterranean",
+        "cnt": 1225738,
+        "pct": 0.44
+      },
+      {
+        "value": "rm_kawasan",
+        "cnt": 1216964,
+        "pct": 0.44
+      },
+      {
+        "value": "rm_glade",
+        "cnt": 1170624,
+        "pct": 0.42
+      },
+      {
+        "value": "rm_baltic",
+        "cnt": 1157751,
+        "pct": 0.42
+      }
+    ],
+    "gameMode": [
+      {
+        "value": "random_map",
+        "cnt": 252087632,
+        "pct": 90.97
+      },
+      {
+        "value": "empire_wars",
+        "cnt": 7619367,
+        "pct": 2.75
+      },
+      {
+        "value": "scenario",
+        "cnt": 6686197,
+        "pct": 2.41
+      },
+      {
+        "value": "co_op_campaign",
+        "cnt": 3954938,
+        "pct": 1.43
+      },
+      {
+        "value": "regicide",
+        "cnt": 2638530,
+        "pct": 0.95
+      },
+      {
+        "value": "death_match",
+        "cnt": 2278097,
+        "pct": 0.82
+      },
+      {
+        "value": "sudden_death",
+        "cnt": 688601,
+        "pct": 0.25
+      },
+      {
+        "value": "unknown",
+        "cnt": 460512,
+        "pct": 0.17
+      },
+      {
+        "value": "battle_royale",
+        "cnt": 315126,
+        "pct": 0.11
+      },
+      {
+        "value": "king_of_the_hill",
+        "cnt": 209629,
+        "pct": 0.08
+      },
+      {
+        "value": "defend_the_wonder",
+        "cnt": 96591,
+        "pct": 0.03
+      },
+      {
+        "value": "capture_the_relic",
+        "cnt": 37270,
+        "pct": 0.01
+      },
+      {
+        "value": "wonder_race",
+        "cnt": 26567,
+        "pct": 0.01
+      },
+      {
+        "value": "turbo_random_map",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "speed": [
+      {
+        "value": "normal",
+        "cnt": 254622800,
+        "pct": 91.89
+      },
+      {
+        "value": "fast",
+        "cnt": 17179752,
+        "pct": 6.2
+      },
+      {
+        "value": "casual",
+        "cnt": 4609521,
+        "pct": 1.66
+      },
+      {
+        "value": "unknown",
+        "cnt": 507457,
+        "pct": 0.18
+      },
+      {
+        "value": "slow",
+        "cnt": 179529,
+        "pct": 0.06
+      }
+    ],
+    "victory": [
+      {
+        "value": "conquest",
+        "cnt": 204971854,
+        "pct": 73.97
+      },
+      {
+        "value": "standard",
+        "cnt": 59656465,
+        "pct": 21.53
+      },
+      {
+        "value": "unknown",
+        "cnt": 10709959,
+        "pct": 3.87
+      },
+      {
+        "value": "time_limit",
+        "cnt": 940544,
+        "pct": 0.34
+      },
+      {
+        "value": "last_man_standing",
+        "cnt": 807906,
+        "pct": 0.29
+      },
+      {
+        "value": "score",
+        "cnt": 12331,
+        "pct": 0.0
+      }
+    ],
+    "server": [
+      {
+        "value": NaN,
+        "cnt": 271537262,
+        "pct": 97.99
+      },
+      {
+        "value": "ukwest",
+        "cnt": 1706959,
+        "pct": 0.62
+      },
+      {
+        "value": "eastus",
+        "cnt": 1197111,
+        "pct": 0.43
+      },
+      {
+        "value": "brazilsouth",
+        "cnt": 559412,
+        "pct": 0.2
+      },
+      {
+        "value": "southeastasia",
+        "cnt": 509169,
+        "pct": 0.18
+      },
+      {
+        "value": "westus2",
+        "cnt": 430536,
+        "pct": 0.16
+      },
+      {
+        "value": "westindia",
+        "cnt": 407069,
+        "pct": 0.15
+      },
+      {
+        "value": "westeurope",
+        "cnt": 381470,
+        "pct": 0.14
+      },
+      {
+        "value": "koreacentral",
+        "cnt": 248786,
+        "pct": 0.09
+      },
+      {
+        "value": "australiasoutheast",
+        "cnt": 121283,
+        "pct": 0.04
+      },
+      {
+        "value": "centralindia",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "country": [
+      {
+        "value": NaN,
+        "cnt": 34902599,
+        "pct": 12.6
+      },
+      {
+        "value": "us",
+        "cnt": 28753281,
+        "pct": 10.38
+      },
+      {
+        "value": "cn",
+        "cnt": 24482525,
+        "pct": 8.84
+      },
+      {
+        "value": "ar",
+        "cnt": 20013544,
+        "pct": 7.22
+      },
+      {
+        "value": "de",
+        "cnt": 17572509,
+        "pct": 6.34
+      },
+      {
+        "value": "mx",
+        "cnt": 11633734,
+        "pct": 4.2
+      },
+      {
+        "value": "tw",
+        "cnt": 10442722,
+        "pct": 3.77
+      },
+      {
+        "value": "fr",
+        "cnt": 9577237,
+        "pct": 3.46
+      },
+      {
+        "value": "tr",
+        "cnt": 9296790,
+        "pct": 3.36
+      },
+      {
+        "value": "es",
+        "cnt": 9206047,
+        "pct": 3.32
+      },
+      {
+        "value": "cl",
+        "cnt": 7974099,
+        "pct": 2.88
+      },
+      {
+        "value": "gb",
+        "cnt": 7940309,
+        "pct": 2.87
+      },
+      {
+        "value": "br",
+        "cnt": 7797042,
+        "pct": 2.81
+      },
+      {
+        "value": "co",
+        "cnt": 6196553,
+        "pct": 2.24
+      },
+      {
+        "value": "ca",
+        "cnt": 5632275,
+        "pct": 2.03
+      },
+      {
+        "value": "au",
+        "cnt": 5533370,
+        "pct": 2.0
+      },
+      {
+        "value": "in",
+        "cnt": 4142976,
+        "pct": 1.5
+      },
+      {
+        "value": "pe",
+        "cnt": 3954941,
+        "pct": 1.43
+      },
+      {
+        "value": "hk",
+        "cnt": 3655650,
+        "pct": 1.32
+      },
+      {
+        "value": "ru",
+        "cnt": 3591572,
+        "pct": 1.3
+      },
+      {
+        "value": "it",
+        "cnt": 3251572,
+        "pct": 1.17
+      },
+      {
+        "value": "nl",
+        "cnt": 3245016,
+        "pct": 1.17
+      },
+      {
+        "value": "cz",
+        "cnt": 2835363,
+        "pct": 1.02
+      },
+      {
+        "value": "ch",
+        "cnt": 2433167,
+        "pct": 0.88
+      },
+      {
+        "value": "se",
+        "cnt": 2367118,
+        "pct": 0.85
+      },
+      {
+        "value": "vn",
+        "cnt": 1954927,
+        "pct": 0.71
+      },
+      {
+        "value": "be",
+        "cnt": 1920375,
+        "pct": 0.69
+      },
+      {
+        "value": "pl",
+        "cnt": 1812960,
+        "pct": 0.65
+      },
+      {
+        "value": "at",
+        "cnt": 1629438,
+        "pct": 0.59
+      },
+      {
+        "value": "jp",
+        "cnt": 1627346,
+        "pct": 0.59
+      }
+    ],
+    "status": [
+      {
+        "value": "player",
+        "cnt": 264151981,
+        "pct": 95.33
+      },
+      {
+        "value": "ai",
+        "cnt": 12947078,
+        "pct": 4.67
+      }
+    ],
+    "difficulty": [
+      {
+        "value": "standard",
+        "cnt": 222596871,
+        "pct": 80.33
+      },
+      {
+        "value": "extreme",
+        "cnt": 18479850,
+        "pct": 6.67
+      },
+      {
+        "value": "hard",
+        "cnt": 14318229,
+        "pct": 5.17
+      },
+      {
+        "value": "moderate",
+        "cnt": 10728884,
+        "pct": 3.87
+      },
+      {
+        "value": "hardest",
+        "cnt": 6926755,
+        "pct": 2.5
+      },
+      {
+        "value": "easiest",
+        "cnt": 3616229,
+        "pct": 1.31
+      },
+      {
+        "value": "unknown",
+        "cnt": 432241,
+        "pct": 0.16
+      }
+    ],
+    "startingAge": [
+      {
+        "value": "dark",
+        "cnt": 169216711,
+        "pct": 61.07
+      },
+      {
+        "value": "standard",
+        "cnt": 68084209,
+        "pct": 24.57
+      },
+      {
+        "value": "dark_age",
+        "cnt": 27798112,
+        "pct": 10.03
+      },
+      {
+        "value": "feudal",
+        "cnt": 6456219,
+        "pct": 2.33
+      },
+      {
+        "value": "post_imperial",
+        "cnt": 2897234,
+        "pct": 1.05
+      },
+      {
+        "value": "feudal_age",
+        "cnt": 944513,
+        "pct": 0.34
+      },
+      {
+        "value": "post_imperial_age",
+        "cnt": 656371,
+        "pct": 0.24
+      },
+      {
+        "value": "unknown",
+        "cnt": 425753,
+        "pct": 0.15
+      },
+      {
+        "value": "castle",
+        "cnt": 358829,
+        "pct": 0.13
+      },
+      {
+        "value": "imperial",
+        "cnt": 204973,
+        "pct": 0.07
+      },
+      {
+        "value": "castle_age",
+        "cnt": 33016,
+        "pct": 0.01
+      },
+      {
+        "value": "imperial_age",
+        "cnt": 23119,
+        "pct": 0.01
+      }
+    ],
+    "endingAge": [
+      {
+        "value": "imperial",
+        "cnt": 177153068,
+        "pct": 63.93
+      },
+      {
+        "value": "standard",
+        "cnt": 68516141,
+        "pct": 24.73
+      },
+      {
+        "value": "imperial_age",
+        "cnt": 30748811,
+        "pct": 11.1
+      },
+      {
+        "value": "unknown",
+        "cnt": 503854,
+        "pct": 0.18
+      },
+      {
+        "value": "castle",
+        "cnt": 101706,
+        "pct": 0.04
+      },
+      {
+        "value": "feudal",
+        "cnt": 33979,
+        "pct": 0.01
+      },
+      {
+        "value": "dark",
+        "cnt": 22662,
+        "pct": 0.01
+      },
+      {
+        "value": "castle_age",
+        "cnt": 13169,
+        "pct": 0.0
+      },
+      {
+        "value": "feudal_age",
+        "cnt": 3534,
+        "pct": 0.0
+      },
+      {
+        "value": "dark_age",
+        "cnt": 2120,
+        "pct": 0.0
+      },
+      {
+        "value": "post_imperial",
+        "cnt": 15,
+        "pct": 0.0
+      }
+    ],
+    "gameVariant": [
+      {
+        "value": "de",
+        "cnt": 178547597,
+        "pct": 64.43
+      },
+      {
+        "value": "unknown",
+        "cnt": 98289829,
+        "pct": 35.47
+      },
+      {
+        "value": "ror",
+        "cnt": 261633,
+        "pct": 0.09
+      }
+    ],
+    "resources": [
+      {
+        "value": "standard",
+        "cnt": 178599205,
+        "pct": 64.45
+      },
+      {
+        "value": "low",
+        "cnt": 86621972,
+        "pct": 31.26
+      },
+      {
+        "value": "high",
+        "cnt": 4495756,
+        "pct": 1.62
+      },
+      {
+        "value": "ultra_high",
+        "cnt": 2065262,
+        "pct": 0.75
+      },
+      {
+        "value": "infinite",
+        "cnt": 2044944,
+        "pct": 0.74
+      },
+      {
+        "value": "medium",
+        "cnt": 1997724,
+        "pct": 0.72
+      },
+      {
+        "value": "unknown",
+        "cnt": 1078196,
+        "pct": 0.39
+      },
+      {
+        "value": "random",
+        "cnt": 196000,
+        "pct": 0.07
+      }
+    ],
+    "revealMap": [
+      {
+        "value": "normal",
+        "cnt": 226660893,
+        "pct": 81.8
+      },
+      {
+        "value": "explored",
+        "cnt": 43553406,
+        "pct": 15.72
+      },
+      {
+        "value": "all_visible",
+        "cnt": 6434621,
+        "pct": 2.32
+      },
+      {
+        "value": "unknown",
+        "cnt": 450139,
+        "pct": 0.16
+      }
+    ],
+    "mapSize": [
+      {
+        "value": "large",
+        "cnt": 86226253,
+        "pct": 31.12
+      },
+      {
+        "value": "tiny",
+        "cnt": 76307245,
+        "pct": 27.54
+      },
+      {
+        "value": "medium",
+        "cnt": 48595311,
+        "pct": 17.54
+      },
+      {
+        "value": "normal",
+        "cnt": 44355175,
+        "pct": 16.01
+      },
+      {
+        "value": "giant",
+        "cnt": 8734943,
+        "pct": 3.15
+      },
+      {
+        "value": "ludicrous",
+        "cnt": 5060487,
+        "pct": 1.83
+      },
+      {
+        "value": "huge",
+        "cnt": 4797231,
+        "pct": 1.73
+      },
+      {
+        "value": "small",
+        "cnt": 2568005,
+        "pct": 0.93
+      },
+      {
+        "value": "unknown",
+        "cnt": 428468,
+        "pct": 0.15
+      },
+      {
+        "value": "enormous",
+        "cnt": 11133,
+        "pct": 0.0
+      },
+      {
+        "value": "massive",
+        "cnt": 7183,
+        "pct": 0.0
+      },
+      {
+        "value": "monstrous",
+        "cnt": 4140,
+        "pct": 0.0
+      },
+      {
+        "value": "miniature",
+        "cnt": 2081,
+        "pct": 0.0
+      },
+      {
+        "value": "colossal",
+        "cnt": 984,
+        "pct": 0.0
+      },
+      {
+        "value": "incredible",
+        "cnt": 420,
+        "pct": 0.0
+      }
+    ],
+    "civilizationSet": [
+      {
+        "value": "unknown",
+        "cnt": 190248871,
+        "pct": 68.66
+      },
+      {
+        "value": "aoe2",
+        "cnt": 85733228,
+        "pct": 30.94
+      },
+      {
+        "value": "all",
+        "cnt": 1114116,
+        "pct": 0.4
+      },
+      {
+        "value": "chronicles",
+        "cnt": 2844,
+        "pct": 0.0
+      }
+    ],
+    "privacy": [
+      {
+        "value": "public",
+        "cnt": 261023646,
+        "pct": 94.2
+      },
+      {
+        "value": "private",
+        "cnt": 14101316,
+        "pct": 5.09
+      },
+      {
+        "value": "unknown",
+        "cnt": 1974097,
+        "pct": 0.71
+      }
+    ],
+    "scenario": [
+      {
+        "value": NaN,
+        "cnt": 272304136,
+        "pct": 98.27
+      },
+      {
+        "value": "",
+        "cnt": 114850,
+        "pct": 0.04
+      },
+      {
+        "value": "35319",
+        "cnt": 84907,
+        "pct": 0.03
+      },
+      {
+        "value": "35613",
+        "cnt": 69454,
+        "pct": 0.03
+      },
+      {
+        "value": "35321",
+        "cnt": 63959,
+        "pct": 0.02
+      },
+      {
+        "value": "35229",
+        "cnt": 60125,
+        "pct": 0.02
+      },
+      {
+        "value": "CBA_=REQUIEM=_V235.aoe2scenario",
+        "cnt": 58285,
+        "pct": 0.02
+      },
+      {
+        "value": "35612",
+        "cnt": 53590,
+        "pct": 0.02
+      },
+      {
+        "value": "FAST VILLAGER DEFENSE 2025 Club DE v550.aoe2scenario",
+        "cnt": 49792,
+        "pct": 0.02
+      },
+      {
+        "value": "35615",
+        "cnt": 48763,
+        "pct": 0.02
+      },
+      {
+        "value": "35234",
+        "cnt": 44453,
+        "pct": 0.02
+      },
+      {
+        "value": "CBA_=REQUIEM=_V218.aoe2scenario",
+        "cnt": 44129,
+        "pct": 0.02
+      },
+      {
+        "value": "FAST VILLAGER DEFENSE 2025 Club DE v547.aoe2scenario",
+        "cnt": 41408,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_=REQUIEM=_V150 Old Portuguese.aoe2scenario",
+        "cnt": 41401,
+        "pct": 0.01
+      },
+      {
+        "value": "34960",
+        "cnt": 40574,
+        "pct": 0.01
+      },
+      {
+        "value": "34964",
+        "cnt": 38553,
+        "pct": 0.01
+      },
+      {
+        "value": "The Siege.aoe2scenario",
+        "cnt": 35923,
+        "pct": 0.01
+      },
+      {
+        "value": "34962",
+        "cnt": 34076,
+        "pct": 0.01
+      },
+      {
+        "value": "35619",
+        "cnt": 32685,
+        "pct": 0.01
+      },
+      {
+        "value": "34959",
+        "cnt": 31379,
+        "pct": 0.01
+      },
+      {
+        "value": "73421",
+        "cnt": 31254,
+        "pct": 0.01
+      },
+      {
+        "value": "35230",
+        "cnt": 27932,
+        "pct": 0.01
+      },
+      {
+        "value": "35429",
+        "cnt": 27753,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_=REQUIEM=_V292.aoe2scenario",
+        "cnt": 27498,
+        "pct": 0.01
+      },
+      {
+        "value": "35433",
+        "cnt": 27472,
+        "pct": 0.01
+      },
+      {
+        "value": "35430",
+        "cnt": 26608,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_=REQUIEM=_V242.aoe2scenario",
+        "cnt": 25754,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_=REQUIEM=_V254.aoe2scenario",
+        "cnt": 25318,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_REQUIEM_V113.aoe2scenario",
+        "cnt": 24983,
+        "pct": 0.01
+      },
+      {
+        "value": "CBA_=REQUIEM=_V139.aoe2scenario",
+        "cnt": 24592,
+        "pct": 0.01
+      }
+    ],
+    "modDataset": [
+      {
+        "value": NaN,
+        "cnt": 276312213,
+        "pct": 99.72
+      },
+      {
+        "value": "251941-New No Collision Trade",
+        "cnt": 131306,
+        "pct": 0.05
+      },
+      {
+        "value": "23222-23222_Fast Villager Defense Club DE 47.1",
+        "cnt": 41742,
+        "pct": 0.02
+      },
+      {
+        "value": "363188-PQ2.41_10xShared_3xtech_10xresources_1xtrees",
+        "cnt": 37695,
+        "pct": 0.01
+      },
+      {
+        "value": "363188-MS2.1_10xShared_3xtech_10xresources_1xtrees",
+        "cnt": 32703,
+        "pct": 0.01
+      },
+      {
+        "value": "858-No Collision Trade",
+        "cnt": 28151,
+        "pct": 0.01
+      },
+      {
+        "value": "60487-60487_6x Tech CBA (Experimental) Alexander the Great DLC",
+        "cnt": 24851,
+        "pct": 0.01
+      },
+      {
+        "value": "363188-PQ3.1_11x Shared Civ bonus  3x Techs",
+        "cnt": 21233,
+        "pct": 0.01
+      },
+      {
+        "value": "362656-362656_CBA Requiem Original",
+        "cnt": 19225,
+        "pct": 0.01
+      },
+      {
+        "value": "59728-59728_6X Tech CBA Alexander the Great DLC",
+        "cnt": 18195,
+        "pct": 0.01
+      },
+      {
+        "value": "15373-15373_Multiple Buffs Mod v1",
+        "cnt": 14488,
+        "pct": 0.01
+      },
+      {
+        "value": "423089-half price wall and no collision trade",
+        "cnt": 14469,
+        "pct": 0.01
+      },
+      {
+        "value": "423165-all fortified half-price wall",
+        "cnt": 14075,
+        "pct": 0.01
+      },
+      {
+        "value": "423078-Worldzzzz Group Chronic \u7fa4\u5e73\u8861\u7f16\u5e74\u53f2",
+        "cnt": 13811,
+        "pct": 0.0
+      },
+      {
+        "value": "223932-[Hex] 10x Shared Civ (3.0)",
+        "cnt": 13177,
+        "pct": 0.0
+      },
+      {
+        "value": "363188-PQ2.37_10xShared_3xtech_10xresources_1xtrees",
+        "cnt": 11869,
+        "pct": 0.0
+      },
+      {
+        "value": "60487-60487_6x Tech CBA (Experimental) The Three Kingdoms DLC",
+        "cnt": 11808,
+        "pct": 0.0
+      },
+      {
+        "value": "223932-[Hex] 10x Shared Civ (2.4)",
+        "cnt": 11568,
+        "pct": 0.0
+      },
+      {
+        "value": "310130-1233 (\u4e2d\u53d8)3x \u79d1\u6280 3x \u8d44\u6e90,\u5fae\u7530,\u5927\u623f,\u65e0\u78b0\u649e\u652f\u6301\u7f16\u5e74\u53f2",
+        "cnt": 10956,
+        "pct": 0.0
+      },
+      {
+        "value": "310130-1233 3x\u79d1\u6280,\u8d44\u6e90,\u5fae\u7530,\u5927\u623f,\u65e0\u78b0\u649e.\u652f\u6301\u4e09\u56fd",
+        "cnt": 10688,
+        "pct": 0.0
+      },
+      {
+        "value": "23222-23222_Fast Villager Defense Club DE 47.0",
+        "cnt": 10684,
+        "pct": 0.0
+      },
+      {
+        "value": "363188-PQ2.55_10x Shared Civ bonus  3x Techs",
+        "cnt": 10384,
+        "pct": 0.0
+      },
+      {
+        "value": "316080-(Myriad) 10x Shared Civ Bonus",
+        "cnt": 9251,
+        "pct": 0.0
+      },
+      {
+        "value": "363188-PQ2.38_10xShared_3xtech_10xresources_1xtrees",
+        "cnt": 8925,
+        "pct": 0.0
+      },
+      {
+        "value": "458994-442665-AllCivsFortifiedBonusWall-FlyingCarts-SuperNC-BigHouse",
+        "cnt": 8578,
+        "pct": 0.0
+      },
+      {
+        "value": "363188-PQ2.5_10x Shared Civ bonus  3x Techs",
+        "cnt": 8342,
+        "pct": 0.0
+      },
+      {
+        "value": "363188-PQ2.2_10xShared_3xtech_10xresources_1xtrees",
+        "cnt": 8042,
+        "pct": 0.0
+      },
+      {
+        "value": "59728-59728_6X Tech CBA The Three Kingdoms DLC",
+        "cnt": 7840,
+        "pct": 0.0
+      },
+      {
+        "value": "93960-3x Tech Mod",
+        "cnt": 7484,
+        "pct": 0.0
+      },
+      {
+        "value": "310130-1233 (\u4e2d\u53d8)3x \u79d1\u6280 3x \u8d44\u6e90,\u5fae\u7530,\u5927\u623f,\u65e0\u78b0\u649e(2026)",
+        "cnt": 7098,
+        "pct": 0.0
+      }
+    ]
+  },
+  "name_cardinality": [
+    {
+      "distinct_names": 2468478,
+      "null_count": 19857,
+      "null_pct": 0.01
+    }
+  ],
+  "colorHex_cardinality": [
+    {
+      "distinct_values": 9,
+      "null_count": 0,
+      "null_pct": 0.0
+    }
+  ],
+  "boolean_census": [
+    {
+      "column_name": "mod",
+      "true_count": 7022020,
+      "false_count": 270077039,
+      "null_count": 0
+    },
+    {
+      "column_name": "fullTechTree",
+      "true_count": 1074868,
+      "false_count": 275592697,
+      "null_count": 431494
+    },
+    {
+      "column_name": "allowCheats",
+      "true_count": 2830361,
+      "false_count": 273840360,
+      "null_count": 428338
+    },
+    {
+      "column_name": "empireWarsMode",
+      "true_count": 255573532,
+      "false_count": 18595385,
+      "null_count": 2930142
+    },
+    {
+      "column_name": "lockSpeed",
+      "true_count": 251301799,
+      "false_count": 25369495,
+      "null_count": 427765
+    },
+    {
+      "column_name": "lockTeams",
+      "true_count": 32135660,
+      "false_count": 244535509,
+      "null_count": 427890
+    },
+    {
+      "column_name": "hideCivs",
+      "true_count": 4991659,
+      "false_count": 135498344,
+      "null_count": 136609056
+    },
+    {
+      "column_name": "recordGame",
+      "true_count": 255765951,
+      "false_count": 20905084,
+      "null_count": 428024
+    },
+    {
+      "column_name": "regicideMode",
+      "true_count": 240124881,
+      "false_count": 16485894,
+      "null_count": 20488284
+    },
+    {
+      "column_name": "sharedExploration",
+      "true_count": 73294670,
+      "false_count": 203377119,
+      "null_count": 427270
+    },
+    {
+      "column_name": "suddenDeathMode",
+      "true_count": 256318276,
+      "false_count": 17891014,
+      "null_count": 2889769
+    },
+    {
+      "column_name": "antiquityMode",
+      "true_count": 72382175,
+      "false_count": 14468333,
+      "null_count": 190248551
+    },
+    {
+      "column_name": "teamPositions",
+      "true_count": 228639034,
+      "false_count": 48031894,
+      "null_count": 428131
+    },
+    {
+      "column_name": "teamTogether",
+      "true_count": 272146075,
+      "false_count": 4524654,
+      "null_count": 428330
+    },
+    {
+      "column_name": "turboMode",
+      "true_count": 251931724,
+      "false_count": 24739523,
+      "null_count": 427812
+    },
+    {
+      "column_name": "password",
+      "true_count": 39902054,
+      "false_count": 7491234,
+      "null_count": 229705771
+    },
+    {
+      "column_name": "shared",
+      "true_count": 531363,
+      "false_count": 276567696,
+      "null_count": 0
+    },
+    {
+      "column_name": "verified",
+      "true_count": 2177071,
+      "false_count": 274921988,
+      "null_count": 0
+    }
+  ],
+  "matches_raw_numeric_stats": [
+    {
+      "column_name": "rating",
+      "min_val": -1,
+      "max_val": 5001,
+      "mean_val": 1120.23,
+      "median_val": 1093.0,
+      "stddev_val": 290.01,
+      "p05": 687.0,
+      "p25": 934.0,
+      "p75": 1299.0,
+      "p95": 1598.0
+    },
+    {
+      "column_name": "ratingDiff",
+      "min_val": -174,
+      "max_val": 319,
+      "mean_val": -0.19,
+      "median_val": 0.0,
+      "stddev_val": 17.66,
+      "p05": -20.0,
+      "p25": -16.0,
+      "p75": 16.0,
+      "p95": 20.0
+    },
+    {
+      "column_name": "population",
+      "min_val": 0,
+      "max_val": 9999,
+      "mean_val": 216.98,
+      "median_val": 200.0,
+      "stddev_val": 57.06,
+      "p05": 200.0,
+      "p25": 200.0,
+      "p75": 200.0,
+      "p95": 300.0
+    },
+    {
+      "column_name": "slot",
+      "min_val": 0,
+      "max_val": 7,
+      "mean_val": 2.04,
+      "median_val": 1.0,
+      "stddev_val": 2.03,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 3.0,
+      "p95": 6.0
+    },
+    {
+      "column_name": "color",
+      "min_val": 0,
+      "max_val": 43,
+      "mean_val": 3.37,
+      "median_val": 3.0,
+      "stddev_val": 2.22,
+      "p05": 1.0,
+      "p25": 2.0,
+      "p75": 5.0,
+      "p95": 8.0
+    },
+    {
+      "column_name": "team",
+      "min_val": 0,
+      "max_val": 255,
+      "mean_val": 1.82,
+      "median_val": 2.0,
+      "stddev_val": 1.49,
+      "p05": 1.0,
+      "p25": 1.0,
+      "p75": 2.0,
+      "p95": 5.0
+    },
+    {
+      "column_name": "speedFactor",
+      "min_val": 1.0,
+      "max_val": 2.0,
+      "mean_val": 1.71,
+      "median_val": 1.7000000476837158,
+      "stddev_val": 0.09,
+      "p05": 1.7000000476837158,
+      "p25": 1.7000000476837158,
+      "p75": 1.7000000476837158,
+      "p95": 2.0
+    },
+    {
+      "column_name": "treatyLength",
+      "min_val": 0,
+      "max_val": 90,
+      "mean_val": 0.87,
+      "median_val": 0.0,
+      "stddev_val": 6.02,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p95": 0.0
+    },
+    {
+      "column_name": "internalLeaderboardId",
+      "min_val": 0,
+      "max_val": 125,
+      "mean_val": 8.79,
+      "median_val": 7.0,
+      "stddev_val": 12.93,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 9.0,
+      "p95": 21.0
+    }
+  ],
+  "ratings_raw_numeric_stats": [
+    {
+      "column_name": "rating",
+      "min_val": -34,
+      "max_val": 3026,
+      "mean_val": 1120.02,
+      "median_val": 1093.0,
+      "stddev_val": 266.79,
+      "p05": 693.0,
+      "p25": 974.0,
+      "p75": 1286.0,
+      "p95": 1552.0
+    },
+    {
+      "column_name": "games",
+      "min_val": 10,
+      "max_val": 1775260795,
+      "mean_val": 2403524.43,
+      "median_val": 546.0,
+      "stddev_val": 65257628.19,
+      "p05": 24.0,
+      "p25": 142.0,
+      "p75": 1602.0,
+      "p95": 4736.0
+    },
+    {
+      "column_name": "rating_diff",
+      "min_val": -136,
+      "max_val": 282,
+      "mean_val": 0.11,
+      "median_val": 0.0,
+      "stddev_val": 13.74,
+      "p05": -19.0,
+      "p25": -14.0,
+      "p75": 14.0,
+      "p95": 19.0
+    },
+    {
+      "column_name": "leaderboard_id",
+      "min_val": 0,
+      "max_val": 5019,
+      "mean_val": 9.15,
+      "median_val": 3.0,
+      "stddev_val": 184.44,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 4.0,
+      "p95": 4.0
+    },
+    {
+      "column_name": "season",
+      "min_val": -1,
+      "max_val": -1,
+      "mean_val": -1.0,
+      "median_val": -1.0,
+      "stddev_val": 0.0,
+      "p05": -1.0,
+      "p25": -1.0,
+      "p75": -1.0,
+      "p95": -1.0
+    }
+  ],
+  "leaderboards_raw_numeric_stats": [
+    {
+      "column_name": "rank",
+      "min_val": 1,
+      "max_val": 247604,
+      "mean_val": 86228.83,
+      "median_val": 73999.0,
+      "stddev_val": 61221.47,
+      "p05": 2842.0,
+      "p25": 33580.0,
+      "p75": 138103.0,
+      "p95": 190546.0
+    },
+    {
+      "column_name": "rating",
+      "min_val": -441,
+      "max_val": 3110,
+      "mean_val": 1038.78,
+      "median_val": 1003.0,
+      "stddev_val": 199.19,
+      "p05": 746.0,
+      "p25": 953.0,
+      "p75": 1111.0,
+      "p95": 1408.0
+    },
+    {
+      "column_name": "wins",
+      "min_val": 0,
+      "max_val": 13878,
+      "mean_val": 107.4,
+      "median_val": 27.0,
+      "stddev_val": 275.47,
+      "p05": 4.0,
+      "p25": 10.0,
+      "p75": 84.0,
+      "p95": 467.0
+    },
+    {
+      "column_name": "losses",
+      "min_val": 0,
+      "max_val": 15274,
+      "mean_val": 102.91,
+      "median_val": 26.0,
+      "stddev_val": 260.42,
+      "p05": 4.0,
+      "p25": 11.0,
+      "p75": 79.0,
+      "p95": 453.0
+    },
+    {
+      "column_name": "games",
+      "min_val": 10,
+      "max_val": 22446,
+      "mean_val": 174.36,
+      "median_val": 45.0,
+      "stddev_val": 466.25,
+      "p05": 11.0,
+      "p25": 20.0,
+      "p75": 128.0,
+      "p95": 741.0
+    },
+    {
+      "column_name": "streak",
+      "min_val": -1331,
+      "max_val": 1000,
+      "mean_val": -0.13,
+      "median_val": 1.0,
+      "stddev_val": 5.45,
+      "p05": -6.0,
+      "p25": -2.0,
+      "p75": 2.0,
+      "p95": 5.0
+    },
+    {
+      "column_name": "drops",
+      "min_val": 0,
+      "max_val": 4553,
+      "mean_val": 5.88,
+      "median_val": 1.0,
+      "stddev_val": 22.21,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p75": 4.0,
+      "p95": 24.0
+    },
+    {
+      "column_name": "rankCountry",
+      "min_val": 1,
+      "max_val": 105669,
+      "mean_val": 15300.75,
+      "median_val": 3383.0,
+      "stddev_val": 23179.72,
+      "p05": 59.0,
+      "p25": 855.0,
+      "p75": 18088.0,
+      "p95": 70491.0
+    },
+    {
+      "column_name": "season",
+      "min_val": -1,
+      "max_val": -1,
+      "mean_val": -1.0,
+      "median_val": -1.0,
+      "stddev_val": 0.0,
+      "p05": -1.0,
+      "p25": -1.0,
+      "p75": -1.0,
+      "p95": -1.0
+    },
+    {
+      "column_name": "rankLevel",
+      "min_val": 1,
+      "max_val": 1,
+      "mean_val": 1.0,
+      "median_val": 1.0,
+      "stddev_val": 0.0,
+      "p05": 1.0,
+      "p25": 1.0,
+      "p75": 1.0,
+      "p95": 1.0
+    }
+  ],
+  "matches_raw_zero_counts": [
+    {
+      "column_name": "rating",
+      "zero_count": 7792,
+      "non_null_count": 159456593,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "ratingDiff",
+      "zero_count": 6860545,
+      "non_null_count": 159455623,
+      "zero_pct_of_non_null": 4.3
+    },
+    {
+      "column_name": "population",
+      "zero_count": 2,
+      "non_null_count": 276667769,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "slot",
+      "zero_count": 74781923,
+      "non_null_count": 277099059,
+      "zero_pct_of_non_null": 26.99
+    },
+    {
+      "column_name": "color",
+      "zero_count": 1732,
+      "non_null_count": 277070972,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "team",
+      "zero_count": 449,
+      "non_null_count": 263522792,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "speedFactor",
+      "zero_count": 0,
+      "non_null_count": 277099059,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "treatyLength",
+      "zero_count": 267323811,
+      "non_null_count": 276853921,
+      "zero_pct_of_non_null": 96.56
+    },
+    {
+      "column_name": "internalLeaderboardId",
+      "zero_count": 78254732,
+      "non_null_count": 275765894,
+      "zero_pct_of_non_null": 28.38
+    }
+  ],
+  "ratings_raw_zero_counts": [
+    {
+      "column_name": "rating",
+      "zero_count": 3655,
+      "non_null_count": 58317433,
+      "zero_pct_of_non_null": 0.01
+    },
+    {
+      "column_name": "games",
+      "zero_count": 0,
+      "non_null_count": 58317433,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "rating_diff",
+      "zero_count": 12442282,
+      "non_null_count": 57236748,
+      "zero_pct_of_non_null": 21.74
+    },
+    {
+      "column_name": "leaderboard_id",
+      "zero_count": 25839038,
+      "non_null_count": 58317433,
+      "zero_pct_of_non_null": 44.31
+    },
+    {
+      "column_name": "season",
+      "zero_count": 0,
+      "non_null_count": 58317433,
+      "zero_pct_of_non_null": 0.0
+    }
+  ],
+  "leaderboards_raw_zero_counts": [
+    {
+      "column_name": "rank",
+      "zero_count": 0,
+      "non_null_count": 1771491,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "rating",
+      "zero_count": 93,
+      "non_null_count": 2381227,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "wins",
+      "zero_count": 9364,
+      "non_null_count": 1771491,
+      "zero_pct_of_non_null": 0.53
+    },
+    {
+      "column_name": "losses",
+      "zero_count": 5457,
+      "non_null_count": 1771491,
+      "zero_pct_of_non_null": 0.31
+    },
+    {
+      "column_name": "games",
+      "zero_count": 0,
+      "non_null_count": 2381108,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "streak",
+      "zero_count": 0,
+      "non_null_count": 1771491,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "drops",
+      "zero_count": 640929,
+      "non_null_count": 1771491,
+      "zero_pct_of_non_null": 36.18
+    },
+    {
+      "column_name": "rankCountry",
+      "zero_count": 0,
+      "non_null_count": 1714830,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "season",
+      "zero_count": 0,
+      "non_null_count": 2381227,
+      "zero_pct_of_non_null": 0.0
+    },
+    {
+      "column_name": "rankLevel",
+      "zero_count": 0,
+      "non_null_count": 1771372,
+      "zero_pct_of_non_null": 0.0
+    }
+  ],
+  "matches_raw_skew_kurtosis": [
+    {
+      "column_name": "rating",
+      "skewness": 0.5662,
+      "kurtosis": 1.6157
+    },
+    {
+      "column_name": "ratingDiff",
+      "skewness": 0.1105,
+      "kurtosis": 0.89
+    },
+    {
+      "column_name": "population",
+      "skewness": 3.7833,
+      "kurtosis": 17.8371
+    },
+    {
+      "column_name": "slot",
+      "skewness": 0.916,
+      "kurtosis": -0.1918
+    },
+    {
+      "column_name": "color",
+      "skewness": 1.6691,
+      "kurtosis": 15.4799
+    },
+    {
+      "column_name": "team",
+      "skewness": 3.8741,
+      "kurtosis": 30.6175
+    },
+    {
+      "column_name": "speedFactor",
+      "skewness": 0.6323,
+      "kurtosis": 17.6757
+    },
+    {
+      "column_name": "treatyLength",
+      "skewness": 9.309,
+      "kurtosis": 103.0427
+    },
+    {
+      "column_name": "internalLeaderboardId",
+      "skewness": 4.355,
+      "kurtosis": 24.9976
+    }
+  ],
+  "ratings_raw_skew_kurtosis": [
+    {
+      "column_name": "leaderboard_id",
+      "skewness": 27.1172,
+      "kurtosis": 733.5336
+    },
+    {
+      "column_name": "season",
+      "skewness": NaN,
+      "kurtosis": NaN
+    },
+    {
+      "column_name": "rating",
+      "skewness": 0.3329,
+      "kurtosis": 1.7587
+    },
+    {
+      "column_name": "games",
+      "skewness": 27.1278,
+      "kurtosis": 733.917
+    },
+    {
+      "column_name": "rating_diff",
+      "skewness": 0.0,
+      "kurtosis": -1.1811
+    }
+  ],
+  "leaderboards_raw_skew_kurtosis": [
+    {
+      "column_name": "rank",
+      "skewness": 0.3594,
+      "kurtosis": -1.0944
+    },
+    {
+      "column_name": "rating",
+      "skewness": 0.7635,
+      "kurtosis": 3.8332
+    },
+    {
+      "column_name": "wins",
+      "skewness": 8.2141,
+      "kurtosis": 121.0519
+    },
+    {
+      "column_name": "losses",
+      "skewness": 7.6537,
+      "kurtosis": 101.7184
+    },
+    {
+      "column_name": "games",
+      "skewness": 8.5055,
+      "kurtosis": 121.8539
+    },
+    {
+      "column_name": "streak",
+      "skewness": -10.8473,
+      "kurtosis": 3644.9604
+    },
+    {
+      "column_name": "drops",
+      "skewness": 27.22,
+      "kurtosis": 2211.8138
+    },
+    {
+      "column_name": "rankCountry",
+      "skewness": 1.6566,
+      "kurtosis": 1.5079
+    },
+    {
+      "column_name": "season",
+      "skewness": NaN,
+      "kurtosis": NaN
+    },
+    {
+      "column_name": "rankLevel",
+      "skewness": -273614308.6411,
+      "kurtosis": -4.738971926357748e+16
+    }
+  ],
+  "temporal_range_matches": [
+    {
+      "earliest_match": "2020-07-31 13:32:14",
+      "latest_match": "2026-04-04 23:58:58",
+      "earliest_finish": "2020-08-01 00:00:11",
+      "latest_finish": "2026-04-04 23:59:59",
+      "distinct_match_dates": 2074
+    }
+  ],
+  "temporal_range_ratings": [
+    {
+      "earliest_rating": "2022-09-10 00:00:00",
+      "latest_rating": "2026-04-03 23:59:59",
+      "distinct_rating_dates": 735
+    }
+  ],
+  "match_duration_stats": [
+    {
+      "avg_duration_secs": 1814.87,
+      "median_duration_secs": 1678.0,
+      "min_duration_secs": 1.0,
+      "max_duration_secs": 3279303.0,
+      "p05_secs": 145.0,
+      "p95_secs": 3789.0
+    }
+  ],
+  "duration_excluded_rows": [
+    {
+      "null_timestamp_count": 0,
+      "non_positive_duration_count": 2941
+    }
+  ],
+  "leaderboards_raw_null_census": [
+    {
+      "column_name": "leaderboard",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 17
+    },
+    {
+      "column_name": "profileId",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2168633
+    },
+    {
+      "column_name": "name",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1286596
+    },
+    {
+      "column_name": "rank",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 201232
+    },
+    {
+      "column_name": "rating",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2682
+    },
+    {
+      "column_name": "lastMatchTime",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1594116
+    },
+    {
+      "column_name": "drops",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 1085
+    },
+    {
+      "column_name": "losses",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 4284
+    },
+    {
+      "column_name": "streak",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 337
+    },
+    {
+      "column_name": "wins",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 5022
+    },
+    {
+      "column_name": "games",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 7234
+    },
+    {
+      "column_name": "updatedAt",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 47729
+    },
+    {
+      "column_name": "rankCountry",
+      "total_rows": 2381227,
+      "null_count": 666505,
+      "null_pct": 27.99,
+      "approx_cardinality": 90042
+    },
+    {
+      "column_name": "active",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "season",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1
+    },
+    {
+      "column_name": "rankLevel",
+      "total_rows": 2381227,
+      "null_count": 609832,
+      "null_pct": 25.61,
+      "approx_cardinality": 1
+    },
+    {
+      "column_name": "steamId",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 2312494
+    },
+    {
+      "column_name": "country",
+      "total_rows": 2381227,
+      "null_count": 760564,
+      "null_pct": 31.94,
+      "approx_cardinality": 222
+    },
+    {
+      "column_name": "filename",
+      "total_rows": 2381227,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1
+    }
+  ],
+  "leaderboards_raw_total_rows": 2381227,
+  "profiles_raw_null_census": [
+    {
+      "column_name": "profileId",
+      "total_rows": 3609686,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 4093912
+    },
+    {
+      "column_name": "steamId",
+      "total_rows": 3609686,
+      "null_count": 1805,
+      "null_pct": 0.05,
+      "approx_cardinality": 3668366
+    },
+    {
+      "column_name": "name",
+      "total_rows": 3609686,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3023244
+    },
+    {
+      "column_name": "clan",
+      "total_rows": 3609686,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 136315
+    },
+    {
+      "column_name": "country",
+      "total_rows": 3609686,
+      "null_count": 1604144,
+      "null_pct": 44.44,
+      "approx_cardinality": 237
+    },
+    {
+      "column_name": "avatarhash",
+      "total_rows": 3609686,
+      "null_count": 32487,
+      "null_pct": 0.9,
+      "approx_cardinality": 1658324
+    },
+    {
+      "column_name": "sharedHistory",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 2
+    },
+    {
+      "column_name": "twitchChannel",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 43
+    },
+    {
+      "column_name": "youtubeChannel",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 9
+    },
+    {
+      "column_name": "youtubeChannelName",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 9
+    },
+    {
+      "column_name": "discordId",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 44
+    },
+    {
+      "column_name": "discordName",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 44
+    },
+    {
+      "column_name": "discordInvitation",
+      "total_rows": 3609686,
+      "null_count": 3609686,
+      "null_pct": 100.0,
+      "approx_cardinality": 6
+    },
+    {
+      "column_name": "filename",
+      "total_rows": 3609686,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1
+    }
+  ],
+  "profiles_raw_total_rows": 3609686,
+  "ratings_raw_null_census": [
+    {
+      "column_name": "profile_id",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 819485
+    },
+    {
+      "column_name": "games",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 42315
+    },
+    {
+      "column_name": "rating",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 3100
+    },
+    {
+      "column_name": "date",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 12435988
+    },
+    {
+      "column_name": "leaderboard_id",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 15
+    },
+    {
+      "column_name": "rating_diff",
+      "total_rows": 58317433,
+      "null_count": 1078873,
+      "null_pct": 1.85,
+      "approx_cardinality": 222
+    },
+    {
+      "column_name": "season",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 1
+    },
+    {
+      "column_name": "filename",
+      "total_rows": 58317433,
+      "null_count": 0,
+      "null_pct": 0.0,
+      "approx_cardinality": 545
+    }
+  ],
+  "ratings_raw_total_rows": 58317433,
+  "leaderboards_raw_categorical": {
+    "leaderboard": [
+      {
+        "value": "unranked",
+        "cnt": 1729627,
+        "pct": 72.64
+      },
+      {
+        "value": "rm_team",
+        "cnt": 329438,
+        "pct": 13.83
+      },
+      {
+        "value": "rm_1v1",
+        "cnt": 242054,
+        "pct": 10.17
+      },
+      {
+        "value": "ew_team",
+        "cnt": 29593,
+        "pct": 1.24
+      },
+      {
+        "value": "ew_1v1",
+        "cnt": 17061,
+        "pct": 0.72
+      },
+      {
+        "value": "rm_team_console",
+        "cnt": 12938,
+        "pct": 0.54
+      },
+      {
+        "value": "rm_1v1_console",
+        "cnt": 8935,
+        "pct": 0.38
+      },
+      {
+        "value": "unknown",
+        "cnt": 7118,
+        "pct": 0.3
+      },
+      {
+        "value": "ew_1v1_redbullwololo",
+        "cnt": 3599,
+        "pct": 0.15
+      },
+      {
+        "value": "ror_1v1",
+        "cnt": 357,
+        "pct": 0.01
+      },
+      {
+        "value": "ror_team",
+        "cnt": 340,
+        "pct": 0.01
+      },
+      {
+        "value": "dm_team",
+        "cnt": 81,
+        "pct": 0.0
+      },
+      {
+        "value": "dm_1v1",
+        "cnt": 38,
+        "pct": 0.0
+      },
+      {
+        "value": "ew_1v1_console",
+        "cnt": 25,
+        "pct": 0.0
+      },
+      {
+        "value": "ew_team_console",
+        "cnt": 21,
+        "pct": 0.0
+      },
+      {
+        "value": "ew_1v1_redbullwololo_console",
+        "cnt": 2,
+        "pct": 0.0
+      }
+    ],
+    "country": {
+      "top_30": [
+        {
+          "value": NaN,
+          "cnt": 760503,
+          "pct": 31.94
+        },
+        {
+          "value": "us",
+          "cnt": 217269,
+          "pct": 9.12
+        },
+        {
+          "value": "de",
+          "cnt": 149736,
+          "pct": 6.29
+        },
+        {
+          "value": "cn",
+          "cnt": 147507,
+          "pct": 6.19
+        },
+        {
+          "value": "ar",
+          "cnt": 114274,
+          "pct": 4.8
+        },
+        {
+          "value": "fr",
+          "cnt": 74391,
+          "pct": 3.12
+        },
+        {
+          "value": "tw",
+          "cnt": 62411,
+          "pct": 2.62
+        },
+        {
+          "value": "tr",
+          "cnt": 61952,
+          "pct": 2.6
+        },
+        {
+          "value": "mx",
+          "cnt": 60248,
+          "pct": 2.53
+        },
+        {
+          "value": "cl",
+          "cnt": 59733,
+          "pct": 2.51
+        },
+        {
+          "value": "gb",
+          "cnt": 55359,
+          "pct": 2.32
+        },
+        {
+          "value": "es",
+          "cnt": 51590,
+          "pct": 2.17
+        },
+        {
+          "value": "br",
+          "cnt": 50458,
+          "pct": 2.12
+        },
+        {
+          "value": "au",
+          "cnt": 47333,
+          "pct": 1.99
+        },
+        {
+          "value": "ca",
+          "cnt": 44117,
+          "pct": 1.85
+        },
+        {
+          "value": "co",
+          "cnt": 30992,
+          "pct": 1.3
+        },
+        {
+          "value": "nl",
+          "cnt": 26504,
+          "pct": 1.11
+        },
+        {
+          "value": "cz",
+          "cnt": 25931,
+          "pct": 1.09
+        },
+        {
+          "value": "ru",
+          "cnt": 24932,
+          "pct": 1.05
+        },
+        {
+          "value": "in",
+          "cnt": 19746,
+          "pct": 0.83
+        },
+        {
+          "value": "se",
+          "cnt": 18492,
+          "pct": 0.78
+        },
+        {
+          "value": "it",
+          "cnt": 18387,
+          "pct": 0.77
+        },
+        {
+          "value": "pe",
+          "cnt": 18012,
+          "pct": 0.76
+        },
+        {
+          "value": "hk",
+          "cnt": 17621,
+          "pct": 0.74
+        },
+        {
+          "value": "ch",
+          "cnt": 16387,
+          "pct": 0.69
+        },
+        {
+          "value": "pl",
+          "cnt": 15116,
+          "pct": 0.63
+        },
+        {
+          "value": "be",
+          "cnt": 14261,
+          "pct": 0.6
+        },
+        {
+          "value": "at",
+          "cnt": 12469,
+          "pct": 0.52
+        },
+        {
+          "value": "nz",
+          "cnt": 10122,
+          "pct": 0.43
+        },
+        {
+          "value": "ro",
+          "cnt": 9580,
+          "pct": 0.4
+        }
+      ],
+      "null_count": 760503
+    }
+  },
+  "leaderboards_raw_boolean": [
+    {
+      "column_name": "active",
+      "true_count": 317789,
+      "false_count": 1453672,
+      "null_count": 609766,
+      "total_rows": 2381227,
+      "true_pct": 13.35,
+      "false_pct": 61.05,
+      "null_pct": 25.61
+    }
+  ],
+  "leaderboards_raw_temporal": [
+    {
+      "column_name": "lastMatchTime",
+      "min_val": "2022-09-06 18:47:29",
+      "max_val": "2026-04-06 00:12:25"
+    },
+    {
+      "column_name": "updatedAt",
+      "min_val": "2023-08-23 22:05:17.362000",
+      "max_val": "2026-04-06 00:12:39.518000"
+    }
+  ],
+  "ratings_raw_leaderboard_id_distribution": [
+    {
+      "value": 0,
+      "cnt": 25839038,
+      "pct": 44.31
+    },
+    {
+      "value": 4,
+      "cnt": 18853083,
+      "pct": 32.33
+    },
+    {
+      "value": 3,
+      "cnt": 11784760,
+      "pct": 20.21
+    },
+    {
+      "value": 14,
+      "cnt": 563025,
+      "pct": 0.97
+    },
+    {
+      "value": 13,
+      "cnt": 387207,
+      "pct": 0.66
+    },
+    {
+      "value": 16,
+      "cnt": 364138,
+      "pct": 0.62
+    },
+    {
+      "value": 15,
+      "cnt": 342918,
+      "pct": 0.59
+    },
+    {
+      "value": 29,
+      "cnt": 104140,
+      "pct": 0.18
+    },
+    {
+      "value": 5019,
+      "cnt": 53557,
+      "pct": 0.09
+    },
+    {
+      "value": 5018,
+      "cnt": 25366,
+      "pct": 0.04
+    },
+    {
+      "value": 18,
+      "cnt": 89,
+      "pct": 0.0
+    },
+    {
+      "value": 25,
+      "cnt": 61,
+      "pct": 0.0
+    },
+    {
+      "value": 17,
+      "cnt": 44,
+      "pct": 0.0
+    },
+    {
+      "value": 30,
+      "cnt": 5,
+      "pct": 0.0
+    },
+    {
+      "value": 27,
+      "cnt": 2,
+      "pct": 0.0
+    }
+  ],
+  "profiles_raw_categorical": {
+    "country": {
+      "top_30": [
+        {
+          "value": NaN,
+          "cnt": 1604091,
+          "pct": 44.44
+        },
+        {
+          "value": "us",
+          "cnt": 270310,
+          "pct": 7.49
+        },
+        {
+          "value": "de",
+          "cnt": 197117,
+          "pct": 5.46
+        },
+        {
+          "value": "cn",
+          "cnt": 194662,
+          "pct": 5.39
+        },
+        {
+          "value": "ar",
+          "cnt": 129261,
+          "pct": 3.58
+        },
+        {
+          "value": "fr",
+          "cnt": 98939,
+          "pct": 2.74
+        },
+        {
+          "value": "tw",
+          "cnt": 76099,
+          "pct": 2.11
+        },
+        {
+          "value": "tr",
+          "cnt": 75176,
+          "pct": 2.08
+        },
+        {
+          "value": "cl",
+          "cnt": 72553,
+          "pct": 2.01
+        },
+        {
+          "value": "br",
+          "cnt": 71678,
+          "pct": 1.99
+        },
+        {
+          "value": "mx",
+          "cnt": 64933,
+          "pct": 1.8
+        },
+        {
+          "value": "gb",
+          "cnt": 64714,
+          "pct": 1.79
+        },
+        {
+          "value": "au",
+          "cnt": 64469,
+          "pct": 1.79
+        },
+        {
+          "value": "ca",
+          "cnt": 56797,
+          "pct": 1.57
+        },
+        {
+          "value": "es",
+          "cnt": 56083,
+          "pct": 1.55
+        },
+        {
+          "value": "ru",
+          "cnt": 35766,
+          "pct": 0.99
+        },
+        {
+          "value": "nl",
+          "cnt": 32858,
+          "pct": 0.91
+        },
+        {
+          "value": "cz",
+          "cnt": 31744,
+          "pct": 0.88
+        },
+        {
+          "value": "co",
+          "cnt": 29551,
+          "pct": 0.82
+        },
+        {
+          "value": "se",
+          "cnt": 23672,
+          "pct": 0.66
+        },
+        {
+          "value": "it",
+          "cnt": 21813,
+          "pct": 0.6
+        },
+        {
+          "value": "hk",
+          "cnt": 21715,
+          "pct": 0.6
+        },
+        {
+          "value": "in",
+          "cnt": 21101,
+          "pct": 0.58
+        },
+        {
+          "value": "pl",
+          "cnt": 20589,
+          "pct": 0.57
+        },
+        {
+          "value": "ch",
+          "cnt": 19291,
+          "pct": 0.53
+        },
+        {
+          "value": "be",
+          "cnt": 18150,
+          "pct": 0.5
+        },
+        {
+          "value": "pe",
+          "cnt": 18050,
+          "pct": 0.5
+        },
+        {
+          "value": "at",
+          "cnt": 16020,
+          "pct": 0.44
+        },
+        {
+          "value": "nz",
+          "cnt": 12392,
+          "pct": 0.34
+        },
+        {
+          "value": "ro",
+          "cnt": 11975,
+          "pct": 0.33
+        }
+      ],
+      "null_count": 1604091,
+      "null_pct": 44.44
+    },
+    "clan": {
+      "top_30": [
+        {
+          "value": "",
+          "cnt": 3249708,
+          "pct": 90.03
+        },
+        {
+          "value": "CAT00",
+          "cnt": 197,
+          "pct": 0.01
+        },
+        {
+          "value": "CoZa",
+          "cnt": 197,
+          "pct": 0.01
+        },
+        {
+          "value": "Yeome",
+          "cnt": 196,
+          "pct": 0.01
+        },
+        {
+          "value": "ClTg",
+          "cnt": 196,
+          "pct": 0.01
+        },
+        {
+          "value": "Katik",
+          "cnt": 195,
+          "pct": 0.01
+        },
+        {
+          "value": "STURM",
+          "cnt": 193,
+          "pct": 0.01
+        },
+        {
+          "value": "WeBFF",
+          "cnt": 193,
+          "pct": 0.01
+        },
+        {
+          "value": "CreSF",
+          "cnt": 191,
+          "pct": 0.01
+        },
+        {
+          "value": "TWWS",
+          "cnt": 191,
+          "pct": 0.01
+        },
+        {
+          "value": "L501",
+          "cnt": 190,
+          "pct": 0.01
+        },
+        {
+          "value": "VZLAA",
+          "cnt": 190,
+          "pct": 0.01
+        },
+        {
+          "value": "KDLD",
+          "cnt": 190,
+          "pct": 0.01
+        },
+        {
+          "value": "BLKLN",
+          "cnt": 189,
+          "pct": 0.01
+        },
+        {
+          "value": "BRAZ1",
+          "cnt": 189,
+          "pct": 0.01
+        },
+        {
+          "value": "NaCl",
+          "cnt": 188,
+          "pct": 0.01
+        },
+        {
+          "value": "OCPOT",
+          "cnt": 188,
+          "pct": 0.01
+        },
+        {
+          "value": "XXNB",
+          "cnt": 188,
+          "pct": 0.01
+        },
+        {
+          "value": "TRAOE",
+          "cnt": 187,
+          "pct": 0.01
+        },
+        {
+          "value": "ROTLD",
+          "cnt": 186,
+          "pct": 0.01
+        },
+        {
+          "value": "RePo",
+          "cnt": 186,
+          "pct": 0.01
+        },
+        {
+          "value": "Albi",
+          "cnt": 185,
+          "pct": 0.01
+        },
+        {
+          "value": "DOGE",
+          "cnt": 185,
+          "pct": 0.01
+        },
+        {
+          "value": "BaR",
+          "cnt": 184,
+          "pct": 0.01
+        },
+        {
+          "value": "BUL",
+          "cnt": 184,
+          "pct": 0.01
+        },
+        {
+          "value": "0ARG0",
+          "cnt": 183,
+          "pct": 0.01
+        },
+        {
+          "value": "VBPK",
+          "cnt": 183,
+          "pct": 0.01
+        },
+        {
+          "value": "JZD",
+          "cnt": 182,
+          "pct": 0.01
+        },
+        {
+          "value": "VNS",
+          "cnt": 182,
+          "pct": 0.01
+        },
+        {
+          "value": "TWCEA",
+          "cnt": 182,
+          "pct": 0.01
+        }
+      ],
+      "cardinality": 94173,
+      "null_count": 3
+    }
+  },
+  "matches_raw_duplicate_check": [
+    {
+      "total_rows": 277099059,
+      "distinct_pairs": 268287054,
+      "duplicate_rows": 8812005
+    }
+  ],
+  "ratings_raw_duplicate_check": [
+    {
+      "total_rows": 58317433,
+      "distinct_triples": 58317433,
+      "duplicate_rows": 0
+    }
+  ],
+  "matches_raw_null_cooccurrence": {
+    "cluster_a_eight_cols": [
+      {
+        "all_eight_null_simultaneously": 426472,
+        "allowCheats_null_count": 428338
+      }
+    ],
+    "cluster_b_fulltree_population": [
+      {
+        "both_null": 431288,
+        "fullTechTree_null_count": 431494,
+        "population_null_count": 431290
+      }
+    ],
+    "cross_cluster_overlap": [
+      {
+        "both_clusters_null": 428321,
+        "cluster_a_only_null": 17,
+        "cluster_b_only_null": 3173
+      }
+    ]
+  },
+  "post_game_fields": [
+    {
+      "table": "matches_raw",
+      "column": "ratingDiff",
+      "type": "INTEGER",
+      "reason": "Rating change resulting from match outcome. Using this to predict the match it encodes would be temporal leakage (Invariant #3)."
+    },
+    {
+      "table": "ratings_raw",
+      "column": "rating_diff",
+      "type": "BIGINT",
+      "reason": "Rating change resulting from match outcome. Semantically identical to matches_raw.ratingDiff. Using this to predict the match it encodes would be temporal leakage (Invariant #3)."
+    },
+    {
+      "table": "matches_raw",
+      "column": "won",
+      "type": "BOOLEAN",
+      "reason": "Prediction target. Post-game by definition."
+    },
+    {
+      "table": "matches_raw",
+      "column": "finished",
+      "type": "TIMESTAMP",
+      "reason": "Match end timestamp. Known only after match completes."
+    }
+  ],
+  "field_classification": {
+    "table": "matches_raw",
+    "classification_status": "preliminary",
+    "formal_boundary_deferred_to": "Phase 02 (Feature Engineering)",
+    "classification_notes": {
+      "pre_game": "Known before match starts. Usable as prediction features without temporal leakage.",
+      "post_game": "Known only after match ends. Using as feature is temporal leakage (Invariant #3).",
+      "ambiguous_pre_or_post": "Temporal status unknown; requires Phase 02 investigation before use.",
+      "identifier": "Player/match identity columns. Not features.",
+      "target": "Prediction target. Never a feature.",
+      "context": "Player-level metadata with unclear temporal availability; not match settings and not match outcomes."
+    },
+    "fields": [
+      {
+        "column": "matchId",
+        "temporal_class": "identifier",
+        "notes": "Match identifier"
+      },
+      {
+        "column": "profileId",
+        "temporal_class": "identifier",
+        "notes": "Player identifier"
+      },
+      {
+        "column": "name",
+        "temporal_class": "identifier",
+        "notes": "Player name"
+      },
+      {
+        "column": "filename",
+        "temporal_class": "identifier",
+        "notes": "Source file provenance (I10)"
+      },
+      {
+        "column": "won",
+        "temporal_class": "target",
+        "notes": "Prediction target"
+      },
+      {
+        "column": "ratingDiff",
+        "temporal_class": "post_game",
+        "notes": "Rating change from match outcome (Invariant #3)"
+      },
+      {
+        "column": "finished",
+        "temporal_class": "post_game",
+        "notes": "Match end timestamp"
+      },
+      {
+        "column": "rating",
+        "temporal_class": "ambiguous_pre_or_post",
+        "notes": "Could be pre-match or post-match snapshot -- identical 42.46% NULL rate suggests co-occurrence with ratingDiff (unverified; needs row-level check)"
+      },
+      {
+        "column": "started",
+        "temporal_class": "pre_game",
+        "notes": "Match start timestamp"
+      },
+      {
+        "column": "leaderboard",
+        "temporal_class": "pre_game",
+        "notes": "Ranked queue / game mode"
+      },
+      {
+        "column": "internalLeaderboardId",
+        "temporal_class": "pre_game",
+        "notes": "Numeric leaderboard ID"
+      },
+      {
+        "column": "map",
+        "temporal_class": "pre_game",
+        "notes": "Map selection"
+      },
+      {
+        "column": "mapSize",
+        "temporal_class": "pre_game",
+        "notes": "Map size setting"
+      },
+      {
+        "column": "civ",
+        "temporal_class": "pre_game",
+        "notes": "Civilization selection"
+      },
+      {
+        "column": "gameMode",
+        "temporal_class": "pre_game",
+        "notes": "Game mode"
+      },
+      {
+        "column": "gameVariant",
+        "temporal_class": "pre_game",
+        "notes": "Game variant"
+      },
+      {
+        "column": "speed",
+        "temporal_class": "pre_game",
+        "notes": "Game speed setting"
+      },
+      {
+        "column": "speedFactor",
+        "temporal_class": "pre_game",
+        "notes": "Speed multiplier"
+      },
+      {
+        "column": "population",
+        "temporal_class": "pre_game",
+        "notes": "Population cap"
+      },
+      {
+        "column": "resources",
+        "temporal_class": "pre_game",
+        "notes": "Resource setting"
+      },
+      {
+        "column": "startingAge",
+        "temporal_class": "pre_game",
+        "notes": "Starting age setting"
+      },
+      {
+        "column": "endingAge",
+        "temporal_class": "pre_game",
+        "notes": "Ending age setting"
+      },
+      {
+        "column": "victory",
+        "temporal_class": "pre_game",
+        "notes": "Victory condition"
+      },
+      {
+        "column": "difficulty",
+        "temporal_class": "pre_game",
+        "notes": "AI difficulty setting"
+      },
+      {
+        "column": "civilizationSet",
+        "temporal_class": "pre_game",
+        "notes": "Civ set restriction"
+      },
+      {
+        "column": "revealMap",
+        "temporal_class": "pre_game",
+        "notes": "Map visibility setting"
+      },
+      {
+        "column": "treatyLength",
+        "temporal_class": "pre_game",
+        "notes": "Treaty length setting"
+      },
+      {
+        "column": "mod",
+        "temporal_class": "pre_game",
+        "notes": "Mod enabled flag"
+      },
+      {
+        "column": "fullTechTree",
+        "temporal_class": "pre_game",
+        "notes": "Full tech tree toggle"
+      },
+      {
+        "column": "allowCheats",
+        "temporal_class": "pre_game",
+        "notes": "Cheats toggle"
+      },
+      {
+        "column": "empireWarsMode",
+        "temporal_class": "pre_game",
+        "notes": "Empire Wars toggle"
+      },
+      {
+        "column": "lockSpeed",
+        "temporal_class": "pre_game",
+        "notes": "Lock speed toggle"
+      },
+      {
+        "column": "lockTeams",
+        "temporal_class": "pre_game",
+        "notes": "Lock teams toggle"
+      },
+      {
+        "column": "hideCivs",
+        "temporal_class": "pre_game",
+        "notes": "Hide civs toggle"
+      },
+      {
+        "column": "recordGame",
+        "temporal_class": "pre_game",
+        "notes": "Record game toggle"
+      },
+      {
+        "column": "regicideMode",
+        "temporal_class": "pre_game",
+        "notes": "Regicide toggle"
+      },
+      {
+        "column": "sharedExploration",
+        "temporal_class": "pre_game",
+        "notes": "Shared exploration toggle"
+      },
+      {
+        "column": "suddenDeathMode",
+        "temporal_class": "pre_game",
+        "notes": "Sudden death toggle"
+      },
+      {
+        "column": "antiquityMode",
+        "temporal_class": "pre_game",
+        "notes": "Antiquity mode toggle"
+      },
+      {
+        "column": "teamPositions",
+        "temporal_class": "pre_game",
+        "notes": "Team positions toggle"
+      },
+      {
+        "column": "teamTogether",
+        "temporal_class": "pre_game",
+        "notes": "Team together toggle"
+      },
+      {
+        "column": "turboMode",
+        "temporal_class": "pre_game",
+        "notes": "Turbo mode toggle"
+      },
+      {
+        "column": "color",
+        "temporal_class": "pre_game",
+        "notes": "Player color slot"
+      },
+      {
+        "column": "colorHex",
+        "temporal_class": "pre_game",
+        "notes": "Player color hex code"
+      },
+      {
+        "column": "slot",
+        "temporal_class": "pre_game",
+        "notes": "Player slot number"
+      },
+      {
+        "column": "team",
+        "temporal_class": "pre_game",
+        "notes": "Team assignment"
+      },
+      {
+        "column": "password",
+        "temporal_class": "pre_game",
+        "notes": "Password-protected match (BOOLEAN, 82.9% NULL)"
+      },
+      {
+        "column": "scenario",
+        "temporal_class": "pre_game",
+        "notes": "Scenario name (98.27% NULL)"
+      },
+      {
+        "column": "modDataset",
+        "temporal_class": "pre_game",
+        "notes": "Mod dataset name (99.72% NULL)"
+      },
+      {
+        "column": "server",
+        "temporal_class": "context",
+        "notes": "Server (97.99% NULL)"
+      },
+      {
+        "column": "privacy",
+        "temporal_class": "context",
+        "notes": "Player privacy setting"
+      },
+      {
+        "column": "status",
+        "temporal_class": "context",
+        "notes": "Player status"
+      },
+      {
+        "column": "country",
+        "temporal_class": "context",
+        "notes": "Player country"
+      },
+      {
+        "column": "shared",
+        "temporal_class": "context",
+        "notes": "Shared flag"
+      },
+      {
+        "column": "verified",
+        "temporal_class": "context",
+        "notes": "Verified flag"
+      }
+    ]
+  },
+  "constant_fields": [
+    {
+      "column_name": "season",
+      "approx_cardinality": 1,
+      "null_pct": 0.0,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 4.199515627867482e-07
+    },
+    {
+      "column_name": "rankLevel",
+      "approx_cardinality": 1,
+      "null_pct": 25.61,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 4.199515627867482e-07
+    },
+    {
+      "column_name": "filename",
+      "approx_cardinality": 1,
+      "null_pct": 0.0,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 4.199515627867482e-07
+    },
+    {
+      "column_name": "sharedHistory",
+      "approx_cardinality": 2,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 5.540648133937412e-07
+    },
+    {
+      "column_name": "twitchChannel",
+      "approx_cardinality": 43,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 1.1912393487965436e-05
+    },
+    {
+      "column_name": "youtubeChannel",
+      "approx_cardinality": 9,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 2.4932916602718355e-06
+    },
+    {
+      "column_name": "youtubeChannelName",
+      "approx_cardinality": 9,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 2.4932916602718355e-06
+    },
+    {
+      "column_name": "discordId",
+      "approx_cardinality": 44,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 1.2189425894662305e-05
+    },
+    {
+      "column_name": "discordName",
+      "approx_cardinality": 44,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 1.2189425894662305e-05
+    },
+    {
+      "column_name": "discordInvitation",
+      "approx_cardinality": 6,
+      "null_pct": 100.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 1.6621944401812234e-06
+    },
+    {
+      "column_name": "filename",
+      "approx_cardinality": 1,
+      "null_pct": 0.0,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 2.770324066968706e-07
+    },
+    {
+      "column_name": "season",
+      "approx_cardinality": 1,
+      "null_pct": 0.0,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 1.7147531167909947e-08
+    }
+  ],
+  "near_constant_low_cardinality": [
+    {
+      "column_name": "leaderboard",
+      "approx_cardinality": 22,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.939399029139251e-08
+    },
+    {
+      "column_name": "server",
+      "approx_cardinality": 11,
+      "null_pct": 97.99,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.9696995145696254e-08
+    },
+    {
+      "column_name": "privacy",
+      "approx_cardinality": 3,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.0826453221553524e-08
+    },
+    {
+      "column_name": "mod",
+      "approx_cardinality": 2,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "difficulty",
+      "approx_cardinality": 7,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 2.526172418362489e-08
+    },
+    {
+      "column_name": "startingAge",
+      "approx_cardinality": 12,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 4.3305812886214094e-08
+    },
+    {
+      "column_name": "fullTechTree",
+      "approx_cardinality": 2,
+      "null_pct": 0.16,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "allowCheats",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "empireWarsMode",
+      "approx_cardinality": 2,
+      "null_pct": 1.06,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "endingAge",
+      "approx_cardinality": 11,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.9696995145696254e-08
+    },
+    {
+      "column_name": "gameMode",
+      "approx_cardinality": 16,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 5.774108384828546e-08
+    },
+    {
+      "column_name": "lockSpeed",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "lockTeams",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "mapSize",
+      "approx_cardinality": 14,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 5.052344836724978e-08
+    },
+    {
+      "column_name": "population",
+      "approx_cardinality": 21,
+      "null_pct": 0.16,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.578517255087467e-08
+    },
+    {
+      "column_name": "hideCivs",
+      "approx_cardinality": 2,
+      "null_pct": 49.3,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "recordGame",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "regicideMode",
+      "approx_cardinality": 2,
+      "null_pct": 7.39,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "gameVariant",
+      "approx_cardinality": 3,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.0826453221553524e-08
+    },
+    {
+      "column_name": "resources",
+      "approx_cardinality": 9,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.2479359664660574e-08
+    },
+    {
+      "column_name": "sharedExploration",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "speed",
+      "approx_cardinality": 5,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.8044088702589207e-08
+    },
+    {
+      "column_name": "speedFactor",
+      "approx_cardinality": 4,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.4435270962071365e-08
+    },
+    {
+      "column_name": "suddenDeathMode",
+      "approx_cardinality": 2,
+      "null_pct": 1.04,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "antiquityMode",
+      "approx_cardinality": 2,
+      "null_pct": 68.66,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "civilizationSet",
+      "approx_cardinality": 3,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.0826453221553524e-08
+    },
+    {
+      "column_name": "teamPositions",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "teamTogether",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "treatyLength",
+      "approx_cardinality": 30,
+      "null_pct": 0.09,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.0826453221553524e-07
+    },
+    {
+      "column_name": "turboMode",
+      "approx_cardinality": 2,
+      "null_pct": 0.15,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "victory",
+      "approx_cardinality": 6,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 2.1652906443107047e-08
+    },
+    {
+      "column_name": "revealMap",
+      "approx_cardinality": 4,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.4435270962071365e-08
+    },
+    {
+      "column_name": "password",
+      "approx_cardinality": 2,
+      "null_pct": 82.9,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "color",
+      "approx_cardinality": 43,
+      "null_pct": 0.01,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.5517916284226716e-07
+    },
+    {
+      "column_name": "colorHex",
+      "approx_cardinality": 10,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.6088177405178414e-08
+    },
+    {
+      "column_name": "slot",
+      "approx_cardinality": 9,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.2479359664660574e-08
+    },
+    {
+      "column_name": "status",
+      "approx_cardinality": 2,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "team",
+      "approx_cardinality": 31,
+      "null_pct": 4.9,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.1187334995605308e-07
+    },
+    {
+      "column_name": "won",
+      "approx_cardinality": 2,
+      "null_pct": 4.69,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "shared",
+      "approx_cardinality": 2,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "verified",
+      "approx_cardinality": 2,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.217635481035683e-09
+    },
+    {
+      "column_name": "civ",
+      "approx_cardinality": 68,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 2.4539960635521323e-07
+    },
+    {
+      "column_name": "leaderboard",
+      "approx_cardinality": 17,
+      "null_pct": 0.0,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 7.139176567374719e-06
+    },
+    {
+      "column_name": "active",
+      "approx_cardinality": 2,
+      "null_pct": 25.61,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 8.399031255734964e-07
+    },
+    {
+      "column_name": "leaderboard_id",
+      "approx_cardinality": 15,
+      "null_pct": 0.0,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 2.572129675186492e-07
+    }
+  ],
+  "near_constant_ratio_flagged": [
+    {
+      "column_name": "internalLeaderboardId",
+      "approx_cardinality": 122,
+      "null_pct": 0.48,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 4.402757643431766e-07
+    },
+    {
+      "column_name": "map",
+      "approx_cardinality": 261,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 9.419014302751566e-07
+    },
+    {
+      "column_name": "scenario",
+      "approx_cardinality": 30484,
+      "null_pct": 98.27,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 0.00011001120000194587
+    },
+    {
+      "column_name": "modDataset",
+      "approx_cardinality": 955,
+      "null_pct": 99.72,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 3.4464209421945386e-06
+    },
+    {
+      "column_name": "rating",
+      "approx_cardinality": 4196,
+      "null_pct": 42.46,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.5142599239212862e-05
+    },
+    {
+      "column_name": "ratingDiff",
+      "approx_cardinality": 353,
+      "null_pct": 42.46,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 1.273912662402798e-06
+    },
+    {
+      "column_name": "country",
+      "approx_cardinality": 222,
+      "null_pct": 12.6,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 8.011575383949607e-07
+    },
+    {
+      "column_name": "filename",
+      "approx_cardinality": 2210,
+      "null_pct": 0.0,
+      "table": "matches_raw",
+      "total_rows": 277099059,
+      "uniqueness_ratio": 7.97548720654443e-06
+    },
+    {
+      "column_name": "drops",
+      "approx_cardinality": 1085,
+      "null_pct": 25.61,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 0.00045564744562362177
+    },
+    {
+      "column_name": "streak",
+      "approx_cardinality": 337,
+      "null_pct": 25.61,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 0.00014152367665913414
+    },
+    {
+      "column_name": "country",
+      "approx_cardinality": 222,
+      "null_pct": 31.94,
+      "table": "leaderboards_raw",
+      "total_rows": 2381227,
+      "uniqueness_ratio": 9.322924693865809e-05
+    },
+    {
+      "column_name": "country",
+      "approx_cardinality": 237,
+      "null_pct": 44.44,
+      "table": "profiles_raw",
+      "total_rows": 3609686,
+      "uniqueness_ratio": 6.565668038715833e-05
+    },
+    {
+      "column_name": "games",
+      "approx_cardinality": 42315,
+      "null_pct": 0.0,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 0.0007255977813701094
+    },
+    {
+      "column_name": "rating",
+      "approx_cardinality": 3100,
+      "null_pct": 0.0,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 5.315734662052083e-05
+    },
+    {
+      "column_name": "rating_diff",
+      "approx_cardinality": 222,
+      "null_pct": 1.85,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 3.806751919276008e-06
+    },
+    {
+      "column_name": "filename",
+      "approx_cardinality": 545,
+      "null_pct": 0.0,
+      "table": "ratings_raw",
+      "total_rows": 58317433,
+      "uniqueness_ratio": 9.34540448651092e-06
+    }
+  ]
+}
