@@ -1,0 +1,304 @@
+# DuckDB Schema Template v1
+#
+# Canonical template for *_raw schema YAML files across all datasets.
+# Each YAML file documents the exact DuckDB schema of one *_raw table or view
+# as returned by DESCRIBE — column names, types, and nullability are sourced
+# verbatim from the 01_02_03 artifact. No column may be added, removed, or
+# retyped relative to that artifact.
+#
+# Authoritative sources:
+#   Scientific Invariants  .claude/scientific-invariants.md
+#   Canonical Phases       docs/PHASES.md
+#   Schema artifacts       src/rts_predict/games/<game>/datasets/<dataset>/
+#                            reports/artifacts/01_exploration/02_eda/
+#                            01_02_03_raw_schema_describe.json
+#
+# How to use:
+#   1. Run (or re-run) the 01_02_03 notebook to produce the DESCRIBE artifact.
+#   2. For each table/view listed in the artifact, copy this template and
+#      fill every <PLACEHOLDER> from the artifact output.
+#   3. `type` and `null` values in the `columns` list MUST be copied verbatim
+#      from the artifact. Never infer or approximate a type.
+#   4. `description` and `notes` are the only fields you are expected to write
+#      by hand; all structural fields come from the artifact.
+#   5. Fields marked required: true must be populated. Fields marked
+#      required: false may be omitted (remove the key; do not leave empty strings).
+#   6. Do not add new top-level fields without updating this template first.
+#   7. Concrete-looking values appear ONLY in Section Z (Examples Appendix).
+#      The template body uses <PLACEHOLDER> tokens exclusively.
+#
+# Relationship to scientific invariants:
+#   Invariant #6 (Reproducibility) -- describe_artifact field provides a
+#       machine-readable cross-reference back to the exact DESCRIBE run.
+#   Invariant #7 (No magic numbers) -- column types and nullability are
+#       empirical measurements from DESCRIBE, never assumed.
+#   Invariant #10 (Relative filenames) -- filename column notes must confirm
+#       relative paths; any absolute path in the raw layer is a violation.
+#
+# Enforcement:
+#   Tier 1 (current): Template documentation + reviewer discipline.
+#   Tier 2 (planned): Pre-commit YAML lint that cross-checks column names
+#       and types against the 01_02_03 artifact JSON.
+#
+# ---- TEMPLATE START (copy below this line) ----
+
+# ── Section A: Identity ──────────────────────────────────────────────────────
+
+table:
+  value: "<TABLE_NAME>"          # Exact DuckDB object name (e.g., matches_raw)
+  required: true
+
+dataset:
+  value: "<DATASET_ID>"          # Dataset identifier (sc2egset | aoe2companion | aoestats)
+  required: true
+
+game:
+  value: "<GAME_ID>"             # Allowed: sc2 | aoe2
+  required: true
+
+object_type:
+  value: "<OBJECT_TYPE>"         # Allowed: table | view
+  required: true
+
+step:
+  value: "<STEP_ID>"             # Pipeline step that creates this object (e.g., 01_02_02)
+  required: true
+
+row_count:
+  value: <ROW_COUNT>             # Integer from artifact; 0 if not yet materialised.
+  required: true                 # Invariant #7: must be a measured value, not an estimate.
+  # If the table is not yet materialised, add a comment with the pre-ingestion
+  # row estimate (e.g., from a direct Parquet scan) so the field is not silently 0.
+
+# ── Section B: Schema Source ─────────────────────────────────────────────────
+# Invariant #6: the artifact that produced this schema must be cited so that
+# column types can be re-verified without re-running the notebook.
+
+describe_artifact:
+  value: "<DESCRIBE_ARTIFACT_PATH>"
+  # Relative path (from repo root) to the 01_02_03_raw_schema_describe.json
+  # artifact that is the authoritative source for column names, types, and
+  # nullability in this file.
+  # Example:
+  #   src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/
+  #   01_exploration/02_eda/01_02_03_raw_schema_describe.json
+  required: true
+
+generated_date:
+  value: "<GENERATED_DATE>"      # ISO 8601 date this YAML was written (YYYY-MM-DD)
+  required: true
+
+# ── Section C: Columns ───────────────────────────────────────────────────────
+# CRITICAL: `name`, `type`, and `nullable` must be copied verbatim from the
+# describe_artifact. Do not rewrite, abbreviate, or infer any of these three
+# fields. The only free-form fields are `description` and `notes`.
+#
+# Column ordering must match the DESCRIBE output order.
+# Invariant #7: no column type is assumed; all come from a measured DESCRIBE.
+
+columns:
+  - name: "<COLUMN_NAME>"
+    type: "<DUCKDB_TYPE>"
+    # Copy exactly as returned by DESCRIBE (e.g., VARCHAR, BIGINT,
+    # TIMESTAMP WITH TIME ZONE, STRUCT(...), VARCHAR[], BOOLEAN).
+    # For complex types, quote the full type string.
+    nullable: true               # true if DESCRIBE says null=YES; false if null=NO
+    description: "<ONE_LINE_DESCRIPTION>"
+    # One sentence: what this column represents in the real world.
+    # Required for every column. Do not leave this as a placeholder.
+    notes: "<OPTIONAL_NOTES>"
+    # Optional. Use for: pre/post-game label, invariant ref, known quirk,
+    # type promotion caveat, NULL rate, or prediction target flag.
+    # Omit this key if no notes are needed.
+
+# Repeat the column block above for every column returned by DESCRIBE.
+# Column count in this YAML must equal the column count in the describe_artifact
+# for this table (gate condition).
+
+# ── Section D: Provenance ────────────────────────────────────────────────────
+# Invariant #6: source files pattern and read options must be recorded so that
+# the raw layer can be reproduced from the source files alone.
+
+provenance:
+  source_files_pattern: "<SOURCE_FILES_GLOB>"
+  # Glob relative to the dataset root (e.g., "data/raw/matches/match-*.parquet").
+  required: true
+
+  duckdb_read_function: "<READ_FUNCTION>"
+  # DuckDB function used to read the source. Allowed:
+  #   read_parquet | read_csv | read_json_auto
+  required: true
+
+  duckdb_read_options:
+  # Key-value map of options passed to the read function.
+  # Include only options that were actually used; omit absent ones.
+  # Common options:
+  #   union_by_name: true
+  #   filename: true
+  #   binary_as_string: true      # required if source has unannotated BYTE_ARRAY columns
+  #   dtypes: "{col: TYPE, ...}"  # required if auto-inference produces wrong types (e.g., CSV at scale)
+  #   maximum_object_size: N      # required if JSON objects exceed DuckDB default
+    union_by_name: <true|false>
+    filename: true
+    binary_as_string: <true|false|OMIT>
+    dtypes: "<OMIT_OR_TYPE_MAP>"
+  required: true
+
+  ingestion_module: "<INGESTION_MODULE_PATH>"
+  # Relative path to the Python module that materialises this object.
+  # Example: "src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py"
+  required: true
+
+  ingestion_function: "<INGESTION_FUNCTION_NAME>"
+  # Function name within the ingestion module.
+  required: true
+
+  notes: "<OPTIONAL_PROVENANCE_NOTES>"
+  # Optional. Use for: batch strategy, OOM-avoidance notes, missing files,
+  # known source quirks, or anything not captured by structured fields above.
+  required: false
+
+# ── Section E: Invariants ────────────────────────────────────────────────────
+# List every scientific invariant that applies to this table.
+# At minimum: I7 (empirical types) and I10 (relative filenames).
+
+invariants:
+  - id: I6
+    description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
+    # Include if the describe_artifact field is populated (always for *_raw YAMLs).
+
+  - id: I7
+    description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
+
+  - id: I10
+    description: "Relative filename: filename column stores paths relative to raw_dir, not absolute paths."
+    # Required for every table that has a filename column. If the table has no
+    # filename column (unusual for a raw table), remove this invariant entry and
+    # add a note explaining why filename is absent.
+
+# Add further invariant entries as applicable:
+#   I3 — Temporal discipline (include if the table is used for pre-game feature joins)
+#   I5 — Symmetric treatment (include if the table contributes per-player features)
+
+# ==============================================================================
+# SECTION Z — EXAMPLES APPENDIX
+#
+# Read this section ONLY when creating a new schema YAML for the first time.
+# It is reference material, not part of the template schema above.
+# Agents: skip this section during routine work.
+# ==============================================================================
+
+# ── Z.1: aoestats / matches_raw (table, from persistent DuckDB) ──────────────
+#
+# table:
+#   value: "matches_raw"
+# dataset:
+#   value: "aoestats"
+# game:
+#   value: "aoe2"
+# object_type:
+#   value: "table"
+# step:
+#   value: "01_02_01"
+# row_count:
+#   value: 30690651
+# describe_artifact:
+#   value: "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
+# generated_date:
+#   value: "2026-04-14"
+#
+# columns:
+#   - name: map
+#     type: VARCHAR
+#     nullable: true
+#     description: Map name.
+#   - name: started_timestamp
+#     type: TIMESTAMP WITH TIME ZONE
+#     nullable: true
+#     description: Match start timestamp.
+#     notes: >
+#       Promoted from mixed us/ns Parquet types (68 files timestamp[us],
+#       104 files timestamp[ns]) via union_by_name.
+#   - name: duration
+#     type: BIGINT
+#     nullable: true
+#     description: Match duration in nanoseconds (Arrow duration[ns] → BIGINT).
+#     notes: "Divide by 1e9 for seconds. NOT INTERVAL in DuckDB 1.5.1."
+#   - name: filename
+#     type: VARCHAR
+#     nullable: true
+#     description: Weekly match Parquet file path relative to raw_dir.
+#     notes: "Invariant I10."
+#   # ... (remaining columns follow the same pattern) ...
+#
+# provenance:
+#   source_files_pattern: "data/raw/matches/*.parquet"
+#   duckdb_read_function: read_parquet
+#   duckdb_read_options:
+#     union_by_name: true
+#     filename: true
+#   ingestion_module: "src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py"
+#   ingestion_function: load_matches_raw
+#
+# invariants:
+#   - id: I6
+#     description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
+#   - id: I7
+#     description: "No magic numbers: column types and nullability sourced from DESCRIBE artifact, not assumed."
+#   - id: I10
+#     description: "Relative filename: filename column stores paths relative to raw_dir."
+
+# ── Z.2: sc2egset / game_events_raw (view, not a table) ──────────────────────
+#
+# table:
+#   value: "game_events_raw"
+# dataset:
+#   value: "sc2egset"
+# game:
+#   value: "sc2"
+# object_type:
+#   value: "view"               # <-- view, not table
+# step:
+#   value: "01_02_02"
+# row_count:
+#   value: 608618823
+# describe_artifact:
+#   value: "src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
+# generated_date:
+#   value: "2026-04-14"
+#
+# columns:
+#   - name: filename
+#     type: VARCHAR
+#     nullable: false
+#     description: Replay file path relative to raw_dir.
+#     notes: "Invariant I10."
+#   - name: loop
+#     type: BIGINT
+#     nullable: false
+#     description: Game tick at which this event occurred.
+#   - name: evtTypeName
+#     type: VARCHAR
+#     nullable: false
+#     description: Event type name.
+#   - name: event_data
+#     type: VARCHAR
+#     nullable: false
+#     description: Full event payload serialised as JSON VARCHAR.
+#
+# provenance:
+#   source_files_pattern: "data/db/events/gameEvents/batch_*.parquet"
+#   duckdb_read_function: read_parquet
+#   duckdb_read_options:
+#     filename: true
+#   ingestion_module: "src/rts_predict/games/sc2/datasets/sc2egset/ingestion.py"
+#   ingestion_function: load_event_views
+#   notes: "View, not table — Parquet batch files are authoritative."
+#
+# invariants:
+#   - id: I6
+#     description: "Reproducibility: describe_artifact field cross-references the DESCRIBE run."
+#   - id: I7
+#     description: "No magic numbers: column types from DESCRIBE artifact."
+#   - id: I10
+#     description: "Relative filename: no absolute paths in filename column."
