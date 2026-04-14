@@ -19,6 +19,24 @@ merged to `master`.
 
 ### Removed
 
+## [3.6.0] — 2026-04-14 (PR #TBD: feat/sc2egset-event-views)
+
+### Added
+- `sc2egset/ingestion.py`: `load_event_views` — registers event Parquet
+  subdirectories (`gameEvents/`, `trackerEvents/`, `messageEvents/`) as
+  DuckDB views (`game_events_raw`, `tracker_events_raw`, `message_events_raw`);
+  views not tables so no data is duplicated; `EVENT_SUBDIR_TO_VIEW` exported
+  for use in notebooks and tests
+- Notebook `01_02_02`: Sections 6–7 — event view registration and health checks
+  (NULL rates, filename coverage vs `replays_meta_raw`, top-10 `evtTypeName`
+  distribution per view, all SQL inlined for Invariant I6)
+- Artifact `01_02_02_duckdb_ingestion.json/.md` now includes
+  `event_extraction_counts`, `event_views_created`, and `event_views_health`
+
+### Changed
+- Notebook `01_02_02`: Section 5 comment updated to reflect production status
+  (no longer "optional/deferred"); Section 6 renamed to Section 8
+
 ## [3.5.1] — 2026-04-13 (PR #TBD: fix/sc2egset-single-pass-event-extraction)
 
 ### Changed
