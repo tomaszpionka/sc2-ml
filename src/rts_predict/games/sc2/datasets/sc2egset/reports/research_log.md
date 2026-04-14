@@ -62,8 +62,8 @@ Key observations:
 
 ### Decisions deferred
 
-- Full NULL profile for all 25 `replay_players_raw` columns — deferred to 01_03 (systematic profiling)
-- Distinct values for `result` column — deferred to 01_03
+- Full NULL profile for all 25 `replay_players_raw` columns
+- Distinct values for `result` column
 - Column descriptions (`TODO: fill`) in `*.yaml` — deferred to 01_03
 
 ### Thesis mapping
