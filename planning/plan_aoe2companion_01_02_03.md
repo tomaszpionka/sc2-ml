@@ -1,12 +1,12 @@
-# Category A Plan: Step 01_02_03 — Univariate Census & Target Variable EDA (aoe2companion)
+# Category A Plan: Step 01_02_04 — Univariate Census & Target Variable EDA (aoe2companion)
 
 ## Phase/Step Reference
 
 - **Phase:** 01 — Data Exploration
 - **Pipeline Section:** 01_02 — Exploratory Data Analysis (Tukey-style)
-- **Step:** 01_02_03
+- **Step:** 01_02_04
 - **Dataset:** aoe2companion
-- **Branch:** `feat/aoe2companion-01-02-03-univariate-census`
+- **Branch:** `feat/step-01-02-04`
 
 ---
 
@@ -14,10 +14,13 @@
 
 Step 01_02_01 characterised the raw Parquet/CSV files pre-ingestion and diagnosed
 the `won` column NULL root cause (genuine NULLs, 4.69%, uniformly distributed).
-Step 01_02_02 materialises four raw DuckDB tables. However, after ingestion,
-no column-level profiling has been performed on the DuckDB tables. The pipeline
-section 01_02 (Tukey-style EDA) cannot advance toward completion without a
-first-pass univariate census of all available fields across all four tables.
+Step 01_02_02 materialises four raw DuckDB tables. Step 01_02_03 established the
+definitive column-name and column-type baseline for all four raw sources, producing
+the `data/db/schemas/raw/*.yaml` source-of-truth files (matches_raw: 55 columns,
+ratings_raw: 8, leaderboards_raw: 19, profiles_raw: 14). However, after ingestion
+and schema documentation, no column-level profiling has been performed on the DuckDB
+tables. The pipeline section 01_02 (Tukey-style EDA) cannot advance toward completion
+without a first-pass univariate census of all available fields across all four tables.
 
 The aoe2companion dataset differs structurally from sc2egset in critical ways:
 no STRUCT columns (all flat scalars), a BOOLEAN target variable (`won`) instead
@@ -37,12 +40,12 @@ This step answers:
 3. **What are the distinct value sets and cardinality for categorical fields
    (`leaderboard`, `civ`, `map`, `gameMode`, `speed`, `victory`, `server`,
    `country`, `status`, `difficulty`, `startingAge`, `endingAge`, `gameVariant`,
-   `resources`, `revealMap`, `mapSize`, `civilizationSet`)?** (EDA Manual
+   `resources`, `revealMap`, `mapSize`, `civilizationSet`, `name`, `colorHex`)?** (EDA Manual
    Section 2.1 — univariate categorical distribution)
 4. **What are the descriptive statistics for numeric fields (`rating`,
    `ratingDiff`, `population`, `slot`, `color`, `team`, `speedFactor`,
    `treatyLength`) and the rating table equivalents (`rating`, `games`,
-   `rating_diff`)?** (EDA Manual Section 2.1 — univariate numeric
+   `rating_diff`, `leaderboard_id`, `season`)?** (EDA Manual Section 2.1 — univariate numeric
    distribution)
 5. **What is the temporal range and duration distribution?** (`started`,
    `finished` timestamps in `matches_raw`; `date` in `ratings_raw`)
@@ -59,7 +62,7 @@ This step answers:
 
 **EDA Manual sections deferred:** Bivariate analysis, outlier detection
 (IQR fences, z-scores), correlation matrices, completeness heatmap,
-distribution shape (skewness, kurtosis), visualisation.
+distribution shape (skewness, kurtosis).
 
 ---
 
@@ -77,8 +80,12 @@ reported result must appear verbatim in the markdown artifact (Invariant #6).
 01_02_01 checked only 3 columns (matchId, profileId, won). This step covers
 all 55 columns (54 source + filename), with both count and percentage.
 
-Because 277M rows make a single-query per-column approach impractical to
-display, use DuckDB's `SUMMARIZE` or a looped approach across column batches.
+Because 277M rows make per-column iteration expensive (55 sequential full-
+table scans), use DuckDB's SUMMARIZE as the primary approach for the NULL
+census. SUMMARIZE produces null_count and distinct_count in a single pass
+over the table. If the SUMMARIZE output format is insufficient (e.g.,
+missing null_pct or producing unexpected column names), fall back to the
+iterative per-column pattern below.
 
 SQL sketch (batch approach):
 ```sql
@@ -122,6 +129,40 @@ ORDER BY leaderboard, won
 
 This resolves the open question: does filtering to a specific leaderboard
 (e.g., ranked 1v1) reduce the won=NULL rate?
+
+Intra-match consistency check (1v1 matches): for matches with exactly 2
+rows per matchId, verify that `won` values are complementary (one TRUE
+and one FALSE, or both NULL). Report the count of inconsistent matches.
+
+```sql
+WITH match_pairs AS (
+    SELECT
+        matchId,
+        COUNT(*) AS n_rows,
+        COUNT(*) FILTER (WHERE won = TRUE) AS won_true,
+        COUNT(*) FILTER (WHERE won = FALSE) AS won_false,
+        COUNT(*) - COUNT(won) AS won_null
+    FROM matches_raw
+    GROUP BY matchId
+    HAVING COUNT(*) = 2
+)
+SELECT
+    COUNT(*) AS total_2row_matches,
+    COUNT(*) FILTER (WHERE won_true = 1 AND won_false = 1) AS consistent_complement,
+    COUNT(*) FILTER (WHERE won_null = 2) AS both_null,
+    COUNT(*) FILTER (WHERE won_true = 1 AND won_null = 1) AS one_true_one_null,
+    COUNT(*) FILTER (WHERE won_false = 1 AND won_null = 1) AS one_false_one_null,
+    COUNT(*) FILTER (WHERE won_true = 2) AS both_true,
+    COUNT(*) FILTER (WHERE won_false = 2) AS both_false,
+    COUNT(*) FILTER (WHERE won_true = 0 AND won_false = 0 AND won_null < 2) AS other_inconsistent
+FROM match_pairs
+```
+
+This directly validates the integrity of the prediction target for the
+primary 1v1 use case. Inconsistencies feed the cleaning step (01_04).
+
+**Visualization:** Bar chart of `won` value counts (TRUE / FALSE / NULL) —
+overall distribution. Render in notebook and save as PNG artifact.
 
 ### C. Match structure by leaderboard
 
@@ -169,8 +210,15 @@ Columns to profile:
 - `privacy`: distinct values and counts
 - `scenario`: cardinality
 - `modDataset`: cardinality
+- `name`: cardinality count only — report `COUNT(DISTINCT name)` and NULL rate.
+  Do NOT print top-k values (millions of distinct player names would be
+  meaningless to display). Player name cardinality is directly relevant
+  as an indicator of distinct player count in the dataset.
+- `colorHex`: excluded from top-k value listing; this is a derived string
+  representation of the `color` INTEGER column. Report cardinality and NULL
+  rate only to confirm it mirrors `color`.
 
-SQL sketch (per column):
+SQL sketch (per column, for columns with top-k):
 ```sql
 SELECT
     "{col}" AS value,
@@ -181,6 +229,19 @@ GROUP BY "{col}"
 ORDER BY cnt DESC
 LIMIT 30
 ```
+
+SQL sketch (for `name` — cardinality only):
+```sql
+SELECT
+    COUNT(DISTINCT name) AS distinct_names,
+    COUNT(*) - COUNT(name) AS null_count,
+    ROUND(100.0 * (COUNT(*) - COUNT(name)) / COUNT(*), 2) AS null_pct
+FROM matches_raw
+```
+
+**Visualization:** Bar charts of top-k value frequencies for selected
+categorical columns (at minimum: `leaderboard`, `civ`, `map` top-20).
+Render in notebook and save as PNG artifacts.
 
 ### E. Boolean field census
 
@@ -217,12 +278,7 @@ For continuous/integer columns in `matches_raw`:
 - `treatyLength`: distinct values and distribution
 - `internalLeaderboardId`: distinct values
 
-For `ratings_raw`:
-- `rating`: min, max, mean, median, stddev, percentiles
-- `games`: same (game count per player)
-- `rating_diff`: same (rating change per snapshot)
-
-SQL sketch (per numeric column):
+SQL sketch for `matches_raw` numeric columns (per column):
 ```sql
 SELECT
     MIN("{col}") AS min_val,
@@ -237,6 +293,62 @@ SELECT
 FROM matches_raw
 WHERE "{col}" IS NOT NULL
 ```
+
+For `ratings_raw`:
+- `rating`: min, max, mean, median, stddev, percentiles
+- `games`: same (game count per player)
+- `rating_diff`: same (rating change per snapshot)
+- `leaderboard_id`: cardinality, distinct values, min, max
+- `season`: cardinality, distinct values, min, max
+
+SQL sketch for `ratings_raw` numeric columns (per column):
+```sql
+SELECT
+    MIN("{col}") AS min_val,
+    MAX("{col}") AS max_val,
+    ROUND(AVG("{col}"), 2) AS mean_val,
+    ROUND(MEDIAN("{col}"), 2) AS median_val,
+    ROUND(STDDEV("{col}"), 2) AS stddev_val,
+    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY "{col}") AS p05,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "{col}") AS p25,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "{col}") AS p75,
+    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "{col}") AS p95
+FROM ratings_raw
+WHERE "{col}" IS NOT NULL
+```
+
+For `leaderboards_raw`:
+- `rank`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `rating`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `wins`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `losses`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `games`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `streak`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `drops`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `rankCountry`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `season`: cardinality, distinct values, min, max
+- `rankLevel`: cardinality, distinct values, min, max
+
+SQL sketch for `leaderboards_raw` numeric columns (per column):
+```sql
+SELECT
+    MIN("{col}") AS min_val,
+    MAX("{col}") AS max_val,
+    ROUND(AVG("{col}"), 2) AS mean_val,
+    ROUND(MEDIAN("{col}"), 2) AS median_val,
+    ROUND(STDDEV("{col}"), 2) AS stddev_val,
+    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY "{col}") AS p05,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "{col}") AS p25,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "{col}") AS p75,
+    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "{col}") AS p95
+FROM leaderboards_raw
+WHERE "{col}" IS NOT NULL
+```
+
+**Visualization:** Histograms (distribution shape) and boxplots (outlier
+visibility) for key numeric columns. At minimum: `rating` and `ratingDiff`
+from `matches_raw`, `rating` from `ratings_raw`, `rating` from
+`leaderboards_raw`. Render in notebook and save as PNG artifacts.
 
 ### G. Temporal range
 
@@ -275,47 +387,81 @@ Unlike SC2's `elapsed_game_loops` which requires a game-speed conversion
 factor, AoE2's `started` and `finished` are real-world timestamps — no
 speed conversion is needed.
 
+**Excluded rows count:** Report the number of matches excluded from the
+duration distribution by the `WHERE finished > started` filter. This
+includes matches where `finished <= started` (zero or negative duration)
+and matches where either timestamp is NULL. These counts are important
+for the census — they indicate data quality issues that cleaning (01_04)
+must address.
+
+```sql
+SELECT
+    COUNT(*) FILTER (WHERE finished IS NULL OR started IS NULL) AS null_timestamp_count,
+    COUNT(*) FILTER (WHERE finished IS NOT NULL AND started IS NOT NULL AND finished <= started) AS non_positive_duration_count
+FROM matches_raw
+```
+
+**Visualization:** Time-series plot of match counts over time (monthly or
+weekly buckets from `started`). Render in notebook and save as PNG artifact.
+
 ### H. Auxiliary table census: leaderboards_raw, profiles_raw, ratings_raw
 
 These three tables have not been profiled at all. For each:
 - Row count (already known from ingestion, verify)
-- Full NULL census (all columns)
+- Full NULL census (all columns). The executor should iterate over column
+  names obtained from DESCRIBE for each auxiliary table (matching the
+  Section A pattern for matches_raw) and collect results into a tidy
+  (column_name, null_count, null_pct, cardinality) DataFrame per table.
+  The column lists are: leaderboards_raw (19 columns), profiles_raw
+  (14 columns), ratings_raw (8 columns) — all enumerated in the SQL
+  sketches below and confirmed by the schema YAMLs produced in 01_02_03.
 - Cardinality of key columns
 
+As with Section A, the executor should try SUMMARIZE first for each
+auxiliary table, falling back to per-column iteration if the output
+format is insufficient.
+
 ```sql
--- leaderboards_raw
+-- leaderboards_raw: iterate over all 19 columns
+-- Column list (from schema YAML): leaderboard, profileId, name, rank,
+-- rating, lastMatchTime, drops, losses, streak, wins, games, updatedAt,
+-- rankCountry, active, season, rankLevel, steamId, country, filename
+-- For each column col_name:
 SELECT
+    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(DISTINCT profileId) AS distinct_profiles,
-    COUNT(DISTINCT leaderboard) AS distinct_leaderboards,
-    COUNT(*) - COUNT(rank) AS rank_null,
-    COUNT(*) - COUNT(rating) AS rating_null,
-    COUNT(*) - COUNT(steamId) AS steamId_null,
-    COUNT(*) - COUNT(country) AS country_null
+    COUNT(*) - COUNT("{col_name}") AS null_count,
+    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
+    COUNT(DISTINCT "{col_name}") AS cardinality
 FROM leaderboards_raw
 ```
 
 ```sql
--- profiles_raw
+-- profiles_raw: iterate over all 14 columns
+-- Column list (from schema YAML): profileId, steamId, name, clan, country,
+-- avatarhash, sharedHistory, twitchChannel, youtubeChannel,
+-- youtubeChannelName, discordId, discordName, discordInvitation, filename
+-- For each column col_name:
 SELECT
+    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(DISTINCT profileId) AS distinct_profiles,
-    COUNT(*) - COUNT(steamId) AS steamId_null,
-    COUNT(*) - COUNT(name) AS name_null,
-    COUNT(*) - COUNT(clan) AS clan_null,
-    COUNT(*) - COUNT(country) AS country_null
+    COUNT(*) - COUNT("{col_name}") AS null_count,
+    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
+    COUNT(DISTINCT "{col_name}") AS cardinality
 FROM profiles_raw
 ```
 
 ```sql
--- ratings_raw
+-- ratings_raw: iterate over all 8 columns
+-- Column list (from schema YAML): profile_id, games, rating, date,
+-- leaderboard_id, rating_diff, season, filename
+-- For each column col_name:
 SELECT
+    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(DISTINCT profile_id) AS distinct_profiles,
-    COUNT(DISTINCT leaderboard_id) AS distinct_leaderboards,
-    COUNT(*) - COUNT(rating) AS rating_null,
-    COUNT(*) - COUNT(games) AS games_null,
-    COUNT(*) - COUNT(rating_diff) AS rating_diff_null
+    COUNT(*) - COUNT("{col_name}") AS null_count,
+    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
+    COUNT(DISTINCT "{col_name}") AS cardinality
 FROM ratings_raw
 ```
 
@@ -325,7 +471,19 @@ For all columns across all four tables, flag:
 - Cardinality = 1: constant (dead field per EDA Manual Section 3.3)
 - Uniqueness ratio < 0.001: near-constant (threshold from EDA Manual Section 3.3)
 
+Note: the uniqueness ratio is computed as COUNT(DISTINCT col) / COUNT(*),
+where the denominator includes rows where the column is NULL. This means
+columns with high NULL rates will have deflated ratios. Interpret the
+ratio alongside the NULL census from Sections A and H.
+
 Use the cardinality values computed in Section A and Section H.
+
+**Expectation note:** The `profiles_raw` social media columns (`twitchChannel`,
+`youtubeChannel`, `youtubeChannelName`, `discordId`, `discordName`,
+`discordInvitation`) will very likely appear as dead or near-constant fields.
+The executor should not be surprised by this outcome — these are optional
+profile fields that most players do not populate. Document their NULL rates
+explicitly in the findings as candidates for exclusion in cleaning (01_04).
 
 ---
 
@@ -333,10 +491,15 @@ Use the cardinality values computed in Section A and Section H.
 
 | Artifact | Path |
 |----------|------|
-| JSON report | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.json` |
-| Markdown summary | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.md` |
-| Notebook (py) | `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.py` |
-| Notebook (ipynb) | `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.ipynb` |
+| JSON report | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json` |
+| Markdown summary | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` |
+| Notebook (py) | `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py` |
+| Notebook (ipynb) | `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.ipynb` |
+| PNG: target distribution | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_won_distribution.png` |
+| PNG: categorical bar charts | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_categorical_topk.png` |
+| PNG: numeric histograms | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_histograms.png` |
+| PNG: numeric boxplots | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_boxplots.png` |
+| PNG: temporal match counts | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_temporal_match_counts.png` |
 
 The markdown artifact must contain every SQL query verbatim (Invariant #6).
 
@@ -346,28 +509,24 @@ The markdown artifact must contain every SQL query verbatim (Invariant #6).
 
 ### T00 — Add step to ROADMAP
 
-**Objective:** Register 01_02_03 in ROADMAP.md before STEP_STATUS.yaml is
+**Objective:** Register 01_02_04 in ROADMAP.md before STEP_STATUS.yaml is
 updated. STEP_STATUS.yaml is derived from the ROADMAP — writing STEP_STATUS
 without a ROADMAP entry violates the project's derivation chain.
 
 **Instructions:**
 1. Read `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`
    to locate the existing step schema.
-2. Append a step definition block for `01_02_03` after the `01_02_02` block,
+2. Append a step definition block for `01_02_04` after the `01_02_03` block,
    using the same YAML schema (step_number, name, description, phase,
    pipeline_section, predecessors, notebook_path, inputs, outputs, gate,
    thesis_mapping, research_log_entry).
+   - `step_number`: `"01_02_04"`
    - `name`: "Univariate Census & Target Variable EDA"
-   - `question`: "What are the NULL rates, cardinality, value distributions,
-     and descriptive statistics across all columns of all four raw DuckDB
-     tables, and what is the class balance of the target variable `won`
-     overall and stratified by leaderboard?"
-   - `manual_reference`: `docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md,
-     Sections 2.1, 3.1, 3.2, 3.3`
-   - `predecessors`: `[01_02_02]`
+   - `predecessors`: `[01_02_03]`
 
 **Verification:**
-- ROADMAP.md contains a valid `01_02_03` step block with all required fields.
+- ROADMAP.md contains a valid `01_02_04` step block with all required fields.
+- The `predecessors` field lists `01_02_03` (not `01_02_02`).
 
 **File scope:**
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`
@@ -376,14 +535,17 @@ without a ROADMAP entry violates the project's derivation chain.
 
 ### T01 — Create the notebook
 
-**Objective:** Create the jupytext-paired notebook implementing analyses A–I.
+**Objective:** Create the jupytext-paired notebook implementing analyses A–I,
+including visualizations.
 
-**Prerequisites:** Step 01_02_02 must be complete — all four DuckDB tables
-(`matches_raw`, `ratings_raw`, `leaderboards_raw`, `profiles_raw`) must exist
-in the persistent database.
+**Prerequisites:** Step 01_02_02 is complete — all four DuckDB tables
+(`matches_raw`, `ratings_raw`, `leaderboards_raw`, `profiles_raw`) exist
+in the persistent database. Step 01_02_03 is also complete — the
+`data/db/schemas/raw/*.yaml` files exist and confirm the column counts
+(matches=55, ratings=8, leaderboards=19, profiles=14).
 
 **Instructions:**
-1. Create `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.py`
+1. Create `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py`
    with jupytext `percent` format header.
 2. Section 1: Full NULL census of `matches_raw` — iterate over all 55
    columns from `DESCRIBE matches_raw`, querying NULL count, NULL percentage,
@@ -391,33 +553,53 @@ in the persistent database.
    table. (See Section A above.)
 3. Section 2: Target variable analysis — `won` value distribution overall
    (TRUE/FALSE/NULL with counts and percentages) and stratified by leaderboard.
+   **Visualization:** Bar chart of TRUE/FALSE/NULL counts.
    (See Section B above.)
 4. Section 3: Match structure by leaderboard — avg_rows_per_match by
    leaderboard value. (See Section C above.)
 5. Section 4: Categorical field profiles — distinct value counts for all
-   categorical columns listed in Section D. Use loop-based cells iterating
+   categorical columns listed in Section D, including `name` (cardinality
+   only) and `colorHex` (cardinality only). Use loop-based cells iterating
    over a column list to stay within the 50-line cell cap.
+   **Visualization:** Bar charts of top-k value frequencies for `leaderboard`,
+   `civ`, and `map` (top-20).
 6. Section 5: Boolean field census — TRUE/FALSE/NULL counts for all boolean
    columns listed in Section E. Use loop-based cells.
 7. Section 6: Numeric descriptive statistics — for all numeric columns listed
-   in Section F, across both `matches_raw` and `ratings_raw`. Use DuckDB
-   `PERCENTILE_CONT`. Use loop-based cells. Print tables via `.df()`.
+   in Section F, across `matches_raw`, `ratings_raw`, and `leaderboards_raw`.
+   Use DuckDB `PERCENTILE_CONT`. Use loop-based cells. Print tables via `.df()`.
+   **Visualization:** Histograms and boxplots for key numeric columns (`rating`
+   and `ratingDiff` from `matches_raw`, `rating` from `ratings_raw`, `rating`
+   from `leaderboards_raw`).
 8. Section 7: Temporal range — `started`/`finished` range from `matches_raw`,
-   `date` range from `ratings_raw`, match duration distribution. No game-speed
-   conversion needed (unlike SC2 — timestamps are real-world clock times).
+   `date` range from `ratings_raw`, match duration distribution, and excluded
+   rows count (matches with `finished <= started` or NULL timestamps). No
+   game-speed conversion needed (unlike SC2 — timestamps are real-world
+   clock times).
+   **Visualization:** Time-series plot of match counts over time (monthly or
+   weekly buckets).
    (See Section G above.)
-9. Section 8: Auxiliary table census — full NULL census and key cardinality
-   for `leaderboards_raw`, `profiles_raw`, and `ratings_raw`. (See Section H
-   above.)
+9. Section 8: Auxiliary table census — full NULL census (ALL columns) and
+   key cardinality for `leaderboards_raw`, `profiles_raw`, and `ratings_raw`.
+   Iterate over all columns using the DESCRIBE-based pattern from Section A,
+   collecting results into a tidy (column_name, null_count, null_pct,
+   cardinality) DataFrame per table. (See Section H above.)
 10. Section 9: Dead/constant/near-constant field detection — flag columns
     with cardinality = 1 (constant) or uniqueness ratio < 0.001 (near-constant,
     threshold from EDA Manual Section 3.3). Use data from Sections A and H.
+    Note the expectation that `profiles_raw` social media columns will appear
+    as dead/near-constant fields.
 11. Section 10: Write JSON and markdown artifacts. All SQL queries must appear
-    verbatim in the markdown (Invariant #6).
+    verbatim in the markdown (Invariant #6). Save all visualization PNGs to
+    the artifacts directory.
 12. All database access via `get_notebook_db("aoe2", "aoe2companion")`
     (read-only). Use `print()` for exploration output; `.df()` for display.
 13. No `def`, `class`, or lambda in any cell (sandbox hard rule #1). No cell
     exceeds 50 lines (sandbox hard rule #2).
+14. Use `matplotlib` for all visualizations. Use a consistent style
+    (`plt.style.use("seaborn-v0_8-whitegrid")` or equivalent). Save figures
+    with `plt.savefig()` to the artifacts directory before `plt.show()`.
+    Close figures with `plt.close()` after saving to avoid memory leaks.
 
 **Performance note:** `matches_raw` contains 277M rows. NULL census and
 descriptive statistics queries will be slower than sc2egset's ~22k rows.
@@ -430,16 +612,22 @@ The executor should:
 - Print progress logging for long-running queries.
 
 **Verification:**
-- Notebook runs to completion: `source .venv/bin/activate && poetry run jupyter execute sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.ipynb`
+- Notebook runs to completion: `source .venv/bin/activate && poetry run jupyter execute sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.ipynb`
 - Both `.py` and `.ipynb` files exist and are paired.
 - JSON artifact exists and is valid JSON.
 - Markdown artifact exists and contains inline SQL for every result table.
+- All PNG visualization artifacts exist in the artifacts directory.
 
 **File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.py`
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.ipynb`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.json`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.md`
+- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py`
+- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.ipynb`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_won_distribution.png`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_categorical_topk.png`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_histograms.png`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_boxplots.png`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_temporal_match_counts.png`
 
 ---
 
@@ -449,12 +637,14 @@ The executor should:
 Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
 
 **Instructions:**
-1. Add `01_02_03` to `STEP_STATUS.yaml` with status `complete` and
+1. Add `01_02_04` to `STEP_STATUS.yaml` with status `complete` and
    `completed_at` set to execution date.
 2. Add a research log entry at the top of `research_log.md` (reverse
-   chronological) following existing entry format. Include: What, Why, How,
-   Findings (with key numbers from the artifact), Decisions taken, Decisions
-   deferred, Thesis mapping, Open questions.
+   chronological — the most recent entry is currently 01_02_03 dated
+   2026-04-14) following existing entry format. The new entry is for step
+   `01_02_04`. Include: What, Why, How, Findings (with key numbers from the
+   artifact), Decisions taken, Decisions deferred, Thesis mapping, Open
+   questions.
 3. Findings section must reference specific numbers from the JSON artifact —
    no fabricated values.
 4. Decisions deferred must include:
@@ -463,6 +653,7 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
    - Handling of boolean game-setting columns (mod, allowCheats, password)
      as potential non-standard-match filters (defer to 01_04 cleaning).
    - Impact assessment of won=NULL by leaderboard on thesis scope.
+   - Pre-game vs post-game field boundary: `ratingDiff` encodes the rating change resulting from a match outcome (positive for winners, negative for losers) and is therefore a post-game field. Its presence in the univariate census does not imply pre-game availability. The formal pre-game/post-game boundary classification for all `matches_raw` columns will be established in Phase 02 (Pipeline Section 02_01). [Cross-game parity note: the SC2 plan flags APM/SQ/supplyCappedPercent as in-game-only fields in the same manner.]
 5. Open questions must address:
    - Which specific `leaderboard` value(s) correspond to ranked 1v1 in
      AoE2 Definitive Edition?
@@ -472,16 +663,17 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
      profileId? (Cross-table join integrity — deferred to a subsequent step.)
 
 **Verification:**
-- `STEP_STATUS.yaml` lists `01_02_03` with status `complete`.
-- `research_log.md` has a new entry at the top referencing step `01_02_03`.
+- `STEP_STATUS.yaml` lists `01_02_04` with status `complete`.
+- `research_log.md` has a new entry at the top referencing step `01_02_04`.
 - Research log entry mentions leaderboard filtering deferral.
+- Research log entry includes the `ratingDiff` post-game field deferral note.
 
 **File scope:**
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml`
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md`
 
 **Read scope (depends on T01):**
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json`
 
 ---
 
@@ -490,10 +682,15 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
 | File | Action |
 |------|--------|
 | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` | Update (T00) |
-| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.py` | Create (T01) |
-| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_univariate_census.ipynb` | Create (T01) |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.json` | Create (T01) |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_univariate_census.md` | Create (T01) |
+| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py` | Create (T01) |
+| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.ipynb` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_won_distribution.png` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_categorical_topk.png` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_histograms.png` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_numeric_boxplots.png` | Create (T01) |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_temporal_match_counts.png` | Create (T01) |
 | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml` | Update (T02) |
 | `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md` | Update (T02) |
 
@@ -503,22 +700,33 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
 
 All of the following must be true before this step is marked complete:
 
-1. JSON artifact `01_02_03_univariate_census.json` exists and is valid JSON.
-2. Markdown artifact `01_02_03_univariate_census.md` contains inline SQL for
+1. JSON artifact `01_02_04_univariate_census.json` exists and is valid JSON.
+2. Markdown artifact `01_02_04_univariate_census.md` contains inline SQL for
    every reported result (Invariant #6).
 3. JSON artifact contains: NULL counts and percentages for all 55 `matches_raw`
    columns, `won` value distribution with TRUE, FALSE, and NULL counts,
    avg_rows_per_match by leaderboard, temporal range with earliest and latest
    dates, descriptive statistics for at least `rating` and `ratingDiff`.
-4. JSON artifact contains NULL census for all three auxiliary tables
-   (`leaderboards_raw`, `profiles_raw`, `ratings_raw`).
+3a. JSON artifact contains intra-match `won` consistency counts for 2-row
+    matches (consistent_complement, both_null, one_true_one_null, etc.).
+4. JSON artifact contains NULL census covering every column of all three
+   auxiliary tables: `leaderboards_raw` (all 19 columns), `profiles_raw`
+   (all 14 columns), `ratings_raw` (all 8 columns).
 5. JSON artifact contains a dead/constant/near-constant field list.
-6. `STEP_STATUS.yaml` lists `01_02_03` as `complete`.
-7. `research_log.md` has a dated entry for step `01_02_03` that mentions
-   leaderboard filtering deferral.
-8. ROADMAP.md contains a valid `01_02_03` step block.
-9. No numbers in artifacts were fabricated — all derive from SQL executed
-   in the notebook.
+6. JSON artifact contains descriptive statistics for `leaderboards_raw`
+   numeric columns (`rank`, `rating`, `wins`, `losses`, `games`, `streak`,
+   `drops`, `rankCountry`).
+7. JSON artifact contains `ratings_raw` profiling for `leaderboard_id` and
+   `season` (at minimum cardinality, min, max).
+8. All PNG visualization artifacts exist: `01_02_04_won_distribution.png`,
+   `01_02_04_categorical_topk.png`, `01_02_04_numeric_histograms.png`,
+   `01_02_04_numeric_boxplots.png`, `01_02_04_temporal_match_counts.png`.
+9. `STEP_STATUS.yaml` lists `01_02_04` as `complete`.
+10. `research_log.md` has a dated entry for step `01_02_04` that mentions
+    leaderboard filtering deferral.
+11. ROADMAP.md contains a valid `01_02_04` step block with `predecessors: [01_02_03]`.
+12. No numbers in artifacts were fabricated — all derive from SQL executed
+    in the notebook.
 
 ---
 
@@ -554,12 +762,17 @@ All of the following must be true before this step is marked complete:
   canonicalisation) — deferred to Phase 02 per Invariant #2.
 - **Temporal analysis** (stationarity, drift, panel structure) — deferred to
   section 01_05.
-- **Visualization** (histograms, boxplots, distribution plots) — deferred to
-  a subsequent step.
 - **Full Section 3.1/3.2 profiling** (zero counts beyond what cardinality
   reveals, skewness, kurtosis, IQR outlier detection, duplicate detection,
   correlation matrices, completeness matrix) — deferred to 01_03 (Systematic
   Data Profiling).
+- **Cross-game comparability sections** — not included at this stage by
+  explicit decision; cross-game comparison will be addressed in a later phase.
+- **Leaderboards_raw out-of-scope decisions** — descriptive statistics for
+  `leaderboards_raw` numeric columns are included in the census, but
+  decisions about how to use them (e.g., whether `leaderboards_raw.rating`
+  and `matches_raw.rating` are on the same scale) are deferred to subsequent
+  analysis steps.
 
 ---
 
@@ -577,6 +790,9 @@ All of the following must be true before this step is marked complete:
   Section 4.)
 - What fraction of matches use non-standard settings (mod=TRUE,
   allowCheats=TRUE, password=TRUE)? (Resolves in T01 Section 5.)
+- What fraction of matches have non-positive duration (`finished <= started`)
+  or NULL timestamps? (Resolves in T01 Section 7.)
+- Follow-up: characterize `won=NULL` missingness mechanism (MCAR/MAR/MNAR per EDA Manual Section 4.5) in a subsequent bivariate step. The intra-match consistency check (Section B) provides initial evidence, but a full characterization requires bivariate analysis against temporal, leaderboard, and rating dimensions.
 
 ---
 
@@ -590,24 +806,30 @@ All of the following must be true before this step is marked complete:
    queries with LIMIT 30 will capture the distribution shape without
    memory issues. Full distinct value lists are deferred to the artifact
    JSON.
-3. **Step 01_02_02 not yet complete.** This plan assumes 01_02_02 will be
-   completed before execution of 01_02_03 begins. If the DuckDB tables
-   do not exist, the notebook will fail on the first query. This is by
-   design — the dependency is explicit.
+3. **Step 01_02_02 is complete. No blocking dependencies remain.**
 
 ---
 
 ## Prerequisite Dependency
 
-**This step cannot be executed until Step 01_02_02 (DuckDB Ingestion) is
-complete.** The STEP_STATUS currently shows 01_02_02 as `not_started`.
-The notebook code for 01_02_02 exists at
-`sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_02_duckdb_ingestion.py`
-but has not been executed. Before dispatching T01, ensure:
-1. 01_02_02 notebook has been executed successfully
-2. 01_02_02 artifacts exist at `reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json`
-3. All four DuckDB tables (`matches_raw`, `ratings_raw`, `leaderboards_raw`,
-   `profiles_raw`) are accessible via `get_notebook_db("aoe2", "aoe2companion")`
+The STEP_STATUS currently shows:
+- `01_01_01` File Inventory: `complete` (2026-04-09)
+- `01_01_02` Schema Discovery: `complete` (2026-04-12)
+- `01_02_01` DuckDB Pre-Ingestion: `complete` (2026-04-13)
+- `01_02_02` DuckDB Ingestion: `complete` (2026-04-13)
+- `01_02_03` Raw Schema DESCRIBE: `complete` (2026-04-14) — produced
+  `data/db/schemas/raw/*.yaml` source-of-truth files
+
+Step 01_02_04 requires **both** of the following to be complete:
+1. **01_02_02** — the persistent DuckDB must contain all four tables
+   (`matches_raw`, `ratings_raw`, `leaderboards_raw`, `profiles_raw`) so
+   that `get_notebook_db("aoe2", "aoe2companion")` returns a working
+   connection.
+2. **01_02_03** — the schema YAMLs must exist, confirming the column counts
+   (matches=55, ratings=8, leaderboards=19, profiles=14) that the notebook's
+   queries rely on.
+
+Both prerequisites are satisfied.
 
 ---
 

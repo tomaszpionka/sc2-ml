@@ -240,6 +240,112 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_03 — Raw Schema DESCRIBE
+
+```yaml
+step_number: "01_02_03"
+name: "Raw Schema DESCRIBE"
+description: "Establish the definitive column-name and column-type snapshot for every aoe2companion raw source. Uses in-memory DuckDB with the same read parameters planned for 01_02_02 (binary_as_string=true, union_by_name=true, filename=true for Parquet; explicit dtypes for CSV) and LIMIT 0 to avoid loading any row data. Output feeds the data/db/schemas/raw/*.yaml source-of-truth files consumed by all downstream steps. When 01_02_02 has been executed, this step can instead connect read-only to the persistent DuckDB."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2"
+dataset: "aoe2companion"
+question: "What are the exact column names and DuckDB types for each aoe2companion raw source — matches, ratings, leaderboards, profiles — as they will appear after ingestion?"
+method: "Connect to in-memory DuckDB. DESCRIBE SELECT * FROM read_parquet/read_csv(...) LIMIT 0 for each of the four sources using the same read options as 01_02_02. Write JSON artifact. Populate data/db/schemas/raw/*.yaml schema files."
+stratification: "By source (matches, ratings, leaderboards, profiles)."
+predecessors:
+  - "01_02_01"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_raw_schema_describe.py"
+inputs:
+  duckdb_tables: "none — in-memory DuckDB, reads files directly with LIMIT 0"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "DuckDB 1.5.1 (pinned in pyproject.toml)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
+  report: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.md"
+  schema_files:
+    - "data/db/schemas/raw/matches_raw.yaml"
+    - "data/db/schemas/raw/ratings_raw.yaml"
+    - "data/db/schemas/raw/leaderboards_raw.yaml"
+    - "data/db/schemas/raw/profiles_raw.yaml"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "All DESCRIBE SQL embedded in notebook; JSON artifact records exact schema seen."
+  - number: "7"
+    how_upheld: "Column types and nullability taken from DESCRIBE output, not assumed."
+  - number: "9"
+    how_upheld: "Read-only step — no DuckDB tables created, no files modified."
+  - number: "10"
+    how_upheld: "filename column confirmed present across all four sources."
+gate:
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json exists and non-empty. data/db/schemas/raw/*.yaml files populated for all four tables."
+  continue_predicate: "Column counts confirmed: matches=55, ratings=8, leaderboards=19, profiles=14."
+  halt_predicate: "Any source cannot be read or DESCRIBE returns zero columns."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_02_04 — Univariate Census & Target Variable EDA
+
+```yaml
+step_number: "01_02_04"
+name: "Univariate Census & Target Variable EDA"
+description: "Perform a full NULL census of all 55 matches_raw columns and all columns of the three auxiliary tables (leaderboards_raw 19 cols, profiles_raw 14 cols, ratings_raw 8 cols), profile the target variable (won) distribution with intra-match consistency validation, compute match structure by leaderboard, profile all categorical, boolean, and numeric fields with descriptive statistics, establish temporal range, detect dead/constant/near-constant fields, and generate univariate visualizations."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.1, 3.2, 3.3"
+dataset: "aoe2companion"
+question: "What are the full NULL rates across all columns of all four raw tables? What is the won (BOOLEAN) class balance, both overall and stratified by leaderboard? Are won values complementary within 2-row matches (intra-match consistency)? What is the match structure by leaderboard (avg rows per match — resolving the 3.71 open question)? What are the descriptive statistics and cardinality for all numeric, categorical, and boolean fields? What is the temporal range? Are there dead or near-constant fields?"
+method: "Connect read-only to persistent DuckDB. Use SUMMARIZE as primary approach for NULL census (single-pass over 277M rows), with per-column iteration as fallback. Target variable GROUP BY on won, stratified by leaderboard. Intra-match won consistency via CTE grouping by matchId with HAVING COUNT(*)=2. Match structure via GROUP BY leaderboard with COUNT(DISTINCT matchId). Categorical cardinality via COUNT(DISTINCT). Numeric descriptive statistics via PERCENTILE_CONT. Boolean TRUE/FALSE/NULL counts via FILTER. Dead-field detection via uniqueness ratio. All SQL embedded in notebook and markdown artifact."
+stratification: "By column (NULL census, cardinality, descriptive stats); by won value (target distribution); by leaderboard (stratified target, match structure); by month (temporal match counts); by table (matches_raw, leaderboards_raw, profiles_raw, ratings_raw)."
+predecessors:
+  - "01_02_03"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "leaderboards_raw"
+    - "profiles_raw"
+    - "ratings_raw"
+  schema_yamls:
+    - "data/db/schemas/raw/matches_raw.yaml"
+    - "data/db/schemas/raw/leaderboards_raw.yaml"
+    - "data/db/schemas/raw/profiles_raw.yaml"
+    - "data/db/schemas/raw/ratings_raw.yaml"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "01_DATA_EXPLORATION_MANUAL.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+  report: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.md"
+reproducibility: "All SQL queries verbatim in both notebook and markdown artifact (Invariant #6). Dead-field thresholds: cardinality=1, uniqueness ratio<0.001 (EDA Manual Section 3.3). Uniqueness ratio denominator is COUNT(*) including NULLs — interpreted alongside NULL census."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "ratingDiff identified as post-game field encoding match outcome — deferred to Phase 02 for formal pre-game/post-game boundary classification. No temporal features computed."
+  - number: "6"
+    how_upheld: "All SQL embedded verbatim in markdown artifact alongside every reported number."
+  - number: "7"
+    how_upheld: "Dead-field thresholds justified by EDA Manual Section 3.3."
+  - number: "9"
+    how_upheld: "Conclusions limited to univariate distributions and NULL rates. No cleaning actions taken."
+gate:
+  artifact_check: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json exists and valid JSON. artifacts/01_exploration/02_eda/01_02_04_univariate_census.md exists with SQL blocks for all analysis sections. Plot PNGs exist."
+  continue_predicate: "JSON contains NULL census covering every column of all four tables (matches_raw 55 cols, leaderboards_raw 19 cols, profiles_raw 14 cols, ratings_raw 8 cols). won distribution with intra-match consistency counts. Match structure by leaderboard. Descriptive statistics for at least rating, ratingDiff, population."
+  halt_predicate: "matches_raw cannot be queried. All won values are NULL."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
