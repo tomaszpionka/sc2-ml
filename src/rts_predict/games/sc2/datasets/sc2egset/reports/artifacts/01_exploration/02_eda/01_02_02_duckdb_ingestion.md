@@ -22,7 +22,9 @@ Three-stream extraction (see 01_02_01 design artifact):
   filename stores relative path from raw_dir.
 - **map_aliases_raw**: DuckDB table, all tournament mapping files with
   tournament provenance column. filename stores relative path from raw_dir.
-- **Events**: Parquet extraction (optional, SSD-dependent, deferred).
+- **game_events_raw / tracker_events_raw / message_events_raw**: DuckDB
+  views over per-type Parquet subdirectories. Single-pass extraction;
+  columns: filename (relative, I10), loop, evtTypeName, event_data.
 
 ## NULL rates
 
@@ -180,3 +182,200 @@ FROM map_aliases_raw
 |   unique_foreign |   unique_english |   unique_tournaments |   total_rows |
 |-----------------:|-----------------:|---------------------:|-------------:|
 |             1488 |              215 |                   70 |       104160 |
+
+## Event extraction
+
+
+| Event type | Rows extracted | DuckDB view |
+|------------|---------------|-------------|
+| gameEvents | 608,618,823 | game_events_raw |
+| trackerEvents | 62,003,411 | tracker_events_raw |
+| messageEvents | 52,167 | message_events_raw |
+
+## game_events_raw health checks
+
+
+### NULL rates
+
+
+```sql
+SELECT
+    COUNT(*)                       AS total_rows,
+    COUNT(*) - COUNT(filename)     AS filename_null,
+    COUNT(*) - COUNT(loop)         AS loop_null,
+    COUNT(*) - COUNT(evtTypeName)  AS evtTypeName_null,
+    COUNT(*) - COUNT(event_data)   AS event_data_null
+FROM game_events_raw
+```
+
+
+|   total_rows |   filename_null |   loop_null |   evtTypeName_null |   event_data_null |
+|-------------:|----------------:|------------:|-------------------:|------------------:|
+|    608618823 |               0 |           0 |                  0 |                 0 |
+
+### Filename coverage
+
+
+```sql
+SELECT
+    COUNT(DISTINCT e.filename)  AS event_files,
+    COUNT(DISTINCT rm.filename) AS meta_files,
+    COUNT(DISTINCT e.filename)
+        - COUNT(DISTINCT CASE WHEN rm.filename IS NOT NULL
+                              THEN e.filename END) AS orphan_event_files
+FROM game_events_raw e
+LEFT JOIN replays_meta_raw rm ON e.filename = rm.filename
+```
+
+
+|   event_files |   meta_files |   orphan_event_files |
+|--------------:|-------------:|---------------------:|
+|         22390 |        22390 |                    0 |
+
+### Top-10 evtTypeName
+
+
+```sql
+SELECT evtTypeName, COUNT(*) AS event_count
+FROM game_events_raw
+GROUP BY evtTypeName
+ORDER BY event_count DESC
+LIMIT 10
+```
+
+
+| evtTypeName          |   event_count |
+|:---------------------|--------------:|
+| CameraUpdate         |     387507855 |
+| ControlGroupUpdate   |      69227281 |
+| CommandManagerState  |      43946635 |
+| SelectionDelta       |      40855099 |
+| Cmd                  |      31201304 |
+| CmdUpdateTargetPoint |      25863707 |
+| CmdUpdateTargetUnit  |       8348208 |
+| CameraSave           |       1027659 |
+| TriggerMouseMoved    |        380197 |
+| UserOptions          |        131738 |
+
+## tracker_events_raw health checks
+
+
+### NULL rates
+
+
+```sql
+SELECT
+    COUNT(*)                       AS total_rows,
+    COUNT(*) - COUNT(filename)     AS filename_null,
+    COUNT(*) - COUNT(loop)         AS loop_null,
+    COUNT(*) - COUNT(evtTypeName)  AS evtTypeName_null,
+    COUNT(*) - COUNT(event_data)   AS event_data_null
+FROM tracker_events_raw
+```
+
+
+|   total_rows |   filename_null |   loop_null |   evtTypeName_null |   event_data_null |
+|-------------:|----------------:|------------:|-------------------:|------------------:|
+|     62003411 |               0 |           0 |                  0 |                 0 |
+
+### Filename coverage
+
+
+```sql
+SELECT
+    COUNT(DISTINCT e.filename)  AS event_files,
+    COUNT(DISTINCT rm.filename) AS meta_files,
+    COUNT(DISTINCT e.filename)
+        - COUNT(DISTINCT CASE WHEN rm.filename IS NOT NULL
+                              THEN e.filename END) AS orphan_event_files
+FROM tracker_events_raw e
+LEFT JOIN replays_meta_raw rm ON e.filename = rm.filename
+```
+
+
+|   event_files |   meta_files |   orphan_event_files |
+|--------------:|-------------:|---------------------:|
+|         22390 |        22390 |                    0 |
+
+### Top-10 evtTypeName
+
+
+```sql
+SELECT evtTypeName, COUNT(*) AS event_count
+FROM tracker_events_raw
+GROUP BY evtTypeName
+ORDER BY event_count DESC
+LIMIT 10
+```
+
+
+| evtTypeName     |   event_count |
+|:----------------|--------------:|
+| UnitBorn        |      22372489 |
+| UnitDied        |      16053834 |
+| UnitTypeChange  |      10999108 |
+| PlayerStats     |       4558736 |
+| UnitInit        |       3151270 |
+| UnitDone        |       3018764 |
+| UnitPositions   |        941249 |
+| Upgrade         |        797987 |
+| UnitOwnerChange |         65157 |
+| PlayerSetup     |         44817 |
+
+## message_events_raw health checks
+
+
+### NULL rates
+
+
+```sql
+SELECT
+    COUNT(*)                       AS total_rows,
+    COUNT(*) - COUNT(filename)     AS filename_null,
+    COUNT(*) - COUNT(loop)         AS loop_null,
+    COUNT(*) - COUNT(evtTypeName)  AS evtTypeName_null,
+    COUNT(*) - COUNT(event_data)   AS event_data_null
+FROM message_events_raw
+```
+
+
+|   total_rows |   filename_null |   loop_null |   evtTypeName_null |   event_data_null |
+|-------------:|----------------:|------------:|-------------------:|------------------:|
+|        52167 |               0 |           0 |                  0 |                 0 |
+
+### Filename coverage
+
+
+```sql
+SELECT
+    COUNT(DISTINCT e.filename)  AS event_files,
+    COUNT(DISTINCT rm.filename) AS meta_files,
+    COUNT(DISTINCT e.filename)
+        - COUNT(DISTINCT CASE WHEN rm.filename IS NOT NULL
+                              THEN e.filename END) AS orphan_event_files
+FROM message_events_raw e
+LEFT JOIN replays_meta_raw rm ON e.filename = rm.filename
+```
+
+
+|   event_files |   meta_files |   orphan_event_files |
+|--------------:|-------------:|---------------------:|
+|         22260 |        22260 |                    0 |
+
+### Top-10 evtTypeName
+
+
+```sql
+SELECT evtTypeName, COUNT(*) AS event_count
+FROM message_events_raw
+GROUP BY evtTypeName
+ORDER BY event_count DESC
+LIMIT 10
+```
+
+
+| evtTypeName     |   event_count |
+|:----------------|--------------:|
+| Chat            |         51412 |
+| Ping            |           714 |
+| ReconnectNotify |            41 |

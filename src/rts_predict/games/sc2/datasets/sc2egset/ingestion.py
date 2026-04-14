@@ -30,8 +30,22 @@ logger = logging.getLogger(__name__)
 # ── SQL constants ────────────────────────────────────────────────────────────
 
 _DROP_IF_EXISTS_QUERY = "DROP TABLE IF EXISTS {table}"
+_DROP_VIEW_IF_EXISTS_QUERY = "DROP VIEW IF EXISTS {view}"
 
 _COUNT_QUERY = "SELECT count(*) FROM {table}"
+
+_EVENT_VIEW_QUERY = """
+CREATE VIEW {view_name} AS
+SELECT * FROM read_parquet('{glob}')
+"""
+
+# Mapping from Parquet subdirectory name → DuckDB view name.
+# Kept at module level so notebooks and tests can import it.
+EVENT_SUBDIR_TO_VIEW: dict[str, str] = {
+    "gameEvents": "game_events_raw",
+    "trackerEvents": "tracker_events_raw",
+    "messageEvents": "message_events_raw",
+}
 
 # Stream 1: replays_meta_raw — scalar metadata per replay, events excluded.
 # ToonPlayerDescMap is stored as VARCHAR (JSON text) because its keys are
@@ -451,6 +465,62 @@ def extract_events_to_parquet(
     for et in event_types:
         logger.info("%s: %d total rows -> %s/", et, counts[et], output_dir / et)
 
+    return counts
+
+
+def load_event_views(
+    con: duckdb.DuckDBPyConnection,
+    parquet_dir: Path,
+    *,
+    should_drop: bool = True,
+) -> dict[str, int]:
+    """Register event Parquet subdirectories as DuckDB views.
+
+    Creates three views (views not tables — the Parquet files are
+    authoritative; no data is duplicated):
+      game_events_raw    → parquet_dir/gameEvents/*.parquet
+      tracker_events_raw → parquet_dir/trackerEvents/*.parquet
+      message_events_raw → parquet_dir/messageEvents/*.parquet
+
+    Each view exposes columns: filename (relative to raw_dir, Invariant I10),
+    loop (game tick), evtTypeName, event_data (full event as JSON VARCHAR).
+
+    If no Parquet files exist for a subdirectory yet, that view is skipped
+    and its count is reported as 0.
+
+    Args:
+        con: Active DuckDB connection (read-write).
+        parquet_dir: Root directory containing per-type subdirectories
+            (gameEvents/, trackerEvents/, messageEvents/).
+        should_drop: If True, drop any existing view of the same name first.
+
+    Returns:
+        Dict mapping view name to row count (0 if no files present yet).
+    """
+    counts: dict[str, int] = {}
+
+    for subdir, view_name in EVENT_SUBDIR_TO_VIEW.items():
+        if should_drop:
+            con.execute(_DROP_VIEW_IF_EXISTS_QUERY.format(view=view_name))
+
+        et_dir = parquet_dir / subdir
+        parquet_files = list(et_dir.glob("*.parquet")) if et_dir.exists() else []
+
+        if not parquet_files:
+            logger.warning(
+                "load_event_views: no parquet files in %s — skipping %s",
+                et_dir, view_name,
+            )
+            counts[view_name] = 0
+            continue
+
+        glob = str(et_dir / "*.parquet")
+        con.execute(_EVENT_VIEW_QUERY.format(view_name=view_name, glob=glob))
+        n = _count_rows(con, view_name)
+        logger.info("%s: %d rows", view_name, n)
+        counts[view_name] = n
+
+    logger.info("load_event_views complete: %s", counts)
     return counts
 
 

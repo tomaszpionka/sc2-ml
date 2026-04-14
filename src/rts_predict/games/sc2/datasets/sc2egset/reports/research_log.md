@@ -8,7 +8,7 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ---
 
-## 2026-04-13 — [Phase 01 / Step 01_02_02] DuckDB ingestion
+## 2026-04-14 — [Phase 01 / Step 01_02_02] DuckDB ingestion
 
 **Category:** A (science)
 **Dataset:** sc2egset
@@ -19,16 +19,19 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ### What
 
-Materialised three `*_raw` DuckDB tables from the full 22,390-file sc2egset
-corpus (209 GB raw JSON) into the persistent database at
-`src/rts_predict/games/sc2/datasets/sc2egset/data/db/db.duckdb`.
+Materialised three `*_raw` DuckDB tables and three event DuckDB views from the
+full 22,390-file sc2egset corpus (209 GB raw JSON) into the persistent database
+at `src/rts_predict/games/sc2/datasets/sc2egset/data/db/db.duckdb`. Event data
+extracted to zstd-compressed Parquet under `IN_GAME_PARQUET_DIR` and registered
+as DuckDB views for SQL access.
 
 ### Why
 
 Enable SQL-based EDA for subsequent profiling (01_03) and cleaning (01_04).
-All data now accessible via DuckDB queries without reading raw JSON files
-on every access. Invariants #6 (reproducibility), #7 (provenance), #9 (step
-scope), #10 (relative filenames) upheld.
+All data — metadata, player stats, and in-game events — now accessible via
+DuckDB queries without reading raw JSON files on every access. Invariants #6
+(reproducibility), #7 (provenance), #9 (step scope), #10 (relative filenames)
+upheld.
 
 ### How (reproducibility)
 
@@ -44,31 +47,57 @@ Module: `src/rts_predict/games/sc2/datasets/sc2egset/ingestion.py`
 | replay_players_raw | 44,817 |
 | map_aliases_raw | 104,160 |
 
-**NULL rates:**
+**Event view row counts:**
+| View | Rows |
+|------|------|
+| game_events_raw | 608,618,823 |
+| tracker_events_raw | 62,003,411 |
+| message_events_raw | 52,167 |
+
+**NULL rates (tables):**
 - replays_meta_raw: zero NULLs across all 6 checked columns (details, header,
   initData, metadata, ToonPlayerDescMap, filename)
 - replay_players_raw: zero NULLs across all 7 checked columns (toon_id,
   nickname, MMR, race, result, APM, filename)
 - map_aliases_raw: zero NULLs across all 4 columns; 70 distinct tournaments
 
+**NULL rates (event views):**
+- All three event views: zero NULLs across all 4 columns (filename, loop,
+  evtTypeName, event_data)
+
 **ToonPlayerDescMap type:** Confirmed VARCHAR (JSON text blob), not STRUCT.
 
 **Cross-table integrity:** `orphan_player_files = 0` in both directions
 (every replay_players_raw file exists in replays_meta_raw, and vice versa).
+Event views also have zero orphan files — all 22,390 replay filenames
+present in game_events_raw and tracker_events_raw; message_events_raw covers
+22,260 files (130 replays have no message events, which is expected).
 
 **Player count per replay:** 22,379 replays have exactly 2 players (99.95%),
 3 replays have 1 player, 2 have 4, 1 has 6, 3 have 8, and 2 have 9.
-The non-2-player replays are likely team games, FFA, or incomplete
+11 total non-2-player replays — likely team games, FFA, or incomplete
 replays; flagged for investigation in 01_04 (cleaning).
 
-**map_aliases_raw dedup profile:** 1,488 unique foreign names, 193 unique
+**map_aliases_raw dedup profile:** 1,488 unique foreign names, 215 unique
 English names, 70 unique tournaments, 104,160 total rows. As expected from
 01_02_01 — all 70 tournament mapping files have identical 1,488-entry key
 sets.
 
-**filename column (Invariant I10):** All three tables store paths relative to
-`raw_dir` (no leading `/`). Cross-table join on `filename` has zero orphans,
-confirming the relative-path strategy is consistent across streams.
+**Top event types (game_events_raw):** CameraUpdate dominates at 387M events
+(63.7%), followed by ControlGroupUpdate (69M), CommandManagerState (44M),
+SelectionDelta (41M), Cmd (31M). These are mechanical-skill signals.
+
+**Top event types (tracker_events_raw):** UnitBorn (22.4M), UnitDied (16.1M),
+UnitTypeChange (11.0M), PlayerStats (4.6M). These are game-state signals
+likely most relevant for outcome prediction features in Phase 02.
+
+**Top event types (message_events_raw):** Chat (51.4K), Ping (714),
+ReconnectNotify (41). Low volume; limited predictive value expected.
+
+**filename column (Invariant I10):** All three tables and all three event
+views store paths relative to `raw_dir` (no leading `/`). Cross-table and
+cross-view join on `filename` has zero orphans, confirming the relative-path
+strategy is consistent across all six data objects.
 
 ### Decisions taken
 
@@ -81,27 +110,40 @@ confirming the relative-path strategy is consistent across streams.
   `json.loads` + `executemany` for correctness and simplicity
 - `_DEFAULT_MAX_OBJECT_SIZE` set to 160 MB (1.12x headroom over largest
   observed file at 143.1 MB)
-- 14 single-player replays retained as-is; deferred to cleaning step
+- Event extraction uses single-pass batched approach: each JSON file read
+  once, events routed to gameEvents/trackerEvents/messageEvents accumulators
+  in the same loop iteration (3x I/O reduction vs sequential extraction)
+- Events stored as zstd-compressed Parquet (not DuckDB tables) to avoid
+  doubling storage; registered as DuckDB views for SQL access
+- Event schema: 4 columns (filename, loop, evtTypeName, event_data) with
+  event_data as JSON VARCHAR — flexible for downstream parsing without
+  committing to a schema prematurely
+- 11 non-2-player replays (3 single, 2 quad, 1 hex, 3 oct, 2 nona) retained
+  as-is; deferred to cleaning step
 
 ### Decisions deferred
 
-- Event Parquet extraction (SSD-dependent, estimated 40-80 GB compressed).
-  Section 5 of the notebook remains commented out.
 - Data cleaning (NULL rates and anomalies documented, not acted on). Deferred
   to pipeline section 01_04.
 - Identity resolution (toon_id stored as-is). Deferred to Phase 02.
+- NULL rate coverage for replay_players_raw extended columns (SQ,
+  supplyCappedPercent, highestLeague, etc.) — only 7 of 25 columns checked.
+  Full profiling deferred to pipeline section 01_03.
 
 ### Thesis mapping
 
 Chapter 4, Section 4.1.1 — SC2EGSet: three-stream ingestion design,
-ToonPlayerDescMap normalisation, `*_raw` bronze-layer convention.
+ToonPlayerDescMap normalisation, `*_raw` bronze-layer convention, event
+Parquet extraction rationale.
 
 ### Open questions
 
-- What are the 14 single-player replays? Are they observers, disconnects,
-  or parse failures? (Investigate in 01_04)
-- The 15 NULL MMR values and 33 NULL APM/SQ/supplyCappedPercent values: are
-  these missing from the original replay metadata or parser artefacts?
+- What are the 11 non-2-player replays? Are they team games, FFA,
+  observers, disconnects, or parse failures? (Investigate in 01_04)
+- 130 replays have no message events — is this expected (players who never
+  chatted/pinged) or a parse artefact?
+- Are SQ, supplyCappedPercent, highestLeague columns fully populated or do
+  they have NULLs? (Profiling in 01_03)
 
 ---
 

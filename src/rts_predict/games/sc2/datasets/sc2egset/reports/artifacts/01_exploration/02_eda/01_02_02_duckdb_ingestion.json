@@ -392,5 +392,157 @@
   "tpdm_type": {
     "column_name": "ToonPlayerDescMap",
     "data_type": "VARCHAR"
+  },
+  "event_extraction_counts": {
+    "gameEvents": 608618823,
+    "trackerEvents": 62003411,
+    "messageEvents": 52167
+  },
+  "event_views_created": {
+    "game_events_raw": 608618823,
+    "tracker_events_raw": 62003411,
+    "message_events_raw": 52167
+  },
+  "event_views_health": {
+    "game_events_raw": {
+      "null_rates": {
+        "total_rows": 608618823,
+        "filename_null": 0,
+        "loop_null": 0,
+        "evtTypeName_null": 0,
+        "event_data_null": 0
+      },
+      "filename_coverage": {
+        "event_files": 22390,
+        "meta_files": 22390,
+        "orphan_event_files": 0
+      },
+      "top10_evt_types": [
+        {
+          "evtTypeName": "CameraUpdate",
+          "event_count": 387507855
+        },
+        {
+          "evtTypeName": "ControlGroupUpdate",
+          "event_count": 69227281
+        },
+        {
+          "evtTypeName": "CommandManagerState",
+          "event_count": 43946635
+        },
+        {
+          "evtTypeName": "SelectionDelta",
+          "event_count": 40855099
+        },
+        {
+          "evtTypeName": "Cmd",
+          "event_count": 31201304
+        },
+        {
+          "evtTypeName": "CmdUpdateTargetPoint",
+          "event_count": 25863707
+        },
+        {
+          "evtTypeName": "CmdUpdateTargetUnit",
+          "event_count": 8348208
+        },
+        {
+          "evtTypeName": "CameraSave",
+          "event_count": 1027659
+        },
+        {
+          "evtTypeName": "TriggerMouseMoved",
+          "event_count": 380197
+        },
+        {
+          "evtTypeName": "UserOptions",
+          "event_count": 131738
+        }
+      ]
+    },
+    "tracker_events_raw": {
+      "null_rates": {
+        "total_rows": 62003411,
+        "filename_null": 0,
+        "loop_null": 0,
+        "evtTypeName_null": 0,
+        "event_data_null": 0
+      },
+      "filename_coverage": {
+        "event_files": 22390,
+        "meta_files": 22390,
+        "orphan_event_files": 0
+      },
+      "top10_evt_types": [
+        {
+          "evtTypeName": "UnitBorn",
+          "event_count": 22372489
+        },
+        {
+          "evtTypeName": "UnitDied",
+          "event_count": 16053834
+        },
+        {
+          "evtTypeName": "UnitTypeChange",
+          "event_count": 10999108
+        },
+        {
+          "evtTypeName": "PlayerStats",
+          "event_count": 4558736
+        },
+        {
+          "evtTypeName": "UnitInit",
+          "event_count": 3151270
+        },
+        {
+          "evtTypeName": "UnitDone",
+          "event_count": 3018764
+        },
+        {
+          "evtTypeName": "UnitPositions",
+          "event_count": 941249
+        },
+        {
+          "evtTypeName": "Upgrade",
+          "event_count": 797987
+        },
+        {
+          "evtTypeName": "UnitOwnerChange",
+          "event_count": 65157
+        },
+        {
+          "evtTypeName": "PlayerSetup",
+          "event_count": 44817
+        }
+      ]
+    },
+    "message_events_raw": {
+      "null_rates": {
+        "total_rows": 52167,
+        "filename_null": 0,
+        "loop_null": 0,
+        "evtTypeName_null": 0,
+        "event_data_null": 0
+      },
+      "filename_coverage": {
+        "event_files": 22260,
+        "meta_files": 22260,
+        "orphan_event_files": 0
+      },
+      "top10_evt_types": [
+        {
+          "evtTypeName": "Chat",
+          "event_count": 51412
+        },
+        {
+          "evtTypeName": "Ping",
+          "event_count": 714
+        },
+        {
+          "evtTypeName": "ReconnectNotify",
+          "event_count": 41
+        }
+      ]
+    }
   }
 }

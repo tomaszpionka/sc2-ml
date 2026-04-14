@@ -8,6 +8,80 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-14 — [Phase 01 / Step 01_02_01] won=NULL root-cause investigation
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** query (amendment to 01_02_01)
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.json` (extended with `won_null_root_cause` key)
+
+### What
+
+Diagnosed why 12,985,561 rows (4.69%) have `won=NULL` in the full matches
+corpus. Added section 8 (Q1–Q4) to the 01_02_01 pre-ingestion notebook to
+distinguish between two hypotheses: H1 (Parquet schema heterogeneity causing
+DuckDB type promotion to inject NULLs) and H2 (genuine NULL values in source
+files).
+
+### Why
+
+The `won` column is the prediction target for this thesis. Before any cleaning
+decisions can be made in later steps, the root cause of NULLs must be
+understood. Invariant #6 (reproducibility) — all diagnostic queries embedded
+in the artifact.
+
+### How (reproducibility)
+
+Notebook: `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_01_duckdb_pre_ingestion.py`
+
+Q1: `parquet_schema()` metadata-only scan — counts distinct `won` Parquet types
+across all 2,073 files without loading row data.
+
+Q2: Per-type-group value census without `union_by_name` — reads each type group
+independently to observe native values and genuine NULLs.
+
+Q3: Type promotion NULL injection test — compares per-file NULL counts before
+and after `union_by_name=true` on a mixed-type sample (runs only if Q1 finds
+multiple types).
+
+Q4: Per-file NULL distribution — identifies which files contribute NULLs and
+their date range under `union_by_name=true`.
+
+### Findings
+
+The investigation was added as a diagnostic section to the notebook. Results
+will be populated when the notebook is executed against the full corpus. The
+`won_null_root_cause` key in the artifact JSON captures Q1 parquet type
+distribution, Q4 file/NULL counts, date range of affected files, and the H1/H2
+verdicts.
+
+### Decisions taken
+
+- Investigation scope limited to diagnosis only — no cleaning decisions made
+- Section 8 uses a dedicated `con8 = duckdb.connect(":memory:")` connection to
+  avoid interference with the existing `con` connection in the notebook
+
+### Decisions deferred
+
+- Actual H1/H2 verdict pending notebook execution on full corpus
+- Recovery strategy for NULL `won` values (explicit cast, row drop, or date
+  filter) deferred to a future cleaning step
+
+### Thesis mapping
+
+- Chapter 4, §4.1.2 — AoE2 data quality: won column NULL analysis
+- Chapter 4, §4.2.1 — Ingestion validation methodology
+
+### Open questions / follow-ups
+
+- If H1 is confirmed: can INT64-encoded `won` values (1/0) be recovered by
+  reading affected files with their native type and casting explicitly?
+- If both H1 and H2 are confirmed: what fraction of NULLs is attributable to
+  each cause?
+
+---
+
 ## 2026-04-13 — [Phase 01 / Step 01_02_01] DuckDB pre-ingestion investigation
 
 **Category:** A (science)

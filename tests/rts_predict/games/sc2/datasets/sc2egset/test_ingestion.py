@@ -10,6 +10,7 @@ from rts_predict.games.sc2.datasets.sc2egset.ingestion import (
     _extract_player_row,
     extract_events_to_parquet,
     load_all_raw_tables,
+    load_event_views,
     load_map_aliases_raw,
     load_replay_players_raw,
     load_replays_meta_raw,
@@ -434,6 +435,97 @@ class TestExtractEventsToParquet:
         # Subdirs are created but contain no batch files
         for et in ("gameEvents", "trackerEvents", "messageEvents"):
             assert len(list((output_dir / et).glob("batch_*.parquet"))) == 0
+
+
+# ── Tests: load_event_views ──────────────────────────────────────────────────
+
+
+@pytest.fixture()
+def events_parquet_dir(sc2_raw_dir: Path, tmp_path: Path) -> Path:
+    """Extract synthetic events to Parquet subdirs, return the output root."""
+    output_dir = tmp_path / "events"
+    extract_events_to_parquet(sc2_raw_dir, output_dir, batch_size=10)
+    return output_dir
+
+
+class TestLoadEventViews:
+    """Tests for load_event_views."""
+
+    def test_creates_three_views(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        events_parquet_dir: Path,
+    ) -> None:
+        """game_events_raw, tracker_events_raw, message_events_raw must all exist."""
+        load_event_views(sc2_db_con, events_parquet_dir)
+        views = {row[0] for row in sc2_db_con.execute("SHOW TABLES").fetchall()}
+        assert "game_events_raw" in views
+        assert "tracker_events_raw" in views
+        assert "message_events_raw" in views
+
+    def test_row_counts_match_extraction(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        events_parquet_dir: Path,
+    ) -> None:
+        """View row counts must equal what extract_events_to_parquet reported."""
+        view_counts = load_event_views(sc2_db_con, events_parquet_dir)
+        assert view_counts["game_events_raw"] == 90  # noqa: PLR2004
+        assert view_counts["tracker_events_raw"] == 18  # noqa: PLR2004
+        assert view_counts["message_events_raw"] == 6  # noqa: PLR2004
+
+    def test_views_have_expected_columns(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        events_parquet_dir: Path,
+    ) -> None:
+        """All three views must expose filename, loop, evtTypeName, event_data."""
+        load_event_views(sc2_db_con, events_parquet_dir)
+        for view_name in ("game_events_raw", "tracker_events_raw", "message_events_raw"):
+            cols = {
+                row[0]
+                for row in sc2_db_con.execute(f"DESCRIBE {view_name}").fetchall()
+            }
+            assert {"filename", "loop", "evtTypeName", "event_data"} <= cols, (
+                f"{view_name} missing expected columns"
+            )
+
+    def test_filename_is_relative(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        events_parquet_dir: Path,
+    ) -> None:
+        """Invariant I10: filename column must not start with '/' in any view."""
+        load_event_views(sc2_db_con, events_parquet_dir)
+        for view_name in ("game_events_raw", "tracker_events_raw", "message_events_raw"):
+            rows = sc2_db_con.execute(
+                f"SELECT DISTINCT filename FROM {view_name} LIMIT 10"
+            ).fetchall()
+            assert all(not r[0].startswith("/") for r in rows), (
+                f"{view_name}.filename must be relative, not absolute"
+            )
+
+    def test_idempotent(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        events_parquet_dir: Path,
+    ) -> None:
+        """Calling load_event_views twice with should_drop=True gives same counts."""
+        c1 = load_event_views(sc2_db_con, events_parquet_dir, should_drop=True)
+        c2 = load_event_views(sc2_db_con, events_parquet_dir, should_drop=True)
+        assert c1 == c2
+
+    def test_empty_parquet_dir_returns_zeros(
+        self,
+        sc2_db_con: duckdb.DuckDBPyConnection,
+        tmp_path: Path,
+    ) -> None:
+        """If no Parquet files exist yet, all counts are 0 and no views are created."""
+        empty_dir = tmp_path / "no_events"
+        counts = load_event_views(sc2_db_con, empty_dir)
+        assert counts["game_events_raw"] == 0
+        assert counts["tracker_events_raw"] == 0
+        assert counts["message_events_raw"] == 0
 
 
 # ── Tests: load_map_aliases_raw ───────────────────────────────────────────────
