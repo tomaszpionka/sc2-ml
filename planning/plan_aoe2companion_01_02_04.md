@@ -80,12 +80,8 @@ reported result must appear verbatim in the markdown artifact (Invariant #6).
 01_02_01 checked only 3 columns (matchId, profileId, won). This step covers
 all 55 columns (54 source + filename), with both count and percentage.
 
-Because 277M rows make per-column iteration expensive (55 sequential full-
-table scans), use DuckDB's SUMMARIZE as the primary approach for the NULL
-census. SUMMARIZE produces null_count and distinct_count in a single pass
-over the table. If the SUMMARIZE output format is insufficient (e.g.,
-missing null_pct or producing unexpected column names), fall back to the
-iterative per-column pattern below.
+Because 277M rows make a single-query per-column approach impractical to
+display, use DuckDB's `SUMMARIZE` or a looped approach across column batches.
 
 SQL sketch (batch approach):
 ```sql
@@ -129,37 +125,6 @@ ORDER BY leaderboard, won
 
 This resolves the open question: does filtering to a specific leaderboard
 (e.g., ranked 1v1) reduce the won=NULL rate?
-
-Intra-match consistency check (1v1 matches): for matches with exactly 2
-rows per matchId, verify that `won` values are complementary (one TRUE
-and one FALSE, or both NULL). Report the count of inconsistent matches.
-
-```sql
-WITH match_pairs AS (
-    SELECT
-        matchId,
-        COUNT(*) AS n_rows,
-        COUNT(*) FILTER (WHERE won = TRUE) AS won_true,
-        COUNT(*) FILTER (WHERE won = FALSE) AS won_false,
-        COUNT(*) - COUNT(won) AS won_null
-    FROM matches_raw
-    GROUP BY matchId
-    HAVING COUNT(*) = 2
-)
-SELECT
-    COUNT(*) AS total_2row_matches,
-    COUNT(*) FILTER (WHERE won_true = 1 AND won_false = 1) AS consistent_complement,
-    COUNT(*) FILTER (WHERE won_null = 2) AS both_null,
-    COUNT(*) FILTER (WHERE won_true = 1 AND won_null = 1) AS one_true_one_null,
-    COUNT(*) FILTER (WHERE won_false = 1 AND won_null = 1) AS one_false_one_null,
-    COUNT(*) FILTER (WHERE won_true = 2) AS both_true,
-    COUNT(*) FILTER (WHERE won_false = 2) AS both_false,
-    COUNT(*) FILTER (WHERE won_true = 0 AND won_false = 0 AND won_null < 2) AS other_inconsistent
-FROM match_pairs
-```
-
-This directly validates the integrity of the prediction target for the
-primary 1v1 use case. Inconsistencies feed the cleaning step (01_04).
 
 **Visualization:** Bar chart of `won` value counts (TRUE / FALSE / NULL) —
 overall distribution. Render in notebook and save as PNG artifact.
@@ -318,14 +283,14 @@ WHERE "{col}" IS NOT NULL
 ```
 
 For `leaderboards_raw`:
-- `rank`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `rating`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `wins`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `losses`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `games`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `streak`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `drops`: min, max, mean, median, stddev, p05, p25, p75, p95
-- `rankCountry`: min, max, mean, median, stddev, p05, p25, p75, p95
+- `rank`: min, max, mean, median, stddev, p25, p75
+- `rating`: min, max, mean, median, stddev, p25, p75
+- `wins`: min, max, mean, median, stddev, p25, p75
+- `losses`: min, max, mean, median, stddev, p25, p75
+- `games`: min, max, mean, median, stddev, p25, p75
+- `streak`: min, max, mean, median, stddev, p25, p75
+- `drops`: min, max, mean, median, stddev, p25, p75
+- `rankCountry`: min, max, mean, median, stddev, p25, p75
 - `season`: cardinality, distinct values, min, max
 - `rankLevel`: cardinality, distinct values, min, max
 
@@ -337,10 +302,8 @@ SELECT
     ROUND(AVG("{col}"), 2) AS mean_val,
     ROUND(MEDIAN("{col}"), 2) AS median_val,
     ROUND(STDDEV("{col}"), 2) AS stddev_val,
-    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY "{col}") AS p05,
     PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "{col}") AS p25,
-    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "{col}") AS p75,
-    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "{col}") AS p95
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "{col}") AS p75
 FROM leaderboards_raw
 WHERE "{col}" IS NOT NULL
 ```
@@ -408,60 +371,43 @@ weekly buckets from `started`). Render in notebook and save as PNG artifact.
 
 These three tables have not been profiled at all. For each:
 - Row count (already known from ingestion, verify)
-- Full NULL census (all columns). The executor should iterate over column
-  names obtained from DESCRIBE for each auxiliary table (matching the
-  Section A pattern for matches_raw) and collect results into a tidy
-  (column_name, null_count, null_pct, cardinality) DataFrame per table.
-  The column lists are: leaderboards_raw (19 columns), profiles_raw
-  (14 columns), ratings_raw (8 columns) — all enumerated in the SQL
-  sketches below and confirmed by the schema YAMLs produced in 01_02_03.
+- Full NULL census (all columns)
 - Cardinality of key columns
 
-As with Section A, the executor should try SUMMARIZE first for each
-auxiliary table, falling back to per-column iteration if the output
-format is insufficient.
-
 ```sql
--- leaderboards_raw: iterate over all 19 columns
--- Column list (from schema YAML): leaderboard, profileId, name, rank,
--- rating, lastMatchTime, drops, losses, streak, wins, games, updatedAt,
--- rankCountry, active, season, rankLevel, steamId, country, filename
--- For each column col_name:
+-- leaderboards_raw
 SELECT
-    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(*) - COUNT("{col_name}") AS null_count,
-    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
-    COUNT(DISTINCT "{col_name}") AS cardinality
+    COUNT(DISTINCT profileId) AS distinct_profiles,
+    COUNT(DISTINCT leaderboard) AS distinct_leaderboards,
+    COUNT(*) - COUNT(rank) AS rank_null,
+    COUNT(*) - COUNT(rating) AS rating_null,
+    COUNT(*) - COUNT(steamId) AS steamId_null,
+    COUNT(*) - COUNT(country) AS country_null
 FROM leaderboards_raw
 ```
 
 ```sql
--- profiles_raw: iterate over all 14 columns
--- Column list (from schema YAML): profileId, steamId, name, clan, country,
--- avatarhash, sharedHistory, twitchChannel, youtubeChannel,
--- youtubeChannelName, discordId, discordName, discordInvitation, filename
--- For each column col_name:
+-- profiles_raw
 SELECT
-    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(*) - COUNT("{col_name}") AS null_count,
-    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
-    COUNT(DISTINCT "{col_name}") AS cardinality
+    COUNT(DISTINCT profileId) AS distinct_profiles,
+    COUNT(*) - COUNT(steamId) AS steamId_null,
+    COUNT(*) - COUNT(name) AS name_null,
+    COUNT(*) - COUNT(clan) AS clan_null,
+    COUNT(*) - COUNT(country) AS country_null
 FROM profiles_raw
 ```
 
 ```sql
--- ratings_raw: iterate over all 8 columns
--- Column list (from schema YAML): profile_id, games, rating, date,
--- leaderboard_id, rating_diff, season, filename
--- For each column col_name:
+-- ratings_raw
 SELECT
-    '{col_name}' AS column_name,
     COUNT(*) AS total_rows,
-    COUNT(*) - COUNT("{col_name}") AS null_count,
-    ROUND(100.0 * (COUNT(*) - COUNT("{col_name}")) / COUNT(*), 2) AS null_pct,
-    COUNT(DISTINCT "{col_name}") AS cardinality
+    COUNT(DISTINCT profile_id) AS distinct_profiles,
+    COUNT(DISTINCT leaderboard_id) AS distinct_leaderboards,
+    COUNT(*) - COUNT(rating) AS rating_null,
+    COUNT(*) - COUNT(games) AS games_null,
+    COUNT(*) - COUNT(rating_diff) AS rating_diff_null
 FROM ratings_raw
 ```
 
@@ -470,11 +416,6 @@ FROM ratings_raw
 For all columns across all four tables, flag:
 - Cardinality = 1: constant (dead field per EDA Manual Section 3.3)
 - Uniqueness ratio < 0.001: near-constant (threshold from EDA Manual Section 3.3)
-
-Note: the uniqueness ratio is computed as COUNT(DISTINCT col) / COUNT(*),
-where the denominator includes rows where the column is NULL. This means
-columns with high NULL rates will have deflated ratios. Interpret the
-ratio alongside the NULL census from Sections A and H.
 
 Use the cardinality values computed in Section A and Section H.
 
@@ -579,11 +520,9 @@ in the persistent database. Step 01_02_03 is also complete — the
    **Visualization:** Time-series plot of match counts over time (monthly or
    weekly buckets).
    (See Section G above.)
-9. Section 8: Auxiliary table census — full NULL census (ALL columns) and
-   key cardinality for `leaderboards_raw`, `profiles_raw`, and `ratings_raw`.
-   Iterate over all columns using the DESCRIBE-based pattern from Section A,
-   collecting results into a tidy (column_name, null_count, null_pct,
-   cardinality) DataFrame per table. (See Section H above.)
+9. Section 8: Auxiliary table census — full NULL census and key cardinality
+   for `leaderboards_raw`, `profiles_raw`, and `ratings_raw`. (See Section H
+   above.)
 10. Section 9: Dead/constant/near-constant field detection — flag columns
     with cardinality = 1 (constant) or uniqueness ratio < 0.001 (near-constant,
     threshold from EDA Manual Section 3.3). Use data from Sections A and H.
@@ -653,7 +592,6 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
    - Handling of boolean game-setting columns (mod, allowCheats, password)
      as potential non-standard-match filters (defer to 01_04 cleaning).
    - Impact assessment of won=NULL by leaderboard on thesis scope.
-   - Pre-game vs post-game field boundary: `ratingDiff` encodes the rating change resulting from a match outcome (positive for winners, negative for losers) and is therefore a post-game field. Its presence in the univariate census does not imply pre-game availability. The formal pre-game/post-game boundary classification for all `matches_raw` columns will be established in Phase 02 (Pipeline Section 02_01). [Cross-game parity note: the SC2 plan flags APM/SQ/supplyCappedPercent as in-game-only fields in the same manner.]
 5. Open questions must address:
    - Which specific `leaderboard` value(s) correspond to ranked 1v1 in
      AoE2 Definitive Edition?
@@ -666,7 +604,6 @@ Depends on T00 (ROADMAP entry must exist) and T01 (artifact must exist).
 - `STEP_STATUS.yaml` lists `01_02_04` with status `complete`.
 - `research_log.md` has a new entry at the top referencing step `01_02_04`.
 - Research log entry mentions leaderboard filtering deferral.
-- Research log entry includes the `ratingDiff` post-game field deferral note.
 
 **File scope:**
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml`
@@ -707,11 +644,8 @@ All of the following must be true before this step is marked complete:
    columns, `won` value distribution with TRUE, FALSE, and NULL counts,
    avg_rows_per_match by leaderboard, temporal range with earliest and latest
    dates, descriptive statistics for at least `rating` and `ratingDiff`.
-3a. JSON artifact contains intra-match `won` consistency counts for 2-row
-    matches (consistent_complement, both_null, one_true_one_null, etc.).
-4. JSON artifact contains NULL census covering every column of all three
-   auxiliary tables: `leaderboards_raw` (all 19 columns), `profiles_raw`
-   (all 14 columns), `ratings_raw` (all 8 columns).
+4. JSON artifact contains NULL census for all three auxiliary tables
+   (`leaderboards_raw`, `profiles_raw`, `ratings_raw`).
 5. JSON artifact contains a dead/constant/near-constant field list.
 6. JSON artifact contains descriptive statistics for `leaderboards_raw`
    numeric columns (`rank`, `rating`, `wins`, `losses`, `games`, `streak`,
@@ -792,7 +726,6 @@ All of the following must be true before this step is marked complete:
   allowCheats=TRUE, password=TRUE)? (Resolves in T01 Section 5.)
 - What fraction of matches have non-positive duration (`finished <= started`)
   or NULL timestamps? (Resolves in T01 Section 7.)
-- Follow-up: characterize `won=NULL` missingness mechanism (MCAR/MAR/MNAR per EDA Manual Section 4.5) in a subsequent bivariate step. The intra-match consistency check (Section B) provides initial evidence, but a full characterization requires bivariate analysis against temporal, leaderboard, and rating dimensions.
 
 ---
 

@@ -268,7 +268,6 @@ inputs:
 outputs:
   data_artifacts:
     - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
-  report: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.md"
   schema_files:
     - "data/db/schemas/raw/matches_raw.yaml"
     - "data/db/schemas/raw/players_raw.yaml"
@@ -287,57 +286,6 @@ gate:
   artifact_check: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json exists and non-empty. data/db/schemas/raw/*.yaml files populated for all three tables."
   continue_predicate: "Column counts confirmed: matches_raw=18, players_raw=14, overviews_raw=9."
   halt_predicate: "Any table cannot be described or column count is zero."
-thesis_mapping:
-  - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
-research_log_entry: "Required on completion."
-```
-
-### Step 01_02_04 — Univariate Census & Target Variable EDA
-
-```yaml
-step_number: "01_02_04"
-name: "Univariate Census & Target Variable EDA"
-description: "Perform a full NULL census of all 18 matches_raw columns and all 14 players_raw columns, profile the target variable (winner) distribution and class balance, compute player-count distribution (thesis scope gate), profile all categorical and numeric fields with descriptive statistics and zero counts, establish temporal range, detect dead/constant/near-constant fields, and assess join integrity between tables."
-phase: "01 — Data Exploration"
-pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
-manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.1, 3.2, 3.3"
-dataset: "aoestats"
-question: "What are the full NULL rates across all columns of matches_raw and players_raw? What is the winner (BOOLEAN) class balance? What fraction of matches are 1v1 (by distinct match count)? What are the descriptive statistics, zero counts, and cardinality for all numeric and categorical fields? What is the temporal range? Are there dead or near-constant fields? What is the join integrity between matches_raw and players_raw?"
-method: "Connect read-only to persistent DuckDB. Full NULL census via COUNT(*) - COUNT(col) for all columns in both tables. Target variable GROUP BY on winner. Player-count distribution via num_players with both row-count and distinct-match-count percentages. Categorical cardinality via COUNT(DISTINCT). Numeric descriptive statistics via PERCENTILE_CONT with n_nonnull, n_null, n_zero. Dead-field detection via uniqueness ratio. Join integrity via anti-join orphan detection. DuckDB-side histogram binning for visualizations. All SQL embedded in notebook and markdown artifact."
-stratification: "By column (NULL census, cardinality, descriptive stats); by winner value (target distribution); by num_players (thesis scope gate with distinct match percentages); by month (temporal match counts); by table (matches_raw vs players_raw join integrity)."
-predecessors:
-  - "01_02_03"
-notebook_path: "sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_04_univariate_census.py"
-inputs:
-  duckdb_tables:
-    - "matches_raw"
-    - "players_raw"
-  schema_yamls:
-    - "data/db/schemas/raw/matches_raw.yaml"
-    - "data/db/schemas/raw/players_raw.yaml"
-  prior_artifacts:
-    - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
-  external_references:
-    - ".claude/scientific-invariants.md"
-    - "01_DATA_EXPLORATION_MANUAL.md"
-outputs:
-  data_artifacts:
-    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
-  report: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.md"
-reproducibility: "All SQL queries verbatim in both notebook and markdown artifact (Invariant #6). Duration conversion /1e9 (nanoseconds to seconds) per 01_02_01 finding. Dead-field thresholds: cardinality=1, uniqueness ratio<0.001 (EDA Manual Section 3.3). Zero counts for all numeric columns. Non-NULL sample sizes reported for columns with >50% NULL rate."
-scientific_invariants_applied:
-  - number: "3"
-    how_upheld: "new_rating identified as post-match leakage. match_rating_diff leakage status deferred with documentation. No temporal features computed."
-  - number: "6"
-    how_upheld: "All SQL embedded verbatim in markdown artifact alongside every reported number."
-  - number: "7"
-    how_upheld: "Duration conversion and dead-field thresholds justified by source."
-  - number: "9"
-    how_upheld: "Conclusions limited to univariate distributions and NULL rates. No cleaning actions taken. Age uptime units treated as TBD finding."
-gate:
-  artifact_check: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json exists and valid JSON. artifacts/01_exploration/02_eda/01_02_04_univariate_census.md exists with SQL blocks for all analysis sections. Plot PNGs exist."
-  continue_predicate: "JSON contains NULL counts for all 18 matches_raw and 14 players_raw columns, winner distribution, num_players distribution with distinct_match_pct, descriptive statistics with n_nonnull for at least old_rating/new_rating/duration/avg_elo and all three age uptime columns. For columns with >50% NULL rate, n_nonnull is reported."
-  halt_predicate: "matches_raw or players_raw cannot be queried. game_id join between tables produces zero matches."
 thesis_mapping:
   - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."

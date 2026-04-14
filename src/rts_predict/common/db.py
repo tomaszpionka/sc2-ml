@@ -217,7 +217,17 @@ class DuckDBClient:
         self._con.execute(f"SET memory_limit = '{self._memory_limit}'")
         self._con.execute(f"SET threads = {self._threads}")
         self._con.execute(f"SET max_temp_directory_size = '{self._max_temp_dir_size}'")
-        self._con.execute(f"SET temp_directory = '{self._dataset.temp_dir}'")
+        try:
+            self._con.execute(f"SET temp_directory = '{self._dataset.temp_dir}'")
+        except duckdb.NotImplementedException:
+            # DuckDB raises this when the temp directory has already been used
+            # in the current process (e.g. a previous kernel cell spilled to disk).
+            # The existing temp dir remains in effect — this is safe to ignore.
+            logger.warning(
+                "Could not set temp_directory to '%s': already in use. "
+                "DuckDB will continue using its current temp directory.",
+                self._dataset.temp_dir,
+            )
         logger.debug(
             "DuckDB pragmas applied — memory_limit=%s, threads=%d, "
             "max_temp_directory_size=%s, temp_directory=%s",

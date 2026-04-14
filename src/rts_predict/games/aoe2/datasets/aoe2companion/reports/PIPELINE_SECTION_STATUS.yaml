@@ -27,7 +27,7 @@ pipeline_sections:
   "01_01":
     name: "Data Acquisition & Source Inventory"
     phase: "01"
-    status: in_progress
+    status: complete
   "01_02":
     name: "Exploratory Data Analysis (Tukey-style)"
     phase: "01"

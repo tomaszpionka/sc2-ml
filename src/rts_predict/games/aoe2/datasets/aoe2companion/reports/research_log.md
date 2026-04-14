@@ -8,6 +8,138 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-14 — [Phase 01 / Step 01_02_03] Raw schema DESCRIBE
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** query
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/matches_raw.yaml`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/ratings_raw.yaml`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/leaderboards_raw.yaml`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/profiles_raw.yaml`
+
+### What
+
+Captured the exact DuckDB column names and types for all four aoe2companion raw sources. Since step 01_02_02 had not yet been executed, no persistent DuckDB exists; the notebook uses in-memory DuckDB and reads source files directly with `LIMIT 0` to obtain schema without loading row data. Same read parameters as planned for 01_02_02 ingestion (`binary_as_string=true`, `union_by_name=true`, `filename=true` for Parquet; explicit `dtypes=` for CSV).
+
+### Why
+
+Establish the source-of-truth bronze-layer schema before full ingestion runs. The `data/db/schemas/raw/*.yaml` files are consumed by all downstream steps (feature engineering, cleaning, documentation). Invariant #6 — all DESCRIBE SQL embedded in artifact.
+
+### How (reproducibility)
+
+Notebook: `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_03_raw_schema_describe.py`
+
+- matches: `read_parquet(glob, binary_as_string=true, union_by_name=true, filename=true) LIMIT 0`
+- ratings: `read_csv(glob, dtypes={profile_id: BIGINT, games: BIGINT, rating: BIGINT, date: TIMESTAMP, leaderboard_id: BIGINT, rating_diff: BIGINT, season: BIGINT}, union_by_name=true, filename=true) LIMIT 0`
+- leaderboards, profiles: `read_parquet(singleton, binary_as_string=true, filename=true) LIMIT 0`
+
+### Findings
+
+| Source | Columns | Notable types |
+|--------|---------|---------------|
+| matches | 55 | `won` BOOLEAN (prediction target); `matchId`/`profileId` INTEGER; `started`/`finished` TIMESTAMP; `speedFactor` FLOAT |
+| ratings | 8 | `profile_id` BIGINT; `date` TIMESTAMP; all numerics BIGINT |
+| leaderboards | 19 | `profileId` INTEGER; `lastMatchTime`/`updatedAt` TIMESTAMP |
+| profiles | 14 | `profileId` INTEGER; all string columns VARCHAR |
+
+Key observations:
+- `won` (BOOLEAN, nullable) confirmed as prediction target column
+- Naming inconsistency cross-confirmed: `profileId` (camelCase, INTEGER) in matches and leaderboards vs `profile_id` (snake_case, BIGINT) in ratings — noted for Phase 02 join design
+- `speedFactor` is FLOAT (only non-integer numeric in matches)
+- All four schema YAMLs populated in `data/db/schemas/raw/`
+
+### Decisions taken
+
+- Schema YAMLs populated from this DESCRIBE output — source-of-truth for all downstream steps
+- No ingestion or schema changes at this step — read-only
+
+### Decisions deferred
+
+- Column descriptions (`TODO: fill`) in `*.yaml` files — deferred to systematic profiling (01_03)
+
+### Thesis mapping
+
+- Chapter 4, §4.1.2 — AoE2 dataset: bronze-layer schema catalog
+
+### Open questions / follow-ups
+
+- None — schema fully captured
+
+---
+
+## 2026-04-14 — [Phase 01 / Step 01_02_02] DuckDB ingestion
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** ingest
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.md`
+
+### What
+
+Materialised four `*_raw` DuckDB tables from the full aoe2companion corpus (2,073 daily match Parquets, 2,072 daily rating CSVs, 1 leaderboard Parquet, 1 profile Parquet) into the persistent database at `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/db.duckdb`.
+
+### Why
+
+Enable SQL-based EDA for subsequent profiling (01_03) and cleaning (01_04). Invariants #6 (reproducibility), #9 (step scope), #10 (relative filenames) upheld.
+
+### How (reproducibility)
+
+Notebook: `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_02_duckdb_ingestion.py`
+Module: `src/rts_predict/games/aoe2/datasets/aoe2companion/ingestion.py`
+
+### Findings
+
+**Table row counts:**
+| Table | Rows |
+|-------|------|
+| `matches_raw` | 277,099,059 |
+| `ratings_raw` | 58,317,433 |
+| `leaderboards_raw` | 2,381,227 |
+| `profiles_raw` | 3,609,686 |
+
+**Dtype strategy for `ratings_raw`:** Explicit `dtypes=` map (BIGINT/TIMESTAMP) required — `read_csv_auto` infers all 7 columns as VARCHAR at scale (2,072 files). Strategy established in Step 01_02_01.
+
+**NULL rates (key fields):**
+- `matches_raw.won`: 12,985,561 NULLs / 277,099,059 rows (4.69%) — root cause established in 01_02_01 won=NULL investigation
+- `matches_raw.matchId`: 0 NULLs
+- `matches_raw.filename`: 0 NULLs
+- `ratings_raw.profile_id`: 0 NULLs
+- `ratings_raw.filename`: 0 NULLs
+
+**Invariant I10 (relative filenames):** All four tables pass — filenames stored relative to `raw_dir`. Enforced inline via `SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)` in every CTAS. No post-load UPDATE (would OOM on 277M-row `matches_raw`).
+
+**Parquet binary columns:** All Parquet reads use `binary_as_string=true` for the unannotated BYTE_ARRAY columns in matches/leaderboards/profiles. Established in 01_02_01.
+
+### Decisions taken
+
+- All tables use `*_raw` suffix convention (bronze layer)
+- Inline `SELECT * REPLACE` for I10 relativization — never post-load UPDATE
+- Explicit dtype map for ratings CSV ingestion — never `read_csv_auto` at scale
+- `binary_as_string=true` for all Parquet sources
+
+### Decisions deferred
+
+- Handling of 12.99M NULL `won` values — deferred to Step 01_04 (data cleaning)
+
+### Thesis mapping
+
+- Chapter 4, §4.1.2 — AoE2 dataset: four-table ingestion, dtype strategy, I10 compliance
+
+### Artifact note
+
+The `.json` artifact `sql` key records pre-fix SQL (`SELECT * FROM read_parquet(...)` without `REPLACE`). The actual ingestion code uses `SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)`. The DuckDB on disk is correct; the artifact should be regenerated from a fresh notebook run to reflect the inline I10 pattern.
+
+### Open questions / follow-ups
+
+- Full NULL profiles for all 55 `matches_raw` columns — deferred to 01_03 (systematic profiling)
+
+---
+
 ## 2026-04-14 — [Phase 01 / Step 01_02_01] won=NULL root-cause investigation
 
 **Category:** A (science)

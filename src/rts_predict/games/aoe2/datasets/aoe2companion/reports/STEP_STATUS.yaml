@@ -39,9 +39,4 @@ steps:
     pipeline_section: "01_02"
     status: complete
     completed_at: "2026-04-14"
-  "01_02_04":
-    name: "Univariate Census & Target Variable EDA"
-    pipeline_section: "01_02"
-    status: complete
-    completed_at: "2026-04-14"
   # Future steps will be added here as they are defined in the ROADMAP.

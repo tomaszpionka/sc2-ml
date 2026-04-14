@@ -1,0 +1,15 @@
+{
+  "step": "01_02_02",
+  "dataset": "aoestats",
+  "tables_created": {
+    "matches_raw": {
+      "row_count": 30690651
+    },
+    "players_raw": {
+      "row_count": 107627584
+    },
+    "overviews_raw": {
+      "row_count": 1
+    }
+  }
+}

@@ -10,6 +10,10 @@ Every table carries a ``filename`` provenance column populated by
 ``filename = true`` on the source read. Removing this column in any
 downstream view is forbidden (INVARIANT I7, I10).
 
+Invariant I10 (relative filenames) is enforced inline via ``SELECT * REPLACE``
+in every CTAS — never via a post-load UPDATE, which would OOM on large tables.
+prefix_len = len(str(raw_dir)) + 2  (+1 for 1-based substr, +1 for trailing /)
+
 The dtype strategy for ratings_raw is supplied as a DtypeDecision
 dataclass (from types.py) — callers must not hard-code an alternative.
 """
@@ -33,7 +37,8 @@ _DROP_IF_EXISTS_QUERY = "DROP TABLE IF EXISTS {table}"
 # cast error. Confirmed in Step 01_02_01 binary_column_inspection artifact.
 _MATCHES_RAW_QUERY = """
 CREATE TABLE matches_raw AS
-SELECT * FROM read_parquet(
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet(
     '{glob}',
     union_by_name = true,
     filename = true,
@@ -43,7 +48,8 @@ SELECT * FROM read_parquet(
 
 _RATINGS_RAW_AUTO_QUERY = """
 CREATE TABLE ratings_raw AS
-SELECT * FROM read_csv(
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_csv(
     '{glob}',
     union_by_name = true,
     auto_detect = true,
@@ -53,7 +59,8 @@ SELECT * FROM read_csv(
 
 _RATINGS_RAW_EXPLICIT_QUERY = """
 CREATE TABLE ratings_raw AS
-SELECT * FROM read_csv(
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_csv(
     '{glob}',
     union_by_name = true,
     dtypes = {dtype_map},
@@ -63,12 +70,14 @@ SELECT * FROM read_csv(
 
 _LEADERBOARDS_RAW_QUERY = """
 CREATE TABLE leaderboards_raw AS
-SELECT * FROM read_parquet('{path}', filename = true, binary_as_string = true)
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet('{path}', filename = true, binary_as_string = true)
 """
 
 _PROFILES_RAW_QUERY = """
 CREATE TABLE profiles_raw AS
-SELECT * FROM read_parquet('{path}', filename = true, binary_as_string = true)
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet('{path}', filename = true, binary_as_string = true)
 """
 
 _COUNT_QUERY = "SELECT count(*) FROM {table}"
@@ -110,7 +119,8 @@ def load_matches_raw(
         logger.info("Dropped existing matches_raw table.")
 
     glob = str(raw_dir / "matches" / "match-*.parquet")
-    con.execute(_MATCHES_RAW_QUERY.format(glob=glob))
+    prefix_len = len(str(raw_dir)) + 2
+    con.execute(_MATCHES_RAW_QUERY.format(glob=glob, prefix_len=prefix_len))
     n = _count_rows(con, "matches_raw")
     logger.info("matches_raw: %d rows from %s", n, glob)
     return n
@@ -145,17 +155,19 @@ def load_ratings_raw(
         logger.info("Dropped existing ratings_raw table.")
 
     glob = str(raw_dir / "ratings" / "rating-*.csv")
+    prefix_len = len(str(raw_dir)) + 2
 
     if decision.strategy == "auto_detect":
-        con.execute(_RATINGS_RAW_AUTO_QUERY.format(glob=glob))
+        con.execute(_RATINGS_RAW_AUTO_QUERY.format(glob=glob, prefix_len=prefix_len))
     elif decision.strategy == "explicit":
-        # Build DuckDB-compatible dtype map literal: {'col': 'TYPE', ...}
         dtype_literal = (
             "{"
             + ", ".join(f"'{k}': '{v}'" for k, v in decision.dtype_map.items())
             + "}"
         )
-        con.execute(_RATINGS_RAW_EXPLICIT_QUERY.format(glob=glob, dtype_map=dtype_literal))
+        con.execute(_RATINGS_RAW_EXPLICIT_QUERY.format(
+            glob=glob, prefix_len=prefix_len, dtype_map=dtype_literal
+        ))
     else:
         raise ValueError(f"Unknown dtype strategy: {decision.strategy!r}")
 
@@ -185,7 +197,8 @@ def load_leaderboards_raw(
         logger.info("Dropped existing leaderboards_raw table.")
 
     path = str(raw_dir / "leaderboards" / "leaderboard.parquet")
-    con.execute(_LEADERBOARDS_RAW_QUERY.format(path=path))
+    prefix_len = len(str(raw_dir)) + 2
+    con.execute(_LEADERBOARDS_RAW_QUERY.format(path=path, prefix_len=prefix_len))
     n = _count_rows(con, "leaderboards_raw")
     logger.info("leaderboards_raw: %d rows", n)
     return n
@@ -212,7 +225,8 @@ def load_profiles_raw(
         logger.info("Dropped existing profiles_raw table.")
 
     path = str(raw_dir / "profiles" / "profile.parquet")
-    con.execute(_PROFILES_RAW_QUERY.format(path=path))
+    prefix_len = len(str(raw_dir)) + 2
+    con.execute(_PROFILES_RAW_QUERY.format(path=path, prefix_len=prefix_len))
     n = _count_rows(con, "profiles_raw")
     logger.info("profiles_raw: %d rows", n)
     return n

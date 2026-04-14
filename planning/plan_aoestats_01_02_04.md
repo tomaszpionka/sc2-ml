@@ -171,8 +171,7 @@ SELECT
     num_players,
     COUNT(*) AS row_count,
     COUNT(DISTINCT game_id) AS distinct_match_count,
-    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct,
-    ROUND(100.0 * COUNT(DISTINCT game_id) / SUM(COUNT(DISTINCT game_id)) OVER(), 2) AS distinct_match_pct
+    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct
 FROM matches_raw
 GROUP BY num_players
 ORDER BY num_players
@@ -217,8 +216,6 @@ LIMIT 20
 
 For continuous/integer columns, compute: min, max, mean, median, stddev, percentiles (p5, p25, p50, p75, p95). Use DuckDB `PERCENTILE_CONT`. Use loop-based cells iterating over column lists.
 
-Also compute: non-NULL count (`n_nonnull`), NULL count (`n_null`), and zero count (`n_zero`). For rating columns (`old_rating`, `new_rating`, `avg_elo`, `team_0_elo`, `team_1_elo`), zeros likely signal "unranked/unrated" rather than a true zero value — document the zero rate as a finding.
-
 Compute descriptive statistics for ALL non-dead columns regardless of NULL rate. The WHERE clause excluding NULLs means the query works on whatever non-NULL rows exist. For columns with very high NULL rates (e.g., age uptime columns at 87-91%), note the limited non-NULL sample size in the findings but do not skip computation.
 
 **`matches_raw` numerics:**
@@ -245,9 +242,6 @@ Compute descriptive statistics for ALL non-dead columns regardless of NULL rate.
 SQL sketch (per-column, templated):
 ```sql
 SELECT
-    COUNT({col}) AS n_nonnull,
-    COUNT(*) - COUNT({col}) AS n_null,
-    SUM(CASE WHEN {col} = 0 THEN 1 ELSE 0 END) AS n_zero,
     MIN({col}) AS min_val,
     MAX({col}) AS max_val,
     ROUND(AVG({col}), 2) AS mean_val,
@@ -263,8 +257,6 @@ WHERE {col} IS NOT NULL
 ```
 
 **Visualizations:** For each numeric column, render a histogram (distribution) and a boxplot (outlier visibility). For `duration / 1e9` and `irl_duration / 1e9`, render histograms in seconds (after the /1e9 conversion). Save all as PNG artifacts.
-
-**Histogram rendering strategy:** For `players_raw` columns (107.6M rows), histograms must use DuckDB-side binning — never pull raw column values to pandas. Compute bins in SQL using `FLOOR(col / bin_width) * bin_width AS bin` with `GROUP BY bin ORDER BY bin`, then plot the resulting bin-count DataFrame in matplotlib. Choose `bin_width` based on the column's range from descriptive statistics (e.g., `(p95 - p05) / 50` as a starting heuristic, adjustable by the executor). For `matches_raw` columns (30.7M rows), the same DuckDB-side binning approach is recommended for consistency and performance, though not strictly required.
 
 ### G. Temporal range
 
@@ -322,8 +314,6 @@ ORDER BY player_count
 ### I. Dead/constant/near-constant field detection
 
 For all 18 `matches_raw` columns plus all 14 `players_raw` columns, compute cardinality and uniqueness ratio. Flag any column with cardinality = 1 (constant, per EDA Manual Section 3.3) or uniqueness ratio < 0.001 (near-constant, threshold from EDA Manual Section 3.3). Always report the raw ratio.
-
-**NULL deflation note:** For columns with high NULL rates, the uniqueness ratio `COUNT(DISTINCT col) / COUNT(*)` is deflated because `COUNT(DISTINCT col)` excludes NULLs while `COUNT(*)` includes all rows. A column with 10,000 distinct non-NULL values but 87% NULLs yields a ratio of ~0.0001, which would trigger the near-constant flag despite high variety among non-NULL values. When interpreting near-constant flags, cross-reference with the NULL census (Sections A/B). For flagged columns with >50% NULL rate, report both the overall uniqueness ratio and the non-NULL uniqueness ratio (`COUNT(DISTINCT col) / COUNT(col)`).
 
 ```sql
 SELECT '{col}' AS column_name,
@@ -457,7 +447,7 @@ PNG artifacts (rendered in the notebook, saved alongside JSON/Markdown):
 3. JSON contains: NULL counts and percentages for all 18 `matches_raw` and all 14 `players_raw` columns.
 4. JSON contains: `winner` distribution with TRUE, FALSE, and NULL counts.
 5. JSON contains: `num_players` distribution establishing the 1v1 fraction, with both `row_count` and `distinct_match_count`.
-6. JSON contains: descriptive statistics for at least `old_rating`, `new_rating`, `duration`, `irl_duration`, `avg_elo`, and all three age uptime columns. For columns with >50% NULL rate, the non-NULL count (n) must be reported alongside the statistics.
+6. JSON contains: descriptive statistics for at least `old_rating`, `new_rating`, `duration`, `irl_duration`, `avg_elo`, and all three age uptime columns.
 7. JSON contains: temporal range with earliest and latest timestamps.
 8. JSON contains: game_id join integrity results (orphan counts on both sides).
 9. `STEP_STATUS.yaml` lists `01_02_04` as `complete`.
@@ -491,7 +481,6 @@ PNG artifacts (rendered in the notebook, saved alongside JSON/Markdown):
 - game_id deduplication in `matches_raw` — profiled but not deduplicated.
 - 1v1-restricted winner distribution — deferred until `num_players` semantics are confirmed.
 - Age uptime NULL characterisation (structural vs data quality) — requires bivariate cross-reference with `replay_enhanced`.
-- **Cross-game histogram binning harmonization** — deferred to thesis-writing (Category F). EDA histograms are exploratory; thesis-ready figures will be composed with harmonized axes and bin strategies in the relevant chapter plan.
 
 ---
 

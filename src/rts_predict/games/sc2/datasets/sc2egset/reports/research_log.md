@@ -8,6 +8,74 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ---
 
+## 2026-04-14 — [Phase 01 / Step 01_02_03] Raw schema DESCRIBE
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** query
+**Artifacts produced:**
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/replays_meta_raw.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/replay_players_raw.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/map_aliases_raw.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/game_events_raw.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/tracker_events_raw.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/message_events_raw.yaml`
+
+### What
+
+Captured the exact DuckDB column names and types for all six sc2egset `*_raw` objects — three persistent tables and three event views — by connecting read-only to the persistent DuckDB populated in 01_02_02 and running `DESCRIBE` on each object.
+
+### Why
+
+Establish the source-of-truth bronze-layer schema for downstream steps. The `data/db/schemas/raw/*.yaml` files are consumed by feature engineering and documentation. Invariant #6 — DESCRIBE SQL embedded in artifact.
+
+### How (reproducibility)
+
+Notebook: `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_03_raw_schema_describe.py`
+
+Read-only connection to `data/db/db.duckdb`. `DESCRIBE <object>` for all six `*_raw` tables and views.
+
+### Findings
+
+| Object | Type | Columns | Notable types |
+|--------|------|---------|---------------|
+| replays_meta_raw | table | 9 | STRUCT columns for details/header/initData/metadata; `ToonPlayerDescMap` VARCHAR; error flags BOOLEAN |
+| replay_players_raw | table | 25 | `result` VARCHAR (prediction target); `MMR`/`APM`/`SQ`/`supplyCappedPercent` INTEGER; `highestLeague` VARCHAR; color channels INTEGER |
+| map_aliases_raw | table | 4 | `tournament`/`foreign_name`/`english_name`/`filename` all VARCHAR, all NOT NULL |
+| game_events_raw | view | 4 | `filename` VARCHAR, `loop` BIGINT, `evtTypeName` VARCHAR, `event_data` VARCHAR |
+| tracker_events_raw | view | 4 | Identical 4-column schema to game_events_raw |
+| message_events_raw | view | 4 | Identical 4-column schema to game_events_raw |
+
+Key observations:
+- `result` (VARCHAR, nullable) in `replay_players_raw` is the prediction target — stores string values, not a boolean; distinct values to be confirmed in 01_03
+- `replay_players_raw` has 25 columns total — the full set including SQ, supplyCappedPercent, highestLeague, color channels; only 7 columns were NULL-checked in 01_02_02
+- `ToonPlayerDescMap` confirmed VARCHAR (JSON text blob) in `replays_meta_raw`, as decided in 01_02_01
+- All three event views share the identical 4-column generic schema; event type discriminated via `evtTypeName`
+- `replay_players_raw.filename` and `map_aliases_raw` key columns all NOT NULL (confirmed by nullable=NO)
+- All six schema YAMLs populated in `data/db/schemas/raw/`
+
+### Decisions taken
+
+- Schema YAMLs populated from this DESCRIBE output — source-of-truth for all downstream steps
+- No schema modifications — read-only step
+
+### Decisions deferred
+
+- Full NULL profile for all 25 `replay_players_raw` columns
+- Distinct values for `result` column
+- Column descriptions (`TODO: fill`) in `*.yaml` — deferred to 01_03
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — SC2EGSet: bronze-layer schema catalog
+
+### Open questions / follow-ups
+
+- What are the actual distinct values of `result`? Are 'Win'/'Loss' the only values, or are there draws/unknowns? (Investigate in 01_03)
+
+---
+
 ## 2026-04-14 — [Phase 01 / Step 01_02_02] DuckDB ingestion
 
 **Category:** A (science)

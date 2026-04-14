@@ -145,8 +145,6 @@ Note: The DESCRIBE output from step 01_02_03 marks `replays_meta_raw.filename` a
 
 11 non-2-player replays are known from 01_02_02 findings (3 with 1 player, 2 with 4 players, etc.). These may contribute rows with unusual result values (e.g., team game outcomes). These are known anomalies, not new discoveries — report their result values separately.
 
-Note: The OR-condition in the isolation query captures a superset — any replay where either `maxPlayers != 2` or the actual player-row count differs from 2. A replay with `maxPlayers = 8` (team lobby metadata) but exactly 2 rows in `replay_players_raw` will be included. Interpret results as "replays where metadata or actual player count suggests non-standard format," not strictly "non-1v1 replays."
-
 ```sql
 SELECT result, COUNT(*) AS cnt,
        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct
@@ -241,8 +239,6 @@ FROM replay_players_raw
 WHERE "{col}" IS NOT NULL
 ```
 
-Note on SQL interpolation: The `"{col}"` placeholders above use DuckDB identifier-quoting syntax. When building these queries via Python f-strings, the executor must avoid double-wrapping — use `f'SELECT ... {col} ...'` (unquoted, since none of the target column names are reserved words) or explicit escaping, not `f'SELECT ... "{col}" ...'` which would produce double-double-quoted identifiers.
-
 **Visualizations:** Histograms and boxplots for `MMR`, `APM`, `SQ`, `supplyCappedPercent`. Duration histogram in minutes (`elapsed_game_loops / 22.4 / 60`). Save as PNG artifacts.
 
 ### F. Temporal range
@@ -278,8 +274,6 @@ If any are non-zero, the corresponding replays may need flagging in 01_04 (clean
 
 For all 25 `replay_players_raw` columns plus all extracted STRUCT fields, compute cardinality and the uniqueness ratio defined as `COUNT(DISTINCT col) / COUNT(*)`. Always report the raw ratio. Flag any column with cardinality = 1 (constant, per EDA Manual Section 3.3) or uniqueness ratio < 0.001 (near-constant, threshold from EDA Manual Section 3.3).
 
-Note: The denominator is `COUNT(*)` (all rows, including NULLs) by design — this measures cardinality relative to dataset size. For columns with high NULL rates (identified in Section B), the executor must cross-reference the NULL census before interpreting near-constant flags, since a low uniqueness ratio may reflect missingness rather than low variance.
-
 ```sql
 SELECT '{col}' AS column_name,
        COUNT(DISTINCT {col}) AS cardinality,
@@ -294,10 +288,10 @@ FROM {table}
 
 | Artifact | Path |
 |----------|------|
-| JSON report | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json` |
-| Markdown summary | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` |
-| Notebook (py) | `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py` |
-| Notebook (ipynb) | `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.ipynb` |
+| JSON report | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.json` |
+| Markdown summary | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.md` |
+| Notebook (py) | `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.py` |
+| Notebook (ipynb) | `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.ipynb` |
 | Plot PNGs | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/plots/01_02_04_*.png` |
 
 The markdown artifact must contain every SQL query verbatim (Invariant #6).
@@ -338,7 +332,7 @@ PNG artifacts (minimum required):
 **Objective:** Create the jupytext-paired notebook implementing analyses A–H plus visualizations.
 
 **Instructions:**
-1. Create `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py` with jupytext `percent` format header.
+1. Create `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.py` with jupytext `percent` format header.
 2. Section 1: STRUCT field extraction — flatten all four metadata STRUCTs into scalar columns via DuckDB SQL. Store result as `struct_flat` DataFrame. Print shape and first 5 rows.
 3. Section 2: Full NULL census — query all 25 columns of `replay_players_raw` with both count and percentage (Section B SQL). Also query NULL counts for `replays_meta_raw.filename`. Pull to pandas `.df()`, reshape into tidy `(column, null_count, null_pct)` table for display.
 4. Section 3: Target variable analysis — `result` value distribution with counts and percentages. Print table. Separately query and report result values for rows associated with the 11 known non-2-player replays (Section C second SQL).
@@ -353,17 +347,17 @@ PNG artifacts (minimum required):
 13. Use `matplotlib` for all visualizations. Use a consistent style. Save figures with `plt.savefig()` before `plt.show()`. Close with `plt.close()`.
 
 **Verification:**
-- Notebook runs to completion: `source .venv/bin/activate && poetry run jupyter execute sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.ipynb`
+- Notebook runs to completion: `source .venv/bin/activate && poetry run jupyter execute sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.ipynb`
 - Both `.py` and `.ipynb` files exist and are paired.
 - JSON artifact exists and is valid JSON.
 - Markdown artifact exists and contains inline SQL for every result table.
 - PNG plot files exist in the plots artifact directory.
 
 **File scope:**
-- `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py`
-- `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.ipynb`
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json`
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md`
+- `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.py`
+- `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.ipynb`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.json`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.md`
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/plots/01_02_04_*.png`
 
 ---
@@ -392,7 +386,7 @@ PNG artifacts (minimum required):
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md`
 
 **Read scope (depends on T01):**
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.json`
 
 ---
 
@@ -401,10 +395,10 @@ PNG artifacts (minimum required):
 | File | Action |
 |------|--------|
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md` | Update (T00) |
-| `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py` | Create (T01) |
-| `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.ipynb` | Create (T01) |
-| `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json` | Create (T01) |
-| `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` | Create (T01) |
+| `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.py` | Create (T01) |
+| `sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_struct_eda.ipynb` | Create (T01) |
+| `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.json` | Create (T01) |
+| `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_struct_eda.md` | Create (T01) |
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/plots/01_02_04_*.png` | Create (T01) |
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/STEP_STATUS.yaml` | Update (T02) |
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` | Update (T02) |
@@ -415,8 +409,8 @@ PNG artifacts (minimum required):
 
 All of the following must be true before this step is marked complete:
 
-1. JSON artifact `01_02_04_univariate_census.json` exists and is valid JSON.
-2. Markdown artifact `01_02_04_univariate_census.md` contains at least 8 SQL blocks corresponding to Sections A–H (Invariant #6).
+1. JSON artifact `01_02_04_struct_eda.json` exists and is valid JSON.
+2. Markdown artifact `01_02_04_struct_eda.md` contains at least 8 SQL blocks corresponding to Sections A–H (Invariant #6).
 3. JSON artifact contains: NULL counts and percentages for all 25 `replay_players_raw` columns, `result` value distribution with at least Win and Loss counts, temporal range with earliest and latest dates, error column counts, descriptive statistics for at least `MMR`, `APM`, `elapsed_game_loops`.
 4. At least 3 extracted STRUCT fields have non-NULL rate > 0% in the JSON artifact (guards against wrong STRUCT paths silently producing all-NULL results). Note: this check catches total extraction failure; it is a minimum bar against silent STRUCT path errors, not a data quality guarantee.
 5. `STEP_STATUS.yaml` lists `01_02_04` as `complete`.

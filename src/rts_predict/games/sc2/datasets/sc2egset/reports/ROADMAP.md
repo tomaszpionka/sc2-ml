@@ -267,7 +267,6 @@ inputs:
 outputs:
   data_artifacts:
     - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
-  report: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.md"
   schema_files:
     - "data/db/schemas/raw/replays_meta_raw.yaml"
     - "data/db/schemas/raw/replay_players_raw.yaml"
@@ -289,57 +288,6 @@ gate:
   artifact_check: "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json exists and non-empty. data/db/schemas/raw/*.yaml files populated for all six objects."
   continue_predicate: "Column counts confirmed: replays_meta_raw=9, replay_players_raw=25, map_aliases_raw=4, game_events_raw=4, tracker_events_raw=4, message_events_raw=4."
   halt_predicate: "Any object cannot be described or column count is zero."
-thesis_mapping:
-  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
-research_log_entry: "Required on completion."
-```
-
-### Step 01_02_04 — Metadata STRUCT Extraction & Replay-Level EDA
-
-```yaml
-step_number: "01_02_04"
-name: "Metadata STRUCT Extraction & Replay-Level EDA"
-description: "Extract scalar fields from the four metadata STRUCT columns in replays_meta_raw, perform a full NULL census of all 25 replay_players_raw columns, profile the target variable (result), compute descriptive statistics for all numeric and categorical fields, establish temporal range, detect dead/constant/near-constant fields, and generate univariate visualizations."
-phase: "01 — Data Exploration"
-pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
-manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.1, 3.2, 3.3"
-dataset: "sc2egset"
-question: "What scalar fields are embedded in the metadata STRUCTs and what are their value distributions? What is the target variable (result), its distinct values, and class balance? What are the NULL rates, cardinality, and descriptive statistics for all columns across replays_meta_raw and replay_players_raw? What is the game duration distribution and temporal range? Are there dead or near-constant fields?"
-method: "Connect read-only to persistent DuckDB. Flatten four STRUCT columns (details, header, initData, metadata) via DuckDB dot-notation into scalar fields. Full NULL census via COUNT(*) - COUNT(col) for all 25 replay_players_raw columns and replays_meta_raw.filename. Target variable GROUP BY. Categorical cardinality via COUNT(DISTINCT). Numeric descriptive statistics via PERCENTILE_CONT. Dead-field detection via uniqueness ratio. All SQL embedded in notebook and markdown artifact."
-stratification: "By column (NULL census, cardinality, descriptive stats); by result value (target distribution); by month (temporal replay counts); by STRUCT source (details, header, initData, metadata)."
-predecessors:
-  - "01_02_03"
-notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py"
-inputs:
-  duckdb_tables:
-    - "replays_meta_raw"
-    - "replay_players_raw"
-  schema_yamls:
-    - "data/db/schemas/raw/replays_meta_raw.yaml"
-    - "data/db/schemas/raw/replay_players_raw.yaml"
-  prior_artifacts:
-    - "artifacts/01_exploration/02_eda/01_02_03_raw_schema_describe.json"
-  external_references:
-    - ".claude/scientific-invariants.md"
-    - "01_DATA_EXPLORATION_MANUAL.md"
-outputs:
-  data_artifacts:
-    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
-  report: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.md"
-reproducibility: "All SQL queries verbatim in both notebook and markdown artifact (Invariant #6). Duration conversion constant 22.4 game loops/second derived from 16 base × 1.4 Faster multiplier (Invariant #7). Dead-field thresholds: cardinality=1, uniqueness ratio<0.001 (EDA Manual Section 3.3)."
-scientific_invariants_applied:
-  - number: "3"
-    how_upheld: "Not directly applicable to univariate profiling. Temporal range finding establishes the time axis for future splits."
-  - number: "6"
-    how_upheld: "All SQL embedded verbatim in markdown artifact alongside every reported number."
-  - number: "7"
-    how_upheld: "Duration conversion constant and dead-field thresholds justified by source (game speed mechanics, EDA Manual Section 3.3)."
-  - number: "9"
-    how_upheld: "Conclusions limited to univariate distributions and NULL rates. No cleaning actions taken."
-gate:
-  artifact_check: "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json exists and valid JSON. artifacts/01_exploration/02_eda/01_02_04_univariate_census.md exists with at least 8 SQL blocks. Plot PNGs exist for at least MMR histogram, result bar chart, and duration histogram."
-  continue_predicate: "JSON contains NULL counts for all 25 replay_players_raw columns, result value distribution, temporal range, error column counts, and descriptive statistics for MMR, APM, and elapsed_game_loops. At least 3 extracted STRUCT fields have non-NULL rate > 0%."
-  halt_predicate: "Game speed assertion fails (not all replays are Faster speed) — blocks duration conversion. Any STRUCT extraction produces all-NULL results for all fields."
 thesis_mapping:
   - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
 research_log_entry: "Required on completion."

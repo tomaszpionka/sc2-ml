@@ -30,6 +30,23 @@ def test_load_matches_raw_creates_table_with_filename(
     assert "filename" in cols
 
 
+def test_load_matches_raw_filename_is_relative(
+    db_con: duckdb.DuckDBPyConnection,
+    raw_dir: Path,
+) -> None:
+    """filename column must be relative (no leading /) and non-bare (contains /) — I10."""
+    load_matches_raw(db_con, raw_dir)
+    row = db_con.execute("""
+        SELECT
+            COUNT(*) FILTER (WHERE filename LIKE '/%') AS abs_count,
+            COUNT(*) FILTER (WHERE filename NOT LIKE '%/%') AS bare_count
+        FROM matches_raw
+    """).fetchone()
+    assert row is not None
+    assert row[0] == 0, f"absolute paths found: {row[0]}"
+    assert row[1] == 0, f"bare basenames found: {row[1]}"
+
+
 def test_load_matches_raw_idempotent(
     db_con: duckdb.DuckDBPyConnection,
     raw_dir: Path,
