@@ -6,16 +6,16 @@
 
 | Table | Rows |
 |-------|------|
-| raw_matches | 30,690,651 |
-| raw_players | 107,627,584 |
-| raw_overviews | 1 |
+| matches_raw | 30,690,651 |
+| players_raw | 107,627,584 |
+| overviews_raw | 1 |
 
 ## Ingestion strategy
 
 
-- `raw_matches` and `raw_players`: `union_by_name = true` to handle
+- `matches_raw` and `players_raw`: `union_by_name = true` to handle
   variant columns across weekly files.
-- `raw_overviews`: `read_json_auto` on singleton overview.json.
+- `overviews_raw`: `read_json_auto` on singleton overview.json.
 - All tables include `filename` provenance column.
 
 ## SQL used

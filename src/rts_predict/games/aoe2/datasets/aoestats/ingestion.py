@@ -9,9 +9,17 @@ All tables carry a ``filename`` provenance column populated by
 ``filename = true`` on the source read. Removing this column in any
 downstream view is forbidden (INVARIANT I7, I10).
 
+matches_raw and players_raw use file-level batching (CREATE + INSERT BY NAME)
+to avoid OOM on the full 171-file / 107.6M-row players set. Per-batch peak
+RSS stays well under machine memory limits.
+
+Invariant I10 (relative filenames) is enforced inline via ``SELECT * REPLACE``
+during each batch — never via a post-load UPDATE, which would OOM on 107.6M rows.
+
 Files follow the naming pattern: {start_date}_{end_date}_{type}.parquet
 """
 
+import glob as glob_module
 import logging
 from pathlib import Path
 
@@ -23,24 +31,51 @@ logger = logging.getLogger(__name__)
 
 _DROP_IF_EXISTS_QUERY = "DROP TABLE IF EXISTS {table}"
 
-_MATCHES_RAW_QUERY = """
+# First-batch CTAS — establishes schema from the initial file set.
+# SELECT * REPLACE inlines I10 relativization: no post-load UPDATE needed.
+# prefix_len = len(str(raw_dir)) + 2  (+1 for 1-based substr, +1 for trailing /)
+_MATCHES_RAW_CREATE_QUERY = """
 CREATE TABLE matches_raw AS
-SELECT * FROM read_parquet(
-    '{glob}',
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet(
+    {file_list},
     union_by_name = true,
     filename = true
 )
 """
 
-_PLAYERS_RAW_QUERY = """
+# Subsequent batches — BY NAME aligns columns and fills missing ones with NULL.
+_MATCHES_RAW_INSERT_QUERY = """
+INSERT INTO matches_raw BY NAME
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet(
+    {file_list},
+    union_by_name = true,
+    filename = true
+)
+"""
+
+_PLAYERS_RAW_CREATE_QUERY = """
 CREATE TABLE players_raw AS
-SELECT * FROM read_parquet(
-    '{glob}',
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet(
+    {file_list},
     union_by_name = true,
     filename = true
 )
 """
 
+_PLAYERS_RAW_INSERT_QUERY = """
+INSERT INTO players_raw BY NAME
+SELECT * REPLACE (substr(filename, {prefix_len}) AS filename)
+FROM read_parquet(
+    {file_list},
+    union_by_name = true,
+    filename = true
+)
+"""
+
+# overviews_raw is 1 row — UPDATE-based relativization is fine here.
 _OVERVIEWS_RAW_QUERY = """
 CREATE TABLE overviews_raw AS
 SELECT * FROM read_json_auto('{path}', filename = true)
@@ -48,11 +83,24 @@ SELECT * FROM read_json_auto('{path}', filename = true)
 
 _COUNT_QUERY = "SELECT count(*) FROM {table}"
 
-# Strips the raw_dir prefix from DuckDB's absolute filename column (I10).
+# Used only for overviews_raw (1 row — no OOM risk).
 # prefix_len = len(str(raw_dir)) + 2  (+1 for 1-based substr, +1 for trailing /)
 _RELATIVIZE_FILENAME_QUERY = (
     "UPDATE {table} SET filename = substr(filename, {prefix_len})"
 )
+
+
+def _file_list_literal(files: list[str]) -> str:
+    """Format a list of file paths as a DuckDB array literal.
+
+    Args:
+        files: Absolute file paths to format.
+
+    Returns:
+        SQL array literal string e.g. ``['path/a', 'path/b']``.
+    """
+    quoted = ", ".join(f"'{p}'" for p in files)
+    return f"[{quoted}]"
 
 
 def _relativize_filenames(
@@ -89,13 +137,20 @@ def load_matches_raw(
     raw_dir: Path,
     *,
     should_drop: bool = True,
+    batch_size: int = 10,
 ) -> int:
     """Materialise matches_raw from all weekly match parquet files.
+
+    Loads in file-level batches to avoid OOM on large datasets. The first
+    batch creates the table; subsequent batches use INSERT BY NAME so that
+    variant columns (present in some weeks but not others) are filled with
+    NULL rather than causing a schema mismatch.
 
     Args:
         con: Active DuckDB connection.
         raw_dir: Path to the raw data directory (contains matches/ subdir).
         should_drop: If True, drop existing matches_raw before creating.
+        batch_size: Number of parquet files to load per batch.
 
     Returns:
         Row count in matches_raw after ingestion.
@@ -104,11 +159,27 @@ def load_matches_raw(
         con.execute(_DROP_IF_EXISTS_QUERY.format(table="matches_raw"))
         logger.info("Dropped existing matches_raw table.")
 
-    glob = str(raw_dir / "matches" / "*_matches.parquet")
-    con.execute(_MATCHES_RAW_QUERY.format(glob=glob))
-    _relativize_filenames(con, "matches_raw", raw_dir)
+    files = sorted(glob_module.glob(str(raw_dir / "matches" / "*_matches.parquet")))
+    if not files:
+        raise FileNotFoundError(f"No match parquet files found under {raw_dir / 'matches'}")
+
+    total = len(files)
+    prefix_len = len(str(raw_dir)) + 2
+    logger.info("matches_raw: loading %d files in batches of %d", total, batch_size)
+
+    first_batch = _file_list_literal(files[:batch_size])
+    con.execute(_MATCHES_RAW_CREATE_QUERY.format(file_list=first_batch, prefix_len=prefix_len))
+
+    for start in range(batch_size, total, batch_size):
+        batch = _file_list_literal(files[start:start + batch_size])
+        con.execute(_MATCHES_RAW_INSERT_QUERY.format(file_list=batch, prefix_len=prefix_len))
+        logger.info(
+            "matches_raw: loaded files %d–%d / %d",
+            start, min(start + batch_size, total), total
+        )
+
     n = _count_rows(con, "matches_raw")
-    logger.info("matches_raw: %d rows from %s", n, glob)
+    logger.info("matches_raw: %d rows from %d files", n, total)
     return n
 
 
@@ -117,13 +188,19 @@ def load_players_raw(
     raw_dir: Path,
     *,
     should_drop: bool = True,
+    batch_size: int = 10,
 ) -> int:
     """Materialise players_raw from all weekly player parquet files.
+
+    Loads in file-level batches to avoid OOM. The full 171-file / 107.6M-row
+    dataset exceeds machine memory in a single CTAS. Batching of 20 files
+    (~12.6M rows per batch) keeps peak RSS manageable.
 
     Args:
         con: Active DuckDB connection.
         raw_dir: Path to the raw data directory (contains players/ subdir).
         should_drop: If True, drop existing players_raw before creating.
+        batch_size: Number of parquet files to load per batch.
 
     Returns:
         Row count in players_raw after ingestion.
@@ -132,11 +209,27 @@ def load_players_raw(
         con.execute(_DROP_IF_EXISTS_QUERY.format(table="players_raw"))
         logger.info("Dropped existing players_raw table.")
 
-    glob = str(raw_dir / "players" / "*_players.parquet")
-    con.execute(_PLAYERS_RAW_QUERY.format(glob=glob))
-    _relativize_filenames(con, "players_raw", raw_dir)
+    files = sorted(glob_module.glob(str(raw_dir / "players" / "*_players.parquet")))
+    if not files:
+        raise FileNotFoundError(f"No player parquet files found under {raw_dir / 'players'}")
+
+    total = len(files)
+    prefix_len = len(str(raw_dir)) + 2
+    logger.info("players_raw: loading %d files in batches of %d", total, batch_size)
+
+    first_batch = _file_list_literal(files[:batch_size])
+    con.execute(_PLAYERS_RAW_CREATE_QUERY.format(file_list=first_batch, prefix_len=prefix_len))
+
+    for start in range(batch_size, total, batch_size):
+        batch = _file_list_literal(files[start:start + batch_size])
+        con.execute(_PLAYERS_RAW_INSERT_QUERY.format(file_list=batch, prefix_len=prefix_len))
+        logger.info(
+            "players_raw: loaded files %d–%d / %d",
+            start, min(start + batch_size, total), total
+        )
+
     n = _count_rows(con, "players_raw")
-    logger.info("players_raw: %d rows from %s", n, glob)
+    logger.info("players_raw: %d rows from %d files", n, total)
     return n
 
 

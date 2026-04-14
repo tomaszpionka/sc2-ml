@@ -1,0 +1,829 @@
+{
+  "step": "01_02_02",
+  "dataset": "aoe2companion",
+  "dtype_decision": {
+    "strategy": "explicit",
+    "rationale": "read_csv_auto inferred all 7 columns as VARCHAR on the full 2,072-file ratings load. Explicit BIGINT/TIMESTAMP types required to preserve numeric fidelity. Confirmed in Step 01_02_01 ratings_type_inference artifact.",
+    "dtype_map": {
+      "profile_id": "BIGINT",
+      "games": "BIGINT",
+      "rating": "BIGINT",
+      "date": "TIMESTAMP",
+      "leaderboard_id": "BIGINT",
+      "rating_diff": "BIGINT",
+      "season": "BIGINT"
+    }
+  },
+  "tables_created": [
+    "matches_raw",
+    "ratings_raw",
+    "leaderboards_raw",
+    "profiles_raw"
+  ],
+  "row_counts": {
+    "matches_raw": 277099059,
+    "ratings_raw": 58317433,
+    "leaderboards_raw": 2381227,
+    "profiles_raw": 3609686
+  },
+  "schemas": {
+    "matches_raw": [
+      {
+        "column_name": "matchId",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "started",
+        "column_type": "TIMESTAMP",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "finished",
+        "column_type": "TIMESTAMP",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "leaderboard",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "name",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "server",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "internalLeaderboardId",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "privacy",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "mod",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "map",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "difficulty",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "startingAge",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "fullTechTree",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "allowCheats",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "empireWarsMode",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "endingAge",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "gameMode",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "lockSpeed",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "lockTeams",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "mapSize",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "population",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "hideCivs",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "recordGame",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "regicideMode",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "gameVariant",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "resources",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "sharedExploration",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "speed",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "speedFactor",
+        "column_type": "FLOAT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "suddenDeathMode",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "antiquityMode",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "civilizationSet",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "teamPositions",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "teamTogether",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "treatyLength",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "turboMode",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "victory",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "revealMap",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "scenario",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "password",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "modDataset",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "profileId",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rating",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "ratingDiff",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "color",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "colorHex",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "slot",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "status",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "team",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "won",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "country",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "shared",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "verified",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "civ",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "filename",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      }
+    ],
+    "ratings_raw": [
+      {
+        "column_name": "profile_id",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "games",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rating",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "date",
+        "column_type": "TIMESTAMP",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "leaderboard_id",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rating_diff",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "season",
+        "column_type": "BIGINT",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "filename",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      }
+    ],
+    "leaderboards_raw": [
+      {
+        "column_name": "leaderboard",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "profileId",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "name",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rank",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rating",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "lastMatchTime",
+        "column_type": "TIMESTAMP",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "drops",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "losses",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "streak",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "wins",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "games",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "updatedAt",
+        "column_type": "TIMESTAMP",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rankCountry",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "active",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "season",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "rankLevel",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "steamId",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "country",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "filename",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      }
+    ],
+    "profiles_raw": [
+      {
+        "column_name": "profileId",
+        "column_type": "INTEGER",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "steamId",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "name",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "clan",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "country",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "avatarhash",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "sharedHistory",
+        "column_type": "BOOLEAN",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "twitchChannel",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "youtubeChannel",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "youtubeChannelName",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "discordId",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "discordName",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "discordInvitation",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      },
+      {
+        "column_name": "filename",
+        "column_type": "VARCHAR",
+        "null": "YES",
+        "key": null,
+        "default": null,
+        "extra": null
+      }
+    ]
+  },
+  "null_rates": {
+    "matches_raw": {
+      "total_rows": 277099059,
+      "matchId_null": 0,
+      "started_null": 0,
+      "won_null": 12985561,
+      "filename_null": 0
+    },
+    "ratings_raw": {
+      "total_rows": 58317433,
+      "profile_id_null": 0,
+      "rating_null": 0,
+      "filename_null": 0
+    }
+  },
+  "sql": {
+    "matches_raw": "CREATE TABLE matches_raw AS SELECT * FROM read_parquet('{glob}', union_by_name = true, filename = true, binary_as_string = true)",
+    "ratings_raw_explicit": "CREATE TABLE ratings_raw AS SELECT * FROM read_csv('{glob}', union_by_name = true, dtypes = {dtype_map}, filename = true)",
+    "leaderboards_raw": "CREATE TABLE leaderboards_raw AS SELECT * FROM read_parquet('{path}', filename = true, binary_as_string = true)",
+    "profiles_raw": "CREATE TABLE profiles_raw AS SELECT * FROM read_parquet('{path}', filename = true, binary_as_string = true)"
+  },
+  "invariant_i10_check": "PASSED \u2014 all filename columns are relative, non-bare"
+}

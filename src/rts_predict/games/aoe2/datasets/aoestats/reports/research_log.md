@@ -68,6 +68,62 @@ Key observations:
 
 ---
 
+## 2026-04-14 — [Phase 01 / Step 01_02_02] DuckDB Ingestion
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** ingestion
+**Artifacts produced:**
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.json`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.md`
+
+### What
+
+Re-executed full ingestion of all three aoestats raw sources into the persistent DuckDB (`data/db/db.duckdb`). Supersedes the initial ingestion performed within 01_02_01 by applying Invariant I10-compliant relative filenames and renaming tables from `raw_*` prefix to `*_raw` suffix convention.
+
+### Why
+
+Invariant I10 required `filename` column to store paths relative to `raw_dir`. Table naming aligned with `*_raw` suffix convention used by sc2egset and aoe2companion. All ingestion SQL lives in `src/rts_predict/games/aoe2/datasets/aoestats/ingestion.py`.
+
+### How (reproducibility)
+
+Notebook: `sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_02_duckdb_ingestion.py`
+
+### Findings
+
+Row counts:
+- `matches_raw`: 30,690,651 rows
+- `players_raw`: 107,627,584 rows
+- `overviews_raw`: 1 row
+
+Row counts match the 01_02_01 initial ingestion, confirming data integrity.
+
+Ingestion strategy:
+- `matches_raw` / `players_raw`: `read_parquet` with `union_by_name=true`, `filename=true`
+- `overviews_raw`: `read_json_auto` on singleton `overview.json`, `filename=true`
+- Filename relativization: `UPDATE ... SET filename = substr(filename, prefix_len)` applied after each CTAS
+
+### Decisions taken
+
+- Tables named with `*_raw` suffix convention — consistent with sc2egset and aoe2companion
+- Invariant I10-compliant relative filenames stored in `filename` column
+
+### Decisions deferred
+
+- None for this step
+
+### Thesis mapping
+
+- Chapter 4, §4.1.2 — AoE2 dataset: bronze-layer ingestion
+
+### Open questions / follow-ups
+
+- None specific to this step — all open questions from 01_02_01 remain active
+
+---
+
+> **2026-04-14 amendment:** The original 01_02_01 heading says "DuckDB pre-ingestion investigation" but the artifact (`01_02_01_duckdb_pre_ingestion.json`) has `"type": "full_ingestion"` and contains `tables_created`, DDL, DESCRIBE output, and NULL counts — it performed full ingestion, not just investigation. The body accurately states "Ingested all three raw data sources" but the heading and step scope label are misleading. The canonical ingestion is step 01_02_02, which re-executed with Invariant I10-compliant relative filenames and renamed tables (`raw_matches` → `matches_raw`, `raw_players` → `players_raw`, `raw_overviews` → `overviews_raw`). Findings in the 01_02_01 entry (variant columns, NULL counts, duration types, missing week) remain valid.
+
 ## 2026-04-13 — [Phase 01 / Step 01_02_01] DuckDB pre-ingestion investigation
 
 **Category:** A (science)

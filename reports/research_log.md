@@ -9,9 +9,9 @@ live in per-dataset logs — one per game/dataset combination.
 
 | Dataset | Log | Last entry |
 |---------|-----|------------|
-| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-13 (01_02_01) |
-| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-13 (01_02_01) |
-| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-13 (01_02_01) |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-14 (01_02_03) |
+| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-14 (01_02_03) |
+| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-14 (01_02_03) |
 
 > **Phase migration note (2026-04-09):** This log was reset as part of the
 > Phase 01-07 migration. Prior entries were removed in v2.0.0 (archive
