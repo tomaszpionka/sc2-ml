@@ -371,6 +371,60 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_06 — Bivariate EDA
+
+```yaml
+step_number: "01_02_06"
+name: "Bivariate EDA"
+description: "Bivariate exploratory data analysis for aoe2companion. Conditional distributions of numeric features by won (violin plots), Spearman correlation matrix, rating vs ratingDiff scatter (sampled), ratingDiff by leaderboard. Resolves temporal leakage status of ratingDiff (Q1) and investigates rating ambiguity (Q2). All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations per Invariant #3."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "Which numeric features differ by outcome (won)? Which feature pairs are correlated? Is ratingDiff definitively post-game? Is rating pre- or post-game?"
+method: "DuckDB aggregated queries for conditional distributions (PERCENTILE_CONT by won). TABLESAMPLE BERNOULLI for scatter plots (sample fraction derived from census total_rows at runtime, I7). Spearman correlation via scipy.stats.spearmanr on BERNOULLI-sampled rows (DuckDB CORR computes Pearson only). 8 plots. Markdown artifact with all SQL (I6)."
+stratification: "By leaderboard (1v1 focus: rm_1v1 + qp_rm_1v1)."
+predecessors:
+  - "01_02_04"
+  - "01_02_05"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_06_bivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "ratings_raw"
+    - "leaderboards_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_rating_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_rating_vs_ratingdiff.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_duration_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_numeric_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_spearman_correlation.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_leaderboard.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_won_by_leaderboard.png"
+  report: "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+gate:
+  artifact_check: "All 8 PNG files exist under plots/. 01_02_06_bivariate_eda.md exists with SQL queries (Invariant #6) and plot index table including Temporal Annotation column."
+  continue_predicate: "Notebook executes end-to-end without error. ratingDiff temporal status resolved."
+  halt_predicate: "DuckDB queries fail on matches_raw or sampling yields zero rows."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "ratingDiff violin carries POST-GAME annotation. rating violin carries AMBIGUOUS annotation. Q1 result resolves ratingDiff status definitively."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "Sample fraction derived from census total_rows at runtime. All clip boundaries, bin widths, and annotation values from census JSON. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Bivariate analysis of features established in 01_02_04. No new column discovery or schema changes."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+  - "Chapter 4 -- Data and Methodology > 4.1.4 Temporal Leakage Audit"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

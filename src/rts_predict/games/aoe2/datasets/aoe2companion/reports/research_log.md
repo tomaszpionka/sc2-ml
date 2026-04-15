@@ -8,6 +8,68 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** bivariate — pairwise relationships between features and match outcome
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (8 files)
+
+### What
+
+Produced 8 thesis-grade PNG plots examining pairwise relationships between numeric
+features and `won` (True/False) in matches_raw (277M rows; sampled to 100K via
+BERNOULLI for Spearman). Ran conditional histograms and violin/box plots for all
+primary numeric features, a Spearman correlation matrix (scipy.stats.spearmanr on
+sample), and leaderboard-faceted ratingDiff distributions. All thresholds derived
+from 01_02_04 census at runtime (Invariant #7). POST-GAME annotations applied to
+`ratingDiff` and `duration` (Invariant #3).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_ratingdiff_by_won` | ratingDiff conditional histogram (POST-GAME annotated) |
+| `01_02_06_rating_by_won` | rating overlapping histogram by outcome (sentinel -1 excluded) |
+| `01_02_06_rating_vs_ratingdiff` | rating vs ratingDiff scatter (BERNOULLI sample) |
+| `01_02_06_duration_by_won` | Duration histogram by outcome (POST-GAME annotated, p95-clipped) |
+| `01_02_06_numeric_by_won` | Multi-panel box-and-whisker: rating, ratingDiff, duration_min |
+| `01_02_06_spearman_correlation` | Spearman correlation heatmap (6 numeric features, sampled) |
+| `01_02_06_ratingdiff_by_leaderboard` | ratingDiff std by leaderboard bar chart |
+| `01_02_06_ratingdiff_by_won_by_leaderboard` | Mean ratingDiff by outcome, faceted by leaderboard |
+
+### Key findings
+
+- **ratingDiff (Q1 — I3 resolution) — POST-GAME CONFIRMED:** won=True mean ratingDiff
+  = +16.6, won=False mean = −17.6. Perfect sign separation. ratingDiff encodes the
+  match outcome directly in its sign (positive = won, negative = lost). **Must be
+  excluded from all pre-game feature sets.** This is a hard constraint for Phase 02.
+- **rating (Q2 — temporal ambiguity) — INCONCLUSIVE:** Mean rating difference = +7.0
+  Elo (won=True: 1095, won=False: 1088). This is ~2% of the rating stddev (~344).
+  Falls between the decision thresholds of 5 (likely pre-game) and 50 (likely
+  post-game). Cannot resolve with bivariate analysis alone.
+- **rating temporal status — deferred to Phase 02:** Row-level verification required:
+  check `rating = pre_rating + ratingDiff` via temporal join with ratings_raw. If
+  true, `rating` is post-game and must be excluded alongside `ratingDiff`.
+- **ratingDiff × leaderboard:** The ratingDiff magnitude varies substantially across
+  leaderboards (higher-ELO leaderboards have larger absolute ratingDiff per match).
+  Leaderboard ID may be a useful pre-game feature.
+
+### Decisions
+
+- `ratingDiff` → excluded from all pre-game feature sets (confirmed leakage, I3)
+- `rating` → ambiguous; Phase 02 row-level verification required before use
+- `duration` → post-game descriptor; usable for EDA characterization but not prediction
+
+### Open questions
+
+- Is `rating` = pre_game_rating + ratingDiff (post-game)? Requires Phase 02 join with ratings_raw.
+- Does leaderboard_id (pre-game) have independent predictive power beyond rating?
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate Census Visualizations
 
 **Category:** A (science)

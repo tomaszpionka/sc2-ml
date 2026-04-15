@@ -8,6 +8,112 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** bivariate — pairwise relationships between features and match result
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (9 files)
+
+### What
+
+Produced 9 thesis-grade PNG plots examining pairwise relationships between features
+and match result (Win vs Loss) in replay_players_raw (44,791 Win/Loss rows; 24
+Undecided and 2 Tie rows excluded per census). Ran Mann-Whitney U tests for all
+continuous features, chi-square tests for categorical features, and a two-panel
+Spearman correlation heatmap (all rows and MMR>0 rated players only). All sentinel
+thresholds derived from 01_02_04 census at runtime (Invariant #7). All three in-game
+columns carry mandatory red-bbox annotation (Invariant #3).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_mmr_by_result` | MMR violin (non-zero only, N=7,319 Win/Loss); Mann-Whitney U test annotated |
+| `01_02_06_race_winrate` | Win rate per race (Prot/Zerg/Terr); chi-square test annotated |
+| `01_02_06_apm_by_result` | APM violin by result (IN-GAME); Mann-Whitney U annotated |
+| `01_02_06_sq_by_result` | SQ violin by result (IN-GAME, INT32_MIN excluded); Mann-Whitney U annotated |
+| `01_02_06_supplycapped_by_result` | supplyCappedPercent violin (IN-GAME); Mann-Whitney U annotated |
+| `01_02_06_league_winrate` | Win rate per highestLeague tier; bar chart with n annotations |
+| `01_02_06_clan_winrate` | Win rate by isInClan (2x2); chi-square annotated |
+| `01_02_06_numeric_by_result` | Multi-panel violin: all numeric features by result (MMR non-zero, SQ sentinel excluded) |
+| `01_02_06_spearman_correlation` | Two-panel Spearman heatmap — all rows (MMR includes zero sentinel) and rated players (MMR>0) |
+
+### Key findings
+
+- **MMR (pre-game feature):** Among rated players (MMR>0, ~16.35% of rows), winners
+  have marginally higher MMR (median Win=6151, Loss=5945). Mann-Whitney U p=2.4e-11
+  but rank-biserial r=-0.090 (small effect, Cohen 1988). Despite statistical
+  significance due to large n, the practical effect size is small — matchmaking is
+  doing its job pairing similarly-rated players.
+- **Race (pre-game feature):** Chi-square = 39.84, p=2.2e-09, dof=2. Win rates by
+  race show statistically significant differences, though win rates cluster near 50%
+  for all three races. Race is a valid pre-game feature with detectable but modest
+  predictive signal.
+- **APM (IN-GAME only):** Median Win=356, Loss=344. p=2.0e-73, r=-0.099 (small
+  effect). High APM correlates weakly with winning — interesting but unusable at
+  prediction time (Invariant #3).
+- **SQ (IN-GAME only):** Spending Quotient shows the strongest in-game signal.
+  Median Win=127, Loss=120. p=2.8e-248, r=-0.184 (medium effect). SQ is the most
+  discriminative in-game metric, consistent with its design as a skill-efficiency
+  measure.
+- **supplyCappedPercent (IN-GAME only):** No meaningful separation. Median Win=6,
+  Loss=6. p=0.074 (not significant at conventional threshold), r=-0.010. Supply
+  cap time is not discriminative between winners and losers in this dataset.
+- **Clan membership (pre-game feature):** Chi-square = 7.75, p=0.0054 (marginal).
+  The effect is very small but statistically significant. Clan membership may be a
+  very weak proxy for engagement/commitment.
+- **League tier (pre-game feature):** Visual inspection shows win rates close to 50%
+  across all tiers. The massive "Unknown" and "(empty)" categories (many unranked
+  players) dominate the distribution. Grandmaster-tier players show near-50% win
+  rate — expected given match quality at the top.
+- **Spearman correlation:** In the all-rows matrix, MMR is near-zero for all other
+  features (zero-sentinel contamination). In the rated-players (MMR>0) matrix, MMR
+  shows a detectable positive rho with result_binary (~0.09), consistent with the
+  Mann-Whitney finding. SQ and APM are moderately correlated (~0.5 rho), as expected
+  — both measure player activity/efficiency.
+
+### Decisions taken
+
+- All sentinel exclusions (MMR=0, SQ INT32_MIN) derived from census JSON at runtime
+  — no hardcoded constants (Invariant #7).
+- Two Spearman matrices computed to explicitly expose MMR zero-sentinel contamination
+  rather than silently hiding it with a single filtered matrix.
+- All statistical tests declared as EXPLORATORY (Tukey-style). No multiple comparison
+  correction applied — findings are hypothesis-generating for Phase 02, not
+  confirmatory.
+
+### Decisions deferred
+
+- MMR zero-row treatment (include/exclude/impute) deferred to Phase 01_04 Data
+  Cleaning. Bivariate analysis confirms that zero-sentinel contamination visibly
+  distorts Spearman correlation.
+- Race encoding strategy (one-hot vs ordinal) deferred to Phase 02 Feature Engineering.
+- Whether supplyCappedPercent's lack of discriminative power is dataset-specific or
+  game-wide deferred to AoE2 comparison (Invariant #8 — cross-game comparability).
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — bivariate EDA results, pre-game vs in-game feature separation
+- Chapter 5 (Results) — feature importance discussion, especially SQ vs pre-game MMR
+- Appendix — Invariant #3 compliance evidence (in-game annotations on all 5 relevant plots)
+
+### Open questions / follow-ups
+
+- SQ is the most predictive feature but is IN-GAME — is there a pre-game proxy
+  (e.g., historical SQ average for a player)? This is a Phase 02 feature
+  engineering question.
+- The Spearman heatmap shows APM and SQ are correlated (~0.5). If both are in-game
+  and correlated, do we need both? Phase 02 will address feature redundancy.
+- Race chi-square significant but small effect — does race interaction with
+  opponent race (matchup) produce stronger signal? This is a Phase 02 question
+  (matchup encoding).
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate EDA Visualizations
 
 **Category:** A (science)

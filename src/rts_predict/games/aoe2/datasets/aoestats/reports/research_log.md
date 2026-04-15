@@ -8,6 +8,72 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** bivariate — pairwise relationships between features and match outcome
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (8 files)
+
+### What
+
+Produced 8 thesis-grade PNG plots examining pairwise relationships between features
+and `winner` in players_raw (107.6M rows) and matches_raw (30.7M rows). Key analyses:
+leakage scatter for `match_rating_diff` (Phase 02 blocker), `old_rating` by winner
+violin, ELO panel, duration violin, opening win rate bar chart, age uptime violin,
+Spearman correlation matrix, and multi-panel numeric features. All thresholds derived
+from 01_02_04 census at runtime (Invariant #7). ELO sentinel (-1) excluded. POST-GAME
+column tick labels marked with asterisk in Spearman heatmap. Age uptime and opening
+analyses restricted to ~14% non-NULL subset (schema change boundary). DuckDB
+connections read_only=True; no DDL.
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_match_rating_diff_leakage_scatter` | match_rating_diff vs (new_rating−old_rating) scatter (leakage test) |
+| `01_02_06_old_rating_by_winner` | old_rating violin by winner (pre-game ELO predictor) |
+| `01_02_06_elo_by_winner` | team_0_elo and team_1_elo panel by winner |
+| `01_02_06_duration_by_winner` | Duration violin by winner (POST-GAME descriptor) |
+| `01_02_06_numeric_by_winner` | Multi-panel numeric features by winner |
+| `01_02_06_opening_winrate` | Opening win rate bar chart (Wilson score CI) |
+| `01_02_06_age_uptime_by_winner` | Age uptime violin by winner (non-NULL subset only) |
+| `01_02_06_spearman_correlation` | Spearman correlation matrix (scipy.stats.spearmanr on 20K sample) |
+
+### Key findings
+
+- **match_rating_diff — PRE-GAME SAFE (Phase 02 blocker RESOLVED):** Pearson r = 0.053
+  between `match_rating_diff` and `new_rating − old_rating`; only 0.66% of rows have
+  `|match_rating_diff − (new_rating − old_rating)| < 0.01`. Definitively refutes H1
+  (that match_rating_diff = post-game rating change). The column encodes something
+  other than the post-game rating delta — most likely a pre-game opponent rating
+  difference or handicap value. **Safe to include in Phase 02 feature sets.**
+- **old_rating × winner:** Pre-game ELO shows measurable distributional separation by
+  winner. Winners have marginally higher old_rating, consistent with a predictive
+  pre-game signal.
+- **Opening win rate:** Some opening types show noticeably higher win rates than others.
+  Wilson score CIs show which differences are reliable vs. noise (large-n openings only).
+- **Age uptime columns (87% NULL):** Bivariate analysis on non-NULL subset confirms
+  expected relationship; must note the selectivity bias in thesis (non-NULL = post-schema-change games only).
+
+### Decisions
+
+- `match_rating_diff` → PRE-GAME SAFE; include in Phase 02 feature engineering candidates
+- `old_rating` → confirmed pre-game ELO predictor; include
+- `new_rating` → post-game; exclude from all feature sets
+- Post-game columns (`new_rating`, `match_result`) → excluded from feature sets
+
+### Open questions
+
+- What exactly does `match_rating_diff` encode? Opponent rating gap, handicap, or something else?
+  Semantic clarity needed before thesis feature description.
+- Do opening types (87% NULL) have enough non-NULL coverage to train on? Depends on Phase 02 target window selection.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate Visualizations
 
 **Category:** A (science)

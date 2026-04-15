@@ -1,0 +1,499 @@
+{
+  "step": "01_02_06",
+  "dataset": "aoestats",
+  "match_rating_diff_leakage": {
+    "leakage_status": "PRE_GAME",
+    "detail": "match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0530). Likely a pre-game feature.",
+    "pearson_r": 0.0529673488966621,
+    "pearson_p": 3.3276065801106513e-124,
+    "ols_slope": 0.016725632472308898,
+    "ols_intercept": -0.3459053655085259,
+    "ols_r_squared": 0.002805540049141057,
+    "exact_match_count": 712331,
+    "exact_match_pct": 0.6619,
+    "total_rows_tested": 107620495,
+    "sample_size_scatter": 199986
+  },
+  "old_rating_by_winner": [
+    {
+      "winner": false,
+      "n": 53811495,
+      "mean_val": 1086.27,
+      "median_val": 1063.0,
+      "stddev_val": 284.59,
+      "p25": 897.0,
+      "p75": 1258.0
+    },
+    {
+      "winner": true,
+      "n": 53810152,
+      "mean_val": 1096.05,
+      "median_val": 1070.0,
+      "stddev_val": 288.82,
+      "p25": 903.0,
+      "p75": 1267.0
+    }
+  ],
+  "null_winner_game_count": 1502,
+  "elo_by_winning_team": [
+    {
+      "winning_team": 0,
+      "mean_t0_elo": 1091.76,
+      "mean_t1_elo": 1092.13,
+      "mean_avg_elo": 1091.95,
+      "mean_elo_diff": -0.37,
+      "n": 14669048
+    },
+    {
+      "winning_team": 1,
+      "mean_t0_elo": 1074.54,
+      "mean_t1_elo": 1093.03,
+      "mean_avg_elo": 1083.79,
+      "mean_elo_diff": -18.48,
+      "n": 15802390
+    },
+    {
+      "winning_team": null,
+      "mean_t0_elo": 1071.23,
+      "mean_t1_elo": 1080.29,
+      "mean_avg_elo": 1075.76,
+      "mean_elo_diff": -9.07,
+      "n": 1484
+    }
+  ],
+  "duration_by_winner": [
+    {
+      "winning_team": 0,
+      "mean_dur_sec": 2606.34,
+      "median_dur_sec": 2609.5,
+      "n": 14670071
+    },
+    {
+      "winning_team": 1,
+      "mean_dur_sec": 2622.26,
+      "median_dur_sec": 2631.6,
+      "n": 15806188
+    },
+    {
+      "winning_team": null,
+      "mean_dur_sec": 1531.16,
+      "median_dur_sec": 1595.45,
+      "n": 1502
+    }
+  ],
+  "numeric_pregame_by_winner": {
+    "old_rating": [
+      {
+        "feature": "old_rating",
+        "winner": false,
+        "n": 53811495,
+        "mean_val": 1086.27,
+        "median_val": 1063.0,
+        "stddev_val": 284.59,
+        "p05": 660.0,
+        "p25": 897.0,
+        "p75": 1258.0,
+        "p95": 1568.0
+      },
+      {
+        "feature": "old_rating",
+        "winner": true,
+        "n": 53810152,
+        "mean_val": 1096.05,
+        "median_val": 1070.0,
+        "stddev_val": 288.82,
+        "p05": 670.0,
+        "p25": 903.0,
+        "p75": 1267.0,
+        "p95": 1593.0
+      }
+    ],
+    "match_elo_features": [
+      {
+        "feature": "avg_elo",
+        "winner_team": 0,
+        "n": 14670015,
+        "mean_val": 1091.88,
+        "median_val": 1059.5,
+        "stddev_val": 304.97,
+        "p05": 647.5,
+        "p25": 892.0,
+        "p75": 1264.5,
+        "p95": 1626.0
+      },
+      {
+        "feature": "avg_elo",
+        "winner_team": 1,
+        "n": 15806126,
+        "mean_val": 1083.55,
+        "median_val": 1051.0,
+        "stddev_val": 313.1,
+        "p05": 628.5,
+        "p25": 881.5,
+        "p75": 1256.5,
+        "p95": 1633.0
+      },
+      {
+        "feature": "avg_elo",
+        "winner_team": null,
+        "n": 1502,
+        "mean_val": 1075.61,
+        "median_val": 1101.25,
+        "stddev_val": 277.36,
+        "p05": 582.75,
+        "p25": 909.125,
+        "p75": 1250.25,
+        "p95": 1504.18125
+      },
+      {
+        "feature": "team_0_elo",
+        "winner_team": 0,
+        "n": 14669113,
+        "mean_val": 1091.76,
+        "median_val": 1059.0,
+        "stddev_val": 309.33,
+        "p05": 641.0,
+        "p25": 890.0,
+        "p75": 1266.0,
+        "p95": 1635.0
+      },
+      {
+        "feature": "team_0_elo",
+        "winner_team": 1,
+        "n": 15802400,
+        "mean_val": 1074.54,
+        "median_val": 1044.5,
+        "stddev_val": 313.76,
+        "p05": 613.0,
+        "p25": 873.5,
+        "p75": 1250.0,
+        "p95": 1623.0
+      },
+      {
+        "feature": "team_0_elo",
+        "winner_team": null,
+        "n": 1484,
+        "mean_val": 1071.23,
+        "median_val": 1096.5,
+        "stddev_val": 282.26,
+        "p05": 562.4666666666667,
+        "p25": 906.75,
+        "p75": 1248.25,
+        "p95": 1511.85
+      },
+      {
+        "feature": "team_1_elo",
+        "winner_team": 0,
+        "n": 14669934,
+        "mean_val": 1092.07,
+        "median_val": 1058.5,
+        "stddev_val": 302.73,
+        "p05": 652.0,
+        "p25": 893.0,
+        "p75": 1263.0,
+        "p95": 1620.0
+      },
+      {
+        "feature": "team_1_elo",
+        "winner_team": 1,
+        "n": 15806116,
+        "mean_val": 1092.82,
+        "median_val": 1057.0,
+        "stddev_val": 314.74,
+        "p05": 641.0,
+        "p25": 888.0,
+        "p75": 1264.0,
+        "p95": 1649.0
+      },
+      {
+        "feature": "team_1_elo",
+        "winner_team": null,
+        "n": 1484,
+        "mean_val": 1080.29,
+        "median_val": 1106.25,
+        "stddev_val": 275.25,
+        "p05": 590.575,
+        "p25": 914.0,
+        "p75": 1253.125,
+        "p95": 1504.925
+      }
+    ]
+  },
+  "opening_winrate": [
+    {
+      "opening": "fast_castle",
+      "total_games": 4200028,
+      "wins": 2213483.0,
+      "win_pct": 52.7,
+      "win_rate": 0.527,
+      "total": 4200028,
+      "ci": 0.00047749173257516766,
+      "ci_low": 0.5265225082674249,
+      "ci_high": 0.5274774917325752
+    },
+    {
+      "opening": "unknown",
+      "total_games": 3589615,
+      "wins": 1693656.0,
+      "win_pct": 47.18,
+      "win_rate": 0.4718,
+      "total": 3589615,
+      "ci": 0.0005164286199307372,
+      "ci_low": 0.47128357138006927,
+      "ci_high": 0.47231642861993073
+    },
+    {
+      "opening": "scouts",
+      "total_games": 2117251,
+      "wins": 1118494.0,
+      "win_pct": 52.83,
+      "win_rate": 0.5283,
+      "total": 2117251,
+      "ci": 0.0006724239004612254,
+      "ci_low": 0.5276275760995388,
+      "ci_high": 0.5289724239004612
+    },
+    {
+      "opening": "archers",
+      "total_games": 1974622,
+      "wins": 997424.0,
+      "win_pct": 50.51,
+      "win_rate": 0.5051,
+      "total": 1974622,
+      "ci": 0.0006973671678097203,
+      "ci_low": 0.5044026328321902,
+      "ci_high": 0.5057973671678098
+    },
+    {
+      "opening": "trash",
+      "total_games": 1099518,
+      "wins": 461889.0,
+      "win_pct": 42.01,
+      "win_rate": 0.4201,
+      "total": 1099518,
+      "ci": 0.0009225879856759725,
+      "ci_low": 0.419177412014324,
+      "ci_high": 0.42102258798567593
+    },
+    {
+      "opening": "man_at_arms",
+      "total_games": 1092885,
+      "wins": 548629.0,
+      "win_pct": 50.2,
+      "win_rate": 0.502,
+      "total": 1092885,
+      "ci": 0.0009374224901688986,
+      "ci_low": 0.5010625775098311,
+      "ci_high": 0.5029374224901689
+    },
+    {
+      "opening": "fires",
+      "total_games": 360897,
+      "wins": 189656.0,
+      "win_pct": 52.55,
+      "win_rate": 0.5255,
+      "total": 360897,
+      "ci": 0.0016291793770841635,
+      "ci_low": 0.5238708206229158,
+      "ci_high": 0.5271291793770841
+    },
+    {
+      "opening": "drush",
+      "total_games": 238173,
+      "wins": 114599.0,
+      "win_pct": 48.12,
+      "win_rate": 0.48119999999999996,
+      "total": 238173,
+      "ci": 0.002006654488614495,
+      "ci_low": 0.4791933455113855,
+      "ci_high": 0.48320665448861444
+    },
+    {
+      "opening": "galleys",
+      "total_games": 179940,
+      "wins": 91786.0,
+      "win_pct": 51.01,
+      "win_rate": 0.5101,
+      "total": 179940,
+      "ci": 0.0023097958396952945,
+      "ci_low": 0.5077902041603047,
+      "ci_high": 0.5124097958396953
+    },
+    {
+      "opening": "towers",
+      "total_games": 158365,
+      "wins": 75868.0,
+      "win_pct": 47.91,
+      "win_rate": 0.47909999999999997,
+      "total": 158365,
+      "ci": 0.002460462401541717,
+      "ci_low": 0.47663953759845823,
+      "ci_high": 0.4815604624015417
+    }
+  ],
+  "age_uptime_by_winner": [
+    {
+      "feature": "castle_age_uptime",
+      "winner": false,
+      "n": 6377078,
+      "mean_val": 1293.83,
+      "median_val": 1276.59,
+      "stddev_val": 295.95,
+      "p05": 893.1568500000001,
+      "p25": 1079.967,
+      "p75": 1450.309,
+      "p95": 1797.796
+    },
+    {
+      "feature": "castle_age_uptime",
+      "winner": true,
+      "n": 6608675,
+      "mean_val": 1257.62,
+      "median_val": 1250.86,
+      "stddev_val": 267.88,
+      "p05": 885.122,
+      "p25": 1060.1019999999999,
+      "p75": 1406.406,
+      "p95": 1704.2275999999997
+    },
+    {
+      "feature": "feudal_age_uptime",
+      "winner": false,
+      "n": 6912524,
+      "mean_val": 714.19,
+      "median_val": 685.41,
+      "stddev_val": 148.73,
+      "p05": 537.8140000000001,
+      "p25": 616.287,
+      "p75": 782.34,
+      "p95": 979.892
+    },
+    {
+      "feature": "feudal_age_uptime",
+      "winner": true,
+      "n": 6988612,
+      "mean_val": 699.54,
+      "median_val": 675.16,
+      "stddev_val": 136.85,
+      "p05": 533.0799999999999,
+      "p25": 607.069,
+      "p75": 766.533,
+      "p95": 944.897
+    },
+    {
+      "feature": "imperial_age_uptime",
+      "winner": false,
+      "n": 4228316,
+      "mean_val": 2262.73,
+      "median_val": 2227.99,
+      "stddev_val": 416.32,
+      "p05": 1686.985,
+      "p25": 1976.319,
+      "p75": 2494.74625,
+      "p95": 2977.4205
+    },
+    {
+      "feature": "imperial_age_uptime",
+      "winner": true,
+      "n": 4930364,
+      "mean_val": 2222.12,
+      "median_val": 2193.42,
+      "stddev_val": 394.0,
+      "p05": 1676.0931500000002,
+      "p25": 1957.838,
+      "p75": 2436.261,
+      "p95": 2889.5466999999994
+    }
+  ],
+  "spearman_correlation": {
+    "players_raw": {
+      "old_rating": {
+        "old_rating": 1.0,
+        "new_rating": 0.9976,
+        "match_rating_diff": 0.0583,
+        "feudal_age_uptime": -0.3456,
+        "castle_age_uptime": -0.2495,
+        "imperial_age_uptime": -0.2054
+      },
+      "new_rating": {
+        "old_rating": 0.9976,
+        "new_rating": 1.0,
+        "match_rating_diff": 0.0626,
+        "feudal_age_uptime": -0.3484,
+        "castle_age_uptime": -0.2528,
+        "imperial_age_uptime": -0.2089
+      },
+      "match_rating_diff": {
+        "old_rating": 0.0583,
+        "new_rating": 0.0626,
+        "match_rating_diff": 1.0,
+        "feudal_age_uptime": -0.0216,
+        "castle_age_uptime": -0.0277,
+        "imperial_age_uptime": -0.0256
+      },
+      "feudal_age_uptime": {
+        "old_rating": -0.3456,
+        "new_rating": -0.3484,
+        "match_rating_diff": -0.0216,
+        "feudal_age_uptime": 1.0,
+        "castle_age_uptime": 0.1748,
+        "imperial_age_uptime": 0.1655
+      },
+      "castle_age_uptime": {
+        "old_rating": -0.2495,
+        "new_rating": -0.2528,
+        "match_rating_diff": -0.0277,
+        "feudal_age_uptime": 0.1748,
+        "castle_age_uptime": 1.0,
+        "imperial_age_uptime": 0.6467
+      },
+      "imperial_age_uptime": {
+        "old_rating": -0.2054,
+        "new_rating": -0.2089,
+        "match_rating_diff": -0.0256,
+        "feudal_age_uptime": 0.1655,
+        "castle_age_uptime": 0.6467,
+        "imperial_age_uptime": 1.0
+      }
+    },
+    "matches_raw": {
+      "avg_elo": {
+        "avg_elo": 1.0,
+        "team_0_elo": 0.9964,
+        "team_1_elo": 0.9962,
+        "duration_sec": -0.1731,
+        "irl_duration_sec": -0.1731
+      },
+      "team_0_elo": {
+        "avg_elo": 0.9964,
+        "team_0_elo": 1.0,
+        "team_1_elo": 0.9859,
+        "duration_sec": -0.1712,
+        "irl_duration_sec": -0.1712
+      },
+      "team_1_elo": {
+        "avg_elo": 0.9962,
+        "team_0_elo": 0.9859,
+        "team_1_elo": 1.0,
+        "duration_sec": -0.173,
+        "irl_duration_sec": -0.173
+      },
+      "duration_sec": {
+        "avg_elo": -0.1731,
+        "team_0_elo": -0.1712,
+        "team_1_elo": -0.173,
+        "duration_sec": 1.0,
+        "irl_duration_sec": 1.0
+      },
+      "irl_duration_sec": {
+        "avg_elo": -0.1731,
+        "team_0_elo": -0.1712,
+        "team_1_elo": -0.173,
+        "duration_sec": 1.0,
+        "irl_duration_sec": 1.0
+      }
+    },
+    "sample_size_players": 499967,
+    "sample_size_matches": 499927
+  }
+}

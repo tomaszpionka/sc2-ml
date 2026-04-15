@@ -369,6 +369,61 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_06 — Bivariate EDA
+
+```yaml
+step_number: "01_02_06"
+name: "Bivariate EDA"
+description: "9 bivariate visualization plots examining pairwise relationships between features and match result in sc2egset. Reads the 01_02_04 JSON artifact for sentinel thresholds and queries DuckDB for conditional distributions. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on in-game columns (APM, SQ, supplyCappedPercent) per Invariant #3. Statistical tests (chi-square, Mann-Whitney U, Spearman) with p-values annotated on plots."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
+dataset: "sc2egset"
+question: "Which features associate with match outcome (Win vs Loss), and how strongly? Do in-game metrics show stronger separation than pre-game features?"
+method: "DuckDB queries for conditional distributions by result. Violin plots for continuous features, grouped bar charts for categorical features. Spearman correlation matrix for numeric columns. Chi-square tests for categorical-by-result associations. Mann-Whitney U for continuous-by-result comparisons. All sentinel thresholds data-derived from 01_02_04 census at runtime."
+predecessors: "01_02_05"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_06_bivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_mmr_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_race_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_apm_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_sq_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_supplycapped_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_league_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_clan_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_numeric_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_spearman_correlation.png"
+  report: "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "All three in-game columns (APM, SQ, supplyCappedPercent) carry a visible annotation: 'IN-GAME -- not available at prediction time (Inv. #3)' on every plot where they appear. Spearman heatmap marks in-game columns with red asterisks in tick labels."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All sentinel thresholds (MMR=0 count, SQ INT32_MIN count, Undecided/Tie counts) derived from census JSON at runtime. No hardcoded numbers. Chi-square and Mann-Whitney p-values computed, not assumed."
+  - number: "9"
+    how_upheld: "Bivariate analysis of existing columns only. No new feature computation. Builds on 01_02_04 census findings and 01_02_05 univariate visualizations."
+gate:
+  artifact_check: "All 9 PNG files, 01_02_06_bivariate_eda.md, and 01_02_06_bivariate_eda.json exist and are non-empty."
+  continue_predicate: "All 9 PNG files exist. JSON artifact contains statistical test results. Markdown artifact contains plot index table with Temporal Annotation column and all SQL queries. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet"
+  - "Chapter 5 — Results > feature importance discussion"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

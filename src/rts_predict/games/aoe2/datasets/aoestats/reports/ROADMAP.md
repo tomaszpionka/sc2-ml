@@ -399,6 +399,65 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_06 — Bivariate EDA
+
+```yaml
+step_number: "01_02_06"
+name: "Bivariate EDA"
+description: "Bivariate EDA for aoestats: 8 plots investigating pairwise feature-target relationships. Resolves match_rating_diff leakage (Phase 02 blocker). Conditional distributions by winner, Spearman correlation matrix, opening win rates. All SQL embedded (Invariant #6). Temporal annotations on in-game and post-game columns (Invariant #3)."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2.1"
+dataset: "aoestats"
+question: "How do pairs of variables relate to each other and to the target (winner)? Is match_rating_diff a post-game leakage feature?"
+method: "Single-table and JOIN queries on DuckDB. Sampled scatter for leakage check. DuckDB width_bucket aggregation for violin-style density estimation. Spearman matrix via DuckDB corr(). All thresholds from census JSON."
+stratification: "By table (matches_raw, players_raw) and by target (winner True/False)."
+predecessors:
+  - "01_02_05"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_06_bivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_05_visualizations.md"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md, Section 2.1"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_match_rating_diff_leakage_scatter.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_old_rating_by_winner.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_elo_by_winner.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_duration_by_winner.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_numeric_by_winner.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_opening_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_age_uptime_by_winner.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_spearman_correlation.png"
+  report: "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "duration annotated POST-GAME. opening and age uptimes annotated IN-GAME. match_rating_diff leakage status resolved by scatter and updated to LEAKAGE or PRE-GAME accordingly."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All sample fractions, bin widths, sentinel exclusion thresholds derived from census JSON at runtime. Sample size justified by census row count."
+  - number: "9"
+    how_upheld: "Bivariate analysis only. No model fitting, no feature engineering, no cleaning decisions."
+gate:
+  artifact_check: "All 8 PNG files exist under plots/. 01_02_06_bivariate_eda.json and .md exist and are non-empty."
+  continue_predicate: "All 8 PNG files exist. match_rating_diff leakage status resolved in JSON artifact (field: bivariate_results[\"match_rating_diff_leakage\"][\"leakage_status\"] = 'LEAKAGE' or 'PRE_GAME'). Markdown artifact contains all SQL queries and plot index table with Temporal Annotation column. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails or match_rating_diff leakage status cannot be determined."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+  - "Chapter 4 -- Data and Methodology > 4.2 Pre-processing"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ---

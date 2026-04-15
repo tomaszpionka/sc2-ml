@@ -49,4 +49,9 @@ steps:
     pipeline_section: "01_02"
     status: complete
     completed_at: "2026-04-15"
+  "01_02_06":
+    name: "Bivariate EDA"
+    pipeline_section: "01_02"
+    status: complete
+    completed_at: "2026-04-15"
   # Future steps will be added here as they are defined in the ROADMAP.
