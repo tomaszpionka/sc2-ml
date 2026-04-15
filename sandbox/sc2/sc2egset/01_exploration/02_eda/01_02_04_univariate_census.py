@@ -37,6 +37,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from rts_predict.common.eda_census import profile_table
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.sc2.config import DB_FILE
 
@@ -1113,6 +1114,7 @@ findings = {
     "map_dimensions": map_dims.to_dict(orient="records"),
     "plots": [],
 }
+sql_queries: dict = {}
 
 # %%
 # Add categorical profiles to findings
@@ -1160,8 +1162,42 @@ plot_files = sorted(plots_dir.glob("01_02_04_*.png"))
 findings["plots"] = [f.name for f in plot_files]
 print(f"Plot files: {findings['plots']}")
 
+# %% [markdown]
+# ## Systematic Column Profile (Top-5 / Bottom-5)
+#
+# EDA Manual Section 3.1: top-5 / bottom-5 for every column.
+# Performance note: game_events_raw (608M rows) may take several minutes
+# per column for GROUP BY on high-cardinality columns (loop, evtTypeName).
+# event_data is excluded from top_n/bottom_n (JSON strings — GROUP BY
+# on 608M opaque payloads is semantically useless and OOM-risk).
+# Elapsed time printed per column; gate: elapsed < 600s per column.
+# Invariant #6: all SQL captured in sql_queries for artifact emission.
+
+# %%
+for _tbl in [
+    "replay_players_raw",
+    "replays_meta_raw",
+    "game_events_raw",
+    "tracker_events_raw",
+    "message_events_raw",
+    "map_aliases_raw",
+]:
+    _skip = {"event_data"} if _tbl == "game_events_raw" else None
+    _specs = [
+        {"name": r["column_name"], "dtype": r["column_type"]}
+        for _, r in con.execute(f"DESCRIBE {_tbl}").df().iterrows()
+    ]
+    _census = profile_table(con, _tbl, _specs, skip_topn_columns=_skip)
+    findings[f"{_tbl}_census"] = _census["profiles"]
+    for _col, _sqls in _census["sql_registry"].items():
+        sql_queries[f"census.{_tbl}.{_col}.null"] = _sqls["sql_null"]
+        sql_queries[f"census.{_tbl}.{_col}.top_n"] = _sqls["sql_top_n"]
+        sql_queries[f"census.{_tbl}.{_col}.bottom_n"] = _sqls["sql_bottom_n"]
+    print(f"census complete: {_tbl} ({len(_census['profiles'])} columns)")
+
 # %%
 # Write JSON
+findings["sql_queries"] = sql_queries
 json_path = artifacts_dir / "01_02_04_univariate_census.json"
 json_path.write_text(json.dumps(findings, indent=2, default=str))
 print(f"JSON artifact written: {json_path}")
