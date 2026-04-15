@@ -1,6 +1,4 @@
-Good, I have everything I need. Here are the two prompts — one per agent, split by game:                                                                                                                                   
-                                                                                                                                                                                                                            
----                                                                                                                                                                                                                        
+                                                                                                                                                                                                                      
 Agent 1 — AoE2 datasets (aoe2companion + aoestats)                                                                                                                                                                         
                                                                                                                                                                                                                             
 You are a reviewer-adversarial agent conducting a gap analysis of two univariate                                                                                                                                           
@@ -34,16 +32,16 @@ For aoe2companion:
 4. src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/leaderboards_raw.yaml                                                                                                                             
 5. src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/profiles_raw.yaml                                                                                                                                 
 6. sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_04_univariate_census.py                                                                                                                                          
-7. planning/plan_aoe2companion_01_02_04_fix.md                                                                                                                                                                             
-8. planning/plan_aoe2companion_01_02_04_fix.critique.md
+7. planning/plan_aoe2companion_01_02_04*.md                                                                                                                                                                             
+8. planning/plan_aoe2companion_01_02_04*.critique.md
                                                                                                                                                                                                                             
 For aoestats:   
 1. src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/raw/matches_raw.yaml                                                                                                                                       
 2. src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/raw/players_raw.yaml                                                                                                                                       
 3. src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/raw/overviews_raw.yaml
 4. sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_04_univariate_census.py                                                                                                                                               
-5. planning/plan_aoestats_01_02_04_fix.md                                                                                                                                                                                  
-6. planning/plan_aoestats_01_02_04_fix.critique.md                                                                                                                                                                         
+5. planning/plan_aoestats_01_02_04*.md                                                                                                                                                                                  
+6. planning/plan_aoestats_01_02_04*.critique.md                                                                                                                                                                         
                                                                                                                                                                                                                             
 ## What to produce
                                                                                                                                                                                                                             
@@ -110,8 +108,8 @@ The canonical EDA Manual requirements for a univariate census (Section 3.1) are:
 6. src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/message_events_raw.yaml                                                                                                                                 
 7. src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/raw/map_aliases_raw.yaml                                                                                                                                    
 8. sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_census.py                                                                                                                                                
-9. planning/plan_sc2egset_01_02_04_fix.md                                                                                                                                                                                  
-10. planning/plan_sc2egset_01_02_04_fix.critique.md
+9. planning/plan_sc2egset_01_02_04*.md                                                                                                                                                                                  
+10. planning/plan_sc2egset_01_02_04*.critique.md
                                                                                                                                                                                                                             
 ## What to produce
                                                                                                                                                                                                                             
