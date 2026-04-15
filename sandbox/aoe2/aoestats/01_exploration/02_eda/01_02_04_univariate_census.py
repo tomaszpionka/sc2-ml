@@ -37,6 +37,7 @@ import duckdb
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from rts_predict.common.eda_census import profile_table
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOESTATS_DB_FILE
 
@@ -1339,11 +1340,36 @@ findings["z_score_outliers_deferred"] = {
 }
 
 # %% [markdown]
+# ## Systematic Column Profile (Top-5 / Bottom-5)
+#
+# EDA Manual Section 3.1: top-5 most frequent and bottom-5 least frequent
+# values for every column in every raw table. Uses shared profile_table()
+# utility. n_top=5 per Tukey (1977) exploratory convention.
+# Invariant #6: all SQL captured in sql_queries for artifact emission.
+# Note: overviews_raw STRUCT[] columns have cardinality=null and
+# array_length instead of top_n/bottom_n — correct behavior for LIST types.
+
+# %%
+for _tbl in ["matches_raw", "players_raw", "overviews_raw"]:
+    _specs = [
+        {"name": r["column_name"], "dtype": r["column_type"]}
+        for _, r in con.execute(f"DESCRIBE {_tbl}").df().iterrows()
+    ]
+    _census = profile_table(con, _tbl, _specs)
+    findings[f"{_tbl}_census"] = _census["profiles"]
+    for _col, _sqls in _census["sql_registry"].items():
+        sql_queries[f"census.{_tbl}.{_col}.null"] = _sqls["sql_null"]
+        sql_queries[f"census.{_tbl}.{_col}.top_n"] = _sqls["sql_top_n"]
+        sql_queries[f"census.{_tbl}.{_col}.bottom_n"] = _sqls["sql_bottom_n"]
+    print(f"census complete: {_tbl} ({len(_census['profiles'])} columns)")
+
+# %% [markdown]
 # ## Section J: Write JSON and markdown artifacts
 #
 # JSON with all findings. Markdown with all SQL verbatim (Invariant #6).
 
 # %%
+findings["sql_queries"] = sql_queries
 artifact_data = {
     "step": "01_02_04",
     "dataset": "aoestats",
