@@ -8,6 +8,21 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Statistical Tests (pass-3 addition)
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** Mann-Whitney U tests with rank-biserial r added to bivariate EDA
+
+### 01_02_06 — Statistical Tests (pass-3 addition, 2026-04-15)
+
+Added Mann-Whitney U tests for ratingDiff (POST-GAME leakage diagnostic) and rating (AMBIGUOUS).
+- ratingDiff by won: r_rb = -1.0 (near -1.0 confirms POST-GAME leakage — winners have ratingDiff > 0, losers < 0, perfectly separated)
+- rating by won: r_rb = -0.0086 (near 0 supports AMBIGUOUS classification — negligible discriminative power)
+Cross-game note: PRE-GAME effect sizes now comparable to sc2egset MMR (r=-0.09).
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
 
 **Category:** A (science)

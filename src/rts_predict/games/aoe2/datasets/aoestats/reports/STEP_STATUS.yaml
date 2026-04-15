@@ -33,6 +33,7 @@ steps:
     name: "DuckDB Ingestion"
     pipeline_section: "01_02"
     status: complete
+    completed_at: "2026-04-13"
   "01_02_03":
     name: "Raw Schema DESCRIBE"
     pipeline_section: "01_02"

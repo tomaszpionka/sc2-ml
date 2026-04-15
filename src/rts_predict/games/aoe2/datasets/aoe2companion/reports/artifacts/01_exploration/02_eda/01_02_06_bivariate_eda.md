@@ -33,6 +33,32 @@ result. Final classification will be written here post-execution.
 | 7 | ratingDiff by Leaderboard (Q7) | `01_02_06_ratingdiff_by_leaderboard.png` | Q7 -- leakage universality | POST-GAME (Inv. #3) |
 | 8 | ratingDiff by Outcome per LB (Q7) | `01_02_06_ratingdiff_by_won_by_leaderboard.png` | Q7 -- leakage universality | POST-GAME (Inv. #3) |
 
+## Statistical Tests -- Leakage Diagnostics
+
+> Tests on POST-GAME columns measure **leakage magnitude**, not prediction power. A large effect size here confirms the column must be excluded from all feature sets.
+
+### ratingdiff_by_won
+- **Temporal status:** POST-GAME (confirmed leakage -- Inv. #3)
+- **Mann-Whitney U:** 507,748,821,116,568
+- **p-value:** 0.0000e+00
+- **Rank-biserial r (Wendt 1972):** -1.0000
+- **n(won=True):** 22,532,474 | **n(won=False):** 22,534,093
+- **Median(won=True):** 16.00 | **Median(won=False):** -16.00
+
+
+## Statistical Tests -- Exploratory Discrimination
+
+> Tests on PRE-GAME / AMBIGUOUS columns measure **discriminative power** at prediction time. These findings generate hypotheses for Phase 02 and Phase 03 (no confirmatory claims; no multiple comparison correction).
+
+### rating_by_won
+- **Temporal status:** AMBIGUOUS (Inv. #3 -- temporal status unresolved)
+- **Mann-Whitney U:** 255,984,614,523,364
+- **p-value:** 0.0000e+00
+- **Rank-biserial r (Wendt 1972):** -0.0086
+- **n(won=True):** 22,531,103 | **n(won=False):** 22,528,795
+- **Median(won=True):** 1051.00 | **Median(won=False):** 1047.00
+
+
 ## SQL Queries (Invariant #6)
 
 ### ratingdiff_percentiles_by_won
@@ -73,6 +99,16 @@ GROUP BY won, ratingDiff
 ORDER BY won, ratingDiff
 ```
 
+### ratingdiff_raw_by_won
+
+```sql
+SELECT won, ratingDiff
+FROM matches_raw
+WHERE won IS NOT NULL
+  AND ratingDiff IS NOT NULL
+  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')
+```
+
 ### rating_percentiles_by_won
 
 ```sql
@@ -109,6 +145,17 @@ WHERE won IS NOT NULL
   AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')
 GROUP BY won, bin
 ORDER BY won, bin
+```
+
+### rating_raw_by_won
+
+```sql
+SELECT won, rating
+FROM matches_raw
+WHERE won IS NOT NULL
+  AND rating IS NOT NULL
+  AND rating > 0
+  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')
 ```
 
 ### rating_vs_ratingdiff_scatter

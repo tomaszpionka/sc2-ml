@@ -278,7 +278,7 @@ data-derived from census (Invariant #7).
 | `apm_hist` | APM histogram; right-skewed with professional-level tail; IN-GAME annotated |
 | `sq_split` | SQ split view excluding 2 INT32_MIN sentinels; shows narrow distribution 60–90; IN-GAME annotated |
 | `supplycapped_hist` | supplyCappedPercent histogram; bimodal structure; IN-GAME annotated |
-| `duration_hist` | Dual-panel body (0–22.5 min, p95-derived from `census["duration_stats"]["p95"] / 22.4`) + full log; IN-GAME annotated |
+| `duration_hist` | Dual-panel body (0–22.5 min, p95-derived from `census["duration_stats"]["p95"] / 22.4`) + full log; POST-GAME annotated |
 | `mmr_zero_interpretation` | Cross-tab of MMR=0 vs result and vs highestLeague; shows zero-MMR is not outcome-correlated |
 | `temporal_coverage` | Match count by year/month 2016–2024; shows tournament activity peaks |
 | `isinclan_bar` | Clan membership — majority of tournament players in clans |
@@ -391,7 +391,7 @@ Remarkably clean: **0% NULLs across all columns in every table and view.** This 
 
 **Pre-game** (struct_flat): time_utc, game_version_header/meta, base_build, data_build, map_name, max_players, map_size_x/y, is_blizzard_map.
 
-**In-game** (struct_flat): elapsed_game_loops — game duration, known only after match ends.
+**Post-game** (struct_flat): elapsed_game_loops — total match duration; only known after match ends (same semantic class as AoE2 duration_sec / duration_min).
 
 **Constant / dead** (no predictive information): game_speed, game_speed_init (always "Faster"); gameEventsErr, messageEventsErr, trackerEvtsErr (always FALSE).
 

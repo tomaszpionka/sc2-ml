@@ -1028,7 +1028,7 @@ else:
 # dataset based on its row count and the cardinality distribution.
 
 # %%
-# Field classification: pre-game / in-game / identifier / target / constant
+# Field classification: pre-game / in-game / post-game / identifier / target / constant
 # Covers all 25 replay_players_raw columns and all struct_flat-extracted fields.
 # Purpose: downstream steps use this dict to select features without parsing prose.
 FIELD_CLASSIFICATION = {
@@ -1049,7 +1049,8 @@ FIELD_CLASSIFICATION = {
             "game_version_meta", "map_name", "max_players", "map_size_x",
             "map_size_y", "is_blizzard_map", "is_blizzard_map_init",
         ],
-        "in_game": ["elapsed_game_loops"],
+        "in_game": [],  # APM, SQ, supplyCappedPercent are in replay_players_raw, not here
+        "post_game": ["elapsed_game_loops"],  # total match duration; only known after match ends (same as AoE2 duration_sec)
         "constant": [
             "game_speed", "game_speed_init", "gameEventsErr",
             "messageEventsErr", "trackerEvtsErr",
@@ -1063,6 +1064,13 @@ FIELD_CLASSIFICATION = {
         "in_game": (
             "Computed from replay actions; available only post-game. Using these "
             "as features requires in-game prediction framing (Phase 02 decision)."
+        ),
+        "post_game": (
+            "Terminal match metadata knowable only after the result is set. "
+            "elapsed_game_loops (total match duration) is only defined once the match "
+            "concludes — unlike APM/SQ which are computed incrementally from action "
+            "streams. Post-game scalars are excluded from all predictive feature sets "
+            "(Invariant #3)."
         ),
         "identifier": "Player/replay identity columns. Not features.",
         "target": "Prediction target. Never a feature.",
@@ -1394,7 +1402,7 @@ md_lines += [
     (
         "Note: APM, SQ, and supplyCappedPercent are in-game-only fields. "
         "See `field_classification` in the JSON artifact for the full "
-        "pre-game/in-game/identifier/target/constant taxonomy."
+        "pre-game/in-game/post-game/identifier/target/constant taxonomy."
     ),
     "",
 ]

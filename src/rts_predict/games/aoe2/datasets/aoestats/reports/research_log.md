@@ -8,6 +8,22 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Statistical Tests (pass-3 addition)
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** Mann-Whitney U tests with rank-biserial r added to bivariate EDA
+
+### 01_02_06 — Statistical Tests (pass-3 addition, 2026-04-15)
+
+Added Mann-Whitney U tests for old_rating and match_rating_diff (both PRE-GAME).
+Sample: RESERVOIR(5M) per query; SE(r) = 0.00045.
+- old_rating by winner: r_rb = -0.0159 (small effect; pre-game rating alone is weak signal)
+- match_rating_diff by winner: r_rb = -0.2041 (medium effect; confirmed PRE-GAME from T03 scatter, not leakage)
+Cross-game note: matches sc2egset Mann-Whitney U reporting (I8 compliance).
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
 
 **Category:** A (science)

@@ -3,16 +3,16 @@
   "dataset": "aoestats",
   "match_rating_diff_leakage": {
     "leakage_status": "PRE_GAME",
-    "detail": "match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0530). Likely a pre-game feature.",
-    "pearson_r": 0.0529673488966621,
-    "pearson_p": 3.3276065801106513e-124,
-    "ols_slope": 0.016725632472308898,
-    "ols_intercept": -0.3459053655085259,
-    "ols_r_squared": 0.002805540049141057,
+    "detail": "match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0541). Likely a pre-game feature.",
+    "pearson_r": 0.05407003452479056,
+    "pearson_p": 2.3673232617131188e-129,
+    "ols_slope": 0.01722585413536649,
+    "ols_intercept": -0.311040837079124,
+    "ols_r_squared": 0.0029235686335121716,
     "exact_match_count": 712331,
     "exact_match_pct": 0.6619,
     "total_rows_tested": 107620495,
-    "sample_size_scatter": 199986
+    "sample_size_scatter": 199984
   },
   "old_rating_by_winner": [
     {
@@ -410,49 +410,49 @@
       "old_rating": {
         "old_rating": 1.0,
         "new_rating": 0.9976,
-        "match_rating_diff": 0.0583,
-        "feudal_age_uptime": -0.3456,
-        "castle_age_uptime": -0.2495,
-        "imperial_age_uptime": -0.2054
+        "match_rating_diff": 0.0572,
+        "feudal_age_uptime": -0.3511,
+        "castle_age_uptime": -0.2546,
+        "imperial_age_uptime": -0.2101
       },
       "new_rating": {
         "old_rating": 0.9976,
         "new_rating": 1.0,
-        "match_rating_diff": 0.0626,
-        "feudal_age_uptime": -0.3484,
-        "castle_age_uptime": -0.2528,
-        "imperial_age_uptime": -0.2089
+        "match_rating_diff": 0.0613,
+        "feudal_age_uptime": -0.3535,
+        "castle_age_uptime": -0.2577,
+        "imperial_age_uptime": -0.2127
       },
       "match_rating_diff": {
-        "old_rating": 0.0583,
-        "new_rating": 0.0626,
+        "old_rating": 0.0572,
+        "new_rating": 0.0613,
         "match_rating_diff": 1.0,
-        "feudal_age_uptime": -0.0216,
-        "castle_age_uptime": -0.0277,
-        "imperial_age_uptime": -0.0256
+        "feudal_age_uptime": -0.0213,
+        "castle_age_uptime": -0.0374,
+        "imperial_age_uptime": -0.024
       },
       "feudal_age_uptime": {
-        "old_rating": -0.3456,
-        "new_rating": -0.3484,
-        "match_rating_diff": -0.0216,
+        "old_rating": -0.3511,
+        "new_rating": -0.3535,
+        "match_rating_diff": -0.0213,
         "feudal_age_uptime": 1.0,
-        "castle_age_uptime": 0.1748,
-        "imperial_age_uptime": 0.1655
+        "castle_age_uptime": 0.1878,
+        "imperial_age_uptime": 0.1652
       },
       "castle_age_uptime": {
-        "old_rating": -0.2495,
-        "new_rating": -0.2528,
-        "match_rating_diff": -0.0277,
-        "feudal_age_uptime": 0.1748,
+        "old_rating": -0.2546,
+        "new_rating": -0.2577,
+        "match_rating_diff": -0.0374,
+        "feudal_age_uptime": 0.1878,
         "castle_age_uptime": 1.0,
-        "imperial_age_uptime": 0.6467
+        "imperial_age_uptime": 0.6445
       },
       "imperial_age_uptime": {
-        "old_rating": -0.2054,
-        "new_rating": -0.2089,
-        "match_rating_diff": -0.0256,
-        "feudal_age_uptime": 0.1655,
-        "castle_age_uptime": 0.6467,
+        "old_rating": -0.2101,
+        "new_rating": -0.2127,
+        "match_rating_diff": -0.024,
+        "feudal_age_uptime": 0.1652,
+        "castle_age_uptime": 0.6445,
         "imperial_age_uptime": 1.0
       }
     },
@@ -460,40 +460,66 @@
       "avg_elo": {
         "avg_elo": 1.0,
         "team_0_elo": 0.9964,
-        "team_1_elo": 0.9962,
-        "duration_sec": -0.1731,
-        "irl_duration_sec": -0.1731
+        "team_1_elo": 0.9961,
+        "duration_sec": -0.1734,
+        "irl_duration_sec": -0.1734
       },
       "team_0_elo": {
         "avg_elo": 0.9964,
         "team_0_elo": 1.0,
-        "team_1_elo": 0.9859,
-        "duration_sec": -0.1712,
-        "irl_duration_sec": -0.1712
+        "team_1_elo": 0.9857,
+        "duration_sec": -0.172,
+        "irl_duration_sec": -0.172
       },
       "team_1_elo": {
-        "avg_elo": 0.9962,
-        "team_0_elo": 0.9859,
+        "avg_elo": 0.9961,
+        "team_0_elo": 0.9857,
         "team_1_elo": 1.0,
-        "duration_sec": -0.173,
-        "irl_duration_sec": -0.173
+        "duration_sec": -0.1729,
+        "irl_duration_sec": -0.1729
       },
       "duration_sec": {
-        "avg_elo": -0.1731,
-        "team_0_elo": -0.1712,
-        "team_1_elo": -0.173,
+        "avg_elo": -0.1734,
+        "team_0_elo": -0.172,
+        "team_1_elo": -0.1729,
         "duration_sec": 1.0,
         "irl_duration_sec": 1.0
       },
       "irl_duration_sec": {
-        "avg_elo": -0.1731,
-        "team_0_elo": -0.1712,
-        "team_1_elo": -0.173,
+        "avg_elo": -0.1734,
+        "team_0_elo": -0.172,
+        "team_1_elo": -0.1729,
         "duration_sec": 1.0,
         "irl_duration_sec": 1.0
       }
     },
-    "sample_size_players": 499967,
-    "sample_size_matches": 499927
+    "sample_size_players": 499972,
+    "sample_size_matches": 499912
+  },
+  "test_results": {
+    "match_rating_diff_by_winner": {
+      "test": "Mann-Whitney U",
+      "temporal_annotation": "PRE-GAME (confirmed in T03 leakage test)",
+      "U_statistic": 3762711920606.0,
+      "p_value": 0.0,
+      "rank_biserial_r": -0.2041,
+      "n_winner": 2500163,
+      "n_loser": 2499835,
+      "median_winner": 4.0,
+      "median_loser": -4.0,
+      "sample_note": "RESERVOIR(5_000_000); SE(r)=0.00045"
+    },
+    "old_rating_by_winner": {
+      "test": "Mann-Whitney U",
+      "temporal_annotation": "PRE-GAME",
+      "U_statistic": 3174601597959.5,
+      "p_value": 1.7690737587975904e-207,
+      "rank_biserial_r": -0.0159,
+      "n_winner": 2498214,
+      "n_loser": 2501786,
+      "median_winner": 1070.0,
+      "median_loser": 1063.0,
+      "sample_note": "RESERVOIR(5_000_000); SE(r)=0.00045"
+    }
   }
 }

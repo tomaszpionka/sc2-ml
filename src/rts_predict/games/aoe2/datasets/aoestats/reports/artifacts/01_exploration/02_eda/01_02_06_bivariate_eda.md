@@ -8,12 +8,12 @@
 
 **Status: PRE_GAME**
 
-match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0530). Likely a pre-game feature.
+match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0541). Likely a pre-game feature.
 
-- Pearson r: 0.052967
-- OLS slope: 0.016726
-- OLS intercept: -0.345905
-- R-squared: 0.002806
+- Pearson r: 0.054070
+- OLS slope: 0.017226
+- OLS intercept: -0.311041
+- R-squared: 0.002924
 - Exact match (tolerance 0.01): 712,331 / 107,620,495 (0.66%)
 
 ## Plot Index
@@ -28,6 +28,29 @@ match_rating_diff does NOT correlate with new_rating - old_rating (Pearson r=0.0
 | 6 | opening_winrate | `01_02_06_opening_winrate.png` | IN-GAME (Inv. #3) |
 | 7 | age_uptime_by_winner | `01_02_06_age_uptime_by_winner.png` | IN-GAME (Inv. #3) |
 | 8 | spearman_correlation | `01_02_06_spearman_correlation.png` | Mixed -- includes post-game columns |
+
+## Statistical Tests -- Exploratory Discrimination
+
+> PRE-GAME features. Effect sizes measure discriminative power at prediction time. Exploratory only (Tukey-style EDA). No multiple comparison correction applied.
+
+### old_rating_by_winner
+- **Temporal status:** PRE-GAME
+- **Mann-Whitney U:** 3,174,601,597,960
+- **p-value:** 1.7691e-207
+- **Rank-biserial r (Wendt 1972):** -0.0159
+- **n(winner):** 2,498,214 | **n(loser):** 2,501,786
+- **Median(winner):** 1070.00 | **Median(loser):** 1063.00
+- **Note:** RESERVOIR(5_000_000); SE(r)=0.00045
+
+### match_rating_diff_by_winner
+- **Temporal status:** PRE-GAME (confirmed in T03 leakage test)
+- **Mann-Whitney U:** 3,762,711,920,606
+- **p-value:** 0.0000e+00
+- **Rank-biserial r (Wendt 1972):** -0.2041
+- **n(winner):** 2,500,163 | **n(loser):** 2,499,835
+- **Median(winner):** 4.00 | **Median(loser):** -4.00
+- **Note:** RESERVOIR(5_000_000); SE(r)=0.00045
+
 
 ## SQL Queries
 
@@ -59,6 +82,16 @@ WHERE match_rating_diff IS NOT NULL
 USING SAMPLE RESERVOIR(200000)
 ```
 
+### match_rating_diff_raw_by_winner
+
+```sql
+SELECT winner, match_rating_diff
+FROM players_raw
+WHERE match_rating_diff IS NOT NULL
+  AND winner IS NOT NULL
+USING SAMPLE RESERVOIR(5000000)
+```
+
 ### old_rating_by_winner_buckets
 
 ```sql
@@ -87,6 +120,16 @@ FROM players_raw
 WHERE old_rating > 0
 GROUP BY winner
 ORDER BY winner
+```
+
+### old_rating_raw_by_winner
+
+```sql
+SELECT winner, old_rating
+FROM players_raw
+WHERE old_rating >= 0
+  AND winner IS NOT NULL
+USING SAMPLE RESERVOIR(5000000)
 ```
 
 ### elo_diff_by_winning_team

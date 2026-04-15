@@ -316,13 +316,13 @@ notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_c
 ```yaml
 step_number: "01_02_05"
 name: "Univariate EDA Visualizations"
-description: "14 visualization plots for the sc2egset univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on in-game columns (APM, SQ, supplyCappedPercent, elapsed_game_loops) per Invariant #3."
+description: "14 visualization plots for the sc2egset univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on in-game columns (APM, SQ, supplyCappedPercent) and post-game column (elapsed_game_loops) per Invariant #3."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
 dataset: "sc2egset"
 question: "What do the distributions from 01_02_04 look like visually, and do the visual patterns confirm or challenge the statistical summaries?"
-method: "Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (MMR, APM, SQ, supplyCappedPercent, duration). Produce 14 plots: result 2-bar, categorical 3-panel (race/highestLeague/region), selectedRace bar, MMR split view, APM histogram (IN-GAME), SQ split view (IN-GAME), supplyCappedPercent histogram (IN-GAME), duration dual-panel (IN-GAME), MMR zero-spike cross-tab, temporal coverage line, isInClan bar, clanTag top-20, map top-20 barh, player repeat frequency. Markdown artifact with SQL queries."
+method: "Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (MMR, APM, SQ, supplyCappedPercent, duration). Produce 14 plots: result 2-bar, categorical 3-panel (race/highestLeague/region), selectedRace bar, MMR split view, APM histogram (IN-GAME), SQ split view (IN-GAME), supplyCappedPercent histogram (IN-GAME), duration dual-panel (POST-GAME), MMR zero-spike cross-tab, temporal coverage line, isInClan bar, clanTag top-20, map top-20 barh, player repeat frequency. Markdown artifact with SQL queries."
 predecessors: "01_02_04"
 notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_05_visualizations.py"
 inputs:
@@ -353,7 +353,11 @@ outputs:
 reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
   - number: "3"
-    how_upheld: "All four in-game columns (APM, SQ, supplyCappedPercent, elapsed_game_loops) carry a visible annotation: 'IN-GAME — not available at prediction time (Inv. #3)'."
+    how_upheld: >-
+      Three in-game columns (APM, SQ, supplyCappedPercent) carry
+      'IN-GAME — not available at prediction time (Inv. #3)'.
+      Post-game column (elapsed_game_loops) carries
+      'POST-GAME — total duration; only known after match ends (Inv. #3)'.
   - number: "6"
     how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
   - number: "7"

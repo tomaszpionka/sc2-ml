@@ -43,6 +43,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import stats as scipy_stats
 
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
 from rts_predict.games.aoe2.config import AOE2COMPANION_DB_FILE
@@ -100,6 +101,14 @@ ratingdiff_stats = get_numeric_stat("ratingDiff")
 
 # %%
 sql_queries = {}
+test_results: dict[str, dict] = {}
+
+# %%
+bivariate_results = {
+    "step": "01_02_06",
+    "dataset": "aoe2companion",
+    "total_rows": total_rows,
+}
 
 # %%
 # I7: leaderboard filter derived from census categorical_profiles at runtime
@@ -207,6 +216,53 @@ fig.savefig(plots_dir / "01_02_06_ratingdiff_by_won.png", dpi=150, bbox_inches="
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_ratingdiff_by_won.png'}")
 
+# %%
+# Raw ratingDiff values for Mann-Whitney U test
+# NOTE: existing T03 uses histogram buckets -- we need row-level values for the test
+sql_queries["ratingdiff_raw_by_won"] = """
+SELECT won, ratingDiff
+FROM matches_raw
+WHERE won IS NOT NULL
+  AND ratingDiff IS NOT NULL
+  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')
+"""
+df_rd_raw = con.execute(sql_queries["ratingdiff_raw_by_won"]).fetchdf()
+print(f"ratingDiff raw rows: {len(df_rd_raw):,}")
+
+# %%
+# --- Mann-Whitney U: ratingDiff by won (POST-GAME leakage diagnostic) ---
+# I9: descriptive only. ratingDiff IS confirmed POST-GAME (T03 leakage test).
+# Effect size quantifies leakage magnitude -- expected near 1.0.
+_rd_win = df_rd_raw.loc[df_rd_raw["won"] == True, "ratingDiff"].values   # noqa: E712
+_rd_loss = df_rd_raw.loc[df_rd_raw["won"] == False, "ratingDiff"].values  # noqa: E712
+_u_rd, _p_rd = scipy_stats.mannwhitneyu(_rd_win, _rd_loss, alternative="two-sided")
+_r_rd = 1 - (2 * _u_rd) / (len(_rd_win) * len(_rd_loss))
+test_results["ratingdiff_by_won"] = {
+    "test": "Mann-Whitney U",
+    "temporal_annotation": "POST-GAME (confirmed leakage -- Inv. #3)",
+    "U_statistic": float(_u_rd),
+    "p_value": float(_p_rd),
+    "rank_biserial_r": round(float(_r_rd), 4),
+    "n_won_true": int(len(_rd_win)),
+    "n_won_false": int(len(_rd_loss)),
+    "median_won_true": float(np.median(_rd_win)),
+    "median_won_false": float(np.median(_rd_loss)),
+}
+print(f"ratingDiff by won: U={_u_rd:,.0f}, p={_p_rd:.4e}, r_rb={_r_rd:.4f}")
+
+# %%
+_win = df_rd_stats[df_rd_stats["won"] == True].iloc[0]   # noqa: E712
+_loss = df_rd_stats[df_rd_stats["won"] == False].iloc[0]  # noqa: E712
+bivariate_results["ratingdiff_leakage"] = {
+    "leakage_status": "POST_GAME",
+    "detail": "Winners have positive mean ratingDiff, losers negative, in every leaderboard.",
+    "won_true_mean": float(_win["mean_val"]),
+    "won_false_mean": float(_loss["mean_val"]),
+    "won_true_median": float(_win["median_val"]),
+    "won_false_median": float(_loss["median_val"]),
+    "n_1v1_filtered": int(_win["n"] + _loss["n"]),
+}
+
 # %% [markdown]
 # ## T04 -- rating by won Violin (Q2 -- Ambiguity Test)
 
@@ -302,6 +358,49 @@ fig.savefig(plots_dir / "01_02_06_rating_by_won.png", dpi=150, bbox_inches="tigh
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_rating_by_won.png'}")
 
+# %%
+sql_queries["rating_raw_by_won"] = """
+SELECT won, rating
+FROM matches_raw
+WHERE won IS NOT NULL
+  AND rating IS NOT NULL
+  AND rating > 0
+  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')
+"""
+df_rat_raw = con.execute(sql_queries["rating_raw_by_won"]).fetchdf()
+print(f"rating raw rows: {len(df_rat_raw):,}")
+
+# %%
+# --- Mann-Whitney U: rating by won (AMBIGUOUS temporal status) ---
+# I9: descriptive only. rating temporal status unresolved (see open questions).
+_rat_win = df_rat_raw.loc[df_rat_raw["won"] == True, "rating"].values   # noqa: E712
+_rat_loss = df_rat_raw.loc[df_rat_raw["won"] == False, "rating"].values  # noqa: E712
+_u_rat, _p_rat = scipy_stats.mannwhitneyu(_rat_win, _rat_loss, alternative="two-sided")
+_r_rat = 1 - (2 * _u_rat) / (len(_rat_win) * len(_rat_loss))
+test_results["rating_by_won"] = {
+    "test": "Mann-Whitney U",
+    "temporal_annotation": "AMBIGUOUS (Inv. #3 -- temporal status unresolved)",
+    "U_statistic": float(_u_rat),
+    "p_value": float(_p_rat),
+    "rank_biserial_r": round(float(_r_rat), 4),
+    "n_won_true": int(len(_rat_win)),
+    "n_won_false": int(len(_rat_loss)),
+    "median_won_true": float(np.median(_rat_win)),
+    "median_won_false": float(np.median(_rat_loss)),
+}
+print(f"rating by won: U={_u_rat:,.0f}, p={_p_rat:.4e}, r_rb={_r_rat:.4f}")
+
+# %%
+_rat_win = df_rat_stats[df_rat_stats["won"] == True].iloc[0]   # noqa: E712
+_rat_loss = df_rat_stats[df_rat_stats["won"] == False].iloc[0]  # noqa: E712
+bivariate_results["rating_ambiguity"] = {
+    "leakage_status": "AMBIGUOUS",
+    "detail": "Mean difference too small to resolve temporal status.",
+    "won_true_mean": float(_rat_win["mean_val"]),
+    "won_false_mean": float(_rat_loss["mean_val"]),
+    "mean_diff": float(_rat_win["mean_val"] - _rat_loss["mean_val"]),
+}
+
 # %% [markdown]
 # ## T05 -- rating vs ratingDiff Scatter (Q3 -- Structural Relationship)
 
@@ -351,8 +450,7 @@ ax.legend(fontsize=9, markerscale=5)
 ax.axhline(0, color="gray", linewidth=0.5, linestyle="--")
 
 # Correlation annotation
-from scipy.stats import spearmanr  # noqa: E402
-rho, pval = spearmanr(df_scatter["rating"], df_scatter["ratingDiff"])
+rho, pval = scipy_stats.spearmanr(df_scatter["rating"], df_scatter["ratingDiff"])
 ax.annotate(
     f"Spearman rho={rho:.4f}, p={pval:.2e}",
     xy=(0.02, 0.02), xycoords="axes fraction",
@@ -463,6 +561,15 @@ fig.tight_layout()
 fig.savefig(plots_dir / "01_02_06_duration_by_won.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_duration_by_won.png'}")
+
+# %%
+_dur_win = df_dur_stats[df_dur_stats["won"] == True].iloc[0]   # noqa: E712
+_dur_loss = df_dur_stats[df_dur_stats["won"] == False].iloc[0]  # noqa: E712
+bivariate_results["duration_by_won"] = {
+    "won_true_median_secs": float(_dur_win["median_secs"]),
+    "won_false_median_secs": float(_dur_loss["median_secs"]),
+    "temporal_status": "POST_GAME",
+}
 
 # %% [markdown]
 # ## T07 -- Multi-Panel Numeric Features by won (Q5)
@@ -608,9 +715,7 @@ print(f"Correlation sample rows: {n_corr:,}")
 
 # %%
 # Compute Spearman correlation matrix
-from scipy.stats import spearmanr as _spearmanr  # noqa: E402
-
-rho_matrix, p_matrix = _spearmanr(df_corr_sample[corr_columns])
+rho_matrix, p_matrix = scipy_stats.spearmanr(df_corr_sample[corr_columns])
 
 # Convert to labeled DataFrame
 rho_df = pd.DataFrame(rho_matrix, index=corr_columns, columns=corr_columns)
@@ -651,6 +756,13 @@ fig.savefig(plots_dir / "01_02_06_spearman_correlation.png", dpi=150, bbox_inche
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_spearman_correlation.png'}")
 
+# %%
+bivariate_results["spearman_correlation"] = {
+    "columns": corr_columns,
+    "matrix": rho_df.round(4).to_dict(),
+    "sample_size": n_corr,
+}
+
 # %% [markdown]
 # ## T09 -- ratingDiff Distribution by Leaderboard (Q7)
 
@@ -673,6 +785,9 @@ ORDER BY n DESC
 
 df_lb_rd = con.execute(sql_queries["ratingdiff_stats_by_leaderboard"]).fetchdf()
 print(df_lb_rd)
+
+# %%
+bivariate_results["ratingdiff_by_leaderboard"] = df_lb_rd.to_dict(orient="records")
 
 # %%
 fig, ax = plt.subplots(figsize=(14, 6))
@@ -730,6 +845,9 @@ ORDER BY leaderboard, won
 df_lb_won = con.execute(sql_queries["ratingdiff_by_won_by_leaderboard"]).fetchdf()
 
 # %%
+bivariate_results["ratingdiff_by_won_by_leaderboard"] = df_lb_won.to_dict(orient="records")
+
+# %%
 # Pivot to get won=True and won=False side by side
 df_pivot = df_lb_won.pivot_table(
     index="leaderboard", columns="won", values="mean_val"
@@ -770,6 +888,49 @@ fig.tight_layout()
 fig.savefig(plots_dir / "01_02_06_ratingdiff_by_won_by_leaderboard.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_ratingdiff_by_won_by_leaderboard.png'}")
+
+# %% [markdown]
+# ## T10b -- JSON Artifact
+
+# %%
+# --- JSON Artifact ---
+# Source I3 classifications from census field_classification (not hardcoded — avoids I7 drift)
+import json as _json_mod
+import pathlib
+_census_candidates = list(pathlib.Path("src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda").glob("01_02_04_univariate_census.json"))
+if _census_candidates:
+    _census_data = _json_mod.loads(_census_candidates[0].read_text())
+    _field_cls = _census_data.get("field_classification", {}).get("fields", {})
+    # Map census lowercase enum to uppercase for cross-dataset consistency
+    _cls_map = {"pre_game": "PRE_GAME", "post_game": "POST_GAME",
+                "ambiguous_pre_or_post": "AMBIGUOUS", "in_game": "IN_GAME",
+                "target": "TARGET", "identifier": "IDENTIFIER"}
+    i3_classifications = {col: _cls_map.get(v, v.upper()) for col, v in _field_cls.items()
+                          if col in ["ratingDiff", "rating", "duration", "duration_min",
+                                     "population", "speedFactor", "treatyLength"]}
+else:
+    # Explicit fallback if census path not found — document divergence
+    i3_classifications = {
+        "ratingDiff": "POST_GAME",   # confirmed POST_GAME in T03
+        "rating": "AMBIGUOUS",       # unresolved — see open questions
+        "duration": "POST_GAME",     # POST_GAME by schema (only known after match)
+        "population": "PRE_GAME",
+        "speedFactor": "PRE_GAME",
+        "treatyLength": "PRE_GAME",
+    }
+    print("WARNING: Census JSON not found; using hardcoded I3 classifications as fallback")
+
+# NOTE: key names are dataset-specific by design — ratingDiff in aoe2companion
+# vs match_rating_diff in aoestats. No cross-dataset key uniformity is required
+# at step 01_02_06; each dataset's JSON captures dataset-specific analyses.
+bivariate_results["test_results"] = test_results
+bivariate_results["sql_queries"] = {k: v.strip() for k, v in sql_queries.items()}
+bivariate_results["i3_classifications"] = i3_classifications
+
+_json_out_path = artifacts_dir / "01_02_06_bivariate_eda.json"
+with open(_json_out_path, "w") as _jf:
+    _json_mod.dump(bivariate_results, _jf, indent=2, default=str)
+print(f"Saved JSON artifact: {_json_out_path} ({_json_out_path.stat().st_size:,} bytes)")
 
 # %% [markdown]
 # ## T11 -- Markdown Artifact and Verification
@@ -842,6 +1003,47 @@ md_lines = [
 for row in plot_index:
     md_lines.append(f"| {row[0]} | {row[1]} | `{row[2]}` | {row[3]} | {row[4]} |")
 
+md_lines.extend(["", "## Statistical Tests -- Leakage Diagnostics", ""])
+md_lines.append(
+    "> Tests on POST-GAME columns measure **leakage magnitude**, not prediction power. "
+    "A large effect size here confirms the column must be excluded from all feature sets."
+)
+md_lines.append("")
+for key in ["ratingdiff_by_won"]:
+    if key in test_results:
+        res = test_results[key]
+        md_lines.extend([
+            f"### {key}",
+            f"- **Temporal status:** {res['temporal_annotation']}",
+            f"- **Mann-Whitney U:** {res['U_statistic']:,.0f}",
+            f"- **p-value:** {res['p_value']:.4e}",
+            f"- **Rank-biserial r (Wendt 1972):** {res['rank_biserial_r']:.4f}",
+            f"- **n(won=True):** {res['n_won_true']:,} | **n(won=False):** {res['n_won_false']:,}",
+            f"- **Median(won=True):** {res['median_won_true']:.2f} | **Median(won=False):** {res['median_won_false']:.2f}",
+            "",
+        ])
+
+md_lines.extend(["", "## Statistical Tests -- Exploratory Discrimination", ""])
+md_lines.append(
+    "> Tests on PRE-GAME / AMBIGUOUS columns measure **discriminative power** "
+    "at prediction time. These findings generate hypotheses for Phase 02 and "
+    "Phase 03 (no confirmatory claims; no multiple comparison correction)."
+)
+md_lines.append("")
+for key in ["rating_by_won"]:
+    if key in test_results:
+        res = test_results[key]
+        md_lines.extend([
+            f"### {key}",
+            f"- **Temporal status:** {res['temporal_annotation']}",
+            f"- **Mann-Whitney U:** {res['U_statistic']:,.0f}",
+            f"- **p-value:** {res['p_value']:.4e}",
+            f"- **Rank-biserial r (Wendt 1972):** {res['rank_biserial_r']:.4f}",
+            f"- **n(won=True):** {res['n_won_true']:,} | **n(won=False):** {res['n_won_false']:,}",
+            f"- **Median(won=True):** {res['median_won_true']:.2f} | **Median(won=False):** {res['median_won_false']:.2f}",
+            "",
+        ])
+
 md_lines.extend([
     "",
     "## SQL Queries (Invariant #6)",
@@ -884,3 +1086,28 @@ print(f"Written: {md_path}")
 con.close()
 print("DuckDB connection closed.")
 print(f"Step 01_02_06 complete: {len(expected_plots)} plots + 1 markdown artifact.")
+
+# %%
+# Gate: JSON artifact
+assert _json_out_path.exists(), f"Missing JSON artifact: {_json_out_path}"
+with open(_json_out_path) as _jf:
+    _j = _json_mod.load(_jf)
+_required = ["step", "dataset", "total_rows", "ratingdiff_leakage",
+             "rating_ambiguity", "duration_by_won", "spearman_correlation",
+             "ratingdiff_by_leaderboard", "ratingdiff_by_won_by_leaderboard",
+             "sql_queries", "i3_classifications", "test_results"]
+_missing = [k for k in _required if k not in _j]
+assert not _missing, f"JSON missing keys: {_missing}"
+assert _j["ratingdiff_leakage"]["leakage_status"] == "POST_GAME"
+assert _j["rating_ambiguity"]["leakage_status"] == "AMBIGUOUS"
+print(f"JSON artifact gate PASSED: {len(_j)} top-level keys")
+
+# %%
+# Gate: Mann-Whitney U test results
+assert "ratingdiff_by_won" in test_results
+assert "rating_by_won" in test_results
+for _k, _res in test_results.items():
+    assert _res["test"] == "Mann-Whitney U"
+    assert -1.0 <= _res["rank_biserial_r"] <= 1.0, f"r_rb out of range: {_res['rank_biserial_r']}"
+    assert _res["n_won_true"] > 0 and _res["n_won_false"] > 0
+print("Gate: aoe2companion Mann-Whitney U results verified.")

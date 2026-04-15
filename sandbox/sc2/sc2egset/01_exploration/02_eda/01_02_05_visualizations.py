@@ -398,7 +398,7 @@ plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_supplycapped_hist.png'}")
 
 # %% [markdown]
-# ## T10 -- Plot 8: Duration Dual-Panel with IN-GAME Annotation (Q7)
+# ## T10 -- Plot 8: Duration Dual-Panel with POST-GAME Annotation (Q7)
 
 # %%
 sql_queries["hist_duration"] = (
@@ -450,7 +450,7 @@ ax_full.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}"))
 
 for ax_panel in [ax_body, ax_full]:
     ax_panel.annotate(
-        "IN-GAME \u2014 not available at prediction time (Inv. #3)",
+        "POST-GAME \u2014 total duration; only known after match ends (Inv. #3)",
         xy=(0.02, 0.98), xycoords="axes fraction",
         ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
         bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
@@ -778,7 +778,7 @@ md_lines = [
     "| 5 | APM Histogram | 01_02_05_apm_hist.png | Near-symmetric distribution (skewness=-0.20) centered around median. Esports-grade players: median ~349 APM. | IN-GAME (Inv. #3) |",
     "| 6 | SQ Split View | 01_02_05_sq_split.png | Left panel shows INT32_MIN sentinel as isolated spike far below main mass. Right panel (sentinel excluded) shows continuous distribution in -51 to 187 range. | IN-GAME (Inv. #3) |",
     "| 7 | supplyCappedPercent Histogram | 01_02_05_supplycapped_hist.png | Right-skewed (skewness=2.25) with median near 6; 95th percentile at 16, confirming most players rarely hit supply cap. | IN-GAME (Inv. #3) |",
-    "| 8 | Duration Dual-Panel | 01_02_05_duration_hist.png | Body panel clipped at p95=22.5 min shows main mass. Full-range log-y panel reveals extreme outliers. SC2 games shorter than AoE2 (cf. 63 min / 79 min). | IN-GAME (Inv. #3) |",
+    "| 8 | Duration Dual-Panel | 01_02_05_duration_hist.png | Body panel clipped at p95=22.5 min shows main mass. Full-range log-y panel reveals extreme outliers. SC2 games shorter than AoE2 (cf. 63 min / 79 min). | POST-GAME (Inv. #3) |",
     "| 9 | MMR Zero Cross-Tab | 01_02_05_mmr_zero_interpretation.png | MMR=0 rate uniform across result categories (~83%) and league tiers, confirming zero is a missing-data sentinel not correlated with outcome. | N/A |",
     "| 10 | Temporal Coverage | 01_02_05_temporal_coverage.png | 2016-2024 span. Monthly volume generally increases through mid-period with visible gap in early 2016. Low-count months annotated. | N/A |",
     "| 11 | isInClan Bar | 01_02_05_isinclan_bar.png | 74% not in clan, 26% in clan. Minority feature worth retaining for feature engineering. | N/A |",

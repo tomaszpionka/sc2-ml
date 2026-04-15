@@ -1,0 +1,621 @@
+{
+  "step": "01_02_06",
+  "dataset": "aoe2companion",
+  "total_rows": 277099059,
+  "ratingdiff_leakage": {
+    "leakage_status": "POST_GAME",
+    "detail": "Winners have positive mean ratingDiff, losers negative, in every leaderboard.",
+    "won_true_mean": 16.635071097829737,
+    "won_false_mean": -17.57210143758615,
+    "won_true_median": 16.0,
+    "won_false_median": -16.0,
+    "n_1v1_filtered": 45066567
+  },
+  "rating_ambiguity": {
+    "leakage_status": "AMBIGUOUS",
+    "detail": "Mean difference too small to resolve temporal status.",
+    "won_true_mean": 1095.3116491012447,
+    "won_false_mean": 1088.3260610254565,
+    "mean_diff": 6.9855880757882005
+  },
+  "duration_by_won": {
+    "won_true_median_secs": 1433.0,
+    "won_false_median_secs": 1433.0,
+    "temporal_status": "POST_GAME"
+  },
+  "spearman_correlation": {
+    "columns": [
+      "rating",
+      "ratingDiff",
+      "duration_min",
+      "population",
+      "speedFactor",
+      "treatyLength"
+    ],
+    "matrix": {
+      "rating": {
+        "rating": 1.0,
+        "ratingDiff": 0.005,
+        "duration_min": -0.129,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      },
+      "ratingDiff": {
+        "rating": 0.005,
+        "ratingDiff": 1.0,
+        "duration_min": -0.0166,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      },
+      "duration_min": {
+        "rating": -0.129,
+        "ratingDiff": -0.0166,
+        "duration_min": 1.0,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      },
+      "population": {
+        "rating": NaN,
+        "ratingDiff": NaN,
+        "duration_min": NaN,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      },
+      "speedFactor": {
+        "rating": NaN,
+        "ratingDiff": NaN,
+        "duration_min": NaN,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      },
+      "treatyLength": {
+        "rating": NaN,
+        "ratingDiff": NaN,
+        "duration_min": NaN,
+        "population": NaN,
+        "speedFactor": NaN,
+        "treatyLength": NaN
+      }
+    },
+    "sample_size": 16119
+  },
+  "ratingdiff_by_leaderboard": [
+    {
+      "leaderboard": "rm_team",
+      "n": 69451391,
+      "mean_val": -0.15097451395897887,
+      "median_val": 0.0,
+      "std_val": 17.34245768751586,
+      "p25": -16.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "n": 39733182,
+      "mean_val": -0.43712484441845106,
+      "median_val": 0.0,
+      "std_val": 17.604075220927857,
+      "p25": -16.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "unranked",
+      "n": 24416051,
+      "mean_val": 0.2853714959884381,
+      "median_val": 0.0,
+      "std_val": 15.019123798066486,
+      "p25": -10.0,
+      "p75": 11.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "n": 12589326,
+      "mean_val": -0.16199739366507787,
+      "median_val": 0.0,
+      "std_val": 20.799159218722664,
+      "p25": -16.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "n": 5334176,
+      "mean_val": -0.7074526599797232,
+      "median_val": 0.0,
+      "std_val": 21.879496201940107,
+      "p25": -16.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "n": 2376705,
+      "mean_val": -0.479542055072043,
+      "median_val": 0.0,
+      "std_val": 21.04702534556912,
+      "p25": -16.0,
+      "p75": 15.0
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "n": 1835944,
+      "mean_val": -0.1393947745682875,
+      "median_val": 0.0,
+      "std_val": 16.02515086244158,
+      "p25": -13.0,
+      "p75": 13.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "n": 1276037,
+      "mean_val": -0.8882508892767216,
+      "median_val": 0.0,
+      "std_val": 20.812696777446465,
+      "p25": -16.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "n": 1079866,
+      "mean_val": -0.5956877983009004,
+      "median_val": 0.0,
+      "std_val": 17.898379830460684,
+      "p25": -14.0,
+      "p75": 13.0
+    },
+    {
+      "leaderboard": "unknown",
+      "n": 730269,
+      "mean_val": -0.0771606079403617,
+      "median_val": 0.0,
+      "std_val": 15.14232860628293,
+      "p25": 0.0,
+      "p75": 0.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "n": 594858,
+      "mean_val": -0.8308470256767161,
+      "median_val": 0.0,
+      "std_val": 25.805614705439027,
+      "p25": -17.0,
+      "p75": 17.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "n": 12728,
+      "mean_val": 9.004478315524826,
+      "median_val": 0.0,
+      "std_val": 33.93551437753506,
+      "p25": -5.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "dm_1v1",
+      "n": 11788,
+      "mean_val": -2.6392093654563964,
+      "median_val": 0.0,
+      "std_val": 31.005157737844662,
+      "p25": -27.0,
+      "p75": 17.0
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "n": 5012,
+      "mean_val": -0.7336392657621708,
+      "median_val": 0.0,
+      "std_val": 38.040944154072534,
+      "p25": -38.0,
+      "p75": 35.0
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "n": 2278,
+      "mean_val": -1.1343283582089552,
+      "median_val": 0.0,
+      "std_val": 26.49969875386972,
+      "p25": -17.0,
+      "p75": 14.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "n": 1548,
+      "mean_val": 8.916666666666666,
+      "median_val": 0.0,
+      "std_val": 45.564620215520456,
+      "p25": -27.0,
+      "p75": 41.0
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "n": 1456,
+      "mean_val": -31.070054945054945,
+      "median_val": -31.0,
+      "std_val": 40.45006980650257,
+      "p25": -48.0,
+      "p75": -8.0
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "n": 992,
+      "mean_val": -0.5231854838709677,
+      "median_val": -1.0,
+      "std_val": 41.225983336390435,
+      "p25": -40.0,
+      "p75": 41.25
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "n": 708,
+      "mean_val": 0.2838983050847458,
+      "median_val": 0.5,
+      "std_val": 40.748234078772555,
+      "p25": -41.0,
+      "p75": 40.0
+    },
+    {
+      "leaderboard": "ror_team",
+      "n": 658,
+      "mean_val": 0.013677811550151976,
+      "median_val": -0.5,
+      "std_val": 22.147316266486026,
+      "p25": -17.0,
+      "p75": 16.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "n": 650,
+      "mean_val": -0.5123076923076924,
+      "median_val": -1.0,
+      "std_val": 41.00096585615813,
+      "p25": -39.0,
+      "p75": 38.75
+    }
+  ],
+  "ratingdiff_by_won_by_leaderboard": [
+    {
+      "leaderboard": "dm_1v1",
+      "won": false,
+      "n": 5894,
+      "mean_val": -28.780794027824907,
+      "median_val": -27.0
+    },
+    {
+      "leaderboard": "dm_1v1",
+      "won": true,
+      "n": 5894,
+      "mean_val": 23.502375296912113,
+      "median_val": 17.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "won": false,
+      "n": 6364,
+      "mean_val": -9.64032055311125,
+      "median_val": -5.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "won": true,
+      "n": 6364,
+      "mean_val": 27.649277184160905,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "won": false,
+      "n": 638023,
+      "mean_val": -19.226573336697893,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "won": true,
+      "n": 638002,
+      "mean_val": 17.4506584618857,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "won": false,
+      "n": 496,
+      "mean_val": -37.79032258064516,
+      "median_val": -40.0
+    },
+    {
+      "leaderboard": "ew_1v1_console",
+      "won": true,
+      "n": 496,
+      "mean_val": 36.743951612903224,
+      "median_val": 41.5
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "won": false,
+      "n": 297423,
+      "mean_val": -23.56552116009858,
+      "median_val": -17.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "won": true,
+      "n": 297429,
+      "mean_val": 21.903351724277055,
+      "median_val": 17.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "won": false,
+      "n": 325,
+      "mean_val": -38.78769230769231,
+      "median_val": -39.0
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo_console",
+      "won": true,
+      "n": 325,
+      "mean_val": 37.76307692307692,
+      "median_val": 39.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "won": false,
+      "n": 1188295,
+      "mean_val": -18.61268792681952,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "ew_team",
+      "won": true,
+      "n": 1188304,
+      "mean_val": 17.65339424928301,
+      "median_val": 15.0
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "won": false,
+      "n": 354,
+      "mean_val": -38.09887005649718,
+      "median_val": -41.0
+    },
+    {
+      "leaderboard": "ew_team_console",
+      "won": true,
+      "n": 354,
+      "mean_val": 38.666666666666664,
+      "median_val": 40.0
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "won": false,
+      "n": 1274,
+      "mean_val": -40.440345368916795,
+      "median_val": -37.0
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "won": true,
+      "n": 182,
+      "mean_val": 34.52197802197802,
+      "median_val": 29.5
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "won": false,
+      "n": 2506,
+      "mean_val": -33.69193934557063,
+      "median_val": -38.0
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "won": true,
+      "n": 2506,
+      "mean_val": 32.22466081404629,
+      "median_val": 35.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "won": false,
+      "n": 774,
+      "mean_val": -26.462532299741603,
+      "median_val": -27.0
+    },
+    {
+      "leaderboard": "qp_ew_team",
+      "won": true,
+      "n": 774,
+      "mean_val": 44.29586563307493,
+      "median_val": 41.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "won": false,
+      "n": 2667141,
+      "mean_val": -20.06718729905918,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "won": true,
+      "n": 2666957,
+      "mean_val": 18.653594714875418,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "won": false,
+      "n": 6294691,
+      "mean_val": -18.299282204638796,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "won": true,
+      "n": 6294150,
+      "mean_val": 17.976833885433297,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "won": false,
+      "n": 19866952,
+      "mean_val": -17.237135822344566,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "won": true,
+      "n": 19865517,
+      "mean_val": 16.36408314971113,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "won": false,
+      "n": 539922,
+      "mean_val": -15.10112571815929,
+      "median_val": -14.0
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "won": true,
+      "n": 539913,
+      "mean_val": 13.909957715409705,
+      "median_val": 13.0
+    },
+    {
+      "leaderboard": "rm_team",
+      "won": false,
+      "n": 34726505,
+      "mean_val": -16.578745456820375,
+      "median_val": -16.0
+    },
+    {
+      "leaderboard": "rm_team",
+      "won": true,
+      "n": 34722310,
+      "mean_val": 16.278768636072886,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "won": false,
+      "n": 917950,
+      "mean_val": -13.507121302903208,
+      "median_val": -13.0
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "won": true,
+      "n": 917919,
+      "mean_val": 13.228771819735728,
+      "median_val": 13.0
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "won": false,
+      "n": 1139,
+      "mean_val": -21.59174714661984,
+      "median_val": -17.0
+    },
+    {
+      "leaderboard": "ror_1v1",
+      "won": true,
+      "n": 1139,
+      "mean_val": 19.323090430201933,
+      "median_val": 14.0
+    },
+    {
+      "leaderboard": "ror_team",
+      "won": false,
+      "n": 329,
+      "mean_val": -19.325227963525837,
+      "median_val": -17.0
+    },
+    {
+      "leaderboard": "ror_team",
+      "won": true,
+      "n": 329,
+      "mean_val": 19.35258358662614,
+      "median_val": 16.0
+    },
+    {
+      "leaderboard": "unknown",
+      "won": false,
+      "n": 326282,
+      "mean_val": -9.322953763922007,
+      "median_val": -1.0
+    },
+    {
+      "leaderboard": "unknown",
+      "won": true,
+      "n": 403976,
+      "mean_val": 7.390448937560647,
+      "median_val": 0.0
+    },
+    {
+      "leaderboard": "unranked",
+      "won": false,
+      "n": 12814732,
+      "mean_val": -9.627770990450678,
+      "median_val": -9.0
+    },
+    {
+      "leaderboard": "unranked",
+      "won": true,
+      "n": 11600273,
+      "mean_val": 11.236364092465754,
+      "median_val": 11.0
+    }
+  ],
+  "test_results": {
+    "ratingdiff_by_won": {
+      "test": "Mann-Whitney U",
+      "temporal_annotation": "POST-GAME (confirmed leakage -- Inv. #3)",
+      "U_statistic": 507748821116567.5,
+      "p_value": 0.0,
+      "rank_biserial_r": -1.0,
+      "n_won_true": 22532474,
+      "n_won_false": 22534093,
+      "median_won_true": 16.0,
+      "median_won_false": -16.0
+    },
+    "rating_by_won": {
+      "test": "Mann-Whitney U",
+      "temporal_annotation": "AMBIGUOUS (Inv. #3 -- temporal status unresolved)",
+      "U_statistic": 255984614523363.5,
+      "p_value": 0.0,
+      "rank_biserial_r": -0.0086,
+      "n_won_true": 22531103,
+      "n_won_false": 22528795,
+      "median_won_true": 1051.0,
+      "median_won_false": 1047.0
+    }
+  },
+  "sql_queries": {
+    "ratingdiff_percentiles_by_won": "SELECT\n    won,\n    COUNT(*) AS n,\n    AVG(ratingDiff) AS mean_val,\n    MEDIAN(ratingDiff) AS median_val,\n    STDDEV(ratingDiff) AS std_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY ratingDiff) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY ratingDiff) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY ratingDiff) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY ratingDiff) AS p95,\n    MIN(ratingDiff) AS min_val,\n    MAX(ratingDiff) AS max_val\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND ratingDiff IS NOT NULL\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\nORDER BY won",
+    "ratingdiff_hist_by_won": "SELECT\n    won,\n    ratingDiff AS val,\n    COUNT(*) AS cnt\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND ratingDiff IS NOT NULL\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won, ratingDiff\nORDER BY won, ratingDiff",
+    "ratingdiff_raw_by_won": "SELECT won, ratingDiff\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND ratingDiff IS NOT NULL\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')",
+    "rating_percentiles_by_won": "SELECT\n    won,\n    COUNT(*) AS n,\n    AVG(rating) AS mean_val,\n    MEDIAN(rating) AS median_val,\n    STDDEV(rating) AS std_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY rating) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY rating) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY rating) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY rating) AS p95\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND rating IS NOT NULL\n  AND rating > 0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\nORDER BY won",
+    "rating_hist_by_won": "SELECT\n    won,\n    FLOOR(rating / 25) * 25 AS bin,\n    COUNT(*) AS cnt\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND rating IS NOT NULL\n  AND rating > 0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won, bin\nORDER BY won, bin",
+    "rating_raw_by_won": "SELECT won, rating\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND rating IS NOT NULL\n  AND rating > 0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')",
+    "rating_vs_ratingdiff_scatter": "SELECT\n    rating,\n    ratingDiff,\n    won\nFROM (\n    SELECT *\n    FROM matches_raw\n    TABLESAMPLE BERNOULLI(0.036088 PERCENT)\n) sub\nWHERE won IS NOT NULL\n  AND rating IS NOT NULL\n  AND ratingDiff IS NOT NULL\n  AND rating > 0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')",
+    "duration_percentiles_by_won": "SELECT\n    won,\n    COUNT(*) AS n,\n    AVG(EXTRACT(EPOCH FROM (finished - started))) AS mean_secs,\n    MEDIAN(EXTRACT(EPOCH FROM (finished - started))) AS median_secs,\n    STDDEV(EXTRACT(EPOCH FROM (finished - started))) AS std_secs,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started))) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started))) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started))) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started))) AS p95\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND finished > started\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\nORDER BY won",
+    "duration_hist_by_won": "SELECT\n    won,\n    FLOOR(EXTRACT(EPOCH FROM (finished - started)) / 60) AS bin_min,\n    COUNT(*) AS cnt\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND finished > started\n  AND EXTRACT(EPOCH FROM (finished - started)) <= 3789.0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won, bin_min\nORDER BY won, bin_min",
+    "numeric_features_by_won": "SELECT\n    won,\n    'rating' AS feature,\n    AVG(rating) AS mean_val,\n    MEDIAN(rating) AS median_val,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY rating) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY rating) AS p75,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY rating) AS p05,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY rating) AS p95\nFROM matches_raw\nWHERE won IS NOT NULL AND rating IS NOT NULL AND rating > 0\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\n\nUNION ALL\n\nSELECT\n    won,\n    'ratingDiff' AS feature,\n    AVG(ratingDiff) AS mean_val,\n    MEDIAN(ratingDiff) AS median_val,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY ratingDiff) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY ratingDiff) AS p75,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY ratingDiff) AS p05,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY ratingDiff) AS p95\nFROM matches_raw\nWHERE won IS NOT NULL AND ratingDiff IS NOT NULL\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\n\nUNION ALL\n\nSELECT\n    won,\n    'duration_min' AS feature,\n    AVG(EXTRACT(EPOCH FROM (finished - started)) / 60) AS mean_val,\n    MEDIAN(EXTRACT(EPOCH FROM (finished - started)) / 60) AS median_val,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started)) / 60) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started)) / 60) AS p75,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started)) / 60) AS p05,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (finished - started)) / 60) AS p95\nFROM matches_raw\nWHERE won IS NOT NULL AND finished > started\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')\nGROUP BY won\n\nORDER BY feature, won",
+    "correlation_sample": "SELECT\n    rating,\n    ratingDiff,\n    EXTRACT(EPOCH FROM (finished - started)) / 60.0 AS duration_min,\n    population,\n    speedFactor,\n    treatyLength\nFROM (\n    SELECT *\n    FROM matches_raw\n    TABLESAMPLE BERNOULLI(0.036088 PERCENT)\n) sub\nWHERE rating IS NOT NULL\n  AND rating > 0\n  AND ratingDiff IS NOT NULL\n  AND finished > started\n  AND population IS NOT NULL\n  AND treatyLength IS NOT NULL\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1')",
+    "ratingdiff_stats_by_leaderboard": "SELECT\n    leaderboard,\n    COUNT(*) AS n,\n    AVG(ratingDiff) AS mean_val,\n    MEDIAN(ratingDiff) AS median_val,\n    STDDEV(ratingDiff) AS std_val,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY ratingDiff) AS p25,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY ratingDiff) AS p75\nFROM matches_raw\nWHERE ratingDiff IS NOT NULL\nGROUP BY leaderboard\nORDER BY n DESC",
+    "ratingdiff_by_won_by_leaderboard": "SELECT\n    leaderboard,\n    won,\n    COUNT(*) AS n,\n    AVG(ratingDiff) AS mean_val,\n    MEDIAN(ratingDiff) AS median_val\nFROM matches_raw\nWHERE won IS NOT NULL\n  AND ratingDiff IS NOT NULL\nGROUP BY leaderboard, won\nORDER BY leaderboard, won"
+  },
+  "i3_classifications": {
+    "ratingDiff": "POST_GAME",
+    "rating": "AMBIGUOUS",
+    "duration": "POST_GAME",
+    "population": "PRE_GAME",
+    "speedFactor": "PRE_GAME",
+    "treatyLength": "PRE_GAME"
+  }
+}

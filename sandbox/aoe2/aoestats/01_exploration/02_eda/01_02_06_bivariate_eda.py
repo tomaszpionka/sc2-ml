@@ -80,6 +80,7 @@ bivariate_results = {
     "step": "01_02_06",
     "dataset": "aoestats",
 }
+test_results: dict[str, dict] = {}
 print("Initialized sql_queries and bivariate_results dicts.")
 
 # %% [markdown]
@@ -258,6 +259,38 @@ fig.savefig(
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_match_rating_diff_leakage_scatter.png'}")
 
+# %%
+sql_queries["match_rating_diff_raw_by_winner"] = """
+SELECT winner, match_rating_diff
+FROM players_raw
+WHERE match_rating_diff IS NOT NULL
+  AND winner IS NOT NULL
+USING SAMPLE RESERVOIR(5000000)
+"""
+# I7: same RESERVOIR justification as old_rating above.
+df_mrd_raw = conn.execute(sql_queries["match_rating_diff_raw_by_winner"]).fetchdf()
+print(f"match_rating_diff raw rows (sample): {len(df_mrd_raw):,}")
+
+# %%
+# --- Mann-Whitney U: match_rating_diff by winner (PRE-GAME, confirmed T03) ---
+_mrd_win = df_mrd_raw.loc[df_mrd_raw["winner"] == True, "match_rating_diff"].values   # noqa: E712
+_mrd_loss = df_mrd_raw.loc[df_mrd_raw["winner"] == False, "match_rating_diff"].values  # noqa: E712
+_u_mrd, _p_mrd = sp_stats.mannwhitneyu(_mrd_win, _mrd_loss, alternative="two-sided")
+_r_mrd = 1 - (2 * _u_mrd) / (len(_mrd_win) * len(_mrd_loss))
+test_results["match_rating_diff_by_winner"] = {
+    "test": "Mann-Whitney U",
+    "temporal_annotation": "PRE-GAME (confirmed in T03 leakage test)",
+    "U_statistic": float(_u_mrd),
+    "p_value": float(_p_mrd),
+    "rank_biserial_r": round(float(_r_mrd), 4),
+    "n_winner": int(len(_mrd_win)),
+    "n_loser": int(len(_mrd_loss)),
+    "median_winner": float(np.median(_mrd_win)),
+    "median_loser": float(np.median(_mrd_loss)),
+    "sample_note": "RESERVOIR(5_000_000); SE(r)=0.00045",
+}
+print(f"match_rating_diff by winner: U={_u_mrd:,.0f}, p={_p_mrd:.4e}, r_rb={_r_mrd:.4f}")
+
 # %% [markdown]
 # ## T04 -- old_rating by Winner Violin (Q4)
 #
@@ -341,6 +374,41 @@ fig.tight_layout()
 fig.savefig(plots_dir / "01_02_06_old_rating_by_winner.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_06_old_rating_by_winner.png'}")
+
+# %%
+# IMPORTANT: old_rating >= 0 (not > 0) -- zero-rating players are legitimate
+# (corrected per I7 audit; prior filter old_rating > 0 was a magic threshold)
+sql_queries["old_rating_raw_by_winner"] = """
+SELECT winner, old_rating
+FROM players_raw
+WHERE old_rating >= 0
+  AND winner IS NOT NULL
+USING SAMPLE RESERVOIR(5000000)
+"""
+# I7: RESERVOIR(5_000_000) -- SE(r) = 1/sqrt(5M) = 0.00045 (negligible for effect sizes).
+# Full 107M-row load approx 1.7 GB RAM per test pair; reservoir controls memory at scale.
+df_or_raw = conn.execute(sql_queries["old_rating_raw_by_winner"]).fetchdf()
+print(f"old_rating raw rows (sample): {len(df_or_raw):,}")
+
+# %%
+# --- Mann-Whitney U: old_rating by winner (PRE-GAME) ---
+_or_win = df_or_raw.loc[df_or_raw["winner"] == True, "old_rating"].values   # noqa: E712
+_or_loss = df_or_raw.loc[df_or_raw["winner"] == False, "old_rating"].values  # noqa: E712
+_u_or, _p_or = sp_stats.mannwhitneyu(_or_win, _or_loss, alternative="two-sided")
+_r_or = 1 - (2 * _u_or) / (len(_or_win) * len(_or_loss))
+test_results["old_rating_by_winner"] = {
+    "test": "Mann-Whitney U",
+    "temporal_annotation": "PRE-GAME",
+    "U_statistic": float(_u_or),
+    "p_value": float(_p_or),
+    "rank_biserial_r": round(float(_r_or), 4),
+    "n_winner": int(len(_or_win)),
+    "n_loser": int(len(_or_loss)),
+    "median_winner": float(np.median(_or_win)),
+    "median_loser": float(np.median(_or_loss)),
+    "sample_note": "RESERVOIR(5_000_000); SE(r)=0.00045",
+}
+print(f"old_rating by winner: U={_u_or:,.0f}, p={_p_or:.4e}, r_rb={_r_or:.4f}")
 
 # %% [markdown]
 # ## T05 -- ELO by Winner Panel (Q6)
@@ -1009,6 +1077,7 @@ print(f"Saved: {plots_dir / '01_02_06_spearman_correlation.png'}")
 
 # Write JSON artifact
 import json as json_mod  # avoid shadowing earlier import
+bivariate_results["test_results"] = test_results
 json_path = artifacts_dir / "01_02_06_bivariate_eda.json"
 with open(json_path, "w") as f:
     json_mod.dump(bivariate_results, f, indent=2, default=str)
@@ -1073,6 +1142,27 @@ for i, plot_name in enumerate(expected_plots, 1):
     annotation = temporal_annotations.get(short_name, "N/A")
     md_lines.append(f"| {i} | {short_name} | `{plot_name}` | {annotation} |")
 
+md_lines.extend(["", "## Statistical Tests -- Exploratory Discrimination", ""])
+md_lines.append(
+    "> PRE-GAME features. Effect sizes measure discriminative power at prediction time. "
+    "Exploratory only (Tukey-style EDA). No multiple comparison correction applied."
+)
+md_lines.append("")
+for key in ["old_rating_by_winner", "match_rating_diff_by_winner"]:
+    if key in test_results:
+        res = test_results[key]
+        md_lines.extend([
+            f"### {key}",
+            f"- **Temporal status:** {res['temporal_annotation']}",
+            f"- **Mann-Whitney U:** {res['U_statistic']:,.0f}",
+            f"- **p-value:** {res['p_value']:.4e}",
+            f"- **Rank-biserial r (Wendt 1972):** {res['rank_biserial_r']:.4f}",
+            f"- **n(winner):** {res['n_winner']:,} | **n(loser):** {res['n_loser']:,}",
+            f"- **Median(winner):** {res['median_winner']:.2f} | **Median(loser):** {res['median_loser']:.2f}",
+            f"- **Note:** {res.get('sample_note', '')}",
+            "",
+        ])
+
 md_lines.extend([
     "",
     "## SQL Queries",
@@ -1100,6 +1190,16 @@ md_path = artifacts_dir / "01_02_06_bivariate_eda.md"
 with open(md_path, "w") as f:
     f.write("\n".join(md_lines))
 print(f"Saved markdown artifact: {md_path}")
+
+# %%
+# Gate: Mann-Whitney U test results
+assert "old_rating_by_winner" in test_results
+assert "match_rating_diff_by_winner" in test_results
+for _k, _res in test_results.items():
+    assert _res["test"] == "Mann-Whitney U"
+    assert -1.0 <= _res["rank_biserial_r"] <= 1.0
+    assert _res["n_winner"] > 0 and _res["n_loser"] > 0
+print("Gate: aoestats Mann-Whitney U results verified.")
 
 # %%
 # Close connection
