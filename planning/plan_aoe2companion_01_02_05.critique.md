@@ -1,74 +1,123 @@
-# Adversarial Critique — plan_aoe2companion_01_02_05.md
+---
+reviewer: reviewer-adversarial
+plan: planning/plan_aoe2companion_01_02_05.md
+date: 2026-04-15
+verdict: APPROVE WITH CONDITIONS
+blocking_count: 1
+warning_count: 5
+---
 
-**Verdict: REVISE BEFORE EXECUTION**
+# Adversarial Review — aoe2companion 01_02_05 Plan
 
-Plan reviewed against: OLD plan from 19:46 (before planner comprehensive revision).
-Note: planner revision (from completion at 20:30) addresses BLOCKER #1 (T03 data extraction bug).
-Remaining open issues noted below.
+## Lens Assessments
+
+- **Temporal discipline:** SOUND — Visualization-only step; no features computed. ratingDiff annotation (T03) correctly addresses Invariant #3.
+- **Thesis defensibility:** ADEQUATE with conditions. The 16-plot set provides thesis-grade cross-dataset comparability only if the duration clip strategy inconsistency is resolved.
+- **Cross-game comparability:** AT RISK — Duration histogram clip strategy diverges from aoestats without documented justification. See BLOCKER.
+
+## Examiner's Questions
+
+1. "You clip aoe2companion duration at p95=63 min, but aoestats clips at a fixed 120 min. How does this support the visual comparison you claim in Chapter 4?"
+2. "The cross-cluster overlap heatmap says 'both clusters null = 428,321' but Cluster A's all-8-simultaneous count is 426,472. How can more rows have both clusters null than have all eight Cluster A columns null?"
+3. "Why does the NULL co-occurrence heatmap use raw counts when cell values span six orders of magnitude?"
 
 ---
 
-## BLOCKER — Already addressed by planner revision
+## T01 — ROADMAP Patch
 
-### B1: T03 won_consistency_2row data structure mismatch — guaranteed KeyError
-Plan assumed JSON structure is category-value rows. Actual structure is ONE dict with category names as keys.
-Old code: `consistency["category"].isin(["both_true", "both_false"])` — KeyError, column "category" does not exist.
-**Planner fix:** `raw = census["won_consistency_2row"][0]; pd.DataFrame([{"category": cat, "count": raw[cat]} for cat in categories])`
-
-### B2: T03 category list — total_2row_matches must not be plotted as a category
-The old code would naively include total_2row_matches as a bar if it melted the entire dict.
-**Planner fix:** Explicit categories list excludes total_2row_matches; other_inconsistent noted as 0.
+**[NOTE] T01-1:** The current ROADMAP 01_02_05 YAML has no `scientific_invariants_applied` block. The plan says "Replace the block" — executor should be told this is an INSERT, not a REPLACE.
 
 ---
 
-## WARNING — Already addressed by planner revision
+## T02 — Won Distribution 2-Bar
 
-### W5: T06 season/rankLevel excluded without justification
-**Planner fix:** Excluded with reasoning (season=constant=-1; rankLevel=pathological skewness=-273M).
-**Planner fix:** Added two-panel grouping: Panel A (rank, rating) vs Panel B (wins/losses/games/streak/drops/rankCountry) with symlog y-scale.
-
-### W9: T05 missing skewness annotation (Invariant #7 partial)
-**Planner fix:** Annotate titles with skew/kurt from `census["matches_raw_skew_kurtosis"]`.
-
-### W: Monthly volume line chart missing (deferred from 01_02_04, required by EDA Manual §3.2)
-**Planner fix:** Added T11 (new): monthly match volume line chart with dual y-axis.
+**[WARNING] T02-1:** The plan says "Extract only the True and False rows" but does not specify the filtering mechanism. After `json.load()`, JSON `null` becomes Python `None`. The filter must use `row["won"] is not None` (identity check), NOT `row["won"] == "NULL"` (string comparison, which fails silently and produces a 3-bar chart). The plan must explicitly specify this predicate.
 
 ---
 
-## REMAINING OPEN ISSUES (not addressed by planner revision)
+## T03 — ratingDiff Leakage Annotation
 
-### W1: T04 "top 20" cutoff is a magic number (Invariant #7)
-The artifact contains 30 entries each for civ and map. Choosing top-20 has no documented derivation.
-Examiner question: "Why 20 and not 30?" — No documented answer.
-**Suggested fix:** Plot all 30 entries (match what the artifact contains), or add justification comment:
-"Top-20 chosen because entries 21-30 each represent <0.5% of rows."
-
-### W2: T05 bin widths (rating=100, ratingDiff=10) are magic numbers (Invariant #7)
-Neither bin width is derived from data range, IQR, or a cited rule (Sturges/Freedman-Diaconis).
-**Suggested fix:** Add I7 comments: "rating range 0-5001 / 100 = ~50 bins; ratingDiff range -174/+319 / 10 = ~50 bins"
-
-### W3: T07 bar chart deviates from EDA Manual §3.2 "heatmap of missingness" — undocumented
-The manual says "heatmap"; plan implements a bar chart. Deviation is defensible (single dimension for
-55 columns) but must be documented.
-**Suggested fix:** Add note in plan: "Bar chart used instead of heatmap per EDA Manual §3.2: for 55
-columns with a single NULL-rate dimension, a bar chart provides higher information density than a
-2D heatmap with a single row (which would be identical to a bar chart but harder to read)."
-
-### W4: T07 color thresholds (1% and 10%) are magic numbers (Invariant #7)
-**Suggested fix:** Add justification: "EDA Manual §4.5 suggests <5% as MCAR-safe threshold; 1%/10%/50%
-are conventional EDA severity bands (minimal/moderate/severe missingness)."
-
-### W6: T06 leaderboard aggregation not documented
-Boxplots aggregate all leaderboard types. Examiner may ask why 1v1 and team rankings are mixed.
-**Suggested fix:** Add note: "Global distributions shown across all leaderboard types; per-leaderboard
-stratification deferred to bivariate analysis (01_03+) where leaderboard is the grouping variable."
+**[WARNING] T03-1:** The ratingDiff plot cell (notebook line ~304) creates `fig, ax = plt.subplots(figsize=(10, 6))`. The plan's `ax.text(0.5, 0.97, ..., transform=ax.transAxes)` targets the correct axes. However, `y=0.97` with `va="top"` will overlap the existing multi-line title (N=, skew=, kurt= values). Executor must move annotation to `y=0.93` or increase figure height, or the plot will fail visual inspection at the gate.
 
 ---
 
-## Key statistics verified from JSON artifact
+## T04 — NULL Threshold Harmonization
 
-- won: TRUE=47.62%, FALSE=47.69%, NULL=4.69% (near-perfect balance)
-- won_consistency_2row: total_2row=40,062,975; both_true=2,499,163; both_false=1,899,564 (inconsistency ~10.98%)
-- rating: skewness=0.5662, NULL=42.46%; ratingDiff: skewness=0.1105, NULL=42.46%
-- profiles_raw: 7 dead columns (100% NULL), HyperLogLog phantom cardinalities 2-44
-- leaderboards_raw: wins skewness=8.21, drops skewness=27.22, streak skewness=-10.85
+**[NOTE] T04-1:** The existing code at notebook line 430 uses `null_df_sorted["null_pct"]` — exact variable name the plan references. 4-tier threshold logic is correct. No flaw.
+
+---
+
+## T05 — Duration Histogram (NEW)
+
+**[BLOCKER] T05-1 — Duration clip strategy inconsistent with aoestats:**
+
+The plan clips aoe2companion at p95=3,789s (63.15 min). The aoestats duration histogram clips at a fixed 120 min. The plan's Out of Scope section claims "aoestats clips at 120 min because its p95 is different" — this is **factually incorrect**. The aoestats p95 is 4,714.1s = 78.6 min (confirmed from the aoestats census artifact), yet aoestats clips at 120 min — well above its own p95. The two datasets use fundamentally different clip strategies.
+
+For thesis defensibility: a reader placing the two left panels side-by-side will see different x-axis ranges and different clip philosophies with no explanation on either plot or in the markdown artifact.
+
+Required fix — one of:
+- **(a)** Add an annotation to the duration histogram subtitle (e.g., "Body clipped at p95=63 min; cf. aoestats fixed 120-min clip") AND a note in the markdown artifact explaining the asymmetry; OR
+- **(b)** Change aoe2companion to clip at fixed 120 min to match aoestats; OR
+- **(c)** Schedule an aoestats notebook revision to use p95-derived clipping (makes both consistent).
+
+Option (a) is the minimum viable fix. The factual error in Out of Scope must be corrected regardless.
+
+**[NOTE] T05-2:** JSON key path `census["match_duration_stats"][0]["p95_secs"]` confirmed correct (value 3,789.0). `census["duration_excluded_rows"][0]["non_positive_duration_count"]` confirmed (value 2,941). SQL `EXTRACT(EPOCH FROM (finished - started))` pattern confirmed in the existing 01_02_04 census notebook. All JSON paths valid.
+
+**[NOTE] T05-3:** Insertion point "after T11 (monthly volume, line ~600)" is correct. Plan should say "before T12 (markdown artifact)" — same location, unambiguous for executor.
+
+---
+
+## T06 — NULL Co-occurrence Visualization (NEW)
+
+**[NOTE] T06-1:** All 8 Cluster A column names (`allowCheats`, `lockSpeed`, `lockTeams`, `recordGame`, `sharedExploration`, `teamPositions`, `teamTogether`, `turboMode`) confirmed present in `matches_raw.yaml`. SQL is correct.
+
+**[WARNING] T06-2 — Heatmap uses proxy, not strict cluster definition:** The `cross_cluster_overlap` values in the JSON were computed using single-column proxies (`allowCheats IS NULL` for Cluster A, `fullTechTree IS NULL` for Cluster B). Discrepancy: `allowCheats IS NULL` = 428,338 rows vs. all-eight-null simultaneously = 426,472 rows (1,866-row gap). The heatmap title "Cluster A vs Cluster B" is therefore inaccurate.
+
+Fix: Relabel the heatmap as "allowCheats NULL (proxy for Cluster A) vs fullTechTree NULL (proxy for Cluster B)" with a footnote explaining the proxy relationship.
+
+**[WARNING] T06-3:** The plan does not specify the Python code to retrieve `matches_raw_total_rows`. Executor may run a full COUNT(*) scan instead of `census["matches_raw_total_rows"]` (value: 277,099,059 confirmed in JSON). Add explicit code: `total_rows = census["matches_raw_total_rows"]`.
+
+**[WARNING] T06-4 — imshow colormap failure:** With raw counts spanning 6 orders of magnitude (off-diagonal: 17 and 3,173; diagonal: 428,321 and 276,667,548), any linear colormap renders all non-maximum cells visually indistinguishable from zero.
+
+Required fix — one of:
+- **(a)** `sns.heatmap(annot=True, fmt=",", norm=LogNorm())`, OR
+- **(b)** Row/column percentage normalization, OR
+- **(c)** Drop the heatmap and use a simple annotated 2×2 table (recommended — 4 numbers need no heatmap).
+
+---
+
+## T07 — Artifact Regeneration
+
+**[WARNING] T07-1 — Dict update alone insufficient for I6 compliance:** The existing T12 cell (notebook line 603–724) uses a **hardcoded** markdown generation block that manually appends each SQL query by name. Adding keys to `sql_queries` does NOT auto-include them in the markdown output. The executor must also add explicit hardcoded markdown sections for `hist_duration_body`, `hist_duration_full_log`, and `null_cooccurrence_monthly`. If only the dict is updated, Invariant #6 is violated silently (no error, missing SQL in artifact).
+
+The plan must enumerate the three new markdown sections to add.
+
+---
+
+## Summary Table
+
+| ID | Severity | Task | Finding |
+|----|----------|------|---------|
+| T02-1 | WARNING | T02 | NULL filter must use `is not None`; string comparison fails silently |
+| T03-1 | WARNING | T03 | Annotation at `y=0.97` overlaps multi-line title |
+| T05-1 | **BLOCKER** | T05 | Duration clip strategy (p95 vs fixed 120 min) inconsistent with aoestats; Out of Scope rationale factually incorrect |
+| T06-2 | WARNING | T06 | Heatmap labels "Cluster A/B" but data uses single-column proxies; 1,866-row discrepancy |
+| T06-3 | WARNING | T06 | `matches_raw_total_rows` retrieval unspecified; risk of full table scan |
+| T06-4 | WARNING | T06 | imshow on 6-orders-of-magnitude counts produces uninformative heatmap |
+| T07-1 | WARNING | T07 | Dict update alone insufficient; hardcoded markdown generation block must also be extended for I6 |
+
+---
+
+## VERDICT: APPROVE WITH CONDITIONS
+
+**Blocking condition (must resolve before execution):**
+
+1. **T05-1** — Correct the factual error in Out of Scope. Add cross-dataset clip strategy documentation to the plot and/or markdown artifact. Minimum fix: subtitle annotation on the duration histogram noting "Body clipped at p95=63 min; aoestats uses fixed 120-min editorial clip — see markdown artifact."
+
+**Strongly recommended before gate sign-off:**
+
+2. T02-1: Specify `row["won"] is not None` as the filter predicate.
+3. T07-1: Enumerate the three new hardcoded markdown sections.
+4. T06-2: Relabel heatmap to proxy language with footnote.
+5. T06-4: Replace imshow with `sns.heatmap(annot=True, fmt=",", norm=LogNorm())` or a 2×2 annotated table.
