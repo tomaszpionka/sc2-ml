@@ -1,0 +1,231 @@
+{
+  "step": "01_02_07",
+  "dataset": "aoestats",
+  "spearman_heatmap": {
+    "sample_size": 20000,
+    "columns": [
+      "old_rating",
+      "new_rating",
+      "match_rating_diff",
+      "feudal_age_uptime",
+      "castle_age_uptime",
+      "imperial_age_uptime",
+      "avg_elo",
+      "team_0_elo",
+      "team_1_elo",
+      "duration_sec"
+    ],
+    "cluster_order": [
+      "match_rating_diff",
+      "duration_sec",
+      "castle_age_uptime",
+      "imperial_age_uptime",
+      "feudal_age_uptime",
+      "old_rating",
+      "new_rating",
+      "team_1_elo",
+      "avg_elo",
+      "team_0_elo"
+    ],
+    "rho_matrix": {
+      "old_rating": {
+        "old_rating": 1.0,
+        "new_rating": 0.9975,
+        "match_rating_diff": 0.0567,
+        "feudal_age_uptime": -0.3614,
+        "castle_age_uptime": -0.2767,
+        "imperial_age_uptime": -0.2154,
+        "avg_elo": 0.983,
+        "team_0_elo": 0.9782,
+        "team_1_elo": 0.9802,
+        "duration_sec": -0.213
+      },
+      "new_rating": {
+        "old_rating": 0.9975,
+        "new_rating": 1.0,
+        "match_rating_diff": 0.0614,
+        "feudal_age_uptime": -0.3625,
+        "castle_age_uptime": -0.2785,
+        "imperial_age_uptime": -0.2169,
+        "avg_elo": 0.9813,
+        "team_0_elo": 0.9766,
+        "team_1_elo": 0.9785,
+        "duration_sec": -0.2124
+      },
+      "match_rating_diff": {
+        "old_rating": 0.0567,
+        "new_rating": 0.0614,
+        "match_rating_diff": 1.0,
+        "feudal_age_uptime": -0.0529,
+        "castle_age_uptime": -0.038,
+        "imperial_age_uptime": -0.0381,
+        "avg_elo": -0.0054,
+        "team_0_elo": -0.0066,
+        "team_1_elo": -0.003,
+        "duration_sec": 0.0002
+      },
+      "feudal_age_uptime": {
+        "old_rating": -0.3614,
+        "new_rating": -0.3625,
+        "match_rating_diff": -0.0529,
+        "feudal_age_uptime": 1.0,
+        "castle_age_uptime": 0.1625,
+        "imperial_age_uptime": 0.1164,
+        "avg_elo": -0.3519,
+        "team_0_elo": -0.3498,
+        "team_1_elo": -0.3509,
+        "duration_sec": 0.2199
+      },
+      "castle_age_uptime": {
+        "old_rating": -0.2767,
+        "new_rating": -0.2785,
+        "match_rating_diff": -0.038,
+        "feudal_age_uptime": 0.1625,
+        "castle_age_uptime": 1.0,
+        "imperial_age_uptime": 0.6544,
+        "avg_elo": -0.2646,
+        "team_0_elo": -0.267,
+        "team_1_elo": -0.2596,
+        "duration_sec": 0.1279
+      },
+      "imperial_age_uptime": {
+        "old_rating": -0.2154,
+        "new_rating": -0.2169,
+        "match_rating_diff": -0.0381,
+        "feudal_age_uptime": 0.1164,
+        "castle_age_uptime": 0.6544,
+        "imperial_age_uptime": 1.0,
+        "avg_elo": -0.2122,
+        "team_0_elo": -0.2145,
+        "team_1_elo": -0.2076,
+        "duration_sec": 0.2756
+      },
+      "avg_elo": {
+        "old_rating": 0.983,
+        "new_rating": 0.9813,
+        "match_rating_diff": -0.0054,
+        "feudal_age_uptime": -0.3519,
+        "castle_age_uptime": -0.2646,
+        "imperial_age_uptime": -0.2122,
+        "avg_elo": 1.0,
+        "team_0_elo": 0.9958,
+        "team_1_elo": 0.9951,
+        "duration_sec": -0.217
+      },
+      "team_0_elo": {
+        "old_rating": 0.9782,
+        "new_rating": 0.9766,
+        "match_rating_diff": -0.0066,
+        "feudal_age_uptime": -0.3498,
+        "castle_age_uptime": -0.267,
+        "imperial_age_uptime": -0.2145,
+        "avg_elo": 0.9958,
+        "team_0_elo": 1.0,
+        "team_1_elo": 0.9826,
+        "duration_sec": -0.2152
+      },
+      "team_1_elo": {
+        "old_rating": 0.9802,
+        "new_rating": 0.9785,
+        "match_rating_diff": -0.003,
+        "feudal_age_uptime": -0.3509,
+        "castle_age_uptime": -0.2596,
+        "imperial_age_uptime": -0.2076,
+        "avg_elo": 0.9951,
+        "team_0_elo": 0.9826,
+        "team_1_elo": 1.0,
+        "duration_sec": -0.2165
+      },
+      "duration_sec": {
+        "old_rating": -0.213,
+        "new_rating": -0.2124,
+        "match_rating_diff": 0.0002,
+        "feudal_age_uptime": 0.2199,
+        "castle_age_uptime": 0.1279,
+        "imperial_age_uptime": 0.2756,
+        "avg_elo": -0.217,
+        "team_0_elo": -0.2152,
+        "team_1_elo": -0.2165,
+        "duration_sec": 1.0
+      }
+    }
+  },
+  "pca_scree": {
+    "features": [
+      "old_rating",
+      "match_rating_diff",
+      "avg_elo",
+      "team_0_elo",
+      "team_1_elo"
+    ],
+    "sample_size": 20000,
+    "n_components": 5,
+    "variance_explained": [
+      0.792119,
+      0.201146,
+      0.003674,
+      0.003061,
+      0.0
+    ],
+    "cumulative_variance": [
+      0.792119,
+      0.993265,
+      0.996939,
+      1.0,
+      1.0
+    ],
+    "scaler_means": [
+      1088.8681,
+      -0.7332,
+      1089.2907,
+      1086.2512,
+      1092.3309
+    ],
+    "scaler_stds": [
+      287.6585,
+      55.0487,
+      283.2363,
+      286.3844,
+      282.7123
+    ]
+  },
+  "pca_biplot": {
+    "loadings": {
+      "old_rating": {
+        "PC1": 0.498603,
+        "PC2": 0.062524,
+        "PC3": -0.040754,
+        "PC4": 0.863612,
+        "PC5": -1e-05
+      },
+      "match_rating_diff": {
+        "PC1": 0.021764,
+        "PC2": 0.996157,
+        "PC3": 0.01048,
+        "PC4": -0.084191,
+        "PC5": -0.0
+      },
+      "avg_elo": {
+        "PC1": 0.501849,
+        "PC2": -0.035303,
+        "PC3": 0.010494,
+        "PC4": -0.286681,
+        "PC5": 0.815233
+      },
+      "team_0_elo": {
+        "PC1": 0.49964,
+        "PC2": -0.030594,
+        "PC3": -0.691293,
+        "PC4": -0.318878,
+        "PC5": -0.412134
+      },
+      "team_1_elo": {
+        "PC1": 0.499428,
+        "PC2": -0.039749,
+        "PC3": 0.721272,
+        "PC4": -0.251433,
+        "PC5": -0.406866
+      }
+    }
+  }
+}

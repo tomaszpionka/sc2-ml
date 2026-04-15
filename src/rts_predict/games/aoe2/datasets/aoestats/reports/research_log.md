@@ -8,6 +8,99 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** multivariate -- cross-table Spearman heatmap, PCA scree, PCA biplot
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png`
+
+### What
+
+Produced 3 thesis-grade multivariate analyses on a 20,000-row RESERVOIR sample from a
+cross-table JOIN of players_raw (107.6M rows) and matches_raw (30.7M rows). Sample size
+justified by JOIN cost; SE(rho) ~0.007 at N=20K (Invariant #7). All SQL embedded verbatim
+(Invariant #6). POST-GAME and IN-GAME columns annotated on heatmap axis labels (Invariant #3).
+No cleaning decisions, no feature engineering, no model fitting (Invariant #9).
+
+Spearman correlation computed via pandas `.corr(method='spearman')` (pairwise deletion),
+not scipy matrix form (which uses listwise deletion and would have reduced the effective
+sample from ~20K to ~1.7K rows due to 87%-NULL age uptime columns). Minimum pairwise N
+asserted >= 1,000 rows.
+
+### Spearman Heatmap Findings
+
+The cluster ordering groups features by correlation magnitude. Three clusters emerge:
+
+1. **ELO cluster** (rho > 0.98): avg_elo, team_0_elo, team_1_elo are near-perfectly
+   correlated with each other (rho 0.9826--0.9958). old_rating and new_rating also join
+   this cluster (old_rating x avg_elo rho=0.983; new_rating x avg_elo rho=0.981). This
+   confirms massive ELO feature redundancy.
+
+2. **match_rating_diff** is near-orthogonal to the ELO cluster (rho near zero with all
+   ELO features). PC2 analysis confirms it is an independent dimension of variation.
+
+3. **duration_sec** and **age uptime columns** (feudal/castle/imperial) form a separate
+   cluster with weak correlations to ELO features, consistent with their POST-GAME /
+   IN-GAME temporal class and high NULL rate (~87-91%).
+
+4. Cross-table correlations between match-level ELO columns (avg_elo, team_0/1_elo) and
+   player-level ELO columns (old_rating, new_rating) are high because all three match-level
+   columns are repeated for every player in the JOIN. The authoritative within-table
+   correlations remain those from 01_02_06.
+
+### PCA Findings (Pre-Game Features Only)
+
+Features: old_rating, match_rating_diff, avg_elo, team_0_elo, team_1_elo (N=20,000).
+
+- **PC1: 79.21% variance.** Loadings nearly equal for old_rating (0.499), avg_elo (0.502),
+  team_0_elo (0.500), team_1_elo (0.499); match_rating_diff loading near zero (0.022).
+  PC1 captures the shared ELO axis -- this is a rating level factor, not a latent feature.
+- **PC2: 20.11% variance (cumulative 99.33%).** Dominated by match_rating_diff (loading
+  0.996). PC2 is effectively the match_rating_diff dimension alone.
+- **PC3-5: <0.4% each.** Essentially numerical noise after the ELO and match_rating_diff
+  axes are captured.
+- **Two components explain 99.3% of variance.** The five pre-game features are nearly
+  two-dimensional. ELO redundancy (avg_elo, team_0_elo, team_1_elo, old_rating) means
+  keeping all four adds marginal information. Retention decision deferred to Phase 02.
+
+### PCA Biplot Findings
+
+- Scatter of 20K rows coloured by winner shows no visible cluster separation in PC1/PC2 space.
+  Winner does not cleanly separate along the ELO axis or the match_rating_diff axis.
+- All four ELO features point in nearly identical directions (PC1 direction), confirming
+  near-perfect redundancy. match_rating_diff points perpendicular (PC2 direction).
+- This is consistent with the bivariate finding that ELO features have weak but non-zero
+  predictive value; the lack of winner separation in PCA space suggests the signal is
+  distributed and not concentrated in a simple projection.
+
+### Decisions / Column Classification Confirmed
+
+All column classifications are now finalized for the thesis methodology chapter:
+
+| Column | Temporal Class | PCA | Notes |
+|--------|---------------|-----|-------|
+| old_rating | PRE-GAME | Yes | ELO cluster, high redundancy with avg_elo |
+| match_rating_diff | PRE-GAME | Yes | Confirmed PRE-GAME in 01_02_06; PC2 |
+| avg_elo | PRE-GAME | Yes | ELO cluster -- effectively = mean(team_0_elo, team_1_elo) |
+| team_0_elo | PRE-GAME | Yes | ELO cluster |
+| team_1_elo | PRE-GAME | Yes | ELO cluster |
+| new_rating | POST-GAME | No | Excluded from PCA and from pre-game prediction |
+| duration_sec | POST-GAME | No | Excluded from PCA and from pre-game prediction |
+| feudal_age_uptime | IN-GAME, 87% NULL | No | Excluded from PCA |
+| castle_age_uptime | IN-GAME, 88% NULL | No | Excluded from PCA |
+| imperial_age_uptime | IN-GAME, 91% NULL | No | Excluded from PCA |
+
+Pipeline section 01_02 (Exploratory Data Analysis) is now complete for aoestats.
+Phase 02 (Feature Engineering) may proceed.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
 
 **Category:** A (science)

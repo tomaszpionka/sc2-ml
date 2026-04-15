@@ -8,6 +8,141 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** multivariate — cluster-ordered Spearman heatmap + pre-game feature space visualization
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pregame_multivariate_faceted.png`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.json`
+
+### What
+
+Produced 2 thesis-grade PNG files comprising the full multivariate EDA for sc2egset.
+Part A: two-panel cluster-ordered Spearman correlation heatmap across all 4 numeric
+columns (MMR, APM, SQ, supplyCappedPercent), without result_binary (pure feature-feature
+covariance view). Two panels: all rows (SQ sentinel excluded, N=44,789) and rated
+players only (MMR>0, N=7,159). Hierarchical clustering (UPGMA linkage on 1-|rho|
+distance) applied to reorder axes and reveal correlation blocks. Part B: MMR
+distribution faceted by selectedRace x highestLeague (MMR>0, standard races only) —
+the scientifically defensible alternative to degenerate PCA (p=1 numeric pre-game
+feature). All sentinel thresholds from 01_02_04 census at runtime (I7). I3
+classification on all heatmap axis labels.
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_07_spearman_heatmap_all.png` | Two-panel cluster-ordered Spearman heatmap; left=all rows, right=rated (MMR>0) |
+| `01_02_07_pregame_multivariate_faceted.png` | MMR distribution by selectedRace x highestLeague (PCA alternative) |
+
+### Key findings
+
+**Spearman heatmap — all rows (N=44,789, MMR includes zero sentinel):**
+- APM-SQ form a strong correlation block: rho=0.405. This is the dominant structure
+  in the all-rows matrix. Both are in-game metrics measuring player activity.
+- MMR is effectively decorrelated from all other features in the all-rows panel:
+  MMR vs APM=-0.013, MMR vs SQ=-0.009, MMR vs supplyCappedPercent=0.012. The zero
+  sentinel contamination (83.65% of MMR rows are zero) suppresses any real correlation.
+- supplyCappedPercent is near-zero correlated with APM (-0.002) but weakly
+  anti-correlated with SQ (-0.125). Spending efficiently (high SQ) associates with
+  spending less time supply-capped — a plausible in-game relationship.
+- Cluster order (all rows): [MMR, supplyCappedPercent, APM, SQ] — MMR is isolated
+  from the in-game cluster (APM+SQ).
+
+**Spearman heatmap — rated players (N=7,159, MMR>0):**
+- APM-SQ correlation drops from 0.405 to 0.345 in the rated subset — the in-game
+  block persists but is less dominant.
+- MMR now shows detectable positive correlations with in-game features: MMR vs APM=0.206,
+  MMR vs SQ=0.159. Higher-ranked players are more active (APM) and more efficient (SQ)
+  — consistent with the known skill-rating relationship.
+- supplyCappedPercent vs SQ anti-correlation strengthens: -0.161 (vs -0.125 all-rows),
+  consistent with the in-game skill relationship being cleaner in the rated subset.
+- Cluster order (rated): [supplyCappedPercent, MMR, APM, SQ] — supplyCappedPercent
+  migrates to join MMR away from the APM-SQ block when rated players dominate.
+- Key shift: The MMR zero-sentinel contamination in the all-rows panel completely
+  suppresses the real MMR-to-in-game correlations. This confirms that zero-sentinel
+  rows should be excluded from any MMR-related analysis.
+
+**Pre-game multivariate faceted view (PCA alternative):**
+- Standard PCA skipped: sc2egset has exactly 1 numeric pre-game feature (MMR).
+  With p=1, PCA produces trivial PC1=100% — uninformative (Jolliffe 2002, §2.2).
+- MMR distributions vary meaningfully across league tiers: Grandmaster players
+  cluster at the high end (~6,000-7,000 MMR), while Unknown/unranked players
+  span the full range. This confirms league tier is correlated with MMR.
+- Within a given league tier, race (Prot/Terr/Zerg) shows minimal effect on MMR
+  distribution — distributions largely overlap. Race and MMR are approximately
+  independent conditioning on league.
+- Several race x league combinations have very sparse data (N<5) — notably
+  Grandmaster in lower-tier leagues, reflecting the small absolute count of
+  Grandmaster-tier players in the dataset.
+
+### PCA decision (documented)
+
+Standard PCA was skipped because the pre-game numeric feature space contains
+exactly 1 column (MMR). Including in-game features (APM, SQ, supplyCappedPercent)
+in PCA with I3 annotation was rejected: dominant PCs would be driven by the APM-SQ
+in-game correlation (rho~0.40), making results uninterpretable for Phase 02 pre-game
+feature engineering. The faceted distribution directly answers the multivariate
+question for the pre-game space.
+
+### Phase 02 implications
+
+- Pre-game feature space is extremely sparse: 1 numeric (MMR, 83.65% zero-sentinel
+  contaminated), 2 categorical (selectedRace, highestLeague). Feature engineering
+  in Phase 02 must either (a) handle the zero-sentinel imputation explicitly, or
+  (b) restrict pre-game modeling to the ~16% rated-player subset.
+- The MMR-to-in-game correlations (MMR vs APM=0.206, MMR vs SQ=0.159 in rated subset)
+  suggest MMR has predictive signal. The practical question for Phase 02 is how to
+  handle the 83.65% unrated rows without discarding them.
+- Race x league joint structure shows reasonable density for most combinations except
+  sparse Grandmaster cells. Interaction terms (race x league) are likely sparse and
+  may need regularization or collapsing.
+
+### Decisions taken
+
+- All sentinel thresholds derived from census JSON at runtime (I7). No hardcoded numbers.
+- UPGMA linkage on (1-|rho|) distance used for cluster ordering — standard choice
+  for correlation matrices (Sokal & Michener 1958).
+- MIN_LEAGUE_ROWS=50 derived from Cleveland (1993) 2 obs/bin recommendation with
+  30 histogram bins.
+
+### Decisions deferred
+
+- MMR zero-sentinel treatment (impute/exclude/flag) deferred to Phase 01_04 Data Cleaning.
+- Race x league interaction encoding strategy deferred to Phase 02 Feature Engineering.
+- Whether the MMR-APM/SQ correlation in rated players is stable across league tiers
+  deferred to targeted follow-up analysis.
+
+### Open questions
+
+- Does the cluster ordering of [supplyCappedPercent, MMR, APM, SQ] in the rated
+  panel have a game-theoretic interpretation? (Why does supply-cap efficiency
+  cluster closer to MMR than to APM in the rated subset?)
+- Is the sparse Grandmaster x race cell count a data quality issue or a genuine
+  reflection of population sparsity? Relevant for Phase 02 imputation decisions.
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — multivariate EDA, PCA alternative decision, pre-game sparsity
+- Chapter 5 (Results) — feature correlation structure, pre-game vs in-game distinction
+
+### Invariants applied
+
+- **I3:** All Spearman heatmap axis labels carry "[IN-GAME (Inv. #3)]" or "[PRE-GAME]"
+  classification. Pre-game faceted plot uses only pre-game features.
+- **I6:** All 3 SQL queries stored in `sql_queries` dict and written verbatim to
+  `01_02_07_multivariate_analysis.md`.
+- **I7:** All thresholds (MMR_zero_count=37,489, SQ_sentinel=2, Undecided=24, Tie=2)
+  derived from census JSON at runtime.
+- **I9:** Multivariate visualization of existing columns only; no new feature
+  computation.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
 
 **Category:** A (science)

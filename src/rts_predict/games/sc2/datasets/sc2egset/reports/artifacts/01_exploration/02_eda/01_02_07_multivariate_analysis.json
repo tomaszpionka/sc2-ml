@@ -1,0 +1,102 @@
+{
+  "step": "01_02_07",
+  "dataset": "sc2egset",
+  "n_rows_total": 44817,
+  "n_rows_winloss": 44791,
+  "n_undecided": 24,
+  "n_tie": 2,
+  "mmr_zero_count": 37489,
+  "sq_sentinel_count": 2,
+  "pca_decision": "SKIPPED -- only 1 numeric pre-game feature (mmr); faceted distribution by selectedRace x highestLeague used instead",
+  "spearman_all": {
+    "method": "spearman",
+    "subset": "all_rows_sq_sentinel_excluded",
+    "n_rows": 44789,
+    "columns": [
+      "MMR",
+      "APM",
+      "SQ",
+      "supplyCappedPercent"
+    ],
+    "cluster_order": [
+      "MMR",
+      "supplyCappedPercent",
+      "APM",
+      "SQ"
+    ],
+    "matrix": [
+      [
+        1.0,
+        -0.013080272620397602,
+        -0.009182437066283586,
+        0.012088186118655407
+      ],
+      [
+        -0.013080272620397602,
+        0.9999999999999999,
+        0.40489589531014575,
+        -0.002289132673043353
+      ],
+      [
+        -0.009182437066283586,
+        0.40489589531014575,
+        1.0,
+        -0.12463817204048558
+      ],
+      [
+        0.012088186118655407,
+        -0.002289132673043353,
+        -0.12463817204048558,
+        1.0
+      ]
+    ]
+  },
+  "spearman_rated": {
+    "method": "spearman",
+    "subset": "mmr_gt_0_rated_players",
+    "n_rows": 7159,
+    "columns": [
+      "MMR",
+      "APM",
+      "SQ",
+      "supplyCappedPercent"
+    ],
+    "cluster_order": [
+      "supplyCappedPercent",
+      "MMR",
+      "APM",
+      "SQ"
+    ],
+    "matrix": [
+      [
+        0.9999999999999998,
+        0.20614524791778716,
+        0.15932175504327725,
+        -0.011775262520850966
+      ],
+      [
+        0.20614524791778716,
+        1.0,
+        0.34448082470988095,
+        -0.0263288561913426
+      ],
+      [
+        0.15932175504327725,
+        0.34448082470988095,
+        1.0,
+        -0.1610565702696266
+      ],
+      [
+        -0.011775262520850966,
+        -0.0263288561913426,
+        -0.1610565702696266,
+        1.0
+      ]
+    ]
+  },
+  "sql_queries": {
+    "spearman_all": "\nSELECT\n    MMR,\n    APM,\n    SQ,\n    supplyCappedPercent\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n",
+    "spearman_rated": "\nSELECT\n    MMR,\n    APM,\n    SQ,\n    supplyCappedPercent\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n  AND MMR > 0\n  -- I7: mmr > 0 filter excludes zero-sentinel rows (83.65% of data,\n  --     census: MMR_zero = 37489)\n",
+    "pregame_faceted": "\nSELECT\n    MMR,\n    selectedRace,\n    highestLeague,\n    result\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND MMR > 0\n  AND selectedRace IN ('Prot', 'Zerg', 'Terr')\n  -- I7: exclude empty-string (1110 rows), Rand (10), BW* (3) per census\n  -- I7: MMR > 0 excludes zero-sentinel (37489 rows, 83.65%)\n"
+  }
+}

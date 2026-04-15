@@ -424,6 +424,52 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_07 -- Multivariate EDA
+
+```yaml
+step_number: "01_02_07"
+name: "Multivariate EDA"
+description: "Multivariate analysis of all numeric features (cluster-ordered Spearman heatmap) and pre-game feature space visualization (MMR faceted by selectedRace and highestLeague). Addresses the degenerate PCA case: only 1 pre-game numeric feature (mmr), so standard PCA is skipped in favor of a scientifically defensible alternative. Produces 2 PNG files and a markdown artifact."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
+dataset: "sc2egset"
+question: "What is the joint covariance structure of all numeric features, and what multivariate structure exists in the pre-game feature space?"
+method: "Spearman rank correlation on all 4 numeric columns (mmr, apm, sq, supplyCappedPercent), cluster-ordered via scipy hierarchical clustering. Two-panel heatmap: all rows vs MMR>0. Pre-game multivariate view: MMR distribution faceted by selectedRace x highestLeague."
+predecessors: "01_02_06"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_07_multivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pregame_multivariate_faceted.png"
+  report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Axis tick labels on Spearman heatmap annotated with I3 classification. Pre-game faceted plot uses only pre-game features."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All sentinel thresholds derived from census JSON at runtime. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Multivariate visualization of existing columns only. No new feature computation."
+gate:
+  artifact_check: "Both PNG files and 01_02_07_multivariate_analysis.md exist and are non-empty."
+  continue_predicate: "Both PNG files exist. Markdown artifact contains plot index, column classification table, all SQL queries, and PCA-alternative justification. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

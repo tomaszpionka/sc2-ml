@@ -8,6 +8,82 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** multivariate — feature cluster structure and effective dimensionality of the pre-game numeric space
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png` (degenerate fallback)
+
+### What
+
+Produced 2 thesis-grade PNG plots examining the multivariate structure of numeric
+features in matches_raw (277M rows; sampled to ~100K via BERNOULLI for Spearman).
+Analysis A: Spearman cluster-ordered correlation heatmap for all 7 numeric columns
+with I3 classification labels on axes (POST-GAME, AMBIGUOUS, PRE-GAME).
+Hierarchical clustering on 1-|rho| distance matrix (UPGMA). Analysis B: PCA
+degeneracy determination from census IQR statistics (I7 -- no magic numbers).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_07_spearman_heatmap_all` | Spearman heatmap, all 7 numeric columns, cluster-ordered, I3-labelled axes |
+| `01_02_07_pca_biplot` | Degenerate PCA fallback -- text summary (0 viable pre-game features) |
+
+### Key findings
+
+- **Spearman heatmap:** ratingDiff and rating show strong positive correlation
+  (rho approximately +0.5–0.7), consistent with rating encoding a mix of pre-game
+  and post-game information. duration_min is largely independent of the pre-game
+  features. speedFactor, treatyLength, and population show near-zero correlation
+  with all other features and with each other, consistent with their near-constant
+  distributions in 1v1 ranked play.
+- **NaN handling in Spearman matrix:** Near-constant columns (speedFactor, treatyLength,
+  population, internalLeaderboardId) produced NaN entries in the scipy spearmanr
+  output due to zero rank variance in the filtered sample. NaNs filled with 0
+  (uncorrelated) for clustering distance computation; p-values set to 1.0 (not
+  significant). This is documented in the notebook output and is expected behavior.
+- **PCA DEGENERATE -- confirmed:** All 3 PCA candidates fail the IQR==0 near-constant
+  filter (population p25==p75==200.0; speedFactor p25==p75==1.70; treatyLength
+  p25==p75==0.0). internalLeaderboardId excluded by design (nominal categorical).
+  Result: 0 viable pre-game numeric features survive. PCA is meaningless.
+- **Pre-game feature poverty -- confirmed:** aoe2companion matches_raw has effectively
+  zero numeric pre-game features usable for machine learning without engineering.
+  This is the central finding of the 01_02 EDA stack for this dataset.
+
+### Decisions
+
+- `speedFactor`, `treatyLength`, `population` → near-constant in 1v1 ranked; exclude
+  from Phase 02 raw numeric feature set (IQR==0 confirmed from census)
+- `internalLeaderboardId` → retained in heatmap (rank-correlation meaningful); excluded
+  from PCA (nominal categorical with arbitrary integer codes)
+- PCA branch → degenerate path; Phase 02 must engineer features from temporal history
+
+### I3 classification applied
+
+| Column | Classification | Applied |
+|--------|----------------|---------|
+| rating | AMBIGUOUS | Deferred to Phase 02 (row-level verification with ratings_raw) |
+| ratingDiff | POST-GAME | Excluded from all pre-game feature sets |
+| duration_min | POST-GAME | EDA characterization only; not prediction feature |
+| population | PRE-GAME | Near-constant; excluded from PCA |
+| speedFactor | PRE-GAME | Near-constant; excluded from PCA |
+| treatyLength | PRE-GAME | Near-constant; excluded from PCA |
+| internalLeaderboardId | PRE-GAME | Nominal categorical; in heatmap, excluded from PCA |
+
+### Open questions
+
+- Does the ratingDiff/rating cluster in the Spearman heatmap confirm that rating
+  is partially post-game? Requires Phase 02 row-level join with ratings_raw.
+- Can engineered features (rolling win rates, Elo trajectories, civ matchup stats)
+  recover sufficient pre-game signal for Phase 02 modelling?
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
 
 **Category:** A (science)

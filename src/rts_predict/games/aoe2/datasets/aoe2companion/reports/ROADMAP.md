@@ -425,6 +425,53 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_07 -- Multivariate EDA
+
+```yaml
+step_number: "01_02_07"
+name: "Multivariate EDA"
+description: "Multivariate exploratory data analysis for aoe2companion. Spearman cluster-ordered heatmap for all numeric columns with I3 classification labels. PCA scree + biplot on pre-game numeric features only (degenerate fallback if <3 features survive). All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations per Invariant #3."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "How do numeric features cluster together (redundancy)? What is the effective dimensionality of the pre-game feature space?"
+method: "Spearman via scipy.stats.spearmanr on BERNOULLI-sampled rows. Hierarchical clustering for axis ordering (scipy.cluster.hierarchy). PCA on StandardScaler-transformed pre-game numeric features (sklearn). Scree plot + biplot or degenerate scatter fallback. Markdown artifact with all SQL (I6)."
+stratification: "1v1 ranked scope (rm_1v1 + qp_rm_1v1)."
+predecessors:
+  - "01_02_04"
+  - "01_02_06"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_07_multivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png"
+  report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+gate:
+  artifact_check: "01_02_07_spearman_heatmap_all.png exists. At least one PCA plot (scree or degenerate scatter) exists. 01_02_07_multivariate_analysis.md exists with SQL queries (Invariant #6) and feature classification table."
+  continue_predicate: "Notebook executes end-to-end without error. Feature classification table complete."
+  halt_predicate: "DuckDB queries fail on matches_raw or sampling yields zero rows."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Axis tick labels on Spearman heatmap carry I3 classification (POST-GAME, AMBIGUOUS, PRE-GAME). PCA excludes all POST-GAME and AMBIGUOUS columns."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "TARGET_SAMPLE_ROWS derived from census total_rows at runtime. Column selection derived from census numeric_stats. No hardcoded thresholds."
+  - number: "9"
+    how_upheld: "Multivariate visualization of features established in 01_02_04 and classified in 01_02_06. No new analytical computation beyond visualization."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

@@ -458,6 +458,57 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_02_07 — Multivariate EDA
+
+```yaml
+step_number: "01_02_07"
+name: "Multivariate EDA"
+description: "Multivariate EDA for aoestats: Spearman cluster-ordered heatmap of all numeric columns across both tables (I3-annotated axis labels), PCA scree + biplot on pre-game numeric features. 3 plots + markdown artifact. All SQL embedded (Invariant #6). Sample-based (20K rows from cross-table JOIN). No cleaning or feature decisions (Invariant #9)."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 2.1"
+dataset: "aoestats"
+question: "What is the full inter-table correlation structure among numeric columns? How much variance is concentrated in the first few principal components of pre-game features? Are any pre-game features redundant?"
+method: "Cross-table JOIN on game_id with RESERVOIR sampling (20K rows). Spearman correlation via pandas .corr(method='spearman') with pairwise deletion. PCA via sklearn.decomposition.PCA with StandardScaler. All thresholds from census JSON."
+stratification: "Cross-table (matches_raw JOIN players_raw on game_id)."
+predecessors:
+  - "01_02_06"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_07_multivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md, Section 2.1"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png"
+  report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "new_rating and duration annotated POST-GAME* on heatmap axis labels. age uptime columns annotated IN-GAME*. match_rating_diff annotated PRE-GAME (resolved in 01_02_06). POST-GAME columns excluded from PCA feature set."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "Sample size (TARGET_SAMPLE_ROWS=20000) justified by cross-table JOIN cost on 30M+107M row tables. ELO sentinel value (-1) from census. All NULL rate thresholds from census JSON."
+  - number: "9"
+    how_upheld: "Multivariate analysis only. No model fitting, no feature engineering, no cleaning decisions. PCA is descriptive — no component retention decision."
+gate:
+  artifact_check: "All 3 PNG files exist under plots/. 01_02_07_multivariate_analysis.md exists and is non-empty."
+  continue_predicate: "All 3 PNG files exist. Markdown artifact contains all SQL queries and plot index table with Temporal Annotation column. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ---
