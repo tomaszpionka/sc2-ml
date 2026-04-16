@@ -19,6 +19,18 @@ merged to `master`.
 
 ### Removed
 
+## [3.7.3] — 2026-04-16 (PR #TBD: fix/aoe2-01-03-01-profile-gaps)
+
+### Fixed
+- aoestats 01_03_01 I3 table: 30 → 32 rows (dict key collision on filename/game_id)
+- aoe2companion 01_03_01: temporal coverage added (2020-07 to 2026-04, 70 months)
+- aoe2companion 01_03_01: near-constant stratified into 11 genuinely uninformative +
+  39 low-cardinality categorical (TARGET rule keeps `won` in categorical)
+- aoe2companion 01_03_01: cross_table_notes for 7 dead profiles_raw columns
+- sc2egset KDE omission justification restored in notebook source (PR2 overwrite)
+- aoe2companion research log: 6 remaining rating "Phase 02" references → 01_04
+- All 01_03_01 PNGs moved to `plots/` subdirectory (matches 02_eda convention)
+
 ## [3.7.2] — 2026-04-16 (PR #TBD: fix/sc2egset-01-03-01-profile-gaps)
 
 ### Fixed
