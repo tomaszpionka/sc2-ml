@@ -1,0 +1,618 @@
+{
+  "step": "01_03_03",
+  "dataset": "aoe2companion",
+  "focus_player_id_for_t02": 3299155,
+  "leaderboard_key_map": {
+    "note": "matches_raw.internalLeaderboardId maps to ratings_raw.leaderboard_id for leaderboard_id=0 (unranked). rm_1v1 (internalLeaderboardId=6) has zero rows in ratings_raw.",
+    "matches_raw_leaderboard_sample": [
+      {
+        "leaderboard": "unranked",
+        "internalLeaderboardId": 0
+      },
+      {
+        "leaderboard": "dm_1v1",
+        "internalLeaderboardId": 2
+      },
+      {
+        "leaderboard": "dm_team",
+        "internalLeaderboardId": 3
+      },
+      {
+        "leaderboard": "dm_team",
+        "internalLeaderboardId": 4
+      },
+      {
+        "leaderboard": "dm_team",
+        "internalLeaderboardId": 5
+      },
+      {
+        "leaderboard": "rm_1v1",
+        "internalLeaderboardId": 6
+      },
+      {
+        "leaderboard": "rm_team",
+        "internalLeaderboardId": 7
+      },
+      {
+        "leaderboard": "rm_team",
+        "internalLeaderboardId": 8
+      },
+      {
+        "leaderboard": "rm_team",
+        "internalLeaderboardId": 9
+      },
+      {
+        "leaderboard": "qp_ew_1v1",
+        "internalLeaderboardId": 11
+      },
+      {
+        "leaderboard": "qp_ew_team",
+        "internalLeaderboardId": 12
+      },
+      {
+        "leaderboard": "qp_ew_team",
+        "internalLeaderboardId": 13
+      },
+      {
+        "leaderboard": "qp_ew_team",
+        "internalLeaderboardId": 14
+      },
+      {
+        "leaderboard": "unknown",
+        "internalLeaderboardId": 15
+      },
+      {
+        "leaderboard": "unknown",
+        "internalLeaderboardId": 16
+      },
+      {
+        "leaderboard": "unknown",
+        "internalLeaderboardId": 17
+      },
+      {
+        "leaderboard": "qp_rm_1v1",
+        "internalLeaderboardId": 18
+      },
+      {
+        "leaderboard": "qp_rm_team",
+        "internalLeaderboardId": 19
+      },
+      {
+        "leaderboard": "qp_rm_team",
+        "internalLeaderboardId": 20
+      },
+      {
+        "leaderboard": "qp_rm_team",
+        "internalLeaderboardId": 21
+      }
+    ],
+    "ratings_raw_leaderboard_ids": [
+      {
+        "leaderboard_id": 0,
+        "n_rows": 25839038,
+        "n_players": 727995,
+        "min_date": "2022-09-10 00:00:00",
+        "max_date": "2026-04-03 23:59:59"
+      },
+      {
+        "leaderboard_id": 3,
+        "n_rows": 11784760,
+        "n_players": 113584,
+        "min_date": "2022-10-12 00:00:00",
+        "max_date": "2026-04-03 23:59:53"
+      },
+      {
+        "leaderboard_id": 4,
+        "n_rows": 18853083,
+        "n_players": 154695,
+        "min_date": "2022-10-14 00:00:00",
+        "max_date": "2026-04-03 23:59:58"
+      },
+      {
+        "leaderboard_id": 13,
+        "n_rows": 387207,
+        "n_players": 7371,
+        "min_date": "2022-10-10 00:00:00",
+        "max_date": "2026-04-03 23:59:10"
+      },
+      {
+        "leaderboard_id": 14,
+        "n_rows": 563025,
+        "n_players": 12965,
+        "min_date": "2023-07-09 00:00:00",
+        "max_date": "2026-04-03 23:56:22"
+      },
+      {
+        "leaderboard_id": 15,
+        "n_rows": 342918,
+        "n_players": 4416,
+        "min_date": "2024-01-03 00:00:00",
+        "max_date": "2026-04-03 23:59:23"
+      },
+      {
+        "leaderboard_id": 16,
+        "n_rows": 364138,
+        "n_players": 5124,
+        "min_date": "2024-01-12 00:00:00",
+        "max_date": "2026-04-03 23:54:23"
+      },
+      {
+        "leaderboard_id": 17,
+        "n_rows": 44,
+        "n_players": 4,
+        "min_date": "2025-07-04 17:35:17",
+        "max_date": "2026-03-31 15:40:17"
+      },
+      {
+        "leaderboard_id": 18,
+        "n_rows": 89,
+        "n_players": 17,
+        "min_date": "2025-07-16 02:55:23",
+        "max_date": "2026-01-14 01:06:17"
+      },
+      {
+        "leaderboard_id": 25,
+        "n_rows": 61,
+        "n_players": 16,
+        "min_date": "2025-07-21 19:23:32",
+        "max_date": "2026-04-02 05:13:00"
+      },
+      {
+        "leaderboard_id": 27,
+        "n_rows": 2,
+        "n_players": 2,
+        "min_date": "2024-07-11 00:00:00",
+        "max_date": "2024-07-11 00:00:00"
+      },
+      {
+        "leaderboard_id": 29,
+        "n_rows": 104140,
+        "n_players": 3599,
+        "min_date": "2026-01-02 18:33:33",
+        "max_date": "2026-01-18 17:32:37"
+      },
+      {
+        "leaderboard_id": 30,
+        "n_rows": 5,
+        "n_players": 2,
+        "min_date": "2026-01-11 15:52:43",
+        "max_date": "2026-01-18 14:05:53"
+      },
+      {
+        "leaderboard_id": 5018,
+        "n_rows": 25366,
+        "n_players": 5007,
+        "min_date": "2026-03-31 00:00:31",
+        "max_date": "2026-04-03 23:59:55"
+      },
+      {
+        "leaderboard_id": 5019,
+        "n_rows": 53557,
+        "n_players": 9626,
+        "min_date": "2026-03-31 00:00:37",
+        "max_date": "2026-04-03 23:59:24"
+      }
+    ]
+  },
+  "leaderboards_raw": {
+    "n_rows": 2381227,
+    "n_source_files": 1,
+    "n_leaderboards": 16,
+    "n_distinct_players": 1863297,
+    "min_updatedAt": "2023-08-23 22:05:17.362000",
+    "max_updatedAt": "2026-04-06 00:12:39.518000",
+    "min_lastMatchTime": "2022-09-06 18:47:29",
+    "max_lastMatchTime": "2026-04-06 00:12:25",
+    "per_leaderboard": [
+      {
+        "leaderboard": "unranked",
+        "n_rows": 1729627,
+        "n_players": 1729627,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 14:57:11.484000",
+        "max_updatedAt": "2026-04-06 00:09:25.142000",
+        "min_lastMatchTime": "2022-09-08 12:32:57",
+        "max_lastMatchTime": "2026-04-06 00:09:02"
+      },
+      {
+        "leaderboard": "rm_team",
+        "n_rows": 329438,
+        "n_players": 329438,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:25:46.490000",
+        "max_updatedAt": "2026-04-06 00:10:48.994000",
+        "min_lastMatchTime": "2022-09-06 18:55:17",
+        "max_lastMatchTime": "2026-04-06 00:10:40"
+      },
+      {
+        "leaderboard": "rm_1v1",
+        "n_rows": 242054,
+        "n_players": 242054,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:22:16.204000",
+        "max_updatedAt": "2026-04-06 00:12:39.518000",
+        "min_lastMatchTime": "2022-09-06 18:47:29",
+        "max_lastMatchTime": "2026-04-06 00:12:25"
+      },
+      {
+        "leaderboard": "ew_team",
+        "n_rows": 29593,
+        "n_players": 29593,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:32:31.637000",
+        "max_updatedAt": "2026-04-06 00:10:57.354000",
+        "min_lastMatchTime": "2022-09-06 19:11:41",
+        "max_lastMatchTime": "2026-04-06 00:07:02"
+      },
+      {
+        "leaderboard": "ew_1v1",
+        "n_rows": 17061,
+        "n_players": 17061,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:32:01.519000",
+        "max_updatedAt": "2026-04-06 00:10:53.409000",
+        "min_lastMatchTime": "2022-09-06 23:25:43",
+        "max_lastMatchTime": "2026-04-06 00:07:37"
+      },
+      {
+        "leaderboard": "rm_team_console",
+        "n_rows": 12938,
+        "n_players": 12938,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 14:04:20.875000",
+        "max_updatedAt": "2026-04-06 00:12:29.735000",
+        "min_lastMatchTime": "2023-09-02 15:31:50",
+        "max_lastMatchTime": "2026-04-06 00:10:38"
+      },
+      {
+        "leaderboard": "rm_1v1_console",
+        "n_rows": 8935,
+        "n_players": 8935,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 13:59:38.705000",
+        "max_updatedAt": "2026-04-06 00:12:27.942000",
+        "min_lastMatchTime": "2023-09-02 15:37:10",
+        "max_lastMatchTime": "2026-04-06 00:11:56"
+      },
+      {
+        "leaderboard": "unknown",
+        "n_rows": 7118,
+        "n_players": 7116,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-05-31 16:09:59.541000",
+        "max_updatedAt": "2025-07-28 16:04:36.646000",
+        "min_lastMatchTime": "2024-04-30 22:53:01",
+        "max_lastMatchTime": "2024-10-18 17:40:04"
+      },
+      {
+        "leaderboard": "ew_1v1_redbullwololo",
+        "n_rows": 3599,
+        "n_players": 3599,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2026-02-01 18:36:27.255000",
+        "max_updatedAt": "2026-03-17 15:40:48.145000",
+        "min_lastMatchTime": "2026-01-02 21:03:14",
+        "max_lastMatchTime": "2026-01-18 17:32:37"
+      },
+      {
+        "leaderboard": "ror_1v1",
+        "n_rows": 357,
+        "n_players": 357,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:32:55.891000",
+        "max_updatedAt": "2026-04-06 00:10:57.635000",
+        "min_lastMatchTime": "2023-05-16 21:21:19",
+        "max_lastMatchTime": "2026-04-02 05:13:00"
+      },
+      {
+        "leaderboard": "ror_team",
+        "n_rows": 340,
+        "n_players": 340,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 10:32:56.917000",
+        "max_updatedAt": "2024-11-29 12:12:54.340000",
+        "min_lastMatchTime": "2023-05-17 14:30:52",
+        "max_lastMatchTime": "2024-10-27 19:48:53"
+      },
+      {
+        "leaderboard": "dm_team",
+        "n_rows": 81,
+        "n_players": 81,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2023-08-23 22:05:17.362000",
+        "max_updatedAt": "2023-08-23 22:05:17.362000",
+        "min_lastMatchTime": "2023-07-30 02:58:40",
+        "max_lastMatchTime": "2023-08-22 23:39:26"
+      },
+      {
+        "leaderboard": "dm_1v1",
+        "n_rows": 38,
+        "n_players": 38,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2023-08-23 22:05:17.362000",
+        "max_updatedAt": "2023-08-23 22:05:17.362000",
+        "min_lastMatchTime": "2023-07-29 00:05:51",
+        "max_lastMatchTime": "2023-08-21 21:32:48"
+      },
+      {
+        "leaderboard": "ew_1v1_console",
+        "n_rows": 25,
+        "n_players": 25,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-01-25 14:18:28.197000",
+        "max_updatedAt": "2026-04-05 17:01:37.427000",
+        "min_lastMatchTime": "2023-07-28 17:46:47",
+        "max_lastMatchTime": "2026-04-05 16:58:22"
+      },
+      {
+        "leaderboard": "ew_team_console",
+        "n_rows": 21,
+        "n_players": 21,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2024-05-15 21:01:52.664000",
+        "max_updatedAt": "2026-04-06 00:12:30.253000",
+        "min_lastMatchTime": "2024-04-11 03:04:41",
+        "max_lastMatchTime": "2026-01-14 01:06:17"
+      },
+      {
+        "leaderboard": "ew_1v1_redbullwololo_console",
+        "n_rows": 2,
+        "n_players": 2,
+        "avg_entries_per_player": 1.0,
+        "min_updatedAt": "2026-04-06 00:12:26.215000",
+        "max_updatedAt": "2026-04-06 00:12:26.215000",
+        "min_lastMatchTime": "2026-01-11 18:10:25",
+        "max_lastMatchTime": "2026-01-18 14:05:53"
+      }
+    ],
+    "rm1v1_coverage": [
+      {
+        "n_rm1v1_match_players": 538280,
+        "n_rm1v1_lb_players": 242054,
+        "n_overlap": 242030,
+        "pct_match_players_in_lb": 45.0
+      }
+    ],
+    "snapshot_check": [
+      {
+        "leaderboard": "rm_1v1",
+        "n_rows": 242054,
+        "n_players": 242054,
+        "avg_entries_per_player": 1.0,
+        "n_distinct_updatedAt_days": 130
+      },
+      {
+        "leaderboard": "rm_team",
+        "n_rows": 329438,
+        "n_players": 329438,
+        "avg_entries_per_player": 1.0,
+        "n_distinct_updatedAt_days": 106
+      },
+      {
+        "leaderboard": "unranked",
+        "n_rows": 1729627,
+        "n_players": 1729627,
+        "avg_entries_per_player": 1.0,
+        "n_distinct_updatedAt_days": 233
+      }
+    ]
+  },
+  "profiles_raw": {
+    "n_rows": 3609686,
+    "n_source_files": 1,
+    "n_distinct_profileIds": 3609686,
+    "n_non_null_steamId": 3607835,
+    "n_non_null_clan": 3609683,
+    "n_non_null_country": 2005595,
+    "n_non_null_twitch": 43,
+    "n_has_timestamp_columns": 0,
+    "coverage": [
+      {
+        "n_profiles_raw": 3609686,
+        "n_match_players": 2659038,
+        "n_overlap": 2659038,
+        "pct_match_players_covered": 100.0
+      }
+    ]
+  },
+  "t02_rating_disambiguation": {
+    "method": "cross-reference matches_raw.rating with ratings_raw.rating (lb=0)",
+    "focus_player_id": 3299155,
+    "pre_game_test": [
+      {
+        "n_matches_with_prior_rating": 3942,
+        "n_exact_pre_match": 3933,
+        "pct_exact_pre_match": 99.8,
+        "median_abs_diff": 0,
+        "max_abs_diff": 17
+      }
+    ],
+    "post_game_test": [
+      {
+        "n_matches_with_post_rating": 5539,
+        "n_direct_post_match": 4366,
+        "pct_direct_post_match": 78.8,
+        "n_derived_post_match": 4386,
+        "pct_derived_post_match": 79.2,
+        "median_diff_direct": 0
+      }
+    ],
+    "verdict": "PRE_GAME",
+    "pct_exact_pre_match": 99.8,
+    "pct_derived_post_match": 79.2,
+    "n_matches_tested": 3942
+  },
+  "matches_raw_rating_completeness": [
+    {
+      "leaderboard": "rm_team",
+      "n_rows": 102711158,
+      "n_with_rating": 69451768,
+      "n_with_ratingDiff": 69451391,
+      "pct_with_rating": 67.6
+    },
+    {
+      "leaderboard": "unranked",
+      "n_rows": 65939173,
+      "n_with_rating": 24416359,
+      "n_with_ratingDiff": 24416051,
+      "pct_with_rating": 37.0
+    },
+    {
+      "leaderboard": "rm_1v1",
+      "n_rows": 53694522,
+      "n_with_rating": 39733424,
+      "n_with_ratingDiff": 39733182,
+      "pct_with_rating": 74.0
+    },
+    {
+      "leaderboard": "qp_rm_team",
+      "n_rows": 19707154,
+      "n_with_rating": 12589326,
+      "n_with_ratingDiff": 12589326,
+      "pct_with_rating": 63.9
+    },
+    {
+      "leaderboard": "qp_rm_1v1",
+      "n_rows": 7377276,
+      "n_with_rating": 5334176,
+      "n_with_ratingDiff": 5334176,
+      "pct_with_rating": 72.3
+    },
+    {
+      "leaderboard": "rm_team_console",
+      "n_rows": 3472383,
+      "n_with_rating": 1835952,
+      "n_with_ratingDiff": 1835944,
+      "pct_with_rating": 52.9
+    },
+    {
+      "leaderboard": "ew_team",
+      "n_rows": 3356610,
+      "n_with_rating": 2376713,
+      "n_with_ratingDiff": 2376705,
+      "pct_with_rating": 70.8
+    },
+    {
+      "leaderboard": "unknown",
+      "n_rows": 3131983,
+      "n_with_rating": 730269,
+      "n_with_ratingDiff": 730269,
+      "pct_with_rating": 23.3
+    },
+    {
+      "leaderboard": "ew_1v1",
+      "n_rows": 1943971,
+      "n_with_rating": 1276050,
+      "n_with_ratingDiff": 1276037,
+      "pct_with_rating": 65.6
+    },
+    {
+      "leaderboard": "rm_1v1_console",
+      "n_rows": 1600477,
+      "n_with_rating": 1079880,
+      "n_with_ratingDiff": 1079866,
+      "pct_with_rating": 67.5
+    },
+    {
+      "leaderboard": "ew_1v1_redbullwololo",
+      "n_rows": 594890,
+      "n_with_rating": 594858,
+      "n_with_ratingDiff": 594858,
+      "pct_with_rating": 100.0
+    },
+    {
+      "leaderboard": "dm_team",
+      "n_rows": 193400,
+      "n_with_rating": 12728,
+      "n_with_ratingDiff": 12728,
+      "pct_with_rating": 6.6
+    },
+    {
+      "leaderboard": "qp_br_ffa",
+      "n_rows": 167984,
+      "n_with_rating": 1456,
+      "n_with_ratingDiff": 1456,
+      "pct_with_rating": 0.9
+    },
+    {
+      "leaderboard": "dm_1v1",
+      "n_rows": 94508,
+      "n_with_rating": 11788,
+      "n_with_ratingDiff": 11788,
+      "pct_with_rating": 12.5
+    },
+    {
+      "leaderboard": "qp_ew_1v1",
+      "n_rows": 49477,
+      "n_with_rating": 5012,
+      "n_with_ratingDiff": 5012,
+      "pct_with_rating": 10.1
+    }
+  ],
+  "table_verdicts": {
+    "matches_raw": {
+      "is_time_series": true,
+      "temporal_dimension": "started, finished (TIMESTAMP, per-match)",
+      "i3_classification": "USABLE",
+      "i3_rationale": "Contains per-match timestamps. Features derived from matches_raw history prior to game T are temporally safe under I3 (using match_time < T). The rating column is the PRE-GAME rating (proven by T02 cross-reference, 99.8% exact match). ratingDiff = post_rating - pre_rating.",
+      "primary_columns_for_pipeline": [
+        "matchId",
+        "started",
+        "profileId",
+        "rating",
+        "ratingDiff",
+        "won",
+        "leaderboard",
+        "internalLeaderboardId",
+        "civ",
+        "map"
+      ],
+      "notes": "74% of rm_1v1 rows have non-null rating/ratingDiff. matches_raw is the PRIMARY source for pre-game feature derivation."
+    },
+    "ratings_raw": {
+      "is_time_series": true,
+      "temporal_dimension": "date (TIMESTAMP, per-game entry -- not daily as filename suggests)",
+      "i3_classification": "CONDITIONALLY_USABLE",
+      "i3_rationale": "ratings_raw contains a per-game rating history with sub-minute timestamps. Entries can be filtered to date < T for temporal safety. However, ratings_raw has NO entries for rm_1v1 (internalLeaderboardId=6). Coverage is only for leaderboard_ids 0 (unranked, 25.8M rows) and 3,4 (dm_team variants, 30.6M rows combined). For rm_1v1 prediction, ratings_raw provides no additional temporal rating data beyond what is in matches_raw.rating.",
+      "leaderboard_coverage": {
+        "rm_1v1_rows": 0,
+        "unranked_rows": 25839038,
+        "dm_team_3_rows": 11784760,
+        "dm_team_4_rows": 18853083
+      },
+      "notes": "The leaderboard_id in ratings_raw does NOT map 1:1 to internalLeaderboardId in matches_raw for all leaderboards. The lb=0 (unranked) mapping is confirmed."
+    },
+    "leaderboards_raw": {
+      "is_time_series": false,
+      "temporal_dimension": "updatedAt (single snapshot per player -- last activity timestamp, not a historical series)",
+      "i3_classification": "NOT_USABLE_FOR_TEMPORAL_FEATURES",
+      "i3_rationale": "leaderboards_raw contains exactly 1 entry per player per leaderboard (avg_entries_per_player=1.0 confirmed). The updatedAt field is the last-activity timestamp per player, not a collection of historical snapshots. Using leaderboards_raw.rating as a feature for game at time T would use a snapshot from the dataset download date (April 2026), violating I3 for all T before that date. Coverage is 45% of rm_1v1 match players (242,054 / 538,280).",
+      "potential_use": "Can be used as a static lookup for player metadata (rank, rankLevel, country, active) at the time of data collection only. Not suitable for any temporally indexed feature."
+    },
+    "profiles_raw": {
+      "is_time_series": false,
+      "temporal_dimension": "none -- no TIMESTAMP columns",
+      "i3_classification": "NOT_USABLE_FOR_TEMPORAL_FEATURES",
+      "i3_rationale": "profiles_raw has zero TIMESTAMP columns. It is a static metadata snapshot (1 row per player). It cannot contribute any temporally safe features under I3.",
+      "potential_use": "Can provide static player metadata: steamId (99.9% non-null), country (55.6% non-null), clan (99.9% non-null). All 2,659,038 match players are covered (100% overlap). steamId and clan are unique to profiles_raw (not available in matches_raw).",
+      "coverage_pct_of_match_players": 100.0
+    }
+  },
+  "sql_queries": {
+    "leaderboards_raw_basic": "\nSELECT\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT filename) AS n_source_files,\n    COUNT(DISTINCT leaderboard) AS n_leaderboards,\n    COUNT(DISTINCT profileId) AS n_distinct_players,\n    MIN(updatedAt) AS min_updatedAt,\n    MAX(updatedAt) AS max_updatedAt,\n    MIN(lastMatchTime) AS min_lastMatchTime,\n    MAX(lastMatchTime) AS max_lastMatchTime\nFROM leaderboards_raw\n",
+    "leaderboards_raw_per_leaderboard": "\nSELECT\n    leaderboard,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT profileId) AS n_players,\n    ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT profileId), 3) AS avg_entries_per_player,\n    MIN(updatedAt) AS min_updatedAt,\n    MAX(updatedAt) AS max_updatedAt,\n    MIN(lastMatchTime) AS min_lastMatchTime,\n    MAX(lastMatchTime) AS max_lastMatchTime\nFROM leaderboards_raw\nGROUP BY leaderboard\nORDER BY n_rows DESC\n",
+    "leaderboards_raw_snapshot_check": "\nSELECT\n    leaderboard,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT profileId) AS n_players,\n    ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT profileId), 3) AS avg_entries_per_player,\n    COUNT(DISTINCT DATE_TRUNC('day', updatedAt)) AS n_distinct_updatedAt_days\nFROM leaderboards_raw\nWHERE leaderboard IN ('rm_1v1', 'rm_team', 'unranked')\nGROUP BY leaderboard\nORDER BY leaderboard\n",
+    "leaderboards_raw_rm1v1_coverage": "\nWITH rm1v1_match_players AS (\n    SELECT DISTINCT profileId\n    FROM matches_raw\n    WHERE leaderboard = 'rm_1v1'\n      AND profileId != -1\n),\nlb_rm1v1_players AS (\n    SELECT DISTINCT profileId\n    FROM leaderboards_raw\n    WHERE leaderboard = 'rm_1v1'\n)\nSELECT\n    (SELECT COUNT(*) FROM rm1v1_match_players) AS n_rm1v1_match_players,\n    (SELECT COUNT(*) FROM lb_rm1v1_players) AS n_rm1v1_lb_players,\n    (SELECT COUNT(*) FROM rm1v1_match_players\n     WHERE profileId IN (SELECT profileId FROM lb_rm1v1_players)) AS n_overlap,\n    ROUND(\n        100.0 * (SELECT COUNT(*) FROM rm1v1_match_players\n                 WHERE profileId IN (SELECT profileId FROM lb_rm1v1_players))\n        / (SELECT COUNT(*) FROM rm1v1_match_players), 1\n    ) AS pct_match_players_in_lb\n",
+    "profiles_raw_basic": "\nSELECT\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT filename) AS n_source_files,\n    COUNT(DISTINCT profileId) AS n_distinct_profileIds,\n    COUNT(steamId) AS n_non_null_steamId,\n    COUNT(clan) AS n_non_null_clan,\n    COUNT(country) AS n_non_null_country,\n    COUNT(twitchChannel) AS n_non_null_twitch,\n    COUNT(youtubeChannel) AS n_non_null_youtube,\n    COUNT(discordId) AS n_non_null_discord\nFROM profiles_raw\n",
+    "profiles_raw_describe": "DESCRIBE profiles_raw",
+    "profiles_raw_coverage": "\nSELECT\n    (SELECT COUNT(DISTINCT profileId) FROM profiles_raw) AS n_profiles_raw,\n    (SELECT COUNT(DISTINCT profileId) FROM matches_raw WHERE profileId != -1)\n        AS n_match_players,\n    (SELECT COUNT(DISTINCT profileId) FROM profiles_raw\n     WHERE profileId IN (SELECT profileId FROM matches_raw WHERE profileId != -1))\n        AS n_overlap,\n    ROUND(\n        100.0 *\n        (SELECT COUNT(DISTINCT profileId) FROM profiles_raw\n         WHERE profileId IN (SELECT profileId FROM matches_raw WHERE profileId != -1))\n        / NULLIF((SELECT COUNT(DISTINCT profileId) FROM matches_raw WHERE profileId != -1), 0),\n        1\n    ) AS pct_match_players_covered\n",
+    "matches_raw_leaderboard_key_map": "\nSELECT DISTINCT leaderboard, internalLeaderboardId\nFROM matches_raw\nORDER BY internalLeaderboardId\nLIMIT 30\n",
+    "ratings_raw_leaderboard_ids": "\nSELECT leaderboard_id, COUNT(*) AS n_rows, COUNT(DISTINCT profile_id) AS n_players,\n       MIN(date) AS min_date, MAX(date) AS max_date\nFROM ratings_raw\nGROUP BY leaderboard_id\nORDER BY leaderboard_id\n",
+    "lb0_profile_overlap": "\nSELECT COUNT(DISTINCT r.profile_id) AS n_overlap_profiles\nFROM ratings_raw r\nJOIN matches_raw m ON r.profile_id = m.profileId\nWHERE r.leaderboard_id = 0\n  AND m.internalLeaderboardId = 0\n  AND m.profileId != -1\n",
+    "active_player_for_case_study": "\nSELECT r.profile_id,\n       COUNT(DISTINCT DATE_TRUNC('day', r.date)) AS n_rating_days,\n       COUNT(DISTINCT m.matchId) AS n_matches\nFROM ratings_raw r\nJOIN matches_raw m ON r.profile_id = m.profileId\n                   AND m.internalLeaderboardId = 0\n                   AND m.started >= TIMESTAMP '2025-08-01'\n                   AND m.rating IS NOT NULL\n                   AND m.ratingDiff IS NOT NULL\nWHERE r.leaderboard_id = 0\n  AND r.date >= TIMESTAMP '2025-08-01'\nGROUP BY r.profile_id\nHAVING COUNT(DISTINCT m.matchId) >= 100\nORDER BY n_matches DESC\nLIMIT 5\n",
+    "case_study_trace": "\nWITH player_matches AS (\n    SELECT matchId, started, finished, rating AS match_rating, ratingDiff AS match_rd\n    FROM matches_raw\n    WHERE profileId = 3299155\n      AND internalLeaderboardId = 0\n      AND rating IS NOT NULL\n      AND ratingDiff IS NOT NULL\n      AND started >= TIMESTAMP '2025-09-01'\n      AND started < TIMESTAMP '2025-09-01' + INTERVAL 1 DAY\n    ORDER BY started\n    LIMIT 20\n),\nplayer_ratings AS (\n    SELECT date, rating AS series_rating, rating_diff AS series_rd, games\n    FROM ratings_raw\n    WHERE profile_id = 3299155\n      AND leaderboard_id = 0\n      AND date >= TIMESTAMP '2025-09-01'\n      AND date < TIMESTAMP '2025-09-01' + INTERVAL 1 DAY\n    ORDER BY date\n    LIMIT 40\n)\nSELECT\n    m.matchId,\n    m.started,\n    m.finished,\n    m.match_rating,\n    m.match_rd,\n    r.date AS rating_date,\n    r.series_rating,\n    r.series_rd,\n    r.games,\n    ABS(m.match_rating - r.series_rating) AS diff_to_match_rating\nFROM player_matches m\nLEFT JOIN player_ratings r\n    ON r.date >= m.started\n   AND r.date <= m.started + INTERVAL 1 HOUR\nORDER BY m.started, r.date\n",
+    "pre_game_hypothesis_test": "\nWITH player_matches AS (\n    SELECT matchId, profileId, started, finished,\n           rating AS match_rating, ratingDiff AS match_rd\n    FROM matches_raw\n    WHERE profileId = 3299155\n      AND internalLeaderboardId = 0\n      AND rating IS NOT NULL\n      AND ratingDiff IS NOT NULL\n),\nnearest_before AS (\n    SELECT\n        m.matchId, m.profileId, m.started, m.match_rating, m.match_rd,\n        MAX(r.date) AS nearest_before_date,\n        MAX_BY(r.rating, r.date) AS rating_before\n    FROM player_matches m\n    JOIN ratings_raw r\n        ON r.profile_id = m.profileId\n       AND r.leaderboard_id = 0\n       AND r.date <= m.started\n    GROUP BY m.matchId, m.profileId, m.started, m.match_rating, m.match_rd\n)\nSELECT\n    COUNT(*) AS n_matches_with_prior_rating,\n    COUNT(CASE WHEN match_rating = rating_before THEN 1 END) AS n_exact_pre_match,\n    ROUND(\n        100.0 * COUNT(CASE WHEN match_rating = rating_before THEN 1 END) / COUNT(*), 1\n    ) AS pct_exact_pre_match,\n    APPROX_QUANTILE(ABS(match_rating - rating_before), 0.5) AS median_abs_diff,\n    MAX(ABS(match_rating - rating_before)) AS max_abs_diff\nFROM nearest_before\n",
+    "post_game_hypothesis_test": "\nWITH player_matches AS (\n    SELECT matchId, profileId, started, finished,\n           rating AS match_rating, ratingDiff AS match_rd\n    FROM matches_raw\n    WHERE profileId = 3299155\n      AND internalLeaderboardId = 0\n      AND rating IS NOT NULL\n      AND ratingDiff IS NOT NULL\n),\nnearest_after AS (\n    SELECT\n        m.matchId, m.profileId, m.finished, m.match_rating, m.match_rd,\n        MIN(r.date) AS nearest_after_date,\n        MIN_BY(r.rating, r.date) AS rating_after\n    FROM player_matches m\n    JOIN ratings_raw r\n        ON r.profile_id = m.profileId\n       AND r.leaderboard_id = 0\n       AND r.date > m.finished\n    GROUP BY m.matchId, m.profileId, m.finished, m.match_rating, m.match_rd\n)\nSELECT\n    COUNT(*) AS n_matches_with_post_rating,\n    -- Direct: match_rating == rating_after\n    COUNT(CASE WHEN match_rating = rating_after THEN 1 END) AS n_direct_post_match,\n    ROUND(\n        100.0 * COUNT(CASE WHEN match_rating = rating_after THEN 1 END) / COUNT(*), 1\n    ) AS pct_direct_post_match,\n    -- Derived: match_rating + match_rd == rating_after\n    COUNT(CASE WHEN (match_rating + match_rd) = rating_after THEN 1 END) AS n_derived_post_match,\n    ROUND(\n        100.0 * COUNT(CASE WHEN (match_rating + match_rd) = rating_after THEN 1 END) / COUNT(*), 1\n    ) AS pct_derived_post_match,\n    APPROX_QUANTILE(ABS(match_rating - rating_after), 0.5) AS median_diff_direct\nFROM nearest_after\n",
+    "matches_raw_rating_completeness_by_lb": "\nSELECT\n    leaderboard,\n    COUNT(*) AS n_rows,\n    COUNT(rating) AS n_with_rating,\n    COUNT(ratingDiff) AS n_with_ratingDiff,\n    ROUND(100.0 * COUNT(rating) / COUNT(*), 1) AS pct_with_rating\nFROM matches_raw\nWHERE profileId != -1\nGROUP BY leaderboard\nORDER BY n_rows DESC\nLIMIT 15\n"
+  }
+}

@@ -574,6 +574,81 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_03 -- Table Utility Assessment
+
+```yaml
+step_number: "01_03_03"
+name: "Table Utility Assessment"
+description: >-
+  Empirical assessment of all 6 raw data objects (replay_players_raw,
+  replays_meta_raw, map_aliases_raw, game_events_raw, tracker_events_raw,
+  message_events_raw) for prediction pipeline utility. Verify the
+  replay_id join key between the two core tables. Enumerate all 31 struct
+  leaf fields of replays_meta_raw. Characterize loop=0 initialization
+  events. Assess map_aliases_raw necessity. Produce evidence-backed
+  utility verdicts.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "sc2egset"
+question: >-
+  Which data objects are essential, utility-conditional, in-game-only,
+  or low-utility? What is the replay_id join key between replay_players_raw
+  and replays_meta_raw? Are map names already in English? What do loop=0
+  events represent?
+method: >-
+  DuckDB SQL: DESCRIBE both core tables; extract all 31 struct leaf fields;
+  verify replay_id join via regexp_extract; cross-reference metadata.mapName
+  against map_aliases_raw; query loop=0 evtTypeName distributions; COUNT
+  tracker_events_raw and message_events_raw; sample game_events_raw (COUNT
+  from schema YAML). All verdicts data-derived.
+predecessors: "01_03_02"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_03_table_utility.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+    - "replays_meta_raw"
+    - "map_aliases_raw"
+    - "game_events_raw"
+    - "tracker_events_raw"
+    - "message_events_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+    - "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - ".claude/rules/sql-data.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json"
+  report: "artifacts/01_exploration/03_profiling/01_03_03_table_utility.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >-
+      All event views classified IN_GAME (loop >= 0). timestamp
+      (details.timeUTC) classified PRE_GAME. header.elapsedGameLoops
+      reclassified POST_GAME. No feature computation performed.
+  - number: "6"
+    how_upheld: "All SQL queries stored verbatim in sql_queries dict and saved to artifact."
+  - number: "9"
+    how_upheld: "Profiling only. No rows dropped. No cleaning decisions made."
+gate:
+  artifact_check: >-
+    artifacts/01_exploration/03_profiling/01_03_03_table_utility.json and
+    .md exist and are non-empty.
+  continue_predicate: >-
+    JSON contains: table_verdicts (6 entries), join_key (matched_replay_ids
+    == 22390, orphan counts == 0), struct_leaf_fields.confirmed_31_fields ==
+    true, map_name_analysis, event_row_counts, tracker_events_loop_range.
+    MD contains utility verdict table and all SQL queries.
+  halt_predicate: "Any artifact is missing or join verification fails."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

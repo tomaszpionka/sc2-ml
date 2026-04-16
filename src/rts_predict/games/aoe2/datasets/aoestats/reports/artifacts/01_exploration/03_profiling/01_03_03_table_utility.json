@@ -1,0 +1,271 @@
+{
+  "step": "01_03_03",
+  "dataset": "aoestats",
+  "constants_source": {
+    "MATCHES_TOTAL": {
+      "value": 30690651,
+      "source": "01_03_01_systematic_profile.json > dataset_level.matches_raw_rows"
+    },
+    "PLAYERS_TOTAL": {
+      "value": 107627584,
+      "source": "01_03_01_systematic_profile.json > dataset_level.players_raw_rows"
+    },
+    "MATCHES_WITHOUT_PLAYERS": {
+      "value": 212890,
+      "source": "01_03_01_systematic_profile.json > dataset_level.matches_without_players"
+    },
+    "TRUE_1V1_COUNT": {
+      "value": 18438769,
+      "source": "01_03_02_true_1v1_profile.json > true_1v1_count"
+    }
+  },
+  "t01_column_overlap": {
+    "matches_raw_column_count": 18,
+    "players_raw_column_count": 14,
+    "shared_columns": [
+      "filename",
+      "game_id"
+    ],
+    "matches_raw_exclusive": [
+      "avg_elo",
+      "duration",
+      "game_speed",
+      "game_type",
+      "irl_duration",
+      "leaderboard",
+      "map",
+      "mirror",
+      "num_players",
+      "patch",
+      "raw_match_type",
+      "replay_enhanced",
+      "started_timestamp",
+      "starting_age",
+      "team_0_elo",
+      "team_1_elo"
+    ],
+    "players_raw_exclusive": [
+      "castle_age_uptime",
+      "civ",
+      "feudal_age_uptime",
+      "imperial_age_uptime",
+      "match_rating_diff",
+      "new_rating",
+      "old_rating",
+      "opening",
+      "profile_id",
+      "replay_summary_raw",
+      "team",
+      "winner"
+    ],
+    "game_id_in_matches": true,
+    "game_id_in_players": true,
+    "winner_table": "players_raw",
+    "winner_in_matches": false,
+    "started_timestamp_table": "matches_raw",
+    "started_timestamp_in_players": false
+  },
+  "t02_join_integrity": {
+    "orphan_matches_in_matches_not_players": 212890,
+    "orphan_player_game_ids_not_in_matches": 0,
+    "orphan_player_rows_not_in_matches": 0,
+    "matches_distinct_game_ids": 30690651,
+    "matches_total_rows": 30690651,
+    "matches_uniqueness_pct": 100.0,
+    "players_distinct_game_ids": 30477761,
+    "players_total_rows": 107627584,
+    "players_avg_rows_per_game_id": 3.5313,
+    "multiplicity_distribution": [
+      {
+        "player_count": 1,
+        "num_games": 39,
+        "pct_of_all_games": 0.0001
+      },
+      {
+        "player_count": 2,
+        "num_games": 18438769,
+        "pct_of_all_games": 60.4991
+      },
+      {
+        "player_count": 3,
+        "num_games": 349,
+        "pct_of_all_games": 0.0011
+      },
+      {
+        "player_count": 4,
+        "num_games": 5027632,
+        "pct_of_all_games": 16.4961
+      },
+      {
+        "player_count": 5,
+        "num_games": 327,
+        "pct_of_all_games": 0.0011
+      },
+      {
+        "player_count": 6,
+        "num_games": 2723856,
+        "pct_of_all_games": 8.9372
+      },
+      {
+        "player_count": 7,
+        "num_games": 651,
+        "pct_of_all_games": 0.0021
+      },
+      {
+        "player_count": 8,
+        "num_games": 4286138,
+        "pct_of_all_games": 14.0632
+      }
+    ],
+    "matches_max_count_per_game_id": 1,
+    "matches_game_ids_with_duplicates": 0
+  },
+  "t03_elo_redundancy": {
+    "avg_elo_formula_check": {
+      "total_rows": 30690651,
+      "any_null_elo": 0,
+      "non_null_rows": 30690651,
+      "exact_match_count": 30689265,
+      "exact_match_pct": 99.9955,
+      "inexact_match_count": 1386,
+      "max_abs_deviation": 1640.0
+    },
+    "avg_elo_derivation_from_players": {
+      "joined_1v1_count": 18438769,
+      "both_non_null": 18438769,
+      "within_half_elo_count": 18438769,
+      "within_half_elo_pct": 100.0,
+      "within_one_elo_count": 18438769,
+      "within_one_elo_pct": 100.0,
+      "mean_abs_deviation": 0.0,
+      "median_abs_deviation": 0.0,
+      "max_abs_deviation": 0.0
+    },
+    "spearman_sample_size": 100000,
+    "spearman_rho_avg_elo_vs_player_avg_old_rating": 1.0,
+    "spearman_pval_avg_elo_vs_player_avg_old_rating": 0.0,
+    "spearman_rho_team0_elo_vs_player_avg_old_rating": 0.996784,
+    "spearman_rho_team1_elo_vs_player_avg_old_rating": 0.99706,
+    "spearman_rho_team0_elo_vs_team1_elo": 0.988389,
+    "temporal_annotation": {
+      "old_rating": "pre-game (temporal class: safe -- I3 compliant)",
+      "new_rating": "post-game (temporal class: LEAKING -- must not be used as feature)",
+      "avg_elo": "match-level pre-game aggregate (temporal class: safe if sourced from pre-game API snapshot)",
+      "team_0_elo": "match-level pre-game aggregate",
+      "team_1_elo": "match-level pre-game aggregate"
+    }
+  },
+  "t04_overviews_and_replay": {
+    "overviews_raw": {
+      "row_count": 1,
+      "last_updated": "2026-04-09T11:12:40.159034Z",
+      "total_match_count": 32979710,
+      "civs_count": 50,
+      "openings_count": 10,
+      "patches_count": 19,
+      "patches_date_range": {
+        "min": "2022-08-29 00:00:00",
+        "max": "2025-12-02 00:00:00"
+      },
+      "groupings_count": 4,
+      "changelog_entries": 41,
+      "tournament_stages_count": 3,
+      "tournament_stages": [
+        "all",
+        "qualifiers",
+        "main_event"
+      ]
+    },
+    "replay_summary_raw": {
+      "total_rows": 107627584,
+      "null_count": 0,
+      "empty_object_count": 92616290,
+      "empty_string_count": 0,
+      "combined_empty_count": 92616290,
+      "combined_empty_pct": 86.0526,
+      "non_empty_count": 15011294,
+      "non_empty_pct": 13.9474,
+      "max_length_chars": 7484,
+      "sample_non_empty": []
+    }
+  },
+  "t05_verdicts": {
+    "matches_raw": {
+      "verdict": "ESSENTIAL",
+      "rationale": "Provides started_timestamp (sole temporal anchor -- I3 critical), map, leaderboard, patch, duration, mirror, and other match-level context. ELO columns (avg_elo, team_0/1_elo) have Spearman rho=1.0000 with player old_rating (near-perfect redundancy), so match-level ELOs are derivable from players_raw but not vice versa for started_timestamp.",
+      "unique_columns": [
+        "avg_elo",
+        "duration",
+        "game_speed",
+        "game_type",
+        "irl_duration",
+        "leaderboard",
+        "map",
+        "mirror",
+        "num_players",
+        "patch",
+        "raw_match_type",
+        "replay_enhanced",
+        "started_timestamp",
+        "starting_age",
+        "team_0_elo",
+        "team_1_elo"
+      ],
+      "elo_derivable_from_players": true,
+      "elo_cross_within_half_pct": 100.0,
+      "spearman_rho_elo_match_vs_player": 1.0
+    },
+    "players_raw": {
+      "verdict": "ESSENTIAL",
+      "rationale": "Contains winner (prediction target -- no alternative), old_rating (pre-game player ELO -- I3 safe), civ, opening, age uptimes, team. new_rating is LEAKING (post-game) and must be excluded from features.",
+      "unique_columns": [
+        "castle_age_uptime",
+        "civ",
+        "feudal_age_uptime",
+        "imperial_age_uptime",
+        "match_rating_diff",
+        "new_rating",
+        "old_rating",
+        "opening",
+        "profile_id",
+        "replay_summary_raw",
+        "team",
+        "winner"
+      ],
+      "new_rating_leaks": true,
+      "new_rating_note": "post-game ELO -- temporal leakage per I3 -- must not be used as feature"
+    },
+    "overviews_raw": {
+      "verdict": "SUPPLEMENTARY REFERENCE",
+      "rationale": "Singleton lookup. Provides 19-entry patch->release_date mapping not available elsewhere. Can enrich matches_raw.patch column. No direct prediction-critical columns.",
+      "patches_count": 19,
+      "provides_patch_date_mapping": true
+    },
+    "replay_summary_raw": {
+      "verdict": "PARTIAL UTILITY -- significant non-empty fraction; content warrants further investigation.",
+      "non_empty_pct": 13.9474,
+      "rationale": "13.95% non-empty rows (15,011,294 / 107,627,584). Max content length: 7,484 chars."
+    }
+  },
+  "sql_queries": {
+    "describe_matches": "DESCRIBE matches_raw",
+    "describe_players": "DESCRIBE players_raw",
+    "orphan_matches": "\nSELECT COUNT(*) AS orphan_matches\nFROM matches_raw m\nWHERE NOT EXISTS (\n    SELECT 1 FROM players_raw p WHERE p.game_id = m.game_id\n)\n",
+    "orphan_players": "\nSELECT COUNT(DISTINCT game_id) AS orphan_player_game_ids,\n       COUNT(*) AS orphan_player_rows\nFROM players_raw p\nWHERE NOT EXISTS (\n    SELECT 1 FROM matches_raw m WHERE m.game_id = p.game_id\n)\n",
+    "game_id_cardinality": "\nSELECT\n    (SELECT COUNT(DISTINCT game_id) FROM matches_raw) AS matches_distinct_game_ids,\n    (SELECT COUNT(*) FROM matches_raw)                AS matches_total_rows,\n    (SELECT COUNT(DISTINCT game_id) FROM players_raw) AS players_distinct_game_ids,\n    (SELECT COUNT(*) FROM players_raw)                AS players_total_rows\n",
+    "multiplicity_distribution": "\nSELECT\n    player_count,\n    COUNT(*) AS num_games,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct_of_all_games\nFROM (\n    SELECT game_id, COUNT(*) AS player_count\n    FROM players_raw\n    GROUP BY game_id\n) sub\nGROUP BY player_count\nORDER BY player_count\n",
+    "match_duplicates": "\nSELECT\n    MAX(cnt) AS max_count_per_game_id,\n    COUNT(*) FILTER (WHERE cnt > 1) AS game_ids_with_duplicates,\n    SUM(cnt) FILTER (WHERE cnt > 1) AS duplicate_rows\nFROM (\n    SELECT game_id, COUNT(*) AS cnt\n    FROM matches_raw\n    GROUP BY game_id\n) sub\n",
+    "elo_formula_check": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) FILTER (WHERE avg_elo IS NULL OR team_0_elo IS NULL OR team_1_elo IS NULL)\n        AS any_null,\n    COUNT(*) FILTER (\n        WHERE avg_elo IS NOT NULL\n          AND team_0_elo IS NOT NULL\n          AND team_1_elo IS NOT NULL\n          AND ABS(avg_elo - (team_0_elo + team_1_elo) / 2.0) < 0.001\n    ) AS exact_match_count,\n    COUNT(*) FILTER (\n        WHERE avg_elo IS NOT NULL\n          AND team_0_elo IS NOT NULL\n          AND team_1_elo IS NOT NULL\n          AND ABS(avg_elo - (team_0_elo + team_1_elo) / 2.0) >= 0.001\n    ) AS inexact_match_count,\n    MAX(\n        CASE\n            WHEN avg_elo IS NOT NULL AND team_0_elo IS NOT NULL AND team_1_elo IS NOT NULL\n            THEN ABS(avg_elo - (team_0_elo + team_1_elo) / 2.0)\n        END\n    ) AS max_abs_deviation\nFROM matches_raw\n",
+    "elo_derivation_check": "\nWITH true_1v1 AS (\n    SELECT game_id\n    FROM players_raw\n    GROUP BY game_id\n    HAVING COUNT(*) = 2\n),\nplayer_avg_elo AS (\n    SELECT p.game_id,\n           AVG(CAST(p.old_rating AS DOUBLE)) AS derived_avg_elo\n    FROM players_raw p\n    INNER JOIN true_1v1 t ON p.game_id = t.game_id\n    WHERE p.old_rating IS NOT NULL\n    GROUP BY p.game_id\n    HAVING COUNT(*) = 2\n)\nSELECT\n    COUNT(*) AS joined_count,\n    COUNT(*) FILTER (WHERE m.avg_elo IS NOT NULL) AS both_non_null,\n    COUNT(*) FILTER (\n        WHERE m.avg_elo IS NOT NULL\n          AND ABS(m.avg_elo - pa.derived_avg_elo) < 0.5\n    ) AS within_half_elo,\n    COUNT(*) FILTER (\n        WHERE m.avg_elo IS NOT NULL\n          AND ABS(m.avg_elo - pa.derived_avg_elo) < 1.0\n    ) AS within_one_elo,\n    AVG(ABS(m.avg_elo - pa.derived_avg_elo)) FILTER (WHERE m.avg_elo IS NOT NULL)\n        AS mean_abs_deviation,\n    MAX(ABS(m.avg_elo - pa.derived_avg_elo)) FILTER (WHERE m.avg_elo IS NOT NULL)\n        AS max_abs_deviation,\n    PERCENTILE_CONT(0.5) WITHIN GROUP (\n        ORDER BY ABS(m.avg_elo - pa.derived_avg_elo)\n    ) FILTER (WHERE m.avg_elo IS NOT NULL) AS median_abs_deviation\nFROM player_avg_elo pa\nINNER JOIN matches_raw m ON m.game_id = pa.game_id\n",
+    "spearman_sample": "\nWITH true_1v1 AS (\n    SELECT game_id\n    FROM players_raw\n    GROUP BY game_id\n    HAVING COUNT(*) = 2\n),\nplayer_avg AS (\n    SELECT p.game_id,\n           AVG(CAST(p.old_rating AS DOUBLE)) AS player_avg_old_rating\n    FROM players_raw p\n    INNER JOIN true_1v1 t ON p.game_id = t.game_id\n    WHERE p.old_rating IS NOT NULL\n    GROUP BY p.game_id\n    HAVING COUNT(*) = 2\n),\njoined AS (\n    SELECT\n        m.avg_elo,\n        pa.player_avg_old_rating,\n        m.team_0_elo,\n        m.team_1_elo\n    FROM player_avg pa\n    INNER JOIN matches_raw m ON m.game_id = pa.game_id\n    WHERE m.avg_elo IS NOT NULL\n      AND m.team_0_elo IS NOT NULL\n      AND m.team_1_elo IS NOT NULL\n)\nSELECT *\nFROM joined\nUSING SAMPLE RESERVOIR(100000)\n",
+    "overviews_basic": "SELECT * EXCLUDE (civs, openings, patches, groupings, changelog, tournament_stages) FROM overviews_raw",
+    "overviews_civs": "\nSELECT\n    unnested.name AS civ_name,\n    unnested.value AS match_count\nFROM (\n    SELECT UNNEST(civs) AS unnested\n    FROM overviews_raw\n)\nORDER BY match_count DESC\nLIMIT 20\n",
+    "overviews_openings": "\nSELECT\n    unnested.name AS opening_name,\n    unnested.value AS match_count\nFROM (\n    SELECT UNNEST(openings) AS unnested\n    FROM overviews_raw\n)\nORDER BY match_count DESC\nLIMIT 20\n",
+    "overviews_patches": "\nSELECT\n    unnested.number AS patch_number,\n    unnested.label AS patch_label,\n    unnested.release_date AS release_date,\n    unnested.published AS published,\n    unnested.total_games AS total_games\nFROM (\n    SELECT UNNEST(patches) AS unnested\n    FROM overviews_raw\n)\nORDER BY release_date DESC NULLS LAST\n",
+    "overviews_groupings": "\nSELECT\n    unnested.name AS group_name,\n    unnested.label AS group_label\nFROM (\n    SELECT UNNEST(groupings) AS unnested\n    FROM overviews_raw\n)\nORDER BY group_name\n",
+    "overviews_changelog": "\nSELECT\n    unnested.change_time AS change_time,\n    unnested.version AS version,\n    ARRAY_LENGTH(unnested.changes) AS num_changes\nFROM (\n    SELECT UNNEST(changelog) AS unnested\n    FROM overviews_raw\n)\nORDER BY change_time DESC NULLS LAST\nLIMIT 20\n",
+    "overviews_tournament_stages": "\nSELECT UNNEST(tournament_stages) AS stage\nFROM overviews_raw\n",
+    "replay_summary_stats": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) FILTER (WHERE replay_summary_raw IS NULL) AS null_count,\n    COUNT(*) FILTER (WHERE replay_summary_raw = '{}') AS empty_object_count,\n    COUNT(*) FILTER (WHERE TRIM(replay_summary_raw) = '') AS empty_string_count,\n    COUNT(*) FILTER (\n        WHERE replay_summary_raw IS NOT NULL\n          AND replay_summary_raw != '{}'\n          AND TRIM(replay_summary_raw) != ''\n    ) AS non_empty_count,\n    MIN(LENGTH(replay_summary_raw)) AS min_length,\n    MAX(LENGTH(replay_summary_raw)) AS max_length,\n    APPROX_COUNT_DISTINCT(replay_summary_raw) AS approx_distinct_values\nFROM players_raw\n",
+    "replay_summary_sample": "\n    SELECT\n        game_id,\n        LENGTH(replay_summary_raw) AS len,\n        LEFT(replay_summary_raw, 300) AS preview\n    FROM players_raw\n    WHERE replay_summary_raw IS NOT NULL\n      AND replay_summary_raw != '{}'\n      AND TRIM(replay_summary_raw) != ''\n    USING SAMPLE RESERVOIR(5)\n    ORDER BY len DESC\n    "
+  }
+}

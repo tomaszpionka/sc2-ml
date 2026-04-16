@@ -567,6 +567,52 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_03 -- Table Utility Assessment
+
+```yaml
+step_number: "01_03_03"
+name: "Table Utility Assessment"
+description: "Empirical assessment of all 4 raw tables (matches_raw, ratings_raw, leaderboards_raw, profiles_raw) for prediction pipeline utility. Determine which tables carry temporal data suitable for pre-game feature derivation under I3, classify leaderboards_raw and profiles_raw as singleton snapshots or time series, and resolve the matches_raw.rating pre-game vs post-game ambiguity via cross-reference with ratings_raw."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "Which tables are I3-usable? Is matches_raw.rating pre-game or post-game?"
+method: "DuckDB diagnostic queries on all 4 tables. Temporal property analysis (row count per player, updatedAt distribution). Cross-reference matches_raw.rating against ratings_raw per-game entries for lb=0 (unranked) for a focal player with 3,942+ matches. Hypothesis testing: pre-game match rate vs post-game match rate."
+stratification: "Full table for structural queries. Single focal player for T02 case study."
+predecessors:
+  - "01_03_02"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/03_profiling/01_03_03_table_utility_assessment.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "ratings_raw"
+    - "leaderboards_raw"
+    - "profiles_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility_assessment.json"
+  report: "artifacts/01_exploration/03_profiling/01_03_03_table_utility_assessment.md"
+gate:
+  artifact_check: "01_03_03_table_utility_assessment.json and .md exist and are non-empty."
+  continue_predicate: "JSON contains table_verdicts for all 4 tables with i3_classification and t02_rating_disambiguation with verdict=PRE_GAME or AMBIGUOUS."
+  halt_predicate: "DuckDB queries fail on any raw table."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Every table classified for I3 compliance. T02 test uses date <= started for nearest-before join (strict temporal discipline)."
+  - number: "6"
+    how_upheld: "All SQL queries written verbatim to JSON and MD artifacts."
+  - number: "7"
+    how_upheld: "No thresholds assumed -- all verdicts based on empirical match rates."
+  - number: "9"
+    how_upheld: "Read-only profiling. No tables created. No cleaning decisions made."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

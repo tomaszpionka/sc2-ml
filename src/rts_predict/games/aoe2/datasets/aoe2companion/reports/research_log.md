@@ -8,6 +8,53 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-16 — [Phase 01 / Step 01_03_03] Table Utility Assessment
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** profiling (read-only — no DuckDB writes, no new tables)
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/03_profiling/01_03_03_table_utility_assessment.json`
+- `reports/artifacts/01_exploration/03_profiling/01_03_03_table_utility_assessment.md`
+
+### What
+
+Ran empirical diagnostic queries on all 4 raw tables to determine I3 classification and prediction pipeline utility. Resolved the matches_raw.rating pre/post-game ambiguity via cross-reference with ratings_raw. All SQL written verbatim to artifacts (I6).
+
+### Key finding: matches_raw.rating is definitively the PRE-GAME rating
+
+Cross-reference of matches_raw.rating against ratings_raw per-game entries for a focal player (profileId=3299155, 3,942 matches, lb=0/unranked):
+
+- **PRE-GAME hypothesis** (rating_before = MAX_BY(r.rating, r.date) WHERE r.date <= m.started): **99.8% exact match** (3,933 / 3,942 matches)
+- **POST-GAME derived** (match_rating + ratingDiff == rating_after): 79.2% (explained by the fact that the nearest-after entry for many matches belongs to a different match played by the same player shortly after)
+
+The ~0.2% mismatch in the pre-game test is attributable to gaps in ratings_raw coverage (games played between two consecutive ratings_raw entries). The conclusion is unambiguous: **matches_raw.rating is the pre-game rating**. ratingDiff = post_game_rating - pre_game_rating.
+
+This resolves the AMBIGUOUS classification from 01_02_04 census.
+
+### Table utility verdicts
+
+| Table | I3 Classification | Notes |
+|---|---|---|
+| `matches_raw` | USABLE | Primary feature source. rating=pre-game (99.8%), 74% of rm_1v1 rows have rating |
+| `ratings_raw` | CONDITIONALLY_USABLE | No rm_1v1 data (lb=6 absent). Only lb=0 (unranked, 25.8M rows) and lb=3/4 (dm_team) |
+| `leaderboards_raw` | NOT_USABLE_FOR_TEMPORAL_FEATURES | Single snapshot per player (avg_entries_per_player=1.0). I3 violation for any T before April 2026 |
+| `profiles_raw` | NOT_USABLE_FOR_TEMPORAL_FEATURES | Zero TIMESTAMP columns. 100% coverage of match players. steamId/clan unique vs matches_raw |
+
+### Leaderboard key mapping finding
+
+`ratings_raw.leaderboard_id` does NOT map 1:1 to `matches_raw.internalLeaderboardId` for rm_1v1:
+- `matches_raw` rm_1v1: `internalLeaderboardId = 6`
+- `ratings_raw`: has zero rows with `leaderboard_id = 6`
+
+The usable cross-reference is only for lb=0 (unranked). For rm_1v1 prediction, the rating history must come from `matches_raw.rating` (pre-game, 74% complete) rather than `ratings_raw`.
+
+### leaderboards_raw snapshot confirmation
+
+`leaderboards_raw` has exactly 1 row per player per leaderboard (avg_entries_per_player=1.000 for rm_1v1, rm_team, unranked). The `updatedAt` column is a per-player last-activity timestamp, not a collection date for multiple snapshots. Coverage of rm_1v1 match players: 242,054 / 538,280 (45.0%).
+
+---
+
 ## 2026-04-16 — [Phase 01 / Step 01_03_02] True 1v1 Match Identification
 
 **Category:** A (science)

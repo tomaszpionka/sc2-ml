@@ -616,6 +616,52 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_03 -- Table Utility Assessment
+
+```yaml
+step_number: "01_03_03"
+name: "Table Utility Assessment"
+description: "Empirical assessment of all 3 raw tables for prediction pipeline utility. Column overlap, join integrity, ELO redundancy between match-level and player-level ratings, overviews_raw STRUCT content (all 6 arrays), replay_summary_raw fill rate, and evidence-backed per-table verdicts."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+dataset: "aoestats"
+question: "Which tables are essential, which are redundant, and which are supplementary? Is avg_elo deterministically derivable from players_raw.old_rating? What does overviews_raw contain? Is replay_summary_raw viable as a feature source?"
+method: "DESCRIBE both match-player tables. Set algebra for column overlap. Anti-join integrity checks. Formula check for avg_elo = (team_0_elo + team_1_elo)/2. Cross-table ELO derivation check for 1v1 matches. 100K RESERVOIR Spearman sample. UNNEST all 6 overviews_raw STRUCT arrays. replay_summary_raw fill-rate census."
+predecessors:
+  - "01_03_02"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/03_profiling/01_03_03_table_utility.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "players_raw"
+    - "overviews_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+    - "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json"
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json"
+  report: "artifacts/01_exploration/03_profiling/01_03_03_table_utility.md"
+reproducibility: "Code and output in the paired notebook. All SQL queries stored verbatim in JSON artifact."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "old_rating annotated as pre-game safe; new_rating flagged as temporal leakage (post-game)."
+  - number: "6"
+    how_upheld: "All SQL queries stored verbatim in sql_queries dict and written to JSON artifact."
+  - number: "7"
+    how_upheld: "No magic numbers. Constants derived from 01_03_01 and 01_03_02 artifacts."
+  - number: "9"
+    how_upheld: "Assessment only. No cleaning, no feature decisions. Verdicts documented for downstream steps."
+gate:
+  artifact_check: "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json and .md exist and are non-empty."
+  continue_predicate: "JSON contains keys t01_column_overlap, t02_join_integrity, t03_elo_redundancy, t04_overviews_and_replay, t05_verdicts. Verdicts recorded for all 4 objects."
+  halt_predicate: "Any SQL query fails or any artifact is missing."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ---

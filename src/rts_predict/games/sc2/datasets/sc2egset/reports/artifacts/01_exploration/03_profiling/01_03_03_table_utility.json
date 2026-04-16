@@ -1,0 +1,116 @@
+{
+  "step": "01_03_03",
+  "dataset": "sc2egset",
+  "table_verdicts": {
+    "replay_players_raw": {
+      "verdict": "ESSENTIAL",
+      "reason": "Contains per-player features (MMR, race, result, APM, SQ, highestLeague) and the prediction target (result). 25 columns, 44,817 rows. No equivalent in other tables.",
+      "i3_classes": [
+        "PRE_GAME features",
+        "IN_GAME metrics",
+        "TARGET (result)"
+      ]
+    },
+    "replays_meta_raw": {
+      "verdict": "ESSENTIAL",
+      "reason": "Contains match-level metadata: timestamp (details.timeUTC), game version (metadata.gameVersion), map name (metadata.mapName), and 31 struct leaf fields. Required for temporal ordering (I3) and map feature derivation. Join to replay_players_raw via replay_id.",
+      "struct_leaf_fields": 31,
+      "i3_classes": [
+        "PRE_GAME (timestamp, game_version, map_name, map_size, maxPlayers)",
+        "POST_GAME (header.elapsedGameLoops)",
+        "CONSTANT (game_speed, gameOptions flags mostly constant)"
+      ]
+    },
+    "map_aliases_raw": {
+      "verdict": "UTILITY_CONDITIONAL",
+      "reason": "metadata.mapName in replays_meta_raw: 188 distinct names. 188 of 188 are in the english_name column of map_aliases_raw (already English). 188 of 188 appear in foreign_name column. Identity (foreign==english) in alias table: 14.4% of pairs. Verdict depends on query results above.",
+      "row_count": 104160,
+      "distinct_mapping_pairs": 1489,
+      "i3_class": "PRE_GAME (map translation lookup, no temporal info)"
+    },
+    "game_events_raw": {
+      "verdict": "IN_GAME_ONLY",
+      "reason": "608,618,823 rows of in-game action events. Min loop at loop=0 events includes initialization events (PlayerSetup, UnitBorn) that are part of game initialization, not pre-game state. All events are at loop >= 0. Excluded from Phase 02 pre-game feature pipeline per I3. Retained as a potential source for in-game feature comparison studies.",
+      "row_count": 608618823,
+      "i3_class": "IN_GAME (loop >= 0, game-time events only)",
+      "scan_note": "Row count from schema YAML (full COUNT would timeout on 608M rows)"
+    },
+    "tracker_events_raw": {
+      "verdict": "IN_GAME_ONLY",
+      "reason": "62,003,411 rows of tracker events (PlayerSetup, UnitBorn, etc). Min loop: 0. All events represent game-time state. Excluded from Phase 02 pre-game feature pipeline per I3. May be used for in-game state features in later phases.",
+      "row_count": 62003411,
+      "min_loop": 0,
+      "i3_class": "IN_GAME (loop >= 0, game initialization + game-time state)"
+    },
+    "message_events_raw": {
+      "verdict": "LOW_UTILITY",
+      "reason": "52,167 rows in 22260 of 22390 replays (99.42% coverage). Contains chat/ping messages between players during game. Not suitable as pre-game features (I3 violation). Insufficient coverage and content value for in-game features.",
+      "row_count": 52167,
+      "i3_class": "IN_GAME (chat/ping messages during match)"
+    }
+  },
+  "join_key": {
+    "method": "replay_id via regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1)",
+    "rp_distinct_replay_ids": 22390,
+    "rm_distinct_replay_ids": 22390,
+    "matched_replay_ids": 22390,
+    "rp_orphan_count": 0,
+    "rm_orphan_count": 0
+  },
+  "struct_leaf_fields": {
+    "total_extracted": 31,
+    "confirmed_31_fields": true
+  },
+  "map_name_analysis": {
+    "meta_map_count": 188,
+    "meta_mapName_nulls": 0,
+    "in_foreign_names": 188,
+    "in_english_names": 188,
+    "in_neither": 0,
+    "alias_identity_pct": 14.44
+  },
+  "event_row_counts": {
+    "game_events_raw": 608618823,
+    "game_events_raw_source": "schema YAML (too large to COUNT)",
+    "tracker_events_raw": 62003411,
+    "tracker_events_raw_source": "live COUNT from DuckDB",
+    "message_events_raw": 52167,
+    "message_events_raw_source": "live COUNT from DuckDB"
+  },
+  "tracker_events_loop_range": {
+    "min_loop": 0,
+    "max_loop": 109287,
+    "distinct_replays": 22390
+  },
+  "message_events_coverage": {
+    "distinct_replays": 22260,
+    "total_replays": 22390,
+    "coverage_pct": 99.4194
+  },
+  "sql_queries": {
+    "describe_replay_players_raw": "DESCRIBE replay_players_raw",
+    "describe_replays_meta_raw": "DESCRIBE replays_meta_raw",
+    "struct_leaf_census": "\nSELECT\n    -- details struct (3 leaves)\n    details.gameSpeed               AS details_gameSpeed,\n    details.isBlizzardMap           AS details_isBlizzardMap,\n    details.timeUTC                 AS details_timeUTC,\n\n    -- header struct (2 leaves)\n    header.elapsedGameLoops         AS header_elapsedGameLoops,\n    header.version                  AS header_version,\n\n    -- initData.gameDescription.gameOptions sub-struct (15 leaves)\n    initData.gameDescription.gameOptions.advancedSharedControl\n                                    AS go_advancedSharedControl,\n    initData.gameDescription.gameOptions.amm\n                                    AS go_amm,\n    initData.gameDescription.gameOptions.battleNet\n                                    AS go_battleNet,\n    initData.gameDescription.gameOptions.clientDebugFlags\n                                    AS go_clientDebugFlags,\n    initData.gameDescription.gameOptions.competitive\n                                    AS go_competitive,\n    initData.gameDescription.gameOptions.cooperative\n                                    AS go_cooperative,\n    initData.gameDescription.gameOptions.fog\n                                    AS go_fog,\n    initData.gameDescription.gameOptions.heroDuplicatesAllowed\n                                    AS go_heroDuplicatesAllowed,\n    initData.gameDescription.gameOptions.lockTeams\n                                    AS go_lockTeams,\n    initData.gameDescription.gameOptions.noVictoryOrDefeat\n                                    AS go_noVictoryOrDefeat,\n    initData.gameDescription.gameOptions.observers\n                                    AS go_observers,\n    initData.gameDescription.gameOptions.practice\n                                    AS go_practice,\n    initData.gameDescription.gameOptions.randomRaces\n                                    AS go_randomRaces,\n    initData.gameDescription.gameOptions.teamsTogether\n                                    AS go_teamsTogether,\n    initData.gameDescription.gameOptions.userDifficulty\n                                    AS go_userDifficulty,\n\n    -- initData.gameDescription direct fields (7 leaves)\n    initData.gameDescription.gameSpeed\n                                    AS gd_gameSpeed,\n    initData.gameDescription.isBlizzardMap\n                                    AS gd_isBlizzardMap,\n    initData.gameDescription.mapAuthorName\n                                    AS gd_mapAuthorName,\n    initData.gameDescription.mapFileSyncChecksum\n                                    AS gd_mapFileSyncChecksum,\n    initData.gameDescription.mapSizeX\n                                    AS gd_mapSizeX,\n    initData.gameDescription.mapSizeY\n                                    AS gd_mapSizeY,\n    initData.gameDescription.maxPlayers\n                                    AS gd_maxPlayers,\n\n    -- metadata struct (4 leaves)\n    metadata.baseBuild              AS metadata_baseBuild,\n    metadata.dataBuild              AS metadata_dataBuild,\n    metadata.gameVersion            AS metadata_gameVersion,\n    metadata.mapName                AS metadata_mapName\n\nFROM replays_meta_raw\nLIMIT 5\n",
+    "struct_leaf_null_cardinality": "\nSELECT\n    -- details.gameSpeed\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT details.gameSpeed) AS details_gameSpeed_card,\n    SUM(CASE WHEN details.gameSpeed IS NULL THEN 1 ELSE 0 END)\n        AS details_gameSpeed_nulls,\n\n    -- details.isBlizzardMap\n    COUNT(DISTINCT details.isBlizzardMap) AS details_isBlizzardMap_card,\n    SUM(CASE WHEN details.isBlizzardMap IS NULL THEN 1 ELSE 0 END)\n        AS details_isBlizzardMap_nulls,\n\n    -- details.timeUTC\n    COUNT(DISTINCT details.timeUTC) AS details_timeUTC_card,\n    SUM(CASE WHEN details.timeUTC IS NULL THEN 1 ELSE 0 END)\n        AS details_timeUTC_nulls,\n\n    -- header.elapsedGameLoops\n    COUNT(DISTINCT header.elapsedGameLoops) AS header_elapsed_card,\n    SUM(CASE WHEN header.elapsedGameLoops IS NULL THEN 1 ELSE 0 END)\n        AS header_elapsed_nulls,\n    MIN(header.elapsedGameLoops) AS header_elapsed_min,\n    MAX(header.elapsedGameLoops) AS header_elapsed_max,\n\n    -- header.version\n    COUNT(DISTINCT header.version) AS header_version_card,\n    SUM(CASE WHEN header.version IS NULL THEN 1 ELSE 0 END)\n        AS header_version_nulls,\n\n    -- gameOptions fields\n    COUNT(DISTINCT initData.gameDescription.gameOptions.advancedSharedControl)\n        AS go_advancedSharedControl_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.amm)\n        AS go_amm_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.battleNet)\n        AS go_battleNet_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.clientDebugFlags)\n        AS go_clientDebugFlags_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.competitive)\n        AS go_competitive_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.cooperative)\n        AS go_cooperative_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.fog)\n        AS go_fog_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.heroDuplicatesAllowed)\n        AS go_heroDuplicatesAllowed_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.lockTeams)\n        AS go_lockTeams_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.noVictoryOrDefeat)\n        AS go_noVictoryOrDefeat_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.observers)\n        AS go_observers_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.practice)\n        AS go_practice_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.randomRaces)\n        AS go_randomRaces_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.teamsTogether)\n        AS go_teamsTogether_card,\n    COUNT(DISTINCT initData.gameDescription.gameOptions.userDifficulty)\n        AS go_userDifficulty_card,\n\n    -- initData.gameDescription direct fields\n    COUNT(DISTINCT initData.gameDescription.gameSpeed)\n        AS gd_gameSpeed_card,\n    COUNT(DISTINCT initData.gameDescription.isBlizzardMap)\n        AS gd_isBlizzardMap_card,\n    COUNT(DISTINCT initData.gameDescription.mapAuthorName)\n        AS gd_mapAuthorName_card,\n    SUM(CASE WHEN initData.gameDescription.mapAuthorName IS NULL THEN 1 ELSE 0 END)\n        AS gd_mapAuthorName_nulls,\n    COUNT(DISTINCT initData.gameDescription.mapFileSyncChecksum)\n        AS gd_mapFileSyncChecksum_card,\n    COUNT(DISTINCT initData.gameDescription.mapSizeX) AS gd_mapSizeX_card,\n    MIN(initData.gameDescription.mapSizeX) AS gd_mapSizeX_min,\n    MAX(initData.gameDescription.mapSizeX) AS gd_mapSizeX_max,\n    COUNT(DISTINCT initData.gameDescription.mapSizeY) AS gd_mapSizeY_card,\n    MIN(initData.gameDescription.mapSizeY) AS gd_mapSizeY_min,\n    MAX(initData.gameDescription.mapSizeY) AS gd_mapSizeY_max,\n    COUNT(DISTINCT initData.gameDescription.maxPlayers) AS gd_maxPlayers_card,\n\n    -- metadata fields\n    COUNT(DISTINCT metadata.baseBuild)   AS metadata_baseBuild_card,\n    COUNT(DISTINCT metadata.dataBuild)   AS metadata_dataBuild_card,\n    COUNT(DISTINCT metadata.gameVersion) AS metadata_gameVersion_card,\n    COUNT(DISTINCT metadata.mapName)     AS metadata_mapName_card,\n    SUM(CASE WHEN metadata.mapName IS NULL THEN 1 ELSE 0 END)\n        AS metadata_mapName_nulls\n\nFROM replays_meta_raw\n",
+    "go_flag_distributions": "\nSELECT\n    initData.gameDescription.gameOptions.advancedSharedControl AS advancedSharedControl,\n    initData.gameDescription.gameOptions.amm               AS amm,\n    initData.gameDescription.gameOptions.battleNet         AS battleNet,\n    initData.gameDescription.gameOptions.competitive       AS competitive,\n    initData.gameDescription.gameOptions.cooperative       AS cooperative,\n    initData.gameDescription.gameOptions.fog               AS fog,\n    initData.gameDescription.gameOptions.heroDuplicatesAllowed AS heroDuplicatesAllowed,\n    initData.gameDescription.gameOptions.lockTeams         AS lockTeams,\n    initData.gameDescription.gameOptions.noVictoryOrDefeat AS noVictoryOrDefeat,\n    initData.gameDescription.gameOptions.practice          AS practice,\n    initData.gameDescription.gameOptions.randomRaces       AS randomRaces,\n    initData.gameDescription.gameOptions.teamsTogether     AS teamsTogether,\n    COUNT(*) AS cnt\nFROM replays_meta_raw\nGROUP BY\n    advancedSharedControl, amm, battleNet, competitive, cooperative,\n    fog, heroDuplicatesAllowed, lockTeams, noVictoryOrDefeat,\n    practice, randomRaces, teamsTogether\nORDER BY cnt DESC\nLIMIT 20\n",
+    "join_verification_replay_id": "\nWITH rp_distinct AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replay_players_raw\n    WHERE regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) != ''\n),\nrm_distinct AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replays_meta_raw\n    WHERE regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) != ''\n),\nmatched AS (\n    SELECT rp.replay_id\n    FROM rp_distinct rp\n    JOIN rm_distinct rm ON rp.replay_id = rm.replay_id\n),\nrp_only AS (\n    SELECT rp.replay_id\n    FROM rp_distinct rp\n    LEFT JOIN rm_distinct rm ON rp.replay_id = rm.replay_id\n    WHERE rm.replay_id IS NULL\n),\nrm_only AS (\n    SELECT rm.replay_id\n    FROM rm_distinct rm\n    LEFT JOIN rp_distinct rp ON rm.replay_id = rp.replay_id\n    WHERE rp.replay_id IS NULL\n)\nSELECT\n    (SELECT COUNT(*) FROM rp_distinct) AS rp_distinct_replay_ids,\n    (SELECT COUNT(*) FROM rm_distinct) AS rm_distinct_replay_ids,\n    (SELECT COUNT(*) FROM matched)     AS matched_replay_ids,\n    (SELECT COUNT(*) FROM rp_only)     AS rp_only,\n    (SELECT COUNT(*) FROM rm_only)     AS rm_only\n",
+    "replay_id_sample": "\nSELECT\n    filename,\n    regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\nFROM replays_meta_raw\nLIMIT 10\n",
+    "empty_replay_id_check": "\nSELECT COUNT(*) AS empty_count\nFROM replays_meta_raw\nWHERE regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) = ''\n",
+    "meta_map_name_sample": "\nSELECT\n    metadata.mapName AS map_name,\n    COUNT(*) AS replay_count,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM replays_meta_raw\nGROUP BY map_name\nORDER BY replay_count DESC\nLIMIT 30\n",
+    "map_aliases_raw_overview": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(DISTINCT tournament) AS distinct_tournaments,\n    COUNT(DISTINCT foreign_name) AS distinct_foreign_names,\n    COUNT(DISTINCT english_name) AS distinct_english_names,\n    COUNT(DISTINCT filename) AS distinct_files\nFROM map_aliases_raw\n",
+    "map_aliases_sample": "\nSELECT foreign_name, english_name\nFROM map_aliases_raw\nWHERE tournament = (SELECT MIN(tournament) FROM map_aliases_raw)\nORDER BY foreign_name\nLIMIT 30\n",
+    "map_name_vs_aliases_cross": "\nWITH meta_maps AS (\n    SELECT DISTINCT metadata.mapName AS map_name\n    FROM replays_meta_raw\n    WHERE metadata.mapName IS NOT NULL\n)\nSELECT\n    COUNT(*) AS meta_map_count,\n    COUNT(*) FILTER (\n        WHERE map_name IN (SELECT DISTINCT foreign_name FROM map_aliases_raw)\n    ) AS in_foreign_names,\n    COUNT(*) FILTER (\n        WHERE map_name IN (SELECT DISTINCT english_name FROM map_aliases_raw)\n    ) AS in_english_names,\n    COUNT(*) FILTER (\n        WHERE map_name NOT IN (SELECT DISTINCT foreign_name FROM map_aliases_raw)\n        AND map_name NOT IN (SELECT DISTINCT english_name FROM map_aliases_raw)\n    ) AS in_neither\nFROM meta_maps\n",
+    "alias_identity_check": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) FILTER (WHERE foreign_name = english_name) AS identity_count,\n    COUNT(*) FILTER (WHERE foreign_name != english_name) AS translated_count,\n    ROUND(\n        100.0 * COUNT(*) FILTER (WHERE foreign_name = english_name) / COUNT(*),\n        2\n    ) AS identity_pct\nFROM (SELECT DISTINCT foreign_name, english_name FROM map_aliases_raw)\n",
+    "map_name_null_check": "\nSELECT\n    COUNT(*) AS total_rows,\n    SUM(CASE WHEN metadata.mapName IS NULL THEN 1 ELSE 0 END) AS null_count,\n    COUNT(DISTINCT metadata.mapName) AS distinct_map_names\nFROM replays_meta_raw\n",
+    "game_events_loop0_types": "\nSELECT\n    evtTypeName,\n    COUNT(*) AS cnt\nFROM game_events_raw\nWHERE loop = 0\nGROUP BY evtTypeName\nORDER BY cnt DESC\n",
+    "game_events_min_loop_sample": "\nSELECT\n    MIN(loop) AS global_min_loop,\n    MAX(loop) AS global_max_loop,\n    COUNT(DISTINCT evtTypeName) AS distinct_event_types\nFROM game_events_raw\nWHERE loop <= 10\n",
+    "tracker_events_loop0_types": "\nSELECT\n    evtTypeName,\n    COUNT(*) AS cnt\nFROM tracker_events_raw\nWHERE loop = 0\nGROUP BY evtTypeName\nORDER BY cnt DESC\n",
+    "tracker_events_type_distribution": "\nSELECT\n    evtTypeName,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM tracker_events_raw\nGROUP BY evtTypeName\nORDER BY cnt DESC\n",
+    "tracker_events_loop_range": "\nSELECT\n    MIN(loop) AS min_loop,\n    MAX(loop) AS max_loop,\n    COUNT(DISTINCT filename) AS distinct_replays\nFROM tracker_events_raw\n",
+    "message_events_overview": "\nSELECT\n    evtTypeName,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM message_events_raw\nGROUP BY evtTypeName\nORDER BY cnt DESC\n",
+    "message_events_coverage": "\nSELECT\n    COUNT(DISTINCT filename) AS distinct_replays_in_events,\n    COUNT(*) AS total_rows,\n    MIN(loop) AS min_loop,\n    MAX(loop) AS max_loop\nFROM message_events_raw\n",
+    "message_events_sample": "\nSELECT\n    evtTypeName,\n    loop,\n    event_data\nFROM message_events_raw\nORDER BY loop\nLIMIT 10\n",
+    "meta_version_distribution": "\nSELECT\n    metadata.gameVersion AS game_version,\n    COUNT(*) AS replay_count,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM replays_meta_raw\nGROUP BY game_version\nORDER BY replay_count DESC\nLIMIT 20\n",
+    "timestamp_distribution": "\nSELECT\n    EXTRACT(YEAR FROM TRY_CAST(details.timeUTC AS TIMESTAMP)) AS year,\n    COUNT(*) AS replay_count,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct,\n    MIN(details.timeUTC) AS sample_min,\n    MAX(details.timeUTC) AS sample_max\nFROM replays_meta_raw\nGROUP BY year\nORDER BY year\n"
+  }
+}

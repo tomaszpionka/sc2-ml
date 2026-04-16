@@ -8,6 +8,63 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-15 — [Phase 01 / Step 01_03_03] Table Utility Assessment
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** Empirical assessment of all 3 raw tables for prediction pipeline utility. Column overlap, join integrity, ELO redundancy, overviews_raw STRUCT content, replay_summary_raw fill rate. Assessment only — no cleaning or feature decisions (I9).
+
+### 01_03_03 — Table Utility Assessment
+
+**Artifacts produced:**
+- `artifacts/01_exploration/03_profiling/01_03_03_table_utility.json` (14K)
+- `artifacts/01_exploration/03_profiling/01_03_03_table_utility.md` (7K)
+
+**T01 — Column overlap:**
+- Shared columns (2): `filename`, `game_id`
+- matches_raw exclusive (16): `avg_elo`, `duration`, `game_speed`, `game_type`, `irl_duration`, `leaderboard`, `map`, `mirror`, `num_players`, `patch`, `raw_match_type`, `replay_enhanced`, `started_timestamp`, `starting_age`, `team_0_elo`, `team_1_elo`
+- players_raw exclusive (12): `castle_age_uptime`, `civ`, `feudal_age_uptime`, `imperial_age_uptime`, `match_rating_diff`, `new_rating`, `old_rating`, `opening`, `profile_id`, `replay_summary_raw`, `team`, `winner`
+- `winner` is exclusive to players_raw. `started_timestamp` is exclusive to matches_raw. Both tables confirmed.
+
+**T02 — Join integrity:**
+- Orphan matches (in matches_raw, no players): 212,890 — validated against 01_03_01 MATCHES_WITHOUT_PLAYERS.
+- Orphan player game_ids (in players_raw, not in matches_raw): 0 — complete referential integrity in the player direction.
+- matches_raw: 30,690,651 distinct game_ids / 30,690,651 rows = 100.0% unique (no duplicates per game_id).
+- players_raw: 30,477,761 distinct game_ids, avg 3.5313 player rows per game_id.
+- Multiplicity: 60.50% of game_ids have exactly 2 player rows (true 1v1). 16.50% have 4, 14.06% have 8, 8.94% have 6.
+
+**T03 — ELO redundancy:**
+- avg_elo = (team_0_elo + team_1_elo) / 2: 99.9955% exact within 0.001 tolerance. 1,386 rows deviate (max deviation: 1,640 -- likely data anomalies).
+- avg_elo cross-derivation from players_raw.old_rating in 1v1 matches: 100.0% within 0.5 ELO. Mean absolute deviation = 0.0. avg_elo is **exactly** the mean of old_rating across the two players in every 1v1 match.
+- Spearman rho (avg_elo vs player_avg_old_rating, n=100K RESERVOIR): **1.000000** (p=0.0). Perfect monotone agreement.
+- team_0_elo vs player_avg: rho=0.996784; team_1_elo vs player_avg: rho=0.997060; team_0 vs team_1: rho=0.988389.
+- **Temporal annotation (I3):** `old_rating` = pre-game rating, I3-safe. `new_rating` = post-game rating, LEAKING — must never be used as a feature.
+
+**T04 — overviews_raw and replay_summary_raw:**
+- overviews_raw: singleton (1 row), last_updated 2026-04-09. Contains 19 patches (release dates 2022-08-29 to 2025-12-02), 50 civs, 10 openings, 4 ELO groupings, 41 changelog entries, 3 tournament stages (`all`, `qualifiers`, `main_event`). Patch->release_date mapping is available here and not elsewhere in raw tables.
+- replay_summary_raw: 86.05% empty (`'{}'`), 0% NULL, 13.95% non-empty (15,011,294 rows). Max content length: 7,484 chars. No rows are fully NULL.
+
+**T05 — Verdicts:**
+- **matches_raw**: ESSENTIAL — sole source of `started_timestamp` (temporal anchor, I3 critical), map, leaderboard, patch, duration, mirror. ELO columns are derivable from players_raw but the reverse is not true for the temporal anchor.
+- **players_raw**: ESSENTIAL — sole source of `winner` (prediction target) and player-level features (`old_rating`, `civ`, `opening`, age uptimes).
+- **overviews_raw**: SUPPLEMENTARY REFERENCE — singleton lookup. Provides 19-entry patch->release_date mapping useful for temporal version stratification.
+- **replay_summary_raw**: PARTIAL UTILITY — 13.95% fill rate with max 7,484-char content. Content structure warrants further investigation in a dedicated step if replay features are considered.
+
+**Decisions taken:**
+- None. Verdicts documented for downstream steps. No cleaning or feature engineering decisions.
+
+**Decisions deferred:**
+- Whether to parse replay_summary_raw content (13.95% fill rate) -- deferred to Phase 02 feature decision gate.
+- Whether to use overviews_raw.patches for patch-date enrichment of matches_raw -- deferred to Phase 02.
+
+**Thesis mapping:** Chapter 4 §4.1.2 — AoE2 dataset split architecture, join structure, ELO redundancy finding.
+
+### SQL queries (I6)
+
+All SQL queries are embedded verbatim in `01_03_03_table_utility.json > sql_queries`.
+
+---
+
 ## 2026-04-16 — [Phase 01 / Step 01_03_02] True 1v1 Match Identification
 
 **Category:** A (science)
