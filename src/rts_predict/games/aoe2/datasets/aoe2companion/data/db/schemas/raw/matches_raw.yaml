@@ -10,219 +10,219 @@ columns:
 - name: matchId
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Match identifier. Primary match join key.
 - name: started
   type: TIMESTAMP
   nullable: true
-  description: 'TODO: fill'
+  description: Game start timestamp. Temporal anchor for I3 ordering.
 - name: finished
   type: TIMESTAMP
   nullable: true
-  description: 'TODO: fill'
+  description: Game end timestamp. POST-GAME.
 - name: leaderboard
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Ladder name (rm_1v1, rm_team, dm_1v1, dm_team, unranked, etc.)."
 - name: name
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player display / in-game name.
 - name: server
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Hosting server region (e.g., westeurope). Mostly NULL."
 - name: internalLeaderboardId
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Numeric ladder ID. Maps to ratings_raw.leaderboard_id for cross-table joins."
 - name: privacy
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Privacy/visibility setting of the lobby.
 - name: mod
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether a mod is active for this match.
 - name: map
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Map name (e.g., arabia, arena, black_forest).
 - name: difficulty
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: AI difficulty setting.
 - name: startingAge
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Starting age setting (e.g., dark, feudal, castle, imperial).
 - name: fullTechTree
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Full tech tree unlocked for all players.
 - name: allowCheats
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Cheats enabled in the lobby.
 - name: empireWarsMode
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Empire Wars game mode enabled.
 - name: endingAge
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Maximum attainable age setting.
 - name: gameMode
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Game mode setting.
 - name: lockSpeed
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Game speed locked.
 - name: lockTeams
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Teams locked (no diplomacy changes).
 - name: mapSize
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Map size setting.
 - name: population
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Population cap setting.
 - name: hideCivs
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Civilization picks hidden from opponents. Phased in over time.
 - name: recordGame
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether the game was recorded.
 - name: regicideMode
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Regicide game mode enabled.
 - name: gameVariant
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Game variant identifier (e.g., standard, empire wars).
 - name: resources
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Starting resources setting.
 - name: sharedExploration
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Shared exploration enabled for teammates.
 - name: speed
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Game speed setting name.
 - name: speedFactor
   type: FLOAT
   nullable: true
-  description: 'TODO: fill'
+  description: Numeric game speed multiplier.
 - name: suddenDeathMode
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Sudden death mode enabled.
 - name: antiquityMode
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Antiquity mode enabled. Recently added setting.
 - name: civilizationSet
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Civilization set restriction for the lobby.
 - name: teamPositions
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Team positions enabled (fixed spawn locations by team).
 - name: teamTogether
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Teams spawned together on the map.
 - name: treatyLength
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Treaty duration in minutes.
 - name: turboMode
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Turbo mode enabled.
 - name: victory
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Victory condition setting.
 - name: revealMap
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Map reveal / fog of war setting.
 - name: scenario
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Custom scenario name. NULL for standard matches.
 - name: password
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether the lobby was password-protected.
 - name: modDataset
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Mod dataset identifier. NULL for standard matches.
 - name: profileId
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player profile ID. Primary player join key across tables.
 - name: rating
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Player rating entering match. Confirmed PRE-GAME in 01_03_03. NULL for unranked matches. Sentinel -1 exists."
 - name: ratingDiff
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Rating change after match (post - pre). POST-GAME, confirmed leakage."
 - name: color
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: In-game player color code.
 - name: colorHex
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: In-game player color as hex string.
 - name: slot
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player slot index in the lobby.
 - name: status
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player status (player or ai).
 - name: team
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Team number. Sentinel value 255 exists.
 - name: won
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Match result. Prediction target. Near-balanced true/false with some NULLs.
 - name: country
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player country code.
 - name: shared
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether the player shared control.
 - name: verified
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether the player account is verified.
 - name: civ
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Civilization name (e.g., Franks, Mongols, Britons).
 - name: filename
   type: VARCHAR
   nullable: true

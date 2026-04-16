@@ -10,31 +10,31 @@ columns:
 - name: profile_id
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Player profile ID (snake_case; maps to matches_raw.profileId via CAST)."
 - name: games
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: Cumulative total games played at this time point.
 - name: rating
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: Player rating at this time point. POST-GAME value (rating = prev_rating + rating_diff).
 - name: date
   type: TIMESTAMP
   nullable: true
-  description: 'TODO: fill'
+  description: "Match/rating event timestamp. Temporal key for ASOF joins with matches_raw.started."
 - name: leaderboard_id
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Ladder ID (0=Unranked, 1=DM 1v1, 2=DM Team, 3=RM 1v1, 4=RM Team). NOTE: leaderboard_id=6 (rm_1v1 in matches_raw) has zero rows."
 - name: rating_diff
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: Rating change from this game (post - pre).
 - name: season
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Season identifier (constant -1 across all rows)."
 - name: filename
   type: VARCHAR
   nullable: true

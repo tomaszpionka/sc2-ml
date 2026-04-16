@@ -15,15 +15,15 @@ columns:
 - name: loop
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Replay game loop / engine tick at which the event occurred."
 - name: evtTypeName
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Game event discriminator (e.g., CameraUpdate, ControlGroupUpdate, Cmd, SelectionDelta)."
 - name: event_data
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "JSON text of the event payload. Schema varies by evtTypeName (camera coords, command targets, selection deltas)."
 provenance:
   source_files_pattern: data/db/events/gameEvents/batch_*.parquet
   duckdb_read_function: read_parquet

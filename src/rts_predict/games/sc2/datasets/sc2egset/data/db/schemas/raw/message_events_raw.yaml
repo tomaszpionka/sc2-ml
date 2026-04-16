@@ -15,15 +15,15 @@ columns:
 - name: loop
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Game loop of the message event."
 - name: evtTypeName
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Message event discriminator (e.g., Chat, Ping, ReconnectNotify)."
 - name: event_data
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "JSON text of the message payload (chat text, ping coordinates, reconnect notification)."
 provenance:
   source_files_pattern: data/db/events/messageEvents/batch_*.parquet
   duckdb_read_function: read_parquet

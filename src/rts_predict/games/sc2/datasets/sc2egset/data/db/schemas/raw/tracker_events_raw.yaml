@@ -15,15 +15,15 @@ columns:
 - name: loop
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: "Replay game loop / engine tick at which the event occurred."
 - name: evtTypeName
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Tracker event discriminator (e.g., UnitBorn, UnitDied, UnitTypeChange, PlayerStats)."
 - name: event_data
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "JSON text of the event payload. Schema varies by evtTypeName (unit births, deaths, economy snapshots, upgrades)."
 provenance:
   source_files_pattern: data/db/events/trackerEvents/batch_*.parquet
   duckdb_read_function: read_parquet

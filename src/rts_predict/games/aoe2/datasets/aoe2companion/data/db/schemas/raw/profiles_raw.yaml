@@ -10,55 +10,55 @@ columns:
 - name: profileId
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player profile ID. Stable primary join key across tables.
 - name: steamId
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Steam 64-bit ID as string.
 - name: name
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Player display / in-game name at crawl time. Also available per-row in matches_raw."
 - name: clan
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Clan / team tag. Snapshot value, unique to profiles_raw (not in matches_raw).
 - name: country
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player country code. Also available per-row in matches_raw.
 - name: avatarhash
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Steam avatar hash string. Cosmetic, no predictive value."
 - name: sharedHistory
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: twitchChannel
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: youtubeChannel
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: youtubeChannelName
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: discordId
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: discordName
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: discordInvitation
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Deprecated API field (dead column, entirely NULL).
 - name: filename
   type: VARCHAR
   nullable: true

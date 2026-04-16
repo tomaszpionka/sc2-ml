@@ -10,75 +10,75 @@ columns:
 - name: leaderboard
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Ladder name (rm_1v1, rm_team, dm_1v1, dm_team, unranked, etc.)."
 - name: profileId
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player profile ID. Join key to matches_raw and profiles_raw.
 - name: name
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player display / in-game name at crawl time.
 - name: rank
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Rank position on ladder at crawl time. NULL for unranked entries.
 - name: rating
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Current Elo rating at crawl time. Singleton snapshot — NOT temporally safe for match-level features (I3)."
 - name: lastMatchTime
   type: TIMESTAMP
   nullable: true
-  description: 'TODO: fill'
+  description: "Timestamp of the player's last match at crawl time."
 - name: drops
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Cumulative dropped/disconnected games at crawl time."
 - name: losses
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Cumulative total losses at crawl time."
 - name: streak
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Current win/loss streak at crawl time (negative = loss streak)."
 - name: wins
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Cumulative total wins at crawl time."
 - name: games
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Cumulative total games played at crawl time."
 - name: updatedAt
   type: TIMESTAMP
   nullable: true
-  description: 'TODO: fill'
+  description: "Per-player crawl/update timestamp. Median 59-day gap from lastMatchTime — snapshot is stale."
 - name: rankCountry
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Country-specific rank position at crawl time."
 - name: active
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: "Whether the player is considered active on this leaderboard."
 - name: season
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Season identifier (constant -1 across all rows)."
 - name: rankLevel
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: "Rank level/tier code (constant 1 across all rows)."
 - name: steamId
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Steam 64-bit ID as string."
 - name: country
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Player country code/string."
 - name: filename
   type: VARCHAR
   nullable: true

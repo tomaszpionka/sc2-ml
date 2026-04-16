@@ -10,15 +10,15 @@ columns:
 - name: tournament
   type: VARCHAR
   nullable: false
-  description: 'TODO: fill'
+  description: Tournament directory name. All tournaments share identical mapping key sets.
 - name: foreign_name
   type: VARCHAR
   nullable: false
-  description: 'TODO: fill'
+  description: Foreign/localized map name. Some entries have foreign_name == english_name.
 - name: english_name
   type: VARCHAR
   nullable: false
-  description: 'TODO: fill'
+  description: English map name. Join target for replays_meta_raw metadata.mapName.
 - name: filename
   type: VARCHAR
   nullable: false

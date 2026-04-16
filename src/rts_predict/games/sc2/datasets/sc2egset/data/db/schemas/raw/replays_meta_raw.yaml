@@ -15,11 +15,11 @@ columns:
 - name: details
   type: STRUCT(gameSpeed VARCHAR, isBlizzardMap BOOLEAN, timeUTC VARCHAR)
   nullable: true
-  description: 'TODO: fill'
+  description: "High-level game details: configured game speed, Blizzard map flag, and UTC timestamp."
 - name: header
   type: STRUCT(elapsedGameLoops BIGINT, "version" VARCHAR)
   nullable: true
-  description: 'TODO: fill'
+  description: "Replay header: game duration in loops/ticks and SC2 version string."
 - name: initData
   type: STRUCT(gameDescription STRUCT(gameOptions STRUCT(advancedSharedControl BOOLEAN, amm BOOLEAN, battleNet BOOLEAN, clientDebugFlags
     BIGINT, competitive BOOLEAN, cooperative BOOLEAN, fog BIGINT, heroDuplicatesAllowed BOOLEAN, lockTeams BOOLEAN, noVictoryOrDefeat
@@ -27,27 +27,27 @@ columns:
     VARCHAR, isBlizzardMap BOOLEAN, mapAuthorName VARCHAR, mapFileSyncChecksum BIGINT, mapSizeX BIGINT, mapSizeY BIGINT, maxPlayers
     BIGINT))
   nullable: true
-  description: 'TODO: fill'
+  description: "Static game setup: map config (size, author, checksum, max players) and game option flags (lock teams, fog, competitive, etc.)."
 - name: metadata
   type: STRUCT(baseBuild VARCHAR, dataBuild VARCHAR, gameVersion VARCHAR, mapName VARCHAR)
   nullable: true
-  description: 'TODO: fill'
+  description: "Parser-level metadata: base/data build strings, game version, and human-readable map name."
 - name: ToonPlayerDescMap
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: "Per-player metadata map keyed by toon/account id string. JSON text blob; normalized into replay_players_raw."
 - name: gameEventsErr
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: "Whether a game-events parse error occurred (constant FALSE across all replays)."
 - name: messageEventsErr
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: "Whether a message-events parse error occurred (constant FALSE across all replays)."
 - name: trackerEvtsErr
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: "Whether a tracker-events parse error occurred (constant FALSE across all replays)."
 provenance:
   source_files_pattern: data/raw/<tournament>/<tournament>_data/*.SC2Replay.json
   duckdb_read_function: read_json_auto

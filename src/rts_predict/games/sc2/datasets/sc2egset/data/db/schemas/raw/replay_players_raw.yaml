@@ -15,99 +15,99 @@ columns:
 - name: toon_id
   type: VARCHAR
   nullable: false
-  description: 'TODO: fill'
+  description: Battle.net toon/account identifier string. Primary player identity key.
 - name: nickname
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Player nickname.
 - name: playerID
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: In-game player id.
 - name: userID
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: User id.
 - name: isInClan
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: Whether the player is in a clan.
 - name: clanTag
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Clan tag.
 - name: MMR
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Matchmaking rating. 0 = unrated player sentinel.
 - name: race
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Actual race played (Protoss, Zerg, Terran).
 - name: selectedRace
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Selected race choice string. Empty string = Random resolved post-game.
 - name: handicap
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Handicap percentage (100 = standard).
 - name: region
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Battle.net region label (Europe, US, Korea, Unknown).
 - name: realm
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Realm label.
 - name: highestLeague
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Highest known league. Mostly Unknown in esports replays.
 - name: result
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: Game result (Win, Loss, Undecided, Tie). Prediction target.
 - name: APM
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Actions per minute (in-game metric, computed from replay).
 - name: SQ
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Spending Quotient (in-game macro efficiency metric). INT32_MIN = sentinel for missing.
 - name: supplyCappedPercent
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Percent of game time supply blocked/capped (in-game metric).
 - name: startDir
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Starting direction code, often clock-position-like.
 - name: startLocX
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Starting x location on the map.
 - name: startLocY
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Starting y location on the map.
 - name: color_a
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player color alpha channel.
 - name: color_b
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player color blue channel.
 - name: color_g
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player color green channel.
 - name: color_r
   type: INTEGER
   nullable: true
-  description: 'TODO: fill'
+  description: Player color red channel.
 provenance:
   source_files_pattern: data/raw/<tournament>/<tournament>_data/*.SC2Replay.json
   extraction_method: Python-side extraction from ToonPlayerDescMap JSON blobs in replays_meta_raw. Rows batch-inserted via
