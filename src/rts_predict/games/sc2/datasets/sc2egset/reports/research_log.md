@@ -74,6 +74,22 @@ complete (0 orphans). Event views (game/tracker/message) are excluded from
 Phase 02 pre-game features per I3. map_aliases_raw may be skipped since
 map names in replays_meta_raw are already in English.
 
+### Cross-dataset summary (01_03_03 across all three datasets)
+
+| Dataset | Table | Verdict | Key finding |
+|---------|-------|---------|-------------|
+| **aoe2companion** | matches_raw | ESSENTIAL | `rating` is PRE-GAME (99.8% match with ratings_raw), sole source for rm_1v1 ratings |
+| | ratings_raw | CONDITIONALLY USABLE | No rm_1v1 coverage (leaderboard_id=6 absent). Useful for other leaderboards only |
+| | leaderboards_raw | NOT USABLE | Singleton snapshot, 1 entry per player per leaderboard. I3 violation risk |
+| | profiles_raw | NOT USABLE | No temporal dimension. Adds steamId/clan (99.9% non-null) but not usable for temporal features |
+| **aoestats** | matches_raw | ESSENTIAL | Temporal anchor (`started_timestamp`), match context (map, leaderboard, patch) |
+| | players_raw | ESSENTIAL | Target (`winner`), `old_rating` (pre-game), `civ`. ELO perfectly derivable (Spearman rho=1.0 with avg_elo in 1v1) |
+| | overviews_raw | SUPPLEMENTARY | Singleton lookup. Patch release dates are the only unique data |
+| **sc2egset** | replay_players_raw | ESSENTIAL | Target (`result`), player features (MMR, race, selectedRace) |
+| | replays_meta_raw | ESSENTIAL | Match metadata, 31 struct fields. Join via replay_id (regexp_extract) |
+| | map_aliases_raw | CONDITIONAL | All 188 map names already English — translation not required |
+| | event views (3) | IN_GAME_ONLY | Deferred to optional Phase 02 in-game comparison |
+
 ---
 
 Thesis: "A comparative analysis of methods for predicting game results
