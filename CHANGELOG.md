@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.8.1] — 2026-04-16 (PR #TBD: fix/stale-research-log-refs)
+
+### Fixed
+- aoe2companion research log: 6 stale "rating AMBIGUOUS / deferred to 01_04" references
+  updated with strikethrough and cross-reference to 01_03_03 PRE-GAME resolution
+
 ## [3.8.0] — 2026-04-16 (PR #TBD: feat/table-utility-assessment)
 
 ### Added
