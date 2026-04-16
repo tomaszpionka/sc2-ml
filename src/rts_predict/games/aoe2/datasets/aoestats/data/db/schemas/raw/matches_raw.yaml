@@ -10,71 +10,71 @@ columns:
 - name: map
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'map the match was played on'
 - name: started_timestamp
   type: TIMESTAMP WITH TIME ZONE
   nullable: true
-  description: 'TODO: fill'
+  description: 'match start time'
 - name: duration
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'in-game duration'
 - name: irl_duration
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'in-irl duration'
 - name: game_id
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'match identifier (intended to correspond to match IDs on other sites)'
 - name: avg_elo
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'average Elo across all players in the match'
 - name: num_players
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'number of players in the match'
 - name: team_0_elo
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'avg rating on team 0'
 - name: team_1_elo
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'avg rating on team 1'
 - name: replay_enhanced
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: 'replay was downloaded and used to enhance player info'
 - name: leaderboard
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'which leaderboard/mode the match was played on'
 - name: mirror
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: 'all players used the same civilization'
 - name: patch
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'patch version number'
 - name: raw_match_type
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'passthrough match type codes'
 - name: game_type
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'mode family (e.g., random_map, empire_wars, deathmatch, etc.)'
 - name: game_speed
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'speed category (slow/casual/normal/fast)'
 - name: starting_age
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'starting age category (dark/feudal/castle/imperial/post-imperial)'
 - name: filename
   type: VARCHAR
   nullable: true

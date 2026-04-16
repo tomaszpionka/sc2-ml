@@ -10,55 +10,55 @@ columns:
 - name: winner
   type: BOOLEAN
   nullable: true
-  description: 'TODO: fill'
+  description: 'whether the player won the match'
 - name: game_id
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'corresponds to the game_id in matches_raw'
 - name: team
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'which team the player is on (0 or 1)'
 - name: feudal_age_uptime
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'time to Feudal Age'
 - name: castle_age_uptime
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'time to Castle Age'
 - name: imperial_age_uptime
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'time to Imperial Age'
 - name: old_rating
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'rating at match start'
 - name: new_rating
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'rating at match end'
 - name: match_rating_diff
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'team rating difference from this player`s perspective'
 - name: replay_summary_raw
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'replay-derived summary of units/buildings/tech by age (replay-enhanced only)'
 - name: profile_id
   type: DOUBLE
   nullable: true
-  description: 'TODO: fill'
+  description: 'player identifier, cross-referenceable (?) on other sites'
 - name: civ
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'civilization used in the match'
 - name: opening
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'opening classification inferred from replay summary (replay-enhanced only)'
 - name: filename
   type: VARCHAR
   nullable: true

@@ -10,36 +10,36 @@ columns:
 - name: last_updated
   type: VARCHAR
   nullable: true
-  description: 'TODO: fill'
+  description: 'date string'
 - name: total_match_count
   type: BIGINT
   nullable: true
-  description: 'TODO: fill'
+  description: 'number of games'
 - name: civs
   type: STRUCT("name" VARCHAR, "value" BIGINT)[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'list of civilizations and their counts across all matches'
 - name: openings
   type: STRUCT("name" VARCHAR, "value" BIGINT)[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'list of openings and their counts'
 - name: patches
   type: STRUCT(number BIGINT, "label" VARCHAR, release_date DATE, published BOOLEAN, url VARCHAR, description VARCHAR, total_games
     HUGEINT)[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'patches struct with metadata and game counts'
 - name: groupings
   type: STRUCT("name" VARCHAR, "label" VARCHAR, elo_groupings STRUCT("label" VARCHAR, "name" VARCHAR)[])[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'defines ladder/mode groupings and their rating bracket schemes'
 - name: changelog
   type: STRUCT(change_time TIMESTAMP, changes VARCHAR[], "version" VARCHAR)[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'change history struct'
 - name: tournament_stages
   type: VARCHAR[]
   nullable: true
-  description: 'TODO: fill'
+  description: 'enumerations'
 - name: filename
   type: VARCHAR
   nullable: true
