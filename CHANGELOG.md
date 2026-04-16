@@ -19,6 +19,19 @@ merged to `master`.
 
 ### Removed
 
+## [3.10.2] — 2026-04-16 (PR #TBD: fix/01-04-aoestats-ingame-cols)
+
+### Fixed
+- aoestats `matches_1v1_clean`: removed 8 IN-GAME columns (`p0_opening`, `p1_opening`,
+  `p0_feudal_age_uptime`, `p1_feudal_age_uptime`, `p0_castle_age_uptime`, `p1_castle_age_uptime`,
+  `p0_imperial_age_uptime`, `p1_imperial_age_uptime`) that were classified IN-GAME in 01_03_01
+  profiling but included in the prediction target VIEW without I3 assertion coverage.
+  Extended `forbidden` set and added combined `information_schema` assertion covering both
+  POST-GAME and IN-GAME I3 violations.
+- Added slot-assignment asymmetry warning comment to aoestats `matches_1v1_clean` VIEW DDL
+  (team=1 wins ~52.27%; Phase 02 must randomise p0/p1 slot before using as focal/opponent pairs).
+- PIPELINE_SECTION_STATUS: `01_04` → `complete` for all three datasets (aoe2companion, aoestats, sc2egset).
+
 ## [3.10.1] — 2026-04-16 (PR #TBD: fix/01-04-i3-violations)
 
 ### Fixed

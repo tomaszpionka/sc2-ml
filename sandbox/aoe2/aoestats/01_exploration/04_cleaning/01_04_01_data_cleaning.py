@@ -288,18 +288,13 @@ SELECT
     p0.civ AS p0_civ,
     p0.old_rating AS p0_old_rating,
     p0.winner AS p0_winner,
-    p0.opening AS p0_opening,
-    p0.feudal_age_uptime AS p0_feudal_age_uptime,
-    p0.castle_age_uptime AS p0_castle_age_uptime,
-    p0.imperial_age_uptime AS p0_imperial_age_uptime,
     CAST(p1.profile_id AS BIGINT) AS p1_profile_id,
     p1.civ AS p1_civ,
     p1.old_rating AS p1_old_rating,
     p1.winner AS p1_winner,
-    p1.opening AS p1_opening,
-    p1.feudal_age_uptime AS p1_feudal_age_uptime,
-    p1.castle_age_uptime AS p1_castle_age_uptime,
-    p1.imperial_age_uptime AS p1_imperial_age_uptime,
+    -- WARNING (I5): p0 = team=0, p1 = team=1. team=1 wins ~52.27% (slot asymmetry documented in 01_04_01).
+    -- Phase 02 feature engineering MUST randomise player-slot assignment before using
+    -- p0_*/p1_* columns as focal/opponent pairs. DO NOT use raw p0/p1 as symmetric features.
     p1.winner AS team1_wins
 FROM ranked_1v1 r
 INNER JOIN matches_raw m ON m.game_id = r.game_id
@@ -317,21 +312,35 @@ print("PASS: row count within +/-1000 of expected 17,814,947")
 # Verify no forbidden columns
 clean_cols = set(con.execute("DESCRIBE matches_1v1_clean").df()["column_name"])
 forbidden = {
-    "new_rating", "p0_new_rating", "p1_new_rating", "game_type", "game_speed", "starting_age",
+    # POST-GAME (I3 violations)
+    "new_rating", "p0_new_rating", "p1_new_rating",
     "duration", "irl_duration", "p0_match_rating_diff", "p1_match_rating_diff",
+    # Constant / near-dead (R04/R05)
+    "game_type", "game_speed", "starting_age",
+    # IN-GAME (I3 violations -- unavailable at prediction time)
+    "p0_opening", "p1_opening",
+    "p0_feudal_age_uptime", "p1_feudal_age_uptime",
+    "p0_castle_age_uptime", "p1_castle_age_uptime",
+    "p0_imperial_age_uptime", "p1_imperial_age_uptime",
 }
 assert forbidden.isdisjoint(clean_cols), f"SCHEMA VIOLATION: {forbidden & clean_cols}"
 assert "team1_wins" in clean_cols, "FAIL: team1_wins column missing"
-print("PASS: no forbidden columns (including POST-GAME I3 violations); team1_wins present")
+print("PASS: no forbidden columns (POST-GAME + IN-GAME I3 violations excluded); team1_wins present")
 
-# Explicit information_schema assertion for POST-GAME columns (W3)
-clean_pg_check = con.execute("""
+# Explicit information_schema assertions for I3 violations (POST-GAME + IN-GAME)
+clean_i3_check = con.execute("""
 SELECT column_name FROM information_schema.columns
 WHERE table_name = 'matches_1v1_clean'
-  AND column_name IN ('duration', 'irl_duration', 'p0_match_rating_diff', 'p1_match_rating_diff')
+  AND column_name IN (
+    'duration', 'irl_duration', 'p0_match_rating_diff', 'p1_match_rating_diff',
+    'p0_opening', 'p1_opening',
+    'p0_feudal_age_uptime', 'p1_feudal_age_uptime',
+    'p0_castle_age_uptime', 'p1_castle_age_uptime',
+    'p0_imperial_age_uptime', 'p1_imperial_age_uptime'
+  )
 """).df()
-assert len(clean_pg_check) == 0, f"FAIL: POST-GAME columns in matches_1v1_clean: {clean_pg_check['column_name'].tolist()}"
-print("W3 PASS: No POST-GAME columns in matches_1v1_clean")
+assert len(clean_i3_check) == 0, f"FAIL: I3-violating columns in matches_1v1_clean: {clean_i3_check['column_name'].tolist()}"
+print("I3 PASS: No POST-GAME or IN-GAME columns in matches_1v1_clean")
 
 # %% [markdown]
 # ## Create player_history_all VIEW
