@@ -262,11 +262,6 @@ columns:
   nullable: True
   description: Game option: user difficulty.
   notes: CONTEXT
-- name: max_players_check
-  type: BIGINT
-  nullable: True
-  description: Alias of gd_maxPlayers for cross-check.
-  notes: CONTEXT
 provenance:
   source_tables: [replay_players_raw, replays_meta_raw]
   join_key: "NULLIF(regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json', 1), '') AS replay_id"

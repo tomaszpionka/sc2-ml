@@ -476,7 +476,6 @@ CREATE OR REPLACE VIEW matches_1v1_clean AS
 SELECT
     d.matchId,
     d.started,
-    d.finished,
     d.leaderboard,
     d.name,
     d.server,
@@ -517,7 +516,6 @@ SELECT
     d.modDataset,
     d.profileId,
     d.rating,
-    d.ratingDiff,
     d.color,
     d.colorHex,
     d.slot,
@@ -617,15 +615,25 @@ print("V1 Rating coverage:")
 print(r_v1.to_string())
 
 # %%
-# V2: No POST-GAME leakage in player_history_all (I3)
+# V2: No POST-GAME leakage in player_history_all or matches_1v1_clean (I3)
 r_v2 = con.execute("""
 SELECT column_name FROM information_schema.columns
 WHERE table_name='player_history_all'
   AND column_name IN ('ratingDiff', 'finished')
 """).df()
-print(f"V2 POST-GAME columns in player_history_all (expect 0 rows): {len(r_v2)}")
+print(f"V2a POST-GAME columns in player_history_all (expect 0 rows): {len(r_v2)}")
 assert len(r_v2) == 0, "FAIL: POST-GAME columns found in player_history_all!"
-print("V2 PASS: No ratingDiff or finished in player_history_all")
+print("V2a PASS: No ratingDiff or finished in player_history_all")
+
+# %%
+r_v2_clean = con.execute("""
+SELECT column_name FROM information_schema.columns
+WHERE table_name='matches_1v1_clean'
+  AND column_name IN ('ratingDiff', 'finished')
+""").df()
+print(f"V2b POST-GAME columns in matches_1v1_clean (expect 0 rows): {len(r_v2_clean)}")
+assert len(r_v2_clean) == 0, "FAIL: POST-GAME columns found in matches_1v1_clean!"
+print("V2b PASS: No ratingDiff or finished in matches_1v1_clean")
 
 # %%
 # V3: Rating sanity
@@ -720,6 +728,10 @@ FROM matches_1v1_clean
 r_v2_art = con_ro.execute("""
 SELECT column_name FROM information_schema.columns
 WHERE table_name='player_history_all' AND column_name IN ('ratingDiff', 'finished')
+""").df()
+r_v2b_art = con_ro.execute("""
+SELECT column_name FROM information_schema.columns
+WHERE table_name='matches_1v1_clean' AND column_name IN ('ratingDiff', 'finished')
 """).df()
 r_v3_art = con_ro.execute("SELECT COUNT(*) FILTER (WHERE rating < 0) AS n FROM matches_1v1_clean").fetchone()
 r_v4_art = con_ro.execute("SELECT leaderboard, internalLeaderboardId, COUNT(*) AS n_rows FROM matches_1v1_clean GROUP BY leaderboard, internalLeaderboardId").df()
@@ -830,10 +842,18 @@ artifact = {
             "description": "Rating (PRE-GAME, confirmed 01_03_03) coverage in matches_1v1_clean",
         },
         "V2_no_postgame_leakage": {
-            "n_postgame_cols_found": len(r_v2_art),
-            "columns_checked": ["ratingDiff", "finished"],
-            "pass": len(r_v2_art) == 0,
-            "description": "No POST-GAME columns in player_history_all (I3)",
+            "player_history_all": {
+                "n_postgame_cols_found": len(r_v2_art),
+                "columns_checked": ["ratingDiff", "finished"],
+                "pass": len(r_v2_art) == 0,
+            },
+            "matches_1v1_clean": {
+                "n_postgame_cols_found": len(r_v2b_art),
+                "columns_checked": ["ratingDiff", "finished"],
+                "pass": len(r_v2b_art) == 0,
+            },
+            "pass": len(r_v2_art) == 0 and len(r_v2b_art) == 0,
+            "description": "No POST-GAME columns in player_history_all or matches_1v1_clean (I3)",
         },
         "V3_rating_sanity": {
             "n_negative_rating": r_v3_art[0],

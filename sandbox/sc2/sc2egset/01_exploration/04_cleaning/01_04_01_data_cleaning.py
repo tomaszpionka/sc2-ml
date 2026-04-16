@@ -710,8 +710,7 @@ SELECT
     mf.go_practice,
     mf.go_randomRaces,
     mf.go_teamsTogether,
-    mf.go_userDifficulty,
-    mf.gd_maxPlayers AS max_players_check
+    mf.go_userDifficulty
 
 FROM matches_flat mf
 WHERE mf.replay_id IS NOT NULL;  -- exclude any rows where replay_id extraction failed (empty-string guard)

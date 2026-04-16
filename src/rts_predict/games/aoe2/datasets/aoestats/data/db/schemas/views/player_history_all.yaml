@@ -82,12 +82,6 @@ columns:
     description: Player ELO rating before the match started.
     notes: "PRE_GAME. I3-safe: recorded before match. Key feature for Phase 02."
 
-  - name: match_rating_diff
-    type: DOUBLE
-    nullable: true
-    description: ELO rating change from this match (new_rating - old_rating).
-    notes: "POST_GAME. Retained for analysis only -- MUST NOT be used as a predictive feature (I3 violation)."
-
   - name: winner
     type: BOOLEAN
     nullable: true
@@ -124,13 +118,14 @@ provenance:
       reason: "POST-GAME (match length known only after completion)"
     - name: irl_duration
       reason: "POST-GAME (wall-clock duration known only after completion)"
+    - name: match_rating_diff
+      reason: "POST-GAME (I3 violation); ELO delta from this match (new_rating - old_rating). Removed in 01_04_01 I3 fix."
 
 invariants:
   - id: I3
     description: >
-      new_rating (POST-GAME) excluded. match_rating_diff retained for analysis only --
-      MUST NOT be used as feature. Temporal anchor (started_timestamp) exposed for
-      downstream WHERE ph.started_timestamp < target_match.started_timestamp.
+      new_rating and match_rating_diff (POST-GAME) excluded. Temporal anchor
+      (started_timestamp) exposed for downstream WHERE ph.started_timestamp < target_match.started_timestamp.
   - id: I5
     description: >
       Player-row-oriented (one row per player per match). No wide-format pivoting.

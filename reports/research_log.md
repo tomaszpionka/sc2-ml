@@ -24,9 +24,10 @@ All three datasets now expose a structurally identical long skeleton VIEW (`matc
 Downstream cleaning in all datasets operates against this common 10-column contract.
 
   - **aoe2companion:** 277,099,059 rows (lossless from matches_raw).
-    side 0 win_pct = 4.45% (449 rows -- source encoding artifact; team=1 and team=2 are 1v1 sides).
-    side 1 win_pct = 49.58%.
-    1v1 scoped (leaderboard_raw IN (6, 18)): only side=1 rows appear; win_pct=47.18%.
+    Full dataset: side=0 449 rows win_pct=4.45% (source encoding artifact; team=0 is not a 1v1 side).
+    side=1 win_pct=49.58%.
+    1v1 scoped (leaderboard_raw IN (6, 18)): side=0 29,921,254 rows win_pct=47.18%;
+    side=1 29,920,914 rows win_pct=52.81%. ~5pp slot asymmetry documented, deferred to Phase 02.
     leaderboard_raw = internalLeaderboardId (INTEGER); 1v1 values: 6 (rm_1v1), 18 (qp_rm_1v1).
     patch_raw = NULL (no patch column in source).
 

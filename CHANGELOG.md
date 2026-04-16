@@ -19,6 +19,27 @@ merged to `master`.
 
 ### Removed
 
+## [3.10.1] — 2026-04-16 (PR #TBD: fix/01-04-i3-violations)
+
+### Fixed
+- B1: aoe2companion `matches_1v1_clean` — removed `d.finished` and `d.ratingDiff` (POST-GAME I3 violations).
+  Extended V2 leakage check to cover `matches_1v1_clean` (previously only `player_history_all`).
+- B2: aoestats `matches_1v1_clean` — removed `m.duration`, `m.irl_duration`,
+  `p0_match_rating_diff`, `p1_match_rating_diff` (POST-GAME I3 violations).
+  aoestats `player_history_all` — removed `p.match_rating_diff` (POST-GAME I3 violation).
+  Added `match_rating_diff` to `forbidden_hist` and explicit `information_schema` assertion.
+- B3: research_log.md — corrected aoe2companion 01_04_00 entry: 1v1-scoped side=0 has 29,921,254 rows
+  (win_pct 47.18%), side=1 has 29,920,914 rows (win_pct 52.81%); prior entry incorrectly stated
+  "only side=1 rows appear".
+- W1: sc2egset `player_history_all` — removed duplicate `max_players_check` alias of `gd_maxPlayers`.
+- W2: aoestats `player_history_all.yaml` — removed `match_rating_diff` column entry; updated I3 invariant.
+- W3: Added explicit `information_schema.columns` assertions for POST-GAME absence in `matches_1v1_clean`
+  (all three datasets).
+
+### Removed
+- aoestats `player_history_all.yaml`: `match_rating_diff` column (POST-GAME I3 violation, now excluded from VIEW).
+- sc2egset `player_history_all.yaml`: `max_players_check` column (duplicate of `gd_maxPlayers`).
+
 ## [3.10.0] — 2026-04-16 (PR #TBD: feat/data-cleaning-01-04)
 
 ### Added

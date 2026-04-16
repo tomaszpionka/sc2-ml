@@ -274,8 +274,6 @@ p1 AS (SELECT * FROM players_raw WHERE team = 1)
 SELECT
     m.game_id,
     m.started_timestamp,
-    m.duration,
-    m.irl_duration,
     m.leaderboard,
     m.map,
     m.mirror,
@@ -289,7 +287,6 @@ SELECT
     CAST(p0.profile_id AS BIGINT) AS p0_profile_id,
     p0.civ AS p0_civ,
     p0.old_rating AS p0_old_rating,
-    p0.match_rating_diff AS p0_match_rating_diff,
     p0.winner AS p0_winner,
     p0.opening AS p0_opening,
     p0.feudal_age_uptime AS p0_feudal_age_uptime,
@@ -298,7 +295,6 @@ SELECT
     CAST(p1.profile_id AS BIGINT) AS p1_profile_id,
     p1.civ AS p1_civ,
     p1.old_rating AS p1_old_rating,
-    p1.match_rating_diff AS p1_match_rating_diff,
     p1.winner AS p1_winner,
     p1.opening AS p1_opening,
     p1.feudal_age_uptime AS p1_feudal_age_uptime,
@@ -320,10 +316,22 @@ print("PASS: row count within +/-1000 of expected 17,814,947")
 
 # Verify no forbidden columns
 clean_cols = set(con.execute("DESCRIBE matches_1v1_clean").df()["column_name"])
-forbidden = {"new_rating", "p0_new_rating", "p1_new_rating", "game_type", "game_speed", "starting_age"}
+forbidden = {
+    "new_rating", "p0_new_rating", "p1_new_rating", "game_type", "game_speed", "starting_age",
+    "duration", "irl_duration", "p0_match_rating_diff", "p1_match_rating_diff",
+}
 assert forbidden.isdisjoint(clean_cols), f"SCHEMA VIOLATION: {forbidden & clean_cols}"
 assert "team1_wins" in clean_cols, "FAIL: team1_wins column missing"
-print("PASS: no forbidden columns; team1_wins present")
+print("PASS: no forbidden columns (including POST-GAME I3 violations); team1_wins present")
+
+# Explicit information_schema assertion for POST-GAME columns (W3)
+clean_pg_check = con.execute("""
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'matches_1v1_clean'
+  AND column_name IN ('duration', 'irl_duration', 'p0_match_rating_diff', 'p1_match_rating_diff')
+""").df()
+assert len(clean_pg_check) == 0, f"FAIL: POST-GAME columns in matches_1v1_clean: {clean_pg_check['column_name'].tolist()}"
+print("W3 PASS: No POST-GAME columns in matches_1v1_clean")
 
 # %% [markdown]
 # ## Create player_history_all VIEW
@@ -353,7 +361,6 @@ SELECT
     p.civ,
     p.team,
     p.old_rating,
-    p.match_rating_diff,
     p.winner
 FROM players_raw p
 INNER JOIN matches_raw m ON p.game_id = m.game_id
@@ -391,10 +398,22 @@ assert t07_nulls[0] == 0 and t07_nulls[1] == 0, f"FAIL: NULLs in player_history_
 
 # Verify forbidden columns absent
 hist_cols = set(con.execute("DESCRIBE player_history_all").df()["column_name"])
-forbidden_hist = {"new_rating", "game_type", "game_speed", "starting_age", "duration", "irl_duration"}
+forbidden_hist = {
+    "new_rating", "game_type", "game_speed", "starting_age",
+    "duration", "irl_duration", "match_rating_diff",
+}
 assert forbidden_hist.isdisjoint(hist_cols), f"SCHEMA VIOLATION: {forbidden_hist & hist_cols}"
 assert "profile_id" in hist_cols, "FAIL: profile_id missing from player_history_all"
 print("PASS: all assertions passed; leaderboard distribution confirmed")
+
+# Explicit information_schema assertion for match_rating_diff in player_history_all (B2/W3)
+hist_pg_check = con.execute("""
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'player_history_all'
+  AND column_name IN ('match_rating_diff')
+""").df()
+assert len(hist_pg_check) == 0, f"FAIL: POST-GAME match_rating_diff in player_history_all: {hist_pg_check['column_name'].tolist()}"
+print("B2 PASS: match_rating_diff absent from player_history_all")
 
 # %% [markdown]
 # ## Post-cleaning validation
