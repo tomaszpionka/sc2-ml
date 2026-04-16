@@ -19,6 +19,14 @@ merged to `master`.
 
 ### Removed
 
+## [3.9.1] — 2026-04-16 (PR #TBD: chore/sc2egset-schema-descriptions)
+
+### Changed
+- All schema YAML column descriptions populated across all three datasets:
+  sc2egset (41 cols from s2protocol), aoe2companion (92 cols from API research),
+  aoestats (38 cols manually). Zero "TODO: fill" entries remain.
+  Descriptions are semantic only — no profiling statistics (I7 compliant).
+
 ## [3.9.0] — 2026-04-16 (PR #TBD: feat/sc2egset-01-03-04-event-profiling)
 
 ### Added
