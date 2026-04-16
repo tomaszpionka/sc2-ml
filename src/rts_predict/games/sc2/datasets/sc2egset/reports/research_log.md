@@ -473,7 +473,7 @@ Remarkably clean: **0% NULLs across all columns in every table and view.** This 
 ### Open questions / follow-ups
 
 - Optimal MMR handling for 84% missing rows: imputation vs. indicator vs. subsetting (Phase 02)
-- Do isInClan and clanTag carry win-rate signal beyond player identity? (Phase 02)
+- Do isInClan and clanTag carry win-rate signal beyond player identity? **Partially resolved in 01_02_06:** isInClan chi-square = 7.75, p=0.0054, small effect -- clan membership is a very weak proxy for engagement. Full clanTag signal analysis (257 distinct tags) deferred to Phase 02.
 - The 3 BW-prefixed race entries — merge with SC2 counterparts or exclude? (01_04)
 - 273 replays with map_size_x=0 and map_size_y=0 — parse artifact or real map configuration? (01_04)
 

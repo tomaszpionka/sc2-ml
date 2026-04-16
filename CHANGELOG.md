@@ -19,7 +19,18 @@ merged to `master`.
 
 ### Removed
 
-## [3.7.0] — 2026-04-16 (PR #TBD: feat/census-pass3)
+## [3.7.1] — 2026-04-16 (PR #TBD: fix/retroactive-tracking-and-logs)
+
+### Fixed
+- PIPELINE_SECTION_STATUS.yaml stale for all 3 datasets (01_02 and 01_03 now `complete`)
+- aoe2companion research log 01_03_01 duplicate contradiction (was "No duplicates",
+  profile JSON shows 3.6M groups); added metric reconciliation note
+- aoestats `mirror` removed from safe pre-game features (reclassified POST-GAME in 01_03_01)
+- aoe2companion rating deferral destination standardized to 01_04 (was inconsistently "Phase 02")
+- sc2egset isInClan open question cross-referenced with 01_02_06 chi-square result
+- KDE omission documented with Tukey (1977) justification in all 3 dataset profile MDs
+
+## [3.7.0] — 2026-04-16 (PR #129: feat/census-pass3)
 
 ### Added
 - **01_02_05 Univariate Visualizations** for all three datasets (aoe2companion 17 plots,

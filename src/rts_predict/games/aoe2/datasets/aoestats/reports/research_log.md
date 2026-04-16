@@ -359,7 +359,9 @@ Zero nulls across all 107.6M rows. Near-perfect 50/50 balance: 53,811,187 true (
 
 **Deferred — leakage unknown:** `match_rating_diff` — requires empirical verification before Phase 02 feature engineering
 
-**Safe pre-game features:** `map`, `started_timestamp`, `num_players`, `avg_elo`, `team_0_elo`, `team_1_elo`, `leaderboard`, `patch`, `raw_match_type`, `mirror`, `starting_age` (matches_raw); `team`, `civ`, `old_rating` (players_raw)
+**Safe pre-game features:** `map`, `started_timestamp`, `num_players`, `avg_elo`, `team_0_elo`, `team_1_elo`, `leaderboard`, `patch`, `raw_match_type`, `starting_age` (matches_raw); `team`, `civ`, `old_rating` (players_raw)
+
+> **[Retroactive correction 2026-04-16]:** `mirror` removed from safe pre-game list. Reclassified POST-GAME in 01_03_01 -- same-civ determination requires both players' civ selections, which are finalized only at match start.
 
 ### Duration distribution
 

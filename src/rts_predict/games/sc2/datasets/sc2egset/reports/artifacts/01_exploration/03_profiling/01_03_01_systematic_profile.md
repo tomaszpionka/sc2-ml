@@ -249,6 +249,8 @@ These 5 columns must be dropped before feature engineering (Phase 02).
 | `01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
 | `01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
 
+**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (MMR, APM, SQ) and bounded distributions (supplyCappedPercent). QQ plots are the stronger diagnostic tool per Tukey (1977).
+
 ---
 
 ## SQL Queries (Invariant #6 — verbatim)

@@ -31,11 +31,11 @@ pipeline_sections:
   "01_02":
     name: "Exploratory Data Analysis (Tukey-style)"
     phase: "01"
-    status: in_progress
+    status: complete
   "01_03":
     name: "Systematic Data Profiling"
     phase: "01"
-    status: in_progress
+    status: complete
   "01_04":
     name: "Data Cleaning"
     phase: "01"

@@ -28,13 +28,20 @@ Systematic profiling of matches_raw (277,099,059 rows, 55 columns) per Manual Se
 
 55 columns profiled with: null count/pct, approximate cardinality, uniqueness ratio, zero count for numeric columns, descriptive stats (mean, std, percentiles from census), exact skewness/kurtosis for all 10 numeric columns (9 from census + derived duration_min) via DuckDB native SKEWNESS()/KURTOSIS() aggregation over the full table (no sampling, no listwise deletion), IQR outlier counts via consolidated single-scan query, and top-5 values for 21 categorical columns.
 
-All columns carry I3 temporal classification (Invariant #3). Rating classified as AMBIGUOUS per 01_02_06 finding. Resolution deferred to 01_04.
+All columns carry I3 temporal classification (Invariant #3). Rating classified as AMBIGUOUS per 01_02_06 finding. Resolution deferred to 01_04. **[Note]:** Rating ambiguity resolution is assigned to 01_04 (Data Cleaning), not Phase 02 -- the temporal join with ratings_raw is a data investigation prerequisite, not a feature engineering decision.
 
 ### Dataset-level profiling
 
-- **Primary key integrity (matchId, profileId):** No duplicates — primary key is clean.
+- **Primary key integrity (matchId, profileId):** Duplicates confirmed. 3,589,428 duplicate (matchId, profileId) groups containing 12,401,433 total rows (4.47% of 277M). Deduplication required in 01_04.
 - **Class balance (won):** False=132,150,323 (47.69%), True=131,963,175 (47.62%), NULL=12,985,561 (4.69%). Balanced binary classification target.
 - **Memory footprint:** Computed via DuckDB `pragma_database_size()`.
+
+### Duplicate metric reconciliation
+
+Two steps measured the same duplication phenomenon with different counting methods:
+- **01_02_04 census:** 8,812,005 excess rows = total_rows (277,099,059) minus distinct (matchId, profileId) pairs (268,287,054). Counts only the surplus beyond the first occurrence.
+- **01_03_01 profile:** 12,401,433 rows in 3,589,428 groups with count > 1. Counts all rows in any group that has duplicates, including the first occurrence.
+Both metrics are correct; the 01_03_01 count is strictly larger because it includes the "keeper" row in each group. The actionable number for 01_04 deduplication is 8,812,005 rows to remove (retaining one row per group).
 
 ### Critical findings
 
@@ -133,7 +140,7 @@ degeneracy determination from census IQR statistics (I7 -- no magic numbers).
 
 | Column | Classification | Applied |
 |--------|----------------|---------|
-| rating | AMBIGUOUS | Deferred to Phase 02 (row-level verification with ratings_raw) |
+| rating | AMBIGUOUS | Deferred to 01_04 (row-level verification with ratings_raw) |
 | ratingDiff | POST-GAME | Excluded from all pre-game feature sets |
 | duration_min | POST-GAME | EDA characterization only; not prediction feature |
 | population | PRE-GAME | Near-constant; excluded from PCA |
@@ -192,7 +199,7 @@ from 01_02_04 census at runtime (Invariant #7). POST-GAME annotations applied to
   Elo (won=True: 1095, won=False: 1088). This is ~2% of the rating stddev (~344).
   Falls between the decision thresholds of 5 (likely pre-game) and 50 (likely
   post-game). Cannot resolve with bivariate analysis alone.
-- **rating temporal status — deferred to Phase 02:** Row-level verification required:
+- **rating temporal status — deferred to 01_04:** Row-level verification required:
   check `rating = pre_rating + ratingDiff` via temporal join with ratings_raw. If
   true, `rating` is post-game and must be excluded alongside `ratingDiff`.
 - **ratingDiff × leaderboard:** The ratingDiff magnitude varies substantially across
@@ -260,7 +267,7 @@ All clip thresholds and bin widths derived from census artifact at runtime (Inva
 ### Decisions deferred
 
 - Bivariate analysis of `ratingDiff × won` and `rating × won` deferred to Step 01_02_06 (Bivariate EDA).
-- `rating` temporal classification (ambiguous_pre_or_post) resolution deferred to Phase 02.
+- `rating` temporal classification (ambiguous_pre_or_post) resolution deferred to 01_04.
 - `won` inconsistency (both_true / both_false rows) cleaning strategy deferred to Phase 01_04 (Data Cleaning).
 
 ### Thesis mapping
@@ -364,7 +371,7 @@ Primary prediction scope: rm_1v1 (26.8M matches) + qp_rm_1v1 (3.7M matches) = 30
 
 - 7 dead columns in profiles_raw identified for exclusion
 - 10 constant/dead fields catalogued across all tables
-- `matches_raw.rating` flagged as ambiguous; resolution deferred to Phase 02
+- `matches_raw.rating` flagged as ambiguous; resolution deferred to 01_04
 - 4,398,727 internally inconsistent 2-row matches flagged for investigation
 
 ### Decisions deferred
