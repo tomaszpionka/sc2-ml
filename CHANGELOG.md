@@ -19,6 +19,15 @@ merged to `master`.
 
 ### Removed
 
+## [3.9.0] — 2026-04-16 (PR #TBD: feat/sc2egset-01-03-04-event-profiling)
+
+### Added
+- **01_03_04 Event Table Profiling** for sc2egset — deep profiling of tracker_events_raw
+  (62M rows, 10 types, PlayerStats every 160 loops, 232 unit types), game_events_raw
+  (608M rows, 23 types, CameraUpdate 63.67%), message_events_raw (52K rows, LOW_UTILITY)
+- event_data JSON schema samples for 7 event types (5 tracker, 2 game)
+- [CROSS] research log entry for in-game data asymmetry (I8)
+
 ## [3.8.1] — 2026-04-16 (PR #TBD: fix/stale-research-log-refs)
 
 ### Fixed

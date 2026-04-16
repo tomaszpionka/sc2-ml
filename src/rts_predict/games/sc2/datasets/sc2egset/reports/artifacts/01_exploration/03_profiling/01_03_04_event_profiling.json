@@ -1,0 +1,1298 @@
+{
+  "step": "01_03_04",
+  "dataset": "sc2egset",
+  "tracker_events": {
+    "total_rows": 62003411,
+    "type_distribution": [
+      {
+        "evtTypeName": "UnitBorn",
+        "count": 22372489,
+        "pct": 36.0827
+      },
+      {
+        "evtTypeName": "UnitDied",
+        "count": 16053834,
+        "pct": 25.8919
+      },
+      {
+        "evtTypeName": "UnitTypeChange",
+        "count": 10999108,
+        "pct": 17.7395
+      },
+      {
+        "evtTypeName": "PlayerStats",
+        "count": 4558736,
+        "pct": 7.3524
+      },
+      {
+        "evtTypeName": "UnitInit",
+        "count": 3151270,
+        "pct": 5.0824
+      },
+      {
+        "evtTypeName": "UnitDone",
+        "count": 3018764,
+        "pct": 4.8687
+      },
+      {
+        "evtTypeName": "UnitPositions",
+        "count": 941249,
+        "pct": 1.5181
+      },
+      {
+        "evtTypeName": "Upgrade",
+        "count": 797987,
+        "pct": 1.287
+      },
+      {
+        "evtTypeName": "UnitOwnerChange",
+        "count": 65157,
+        "pct": 0.1051
+      },
+      {
+        "evtTypeName": "PlayerSetup",
+        "count": 44817,
+        "pct": 0.0723
+      }
+    ],
+    "n_event_types": 10,
+    "per_replay_density": {
+      "n_replays": 22390,
+      "mean": 2769.2,
+      "median": 1920.5,
+      "p05": 587.45,
+      "p25": 1147.0,
+      "p75": 3207.75,
+      "p95": 7703.649999999998,
+      "min": 140,
+      "max": 66984
+    },
+    "per_replay_by_type": [
+      {
+        "evtTypeName": "UnitBorn",
+        "n_replays": 22390,
+        "replay_coverage_pct": 100.0,
+        "total_events": 22372489,
+        "mean_per_replay": 999.2
+      },
+      {
+        "evtTypeName": "UnitDied",
+        "n_replays": 22361,
+        "replay_coverage_pct": 99.87,
+        "total_events": 16053834,
+        "mean_per_replay": 717.9
+      },
+      {
+        "evtTypeName": "UnitTypeChange",
+        "n_replays": 22281,
+        "replay_coverage_pct": 99.51,
+        "total_events": 10999108,
+        "mean_per_replay": 493.7
+      },
+      {
+        "evtTypeName": "PlayerStats",
+        "n_replays": 22390,
+        "replay_coverage_pct": 100.0,
+        "total_events": 4558736,
+        "mean_per_replay": 203.6
+      },
+      {
+        "evtTypeName": "UnitInit",
+        "n_replays": 22366,
+        "replay_coverage_pct": 99.89,
+        "total_events": 3151270,
+        "mean_per_replay": 140.9
+      },
+      {
+        "evtTypeName": "UnitDone",
+        "n_replays": 22358,
+        "replay_coverage_pct": 99.86,
+        "total_events": 3018764,
+        "mean_per_replay": 135.0
+      },
+      {
+        "evtTypeName": "UnitPositions",
+        "n_replays": 22345,
+        "replay_coverage_pct": 99.8,
+        "total_events": 941249,
+        "mean_per_replay": 42.1
+      },
+      {
+        "evtTypeName": "Upgrade",
+        "n_replays": 22385,
+        "replay_coverage_pct": 99.98,
+        "total_events": 797987,
+        "mean_per_replay": 35.6
+      },
+      {
+        "evtTypeName": "UnitOwnerChange",
+        "n_replays": 5684,
+        "replay_coverage_pct": 25.39,
+        "total_events": 65157,
+        "mean_per_replay": 11.5
+      },
+      {
+        "evtTypeName": "PlayerSetup",
+        "n_replays": 22390,
+        "replay_coverage_pct": 100.0,
+        "total_events": 44817,
+        "mean_per_replay": 2.0
+      }
+    ],
+    "temporal_distribution": {
+      "n_buckets": 81479,
+      "min_bucket": 0,
+      "max_bucket": 109287
+    },
+    "playerstats_periodicity": {
+      "n_distinct_gaps": 162,
+      "total_gap_observations": 4536346,
+      "mode_gap": 0,
+      "mode_count": 2294282,
+      "mode_pct": 50.5756,
+      "all_gaps": [
+        {
+          "gap": 0,
+          "count": 2294282
+        },
+        {
+          "gap": 160,
+          "count": 2197401
+        },
+        {
+          "gap": 159,
+          "count": 22498
+        },
+        {
+          "gap": 43,
+          "count": 177
+        },
+        {
+          "gap": 95,
+          "count": 170
+        },
+        {
+          "gap": 119,
+          "count": 168
+        },
+        {
+          "gap": 17,
+          "count": 166
+        },
+        {
+          "gap": 7,
+          "count": 166
+        },
+        {
+          "gap": 74,
+          "count": 163
+        },
+        {
+          "gap": 90,
+          "count": 160
+        },
+        {
+          "gap": 21,
+          "count": 159
+        },
+        {
+          "gap": 103,
+          "count": 159
+        },
+        {
+          "gap": 14,
+          "count": 158
+        },
+        {
+          "gap": 112,
+          "count": 158
+        },
+        {
+          "gap": 143,
+          "count": 157
+        },
+        {
+          "gap": 96,
+          "count": 157
+        },
+        {
+          "gap": 116,
+          "count": 157
+        },
+        {
+          "gap": 18,
+          "count": 157
+        },
+        {
+          "gap": 63,
+          "count": 157
+        },
+        {
+          "gap": 149,
+          "count": 156
+        },
+        {
+          "gap": 137,
+          "count": 156
+        },
+        {
+          "gap": 9,
+          "count": 155
+        },
+        {
+          "gap": 60,
+          "count": 155
+        },
+        {
+          "gap": 106,
+          "count": 154
+        },
+        {
+          "gap": 139,
+          "count": 154
+        },
+        {
+          "gap": 99,
+          "count": 152
+        },
+        {
+          "gap": 19,
+          "count": 151
+        },
+        {
+          "gap": 147,
+          "count": 151
+        },
+        {
+          "gap": 79,
+          "count": 150
+        },
+        {
+          "gap": 61,
+          "count": 150
+        },
+        {
+          "gap": 57,
+          "count": 150
+        },
+        {
+          "gap": 150,
+          "count": 150
+        },
+        {
+          "gap": 158,
+          "count": 150
+        },
+        {
+          "gap": 52,
+          "count": 149
+        },
+        {
+          "gap": 87,
+          "count": 149
+        },
+        {
+          "gap": 66,
+          "count": 149
+        },
+        {
+          "gap": 144,
+          "count": 149
+        },
+        {
+          "gap": 104,
+          "count": 148
+        },
+        {
+          "gap": 75,
+          "count": 148
+        },
+        {
+          "gap": 121,
+          "count": 148
+        },
+        {
+          "gap": 68,
+          "count": 148
+        },
+        {
+          "gap": 124,
+          "count": 148
+        },
+        {
+          "gap": 34,
+          "count": 148
+        },
+        {
+          "gap": 156,
+          "count": 148
+        },
+        {
+          "gap": 31,
+          "count": 147
+        },
+        {
+          "gap": 145,
+          "count": 147
+        },
+        {
+          "gap": 81,
+          "count": 146
+        },
+        {
+          "gap": 45,
+          "count": 146
+        },
+        {
+          "gap": 11,
+          "count": 145
+        },
+        {
+          "gap": 13,
+          "count": 145
+        },
+        {
+          "gap": 109,
+          "count": 145
+        },
+        {
+          "gap": 105,
+          "count": 145
+        },
+        {
+          "gap": 128,
+          "count": 145
+        },
+        {
+          "gap": 108,
+          "count": 145
+        },
+        {
+          "gap": 127,
+          "count": 144
+        },
+        {
+          "gap": 141,
+          "count": 144
+        },
+        {
+          "gap": 86,
+          "count": 144
+        },
+        {
+          "gap": 77,
+          "count": 144
+        },
+        {
+          "gap": 132,
+          "count": 143
+        },
+        {
+          "gap": 32,
+          "count": 143
+        },
+        {
+          "gap": 69,
+          "count": 143
+        },
+        {
+          "gap": 51,
+          "count": 143
+        },
+        {
+          "gap": 125,
+          "count": 143
+        },
+        {
+          "gap": 5,
+          "count": 142
+        },
+        {
+          "gap": 140,
+          "count": 142
+        },
+        {
+          "gap": 133,
+          "count": 142
+        },
+        {
+          "gap": 82,
+          "count": 142
+        },
+        {
+          "gap": 146,
+          "count": 142
+        },
+        {
+          "gap": 151,
+          "count": 142
+        },
+        {
+          "gap": 67,
+          "count": 141
+        },
+        {
+          "gap": 22,
+          "count": 141
+        },
+        {
+          "gap": 65,
+          "count": 141
+        },
+        {
+          "gap": 122,
+          "count": 141
+        },
+        {
+          "gap": 154,
+          "count": 141
+        },
+        {
+          "gap": 55,
+          "count": 141
+        },
+        {
+          "gap": 136,
+          "count": 141
+        },
+        {
+          "gap": 126,
+          "count": 141
+        },
+        {
+          "gap": 37,
+          "count": 140
+        },
+        {
+          "gap": 54,
+          "count": 140
+        },
+        {
+          "gap": 120,
+          "count": 140
+        },
+        {
+          "gap": 58,
+          "count": 140
+        },
+        {
+          "gap": 135,
+          "count": 139
+        },
+        {
+          "gap": 44,
+          "count": 139
+        },
+        {
+          "gap": 110,
+          "count": 139
+        },
+        {
+          "gap": 35,
+          "count": 139
+        },
+        {
+          "gap": 27,
+          "count": 139
+        },
+        {
+          "gap": 1,
+          "count": 139
+        },
+        {
+          "gap": 25,
+          "count": 139
+        },
+        {
+          "gap": 102,
+          "count": 139
+        },
+        {
+          "gap": 131,
+          "count": 139
+        },
+        {
+          "gap": 117,
+          "count": 139
+        },
+        {
+          "gap": 62,
+          "count": 138
+        },
+        {
+          "gap": 92,
+          "count": 138
+        },
+        {
+          "gap": 15,
+          "count": 138
+        },
+        {
+          "gap": 97,
+          "count": 138
+        },
+        {
+          "gap": 83,
+          "count": 138
+        },
+        {
+          "gap": 84,
+          "count": 138
+        },
+        {
+          "gap": 41,
+          "count": 138
+        },
+        {
+          "gap": 53,
+          "count": 138
+        },
+        {
+          "gap": 152,
+          "count": 138
+        },
+        {
+          "gap": 42,
+          "count": 138
+        },
+        {
+          "gap": 91,
+          "count": 137
+        },
+        {
+          "gap": 114,
+          "count": 137
+        },
+        {
+          "gap": 36,
+          "count": 137
+        },
+        {
+          "gap": 148,
+          "count": 136
+        },
+        {
+          "gap": 40,
+          "count": 136
+        },
+        {
+          "gap": 130,
+          "count": 136
+        },
+        {
+          "gap": 47,
+          "count": 136
+        },
+        {
+          "gap": 89,
+          "count": 135
+        },
+        {
+          "gap": 142,
+          "count": 134
+        },
+        {
+          "gap": 12,
+          "count": 134
+        },
+        {
+          "gap": 20,
+          "count": 134
+        },
+        {
+          "gap": 3,
+          "count": 134
+        },
+        {
+          "gap": 2,
+          "count": 134
+        },
+        {
+          "gap": 64,
+          "count": 133
+        },
+        {
+          "gap": 46,
+          "count": 133
+        },
+        {
+          "gap": 76,
+          "count": 133
+        },
+        {
+          "gap": 24,
+          "count": 133
+        },
+        {
+          "gap": 4,
+          "count": 133
+        },
+        {
+          "gap": 73,
+          "count": 133
+        },
+        {
+          "gap": 49,
+          "count": 133
+        },
+        {
+          "gap": 88,
+          "count": 133
+        },
+        {
+          "gap": 94,
+          "count": 132
+        },
+        {
+          "gap": 23,
+          "count": 132
+        },
+        {
+          "gap": 101,
+          "count": 132
+        },
+        {
+          "gap": 50,
+          "count": 132
+        },
+        {
+          "gap": 39,
+          "count": 132
+        },
+        {
+          "gap": 134,
+          "count": 131
+        },
+        {
+          "gap": 118,
+          "count": 131
+        },
+        {
+          "gap": 8,
+          "count": 131
+        },
+        {
+          "gap": 38,
+          "count": 131
+        },
+        {
+          "gap": 33,
+          "count": 131
+        },
+        {
+          "gap": 123,
+          "count": 130
+        },
+        {
+          "gap": 157,
+          "count": 130
+        },
+        {
+          "gap": 28,
+          "count": 130
+        },
+        {
+          "gap": 29,
+          "count": 130
+        },
+        {
+          "gap": 85,
+          "count": 129
+        },
+        {
+          "gap": 155,
+          "count": 128
+        },
+        {
+          "gap": 56,
+          "count": 128
+        },
+        {
+          "gap": 70,
+          "count": 128
+        },
+        {
+          "gap": 59,
+          "count": 127
+        },
+        {
+          "gap": 72,
+          "count": 127
+        },
+        {
+          "gap": 71,
+          "count": 127
+        },
+        {
+          "gap": 78,
+          "count": 126
+        },
+        {
+          "gap": 138,
+          "count": 126
+        },
+        {
+          "gap": 93,
+          "count": 126
+        },
+        {
+          "gap": 129,
+          "count": 126
+        },
+        {
+          "gap": 10,
+          "count": 126
+        },
+        {
+          "gap": 100,
+          "count": 125
+        },
+        {
+          "gap": 115,
+          "count": 124
+        },
+        {
+          "gap": 80,
+          "count": 124
+        },
+        {
+          "gap": 107,
+          "count": 124
+        },
+        {
+          "gap": 26,
+          "count": 121
+        },
+        {
+          "gap": 16,
+          "count": 121
+        },
+        {
+          "gap": 98,
+          "count": 121
+        },
+        {
+          "gap": 153,
+          "count": 120
+        },
+        {
+          "gap": 6,
+          "count": 120
+        },
+        {
+          "gap": 48,
+          "count": 118
+        },
+        {
+          "gap": 113,
+          "count": 118
+        },
+        {
+          "gap": 30,
+          "count": 112
+        },
+        {
+          "gap": 111,
+          "count": 110
+        },
+        {
+          "gap": 320,
+          "count": 12
+        }
+      ]
+    },
+    "unitborn_unit_types": {
+      "distinct_count": 232,
+      "top_50": [
+        {
+          "unit_type": "Larva",
+          "count": 3899335
+        },
+        {
+          "unit_type": "InvisibleTargetDummy",
+          "count": 2803987
+        },
+        {
+          "unit_type": "Zergling",
+          "count": 2507484
+        },
+        {
+          "unit_type": "Drone",
+          "count": 1388903
+        },
+        {
+          "unit_type": "Probe",
+          "count": 1073446
+        },
+        {
+          "unit_type": "Marine",
+          "count": 996359
+        },
+        {
+          "unit_type": "SCV",
+          "count": 946222
+        },
+        {
+          "unit_type": "MineralField",
+          "count": 837605
+        },
+        {
+          "unit_type": "MineralField750",
+          "count": 833228
+        },
+        {
+          "unit_type": "Roach",
+          "count": 533518
+        },
+        {
+          "unit_type": "Broodling",
+          "count": 456249
+        },
+        {
+          "unit_type": "LabMineralField",
+          "count": 374202
+        },
+        {
+          "unit_type": "LabMineralField750",
+          "count": 374084
+        },
+        {
+          "unit_type": "Baneling",
+          "count": 367239
+        },
+        {
+          "unit_type": "VespeneGeyser",
+          "count": 334491
+        },
+        {
+          "unit_type": "BroodlingEscort",
+          "count": 321477
+        },
+        {
+          "unit_type": "Overlord",
+          "count": 321027
+        },
+        {
+          "unit_type": "AdeptPhaseShift",
+          "count": 216826
+        },
+        {
+          "unit_type": "SpacePlatformGeyser",
+          "count": 211174
+        },
+        {
+          "unit_type": "Hydralisk",
+          "count": 185643
+        },
+        {
+          "unit_type": "Marauder",
+          "count": 180688
+        },
+        {
+          "unit_type": "MULE",
+          "count": 171547
+        },
+        {
+          "unit_type": "Interceptor",
+          "count": 127996
+        },
+        {
+          "unit_type": "Queen",
+          "count": 111041
+        },
+        {
+          "unit_type": "PurifierMineralField",
+          "count": 109722
+        },
+        {
+          "unit_type": "PurifierMineralField750",
+          "count": 109334
+        },
+        {
+          "unit_type": "SiegeTank",
+          "count": 98021
+        },
+        {
+          "unit_type": "Medivac",
+          "count": 89682
+        },
+        {
+          "unit_type": "Hellion",
+          "count": 88366
+        },
+        {
+          "unit_type": "WidowMine",
+          "count": 70923
+        },
+        {
+          "unit_type": "LocustMP",
+          "count": 67792
+        },
+        {
+          "unit_type": "VikingFighter",
+          "count": 66748
+        },
+        {
+          "unit_type": "Changeling",
+          "count": 63080
+        },
+        {
+          "unit_type": "LocustMPPrecursor",
+          "count": 61536
+        },
+        {
+          "unit_type": "Mutalisk",
+          "count": 58704
+        },
+        {
+          "unit_type": "DisruptorPhased",
+          "count": 57951
+        },
+        {
+          "unit_type": "ForceField",
+          "count": 51535
+        },
+        {
+          "unit_type": "Corruptor",
+          "count": 48916
+        },
+        {
+          "unit_type": "MineralField450",
+          "count": 48440
+        },
+        {
+          "unit_type": "BeaconArmy",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconDetect",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconClaim",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconExpand",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconCustom2",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconCustom1",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconScout",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconIdle",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconCustom4",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconRally",
+          "count": 44817
+        },
+        {
+          "unit_type": "BeaconDefend",
+          "count": 44817
+        }
+      ]
+    },
+    "event_data_keys": {
+      "UnitBorn": [
+        "controlPlayerId",
+        "evtTypeName",
+        "id",
+        "loop",
+        "unitTagIndex",
+        "unitTagRecycle",
+        "unitTypeName",
+        "upkeepPlayerId",
+        "x",
+        "y"
+      ],
+      "UnitDied": [
+        "evtTypeName",
+        "id",
+        "killerPlayerId",
+        "killerUnitTagIndex",
+        "killerUnitTagRecycle",
+        "loop",
+        "unitTagIndex",
+        "unitTagRecycle",
+        "x",
+        "y"
+      ],
+      "UnitTypeChange": [
+        "evtTypeName",
+        "id",
+        "loop",
+        "unitTagIndex",
+        "unitTagRecycle",
+        "unitTypeName"
+      ],
+      "PlayerStats": [
+        "evtTypeName",
+        "id",
+        "loop",
+        "playerId",
+        "stats"
+      ],
+      "UnitInit": [
+        "controlPlayerId",
+        "evtTypeName",
+        "id",
+        "loop",
+        "unitTagIndex",
+        "unitTagRecycle",
+        "unitTypeName",
+        "upkeepPlayerId",
+        "x",
+        "y"
+      ]
+    }
+  },
+  "game_events": {
+    "total_rows": 608618823,
+    "type_distribution": [
+      {
+        "evtTypeName": "CameraUpdate",
+        "count": 387507855,
+        "pct": 63.67
+      },
+      {
+        "evtTypeName": "ControlGroupUpdate",
+        "count": 69227281,
+        "pct": 11.3745
+      },
+      {
+        "evtTypeName": "CommandManagerState",
+        "count": 43946635,
+        "pct": 7.2207
+      },
+      {
+        "evtTypeName": "SelectionDelta",
+        "count": 40855099,
+        "pct": 6.7128
+      },
+      {
+        "evtTypeName": "Cmd",
+        "count": 31201304,
+        "pct": 5.1266
+      },
+      {
+        "evtTypeName": "CmdUpdateTargetPoint",
+        "count": 25863707,
+        "pct": 4.2496
+      },
+      {
+        "evtTypeName": "CmdUpdateTargetUnit",
+        "count": 8348208,
+        "pct": 1.3717
+      },
+      {
+        "evtTypeName": "CameraSave",
+        "count": 1027659,
+        "pct": 0.1689
+      },
+      {
+        "evtTypeName": "TriggerMouseMoved",
+        "count": 380197,
+        "pct": 0.0625
+      },
+      {
+        "evtTypeName": "UserOptions",
+        "count": 131738,
+        "pct": 0.0216
+      },
+      {
+        "evtTypeName": "GameUserLeave",
+        "count": 70032,
+        "pct": 0.0115
+      },
+      {
+        "evtTypeName": "TriggerDialogControl",
+        "count": 52072,
+        "pct": 0.0086
+      },
+      {
+        "evtTypeName": "UnitClick",
+        "count": 2187,
+        "pct": 0.0004
+      },
+      {
+        "evtTypeName": "AchievementAwarded",
+        "count": 1495,
+        "pct": 0.0002
+      },
+      {
+        "evtTypeName": "DecrementGameTimeRemaining",
+        "count": 1493,
+        "pct": 0.0002
+      },
+      {
+        "evtTypeName": "TriggerPing",
+        "count": 1416,
+        "pct": 0.0002
+      },
+      {
+        "evtTypeName": "CommandManagerReset",
+        "count": 238,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "HijackReplayGame",
+        "count": 122,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "GameUserJoin",
+        "count": 25,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "Alliance",
+        "count": 24,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "AddAbsoluteGameSpeed",
+        "count": 24,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "TriggerTransmissionComplete",
+        "count": 8,
+        "pct": 0.0
+      },
+      {
+        "evtTypeName": "ResourceTrade",
+        "count": 4,
+        "pct": 0.0
+      }
+    ],
+    "n_event_types": 23,
+    "camera_update_analysis": {
+      "camera_pct": 63.67,
+      "non_camera_total": 221110968
+    },
+    "per_replay_density_sample": {
+      "sample_method": "CTE-based 10% filename sample",
+      "n_replays_sampled": 22383,
+      "mean": 27191.1,
+      "median": 21910.0,
+      "p05": 6155.200000000001,
+      "p25": 12969.5,
+      "p75": 35326.5,
+      "p95": 65552.19999999992,
+      "min": 3,
+      "max": 431109
+    },
+    "event_data_keys": {
+      "Cmd": [
+        "abil",
+        "cmdFlags",
+        "data",
+        "evtTypeName",
+        "id",
+        "loop",
+        "otherUnit",
+        "sequence",
+        "unitGroup",
+        "userid"
+      ],
+      "SelectionDelta": [
+        "controlGroupId",
+        "delta",
+        "evtTypeName",
+        "id",
+        "loop",
+        "userid"
+      ]
+    }
+  },
+  "message_events": {
+    "total_rows": 52167,
+    "type_distribution": [
+      {
+        "evtTypeName": "Chat",
+        "count": 51412,
+        "pct": 98.5527
+      },
+      {
+        "evtTypeName": "Ping",
+        "count": 714,
+        "pct": 1.3687
+      },
+      {
+        "evtTypeName": "ReconnectNotify",
+        "count": 41,
+        "pct": 0.0786
+      }
+    ],
+    "n_event_types": 3,
+    "replay_coverage": {
+      "n_replays_with_messages": 22260,
+      "total_replays": 22390,
+      "coverage_pct": 99.42
+    },
+    "event_data_keys": {
+      "Chat": [
+        "evtTypeName",
+        "id",
+        "loop",
+        "recipient",
+        "string",
+        "userid"
+      ],
+      "Ping": [
+        "evtTypeName",
+        "id",
+        "loop",
+        "point",
+        "recipient",
+        "userid"
+      ],
+      "ReconnectNotify": [
+        "evtTypeName",
+        "id",
+        "loop",
+        "status",
+        "userid"
+      ]
+    }
+  },
+  "sql_queries": {
+    "tracker_type_distribution": "\nSELECT evtTypeName, COUNT(*) AS cnt,\n       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nGROUP BY evtTypeName ORDER BY cnt DESC\n",
+    "tracker_per_replay_density": "\nSELECT filename, COUNT(*) AS n_events\nFROM tracker_events_raw GROUP BY filename\n",
+    "tracker_per_replay_by_type": "\nSELECT evtTypeName,\n       COUNT(DISTINCT filename) AS n_replays,\n       ROUND(100.0 * COUNT(DISTINCT filename) / 22390, 2)\n         AS replay_coverage_pct,\n       COUNT(*) AS total_events,\n       ROUND(1.0 * COUNT(*) / COUNT(DISTINCT filename), 1)\n         AS mean_per_replay\nFROM tracker_events_raw GROUP BY evtTypeName ORDER BY total_events DESC\n",
+    "tracker_temporal_distribution": "\nSELECT (loop / 1000) * 1000 AS loop_bucket, COUNT(*) AS cnt\nFROM tracker_events_raw GROUP BY loop_bucket ORDER BY loop_bucket\n",
+    "tracker_event_data_sample_UnitBorn": "SELECT event_data FROM tracker_events_raw WHERE evtTypeName = 'UnitBorn' LIMIT 5",
+    "tracker_event_data_sample_UnitDied": "SELECT event_data FROM tracker_events_raw WHERE evtTypeName = 'UnitDied' LIMIT 5",
+    "tracker_event_data_sample_UnitTypeChange": "SELECT event_data FROM tracker_events_raw WHERE evtTypeName = 'UnitTypeChange' LIMIT 5",
+    "tracker_event_data_sample_PlayerStats": "SELECT event_data FROM tracker_events_raw WHERE evtTypeName = 'PlayerStats' LIMIT 5",
+    "tracker_event_data_sample_UnitInit": "SELECT event_data FROM tracker_events_raw WHERE evtTypeName = 'UnitInit' LIMIT 5",
+    "playerstats_periodicity": "\nWITH ps AS (\n    SELECT filename, loop,\n           loop - LAG(loop) OVER (\n               PARTITION BY filename ORDER BY loop\n           ) AS gap\n    FROM tracker_events_raw\n    WHERE evtTypeName = 'PlayerStats'\n)\nSELECT gap, COUNT(*) AS cnt\nFROM ps WHERE gap IS NOT NULL\nGROUP BY gap ORDER BY cnt DESC\n",
+    "unitborn_unit_types": "\nSELECT json_extract_string(event_data, '$.unitTypeName') AS unit_type,\n       COUNT(*) AS cnt\nFROM tracker_events_raw\nWHERE evtTypeName = 'UnitBorn'\nGROUP BY unit_type ORDER BY cnt DESC LIMIT 50\n",
+    "unitborn_distinct_count": "\nSELECT COUNT(DISTINCT\n    json_extract_string(event_data, '$.unitTypeName')\n) AS n_distinct\nFROM tracker_events_raw\nWHERE evtTypeName = 'UnitBorn'\n",
+    "game_type_distribution": "\nSELECT evtTypeName, COUNT(*) AS cnt,\n       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw GROUP BY evtTypeName ORDER BY cnt DESC\n",
+    "game_per_replay_density_sample": "\nSELECT filename, COUNT(*) AS n_events\nFROM game_events_raw TABLESAMPLE BERNOULLI(10)\nGROUP BY filename\n",
+    "game_per_replay_density_fallback": "\n    WITH sample_files AS (\n        SELECT DISTINCT filename FROM game_events_raw\n        USING SAMPLE 10 PERCENT (bernoulli)\n    )\n    SELECT g.filename, COUNT(*) AS n_events\n    FROM game_events_raw g\n    INNER JOIN sample_files s ON g.filename = s.filename\n    GROUP BY g.filename\n    ",
+    "game_event_data_sample_Cmd": "SELECT event_data FROM game_events_raw WHERE evtTypeName = 'Cmd' LIMIT 5",
+    "game_event_data_sample_SelectionDelta": "SELECT event_data FROM game_events_raw WHERE evtTypeName = 'SelectionDelta' LIMIT 5",
+    "message_type_distribution": "\nSELECT evtTypeName, COUNT(*) AS cnt,\n       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM message_events_raw GROUP BY evtTypeName ORDER BY cnt DESC\n",
+    "message_replay_coverage": "\nSELECT COUNT(DISTINCT filename) AS n_replays\nFROM message_events_raw\n",
+    "message_event_data_sample": "\nSELECT evtTypeName, event_data\nFROM message_events_raw LIMIT 10\n",
+    "message_event_data_sample_Chat": "SELECT event_data FROM message_events_raw WHERE evtTypeName = 'Chat' LIMIT 5",
+    "message_event_data_sample_Ping": "SELECT event_data FROM message_events_raw WHERE evtTypeName = 'Ping' LIMIT 5",
+    "message_event_data_sample_ReconnectNotify": "SELECT event_data FROM message_events_raw WHERE evtTypeName = 'ReconnectNotify' LIMIT 5"
+  }
+}

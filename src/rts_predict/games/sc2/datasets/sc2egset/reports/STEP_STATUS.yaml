@@ -74,4 +74,9 @@ steps:
     pipeline_section: "01_03"
     status: complete
     completed_at: "2026-04-16"
+  "01_03_04":
+    name: "Event Table Profiling"
+    pipeline_section: "01_03"
+    status: complete
+    completed_at: "2026-04-15"
   # Future steps will be added here as they are defined in the ROADMAP.

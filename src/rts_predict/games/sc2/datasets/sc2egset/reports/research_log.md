@@ -2,6 +2,78 @@
 
 ---
 
+## 2026-04-15 -- [Phase 01 / Step 01_03_04] Event Table Profiling
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** profiling -- deep structural profile of 3 event views
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/03_profiling/01_03_04_event_profiling.json`
+- `reports/artifacts/01_exploration/03_profiling/01_03_04_event_profiling.md`
+
+### What
+
+Deep structural profiling of all three event views unique to sc2egset:
+tracker_events_raw (62,003,411 rows, 10 event types), game_events_raw
+(608,618,823 rows, 23 event types), message_events_raw (52,167 rows, 3
+event types). Profiled event type distributions, per-replay density,
+replay coverage per event type, temporal distribution, PlayerStats
+periodicity, UnitBorn unit-type diversity, and event_data JSON schemas.
+All SQL stored verbatim (I6). No cleaning decisions, no tables created (I9).
+
+### Key findings
+
+**Tracker events (62M rows):**
+- 10 event types. UnitBorn dominates (36.08%), followed by UnitDied
+  (25.89%) and UnitTypeChange (17.74%). PlayerStats is 7.35%.
+- Per-replay density: mean 2,769, median 1,920 (right-skewed). Range
+  140--66,984.
+- UnitBorn, PlayerStats, and PlayerSetup appear in 100% of replays.
+  UnitOwnerChange in only 25.39% (Neural Parasites, mind control).
+- PlayerStats periodicity: gap=0 is the mode (50.58%) because both
+  players emit PlayerStats at the same loop. True period is 160 loops
+  (2,197,401 occurrences, ~98% of non-zero gaps). This is the standard
+  SC2 tracker interval (~10 real-time seconds at Faster speed).
+- UnitBorn: 232 distinct unit types. Top: Larva (3.9M), InvisibleTargetDummy
+  (2.8M), Zergling (2.5M), Drone (1.4M), Probe (1.1M), Marine (1.0M).
+  InvisibleTargetDummy is a hidden game-engine entity, not a player unit.
+
+**Game events (608M rows):**
+- 23 event types. CameraUpdate dominates (63.67%, 387.5M rows).
+  Non-CameraUpdate events total 221.1M.
+- Key action types: ControlGroupUpdate (11.37%), CommandManagerState
+  (7.22%), SelectionDelta (6.71%), Cmd (5.13%), CmdUpdateTargetPoint
+  (4.25%).
+- Per-replay density (CTE-based 10% filename sample, true counts):
+  mean 27,191, median 21,910.
+- Cmd event_data keys: abil, cmdFlags, data, evtTypeName, id, loop,
+  otherUnit, sequence, unitGroup, userid. SelectionDelta: controlGroupId,
+  delta, evtTypeName, id, loop, userid.
+
+**Message events (52K rows):**
+- 3 event types: Chat (98.55%), Ping (1.37%), ReconnectNotify (0.08%).
+- Coverage: 22,260 of 22,390 replays (99.42%). 130 replays have no
+  message events.
+
+### Implications for Phase 02
+
+All three event views remain classified IN_GAME_ONLY per I3. PlayerStats
+at 160-loop periodicity provides a natural time-series for in-game
+features (resource counts, army value, worker count). UnitBorn with 232
+unit types enables unit composition features. CameraUpdate could enable
+attention/multitasking metrics (if in-game comparison is pursued). The
+Cmd event stream provides APM-like action density per time window.
+
+### [CROSS] Cross-game note
+
+SC2EGSet provides in-game event streams (tracker 62M, game 608M,
+message 52K rows). Neither AoE2 dataset has equivalent in-game event
+data. This asymmetry is the controlled experimental variable for
+Invariant #8: "Do the same methods work equally well with and without
+in-game data?"
+
+---
+
 ## 2026-04-16 -- [Phase 01 / Step 01_03_03] Table Utility Assessment
 
 **Category:** A (science)
