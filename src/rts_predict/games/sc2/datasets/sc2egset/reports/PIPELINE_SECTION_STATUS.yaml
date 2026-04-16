@@ -39,7 +39,7 @@ pipeline_sections:
   "01_04":
     name: "Data Cleaning"
     phase: "01"
-    status: not_started
+    status: in_progress
   "01_05":
     name: "Temporal & Panel EDA"
     phase: "01"

@@ -2,6 +2,82 @@
 
 ---
 
+## 2026-04-16 -- [Phase 01 / Step 01_04_01] Data Cleaning
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** Non-destructive cleaning -- creates 3 DuckDB VIEWs (matches_flat,
+matches_flat_clean, player_history_all)
+**Revision:** 1 (incorporates critique BLOCKER F01, WARNINGS W02-W05)
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json`
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md`
+- `data/db/schemas/views/player_history_all.yaml`
+
+### What
+
+Created three DuckDB VIEWs resolving the F01 structural blocker (matches_flat
+JOIN) and implementing the dual-scope cleaning design:
+
+1. **matches_flat** (44,817 rows / 22,390 replays): Structural JOIN of
+   replay_players_raw x replays_meta_raw via NULLIF-guarded regexp_extract.
+   No filters. All columns retained.
+
+2. **matches_flat_clean** (44,418 rows / 22,209 replays): Prediction target
+   VIEW. True 1v1 decisive only (R01: -24 replays). MMR<0 replays excluded
+   at REPLAY level (R03: -157 replays, BLOCKER F01 fix). PRE-GAME features
+   only (I3: APM, SQ, supplyCappedPercent, header_elapsedGameLoops excluded).
+   Constant columns excluded (W02: gameSpeed). Duplicate column excluded
+   (W03: gd_isBlizzardMap). No APM-derived flags (W05).
+
+3. **player_history_all** (44,817 rows / 22,390 replays): Player feature
+   history VIEW. All replays retained (including non-1v1 and indecisive).
+   APM, SQ, supplyCappedPercent, header_elapsedGameLoops RETAINED as valid
+   IN_GAME_HISTORICAL signals for prior matches.
+
+### CONSORT Flow (REPLAY units)
+
+| Stage | Replays | Rows |
+|-------|---------|------|
+| Raw (replays_meta_raw) | 22,390 | -- |
+| Raw (replay_players_raw) | -- | 44,817 |
+| matches_flat (JOIN) | 22,390 | 44,817 |
+| After R01 (true_1v1_decisive) | 22,366 | 44,732 |
+| R01 excluded (non-1v1 + indecisive) | -24 | -85 |
+| After R03 (MMR<0 replay-level) | 22,209 | 44,418 |
+| R03 excluded (any MMR<0 player) | -157 | -314 |
+| **matches_flat_clean (final)** | **22,209** | **44,418** |
+| player_history_all (all replays) | 22,390 | 44,817 |
+
+R03 is a REPLAY-LEVEL exclusion (BLOCKER F01 fix). Row-level filtering would
+orphan the opponent's row, breaking the 2-per-replay invariant.
+
+### Key Findings
+
+- isBlizzardMap duplication: gd_isBlizzardMap == details_isBlizzardMap for
+  all 44,817 rows (mismatch=0). gd_isBlizzardMap excluded from downstream VIEWs.
+- gameSpeed constant: cardinality=1 for both details_gameSpeed and gd_gameSpeed.
+  Both excluded from downstream VIEWs (W02).
+- NULLIF guard: null_replay_id=0 in matches_flat (W04 fix verified).
+- R03 scope: all 157 MMR<0-containing replays are in true_1v1_decisive scope
+  (not already excluded by R01).
+- Result distribution in matches_flat_clean: 50.0% Win / 50.0% Loss (perfect).
+- Symmetry: 0 violations (every clean replay has exactly 1 Win + 1 Loss row).
+- Unique players in player_history_all: 2,495 distinct toon_ids.
+- selectedRace normalization: 1,110 empty strings normalized to 'Random' (R04).
+- SQ sentinel: 2 rows with INT32_MIN -> NULL in player_history_all (R05).
+- map_size=0: 273 replays (271 also in 1v1_decisive scope); flagged, not excluded.
+
+### Critique Fixes Applied
+
+- **F01 (BLOCKER):** R03 replay-level CTE (mmr_valid). 157 replays excluded.
+- **W02:** gameSpeed columns excluded (verified constant, cardinality=1).
+- **W03:** gd_isBlizzardMap excluded (verified identical, mismatch=0).
+- **W04:** NULLIF wrapper on regexp_extract. null_replay_id=0 confirmed.
+- **W05:** No APM-derived columns in any VIEW.
+
+---
+
 ## 2026-04-15 -- [Phase 01 / Step 01_03_04] Event Table Profiling
 
 **Category:** A (science)

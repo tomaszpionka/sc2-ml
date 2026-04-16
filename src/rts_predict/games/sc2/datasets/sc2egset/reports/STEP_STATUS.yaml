@@ -79,4 +79,9 @@ steps:
     pipeline_section: "01_03"
     status: complete
     completed_at: "2026-04-15"
+  "01_04_01":
+    name: "Data Cleaning"
+    pipeline_section: "01_04"
+    status: complete
+    completed_at: "2026-04-16"
   # Future steps will be added here as they are defined in the ROADMAP.

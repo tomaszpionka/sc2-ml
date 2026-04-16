@@ -1,0 +1,159 @@
+{
+  "step": "01_04_01",
+  "dataset": "sc2egset",
+  "revision": 1,
+  "revision_basis": "plan_sc2egset_01_04_01.critique.md",
+  "cleaning_registry": [
+    {
+      "rule_id": "R01",
+      "condition": "Replay is not true_1v1_decisive (player_count != 2 OR result not Win+Loss)",
+      "action": "EXCLUDE from matches_flat_clean; RETAIN in player_history_all",
+      "justification": "Binary classification target requires 2 players with 1 Win + 1 Loss. Non-1v1 and indecisive replays are valid game history. Source: 01_03_02.",
+      "impact": "24 replays excluded from prediction scope, retained in history"
+    },
+    {
+      "rule_id": "R02",
+      "condition": "MMR = 0",
+      "action": "FLAG (is_mmr_missing = TRUE)",
+      "justification": "MNAR -- professional players on private accounts. 83.66%. Source: 01_03_01.",
+      "impact": "37,422 rows in true_1v1_decisive scope"
+    },
+    {
+      "rule_id": "R03",
+      "condition": "ANY player in replay has MMR < 0 (replay-level exclusion)",
+      "action": "EXCLUDE entire replay from matches_flat_clean; RETAIN in player_history_all (MMR<0 treated as unreliable)",
+      "justification": "Impossible in SC2 matchmaking. Replay-level exclusion prevents orphaned rows (BLOCKER F01 fix). Source: 01_03_01, critique F01.",
+      "impact": "157 replays excluded from prediction scope"
+    },
+    {
+      "rule_id": "R04",
+      "condition": "selectedRace = '' (empty string)",
+      "action": "NORMALIZE to 'Random' in both VIEWs",
+      "justification": "Empty string = Random race selection resolved post-game. Source: 01_03_02.",
+      "impact": "1,110 rows (2.48%)"
+    },
+    {
+      "rule_id": "R05",
+      "condition": "SQ = -2147483648 (INT32_MIN)",
+      "action": "FLAG (SQ -> NULL). SQ excluded from matches_flat_clean per I3; sentinel applies in player_history_all.",
+      "justification": "Parse-failure sentinel. Source: 01_03_01.",
+      "impact": "2 rows (0.0045%)"
+    },
+    {
+      "rule_id": "R07",
+      "condition": "gd_mapSizeX = 0 AND gd_mapSizeY = 0",
+      "action": "FLAG (mapSize -> NULL; is_map_size_missing = TRUE in both VIEWs)",
+      "justification": "Parse artifact; 0 is not a valid SC2 map dimension. Source: 01_02_04, 01_03_01.",
+      "impact": "273 replays (~554 rows)"
+    },
+    {
+      "rule_id": "R08",
+      "condition": "handicap = 0",
+      "action": "FLAG (is_handicap_anomalous = TRUE)",
+      "justification": "Standard handicap = 100. Source: 01_02_04.",
+      "impact": "2 rows (0.0045%)"
+    }
+  ],
+  "consort_flow": {
+    "raw_player_rows": 44817,
+    "raw_replays": 22390,
+    "matches_flat_rows": 44817,
+    "matches_flat_replays": 22390,
+    "after_r01_replays": 22366,
+    "r01_excluded_replays": 24,
+    "r01_excluded_rows": 85,
+    "r03_excluded_replays": 157,
+    "r03_excluded_rows": 314,
+    "clean_rows": 44418,
+    "clean_replays": 22209,
+    "history_rows": 44817,
+    "history_replays": 22390
+  },
+  "validation": {
+    "matches_flat_rows": 44817,
+    "matches_flat_replays": 22390,
+    "null_replay_id": 0,
+    "isBlizzardMap_mismatch": 0,
+    "details_gameSpeed_cardinality": 1,
+    "gd_gameSpeed_cardinality": 1,
+    "clean_rows": 44418,
+    "clean_replays": 22209,
+    "non_win_loss_results_clean": 0,
+    "mmr_negative_clean": 0,
+    "empty_selected_race_clean": 0,
+    "null_replay_id_clean": 0,
+    "symmetry_violations": 0,
+    "history_rows": 44817,
+    "history_replays": 22390,
+    "sq_sentinel_history": 0,
+    "empty_selected_race_history": 0,
+    "apm_present_history": 44817,
+    "i3_column_exclusion_passed": true,
+    "consort_arithmetic_verified": true
+  },
+  "views_created": [
+    "matches_flat",
+    "matches_flat_clean",
+    "player_history_all"
+  ],
+  "design_constraint": {
+    "prediction_scope": "matches_flat_clean -- 1v1 decisive results only, PRE-GAME features, MMR<0 replays excluded",
+    "feature_history_scope": "player_history_all -- all replays, all game types, including in-game metrics (APM, SQ)",
+    "rationale": "Player features computed from full game history; prediction targets restricted to 1v1 decisive. I3 applies at target match level only."
+  },
+  "i3_compliance": {
+    "matches_flat_clean_excluded": [
+      "APM",
+      "SQ",
+      "supplyCappedPercent",
+      "header_elapsedGameLoops",
+      "details_gameSpeed",
+      "gd_gameSpeed",
+      "gd_isBlizzardMap",
+      "color_a",
+      "color_b",
+      "color_g",
+      "color_r"
+    ],
+    "player_history_all_includes_ingame": [
+      "APM",
+      "SQ",
+      "supplyCappedPercent",
+      "header_elapsedGameLoops"
+    ],
+    "rationale": "I3 prohibits in-game metrics for TARGET match T. For prior matches in player_history_all, they are valid historical signals."
+  },
+  "critique_fixes": {
+    "F01_blocker": "R03 changed from row-level WHERE to replay-level CTE (mmr_valid). 157 replays excluded.",
+    "W02_constant_cols": "details_gameSpeed and gd_gameSpeed excluded from both matches_flat_clean and player_history_all",
+    "W03_isBlizzardMap": "gd_isBlizzardMap excluded from downstream VIEWs; verified identical to details_isBlizzardMap (mismatch=0)",
+    "W04_regexp_extract": "NULLIF wrapper applied in matches_flat VIEW definition; null_replay_id=0 confirmed",
+    "W05_apm_flag": "No APM-derived columns in any VIEW; APM=0 investigation is documentation-only (T06)"
+  },
+  "sql_queries": {
+    "CREATE_MATCHES_FLAT": "\nCREATE OR REPLACE VIEW matches_flat AS\nSELECT\n    -- Canonical join key (NULLIF converts empty-string non-match to NULL -- W04 fix)\n    NULLIF(\n        regexp_extract(rp.filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1),\n        ''\n    ) AS replay_id,\n\n    -- Player identity\n    rp.filename,\n    rp.toon_id,\n    rp.nickname,\n    rp.playerID,\n    rp.userID,\n\n    -- Player pre-game features\n    rp.MMR,\n    rp.race,\n    rp.selectedRace,\n    rp.handicap,\n    rp.region,\n    rp.realm,\n    rp.highestLeague,\n    rp.isInClan,\n    rp.clanTag,\n\n    -- Target variable\n    rp.result,\n\n    -- Player in-game metrics (I3: IN_GAME -- excluded from matches_flat_clean,\n    -- but RETAINED in player_history_all for historical feature computation)\n    rp.APM,\n    rp.SQ,\n    rp.supplyCappedPercent,\n\n    -- Player spatial (pre-game lobby assignment)\n    rp.startDir,\n    rp.startLocX,\n    rp.startLocY,\n\n    -- Player cosmetic\n    rp.color_a, rp.color_b, rp.color_g, rp.color_r,\n\n    -- Match metadata: details struct\n    rm.details.gameSpeed            AS details_gameSpeed,\n    rm.details.isBlizzardMap        AS details_isBlizzardMap,\n    rm.details.timeUTC              AS details_timeUTC,\n\n    -- Match metadata: header struct\n    rm.header.elapsedGameLoops      AS header_elapsedGameLoops,\n    rm.header.version               AS header_version,\n\n    -- Match metadata: initData.gameDescription direct fields\n    rm.initData.gameDescription.gameSpeed           AS gd_gameSpeed,\n    rm.initData.gameDescription.isBlizzardMap       AS gd_isBlizzardMap,\n    rm.initData.gameDescription.mapAuthorName       AS gd_mapAuthorName,\n    rm.initData.gameDescription.mapFileSyncChecksum AS gd_mapFileSyncChecksum,\n    rm.initData.gameDescription.mapSizeX            AS gd_mapSizeX,\n    rm.initData.gameDescription.mapSizeY            AS gd_mapSizeY,\n    rm.initData.gameDescription.maxPlayers          AS gd_maxPlayers,\n\n    -- Match metadata: gameOptions (15 leaves)\n    rm.initData.gameDescription.gameOptions.advancedSharedControl AS go_advancedSharedControl,\n    rm.initData.gameDescription.gameOptions.amm                   AS go_amm,\n    rm.initData.gameDescription.gameOptions.battleNet             AS go_battleNet,\n    rm.initData.gameDescription.gameOptions.clientDebugFlags      AS go_clientDebugFlags,\n    rm.initData.gameDescription.gameOptions.competitive           AS go_competitive,\n    rm.initData.gameDescription.gameOptions.cooperative           AS go_cooperative,\n    rm.initData.gameDescription.gameOptions.fog                   AS go_fog,\n    rm.initData.gameDescription.gameOptions.heroDuplicatesAllowed AS go_heroDuplicatesAllowed,\n    rm.initData.gameDescription.gameOptions.lockTeams             AS go_lockTeams,\n    rm.initData.gameDescription.gameOptions.noVictoryOrDefeat     AS go_noVictoryOrDefeat,\n    rm.initData.gameDescription.gameOptions.observers             AS go_observers,\n    rm.initData.gameDescription.gameOptions.practice              AS go_practice,\n    rm.initData.gameDescription.gameOptions.randomRaces           AS go_randomRaces,\n    rm.initData.gameDescription.gameOptions.teamsTogether         AS go_teamsTogether,\n    rm.initData.gameDescription.gameOptions.userDifficulty        AS go_userDifficulty,\n\n    -- Match metadata: metadata struct\n    rm.metadata.baseBuild           AS metadata_baseBuild,\n    rm.metadata.dataBuild           AS metadata_dataBuild,\n    rm.metadata.gameVersion         AS metadata_gameVersion,\n    rm.metadata.mapName             AS metadata_mapName\n\nFROM replay_players_raw rp\nJOIN replays_meta_raw rm\n  ON NULLIF(\n         regexp_extract(rp.filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1),\n         ''\n     )\n   = NULLIF(\n         regexp_extract(rm.filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1),\n         ''\n     );\n",
+    "CREATE_MATCHES_FLAT_CLEAN": "\nCREATE OR REPLACE VIEW matches_flat_clean AS\nWITH true_1v1_decisive AS (\n    -- R01: only replays with exactly 2 players, 1 Win + 1 Loss\n    SELECT replay_id\n    FROM matches_flat\n    GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1\n),\nmmr_valid AS (\n    -- R03 (BLOCKER F01 FIX): replay-level exclusion -- ALL players must have MMR >= 0.\n    -- If ANY player has MMR < 0, the ENTIRE replay is excluded.\n    -- Prevents orphaned opponent rows that would break the 2-per-replay invariant.\n    SELECT replay_id\n    FROM matches_flat\n    GROUP BY replay_id\n    HAVING COUNT(*) FILTER (WHERE MMR < 0) = 0\n)\nSELECT\n    -- Identity\n    mf.replay_id,\n    mf.filename,\n    mf.toon_id,\n    mf.nickname,\n    mf.playerID,\n    mf.userID,\n\n    -- Target\n    mf.result,\n\n    -- Pre-game player features\n    mf.MMR,\n    CASE WHEN mf.MMR = 0 THEN TRUE ELSE FALSE END AS is_mmr_missing,  -- R02\n    mf.race,\n    CASE WHEN mf.selectedRace = '' THEN 'Random'\n         ELSE mf.selectedRace END AS selectedRace,                      -- R04\n\n    mf.handicap,\n    CASE WHEN mf.handicap = 0 THEN TRUE ELSE FALSE END AS is_handicap_anomalous, -- R08\n    mf.region,\n    mf.realm,\n    mf.highestLeague,\n    mf.isInClan,\n    mf.clanTag,\n\n    -- Pre-game spatial\n    mf.startDir,\n    mf.startLocX,\n    mf.startLocY,\n\n    -- Pre-game map metadata\n    mf.metadata_mapName,\n    CASE WHEN mf.gd_mapSizeX = 0 THEN NULL ELSE mf.gd_mapSizeX END AS gd_mapSizeX, -- R07\n    CASE WHEN mf.gd_mapSizeY = 0 THEN NULL ELSE mf.gd_mapSizeY END AS gd_mapSizeY, -- R07\n    CASE WHEN mf.gd_mapSizeX = 0 AND mf.gd_mapSizeY = 0 THEN TRUE\n         ELSE FALSE END AS is_map_size_missing,                         -- R07\n    mf.gd_maxPlayers,\n    mf.gd_mapAuthorName,\n    mf.gd_mapFileSyncChecksum,\n\n    -- Pre-game Blizzard map flag (W03: only details_ variant retained)\n    mf.details_isBlizzardMap,\n\n    -- Pre-game temporal anchor\n    mf.details_timeUTC,\n\n    -- Pre-game version\n    mf.header_version,\n    mf.metadata_baseBuild,\n    mf.metadata_dataBuild,\n    mf.metadata_gameVersion,\n\n    -- Pre-game game options\n    mf.go_advancedSharedControl,\n    mf.go_amm,\n    mf.go_battleNet,\n    mf.go_clientDebugFlags,\n    mf.go_competitive,\n    mf.go_cooperative,\n    mf.go_fog,\n    mf.go_heroDuplicatesAllowed,\n    mf.go_lockTeams,\n    mf.go_noVictoryOrDefeat,\n    mf.go_observers,\n    mf.go_practice,\n    mf.go_randomRaces,\n    mf.go_teamsTogether,\n    mf.go_userDifficulty\n\nFROM matches_flat mf\nJOIN true_1v1_decisive t1v1 ON mf.replay_id = t1v1.replay_id  -- R01\nJOIN mmr_valid mv ON mf.replay_id = mv.replay_id;             -- R03 (replay-level)\n",
+    "CREATE_PLAYER_HISTORY_ALL": "\nCREATE OR REPLACE VIEW player_history_all AS\nSELECT\n    -- Identity and join keys\n    mf.replay_id,\n    mf.filename,\n    mf.toon_id,\n    mf.nickname,\n    mf.playerID,\n    mf.userID,\n\n    -- Result (unfiltered -- includes Win, Loss, Undecided, Tie)\n    mf.result,\n\n    -- Player pre-game features\n    mf.MMR,\n    CASE WHEN mf.MMR = 0 THEN TRUE ELSE FALSE END AS is_mmr_missing,  -- R02\n\n    mf.race,\n    CASE WHEN mf.selectedRace = '' THEN 'Random'\n         ELSE mf.selectedRace END AS selectedRace,                      -- R04\n\n    mf.handicap,\n    mf.region,\n    mf.realm,\n    mf.highestLeague,\n    mf.isInClan,\n    mf.clanTag,\n\n    -- In-game metrics (VALID in player history for historical features).\n    -- I3 note: excluded from matches_flat_clean (prediction targets) but\n    -- legitimate historical signals for PRIOR matches only.\n    mf.APM,\n    CASE WHEN mf.SQ = -2147483648 THEN NULL ELSE mf.SQ END AS SQ,     -- R05: sentinel -> NULL\n    mf.supplyCappedPercent,\n\n    -- Game duration (historical signal -- valid for past matches)\n    mf.header_elapsedGameLoops,\n\n    -- Pre-game spatial\n    mf.startDir,\n    mf.startLocX,\n    mf.startLocY,\n\n    -- Map metadata\n    mf.metadata_mapName,\n    CASE WHEN mf.gd_mapSizeX = 0 THEN NULL ELSE mf.gd_mapSizeX END AS gd_mapSizeX, -- R07\n    CASE WHEN mf.gd_mapSizeY = 0 THEN NULL ELSE mf.gd_mapSizeY END AS gd_mapSizeY, -- R07\n    mf.gd_maxPlayers,\n    mf.details_isBlizzardMap,\n    mf.gd_mapAuthorName,\n    mf.gd_mapFileSyncChecksum,\n\n    -- Temporal anchor (critical for I3 temporal ordering)\n    mf.details_timeUTC,\n\n    -- Version context (for patch-period stratification)\n    mf.header_version,\n    mf.metadata_baseBuild,\n    mf.metadata_dataBuild,\n    mf.metadata_gameVersion,\n\n    -- Game options (for context; Phase 02 feature selection will prune constants)\n    mf.go_advancedSharedControl,\n    mf.go_amm,\n    mf.go_battleNet,\n    mf.go_clientDebugFlags,\n    mf.go_competitive,\n    mf.go_cooperative,\n    mf.go_fog,\n    mf.go_heroDuplicatesAllowed,\n    mf.go_lockTeams,\n    mf.go_noVictoryOrDefeat,\n    mf.go_observers,\n    mf.go_practice,\n    mf.go_randomRaces,\n    mf.go_teamsTogether,\n    mf.go_userDifficulty,\n    mf.gd_maxPlayers AS max_players_check\n\nFROM matches_flat mf\nWHERE mf.replay_id IS NOT NULL;  -- Safety: exclude any rows where replay_id extraction failed (W04)\n",
+    "CLASSIFICATION_SUMMARY": "\nSELECT classification, COUNT(*) AS n_replays\nFROM (\n    SELECT replay_id,\n        CASE\n            WHEN COUNT(*) = 2\n                 AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n                 AND COUNT(*) FILTER (WHERE result = 'Loss') = 1\n            THEN 'true_1v1_decisive'\n            WHEN COUNT(*) < 2 THEN 'non_1v1_too_few_players'\n            WHEN COUNT(*) > 2 THEN 'non_1v1_too_many_players'\n            WHEN COUNT(*) = 2\n                 AND (COUNT(*) FILTER (WHERE result = 'Undecided') > 0\n                      OR COUNT(*) FILTER (WHERE result = 'Tie') > 0)\n            THEN 'true_1v1_indecisive'\n            ELSE 'non_1v1_other'\n        END AS classification\n    FROM matches_flat GROUP BY replay_id\n) t\nGROUP BY classification ORDER BY n_replays DESC\n",
+    "MMR_COUNTS": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) FILTER (WHERE MMR = 0) AS mmr_zero,\n    COUNT(*) FILTER (WHERE MMR < 0) AS mmr_negative,\n    COUNT(*) FILTER (WHERE MMR > 0) AS mmr_positive,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE MMR = 0) / COUNT(*), 4) AS mmr_zero_pct,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE MMR < 0) / COUNT(*), 4) AS mmr_negative_pct\nFROM matches_flat\nWHERE replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\n",
+    "MMR_NEG_REPLAYS": "\nSELECT COUNT(*) AS replays_with_mmr_negative\nFROM (\n    SELECT replay_id\n    FROM matches_flat\n    WHERE replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\n    GROUP BY replay_id\n    HAVING COUNT(*) FILTER (WHERE MMR < 0) > 0\n)\n",
+    "MMR_NEG_DISTRIBUTION": "\nSELECT MMR, COUNT(*) AS cnt,\n       regexp_extract(filename, '^([^/]+)', 1) AS tournament_sample\nFROM matches_flat\nWHERE MMR < 0\nGROUP BY MMR, tournament_sample\nORDER BY MMR\nLIMIT 30\n",
+    "MMR_OVERLAP": "\nSELECT\n    CASE\n        WHEN replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1) THEN 'true_1v1_decisive'\n        ELSE 'non_1v1_or_indecisive'\n    END AS scope,\n    COUNT(*) AS mmr_neg_rows,\n    COUNT(DISTINCT replay_id) AS mmr_neg_replays\nFROM matches_flat\nWHERE MMR < 0\nGROUP BY scope\n",
+    "MMR_STRATIFICATION": "\nSELECT\n    regexp_extract(filename, '^([^/]+)', 1) AS tournament,\n    COUNT(*) AS total_rows,\n    COUNT(*) FILTER (WHERE MMR = 0) AS mmr_zero,\n    COUNT(*) FILTER (WHERE MMR > 0) AS mmr_positive,\n    COUNT(*) FILTER (WHERE MMR < 0) AS mmr_negative,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE MMR = 0) / COUNT(*), 2) AS mmr_zero_pct\nFROM matches_flat\nWHERE replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\nGROUP BY tournament ORDER BY tournament\n",
+    "SELECTED_RACE_CROSSREF": "\nSELECT selectedRace, race, COUNT(*) AS cnt\nFROM matches_flat\nWHERE selectedRace = ''\nGROUP BY selectedRace, race\nORDER BY cnt DESC\n",
+    "SELECTED_RACE_APM": "\nSELECT\n    COUNT(*) AS total,\n    COUNT(*) FILTER (WHERE APM = 0) AS apm_zero,\n    COUNT(*) FILTER (WHERE APM > 0) AS apm_nonzero\nFROM matches_flat\nWHERE selectedRace = ''\n",
+    "SQ_SENTINEL": "\nSELECT replay_id, filename, nickname, playerID, MMR, APM, SQ, result\nFROM matches_flat\nWHERE SQ = -2147483648\n",
+    "APM_DURATION": "\nSELECT\n    CASE WHEN APM = 0 THEN 'APM=0' ELSE 'APM>0' END AS apm_group,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT replay_id) AS n_replays,\n    ROUND(MEDIAN(header_elapsedGameLoops), 0) AS median_loops,\n    MIN(header_elapsedGameLoops) AS min_loops,\n    MAX(header_elapsedGameLoops) AS max_loops\nFROM matches_flat\nWHERE replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\nGROUP BY apm_group\n",
+    "APM_RACE_OVERLAP": "\nSELECT\n    COUNT(*) AS apm_zero_total,\n    COUNT(*) FILTER (WHERE selectedRace = '') AS also_empty_race,\n    COUNT(*) FILTER (WHERE selectedRace != '') AS has_selected_race\nFROM matches_flat\nWHERE APM = 0\n  AND replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\n",
+    "MAP_ZERO_PROFILE": "\nSELECT\n    COUNT(DISTINCT replay_id) AS n_replays,\n    COUNT(*) AS n_player_rows,\n    COUNT(*) FILTER (WHERE result = 'Win') AS wins,\n    COUNT(*) FILTER (WHERE result = 'Loss') AS losses,\n    COUNT(*) FILTER (WHERE result NOT IN ('Win', 'Loss')) AS other_results,\n    COUNT(*) FILTER (WHERE MMR > 0) AS mmr_rated,\n    COUNT(*) FILTER (WHERE MMR = 0) AS mmr_zero,\n    ROUND(MEDIAN(header_elapsedGameLoops), 0) AS median_loops\nFROM matches_flat\nWHERE gd_mapSizeX = 0 AND gd_mapSizeY = 0\n",
+    "MAP_ZERO_OVERLAP": "\nSELECT\n    COUNT(DISTINCT mf.replay_id) AS map_zero_replays,\n    COUNT(DISTINCT mf.replay_id) FILTER (\n        WHERE mf.replay_id IN (SELECT replay_id FROM matches_flat GROUP BY replay_id\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE result = 'Win') = 1\n       AND COUNT(*) FILTER (WHERE result = 'Loss') = 1)\n    ) AS map_zero_and_1v1_decisive\nFROM matches_flat mf\nWHERE mf.gd_mapSizeX = 0 AND mf.gd_mapSizeY = 0\n",
+    "HANDICAP_ZERO": "\nSELECT replay_id, filename, nickname, playerID, MMR, handicap, result\nFROM matches_flat\nWHERE handicap = 0\n",
+    "RESULT_DISTRIBUTION": "\nSELECT result, COUNT(*) AS cnt,\n       ROUND(100.0*COUNT(*)/SUM(COUNT(*)) OVER(),4) AS pct\nFROM matches_flat_clean GROUP BY result ORDER BY result\n",
+    "RACE_DISTRIBUTION": "SELECT race, COUNT(*) AS cnt FROM matches_flat_clean GROUP BY race ORDER BY cnt DESC",
+    "SELECTED_RACE_DISTRIBUTION": "\nSELECT selectedRace, COUNT(*) AS cnt FROM matches_flat_clean\nGROUP BY selectedRace ORDER BY cnt DESC\n",
+    "MMR_STATS": "\nSELECT COUNT(*) AS rated_rows,\n       MIN(MMR) AS mmr_min, MAX(MMR) AS mmr_max,\n       ROUND(AVG(MMR), 2) AS mmr_mean\nFROM matches_flat_clean WHERE is_mmr_missing = FALSE\n",
+    "NULL_CHECK": "\nSELECT\n    COUNT(*) AS total,\n    COUNT(*) FILTER (WHERE replay_id IS NULL) AS null_replay_id,\n    COUNT(*) FILTER (WHERE result IS NULL) AS null_result,\n    COUNT(*) FILTER (WHERE race IS NULL) AS null_race,\n    COUNT(*) FILTER (WHERE selectedRace IS NULL) AS null_selectedRace,\n    COUNT(*) FILTER (WHERE toon_id IS NULL) AS null_toon_id,\n    COUNT(*) FILTER (WHERE details_timeUTC IS NULL) AS null_timeUTC\nFROM matches_flat_clean\n",
+    "SYMMETRY_CHECK": "\nSELECT COUNT(*) AS replays_not_symmetric\nFROM (\n    SELECT replay_id,\n           COUNT(*) FILTER (WHERE result = 'Win') AS wins,\n           COUNT(*) FILTER (WHERE result = 'Loss') AS losses\n    FROM matches_flat_clean\n    GROUP BY replay_id\n    HAVING wins != 1 OR losses != 1\n)\n",
+    "SCOPE_COMPARISON": "\nSELECT\n    CASE\n        WHEN replay_id IN (SELECT replay_id FROM matches_flat_clean)\n        THEN 'in_prediction_scope'\n        ELSE 'history_only'\n    END AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT replay_id) AS n_replays\nFROM player_history_all\nGROUP BY scope\n"
+  }
+}

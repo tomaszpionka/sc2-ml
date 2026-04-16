@@ -1,0 +1,286 @@
+table: player_history_all
+dataset: sc2egset
+game: sc2
+object_type: view
+step: "01_04_01"
+row_count: 44817
+describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json
+generated_date: '2026-04-16'
+columns:
+- name: replay_id
+  type: VARCHAR
+  nullable: True
+  description: Canonical join key extracted via regexp. NULLIF-guarded (W04).
+  notes: IDENTITY
+- name: filename
+  type: VARCHAR
+  nullable: False
+  description: Replay file path relative to raw_dir. Invariant I10.
+  notes: IDENTITY
+- name: toon_id
+  type: VARCHAR
+  nullable: False
+  description: Battle.net toon/account identifier. Player identity key.
+  notes: IDENTITY
+- name: nickname
+  type: VARCHAR
+  nullable: True
+  description: Player nickname.
+  notes: IDENTITY
+- name: playerID
+  type: INTEGER
+  nullable: True
+  description: In-game player id.
+  notes: IDENTITY
+- name: userID
+  type: BIGINT
+  nullable: True
+  description: User id.
+  notes: IDENTITY
+- name: result
+  type: VARCHAR
+  nullable: True
+  description: Game result (Win, Loss, Undecided, Tie). Unfiltered in history.
+  notes: TARGET
+- name: MMR
+  type: INTEGER
+  nullable: True
+  description: Matchmaking rating. 0=unrated sentinel (83.66% MNAR).
+  notes: PRE_GAME
+- name: is_mmr_missing
+  type: BOOLEAN
+  nullable: True
+  description: R02: TRUE if MMR=0 (unrated professional). MNAR.
+  notes: PRE_GAME
+- name: race
+  type: VARCHAR
+  nullable: True
+  description: Actual race played (Protoss, Zerg, Terran abbreviated).
+  notes: PRE_GAME
+- name: selectedRace
+  type: VARCHAR
+  nullable: True
+  description: Selected race. Empty string normalized to 'Random' (R04).
+  notes: PRE_GAME
+- name: handicap
+  type: INTEGER
+  nullable: True
+  description: Handicap percentage (100=standard). 2 anomalous rows have 0.
+  notes: PRE_GAME
+- name: region
+  type: VARCHAR
+  nullable: True
+  description: Battle.net region label.
+  notes: PRE_GAME
+- name: realm
+  type: VARCHAR
+  nullable: True
+  description: Realm label.
+  notes: PRE_GAME
+- name: highestLeague
+  type: VARCHAR
+  nullable: True
+  description: Highest known league. Mostly Unknown in esports replays.
+  notes: PRE_GAME
+- name: isInClan
+  type: BOOLEAN
+  nullable: True
+  description: Whether the player is in a clan.
+  notes: PRE_GAME
+- name: clanTag
+  type: VARCHAR
+  nullable: True
+  description: Clan tag.
+  notes: PRE_GAME
+- name: APM
+  type: INTEGER
+  nullable: True
+  description: Actions per minute (in-game metric). IN_GAME_HISTORICAL: valid for prior matches only. Excluded from matches_flat_clean (I3).
+  notes: IN_GAME_HISTORICAL
+- name: SQ
+  type: INTEGER
+  nullable: True
+  description: Spending Quotient. R05: INT32_MIN sentinel -> NULL. IN_GAME_HISTORICAL.
+  notes: IN_GAME_HISTORICAL
+- name: supplyCappedPercent
+  type: INTEGER
+  nullable: True
+  description: % game time supply-capped. IN_GAME_HISTORICAL.
+  notes: IN_GAME_HISTORICAL
+- name: header_elapsedGameLoops
+  type: BIGINT
+  nullable: True
+  description: Game duration in loops. IN_GAME_HISTORICAL (post-game observable).
+  notes: IN_GAME_HISTORICAL
+- name: startDir
+  type: INTEGER
+  nullable: True
+  description: Starting direction code (lobby assignment).
+  notes: PRE_GAME
+- name: startLocX
+  type: INTEGER
+  nullable: True
+  description: Starting x location on map.
+  notes: PRE_GAME
+- name: startLocY
+  type: INTEGER
+  nullable: True
+  description: Starting y location on map.
+  notes: PRE_GAME
+- name: metadata_mapName
+  type: VARCHAR
+  nullable: True
+  description: Human-readable map name.
+  notes: PRE_GAME
+- name: gd_mapSizeX
+  type: BIGINT
+  nullable: True
+  description: Map width (R07: 0 -> NULL; parse artifact).
+  notes: PRE_GAME
+- name: gd_mapSizeY
+  type: BIGINT
+  nullable: True
+  description: Map height (R07: 0 -> NULL; parse artifact).
+  notes: PRE_GAME
+- name: gd_maxPlayers
+  type: BIGINT
+  nullable: True
+  description: Max players in game description.
+  notes: PRE_GAME
+- name: details_isBlizzardMap
+  type: BOOLEAN
+  nullable: True
+  description: Blizzard-authored map flag (from details struct). W03: preferred over gd_isBlizzardMap.
+  notes: PRE_GAME
+- name: gd_mapAuthorName
+  type: VARCHAR
+  nullable: True
+  description: Map author name.
+  notes: PRE_GAME
+- name: gd_mapFileSyncChecksum
+  type: BIGINT
+  nullable: True
+  description: Map file sync checksum.
+  notes: PRE_GAME
+- name: details_timeUTC
+  type: VARCHAR
+  nullable: True
+  description: UTC timestamp of game. Temporal anchor for I3 ordering.
+  notes: CONTEXT
+- name: header_version
+  type: VARCHAR
+  nullable: True
+  description: SC2 version string.
+  notes: CONTEXT
+- name: metadata_baseBuild
+  type: VARCHAR
+  nullable: True
+  description: Base build string.
+  notes: CONTEXT
+- name: metadata_dataBuild
+  type: VARCHAR
+  nullable: True
+  description: Data build string.
+  notes: CONTEXT
+- name: metadata_gameVersion
+  type: VARCHAR
+  nullable: True
+  description: Game version.
+  notes: CONTEXT
+- name: go_advancedSharedControl
+  type: BOOLEAN
+  nullable: True
+  description: Game option: advanced shared control.
+  notes: CONTEXT
+- name: go_amm
+  type: BOOLEAN
+  nullable: True
+  description: Game option: automated match making.
+  notes: CONTEXT
+- name: go_battleNet
+  type: BOOLEAN
+  nullable: True
+  description: Game option: Battle.net game.
+  notes: CONTEXT
+- name: go_clientDebugFlags
+  type: BIGINT
+  nullable: True
+  description: Game option: client debug flags.
+  notes: CONTEXT
+- name: go_competitive
+  type: BOOLEAN
+  nullable: True
+  description: Game option: competitive mode.
+  notes: CONTEXT
+- name: go_cooperative
+  type: BOOLEAN
+  nullable: True
+  description: Game option: cooperative mode.
+  notes: CONTEXT
+- name: go_fog
+  type: BIGINT
+  nullable: True
+  description: Game option: fog of war setting.
+  notes: CONTEXT
+- name: go_heroDuplicatesAllowed
+  type: BOOLEAN
+  nullable: True
+  description: Game option: hero duplicates allowed.
+  notes: CONTEXT
+- name: go_lockTeams
+  type: BOOLEAN
+  nullable: True
+  description: Game option: teams locked.
+  notes: CONTEXT
+- name: go_noVictoryOrDefeat
+  type: BOOLEAN
+  nullable: True
+  description: Game option: no victory or defeat.
+  notes: CONTEXT
+- name: go_observers
+  type: BIGINT
+  nullable: True
+  description: Game option: observers allowed.
+  notes: CONTEXT
+- name: go_practice
+  type: BOOLEAN
+  nullable: True
+  description: Game option: practice mode.
+  notes: CONTEXT
+- name: go_randomRaces
+  type: BOOLEAN
+  nullable: True
+  description: Game option: random races.
+  notes: CONTEXT
+- name: go_teamsTogether
+  type: BOOLEAN
+  nullable: True
+  description: Game option: teams together.
+  notes: CONTEXT
+- name: go_userDifficulty
+  type: BIGINT
+  nullable: True
+  description: Game option: user difficulty.
+  notes: CONTEXT
+- name: max_players_check
+  type: BIGINT
+  nullable: True
+  description: Alias of gd_maxPlayers for cross-check.
+  notes: CONTEXT
+provenance:
+  source_tables: [replay_players_raw, replays_meta_raw]
+  join_key: "NULLIF(regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json', 1), '') AS replay_id"
+  filter: "replay_id IS NOT NULL (W04 fix); MMR<0 retained with flag; SQ=INT32_MIN -> NULL (R05)"
+  scope: "All replays (no 1v1/decisive filter). Includes non-1v1 and indecisive replays excluded from matches_flat_clean."
+  created_by: sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py
+invariants:
+  - id: I3
+    description: "APM, SQ, supplyCappedPercent, header_elapsedGameLoops are IN_GAME
+      and excluded from matches_flat_clean. They are RETAINED here as valid
+      historical signals for prior matches only (I3 applies to target match T,
+      not to historical records)."
+  - id: I6
+    description: "VIEW DDL stored verbatim in 01_04_01_data_cleaning.json sql_queries."
+  - id: I9
+    description: "No features computed. VIEW is a JOIN projection of replay_players_raw
+      x replays_meta_raw with minimal quality corrections."

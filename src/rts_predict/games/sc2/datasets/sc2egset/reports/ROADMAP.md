@@ -719,6 +719,59 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_04_01 -- Data Cleaning
+
+```yaml
+step_number: "01_04_01"
+name: "Data Cleaning"
+description: "Non-destructive cleaning of replay_players_raw and replays_meta_raw. Creates three DuckDB VIEWs: matches_flat (structural JOIN, all rows), matches_flat_clean (prediction targets: 1v1 decisive, PRE-GAME only, I3-compliant), and player_history_all (player history features: all replays, IN_GAME metrics retained as historical signals). Resolves F01 structural blocker. Revision 1 incorporates critique BLOCKER F01 (replay-level R03) and WARNINGS W02-W05."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4"
+dataset: "sc2egset"
+question: "Which data quality issues require cleaning before Phase 02 feature engineering, and how should they be resolved non-destructively?"
+method: "CRISP-DM Phase 3. Seven cleaning rules (R01-R08 minus R06). CONSORT-style row-count accounting in REPLAY units. Three VIEWs created. Dual-scope design: prediction scope (matches_flat_clean) != feature scope (player_history_all)."
+predecessors:
+  - "01_03_04"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+    - "replays_meta_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+    - "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json"
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json"
+outputs:
+  views_created:
+    - "matches_flat (44,817 rows / 22,390 replays)"
+    - "matches_flat_clean (44,418 rows / 22,209 replays)"
+    - "player_history_all (44,817 rows / 22,390 replays)"
+  schemas:
+    - "data/db/schemas/views/player_history_all.yaml"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "matches_flat_clean excludes APM, SQ, supplyCappedPercent, header_elapsedGameLoops (IN_GAME). player_history_all retains them as valid historical signals for PRIOR matches. I3 applies at TARGET match level only."
+  - number: "6"
+    how_upheld: "All VIEW DDL and SQL queries stored verbatim in 01_04_01_data_cleaning.json sql_queries."
+  - number: "7"
+    how_upheld: "All cleaning thresholds (MMR<0, SQ=INT32_MIN, map_size=0, handicap=0) derived from prior profiling artifacts (01_03_01, 01_02_04)."
+  - number: "9"
+    how_upheld: "No rows deleted. Raw tables untouched. VIEWs are non-destructive projections."
+gate:
+  artifact_check: "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json and .md exist. data/db/schemas/views/player_history_all.yaml exists."
+  continue_predicate: "matches_flat=44,817 rows; matches_flat_clean rows > 0 with APM absent; player_history_all=44,817 rows with APM present; CONSORT arithmetic verified; symmetry_violations=0."
+  halt_predicate: "Any VIEW fails to create or validation assertions fail."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet (StarCraft II) > 4.1.1.3 Data Cleaning"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
