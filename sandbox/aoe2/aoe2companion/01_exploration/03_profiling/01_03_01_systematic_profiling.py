@@ -68,6 +68,8 @@ reports_dir = get_reports_dir("aoe2", "aoe2companion")
 census_artifacts_dir = reports_dir / "artifacts" / "01_exploration" / "02_eda"
 profiling_dir = reports_dir / "artifacts" / "01_exploration" / "03_profiling"
 profiling_dir.mkdir(parents=True, exist_ok=True)
+plots_dir = profiling_dir / "plots"
+plots_dir.mkdir(parents=True, exist_ok=True)
 
 census_json_path = census_artifacts_dir / "01_02_04_univariate_census.json"
 with open(census_json_path) as f:
@@ -507,6 +509,143 @@ for nc in near_constant_columns:
     print(f"  {nc['column']}: {', '.join(nc['reasons'])}")
 
 # %% [markdown]
+# ## 3b. Near-constant Stratification (R11)
+#
+# Stratify the near-constant columns into "genuinely uninformative" vs
+# "low cardinality categorical" using a hybrid approach: IQR + top_k +
+# boolean_census + cardinality fallback.
+
+# %%
+# Build dominant-value percentage lookup from boolean_census
+boolean_dominant_pct = {}
+for entry in census["boolean_census"]:
+    col = entry["column_name"]
+    non_null = entry["true_count"] + entry["false_count"]
+    if non_null > 0:
+        dominant = max(entry["true_count"], entry["false_count"])
+        boolean_dominant_pct[col] = dominant * 100.0 / non_null
+
+# won from won_distribution (exclude NULLs)
+won_non_null = sum(
+    e["cnt"] for e in census["won_distribution"] if e["won"] is not None
+)
+won_dominant = max(
+    e["cnt"] for e in census["won_distribution"] if e["won"] is not None
+)
+boolean_dominant_pct["won"] = won_dominant * 100.0 / won_non_null
+
+print(f"Boolean dominant_pct lookup: {len(boolean_dominant_pct)} columns")
+for col, pct in sorted(boolean_dominant_pct.items()):
+    print(f"  {col}: {pct:.2f}%")
+
+# %%
+# I7: 95% dominant-value threshold follows scikit-learn VarianceThreshold
+# and caret nearZeroVar conventions (default frequency ratio 95/5).
+# At 277M rows, dominant value must account for >263M rows to trigger.
+DOMINANT_VALUE_THRESHOLD = 95.0
+
+genuinely_uninformative = []
+low_cardinality_categorical = []
+
+for nc in near_constant_columns:
+    col = nc["column"]
+
+    # Rule 0: TARGET is never uninformative
+    if nc["i3_classification"] == "TARGET":
+        low_cardinality_categorical.append(col)
+        continue
+
+    # Rule 1: IQR available and IQR == 0
+    if nc.get("iqr") is not None and nc["iqr"] == 0:
+        genuinely_uninformative.append(col)
+        continue
+
+    # Rule 2: top_k available -- check top-1 percentage
+    col_profile = next(
+        (p for p in column_profiles if p["column"] == col), None
+    )
+    if col_profile and "top_k" in col_profile and col_profile["top_k"]:
+        top1_pct = col_profile["top_k"][0]["pct"]
+        if top1_pct > DOMINANT_VALUE_THRESHOLD:
+            genuinely_uninformative.append(col)
+        else:
+            low_cardinality_categorical.append(col)
+        continue
+
+    # Rule 3: boolean_census available
+    if col in boolean_dominant_pct:
+        if boolean_dominant_pct[col] > DOMINANT_VALUE_THRESHOLD:
+            genuinely_uninformative.append(col)
+        else:
+            low_cardinality_categorical.append(col)
+        continue
+
+    # Rule 4: cardinality heuristic fallback (only filename expected here)
+    if nc["i3_classification"] == "IDENTIFIER":
+        low_cardinality_categorical.append(col)
+    elif nc["cardinality"] == 1:
+        genuinely_uninformative.append(col)
+    else:
+        low_cardinality_categorical.append(col)
+
+assert (
+    len(genuinely_uninformative) + len(low_cardinality_categorical)
+    == len(near_constant_columns)
+), (
+    f"Stratification mismatch: {len(genuinely_uninformative)} + "
+    f"{len(low_cardinality_categorical)} != {len(near_constant_columns)}"
+)
+
+print(f"\nNear-constant stratification:")
+print(f"  Genuinely uninformative ({len(genuinely_uninformative)}): "
+      f"{genuinely_uninformative}")
+print(f"  Low-cardinality categorical ({len(low_cardinality_categorical)}): "
+      f"{low_cardinality_categorical}")
+
+# Verify key classifications
+assert "won" in low_cardinality_categorical, "TARGET column 'won' must be low_cardinality_categorical"
+
+# %%
+critical_findings["near_constant_stratification"] = {
+    "genuinely_uninformative": genuinely_uninformative,
+    "genuinely_uninformative_count": len(genuinely_uninformative),
+    "low_cardinality_categorical": low_cardinality_categorical,
+    "low_cardinality_categorical_count": len(low_cardinality_categorical),
+    "stratification_criteria": {
+        "genuinely_uninformative": (
+            "IQR=0 (numeric) OR dominant value > 95% of non-null rows "
+            "(from top_k or boolean_census)"
+        ),
+        "low_cardinality_categorical": (
+            "Flagged by uniqueness_ratio < 0.001 only due to large table "
+            "size; dominant value <= 95% indicates meaningful variation"
+        ),
+        "threshold_justification": (
+            "I7: 95% dominant-value threshold follows scikit-learn "
+            "VarianceThreshold and caret nearZeroVar conventions "
+            "(default frequency ratio 95/5)."
+        ),
+    },
+    "data_sources": {
+        "iqr": "column_profiles (9 numeric columns)",
+        "top_k": "column_profiles (21 categorical columns)",
+        "boolean_census": "01_02_04 census (18 BOOLEAN columns)",
+        "won_distribution": "01_02_04 census (target column)",
+        "cardinality_heuristic": "column_profiles cardinality + I3 class (filename only)",
+    },
+    # [Critique fix: WARNING I8]
+    "cross_notebook_asymmetry_note": (
+        "The aoestats notebook applies NEAR_CONSTANT_CARDINALITY_CAP=5 in "
+        "near-constant detection, resulting in 3 flagged columns vs 50 here. "
+        "The difference is due to the much larger row count (277M vs 30M) "
+        "making the uniqueness_ratio threshold more aggressive. The "
+        "stratification resolves this by separating genuinely uninformative "
+        "columns from low-cardinality categoricals."
+    ),
+}
+print("Near-constant stratification added to critical_findings")
+
+# %% [markdown]
 # ## 4. Leaderboard-Stratified Rating Profile
 
 # %%
@@ -578,10 +717,71 @@ for i, (pct, col) in enumerate(zip(comp_nonzero["null_pct"].values, comp_nonzero
     ax.text(pct + 0.5, i, f"{pct:.1f}%", va="center", fontsize=7)
 
 fig.tight_layout()
-heatmap_path = profiling_dir / "01_03_01_completeness_heatmap.png"
+heatmap_path = plots_dir / "01_03_01_completeness_heatmap.png"
 fig.savefig(heatmap_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {heatmap_path}")
+
+# %% [markdown]
+# ## 5b. Temporal Coverage (Section 3.2)
+
+# %%
+temporal_coverage_sql = """
+SELECT
+    MIN(started) AS min_started,
+    MAX(started) AS max_started,
+    COUNT(DISTINCT DATE_TRUNC('month', started)) AS distinct_months
+FROM matches_raw
+WHERE started IS NOT NULL
+"""
+sql_queries["temporal_coverage"] = temporal_coverage_sql
+print("Querying temporal coverage...")
+tc_result = con.execute(temporal_coverage_sql).fetchdf().iloc[0]
+tc_min = str(tc_result["min_started"])
+tc_max = str(tc_result["max_started"])
+tc_distinct_months = int(tc_result["distinct_months"])
+print(f"  Min started: {tc_min}")
+print(f"  Max started: {tc_max}")
+print(f"  Distinct months: {tc_distinct_months}")
+
+# %%
+temporal_gaps_sql = """
+WITH monthly AS (
+    SELECT DISTINCT DATE_TRUNC('month', started) AS month
+    FROM matches_raw
+    WHERE started IS NOT NULL
+),
+expected AS (
+    SELECT UNNEST(GENERATE_SERIES(
+        (SELECT MIN(month) FROM monthly),
+        (SELECT MAX(month) FROM monthly),
+        INTERVAL '1 MONTH'
+    )) AS month
+)
+SELECT e.month
+FROM expected e
+LEFT JOIN monthly m ON e.month = m.month
+WHERE m.month IS NULL
+ORDER BY e.month
+"""
+sql_queries["temporal_gaps"] = temporal_gaps_sql
+print("Querying temporal gaps...")
+gaps_df = con.execute(temporal_gaps_sql).fetchdf()
+temporal_gaps = [str(g) for g in gaps_df["month"].tolist()]
+print(f"  Missing months: {len(temporal_gaps)}")
+for g in temporal_gaps:
+    print(f"    {g}")
+
+# %%
+temporal_coverage = {
+    "min_started": tc_min,
+    "max_started": tc_max,
+    "distinct_months": tc_distinct_months,
+    "missing_months": temporal_gaps,
+    "missing_months_count": len(temporal_gaps),
+}
+print(f"Temporal coverage assembled: {tc_min} to {tc_max}, "
+      f"{tc_distinct_months} distinct months, {len(temporal_gaps)} gaps")
 
 # %% [markdown]
 # ## 6. QQ Plots (Artifact 3)
@@ -658,7 +858,7 @@ fig.suptitle(
     fontsize=11, y=1.02
 )
 fig.tight_layout()
-qq_path = profiling_dir / "01_03_01_qq_plot.png"
+qq_path = plots_dir / "01_03_01_qq_plot.png"
 fig.savefig(qq_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {qq_path}")
@@ -711,7 +911,7 @@ fig.suptitle(
     fontsize=11, y=1.02
 )
 fig.tight_layout()
-ecdf_path = profiling_dir / "01_03_01_ecdf_key_columns.png"
+ecdf_path = plots_dir / "01_03_01_ecdf_key_columns.png"
 fig.savefig(ecdf_path, dpi=150, bbox_inches="tight")
 plt.close(fig)
 print(f"Saved: {ecdf_path}")
@@ -729,6 +929,19 @@ profile_json = {
     "column_profiles": column_profiles,
     "dataset_profile": dataset_profile,
     "critical_findings": critical_findings,
+    "temporal_coverage": temporal_coverage,
+    "cross_table_notes": {
+        "profiles_raw_dead_columns": [
+            "sharedHistory", "twitchChannel", "youtubeChannel",
+            "youtubeChannelName", "discordId", "discordName",
+            "discordInvitation",
+        ],
+        "source": "01_02_04 univariate census",
+        "note": (
+            "profiles_raw contains 7 columns that are 100% NULL. "
+            "Not re-profiled in 01_03_01 (matches_raw scope only)."
+        ),
+    },
     "rating_stratified": rating_stratified,
     "sample_info": {
         "bernoulli_pct_viz": SAMPLE_PCT_VIZ,
@@ -832,6 +1045,61 @@ if near_constant_columns:
         )
     md_lines.append("")
 
+# Near-constant stratification subsection
+md_lines.extend([
+    "### Near-constant Stratification",
+    "",
+    f"Of {len(near_constant_columns)} near-constant columns, "
+    f"**{len(genuinely_uninformative)}** are genuinely uninformative and "
+    f"**{len(low_cardinality_categorical)}** are low-cardinality categoricals "
+    f"with meaningful variation.",
+    "",
+    f"**Genuinely uninformative ({len(genuinely_uninformative)}):** "
+    + (", ".join(genuinely_uninformative) if genuinely_uninformative else "None"),
+    "",
+    f"**Low-cardinality categorical ({len(low_cardinality_categorical)}):** "
+    + (", ".join(low_cardinality_categorical) if low_cardinality_categorical else "None"),
+    "",
+    f"**Threshold justification (I7):** 95% dominant-value threshold follows "
+    f"scikit-learn VarianceThreshold and caret nearZeroVar conventions "
+    f"(default frequency ratio 95/5). At {total_rows:,} rows, the dominant "
+    f"value must account for >{int(total_rows * 0.95):,} rows to trigger.",
+    "",
+    f"**Cross-notebook asymmetry note (I8):** The aoestats notebook applies "
+    f"NEAR_CONSTANT_CARDINALITY_CAP=5 in near-constant detection, resulting "
+    f"in 3 flagged columns vs {len(near_constant_columns)} here. The "
+    f"difference is due to the much larger row count (277M vs 30M) making "
+    f"the uniqueness_ratio threshold more aggressive. The stratification "
+    f"resolves this by separating genuinely uninformative columns from "
+    f"low-cardinality categoricals.",
+    "",
+])
+
+# Temporal coverage section
+md_lines.extend([
+    "## Temporal Coverage",
+    "",
+    f"- **Earliest match:** {temporal_coverage['min_started']}",
+    f"- **Latest match:** {temporal_coverage['max_started']}",
+    f"- **Distinct months:** {temporal_coverage['distinct_months']}",
+    f"- **Missing months:** {temporal_coverage['missing_months_count']}",
+])
+if temporal_coverage["missing_months"]:
+    for gap in temporal_coverage["missing_months"]:
+        md_lines.append(f"  - {gap}")
+md_lines.append("")
+
+# Cross-table notes section
+md_lines.extend([
+    "## Cross-Table Notes",
+    "",
+    "**profiles_raw dead columns (01_02_04 census):** "
+    "sharedHistory, twitchChannel, youtubeChannel, youtubeChannelName, "
+    "discordId, discordName, discordInvitation (all 100% NULL). "
+    "Not re-profiled in 01_03_01 (matches_raw scope only).",
+    "",
+])
+
 md_lines.extend([
     "## Rating Stratification",
     "",
@@ -870,9 +1138,9 @@ md_lines.extend([
     "| # | Artifact | Filename | Description |",
     "|---|----------|----------|-------------|",
     "| 1 | Systematic Profile JSON | `01_03_01_systematic_profile.json` | Machine-readable profile with all metrics |",
-    "| 2 | Completeness Heatmap | `01_03_01_completeness_heatmap.png` | NULL rate per column, color-coded |",
-    "| 3 | QQ Plots | `01_03_01_qq_plot.png` | Normal reference QQ for 5 numeric columns |",
-    "| 4 | ECDF Plots | `01_03_01_ecdf_key_columns.png` | Empirical CDFs for rating, ratingDiff, duration_min |",
+    "| 2 | Completeness Heatmap | `plots/01_03_01_completeness_heatmap.png` | NULL rate per column, color-coded |",
+    "| 3 | QQ Plots | `plots/01_03_01_qq_plot.png` | Normal reference QQ for 5 numeric columns |",
+    "| 4 | ECDF Plots | `plots/01_03_01_ecdf_key_columns.png` | Empirical CDFs for rating, ratingDiff, duration_min |",
     "| 5 | This Report | `01_03_01_systematic_profile.md` | Human-readable summary |",
     "",
     "## SQL Queries (Invariant #6)",
@@ -907,9 +1175,9 @@ print(f"Saved: {md_path} ({md_path.stat().st_size:,} bytes)")
 # %%
 expected_artifacts = [
     profiling_dir / "01_03_01_systematic_profile.json",
-    profiling_dir / "01_03_01_completeness_heatmap.png",
-    profiling_dir / "01_03_01_qq_plot.png",
-    profiling_dir / "01_03_01_ecdf_key_columns.png",
+    plots_dir / "01_03_01_completeness_heatmap.png",
+    plots_dir / "01_03_01_qq_plot.png",
+    plots_dir / "01_03_01_ecdf_key_columns.png",
     profiling_dir / "01_03_01_systematic_profile.md",
 ]
 
@@ -968,6 +1236,52 @@ for nc in expected_numeric:
         f"Numeric column {nc} missing skewness/kurtosis in profile"
     )
 print(f"  OK: All {len(expected_numeric)} census numeric columns have skewness/kurtosis")
+
+# Verify temporal_coverage in JSON (R10)
+assert "temporal_coverage" in profile_check, "JSON missing temporal_coverage key"
+tc_check = profile_check["temporal_coverage"]
+assert tc_check["min_started"], "temporal_coverage.min_started is empty"
+assert tc_check["max_started"], "temporal_coverage.max_started is empty"
+assert tc_check["distinct_months"] > 0, "temporal_coverage.distinct_months must be > 0"
+print(f"  OK: temporal_coverage present ({tc_check['min_started']} to {tc_check['max_started']})")
+
+# Verify near_constant_stratification in JSON (R11)
+assert "near_constant_stratification" in profile_check["critical_findings"], (
+    "JSON missing near_constant_stratification in critical_findings"
+)
+ncs_check = profile_check["critical_findings"]["near_constant_stratification"]
+assert (
+    ncs_check["genuinely_uninformative_count"] + ncs_check["low_cardinality_categorical_count"]
+    == len(near_constant_columns)
+), "near_constant_stratification counts do not sum to total near-constant columns"
+assert "won" in ncs_check["low_cardinality_categorical"], (
+    "TARGET column 'won' must be in low_cardinality_categorical"
+)
+assert "threshold_justification" in ncs_check["stratification_criteria"], (
+    "JSON missing threshold_justification (I7)"
+)
+assert "cross_notebook_asymmetry_note" in ncs_check, (
+    "JSON missing cross_notebook_asymmetry_note (I8)"
+)
+print(f"  OK: near_constant_stratification present "
+      f"({ncs_check['genuinely_uninformative_count']} uninformative + "
+      f"{ncs_check['low_cardinality_categorical_count']} categorical = "
+      f"{len(near_constant_columns)} total)")
+
+# Verify cross_table_notes in JSON (R12)
+assert "cross_table_notes" in profile_check, "JSON missing cross_table_notes key"
+ctn_check = profile_check["cross_table_notes"]
+assert len(ctn_check["profiles_raw_dead_columns"]) == 7, (
+    f"Expected 7 dead columns in cross_table_notes, got "
+    f"{len(ctn_check['profiles_raw_dead_columns'])}"
+)
+print(f"  OK: cross_table_notes present ({len(ctn_check['profiles_raw_dead_columns'])} dead columns)")
+
+# Verify MD contains new sections
+assert "Temporal Coverage" in md_check, "MD missing Temporal Coverage section"
+assert "Near-constant Stratification" in md_check, "MD missing Near-constant Stratification section"
+assert "Cross-Table Notes" in md_check, "MD missing Cross-Table Notes section"
+print("  OK: MD contains Temporal Coverage, Near-constant Stratification, Cross-Table Notes")
 
 print("\nAll gate checks passed.")
 

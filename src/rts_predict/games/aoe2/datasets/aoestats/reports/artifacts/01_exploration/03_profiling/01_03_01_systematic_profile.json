@@ -485,23 +485,23 @@
       "uniqueness_ratio": 1.0,
       "top_5": [
         {
-          "val": "187227905",
+          "val": "194471193",
           "cnt": 1
         },
         {
-          "val": "187490264",
+          "val": "195057162",
           "cnt": 1
         },
         {
-          "val": "187375510",
+          "val": "195017550",
           "cnt": 1
         },
         {
-          "val": "186638418",
+          "val": "194848564",
           "cnt": 1
         },
         {
-          "val": "187514629",
+          "val": "194212311",
           "cnt": 1
         }
       ]
@@ -746,23 +746,23 @@
       "uniqueness_ratio": 0.283178,
       "top_5": [
         {
-          "val": "183957467",
+          "val": "180839803",
           "cnt": 8
         },
         {
-          "val": "184068916",
+          "val": "180115800",
           "cnt": 8
         },
         {
-          "val": "183893634",
+          "val": "180005298",
           "cnt": 8
         },
         {
-          "val": "183734368",
+          "val": "180810230",
           "cnt": 8
         },
         {
-          "val": "183481346",
+          "val": "180362292",
           "cnt": 8
         }
       ]
@@ -920,6 +920,108 @@
       "null_pct": 0.0
     },
     {
+      "column": "duration",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "filename",
+      "table": "matches_raw",
+      "temporal_class": "IDENTIFIER",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_id",
+      "table": "matches_raw",
+      "temporal_class": "IDENTIFIER",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_speed",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_type",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "irl_duration",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "leaderboard",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "map",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "mirror",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "num_players",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "patch",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "raw_match_type",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0407
+    },
+    {
+      "column": "replay_enhanced",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "started_timestamp",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "starting_age",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "team_0_elo",
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "team_1_elo",
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
       "column": "castle_age_uptime",
       "table": "players_raw",
       "temporal_class": "IN-GAME",
@@ -929,12 +1031,6 @@
       "column": "civ",
       "table": "players_raw",
       "temporal_class": "PRE-GAME",
-      "null_pct": 0.0
-    },
-    {
-      "column": "duration",
-      "table": "matches_raw",
-      "temporal_class": "POST-GAME",
       "null_pct": 0.0
     },
     {
@@ -956,40 +1052,10 @@
       "null_pct": 0.0
     },
     {
-      "column": "game_speed",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
-      "column": "game_type",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
       "column": "imperial_age_uptime",
       "table": "players_raw",
       "temporal_class": "IN-GAME",
       "null_pct": 91.4904
-    },
-    {
-      "column": "irl_duration",
-      "table": "matches_raw",
-      "temporal_class": "POST-GAME",
-      "null_pct": 0.0
-    },
-    {
-      "column": "leaderboard",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
-      "column": "map",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
     },
     {
       "column": "match_rating_diff",
@@ -998,21 +1064,9 @@
       "null_pct": 0.0
     },
     {
-      "column": "mirror",
-      "table": "matches_raw",
-      "temporal_class": "POST-GAME",
-      "null_pct": 0.0
-    },
-    {
       "column": "new_rating",
       "table": "players_raw",
       "temporal_class": "POST-GAME",
-      "null_pct": 0.0
-    },
-    {
-      "column": "num_players",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
       "null_pct": 0.0
     },
     {
@@ -1028,28 +1082,10 @@
       "null_pct": 86.0526
     },
     {
-      "column": "patch",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
       "column": "profile_id",
       "table": "players_raw",
       "temporal_class": "IDENTIFIER",
       "null_pct": 0.0011
-    },
-    {
-      "column": "raw_match_type",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0407
-    },
-    {
-      "column": "replay_enhanced",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
     },
     {
       "column": "replay_summary_raw",
@@ -1058,33 +1094,9 @@
       "null_pct": 0.0
     },
     {
-      "column": "started_timestamp",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
-      "column": "starting_age",
-      "table": "matches_raw",
-      "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
       "column": "team",
       "table": "players_raw",
       "temporal_class": "CONTEXT",
-      "null_pct": 0.0
-    },
-    {
-      "column": "team_0_elo",
-      "table": "matches_raw",
-      "temporal_class": "PRE-GAME",
-      "null_pct": 0.0
-    },
-    {
-      "column": "team_1_elo",
-      "table": "matches_raw",
-      "temporal_class": "PRE-GAME",
       "null_pct": 0.0
     },
     {

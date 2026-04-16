@@ -117,8 +117,8 @@ IQR fence at 1.5*IQR per Tukey (1977) — Invariant #7.
 | Prot | 16,228 | 36.2095% |
 | Zerg | 15,695 | 35.0202% |
 | Terr | 12,891 | 28.7636% |
+| BWTe | 1 | 0.0022% |
 | BWPr | 1 | 0.0022% |
-| BWZe | 1 | 0.0022% |
 
 #### selectedRace
 | value | count | pct |
@@ -275,9 +275,11 @@ Both columns are INTEGER with zero NULLs, confirmed by schema YAML and runtime v
 
 | File | Description |
 |------|-------------|
-| `01_03_01_completeness_heatmap.png` | Effective missingness per column per table. MMR=83.65% sentinel missingness dominates. |
-| `01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
-| `01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
+| `plots/01_03_01_completeness_heatmap.png` | Effective missingness per column per table. MMR=83.65% sentinel missingness dominates. |
+| `plots/01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
+| `plots/01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
+
+**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (MMR, APM, SQ) and bounded distributions (supplyCappedPercent). QQ plots are the stronger diagnostic tool per Tukey (1977).
 
 ---
 

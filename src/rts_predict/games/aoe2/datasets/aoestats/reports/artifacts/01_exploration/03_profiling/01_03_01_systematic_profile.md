@@ -9,6 +9,8 @@
 |--------|-------------|--------------|---------------|
 | avg_elo | matches_raw | numeric | PRE-GAME |
 | duration | matches_raw | numeric | POST-GAME |
+| filename | matches_raw | categorical | IDENTIFIER |
+| game_id | matches_raw | categorical | IDENTIFIER |
 | game_speed | matches_raw | categorical | CONTEXT |
 | game_type | matches_raw | categorical | CONTEXT |
 | irl_duration | matches_raw | numeric | POST-GAME |
@@ -57,12 +59,10 @@
 
 | # | Title | Filename | Description |
 |---|-------|----------|-------------|
-| 1 | Completeness Heatmap | `01_03_01_completeness_heatmap.png` | NULL % per column, I3 annotated |
-| 2 | QQ Plots (matches_raw) | `01_03_01_qq_matches.png` | duration, avg_elo, team_0/1_elo |
-| 3 | QQ Plots (players_raw) | `01_03_01_qq_players.png` | old/new_rating, match_rating_diff, age uptimes (N per panel in title) |
-| 4 | ECDF Key Columns | `01_03_01_ecdf_key_columns.png` | team_0/1_elo, old_rating, match_rating_diff |
-
-**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (old_rating, new_rating, match_rating_diff) and bounded distributions (age uptimes). QQ plots are the stronger diagnostic tool per Tukey (1977).
+| 1 | Completeness Heatmap | `plots/01_03_01_completeness_heatmap.png` | NULL % per column, I3 annotated |
+| 2 | QQ Plots (matches_raw) | `plots/01_03_01_qq_matches.png` | duration, avg_elo, team_0/1_elo |
+| 3 | QQ Plots (players_raw) | `plots/01_03_01_qq_players.png` | old/new_rating, match_rating_diff, age uptimes (N per panel in title) |
+| 4 | ECDF Key Columns | `plots/01_03_01_ecdf_key_columns.png` | team_0/1_elo, old_rating, match_rating_diff |
 
 ## SQL Queries
 

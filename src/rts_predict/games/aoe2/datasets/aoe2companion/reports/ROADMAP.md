@@ -501,9 +501,9 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
   plots:
-    - "artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png"
-    - "artifacts/01_exploration/03_profiling/01_03_01_qq_plot.png"
-    - "artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_completeness_heatmap.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_qq_plot.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_ecdf_key_columns.png"
   report: "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md"
 gate:
   artifact_check: "All 5 artifact files exist and are non-empty. JSON contains critical_findings key. MD contains I3 classification table."

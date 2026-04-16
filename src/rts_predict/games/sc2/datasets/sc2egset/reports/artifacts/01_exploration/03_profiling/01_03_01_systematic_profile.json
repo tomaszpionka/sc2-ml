@@ -283,12 +283,12 @@
             "pct": 28.7636
           },
           {
-            "value": "BWPr",
+            "value": "BWTe",
             "cnt": 1,
             "pct": 0.0022
           },
           {
-            "value": "BWZe",
+            "value": "BWPr",
             "cnt": 1,
             "pct": 0.0022
           }
@@ -689,27 +689,27 @@
       "trackerEvtsErr"
     ],
     "near_constant": [
+      "color_a",
+      "playerID",
+      "region",
       "handicap",
-      "startDir",
-      "race",
-      "map_size_y",
       "color_r",
-      "is_blizzard_map",
-      "userID",
+      "map_size_x",
+      "isInClan",
+      "realm",
+      "race",
       "selectedRace",
       "is_blizzard_map_init",
+      "color_b",
+      "startDir",
+      "is_blizzard_map",
+      "color_g",
       "result",
+      "MMR",
       "highestLeague",
       "max_players",
-      "realm",
-      "color_g",
-      "MMR",
-      "color_b",
-      "map_size_x",
-      "region",
-      "isInClan",
-      "playerID",
-      "color_a"
+      "map_size_y",
+      "userID"
     ],
     "sentinel_columns": [
       {

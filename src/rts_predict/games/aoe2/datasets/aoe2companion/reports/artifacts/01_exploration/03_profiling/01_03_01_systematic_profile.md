@@ -143,6 +143,29 @@
 | civ | 68 | 0.00000025 | None | uniqueness_ratio=0.00000025 < 0.001 | PRE_GAME |
 | filename | 2210 | 0.00000798 | None | uniqueness_ratio=0.00000798 < 0.001 | IDENTIFIER |
 
+### Near-constant Stratification
+
+Of 50 near-constant columns, **11** are genuinely uninformative and **39** are low-cardinality categoricals with meaningful variation.
+
+**Genuinely uninformative (11):** mod, fullTechTree, allowCheats, population, hideCivs, speedFactor, teamTogether, treatyLength, status, shared, verified
+
+**Low-cardinality categorical (39):** leaderboard, server, internalLeaderboardId, privacy, map, difficulty, startingAge, empireWarsMode, endingAge, gameMode, lockSpeed, lockTeams, mapSize, recordGame, regicideMode, gameVariant, resources, sharedExploration, speed, suddenDeathMode, antiquityMode, civilizationSet, teamPositions, turboMode, victory, revealMap, scenario, password, modDataset, rating, ratingDiff, color, colorHex, slot, team, won, country, civ, filename
+
+**Threshold justification (I7):** 95% dominant-value threshold follows scikit-learn VarianceThreshold and caret nearZeroVar conventions (default frequency ratio 95/5). At 277,099,059 rows, the dominant value must account for >263,244,106 rows to trigger.
+
+**Cross-notebook asymmetry note (I8):** The aoestats notebook applies NEAR_CONSTANT_CARDINALITY_CAP=5 in near-constant detection, resulting in 3 flagged columns vs 50 here. The difference is due to the much larger row count (277M vs 30M) making the uniqueness_ratio threshold more aggressive. The stratification resolves this by separating genuinely uninformative columns from low-cardinality categoricals.
+
+## Temporal Coverage
+
+- **Earliest match:** 2020-07-31 13:32:14
+- **Latest match:** 2026-04-04 23:58:58
+- **Distinct months:** 70
+- **Missing months:** 0
+
+## Cross-Table Notes
+
+**profiles_raw dead columns (01_02_04 census):** sharedHistory, twitchChannel, youtubeChannel, youtubeChannelName, discordId, discordName, discordInvitation (all 100% NULL). Not re-profiled in 01_03_01 (matches_raw scope only).
+
 ## Rating Stratification
 
 | Scope | N Rows | Rating NULL % | Rating Mean | Rating Std | Rating Median | RatingDiff Mean |
@@ -174,12 +197,10 @@ Kurtosis values are **excess kurtosis** (kurtosis - 3); normal = 0.
 | # | Artifact | Filename | Description |
 |---|----------|----------|-------------|
 | 1 | Systematic Profile JSON | `01_03_01_systematic_profile.json` | Machine-readable profile with all metrics |
-| 2 | Completeness Heatmap | `01_03_01_completeness_heatmap.png` | NULL rate per column, color-coded |
-| 3 | QQ Plots | `01_03_01_qq_plot.png` | Normal reference QQ for 5 numeric columns |
-| 4 | ECDF Plots | `01_03_01_ecdf_key_columns.png` | Empirical CDFs for rating, ratingDiff, duration_min |
+| 2 | Completeness Heatmap | `plots/01_03_01_completeness_heatmap.png` | NULL rate per column, color-coded |
+| 3 | QQ Plots | `plots/01_03_01_qq_plot.png` | Normal reference QQ for 5 numeric columns |
+| 4 | ECDF Plots | `plots/01_03_01_ecdf_key_columns.png` | Empirical CDFs for rating, ratingDiff, duration_min |
 | 5 | This Report | `01_03_01_systematic_profile.md` | Human-readable summary |
-
-**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (rating) and bounded/near-constant distributions (population, speedFactor). QQ plots are the stronger diagnostic tool per Tukey (1977).
 
 ## SQL Queries (Invariant #6)
 
@@ -548,6 +569,39 @@ FROM matches_raw
 WHERE leaderboard IN ('rm_1v1', 'qp_rm_1v1')
 ```
 
+### temporal_coverage
+
+```sql
+SELECT
+    MIN(started) AS min_started,
+    MAX(started) AS max_started,
+    COUNT(DISTINCT DATE_TRUNC('month', started)) AS distinct_months
+FROM matches_raw
+WHERE started IS NOT NULL
+```
+
+### temporal_gaps
+
+```sql
+WITH monthly AS (
+    SELECT DISTINCT DATE_TRUNC('month', started) AS month
+    FROM matches_raw
+    WHERE started IS NOT NULL
+),
+expected AS (
+    SELECT UNNEST(GENERATE_SERIES(
+        (SELECT MIN(month) FROM monthly),
+        (SELECT MAX(month) FROM monthly),
+        INTERVAL '1 MONTH'
+    )) AS month
+)
+SELECT e.month
+FROM expected e
+LEFT JOIN monthly m ON e.month = m.month
+WHERE m.month IS NULL
+ORDER BY e.month
+```
+
 ### qq_ecdf_sample
 
 ```sql
@@ -572,4 +626,4 @@ WHERE finished > started
 - Bivariate findings: `01_02_06_bivariate_eda.md` (I3 classifications)
 - Multivariate findings: `01_02_07_multivariate_analysis.md`
 - Skewness/kurtosis: DuckDB native SKEWNESS()/KURTOSIS() -- exact, full table, 10 columns
-- BERNOULLI sample: 0.02% (55,414 rows for QQ/ECDF visualization)
+- BERNOULLI sample: 0.02% (55,952 rows for QQ/ECDF visualization)

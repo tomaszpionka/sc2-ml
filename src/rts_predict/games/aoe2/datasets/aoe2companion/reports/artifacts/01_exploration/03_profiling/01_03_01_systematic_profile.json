@@ -1162,97 +1162,97 @@
           "cnt": 8
         },
         {
-          "matchId": 326681601,
-          "profileId": -1,
-          "cnt": 8
-        },
-        {
           "matchId": 68070047,
           "profileId": -1,
           "cnt": 8
         },
         {
-          "matchId": 172533416,
+          "matchId": 326681601,
+          "profileId": -1,
+          "cnt": 8
+        },
+        {
+          "matchId": 178080720,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 159809463,
+          "matchId": 183355314,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184288749,
+          "matchId": 181401860,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 192321406,
+          "matchId": 181009322,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184945346,
+          "matchId": 180310176,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184575672,
+          "matchId": 184603984,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 156839600,
+          "matchId": 181905200,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 174212648,
+          "matchId": 181358520,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 191528711,
+          "matchId": 183352442,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 174347427,
+          "matchId": 183968858,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184633797,
+          "matchId": 183969245,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184594552,
+          "matchId": 177340905,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 187958248,
+          "matchId": 179301325,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 148899533,
+          "matchId": 179325732,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 171129952,
+          "matchId": 182692194,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 183638356,
+          "matchId": 182282999,
           "profileId": -1,
           "cnt": 7
         },
         {
-          "matchId": 184268594,
+          "matchId": 182666096,
           "profileId": -1,
           "cnt": 7
         }
@@ -2080,7 +2080,98 @@
       "near_constant_uniqueness_ratio": 0.001,
       "iqr_zero_flagged": true,
       "source": "Manual 3.3 + census percentiles (I7)"
+    },
+    "near_constant_stratification": {
+      "genuinely_uninformative": [
+        "mod",
+        "fullTechTree",
+        "allowCheats",
+        "population",
+        "hideCivs",
+        "speedFactor",
+        "teamTogether",
+        "treatyLength",
+        "status",
+        "shared",
+        "verified"
+      ],
+      "genuinely_uninformative_count": 11,
+      "low_cardinality_categorical": [
+        "leaderboard",
+        "server",
+        "internalLeaderboardId",
+        "privacy",
+        "map",
+        "difficulty",
+        "startingAge",
+        "empireWarsMode",
+        "endingAge",
+        "gameMode",
+        "lockSpeed",
+        "lockTeams",
+        "mapSize",
+        "recordGame",
+        "regicideMode",
+        "gameVariant",
+        "resources",
+        "sharedExploration",
+        "speed",
+        "suddenDeathMode",
+        "antiquityMode",
+        "civilizationSet",
+        "teamPositions",
+        "turboMode",
+        "victory",
+        "revealMap",
+        "scenario",
+        "password",
+        "modDataset",
+        "rating",
+        "ratingDiff",
+        "color",
+        "colorHex",
+        "slot",
+        "team",
+        "won",
+        "country",
+        "civ",
+        "filename"
+      ],
+      "low_cardinality_categorical_count": 39,
+      "stratification_criteria": {
+        "genuinely_uninformative": "IQR=0 (numeric) OR dominant value > 95% of non-null rows (from top_k or boolean_census)",
+        "low_cardinality_categorical": "Flagged by uniqueness_ratio < 0.001 only due to large table size; dominant value <= 95% indicates meaningful variation",
+        "threshold_justification": "I7: 95% dominant-value threshold follows scikit-learn VarianceThreshold and caret nearZeroVar conventions (default frequency ratio 95/5)."
+      },
+      "data_sources": {
+        "iqr": "column_profiles (9 numeric columns)",
+        "top_k": "column_profiles (21 categorical columns)",
+        "boolean_census": "01_02_04 census (18 BOOLEAN columns)",
+        "won_distribution": "01_02_04 census (target column)",
+        "cardinality_heuristic": "column_profiles cardinality + I3 class (filename only)"
+      },
+      "cross_notebook_asymmetry_note": "The aoestats notebook applies NEAR_CONSTANT_CARDINALITY_CAP=5 in near-constant detection, resulting in 3 flagged columns vs 50 here. The difference is due to the much larger row count (277M vs 30M) making the uniqueness_ratio threshold more aggressive. The stratification resolves this by separating genuinely uninformative columns from low-cardinality categoricals."
     }
+  },
+  "temporal_coverage": {
+    "min_started": "2020-07-31 13:32:14",
+    "max_started": "2026-04-04 23:58:58",
+    "distinct_months": 70,
+    "missing_months": [],
+    "missing_months_count": 0
+  },
+  "cross_table_notes": {
+    "profiles_raw_dead_columns": [
+      "sharedHistory",
+      "twitchChannel",
+      "youtubeChannel",
+      "youtubeChannelName",
+      "discordId",
+      "discordName",
+      "discordInvitation"
+    ],
+    "source": "01_02_04 univariate census",
+    "note": "profiles_raw contains 7 columns that are 100% NULL. Not re-profiled in 01_03_01 (matches_raw scope only)."
   },
   "rating_stratified": [
     {
@@ -2111,7 +2202,7 @@
     "skewness_kurtosis_method": "DuckDB native SKEWNESS()/KURTOSIS() -- exact, full table",
     "skewness_kurtosis_columns": 10,
     "kurtosis_convention": "excess kurtosis (kurtosis - 3); DuckDB KURTOSIS() default",
-    "qq_ecdf_sample_rows": 55414
+    "qq_ecdf_sample_rows": 55952
   },
   "sql_queries": {
     "zero_count_numeric": "SELECT\n    SUM(CASE WHEN rating = 0 THEN 1 ELSE 0 END) AS rating_zero_count,\n    SUM(CASE WHEN ratingDiff = 0 THEN 1 ELSE 0 END) AS ratingDiff_zero_count,\n    SUM(CASE WHEN population = 0 THEN 1 ELSE 0 END) AS population_zero_count,\n    SUM(CASE WHEN slot = 0 THEN 1 ELSE 0 END) AS slot_zero_count,\n    SUM(CASE WHEN color = 0 THEN 1 ELSE 0 END) AS color_zero_count,\n    SUM(CASE WHEN team = 0 THEN 1 ELSE 0 END) AS team_zero_count,\n    SUM(CASE WHEN speedFactor = 0 THEN 1 ELSE 0 END) AS speedFactor_zero_count,\n    SUM(CASE WHEN treatyLength = 0 THEN 1 ELSE 0 END) AS treatyLength_zero_count,\n    SUM(CASE WHEN internalLeaderboardId = 0 THEN 1 ELSE 0 END) AS internalLeaderboardId_zero_count\nFROM matches_raw",
@@ -2142,6 +2233,8 @@
     "duplicate_totals": "\nSELECT SUM(cnt) AS total_dup_rows, COUNT(*) AS dup_groups\nFROM (\n    SELECT matchId, profileId, COUNT(*) AS cnt\n    FROM matches_raw\n    GROUP BY matchId, profileId\n    HAVING COUNT(*) > 1\n)\n",
     "memory_footprint": "\nSELECT\n    total_blocks * block_size AS total_bytes,\n    used_blocks * block_size AS used_bytes\nFROM pragma_database_size()\n",
     "rating_stratified": "\nSELECT\n    'full_table' AS scope,\n    COUNT(*) AS n_rows,\n    SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS rating_null,\n    ROUND(SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS rating_null_pct,\n    ROUND(AVG(rating), 2) AS rating_mean,\n    ROUND(STDDEV(rating), 2) AS rating_std,\n    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rating) AS rating_median,\n    SUM(CASE WHEN ratingDiff IS NULL THEN 1 ELSE 0 END) AS ratingdiff_null,\n    ROUND(AVG(ratingDiff), 4) AS ratingdiff_mean\nFROM matches_raw\n\nUNION ALL\n\nSELECT\n    '1v1_ranked' AS scope,\n    COUNT(*) AS n_rows,\n    SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS rating_null,\n    ROUND(SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS rating_null_pct,\n    ROUND(AVG(rating), 2) AS rating_mean,\n    ROUND(STDDEV(rating), 2) AS rating_std,\n    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rating) AS rating_median,\n    SUM(CASE WHEN ratingDiff IS NULL THEN 1 ELSE 0 END) AS ratingdiff_null,\n    ROUND(AVG(ratingDiff), 4) AS ratingdiff_mean\nFROM matches_raw\nWHERE leaderboard IN ('rm_1v1', 'qp_rm_1v1')\n",
+    "temporal_coverage": "\nSELECT\n    MIN(started) AS min_started,\n    MAX(started) AS max_started,\n    COUNT(DISTINCT DATE_TRUNC('month', started)) AS distinct_months\nFROM matches_raw\nWHERE started IS NOT NULL\n",
+    "temporal_gaps": "\nWITH monthly AS (\n    SELECT DISTINCT DATE_TRUNC('month', started) AS month\n    FROM matches_raw\n    WHERE started IS NOT NULL\n),\nexpected AS (\n    SELECT UNNEST(GENERATE_SERIES(\n        (SELECT MIN(month) FROM monthly),\n        (SELECT MAX(month) FROM monthly),\n        INTERVAL '1 MONTH'\n    )) AS month\n)\nSELECT e.month\nFROM expected e\nLEFT JOIN monthly m ON e.month = m.month\nWHERE m.month IS NULL\nORDER BY e.month\n",
     "qq_ecdf_sample": "\nSELECT\n    rating,\n    ratingDiff,\n    EXTRACT(EPOCH FROM (finished - started)) / 60.0 AS duration_min,\n    population,\n    speedFactor\nFROM (\n    SELECT *\n    FROM matches_raw\n    TABLESAMPLE BERNOULLI(0.020000 PERCENT)\n) sub\nWHERE finished > started\n"
   }
 }

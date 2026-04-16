@@ -116,7 +116,10 @@ artifact_dir = (
     reports_dir / "artifacts" / "01_exploration" / "03_profiling"
 )
 artifact_dir.mkdir(parents=True, exist_ok=True)
+plots_dir = artifact_dir / "plots"
+plots_dir.mkdir(parents=True, exist_ok=True)
 print(f"Artifact dir: {artifact_dir}")
+print(f"Plots dir: {plots_dir}")
 
 # %% [markdown]
 # ## Cell 4 -- SQL Queries Dict (Invariant #6)
@@ -1268,7 +1271,7 @@ fig_h2.suptitle(
 )
 plt.tight_layout()
 
-heatmap_path = artifact_dir / "01_03_01_completeness_heatmap.png"
+heatmap_path = plots_dir / "01_03_01_completeness_heatmap.png"
 fig_h2.savefig(str(heatmap_path), bbox_inches="tight", dpi=120)
 plt.close(fig_h2)
 print(f"Saved: {heatmap_path}")
@@ -1351,7 +1354,7 @@ fig_qq.suptitle(
 )
 plt.tight_layout()
 
-qq_path = artifact_dir / "01_03_01_qq_plots.png"
+qq_path = plots_dir / "01_03_01_qq_plots.png"
 fig_qq.savefig(str(qq_path), bbox_inches="tight", dpi=120)
 plt.close(fig_qq)
 print(f"Saved: {qq_path}")
@@ -1398,7 +1401,7 @@ fig_ecdf.suptitle(
 )
 plt.tight_layout()
 
-ecdf_path = artifact_dir / "01_03_01_ecdf_key_columns.png"
+ecdf_path = plots_dir / "01_03_01_ecdf_key_columns.png"
 fig_ecdf.savefig(str(ecdf_path), bbox_inches="tight", dpi=120)
 plt.close(fig_ecdf)
 print(f"Saved: {ecdf_path}")
@@ -1828,9 +1831,11 @@ Both columns are INTEGER with zero NULLs, confirmed by schema YAML and runtime v
 
 | File | Description |
 |------|-------------|
-| `01_03_01_completeness_heatmap.png` | Effective missingness per column per table. MMR=83.65% sentinel missingness dominates. |
-| `01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
-| `01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
+| `plots/01_03_01_completeness_heatmap.png` | Effective missingness per column per table. MMR=83.65% sentinel missingness dominates. |
+| `plots/01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
+| `plots/01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
+
+**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (MMR, APM, SQ) and bounded distributions (supplyCappedPercent). QQ plots are the stronger diagnostic tool per Tukey (1977).
 
 ---
 
@@ -1865,9 +1870,9 @@ print(f"Saved: {md_path}")
 # %%
 json_path_chk = artifact_dir / "01_03_01_systematic_profile.json"
 md_path_chk = artifact_dir / "01_03_01_systematic_profile.md"
-heatmap_path_chk = artifact_dir / "01_03_01_completeness_heatmap.png"
-qq_path_chk = artifact_dir / "01_03_01_qq_plots.png"
-ecdf_path_chk = artifact_dir / "01_03_01_ecdf_key_columns.png"
+heatmap_path_chk = plots_dir / "01_03_01_completeness_heatmap.png"
+qq_path_chk = plots_dir / "01_03_01_qq_plots.png"
+ecdf_path_chk = plots_dir / "01_03_01_ecdf_key_columns.png"
 
 for p in [json_path_chk, md_path_chk, heatmap_path_chk, qq_path_chk, ecdf_path_chk]:
     assert p.exists(), f"Missing artifact: {p}"

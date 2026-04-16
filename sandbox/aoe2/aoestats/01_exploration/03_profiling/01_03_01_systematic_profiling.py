@@ -57,6 +57,8 @@ db = get_notebook_db("aoe2", "aoestats")
 reports_dir = get_reports_dir("aoe2", "aoestats")
 profiling_dir = reports_dir / "artifacts" / "01_exploration" / "03_profiling"
 profiling_dir.mkdir(parents=True, exist_ok=True)
+plots_dir = profiling_dir / "plots"
+plots_dir.mkdir(parents=True, exist_ok=True)
 
 census_path = reports_dir / "artifacts" / "01_exploration" / "02_eda" / "01_02_04_univariate_census.json"
 with open(census_path) as f:
@@ -873,12 +875,22 @@ print(f"DB memory footprint from census: {footprint_matches_est:,} bytes" if foo
 
 # %%
 # Build completeness matrix: null_pct per column for heatmap
+# T01 fix: Use composite (table, col) keys to avoid collision between
+# matches_raw and players_raw columns with the same name (filename, game_id).
 all_profiles = {}
-all_profiles.update(matches_column_profiles)
-all_profiles.update(players_column_profiles)
+for col, p in matches_column_profiles.items():
+    all_profiles[(p["table"], col)] = p
+for col, p in players_column_profiles.items():
+    all_profiles[(p["table"], col)] = p
+
+assert len(all_profiles) == len(matches_column_profiles) + len(players_column_profiles), (
+    f"Composite key collision: {len(all_profiles)} != "
+    f"{len(matches_column_profiles)} + {len(players_column_profiles)}"
+)
+assert len(all_profiles) == 32, f"Expected 32 total columns, got {len(all_profiles)}"
 
 completeness_data = []
-for col, p in sorted(all_profiles.items()):
+for (table, col), p in sorted(all_profiles.items()):
     completeness_data.append({
         "column": col,
         "table": p["table"],
@@ -925,7 +937,7 @@ critical_findings = {
                               # (cardinality=1) plus buffer.
 }
 
-for col, p in all_profiles.items():
+for (table, col), p in all_profiles.items():
     if p["null_pct"] == 100.0:
         critical_findings["dead_fields"].append(col)
     if p.get("cardinality", 0) == 1:
@@ -1002,7 +1014,7 @@ for i, v in enumerate(p_vals[0]):
 fig.colorbar(im_p, ax=[ax_m, ax_p], shrink=0.4, label="NULL %")
 fig.suptitle("Completeness Heatmap -- aoestats (I3 temporal class annotated)", fontsize=12)
 fig.tight_layout()
-fig.savefig(profiling_dir / "01_03_01_completeness_heatmap.png", dpi=150, bbox_inches="tight")
+fig.savefig(plots_dir / "01_03_01_completeness_heatmap.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print("Saved: 01_03_01_completeness_heatmap.png")
 
@@ -1039,7 +1051,7 @@ for i, col in enumerate(qq_m_cols):
     axes[i].get_lines()[0].set_markersize(1)
 fig.suptitle(f"QQ Plots -- matches_raw (N={len(df_qq_m):,}, RESERVOIR sample)", fontsize=12)
 fig.tight_layout()
-fig.savefig(profiling_dir / "01_03_01_qq_matches.png", dpi=150, bbox_inches="tight")
+fig.savefig(plots_dir / "01_03_01_qq_matches.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print("Saved: 01_03_01_qq_matches.png")
 
@@ -1080,7 +1092,7 @@ for i, col in enumerate(qq_p_cols):
         axes_flat[i].set_title(f"QQ: {col} [N={n_valid:,}]\n(insufficient non-null data)", fontsize=10)
 fig.suptitle(f"QQ Plots -- players_raw (RESERVOIR sample, N_sampled={len(df_qq_p):,})", fontsize=12)
 fig.tight_layout()
-fig.savefig(profiling_dir / "01_03_01_qq_players.png", dpi=150, bbox_inches="tight")
+fig.savefig(plots_dir / "01_03_01_qq_players.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print("Saved: 01_03_01_qq_players.png")
 
@@ -1124,7 +1136,7 @@ for i, col in enumerate(ecdf_cols):
         axes_flat[i].axhline(y=q, color="gray", linestyle=ls, alpha=0.5)
 fig.suptitle(f"Empirical CDF -- Key Pre-Game Columns (N={len(df_ecdf):,})", fontsize=12)
 fig.tight_layout()
-fig.savefig(profiling_dir / "01_03_01_ecdf_key_columns.png", dpi=150, bbox_inches="tight")
+fig.savefig(plots_dir / "01_03_01_ecdf_key_columns.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 print("Saved: 01_03_01_ecdf_key_columns.png")
 
@@ -1158,8 +1170,8 @@ md_lines = [
     "|--------|-------------|--------------|---------------|",
 ]
 # Sort by table then column
-for col in sorted(all_profiles.keys(), key=lambda c: (all_profiles[c]["table"], c)):
-    p = all_profiles[col]
+for (table, col) in sorted(all_profiles.keys()):
+    p = all_profiles[(table, col)]
     md_lines.append(f"| {col} | {p['table']} | {p['dtype']} | {p['temporal_class']} |")
 
 md_lines.extend([
@@ -1183,10 +1195,10 @@ md_lines.extend([
     "## Plot Index\n",
     "| # | Title | Filename | Description |",
     "|---|-------|----------|-------------|",
-    "| 1 | Completeness Heatmap | `01_03_01_completeness_heatmap.png` | NULL % per column, I3 annotated |",
-    "| 2 | QQ Plots (matches_raw) | `01_03_01_qq_matches.png` | duration, avg_elo, team_0/1_elo |",
-    "| 3 | QQ Plots (players_raw) | `01_03_01_qq_players.png` | old/new_rating, match_rating_diff, age uptimes (N per panel in title) |",
-    "| 4 | ECDF Key Columns | `01_03_01_ecdf_key_columns.png` | team_0/1_elo, old_rating, match_rating_diff |",
+    "| 1 | Completeness Heatmap | `plots/01_03_01_completeness_heatmap.png` | NULL % per column, I3 annotated |",
+    "| 2 | QQ Plots (matches_raw) | `plots/01_03_01_qq_matches.png` | duration, avg_elo, team_0/1_elo |",
+    "| 3 | QQ Plots (players_raw) | `plots/01_03_01_qq_players.png` | old/new_rating, match_rating_diff, age uptimes (N per panel in title) |",
+    "| 4 | ECDF Key Columns | `plots/01_03_01_ecdf_key_columns.png` | team_0/1_elo, old_rating, match_rating_diff |",
     "",
 ])
 
@@ -1205,10 +1217,10 @@ print(f"Markdown artifact written: {md_path} ({md_path.stat().st_size:,} bytes)"
 # %%
 expected_artifacts = [
     ("01_03_01_systematic_profile.json", profiling_dir),
-    ("01_03_01_completeness_heatmap.png", profiling_dir),
-    ("01_03_01_qq_matches.png", profiling_dir),
-    ("01_03_01_qq_players.png", profiling_dir),
-    ("01_03_01_ecdf_key_columns.png", profiling_dir),
+    ("01_03_01_completeness_heatmap.png", plots_dir),
+    ("01_03_01_qq_matches.png", plots_dir),
+    ("01_03_01_qq_players.png", plots_dir),
+    ("01_03_01_ecdf_key_columns.png", plots_dir),
     ("01_03_01_systematic_profile.md", profiling_dir),
 ]
 for name, parent in expected_artifacts:

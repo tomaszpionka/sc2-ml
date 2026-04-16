@@ -151,7 +151,7 @@ degeneracy determination from census IQR statistics (I7 -- no magic numbers).
 ### Open questions
 
 - Does the ratingDiff/rating cluster in the Spearman heatmap confirm that rating
-  is partially post-game? Requires Phase 02 row-level join with ratings_raw.
+  is partially post-game? Requires 01_04 row-level join with ratings_raw.
 - Can engineered features (rolling win rates, Elo trajectories, civ matchup stats)
   recover sufficient pre-game signal for Phase 02 modelling?
 
@@ -209,12 +209,12 @@ from 01_02_04 census at runtime (Invariant #7). POST-GAME annotations applied to
 ### Decisions
 
 - `ratingDiff` → excluded from all pre-game feature sets (confirmed leakage, I3)
-- `rating` → ambiguous; Phase 02 row-level verification required before use
+- `rating` → ambiguous; 01_04 row-level verification required before use
 - `duration` → post-game descriptor; usable for EDA characterization but not prediction
 
 ### Open questions
 
-- Is `rating` = pre_game_rating + ratingDiff (post-game)? Requires Phase 02 join with ratings_raw.
+- Is `rating` = pre_game_rating + ratingDiff (post-game)? Requires 01_04 join with ratings_raw.
 - Does leaderboard_id (pre-game) have independent predictive power beyond rating?
 
 ---
@@ -261,7 +261,7 @@ All clip thresholds and bin widths derived from census artifact at runtime (Inva
 
 - Duration clip: p95 = 3,789s = 63.15 min (derived from census `match_duration_stats[0]["p95_secs"]`). Differs from aoestats (p95 = 78.6 min) — both use p95-derived clipping; subtitle documents cross-dataset difference.
 - NULL co-occurrence: rendered as annotated 2×2 matplotlib table (not imshow) — 4-cell values span 6 orders of magnitude, making any linear colormap uninformative.
-- `rating` histogram: no I3 annotation applied; subtitle flags the ambiguity pending Phase 02 row-level co-occurrence check.
+- `rating` histogram: no I3 annotation applied; subtitle flags the ambiguity pending 01_04 row-level co-occurrence check.
 - `ratingDiff` histogram: POST-GAME annotation applied (range [-174, +319] is outcome-derived).
 
 ### Decisions deferred
@@ -347,7 +347,7 @@ Primary prediction scope: rm_1v1 (26.8M matches) + qp_rm_1v1 (3.7M matches) = 30
 
 **Confirmed post_game:** `ratingDiff` (range [-174, 319], direct leakage); `finished`; `won` (target).
 
-**Critical ambiguity — `matches_raw.rating`:** Classified `ambiguous_pre_or_post`. Identical 42.46% NULL rate for `rating` and `ratingDiff` suggests simultaneous population. If `rating` is post-match snapshot, it encodes the outcome via `rating = pre_rating + ratingDiff`. Row-level co-occurrence check required in Phase 02 — this is the single most important open question for aoe2companion feature engineering.
+**Critical ambiguity — `matches_raw.rating`:** Classified `ambiguous_pre_or_post`. Identical 42.46% NULL rate for `rating` and `ratingDiff` suggests simultaneous population. If `rating` is post-match snapshot, it encodes the outcome via `rating = pre_rating + ratingDiff`. Row-level co-occurrence check required in 01_04 — this is the single most important open question for aoe2companion feature engineering.
 
 **ratings_raw:** Time-series ratings safe only with strict temporal join (`rating.date < match.started`).
 
@@ -376,7 +376,7 @@ Primary prediction scope: rm_1v1 (26.8M matches) + qp_rm_1v1 (3.7M matches) = 30
 
 ### Decisions deferred
 
-- Row-level `rating`/`ratingDiff` co-occurrence check — Phase 02 (verify: does `rating - ratingDiff` = prior rating in time series?)
+- Row-level `rating`/`ratingDiff` co-occurrence check — 01_04 (verify: does `rating - ratingDiff` = prior rating in time series?)
 - Deduplication of 8.8M duplicate (matchId, profileId) pairs
 - Root cause of internally inconsistent won values (both_true, both_false)
 - `ratings_raw.games` max outlier capping/exclusion strategy

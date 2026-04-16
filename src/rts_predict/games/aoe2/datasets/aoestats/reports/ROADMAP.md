@@ -541,10 +541,10 @@ outputs:
   data_artifacts:
     - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
   plots:
-    - "artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png"
-    - "artifacts/01_exploration/03_profiling/01_03_01_qq_matches.png"
-    - "artifacts/01_exploration/03_profiling/01_03_01_qq_players.png"
-    - "artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_completeness_heatmap.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_qq_matches.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_qq_players.png"
+    - "artifacts/01_exploration/03_profiling/plots/01_03_01_ecdf_key_columns.png"
   report: "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md"
 reproducibility: "Code and output in the paired notebook."
 scientific_invariants_applied:
