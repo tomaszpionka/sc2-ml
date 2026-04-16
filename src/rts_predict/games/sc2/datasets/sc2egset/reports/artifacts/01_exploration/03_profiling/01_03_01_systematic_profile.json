@@ -628,7 +628,56 @@
         "column_count": 9,
         "index_count": 0
       }
-    ]
+    ],
+    "temporal_coverage": {
+      "time_utc_min": "2016-01-07T02:21:46.002Z",
+      "time_utc_max": "2024-12-01T23:48:45.2511615Z",
+      "distinct_months": 76,
+      "gap_months": [
+        "2016-04",
+        "2016-05",
+        "2016-06",
+        "2016-08",
+        "2016-09",
+        "2016-10",
+        "2016-11",
+        "2016-12",
+        "2017-01",
+        "2017-08",
+        "2017-12",
+        "2018-04",
+        "2018-05",
+        "2018-08",
+        "2019-12",
+        "2020-01",
+        "2020-10",
+        "2021-04",
+        "2022-03",
+        "2022-04",
+        "2023-01",
+        "2023-03",
+        "2023-04",
+        "2023-07",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2024-01",
+        "2024-03",
+        "2024-04",
+        "2024-07",
+        "2024-10"
+      ]
+    },
+    "startloc_verification": {
+      "startLocX_null": 0,
+      "startLocY_null": 0,
+      "startLocX_min": 0,
+      "startLocX_max": 211,
+      "startLocY_min": 0,
+      "startLocY_max": 207,
+      "startLocX_cardinality": 117,
+      "startLocY_cardinality": 115
+    }
   },
   "critical_findings": {
     "dead_fields": [],
@@ -640,27 +689,27 @@
       "trackerEvtsErr"
     ],
     "near_constant": [
-      "userID",
-      "color_g",
-      "map_size_x",
-      "selectedRace",
-      "is_blizzard_map",
-      "color_b",
-      "isInClan",
-      "race",
-      "MMR",
-      "color_a",
-      "is_blizzard_map_init",
-      "realm",
-      "region",
-      "map_size_y",
-      "result",
-      "max_players",
-      "highestLeague",
-      "color_r",
-      "startDir",
       "handicap",
-      "playerID"
+      "startDir",
+      "race",
+      "map_size_y",
+      "color_r",
+      "is_blizzard_map",
+      "userID",
+      "selectedRace",
+      "is_blizzard_map_init",
+      "result",
+      "highestLeague",
+      "max_players",
+      "realm",
+      "color_g",
+      "MMR",
+      "color_b",
+      "map_size_x",
+      "region",
+      "isInClan",
+      "playerID",
+      "color_a"
     ],
     "sentinel_columns": [
       {
@@ -678,6 +727,46 @@
         "sentinel_count": 2,
         "sentinel_pct": 0.0045,
         "interpretation": "INT32_MIN sentinel for missing SQ value"
+      },
+      {
+        "column": "APM",
+        "table": "replay_players_raw",
+        "sentinel_value": 0,
+        "sentinel_count": 1132,
+        "sentinel_pct": 2.5258,
+        "interpretation": "APM=0 may indicate observer or disconnect"
+      },
+      {
+        "column": "MMR",
+        "table": "replay_players_raw",
+        "sentinel_value": "negative",
+        "sentinel_count": 159,
+        "sentinel_pct": 0.3548,
+        "interpretation": "Negative MMR values \u2014 anomalous sentinel"
+      },
+      {
+        "column": "map_size",
+        "table": "replays_meta_raw",
+        "sentinel_value": 0,
+        "sentinel_count": 273,
+        "sentinel_pct": 1.2193,
+        "interpretation": "mapSizeX=0 AND mapSizeY=0 \u2014 missing or default map size"
+      },
+      {
+        "column": "handicap",
+        "table": "replay_players_raw",
+        "sentinel_value": 0,
+        "sentinel_count": 2,
+        "sentinel_pct": 0.0045,
+        "interpretation": "handicap=0 \u2014 standard/no handicap applied"
+      },
+      {
+        "column": "selectedRace",
+        "table": "replay_players_raw",
+        "sentinel_value": "",
+        "sentinel_count": 1110,
+        "sentinel_pct": 2.4767,
+        "interpretation": "Empty selectedRace string \u2014 race not specified"
       }
     ]
   },
@@ -755,7 +844,7 @@
       "constant": "Single-value columns. No predictive information."
     }
   },
-  "elapsed_game_loops_reclassification": "elapsed_game_loops reclassified as POST-GAME on 2026-04-15. The census JSON (01_02_04) still shows it as 'in_game'; this profiling step records the corrected classification.",
+  "elapsed_game_loops_reclassification": "elapsed_game_loops classified POST-GAME, consistent with the census artifact (01_02_04) which also records it under 'post_game' in the I3 classification.",
   "sql_queries": {
     "rp_numeric_profile": "\nWITH base AS (\n    SELECT *\n    FROM replay_players_raw\n)\nSELECT\n    'MMR' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(MMR) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(MMR)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN MMR = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN MMR = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT MMR) AS cardinality,\n    ROUND(COUNT(DISTINCT MMR)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(MMR) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY MMR) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY MMR) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY MMR) AS p95,\n    MAX(MMR) AS max_val,\n    ROUND(AVG(MMR), 4) AS mean_val,\n    ROUND(STDDEV(MMR), 4) AS std_val,\n    ROUND(SKEWNESS(MMR), 4) AS skewness,\n    ROUND(KURTOSIS(MMR), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'MMR_rated_only' AS column_name,\n    SUM(CASE WHEN MMR > 0 THEN 1 ELSE 0 END) AS n_rows,\n    0 AS null_count,\n    0.0 AS null_pct,\n    0 AS zero_count,\n    0.0 AS zero_pct,\n    COUNT(DISTINCT CASE WHEN MMR > 0 THEN MMR END) AS cardinality,\n    ROUND(COUNT(DISTINCT CASE WHEN MMR > 0 THEN MMR END)::DOUBLE\n          / NULLIF(SUM(CASE WHEN MMR > 0 THEN 1 ELSE 0 END), 0), 6) AS uniqueness_ratio,\n    MIN(CASE WHEN MMR > 0 THEN MMR END) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p95,\n    MAX(CASE WHEN MMR > 0 THEN MMR END) AS max_val,\n    ROUND(AVG(CASE WHEN MMR > 0 THEN MMR END), 4) AS mean_val,\n    ROUND(STDDEV(CASE WHEN MMR > 0 THEN MMR END), 4) AS std_val,\n    ROUND(SKEWNESS(MMR) FILTER (WHERE MMR > 0), 4) AS skewness,\n    ROUND(KURTOSIS(MMR) FILTER (WHERE MMR > 0), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'APM' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(APM) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(APM)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN APM = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN APM = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT APM) AS cardinality,\n    ROUND(COUNT(DISTINCT APM)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(APM) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY APM) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY APM) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY APM) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY APM) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY APM) AS p95,\n    MAX(APM) AS max_val,\n    ROUND(AVG(APM), 4) AS mean_val,\n    ROUND(STDDEV(APM), 4) AS std_val,\n    ROUND(SKEWNESS(APM), 4) AS skewness,\n    ROUND(KURTOSIS(APM), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'SQ' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(SQ) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(SQ)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN SQ = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN SQ = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT SQ) AS cardinality,\n    ROUND(COUNT(DISTINCT SQ)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(SQ) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY SQ) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY SQ) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY SQ) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY SQ) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY SQ) AS p95,\n    MAX(SQ) AS max_val,\n    ROUND(AVG(SQ), 4) AS mean_val,\n    ROUND(STDDEV(SQ), 4) AS std_val,\n    ROUND(SKEWNESS(SQ), 4) AS skewness,\n    ROUND(KURTOSIS(SQ), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'SQ_no_sentinel' AS column_name,\n    SUM(CASE WHEN SQ > -2147483648 THEN 1 ELSE 0 END) AS n_rows,\n    0 AS null_count,\n    0.0 AS null_pct,\n    SUM(CASE WHEN SQ = 0 AND SQ > -2147483648 THEN 1 ELSE 0 END) AS zero_count,\n    0.0 AS zero_pct,\n    COUNT(DISTINCT CASE WHEN SQ > -2147483648 THEN SQ END) AS cardinality,\n    ROUND(COUNT(DISTINCT CASE WHEN SQ > -2147483648 THEN SQ END)::DOUBLE\n          / NULLIF(SUM(CASE WHEN SQ > -2147483648 THEN 1 ELSE 0 END), 0), 6) AS uniqueness_ratio,\n    MIN(CASE WHEN SQ > -2147483648 THEN SQ END) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p95,\n    MAX(CASE WHEN SQ > -2147483648 THEN SQ END) AS max_val,\n    ROUND(AVG(CASE WHEN SQ > -2147483648 THEN SQ END), 4) AS mean_val,\n    ROUND(STDDEV(CASE WHEN SQ > -2147483648 THEN SQ END), 4) AS std_val,\n    ROUND(SKEWNESS(SQ) FILTER (WHERE SQ > -2147483648), 4) AS skewness,\n    ROUND(KURTOSIS(SQ) FILTER (WHERE SQ > -2147483648), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'supplyCappedPercent' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(supplyCappedPercent) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(supplyCappedPercent)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN supplyCappedPercent = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN supplyCappedPercent = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT supplyCappedPercent) AS cardinality,\n    ROUND(COUNT(DISTINCT supplyCappedPercent)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(supplyCappedPercent) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p95,\n    MAX(supplyCappedPercent) AS max_val,\n    ROUND(AVG(supplyCappedPercent), 4) AS mean_val,\n    ROUND(STDDEV(supplyCappedPercent), 4) AS std_val,\n    ROUND(SKEWNESS(supplyCappedPercent), 4) AS skewness,\n    ROUND(KURTOSIS(supplyCappedPercent), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'handicap' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(handicap) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(handicap)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN handicap = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN handicap = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT handicap) AS cardinality,\n    ROUND(COUNT(DISTINCT handicap)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(handicap) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY handicap) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY handicap) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY handicap) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY handicap) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY handicap) AS p95,\n    MAX(handicap) AS max_val,\n    ROUND(AVG(handicap), 4) AS mean_val,\n    ROUND(STDDEV(handicap), 4) AS std_val,\n    ROUND(SKEWNESS(handicap), 4) AS skewness,\n    ROUND(KURTOSIS(handicap), 4) AS kurtosis\nFROM base\n",
     "rp_null_cardinality": "\nSELECT\n    column_name,\n    COUNT(*) - COUNT(col_val) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(col_val)) / COUNT(*), 4) AS null_pct,\n    COUNT(DISTINCT col_val) AS cardinality,\n    ROUND(COUNT(DISTINCT col_val)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio\nFROM (\n    UNPIVOT replay_players_raw\n    ON COLUMNS(*)\n    INTO NAME column_name VALUE col_val\n)\nGROUP BY column_name\nORDER BY column_name\n",
@@ -781,6 +870,13 @@
     "class_balance": "\nSELECT\n    result,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM replay_players_raw\nGROUP BY result\nORDER BY cnt DESC\n",
     "cross_table_linkage": "\nWITH rp_replays AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replay_players_raw\n),\nrm_replays AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replays_meta_raw\n)\nSELECT\n    (SELECT COUNT(*) FROM rp_replays) AS rp_distinct_replays,\n    (SELECT COUNT(*) FROM rm_replays) AS rm_distinct_replays,\n    (SELECT COUNT(*) FROM rp_replays\n     WHERE replay_id NOT IN (SELECT replay_id FROM rm_replays)) AS rp_orphans,\n    (SELECT COUNT(*) FROM rm_replays\n     WHERE replay_id NOT IN (SELECT replay_id FROM rp_replays)) AS rm_orphans\n",
     "memory_footprint": "\nSELECT\n    database_name,\n    table_name,\n    estimated_size,\n    column_count,\n    index_count\nFROM duckdb_tables()\nWHERE table_name IN ('replay_players_raw', 'replays_meta_raw', 'map_aliases_raw')\nORDER BY table_name\n",
+    "sentinel_mmr_negative": "\nSELECT\n    COUNT(*) AS mmr_negative_count,\n    MIN(MMR) AS mmr_min_negative,\n    MAX(MMR) AS mmr_max_negative,\n    ROUND(100.0 * COUNT(*) / 44817, 4) AS mmr_negative_pct\nFROM replay_players_raw\nWHERE MMR < 0\n",
+    "sentinel_map_size_zero": "\nSELECT COUNT(*) AS map_size_zero_count\nFROM replays_meta_raw\nWHERE initData.gameDescription.mapSizeX = 0\n  AND initData.gameDescription.mapSizeY = 0\n",
+    "sentinel_selectedrace_empty": "\nSELECT COUNT(*) AS selected_race_empty_count\nFROM replay_players_raw\nWHERE selectedRace = ''\n",
+    "temporal_coverage": "\nSELECT\n    MIN(details.timeUTC) AS time_utc_min,\n    MAX(details.timeUTC) AS time_utc_max,\n    COUNT(DISTINCT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m'))\n        AS distinct_months\nFROM replays_meta_raw\nWHERE details.timeUTC IS NOT NULL\n",
+    "temporal_trycast_verification": "\nSELECT COUNT(DISTINCT details.timeUTC) AS raw_distinct\nFROM replays_meta_raw\nWHERE details.timeUTC IS NOT NULL\n",
+    "temporal_month_gaps": "\nWITH parsed AS (\n    SELECT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m') AS ym\n    FROM replays_meta_raw\n    WHERE details.timeUTC IS NOT NULL\n),\nobserved AS (\n    SELECT DISTINCT ym FROM parsed WHERE ym IS NOT NULL\n),\ndate_range AS (\n    SELECT MIN(ym) AS min_ym, MAX(ym) AS max_ym FROM observed\n),\nall_months AS (\n    SELECT strftime(\n        (SELECT TRY_CAST(min_ym || '-01' AS DATE) FROM date_range)\n        + INTERVAL (i) MONTH,\n        '%Y-%m'\n    ) AS ym\n    FROM generate_series(0,\n        (SELECT DATEDIFF('month',\n            TRY_CAST(min_ym || '-01' AS DATE),\n            TRY_CAST(max_ym || '-01' AS DATE))\n         FROM date_range)\n    ) AS t(i)\n)\nSELECT am.ym AS gap_month\nFROM all_months am\nLEFT JOIN observed o ON am.ym = o.ym\nWHERE o.ym IS NULL\nORDER BY am.ym\n",
+    "startloc_verification": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(startLocX) AS startLocX_null,\n    COUNT(*) - COUNT(startLocY) AS startLocY_null,\n    SUM(CASE WHEN startLocX < 0 THEN 1 ELSE 0 END) AS startLocX_negative,\n    SUM(CASE WHEN startLocY < 0 THEN 1 ELSE 0 END) AS startLocY_negative,\n    MIN(startLocX) AS startLocX_min,\n    MAX(startLocX) AS startLocX_max,\n    MIN(startLocY) AS startLocY_min,\n    MAX(startLocY) AS startLocY_max,\n    COUNT(DISTINCT startLocX) AS startLocX_cardinality,\n    COUNT(DISTINCT startLocY) AS startLocY_cardinality\nFROM replay_players_raw\n",
     "qq_mmr": "\nSELECT MMR\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss') AND MMR > 0\n-- I7: MMR > 0 excludes unrated sentinel (83.65% of rows). Rated-only QQ.\n",
     "qq_ingame": "\nSELECT APM, SQ, supplyCappedPercent\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n-- I7: SQ > INT32_MIN excludes 2 sentinel rows. APM/supplyCappedPercent unfiltered.\n",
     "qq_egl_data": "\nSELECT header.elapsedGameLoops AS elapsed_game_loops\nFROM replays_meta_raw\n"
@@ -797,6 +893,37 @@
       "count": 2,
       "pct": 0.0045,
       "interpretation": "INT32_MIN sentinel for missing SQ value"
+    },
+    "APM": {
+      "sentinel_value": 0,
+      "count": 1132,
+      "pct": 2.5258,
+      "interpretation": "APM=0 may indicate observer or disconnect"
+    },
+    "MMR_negative": {
+      "sentinel_value": "negative",
+      "count": 159,
+      "pct": 0.3548,
+      "interpretation": "Negative MMR values \u2014 anomalous sentinel"
+    },
+    "map_size": {
+      "sentinel_value": 0,
+      "count": 273,
+      "pct": 1.2193,
+      "table": "replays_meta_raw",
+      "interpretation": "mapSizeX=0 AND mapSizeY=0 \u2014 missing or default map size"
+    },
+    "handicap": {
+      "sentinel_value": 0,
+      "count": 2,
+      "pct": 0.0045,
+      "interpretation": "handicap=0 \u2014 standard/no handicap applied"
+    },
+    "selectedRace": {
+      "sentinel_value": "",
+      "count": 1110,
+      "pct": 2.4767,
+      "interpretation": "Empty selectedRace string \u2014 race not specified"
     }
   }
 }

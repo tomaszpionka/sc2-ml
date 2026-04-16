@@ -19,6 +19,15 @@ merged to `master`.
 
 ### Removed
 
+## [3.7.2] — 2026-04-16 (PR #TBD: fix/sc2egset-01-03-01-profile-gaps)
+
+### Fixed
+- sc2egset 01_03_01 sentinel summary expanded from 2 to 7 patterns (APM=0, MMR<0,
+  map_size=0, handicap=0, selectedRace="") with runtime SQL counts (I7)
+- sc2egset 01_03_01 temporal coverage added (2016-01 to 2024-12, 76 months, 32 gaps)
+- sc2egset 01_03_01 startLocX/startLocY type and range verification added
+- sc2egset stale elapsed_game_loops reclassification claim fixed in notebook source
+
 ## [3.7.1] — 2026-04-16 (PR #TBD: fix/retroactive-tracking-and-logs)
 
 ### Fixed

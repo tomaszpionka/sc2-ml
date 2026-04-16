@@ -11,8 +11,7 @@
 
 ## Temporal Classification (Invariant #3)
 
-> Note: `elapsed_game_loops` was reclassified as **POST-GAME** on 2026-04-15.
-> The census artifact (01_02_04) still shows it as `in_game`; this notebook records the corrected classification.
+> Note: `elapsed_game_loops` classified **POST-GAME**, consistent with the census artifact (01_02_04) which also records it under `post_game` in the I3 classification.
 
 | Table | Column | I3 Classification |
 |-------|--------|-------------------|
@@ -216,6 +215,37 @@ These 5 columns must be dropped before feature engineering (Phase 02).
 |--------|-------|---------------|-------|-----|---------------|
 | MMR | replay_players_raw | 0 | 37,489 | 83.65% | Unrated player |
 | SQ | replay_players_raw | INT32_MIN (-2147483648) | 2 | 0.0045% | Missing SQ value |
+| APM | replay_players_raw | 0 | 1,132 | 2.5258% | Observer or disconnect |
+| MMR (negative) | replay_players_raw | negative | 159 | 0.3548% | Anomalous sentinel |
+| map_size* | replays_meta_raw | 0 | 273 | 1.2193% | Missing/default map size |
+| handicap | replay_players_raw | 0 | 2 | 0.0045% | Standard/no handicap |
+| selectedRace | replay_players_raw | (empty) | 1,110 | 2.4767% | Race not specified |
+
+\* map_size uses replays_meta_raw (N=22,390); all others use replay_players_raw (N=44,817)
+
+---
+
+## Temporal Coverage
+
+| Metric | Value |
+|--------|-------|
+| Earliest timestamp | 2016-01-07T02:21:46.002Z |
+| Latest timestamp | 2024-12-01T23:48:45.2511615Z |
+| Distinct calendar months | 76 |
+| Calendar-month gaps | 32 (2016-04, 2016-05, 2016-06, 2016-08, 2016-09, 2016-10, 2016-11, 2016-12, 2017-01, 2017-08, 2017-12, 2018-04, 2018-05, 2018-08, 2019-12, 2020-01, 2020-10, 2021-04, 2022-03, 2022-04, 2023-01, 2023-03, 2023-04, 2023-07, 2023-09, 2023-10, 2023-11, 2024-01, 2024-03, 2024-04, 2024-07, 2024-10) |
+
+---
+
+## startLocX/startLocY Verification
+
+| Metric | startLocX | startLocY |
+|--------|-----------|-----------|
+| NULLs | 0 | 0 |
+| Min | 0 | 0 |
+| Max | 211 | 207 |
+| Cardinality | 117 | 115 |
+
+Both columns are INTEGER with zero NULLs, confirmed by schema YAML and runtime verification.
 
 ---
 
@@ -248,8 +278,6 @@ These 5 columns must be dropped before feature engineering (Phase 02).
 | `01_03_01_completeness_heatmap.png` | Effective missingness per column per table. MMR=83.65% sentinel missingness dominates. |
 | `01_03_01_qq_plots.png` | Normal QQ plots for MMR (rated), APM, SQ (no sentinel), supplyCappedPercent, elapsed_game_loops (POST-GAME). |
 | `01_03_01_ecdf_key_columns.png` | ECDF for MMR (rated), APM, SQ (no sentinel). |
-
-**Distribution methods applied:** Histograms (01_02_05), QQ plots, ECDFs. KDE omitted: histograms and QQ plots provide equivalent shape assessment for these distributions; KDE adds smoothing artifacts on discrete integer columns (MMR, APM, SQ) and bounded distributions (supplyCappedPercent). QQ plots are the stronger diagnostic tool per Tukey (1977).
 
 ---
 
@@ -822,6 +850,100 @@ SELECT
 FROM duckdb_tables()
 WHERE table_name IN ('replay_players_raw', 'replays_meta_raw', 'map_aliases_raw')
 ORDER BY table_name
+```
+
+### sentinel_mmr_negative
+```sql
+SELECT
+    COUNT(*) AS mmr_negative_count,
+    MIN(MMR) AS mmr_min_negative,
+    MAX(MMR) AS mmr_max_negative,
+    ROUND(100.0 * COUNT(*) / 44817, 4) AS mmr_negative_pct
+FROM replay_players_raw
+WHERE MMR < 0
+```
+
+### sentinel_map_size_zero
+```sql
+SELECT COUNT(*) AS map_size_zero_count
+FROM replays_meta_raw
+WHERE initData.gameDescription.mapSizeX = 0
+  AND initData.gameDescription.mapSizeY = 0
+```
+
+### sentinel_selectedrace_empty
+```sql
+SELECT COUNT(*) AS selected_race_empty_count
+FROM replay_players_raw
+WHERE selectedRace = ''
+```
+
+### temporal_coverage
+```sql
+SELECT
+    MIN(details.timeUTC) AS time_utc_min,
+    MAX(details.timeUTC) AS time_utc_max,
+    COUNT(DISTINCT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m'))
+        AS distinct_months
+FROM replays_meta_raw
+WHERE details.timeUTC IS NOT NULL
+```
+
+### temporal_trycast_verification
+```sql
+SELECT COUNT(DISTINCT details.timeUTC) AS raw_distinct
+FROM replays_meta_raw
+WHERE details.timeUTC IS NOT NULL
+```
+
+### temporal_month_gaps
+```sql
+WITH parsed AS (
+    SELECT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m') AS ym
+    FROM replays_meta_raw
+    WHERE details.timeUTC IS NOT NULL
+),
+observed AS (
+    SELECT DISTINCT ym FROM parsed WHERE ym IS NOT NULL
+),
+date_range AS (
+    SELECT MIN(ym) AS min_ym, MAX(ym) AS max_ym FROM observed
+),
+all_months AS (
+    SELECT strftime(
+        (SELECT TRY_CAST(min_ym || '-01' AS DATE) FROM date_range)
+        + INTERVAL (i) MONTH,
+        '%Y-%m'
+    ) AS ym
+    FROM generate_series(0,
+        (SELECT DATEDIFF('month',
+            TRY_CAST(min_ym || '-01' AS DATE),
+            TRY_CAST(max_ym || '-01' AS DATE))
+         FROM date_range)
+    ) AS t(i)
+)
+SELECT am.ym AS gap_month
+FROM all_months am
+LEFT JOIN observed o ON am.ym = o.ym
+WHERE o.ym IS NULL
+ORDER BY am.ym
+```
+
+### startloc_verification
+```sql
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(*) - COUNT(startLocX) AS startLocX_null,
+    COUNT(*) - COUNT(startLocY) AS startLocY_null,
+    SUM(CASE WHEN startLocX < 0 THEN 1 ELSE 0 END) AS startLocX_negative,
+    SUM(CASE WHEN startLocY < 0 THEN 1 ELSE 0 END) AS startLocY_negative,
+    MIN(startLocX) AS startLocX_min,
+    MAX(startLocX) AS startLocX_max,
+    MIN(startLocY) AS startLocY_min,
+    MAX(startLocY) AS startLocY_max,
+    COUNT(DISTINCT startLocX) AS startLocX_cardinality,
+    COUNT(DISTINCT startLocY) AS startLocY_cardinality
+FROM replay_players_raw
 ```
 
 ### qq_mmr
