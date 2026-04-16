@@ -9,7 +9,7 @@ live in per-dataset logs — one per game/dataset combination.
 
 | Dataset | Log | Last entry |
 |---------|-----|------------|
-| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-14 (01_02_03) |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-15 (01_03_04) |
 | aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-14 (01_02_03) |
 | aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-14 (01_02_03) |
 
@@ -24,7 +24,24 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
-## 2026-04-14 — [Phase 01 / Step 01_02_02] Invariant I10 fix: inline filename relativization
+## 2026-04-15 -- [CROSS] [Phase 01 / Step 01_03_04] In-game event data asymmetry
+
+**Datasets affected:** sc2egset (has event data), aoe2companion and aoestats (no equivalent)
+
+SC2EGSet provides three in-game event streams: tracker_events_raw (62M rows,
+10 types), game_events_raw (608M rows, 23 types), message_events_raw (52K rows,
+3 types). Deep profiling confirms PlayerStats fires at a 160-loop periodic
+interval (per player), UnitBorn spans 232 distinct unit types, and Cmd/SelectionDelta
+carry structured action data.
+
+Neither AoE2 dataset has in-game event logs. This asymmetry is the controlled
+experimental variable for Invariant #8: "Do the same methods work equally well
+with and without in-game data?" Pre-game feature sets can be compared directly;
+SC2 additionally enables in-game feature comparison.
+
+---
+
+## 2026-04-14 -- [Phase 01 / Step 01_02_02] Invariant I10 fix: inline filename relativization
 
 **Datasets affected:** aoe2companion, aoestats (sc2egset was already correct)
 

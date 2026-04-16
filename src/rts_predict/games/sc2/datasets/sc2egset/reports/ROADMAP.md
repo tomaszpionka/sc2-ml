@@ -649,6 +649,76 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_04 -- Event Table Profiling
+
+```yaml
+step_number: "01_03_04"
+name: "Event Table Profiling"
+description: >-
+  Deep structural profiling of the three event views (tracker_events_raw
+  62M rows, game_events_raw 608M rows, message_events_raw 52K rows).
+  These are unique to sc2egset -- neither AoE2 dataset has in-game event
+  logs. Profiles event type distributions, per-replay density,
+  PlayerStats periodicity, UnitBorn unit-type diversity, and event_data
+  JSON schemas. No features extracted, no tables created (I9).
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "sc2egset"
+question: >-
+  What are the event type distributions for all three event views? What
+  is the per-replay event density? Is PlayerStats periodic or variable?
+  How many distinct unit types appear in UnitBorn? What JSON keys exist
+  in event_data for each event type?
+method: >-
+  DuckDB SQL: GROUP BY evtTypeName distributions for all three views;
+  per-replay density via GROUP BY filename; PlayerStats periodicity via
+  LAG window function; UnitBorn unit types via json_extract_string;
+  event_data JSON key sampling per type. Game events sampled at 10%
+  BERNOULLI for density. All SQL stored verbatim (I6).
+predecessors: "01_03_03"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_04_event_profiling.py"
+inputs:
+  duckdb_tables:
+    - "tracker_events_raw"
+    - "game_events_raw"
+    - "message_events_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - ".claude/rules/sql-data.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_04_event_profiling.json"
+  report: "artifacts/01_exploration/03_profiling/01_03_04_event_profiling.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "All SQL queries stored verbatim in sql_queries dict and saved to artifact."
+  - number: "9"
+    how_upheld: "Profiling only. No rows dropped. No cleaning decisions made. No tables created."
+  - number: "3"
+    how_upheld: "All three event views classified IN_GAME_ONLY. No features extracted."
+gate:
+  artifact_check: >-
+    artifacts/01_exploration/03_profiling/01_03_04_event_profiling.json and
+    .md exist and are non-empty.
+  continue_predicate: >-
+    JSON contains: tracker_events (type_distribution with 10 types,
+    per_replay_density, playerstats_periodicity, unitborn_unit_types with
+    >=20 distinct types, event_data_keys for 5+ types), game_events
+    (type_distribution with 23 types, event_data_keys for 2+ types),
+    message_events (type_distribution, coverage). Exact totals:
+    tracker=62,003,411; game=608,618,823; message=52,167.
+    All SQL in sql_queries dict (I6).
+  halt_predicate: "Any artifact is missing or exact row counts do not match."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
