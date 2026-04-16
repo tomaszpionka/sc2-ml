@@ -64,4 +64,9 @@ steps:
     pipeline_section: "01_03"
     status: complete
     completed_at: "2026-04-16"
+  "01_03_02":
+    name: "True 1v1 Match Identification"
+    pipeline_section: "01_03"
+    status: complete
+    completed_at: "2026-04-16"
   # Future steps will be added here as they are defined in the ROADMAP.

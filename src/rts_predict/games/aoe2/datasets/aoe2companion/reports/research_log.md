@@ -8,6 +8,84 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-16 — [Phase 01 / Step 01_03_02] True 1v1 Match Identification
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** profiling (read-only — no DuckDB writes, no new tables)
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json`
+- `reports/artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.md`
+
+### What
+
+Identified the full population of genuine 1v1 matches in matches_raw (277,099,059 rows, 74,788,989 distinct matchIds) using structural criteria applied via DuckDB aggregate queries. No temporal features computed, no tables created. All SQL written verbatim to artifacts (I6).
+
+### Key finding: all matchIds have exactly 1 leaderboard value
+
+The leaderboard_cardinality_per_match diagnostic showed that all 74,788,989 distinct matchIds appear under exactly 1 leaderboard value. The census surplus (sum of per-leaderboard distinct matchIds = 74.8M > 61.8M total) was caused by multi-row counting, not multi-leaderboard matchIds. The leaderboard column is a clean single-value per match.
+
+### Rows-per-match distribution
+
+| Rows/Match | Matches | % |
+|---|---|---|
+| 1 | 782,044 | 1.05% |
+| 2 | 40,062,975 | 53.57% |
+| 3 | 2,013,196 | 2.69% |
+| 4 | 12,288,436 | 16.43% |
+| 5 | 677,201 | 0.91% |
+| 6 | 6,864,783 | 9.18% |
+| 7 | 379,802 | 0.51% |
+| 8 | 11,720,552 | 15.67% |
+
+### True 1v1 criteria funnel (structural, no deduplication)
+
+| Level | Criterion | Matches | % |
+|---|---|---|---|
+| total_matches | All distinct matchIds | 74,788,989 | 100.00% |
+| L1 | Exactly 2 rows | 40,062,975 | 53.57% |
+| L2 | L1 + both status='player' | 39,882,778 | 53.33% |
+| L3 | L2 + both won IS NOT NULL | 39,878,383 | 53.32% |
+| L4 | L3 + one won=true, one won=false | 35,479,656 | 47.44% |
+| L5 | L4 + 2 distinct profileId (excl -1) | 35,479,656 | 47.44% |
+| L6 | L5 + 2 distinct teams | 34,630,907 | 46.30% |
+
+L5 = L4 (35,479,656): all complementary-won 2-human matches already have 2 distinct non-(-1) profileIds.
+
+Deduplication recovers 1,940,722 additional matchIds at L1 (matchIds with >2 rows but exactly 2 distinct human profileIds), raising dedup-L1 to 42,003,697.
+
+### Proxy vs structural overlap
+
+rm_1v1 leaderboard: 26,847,572 total matchIds, 26,843,082 (99.98%) are structural 1v1 (L4). Only 4,490 rm_1v1 matchIds fail structural 1v1.
+
+qp_rm_1v1 leaderboard: 3,688,676 total, 3,688,114 (99.98%) structural 1v1.
+
+unranked leaderboard: 18,783,620 total matchIds, 2,558,192 (13.62%) are structural 1v1. This is the largest source of "hidden" 1v1 matches outside named 1v1 leaderboards.
+
+rm_1v1 + qp_rm_1v1 proxy captures 30,531,196 structural 1v1 matches; all-1v1-leaderboard proxy (incl ew_1v1, dm_1v1, etc.) adds ew_1v1 (971,856), rm_1v1_console (800,143), ew_1v1_redbullwololo (297,413), dm_1v1 (47,254), and smaller leaderboards.
+
+### profileId = -1 investigation
+
+profileId = -1 appears as: status='ai' (12,947,078 rows, 4.67% of all rows, 4,150,733 distinct matches) and status='player' (19,232 rows, 0.01%, 8,993 matches). Only 1 profileId=-1 row appears in rm_1v1 leaderboard (in exactly 1 match). profileId = -1 with status='player' is negligible.
+
+### Won complement (2-row, 2-human matches)
+
+complementary: 35,479,656 (88.96%), both_true: 2,499,163 (6.27%), both_false: 1,899,564 (4.76%), edge cases (<0.01% combined).
+
+### Team patterns (structural 1v1, L4 matches)
+
+standard_1v2 (teams 1 and 2): 32,525,927 (91.67%), two_teams_nonstandard: 2,104,980 (5.93%), both_null: 846,898 (2.39%).
+
+### Thesis implications (observations for 01_04, no decisions)
+
+1. The leaderboard proxy rm_1v1+qp_rm_1v1 captures ~86.3% of structural 1v1 matches. Including all named 1v1 leaderboards raises coverage further. unranked contains ~2.6M structural 1v1 matches not captured by any named 1v1 leaderboard.
+2. 4,390 (L2 - L4 drop) 2-human matches have non-complementary won patterns (mostly both_true/both_false). These are candidates for exclusion from the prediction target.
+3. 846,898 structural 1v1 matches have NULL team for both players (2.39%). Whether to require team data is a 01_04 decision.
+4. profileId = -1 as status='player' affects 8,993 matches (negligible). Identity resolution scope for 01_05 accordingly narrow.
+5. Deduplication recovers 1.94M additional matchIds at L1. Whether to include deduplicated matches is a 01_04 decision.
+
+---
+
 ## 2026-04-16 — [Phase 01 / Step 01_03_01] Systematic Data Profiling
 
 **Category:** A (science)

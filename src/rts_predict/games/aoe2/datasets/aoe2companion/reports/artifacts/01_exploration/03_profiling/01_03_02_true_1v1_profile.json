@@ -1,0 +1,434 @@
+{
+  "step": "01_03_02",
+  "dataset": "aoe2companion",
+  "table": "matches_raw",
+  "total_rows": 277099059,
+  "total_distinct_matchIds": 74788989,
+  "rows_per_match_distribution": [
+    {
+      "rows_per_match": 1,
+      "n_matches": 782044,
+      "pct_matches": 1.05,
+      "total_rows_in_group": 782044.0
+    },
+    {
+      "rows_per_match": 2,
+      "n_matches": 40062975,
+      "pct_matches": 53.57,
+      "total_rows_in_group": 80125950.0
+    },
+    {
+      "rows_per_match": 3,
+      "n_matches": 2013196,
+      "pct_matches": 2.69,
+      "total_rows_in_group": 6039588.0
+    },
+    {
+      "rows_per_match": 4,
+      "n_matches": 12288436,
+      "pct_matches": 16.43,
+      "total_rows_in_group": 49153744.0
+    },
+    {
+      "rows_per_match": 5,
+      "n_matches": 677201,
+      "pct_matches": 0.91,
+      "total_rows_in_group": 3386005.0
+    },
+    {
+      "rows_per_match": 6,
+      "n_matches": 6864783,
+      "pct_matches": 9.18,
+      "total_rows_in_group": 41188698.0
+    },
+    {
+      "rows_per_match": 7,
+      "n_matches": 379802,
+      "pct_matches": 0.51,
+      "total_rows_in_group": 2658614.0
+    },
+    {
+      "rows_per_match": 8,
+      "n_matches": 11720552,
+      "pct_matches": 15.67,
+      "total_rows_in_group": 93764416.0
+    }
+  ],
+  "human_rows_per_match_distribution": [
+    {
+      "human_players": 1,
+      "n_matches": 1198709,
+      "pct_matches": 1.6
+    },
+    {
+      "human_players": 2,
+      "n_matches": 42008262,
+      "pct_matches": 56.17
+    },
+    {
+      "human_players": 3,
+      "n_matches": 2504580,
+      "pct_matches": 3.35
+    },
+    {
+      "human_players": 4,
+      "n_matches": 11823279,
+      "pct_matches": 15.81
+    },
+    {
+      "human_players": 5,
+      "n_matches": 417014,
+      "pct_matches": 0.56
+    },
+    {
+      "human_players": 6,
+      "n_matches": 6226762,
+      "pct_matches": 8.33
+    },
+    {
+      "human_players": 7,
+      "n_matches": 198814,
+      "pct_matches": 0.27
+    },
+    {
+      "human_players": 8,
+      "n_matches": 10411569,
+      "pct_matches": 13.92
+    }
+  ],
+  "profileId_minus1_profile": [
+    {
+      "status": "ai",
+      "n_rows": 12947078,
+      "n_matches": 4150733,
+      "pct_all_rows": 4.67
+    },
+    {
+      "status": "player",
+      "n_rows": 19232,
+      "n_matches": 8993,
+      "pct_all_rows": 0.01
+    }
+  ],
+  "profileId_minus1_in_1v1_leaderboards": [
+    {
+      "leaderboard": "rm_1v1",
+      "n_rows": 1,
+      "n_matches": 1
+    }
+  ],
+  "true_1v1_criteria_funnel_raw": {
+    "total_matches": 74788989,
+    "L1_exactly_2_rows": 40062975,
+    "L2_2_human_players": 39882778,
+    "L3_2_humans_won_known": 39878383,
+    "L4_complementary_won": 35479656,
+    "L5_distinct_profiles": 35479656,
+    "L6_distinct_teams": 34630907
+  },
+  "true_1v1_criteria_funnel_dedup": {
+    "total_matches": 74788989,
+    "L1_dedup_2_human_profiles": 42003697,
+    "L2_dedup_won_known": 42000384,
+    "L3_dedup_complementary_won": 35544901,
+    "L4_dedup_distinct_profiles": 35544901,
+    "L5_dedup_distinct_teams": 34693848
+  },
+  "dedup_delta": {
+    "L1_delta": 1940722,
+    "note": "Positive = matchIds recovered by dedup"
+  },
+  "hybrid_1v1_composition": [
+    {
+      "human_rows": 2,
+      "ai_rows": 0,
+      "n_matches": 39882778
+    },
+    {
+      "human_rows": 1,
+      "ai_rows": 1,
+      "n_matches": 180197
+    }
+  ],
+  "leaderboard_cardinality_per_match": [
+    {
+      "n_leaderboards": 1,
+      "n_matches": 74788989
+    }
+  ],
+  "leaderboard_overlap": [
+    {
+      "leaderboard_category": "rm_1v1_only",
+      "total_matches": 26847572,
+      "structural_1v1": 26843082,
+      "not_structural_1v1": 4490,
+      "pct_structural_1v1": 99.98
+    },
+    {
+      "leaderboard_category": "unranked",
+      "total_matches": 18783620,
+      "structural_1v1": 2558192,
+      "not_structural_1v1": 16225428,
+      "pct_structural_1v1": 13.62
+    },
+    {
+      "leaderboard_category": "rm_team",
+      "total_matches": 17379984,
+      "structural_1v1": 2,
+      "not_structural_1v1": 17379982,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "qp_rm_1v1_only",
+      "total_matches": 3688676,
+      "structural_1v1": 3688114,
+      "not_structural_1v1": 562,
+      "pct_structural_1v1": 99.98
+    },
+    {
+      "leaderboard_category": "qp_rm_team",
+      "total_matches": 3611539,
+      "structural_1v1": 1,
+      "not_structural_1v1": 3611538,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ew_1v1",
+      "total_matches": 972000,
+      "structural_1v1": 971856,
+      "not_structural_1v1": 144,
+      "pct_structural_1v1": 99.99
+    },
+    {
+      "leaderboard_category": "unknown",
+      "total_matches": 930658,
+      "structural_1v1": 236895,
+      "not_structural_1v1": 693763,
+      "pct_structural_1v1": 25.45
+    },
+    {
+      "leaderboard_category": "rm_1v1_console",
+      "total_matches": 800244,
+      "structural_1v1": 800143,
+      "not_structural_1v1": 101,
+      "pct_structural_1v1": 99.99
+    },
+    {
+      "leaderboard_category": "rm_team_console",
+      "total_matches": 721688,
+      "structural_1v1": 2,
+      "not_structural_1v1": 721686,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ew_team",
+      "total_matches": 600507,
+      "structural_1v1": 0,
+      "not_structural_1v1": 600507,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ew_1v1_redbullwololo",
+      "total_matches": 297445,
+      "structural_1v1": 297413,
+      "not_structural_1v1": 32,
+      "pct_structural_1v1": 99.99
+    },
+    {
+      "leaderboard_category": "dm_1v1",
+      "total_matches": 47254,
+      "structural_1v1": 47254,
+      "not_structural_1v1": 0,
+      "pct_structural_1v1": 100.0
+    },
+    {
+      "leaderboard_category": "dm_team",
+      "total_matches": 36144,
+      "structural_1v1": 0,
+      "not_structural_1v1": 36144,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "qp_ew_1v1",
+      "total_matches": 24739,
+      "structural_1v1": 24737,
+      "not_structural_1v1": 2,
+      "pct_structural_1v1": 99.99
+    },
+    {
+      "leaderboard_category": "qp_br_ffa",
+      "total_matches": 20998,
+      "structural_1v1": 0,
+      "not_structural_1v1": 20998,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "qp_ew_team",
+      "total_matches": 9266,
+      "structural_1v1": 0,
+      "not_structural_1v1": 9266,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ror_1v1",
+      "total_matches": 7888,
+      "structural_1v1": 7879,
+      "not_structural_1v1": 9,
+      "pct_structural_1v1": 99.89
+    },
+    {
+      "leaderboard_category": "ew_1v1_console",
+      "total_matches": 3761,
+      "structural_1v1": 3761,
+      "not_structural_1v1": 0,
+      "pct_structural_1v1": 100.0
+    },
+    {
+      "leaderboard_category": "ror_team",
+      "total_matches": 3353,
+      "structural_1v1": 0,
+      "not_structural_1v1": 3353,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ew_team_console",
+      "total_matches": 1328,
+      "structural_1v1": 0,
+      "not_structural_1v1": 1328,
+      "pct_structural_1v1": 0.0
+    },
+    {
+      "leaderboard_category": "ew_1v1_redbullwololo_console",
+      "total_matches": 325,
+      "structural_1v1": 325,
+      "not_structural_1v1": 0,
+      "pct_structural_1v1": 100.0
+    }
+  ],
+  "proxy_vs_structural_confusion_matrix": [
+    {
+      "leaderboard_category": "non_rm_1v1_only",
+      "is_structural_1v1": false,
+      "n_matches": 39304281
+    },
+    {
+      "leaderboard_category": "non_rm_1v1_only",
+      "is_structural_1v1": true,
+      "n_matches": 4948460
+    },
+    {
+      "leaderboard_category": "rm_1v1_only",
+      "is_structural_1v1": false,
+      "n_matches": 5052
+    },
+    {
+      "leaderboard_category": "rm_1v1_only",
+      "is_structural_1v1": true,
+      "n_matches": 30531196
+    }
+  ],
+  "expanded_proxy_confusion_matrix": [
+    {
+      "leaderboard_category": "any_1v1_leaderboard_only",
+      "is_structural_1v1": false,
+      "n_matches": 5340
+    },
+    {
+      "leaderboard_category": "any_1v1_leaderboard_only",
+      "is_structural_1v1": true,
+      "n_matches": 32684564
+    },
+    {
+      "leaderboard_category": "non_1v1_leaderboard_only",
+      "is_structural_1v1": false,
+      "n_matches": 39303993
+    },
+    {
+      "leaderboard_category": "non_1v1_leaderboard_only",
+      "is_structural_1v1": true,
+      "n_matches": 2795092
+    }
+  ],
+  "won_complement_analysis": [
+    {
+      "won_pattern": "complementary",
+      "n_matches": 35479656,
+      "pct": 88.96
+    },
+    {
+      "won_pattern": "both_true",
+      "n_matches": 2499163,
+      "pct": 6.27
+    },
+    {
+      "won_pattern": "both_false",
+      "n_matches": 1899564,
+      "pct": 4.76
+    },
+    {
+      "won_pattern": "one_true_one_null",
+      "n_matches": 1949,
+      "pct": 0.0
+    },
+    {
+      "won_pattern": "both_null",
+      "n_matches": 1876,
+      "pct": 0.0
+    },
+    {
+      "won_pattern": "one_false_one_null",
+      "n_matches": 570,
+      "pct": 0.0
+    }
+  ],
+  "team_analysis": [
+    {
+      "team_pattern": "standard_1v2",
+      "n_matches": 32525927,
+      "pct": 91.67
+    },
+    {
+      "team_pattern": "two_teams_nonstandard",
+      "n_matches": 2104980,
+      "pct": 5.93
+    },
+    {
+      "team_pattern": "both_null",
+      "n_matches": 846898,
+      "pct": 2.39
+    },
+    {
+      "team_pattern": "one_null",
+      "n_matches": 1478,
+      "pct": 0.0
+    },
+    {
+      "team_pattern": "same_team",
+      "n_matches": 373,
+      "pct": 0.0
+    }
+  ],
+  "sql_queries": {
+    "rows_per_match_distribution": "\nSELECT\n    rows_per_match,\n    COUNT(*) AS n_matches,\n    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_matches,\n    SUM(rows_per_match) AS total_rows_in_group\nFROM (\n    SELECT matchId, COUNT(*) AS rows_per_match\n    FROM matches_raw\n    GROUP BY matchId\n)\nGROUP BY rows_per_match\nORDER BY rows_per_match\n",
+    "human_rows_per_match_distribution": "\nSELECT\n    human_players,\n    COUNT(*) AS n_matches,\n    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_matches\nFROM (\n    SELECT matchId,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_players,\n           COUNT(*) FILTER (WHERE status = 'ai') AS ai_players,\n           COUNT(*) AS total_players\n    FROM matches_raw\n    GROUP BY matchId\n)\nGROUP BY human_players\nORDER BY human_players\n",
+    "profileId_minus1_by_status": "\nSELECT\n    status,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches,\n    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM matches_raw), 2) AS pct_all_rows\nFROM matches_raw\nWHERE profileId = -1\nGROUP BY status\nORDER BY n_rows DESC\n",
+    "profileId_minus1_in_1v1_leaderboards": "\nSELECT\n    leaderboard,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\nWHERE profileId = -1\n  AND leaderboard IN ('rm_1v1', 'qp_rm_1v1', 'ew_1v1', 'dm_1v1',\n                       'rm_1v1_console', 'ew_1v1_console', 'ew_1v1_redbullwololo',\n                       'ew_1v1_redbullwololo_console', 'qp_ew_1v1', 'ror_1v1')\nGROUP BY leaderboard\nORDER BY n_rows DESC\n",
+    "criteria_funnel_a": "\nWITH match_stats AS (\n    SELECT\n        matchId,\n        COUNT(*) AS total_rows,\n        COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n        COUNT(*) FILTER (WHERE won IS NOT NULL) AS won_nonnull,\n        COUNT(*) FILTER (WHERE won = true) AS won_true,\n        COUNT(*) FILTER (WHERE won = false) AS won_false\n    FROM matches_raw\n    GROUP BY matchId\n)\nSELECT\n    COUNT(*) AS total_matches,\n    COUNT(*) FILTER (WHERE total_rows = 2) AS L1_exactly_2_rows,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2) AS L2_2_humans,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2\n                     AND won_nonnull = 2) AS L3_2_humans_won_known,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2\n                     AND won_true = 1 AND won_false = 1) AS L4_complementary_won\nFROM match_stats\n",
+    "criteria_funnel_b": "\nSELECT COUNT(*) AS L5_distinct_profiles\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE status = 'player') = 2\n       AND COUNT(*) FILTER (WHERE won = true) = 1\n       AND COUNT(*) FILTER (WHERE won = false) = 1\n       AND COUNT(DISTINCT profileId) FILTER (WHERE profileId != -1) = 2\n)\n",
+    "criteria_funnel_c": "\nSELECT COUNT(*) AS L6_distinct_teams\nFROM (\n    SELECT matchId,\n           MIN(team) AS min_team,\n           MAX(team) AS max_team\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE status = 'player') = 2\n       AND COUNT(*) FILTER (WHERE won = true) = 1\n       AND COUNT(*) FILTER (WHERE won = false) = 1\n       AND MIN(profileId) > -1\n       AND MIN(profileId) != MAX(profileId)\n)\nWHERE min_team IS NOT NULL AND min_team != max_team\n",
+    "criteria_funnel": "-- Part A (L1-L4, no DISTINCT aggregates):\n\nWITH match_stats AS (\n    SELECT\n        matchId,\n        COUNT(*) AS total_rows,\n        COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n        COUNT(*) FILTER (WHERE won IS NOT NULL) AS won_nonnull,\n        COUNT(*) FILTER (WHERE won = true) AS won_true,\n        COUNT(*) FILTER (WHERE won = false) AS won_false\n    FROM matches_raw\n    GROUP BY matchId\n)\nSELECT\n    COUNT(*) AS total_matches,\n    COUNT(*) FILTER (WHERE total_rows = 2) AS L1_exactly_2_rows,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2) AS L2_2_humans,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2\n                     AND won_nonnull = 2) AS L3_2_humans_won_known,\n    COUNT(*) FILTER (WHERE total_rows = 2 AND human_rows = 2\n                     AND won_true = 1 AND won_false = 1) AS L4_complementary_won\nFROM match_stats\n\n-- Part B (L5, HAVING COUNT(DISTINCT profileId)):\n\nSELECT COUNT(*) AS L5_distinct_profiles\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE status = 'player') = 2\n       AND COUNT(*) FILTER (WHERE won = true) = 1\n       AND COUNT(*) FILTER (WHERE won = false) = 1\n       AND COUNT(DISTINCT profileId) FILTER (WHERE profileId != -1) = 2\n)\n\n-- Part C (L6, HAVING COUNT(DISTINCT team)):\n\nSELECT COUNT(*) AS L6_distinct_teams\nFROM (\n    SELECT matchId,\n           MIN(team) AS min_team,\n           MAX(team) AS max_team\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE status = 'player') = 2\n       AND COUNT(*) FILTER (WHERE won = true) = 1\n       AND COUNT(*) FILTER (WHERE won = false) = 1\n       AND MIN(profileId) > -1\n       AND MIN(profileId) != MAX(profileId)\n)\nWHERE min_team IS NOT NULL AND min_team != max_team\n",
+    "criteria_funnel_dedup_l1": "\nSELECT COUNT(*) AS L1_dedup_2_human_profiles\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n)\n",
+    "criteria_funnel_dedup_l2": "\nSELECT COUNT(*) AS L2_dedup_won_known\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won IS NOT NULL) >= 2\n) w USING (matchId)\n",
+    "criteria_funnel_dedup_l3": "\nSELECT COUNT(*) AS L3_dedup_complementary_won\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won = true) >= 1\n       AND COUNT(*) FILTER (WHERE won = false) >= 1\n) w USING (matchId)\n",
+    "criteria_funnel_dedup_l4": "-- L4_dedup = L3_dedup (profileId != -1 already enforced in L1 filter)",
+    "criteria_funnel_dedup_l5": "\nSELECT COUNT(*) AS L5_dedup_distinct_teams\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId,\n           MIN(team) AS min_team,\n           MAX(team) AS max_team\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won = true) >= 1\n       AND COUNT(*) FILTER (WHERE won = false) >= 1\n) w USING (matchId)\nWHERE w.min_team IS NOT NULL AND w.min_team != w.max_team\n",
+    "criteria_funnel_dedup": "-- Dedup L1 (2 distinct human profiles):\n\nSELECT COUNT(*) AS L1_dedup_2_human_profiles\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n)\n\n-- Dedup L2 (+ won_nonnull >= 2):\n\nSELECT COUNT(*) AS L2_dedup_won_known\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won IS NOT NULL) >= 2\n) w USING (matchId)\n\n-- Dedup L3 (+ complementary won):\n\nSELECT COUNT(*) AS L3_dedup_complementary_won\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won = true) >= 1\n       AND COUNT(*) FILTER (WHERE won = false) >= 1\n) w USING (matchId)\n\n-- Dedup L4 (= L3, profileId filter in L1):\n-- L4_dedup = L3_dedup (profileId != -1 already enforced in L1 filter)\n-- Dedup L5 (+ distinct teams):\n\nSELECT COUNT(*) AS L5_dedup_distinct_teams\nFROM (\n    SELECT matchId\n    FROM matches_raw\n    WHERE profileId != -1 AND status = 'player'\n    GROUP BY matchId\n    HAVING COUNT(DISTINCT profileId) = 2\n) h\nJOIN (\n    SELECT matchId,\n           MIN(team) AS min_team,\n           MAX(team) AS max_team\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) FILTER (WHERE won = true) >= 1\n       AND COUNT(*) FILTER (WHERE won = false) >= 1\n) w USING (matchId)\nWHERE w.min_team IS NOT NULL AND w.min_team != w.max_team\n",
+    "hybrid_1v1_composition": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE status = 'ai') AS ai_rows\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n)\nSELECT\n    human_rows, ai_rows,\n    COUNT(*) AS n_matches\nFROM match_stats\nGROUP BY human_rows, ai_rows\nORDER BY n_matches DESC\n",
+    "leaderboard_cardinality_per_match": "\nSELECT n_leaderboards, COUNT(*) AS n_matches\nFROM (\n    SELECT matchId, COUNT(DISTINCT leaderboard) AS n_leaderboards\n    FROM matches_raw\n    GROUP BY matchId\n)\nGROUP BY n_leaderboards\nORDER BY n_leaderboards\n",
+    "leaderboard_structural_1v1_overlap": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE won = true) AS won_true,\n           COUNT(*) FILTER (WHERE won = false) AS won_false,\n           COUNT(DISTINCT leaderboard) AS n_leaderboards,\n           MIN(leaderboard) AS min_leaderboard\n    FROM matches_raw\n    GROUP BY matchId\n),\nclassified AS (\n    SELECT *,\n           (total_rows = 2 AND human_rows = 2\n            AND won_true = 1 AND won_false = 1) AS is_structural_1v1,\n           CASE\n               WHEN n_leaderboards > 1 THEN 'multi_leaderboard'\n               WHEN min_leaderboard = 'rm_1v1' THEN 'rm_1v1_only'\n               WHEN min_leaderboard = 'qp_rm_1v1' THEN 'qp_rm_1v1_only'\n               ELSE min_leaderboard\n           END AS leaderboard_category\n    FROM match_stats\n)\nSELECT\n    leaderboard_category,\n    COUNT(*) AS total_matches,\n    COUNT(*) FILTER (WHERE is_structural_1v1) AS structural_1v1,\n    COUNT(*) FILTER (WHERE NOT is_structural_1v1) AS not_structural_1v1,\n    ROUND(COUNT(*) FILTER (WHERE is_structural_1v1) * 100.0 / COUNT(*), 2) AS pct_structural_1v1\nFROM classified\nGROUP BY leaderboard_category\nORDER BY total_matches DESC\n",
+    "proxy_vs_structural_confusion": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE won = true) AS won_true,\n           COUNT(*) FILTER (WHERE won = false) AS won_false,\n           COUNT(DISTINCT leaderboard) AS n_leaderboards,\n           MIN(leaderboard) AS min_leaderboard,\n           MAX(leaderboard) AS max_leaderboard\n    FROM matches_raw\n    GROUP BY matchId\n),\nclassified AS (\n    SELECT *,\n           (total_rows = 2 AND human_rows = 2\n            AND won_true = 1 AND won_false = 1) AS is_structural_1v1,\n           CASE\n               WHEN n_leaderboards > 1 THEN 'multi_leaderboard'\n               WHEN min_leaderboard IN ('rm_1v1', 'qp_rm_1v1') THEN 'rm_1v1_only'\n               ELSE 'non_rm_1v1_only'\n           END AS leaderboard_category\n    FROM match_stats\n)\nSELECT\n    leaderboard_category,\n    is_structural_1v1,\n    COUNT(*) AS n_matches\nFROM classified\nGROUP BY leaderboard_category, is_structural_1v1\nORDER BY leaderboard_category, is_structural_1v1\n",
+    "expanded_proxy_vs_structural": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE won = true) AS won_true,\n           COUNT(*) FILTER (WHERE won = false) AS won_false,\n           COUNT(DISTINCT leaderboard) AS n_leaderboards,\n           MIN(leaderboard) AS min_leaderboard\n    FROM matches_raw\n    GROUP BY matchId\n),\nclassified AS (\n    SELECT *,\n           (total_rows = 2 AND human_rows = 2\n            AND won_true = 1 AND won_false = 1) AS is_structural_1v1,\n           CASE\n               WHEN n_leaderboards > 1 THEN 'multi_leaderboard'\n               WHEN min_leaderboard IN (\n                   'rm_1v1', 'qp_rm_1v1', 'ew_1v1', 'dm_1v1',\n                   'rm_1v1_console', 'ew_1v1_console', 'ew_1v1_redbullwololo',\n                   'ew_1v1_redbullwololo_console', 'qp_ew_1v1', 'ror_1v1'\n               ) THEN 'any_1v1_leaderboard_only'\n               ELSE 'non_1v1_leaderboard_only'\n           END AS leaderboard_category\n    FROM match_stats\n)\nSELECT\n    leaderboard_category,\n    is_structural_1v1,\n    COUNT(*) AS n_matches\nFROM classified\nGROUP BY leaderboard_category, is_structural_1v1\nORDER BY leaderboard_category, is_structural_1v1\n",
+    "won_complement_2human": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE won IS NULL) AS won_null_count,\n           COUNT(*) FILTER (WHERE won = true) AS won_true,\n           COUNT(*) FILTER (WHERE won = false) AS won_false\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2 AND COUNT(*) FILTER (WHERE status = 'player') = 2\n)\nSELECT\n    CASE\n        WHEN won_true = 1 AND won_false = 1 THEN 'complementary'\n        WHEN won_true = 2 THEN 'both_true'\n        WHEN won_false = 2 THEN 'both_false'\n        WHEN won_null_count = 2 THEN 'both_null'\n        WHEN won_null_count = 1 AND won_true = 1 THEN 'one_true_one_null'\n        WHEN won_null_count = 1 AND won_false = 1 THEN 'one_false_one_null'\n        ELSE 'other'\n    END AS won_pattern,\n    COUNT(*) AS n_matches,\n    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct\nFROM match_stats\nGROUP BY 1\nORDER BY n_matches DESC\n",
+    "team_analysis_structural_1v1": "\nWITH match_stats AS (\n    SELECT matchId,\n           COUNT(*) AS total_rows,\n           COUNT(*) FILTER (WHERE status = 'player') AS human_rows,\n           COUNT(*) FILTER (WHERE won = true) AS won_true,\n           COUNT(*) FILTER (WHERE won = false) AS won_false,\n           COUNT(DISTINCT team) FILTER (WHERE team IS NOT NULL) AS distinct_teams,\n           COUNT(*) FILTER (WHERE team IS NULL) AS team_null_count,\n           MIN(team) AS min_team,\n           MAX(team) AS max_team\n    FROM matches_raw\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE status = 'player') = 2\n       AND COUNT(*) FILTER (WHERE won = true) = 1\n       AND COUNT(*) FILTER (WHERE won = false) = 1\n)\nSELECT\n    CASE\n        WHEN team_null_count = 2 THEN 'both_null'\n        WHEN team_null_count = 1 THEN 'one_null'\n        WHEN distinct_teams = 2 AND min_team = 1 AND max_team = 2 THEN 'standard_1v2'\n        WHEN distinct_teams = 2 THEN 'two_teams_nonstandard'\n        WHEN distinct_teams = 1 THEN 'same_team'\n        ELSE 'other'\n    END AS team_pattern,\n    COUNT(*) AS n_matches,\n    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct\nFROM match_stats\nGROUP BY 1\nORDER BY n_matches DESC\n"
+  }
+}

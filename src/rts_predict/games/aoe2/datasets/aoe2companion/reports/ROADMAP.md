@@ -523,6 +523,50 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_02 -- True 1v1 Match Identification
+
+```yaml
+step_number: "01_03_02"
+name: "True 1v1 Match Identification"
+description: "Identify the full population of genuine 1v1 matches in matches_raw regardless of leaderboard. Profile the matchId grouping structure: rows-per-match distribution, true 1v1 criteria (exactly 2 human players, complementary won outcome), overlap with leaderboard-based 1v1 proxy, and edge cases (AI rows, NULL won, duplicate profileId=-1). Read-only profiling -- no tables or views created."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "Among all 61.8M distinct matchIds, which ones are genuine 1v1 matches (exactly 2 human players)? How does this set compare to the leaderboard-based 1v1 proxy? What edge cases exist?"
+method: "DuckDB aggregate queries over matches_raw. GROUP BY matchId with HAVING-based structural criteria. Cross-tabulation with leaderboard. Won complement analysis. All SQL verbatim in artifact (I6)."
+stratification: "Full table for aggregate counts. Leaderboard-stratified for overlap analysis."
+predecessors:
+  - "01_03_01"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/03_profiling/01_03_02_true_1v1_identification.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.json"
+  report: "artifacts/01_exploration/03_profiling/01_03_02_true_1v1_profile.md"
+gate:
+  artifact_check: "01_03_02_true_1v1_profile.json and .md exist and are non-empty."
+  continue_predicate: "JSON contains rows_per_match_distribution, true_1v1_criteria_funnel_raw, leaderboard_overlap, and won_complement_analysis keys."
+  halt_predicate: "DuckDB queries fail on matches_raw."
+scientific_invariants_applied:
+  - number: "6"
+    how_upheld: "All SQL queries written verbatim to JSON and MD artifacts."
+  - number: "7"
+    how_upheld: "1v1 criteria (exactly 2 human player rows) derived empirically from match structure, not assumed. Thresholds from census data."
+  - number: "9"
+    how_upheld: "Read-only profiling. No tables created. No cleaning decisions made. Findings feed 01_04."
+  - number: "3"
+    how_upheld: "No temporal features computed. Only structural grouping analysis."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)
