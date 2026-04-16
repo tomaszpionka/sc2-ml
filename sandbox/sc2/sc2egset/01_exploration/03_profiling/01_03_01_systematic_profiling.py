@@ -88,6 +88,14 @@ SQ_SENTINEL_COUNT = census["zero_counts"]["replay_players_raw"]["SQ_sentinel"]
 INT32_MIN = int(np.iinfo(np.int32).min)
 print(f"SQ sentinel (INT32_MIN={INT32_MIN}): {SQ_SENTINEL_COUNT} rows")
 
+APM_ZERO_COUNT = census["zero_counts"]["replay_players_raw"]["APM_zero"]
+APM_ZERO_PCT = round(100.0 * APM_ZERO_COUNT / RP_TOTAL_ROWS, 4)
+print(f"APM zero sentinel: {APM_ZERO_COUNT} rows ({APM_ZERO_PCT}%)")
+
+HANDICAP_ZERO_COUNT = census["zero_counts"]["replay_players_raw"]["handicap_zero"]
+HANDICAP_ZERO_PCT = round(100.0 * HANDICAP_ZERO_COUNT / RP_TOTAL_ROWS, 4)
+print(f"handicap zero sentinel: {HANDICAP_ZERO_COUNT} rows ({HANDICAP_ZERO_PCT}%)")
+
 result_dist = {r["result"]: r["cnt"] for r in census["result_distribution"]}
 N_WIN = result_dist["Win"]
 N_LOSS = result_dist["Loss"]
@@ -947,6 +955,229 @@ assert len(critical_findings["constant_columns"]) == 5, (
 print("\nAssertion PASSED: exactly 5 constant columns.")
 
 # %% [markdown]
+# ## Cell 18b -- Extended Sentinel Analysis (R08)
+
+# %%
+# --- R08: 5 additional sentinel patterns beyond MMR=0 and SQ=INT32_MIN ---
+
+# 1. MMR < 0 (negative MMR values)
+sql_queries["sentinel_mmr_negative"] = f"""
+SELECT
+    COUNT(*) AS mmr_negative_count,
+    MIN(MMR) AS mmr_min_negative,
+    MAX(MMR) AS mmr_max_negative,
+    ROUND(100.0 * COUNT(*) / {RP_TOTAL_ROWS}, 4) AS mmr_negative_pct
+FROM replay_players_raw
+WHERE MMR < 0
+"""
+df_mmr_neg = conn.fetch_df(sql_queries["sentinel_mmr_negative"])
+MMR_NEGATIVE_COUNT = int(df_mmr_neg.iloc[0]["mmr_negative_count"])
+MMR_NEGATIVE_PCT = float(df_mmr_neg.iloc[0]["mmr_negative_pct"])
+MMR_MIN_NEGATIVE = int(df_mmr_neg.iloc[0]["mmr_min_negative"]) if MMR_NEGATIVE_COUNT > 0 else None
+MMR_MAX_NEGATIVE = int(df_mmr_neg.iloc[0]["mmr_max_negative"]) if MMR_NEGATIVE_COUNT > 0 else None
+print(f"MMR negative: {MMR_NEGATIVE_COUNT} rows ({MMR_NEGATIVE_PCT}%)")
+if MMR_NEGATIVE_COUNT > 0:
+    print(f"  range: [{MMR_MIN_NEGATIVE}, {MMR_MAX_NEGATIVE}]")
+
+# 2. map_size = 0 (from replays_meta_raw -- uses RM_TOTAL_ROWS)
+sql_queries["sentinel_map_size_zero"] = """
+SELECT COUNT(*) AS map_size_zero_count
+FROM replays_meta_raw
+WHERE initData.gameDescription.mapSizeX = 0
+  AND initData.gameDescription.mapSizeY = 0
+"""
+df_map_size_zero = conn.fetch_df(sql_queries["sentinel_map_size_zero"])
+MAP_SIZE_ZERO_COUNT = int(df_map_size_zero.iloc[0]["map_size_zero_count"])
+MAP_SIZE_ZERO_PCT = round(100.0 * MAP_SIZE_ZERO_COUNT / RM_TOTAL_ROWS, 4)
+print(f"map_size zero (replays_meta_raw): {MAP_SIZE_ZERO_COUNT} rows ({MAP_SIZE_ZERO_PCT}%)")
+
+# 3. selectedRace = '' (empty string)
+sql_queries["sentinel_selectedrace_empty"] = """
+SELECT COUNT(*) AS selected_race_empty_count
+FROM replay_players_raw
+WHERE selectedRace = ''
+"""
+df_race_empty = conn.fetch_df(sql_queries["sentinel_selectedrace_empty"])
+SELECTED_RACE_EMPTY_COUNT = int(df_race_empty.iloc[0]["selected_race_empty_count"])
+SELECTED_RACE_EMPTY_PCT = round(100.0 * SELECTED_RACE_EMPTY_COUNT / RP_TOTAL_ROWS, 4)
+print(f"selectedRace empty: {SELECTED_RACE_EMPTY_COUNT} rows ({SELECTED_RACE_EMPTY_PCT}%)")
+
+# Extend critical_findings["sentinel_columns"] with 5 new entries
+critical_findings["sentinel_columns"].extend([
+    {
+        "column": "APM",
+        "table": "replay_players_raw",
+        "sentinel_value": 0,
+        "sentinel_count": APM_ZERO_COUNT,
+        "sentinel_pct": APM_ZERO_PCT,
+        "interpretation": "APM=0 may indicate observer or disconnect",
+    },
+    {
+        "column": "MMR",
+        "table": "replay_players_raw",
+        "sentinel_value": "negative",
+        "sentinel_count": MMR_NEGATIVE_COUNT,
+        "sentinel_pct": MMR_NEGATIVE_PCT,
+        "interpretation": "Negative MMR values — anomalous sentinel",
+    },
+    {
+        "column": "map_size",
+        "table": "replays_meta_raw",
+        "sentinel_value": 0,
+        "sentinel_count": MAP_SIZE_ZERO_COUNT,
+        "sentinel_pct": MAP_SIZE_ZERO_PCT,
+        "interpretation": "mapSizeX=0 AND mapSizeY=0 — missing or default map size",
+    },
+    {
+        "column": "handicap",
+        "table": "replay_players_raw",
+        "sentinel_value": 0,
+        "sentinel_count": HANDICAP_ZERO_COUNT,
+        "sentinel_pct": HANDICAP_ZERO_PCT,
+        "interpretation": "handicap=0 — standard/no handicap applied",
+    },
+    {
+        "column": "selectedRace",
+        "table": "replay_players_raw",
+        "sentinel_value": "",
+        "sentinel_count": SELECTED_RACE_EMPTY_COUNT,
+        "sentinel_pct": SELECTED_RACE_EMPTY_PCT,
+        "interpretation": "Empty selectedRace string — race not specified",
+    },
+])
+
+print(f"\nsentinel_columns count: {len(critical_findings['sentinel_columns'])}")
+for s in critical_findings["sentinel_columns"]:
+    print(f"  {s['column']}: {s['sentinel_count']:,} ({s['sentinel_pct']}%)")
+
+# %% [markdown]
+# ## Cell 18c -- Temporal Coverage (R09)
+
+# %%
+# --- R09: Temporal coverage (date range, gaps) ---
+
+sql_queries["temporal_coverage"] = """
+SELECT
+    MIN(details.timeUTC) AS time_utc_min,
+    MAX(details.timeUTC) AS time_utc_max,
+    COUNT(DISTINCT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m'))
+        AS distinct_months
+FROM replays_meta_raw
+WHERE details.timeUTC IS NOT NULL
+"""
+
+df_temporal = conn.fetch_df(sql_queries["temporal_coverage"])
+TIME_UTC_MIN = str(df_temporal.iloc[0]["time_utc_min"])
+TIME_UTC_MAX = str(df_temporal.iloc[0]["time_utc_max"])
+DISTINCT_MONTH_COUNT = int(df_temporal.iloc[0]["distinct_months"])
+print(f"Temporal range: {TIME_UTC_MIN} to {TIME_UTC_MAX}")
+print(f"Distinct months: {DISTINCT_MONTH_COUNT}")
+
+# TRY_CAST verification (Critique fix T02.2)
+sql_queries["temporal_trycast_verification"] = """
+SELECT COUNT(DISTINCT details.timeUTC) AS raw_distinct
+FROM replays_meta_raw
+WHERE details.timeUTC IS NOT NULL
+"""
+df_trycast_verify = conn.fetch_df(sql_queries["temporal_trycast_verification"])
+RAW_DISTINCT_TIMESTAMPS = int(df_trycast_verify.iloc[0]["raw_distinct"])
+assert DISTINCT_MONTH_COUNT > 0, "No parseable timestamps found"
+print(f"TRY_CAST verification: {RAW_DISTINCT_TIMESTAMPS} distinct raw values -> "
+      f"{DISTINCT_MONTH_COUNT} distinct months")
+
+# Temporal month gaps (Critique fix T02.1: Python fallback for generate_series)
+sql_queries["temporal_month_gaps"] = """
+WITH parsed AS (
+    SELECT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m') AS ym
+    FROM replays_meta_raw
+    WHERE details.timeUTC IS NOT NULL
+),
+observed AS (
+    SELECT DISTINCT ym FROM parsed WHERE ym IS NOT NULL
+),
+date_range AS (
+    SELECT MIN(ym) AS min_ym, MAX(ym) AS max_ym FROM observed
+),
+all_months AS (
+    SELECT strftime(
+        (SELECT TRY_CAST(min_ym || '-01' AS DATE) FROM date_range)
+        + INTERVAL (i) MONTH,
+        '%Y-%m'
+    ) AS ym
+    FROM generate_series(0,
+        (SELECT DATEDIFF('month',
+            TRY_CAST(min_ym || '-01' AS DATE),
+            TRY_CAST(max_ym || '-01' AS DATE))
+         FROM date_range)
+    ) AS t(i)
+)
+SELECT am.ym AS gap_month
+FROM all_months am
+LEFT JOIN observed o ON am.ym = o.ym
+WHERE o.ym IS NULL
+ORDER BY am.ym
+"""
+
+try:
+    df_gaps = conn.fetch_df(sql_queries["temporal_month_gaps"])
+    GAP_MONTHS = df_gaps["gap_month"].tolist()
+    print(f"SQL gap detection succeeded: {len(GAP_MONTHS)} gap months")
+except Exception as e:
+    print(f"SQL gap detection failed ({e}), using Python fallback.")
+    # Python fallback (Critique fix T02.1)
+    observed_months_df = conn.fetch_df(
+        "SELECT DISTINCT strftime(TRY_CAST(details.timeUTC AS TIMESTAMP), '%Y-%m') AS ym "
+        "FROM replays_meta_raw WHERE details.timeUTC IS NOT NULL "
+        "AND TRY_CAST(details.timeUTC AS TIMESTAMP) IS NOT NULL ORDER BY ym"
+    )
+    sql_queries["temporal_month_gaps_note"] = (
+        "Python fallback used for gap detection (generate_series CTE failed). "
+        "See temporal_month_gaps for original SQL."
+    )
+    observed_set = set(observed_months_df["ym"].dropna())
+    min_ym, max_ym = min(observed_set), max(observed_set)
+    all_months_set = set(
+        pd.date_range(min_ym + "-01", max_ym + "-01", freq="MS").strftime("%Y-%m")
+    )
+    GAP_MONTHS = sorted(all_months_set - observed_set)
+    print(f"Python fallback: {len(GAP_MONTHS)} gap months")
+
+if GAP_MONTHS:
+    print(f"Gap months: {GAP_MONTHS}")
+else:
+    print("No calendar-month gaps found in the temporal range.")
+
+# %% [markdown]
+# ## Cell 18d -- startLocX/startLocY Type Verification (R13)
+
+# %%
+# --- R13: startLocX/startLocY verification ---
+sql_queries["startloc_verification"] = """
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(*) - COUNT(startLocX) AS startLocX_null,
+    COUNT(*) - COUNT(startLocY) AS startLocY_null,
+    SUM(CASE WHEN startLocX < 0 THEN 1 ELSE 0 END) AS startLocX_negative,
+    SUM(CASE WHEN startLocY < 0 THEN 1 ELSE 0 END) AS startLocY_negative,
+    MIN(startLocX) AS startLocX_min,
+    MAX(startLocX) AS startLocX_max,
+    MIN(startLocY) AS startLocY_min,
+    MAX(startLocY) AS startLocY_max,
+    COUNT(DISTINCT startLocX) AS startLocX_cardinality,
+    COUNT(DISTINCT startLocY) AS startLocY_cardinality
+FROM replay_players_raw
+"""
+
+df_startloc = conn.fetch_df(sql_queries["startloc_verification"])
+STARTLOCX_NULL = int(df_startloc.iloc[0]["startLocX_null"])
+STARTLOCY_NULL = int(df_startloc.iloc[0]["startLocY_null"])
+assert STARTLOCX_NULL == 0, f"startLocX has {STARTLOCX_NULL} NULLs"
+assert STARTLOCY_NULL == 0, f"startLocY has {STARTLOCY_NULL} NULLs"
+print("startLocX/startLocY verification:")
+print(df_startloc.T.to_string())
+print("\nAssertion PASSED: zero NULLs for startLocX and startLocY.")
+
+# %% [markdown]
 # ## Cell 19 -- Completeness Heatmap (T07)
 
 # %%
@@ -1314,13 +1545,29 @@ profile_json = {
             "rm_orphans": _to_native(linkage_row.get("rm_orphans")),
         },
         "memory_footprint": _to_native(mem_rows),
+        "temporal_coverage": {
+            "time_utc_min": TIME_UTC_MIN,
+            "time_utc_max": TIME_UTC_MAX,
+            "distinct_months": DISTINCT_MONTH_COUNT,
+            "gap_months": GAP_MONTHS,
+        },
+        "startloc_verification": {
+            "startLocX_null": STARTLOCX_NULL,
+            "startLocY_null": STARTLOCY_NULL,
+            "startLocX_min": int(df_startloc.iloc[0]["startLocX_min"]),
+            "startLocX_max": int(df_startloc.iloc[0]["startLocX_max"]),
+            "startLocY_min": int(df_startloc.iloc[0]["startLocY_min"]),
+            "startLocY_max": int(df_startloc.iloc[0]["startLocY_max"]),
+            "startLocX_cardinality": int(df_startloc.iloc[0]["startLocX_cardinality"]),
+            "startLocY_cardinality": int(df_startloc.iloc[0]["startLocY_cardinality"]),
+        },
     },
     "critical_findings": critical_findings,
     "field_classification": FIELD_CLASSIFICATION,
     "elapsed_game_loops_reclassification": (
-        "elapsed_game_loops reclassified as POST-GAME on 2026-04-15. "
-        "The census JSON (01_02_04) still shows it as 'in_game'; "
-        "this profiling step records the corrected classification."
+        "elapsed_game_loops classified POST-GAME, consistent with "
+        "the census artifact (01_02_04) which also records it under "
+        "'post_game' in the I3 classification."
     ),
     "sql_queries": sql_queries_json,
     "sentinel_summary": {
@@ -1335,6 +1582,37 @@ profile_json = {
             "count": SQ_SENTINEL_COUNT,
             "pct": round(100.0 * SQ_SENTINEL_COUNT / RP_TOTAL_ROWS, 4),
             "interpretation": "INT32_MIN sentinel for missing SQ value",
+        },
+        "APM": {
+            "sentinel_value": 0,
+            "count": APM_ZERO_COUNT,
+            "pct": APM_ZERO_PCT,
+            "interpretation": "APM=0 may indicate observer or disconnect",
+        },
+        "MMR_negative": {
+            "sentinel_value": "negative",
+            "count": MMR_NEGATIVE_COUNT,
+            "pct": MMR_NEGATIVE_PCT,
+            "interpretation": "Negative MMR values — anomalous sentinel",
+        },
+        "map_size": {
+            "sentinel_value": 0,
+            "count": MAP_SIZE_ZERO_COUNT,
+            "pct": MAP_SIZE_ZERO_PCT,
+            "table": "replays_meta_raw",
+            "interpretation": "mapSizeX=0 AND mapSizeY=0 — missing or default map size",
+        },
+        "handicap": {
+            "sentinel_value": 0,
+            "count": HANDICAP_ZERO_COUNT,
+            "pct": HANDICAP_ZERO_PCT,
+            "interpretation": "handicap=0 — standard/no handicap applied",
+        },
+        "selectedRace": {
+            "sentinel_value": "",
+            "count": SELECTED_RACE_EMPTY_COUNT,
+            "pct": SELECTED_RACE_EMPTY_PCT,
+            "interpretation": "Empty selectedRace string — race not specified",
         },
     },
 }
@@ -1436,8 +1714,7 @@ md_content = f"""# Step 01_03_01 -- Systematic Data Profiling
 
 ## Temporal Classification (Invariant #3)
 
-> Note: `elapsed_game_loops` was reclassified as **POST-GAME** on 2026-04-15.
-> The census artifact (01_02_04) still shows it as `in_game`; this notebook records the corrected classification.
+> Note: `elapsed_game_loops` classified **POST-GAME**, consistent with the census artifact (01_02_04) which also records it under `post_game` in the I3 classification.
 
 {i3_table}
 
@@ -1494,6 +1771,37 @@ These 5 columns must be dropped before feature engineering (Phase 02).
 |--------|-------|---------------|-------|-----|---------------|
 | MMR | replay_players_raw | 0 | {MMR_ZERO_COUNT:,} | {MMR_ZERO_PCT:.2f}% | Unrated player |
 | SQ | replay_players_raw | INT32_MIN ({INT32_MIN}) | {SQ_SENTINEL_COUNT} | {round(100.0*SQ_SENTINEL_COUNT/RP_TOTAL_ROWS, 4):.4f}% | Missing SQ value |
+| APM | replay_players_raw | 0 | {APM_ZERO_COUNT:,} | {APM_ZERO_PCT:.4f}% | Observer or disconnect |
+| MMR (negative) | replay_players_raw | negative | {MMR_NEGATIVE_COUNT:,} | {MMR_NEGATIVE_PCT:.4f}% | Anomalous sentinel |
+| map_size* | replays_meta_raw | 0 | {MAP_SIZE_ZERO_COUNT:,} | {MAP_SIZE_ZERO_PCT:.4f}% | Missing/default map size |
+| handicap | replay_players_raw | 0 | {HANDICAP_ZERO_COUNT:,} | {HANDICAP_ZERO_PCT:.4f}% | Standard/no handicap |
+| selectedRace | replay_players_raw | (empty) | {SELECTED_RACE_EMPTY_COUNT:,} | {SELECTED_RACE_EMPTY_PCT:.4f}% | Race not specified |
+
+\\* map_size uses replays_meta_raw (N={RM_TOTAL_ROWS:,}); all others use replay_players_raw (N={RP_TOTAL_ROWS:,})
+
+---
+
+## Temporal Coverage
+
+| Metric | Value |
+|--------|-------|
+| Earliest timestamp | {TIME_UTC_MIN} |
+| Latest timestamp | {TIME_UTC_MAX} |
+| Distinct calendar months | {DISTINCT_MONTH_COUNT} |
+| Calendar-month gaps | {len(GAP_MONTHS)} ({', '.join(GAP_MONTHS) if GAP_MONTHS else 'none'}) |
+
+---
+
+## startLocX/startLocY Verification
+
+| Metric | startLocX | startLocY |
+|--------|-----------|-----------|
+| NULLs | {STARTLOCX_NULL} | {STARTLOCY_NULL} |
+| Min | {int(df_startloc.iloc[0]['startLocX_min'])} | {int(df_startloc.iloc[0]['startLocY_min'])} |
+| Max | {int(df_startloc.iloc[0]['startLocX_max'])} | {int(df_startloc.iloc[0]['startLocY_max'])} |
+| Cardinality | {int(df_startloc.iloc[0]['startLocX_cardinality'])} | {int(df_startloc.iloc[0]['startLocY_cardinality'])} |
+
+Both columns are INTEGER with zero NULLs, confirmed by schema YAML and runtime verification.
 
 ---
 
@@ -1586,6 +1894,27 @@ assert "I3" in md_text_chk or "Temporal Classification" in md_text_chk, (
 # Gate check: MMR rated-only IQR exists in JSON (W-03)
 assert "iqr_outliers_rated_only" in str(profile_chk), (
     "JSON missing MMR rated-only IQR outlier count"
+)
+
+# Gate check: R08 -- sentinel_summary has 7 keys
+assert len(profile_chk["sentinel_summary"]) == 7, (
+    f"Expected 7 sentinel_summary entries, got {len(profile_chk['sentinel_summary'])}"
+)
+
+# Gate check: R09 -- temporal_coverage exists
+assert "temporal_coverage" in profile_chk.get("dataset_level", {}), (
+    "JSON missing temporal_coverage key"
+)
+
+# Gate check: R13 -- startloc_verification exists
+assert "startloc_verification" in profile_chk.get("dataset_level", {}), (
+    "JSON missing startloc_verification key"
+)
+
+# Gate check: R08 -- sentinel_columns has 7 entries
+assert len(profile_chk["critical_findings"]["sentinel_columns"]) == 7, (
+    f"Expected 7 sentinel_columns, got "
+    f"{len(profile_chk['critical_findings']['sentinel_columns'])}"
 )
 
 print("\nAll 01_03_01 gate checks PASSED.")
