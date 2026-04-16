@@ -1,0 +1,2147 @@
+{
+  "step": "01_03_01",
+  "dataset": "aoe2companion",
+  "table": "matches_raw",
+  "total_rows": 277099059,
+  "total_columns": 55,
+  "column_profiles": [
+    {
+      "column": "matchId",
+      "i3_classification": "IDENTIFIER",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 61799126,
+      "uniqueness_ratio": 0.22302178
+    },
+    {
+      "column": "started",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 52689164,
+      "uniqueness_ratio": 0.19014559
+    },
+    {
+      "column": "finished",
+      "i3_classification": "POST_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 55139738,
+      "uniqueness_ratio": 0.19898926
+    },
+    {
+      "column": "leaderboard",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 22,
+      "uniqueness_ratio": 8e-08,
+      "top_k": [
+        {
+          "value": "rm_team",
+          "cnt": 102711164,
+          "pct": 37.07
+        },
+        {
+          "value": "unranked",
+          "cnt": 78254732,
+          "pct": 28.24
+        },
+        {
+          "value": "rm_1v1",
+          "cnt": 53694523,
+          "pct": 19.38
+        },
+        {
+          "value": "qp_rm_team",
+          "cnt": 19707155,
+          "pct": 7.11
+        },
+        {
+          "value": "qp_rm_1v1",
+          "cnt": 7377276,
+          "pct": 2.66
+        }
+      ]
+    },
+    {
+      "column": "name",
+      "i3_classification": "IDENTIFIER",
+      "null_count": 27710,
+      "null_pct": 0.01,
+      "cardinality": 2308187,
+      "uniqueness_ratio": 0.00832983
+    },
+    {
+      "column": "server",
+      "i3_classification": "CONTEXT",
+      "null_count": 271529368,
+      "null_pct": 97.99,
+      "cardinality": 11,
+      "uniqueness_ratio": 4e-08,
+      "top_k": [
+        {
+          "value": "ukwest",
+          "cnt": 1706959,
+          "pct": 0.62
+        },
+        {
+          "value": "eastus",
+          "cnt": 1197111,
+          "pct": 0.43
+        },
+        {
+          "value": "brazilsouth",
+          "cnt": 559412,
+          "pct": 0.2
+        },
+        {
+          "value": "southeastasia",
+          "cnt": 509169,
+          "pct": 0.18
+        },
+        {
+          "value": "westus2",
+          "cnt": 430536,
+          "pct": 0.16
+        }
+      ]
+    },
+    {
+      "column": "internalLeaderboardId",
+      "i3_classification": "PRE_GAME",
+      "null_count": 1330075,
+      "null_pct": 0.48,
+      "cardinality": 122,
+      "uniqueness_ratio": 4.4e-07,
+      "zero_count": 78254732,
+      "zero_pct": 28.2407,
+      "mean": 8.79,
+      "std": 12.93,
+      "min": 0,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p50": 7.0,
+      "p75": 9.0,
+      "p95": 21.0,
+      "max": 125,
+      "skewness": 4.355,
+      "kurtosis": 24.9976,
+      "iqr_outlier": {
+        "iqr": 9.0,
+        "lower_fence": -13.5,
+        "upper_fence": 22.5,
+        "outlier_count": 13617675,
+        "outlier_pct": 4.9381
+      }
+    },
+    {
+      "column": "privacy",
+      "i3_classification": "CONTEXT",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 3,
+      "uniqueness_ratio": 1e-08,
+      "top_k": [
+        {
+          "value": "public",
+          "cnt": 261023646,
+          "pct": 94.2
+        },
+        {
+          "value": "private",
+          "cnt": 14101316,
+          "pct": 5.09
+        },
+        {
+          "value": "unknown",
+          "cnt": 1974097,
+          "pct": 0.71
+        }
+      ]
+    },
+    {
+      "column": "mod",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "map",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 261,
+      "uniqueness_ratio": 9.4e-07,
+      "top_k": [
+        {
+          "value": "rm_arabia",
+          "cnt": 54118272,
+          "pct": 19.53
+        },
+        {
+          "value": "rm_arena",
+          "cnt": 46540790,
+          "pct": 16.8
+        },
+        {
+          "value": "rm_black-forest",
+          "cnt": 34421288,
+          "pct": 12.42
+        },
+        {
+          "value": "rm_nomad",
+          "cnt": 18932603,
+          "pct": 6.83
+        },
+        {
+          "value": "unknown",
+          "cnt": 14792062,
+          "pct": 5.34
+        }
+      ]
+    },
+    {
+      "column": "difficulty",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 7,
+      "uniqueness_ratio": 3e-08,
+      "top_k": [
+        {
+          "value": "standard",
+          "cnt": 222596871,
+          "pct": 80.33
+        },
+        {
+          "value": "extreme",
+          "cnt": 18479850,
+          "pct": 6.67
+        },
+        {
+          "value": "hard",
+          "cnt": 14318229,
+          "pct": 5.17
+        },
+        {
+          "value": "moderate",
+          "cnt": 10728884,
+          "pct": 3.87
+        },
+        {
+          "value": "hardest",
+          "cnt": 6926755,
+          "pct": 2.5
+        }
+      ]
+    },
+    {
+      "column": "startingAge",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 12,
+      "uniqueness_ratio": 4e-08,
+      "top_k": [
+        {
+          "value": "dark",
+          "cnt": 169216711,
+          "pct": 61.07
+        },
+        {
+          "value": "standard",
+          "cnt": 68084209,
+          "pct": 24.57
+        },
+        {
+          "value": "dark_age",
+          "cnt": 27798112,
+          "pct": 10.03
+        },
+        {
+          "value": "feudal",
+          "cnt": 6456219,
+          "pct": 2.33
+        },
+        {
+          "value": "post_imperial",
+          "cnt": 2897234,
+          "pct": 1.05
+        }
+      ]
+    },
+    {
+      "column": "fullTechTree",
+      "i3_classification": "PRE_GAME",
+      "null_count": 443358,
+      "null_pct": 0.16,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "allowCheats",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "empireWarsMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 2937250,
+      "null_pct": 1.06,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "endingAge",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 11,
+      "uniqueness_ratio": 4e-08,
+      "top_k": [
+        {
+          "value": "imperial",
+          "cnt": 177153068,
+          "pct": 63.93
+        },
+        {
+          "value": "standard",
+          "cnt": 68516141,
+          "pct": 24.73
+        },
+        {
+          "value": "imperial_age",
+          "cnt": 30748811,
+          "pct": 11.1
+        },
+        {
+          "value": "unknown",
+          "cnt": 503854,
+          "pct": 0.18
+        },
+        {
+          "value": "castle",
+          "cnt": 101706,
+          "pct": 0.04
+        }
+      ]
+    },
+    {
+      "column": "gameMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 16,
+      "uniqueness_ratio": 6e-08,
+      "top_k": [
+        {
+          "value": "random_map",
+          "cnt": 252087632,
+          "pct": 90.97
+        },
+        {
+          "value": "empire_wars",
+          "cnt": 7619367,
+          "pct": 2.75
+        },
+        {
+          "value": "scenario",
+          "cnt": 6686197,
+          "pct": 2.41
+        },
+        {
+          "value": "co_op_campaign",
+          "cnt": 3954938,
+          "pct": 1.43
+        },
+        {
+          "value": "regicide",
+          "cnt": 2638530,
+          "pct": 0.95
+        }
+      ]
+    },
+    {
+      "column": "lockSpeed",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "lockTeams",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "mapSize",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 14,
+      "uniqueness_ratio": 5e-08,
+      "top_k": [
+        {
+          "value": "large",
+          "cnt": 86226253,
+          "pct": 31.12
+        },
+        {
+          "value": "tiny",
+          "cnt": 76307245,
+          "pct": 27.54
+        },
+        {
+          "value": "medium",
+          "cnt": 48595311,
+          "pct": 17.54
+        },
+        {
+          "value": "normal",
+          "cnt": 44355175,
+          "pct": 16.01
+        },
+        {
+          "value": "giant",
+          "cnt": 8734943,
+          "pct": 3.15
+        }
+      ]
+    },
+    {
+      "column": "population",
+      "i3_classification": "PRE_GAME",
+      "null_count": 443358,
+      "null_pct": 0.16,
+      "cardinality": 21,
+      "uniqueness_ratio": 8e-08,
+      "zero_count": 2,
+      "zero_pct": 0.0,
+      "mean": 216.98,
+      "std": 57.06,
+      "min": 0,
+      "p05": 200.0,
+      "p25": 200.0,
+      "p50": 200.0,
+      "p75": 200.0,
+      "p95": 300.0,
+      "max": 9999,
+      "skewness": 3.7833,
+      "kurtosis": 17.8371,
+      "iqr_outlier": {
+        "iqr": 0.0,
+        "lower_fence": 200.0,
+        "upper_fence": 200.0,
+        "outlier_count": null,
+        "note": "IQR=0 (near-constant); IQR outlier detection not meaningful"
+      }
+    },
+    {
+      "column": "hideCivs",
+      "i3_classification": "PRE_GAME",
+      "null_count": 136609836,
+      "null_pct": 49.3,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "recordGame",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "regicideMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 20477620,
+      "null_pct": 7.39,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "gameVariant",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 3,
+      "uniqueness_ratio": 1e-08,
+      "top_k": [
+        {
+          "value": "de",
+          "cnt": 178547597,
+          "pct": 64.43
+        },
+        {
+          "value": "unknown",
+          "cnt": 98289829,
+          "pct": 35.47
+        },
+        {
+          "value": "ror",
+          "cnt": 261633,
+          "pct": 0.09
+        }
+      ]
+    },
+    {
+      "column": "resources",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 9,
+      "uniqueness_ratio": 3e-08,
+      "top_k": [
+        {
+          "value": "standard",
+          "cnt": 178599205,
+          "pct": 64.45
+        },
+        {
+          "value": "low",
+          "cnt": 86621972,
+          "pct": 31.26
+        },
+        {
+          "value": "high",
+          "cnt": 4495756,
+          "pct": 1.62
+        },
+        {
+          "value": "ultra_high",
+          "cnt": 2065262,
+          "pct": 0.75
+        },
+        {
+          "value": "infinite",
+          "cnt": 2044944,
+          "pct": 0.74
+        }
+      ]
+    },
+    {
+      "column": "sharedExploration",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "speed",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 5,
+      "uniqueness_ratio": 2e-08,
+      "top_k": [
+        {
+          "value": "normal",
+          "cnt": 254622800,
+          "pct": 91.89
+        },
+        {
+          "value": "fast",
+          "cnt": 17179752,
+          "pct": 6.2
+        },
+        {
+          "value": "casual",
+          "cnt": 4609521,
+          "pct": 1.66
+        },
+        {
+          "value": "unknown",
+          "cnt": 507457,
+          "pct": 0.18
+        },
+        {
+          "value": "slow",
+          "cnt": 179529,
+          "pct": 0.06
+        }
+      ]
+    },
+    {
+      "column": "speedFactor",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 4,
+      "uniqueness_ratio": 1e-08,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "mean": 1.71,
+      "std": 0.09,
+      "min": 1.0,
+      "p05": 1.7000000476837158,
+      "p25": 1.7000000476837158,
+      "p50": 1.7000000476837158,
+      "p75": 1.7000000476837158,
+      "p95": 2.0,
+      "max": 2.0,
+      "skewness": 0.6323,
+      "kurtosis": 17.6757,
+      "iqr_outlier": {
+        "iqr": 0.0,
+        "lower_fence": 1.7000000476837158,
+        "upper_fence": 1.7000000476837158,
+        "outlier_count": null,
+        "note": "IQR=0 (near-constant); IQR outlier detection not meaningful"
+      }
+    },
+    {
+      "column": "suddenDeathMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 2881830,
+      "null_pct": 1.04,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "antiquityMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 190256214,
+      "null_pct": 68.66,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "civilizationSet",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 3,
+      "uniqueness_ratio": 1e-08,
+      "top_k": [
+        {
+          "value": "unknown",
+          "cnt": 190248871,
+          "pct": 68.66
+        },
+        {
+          "value": "aoe2",
+          "cnt": 85733228,
+          "pct": 30.94
+        },
+        {
+          "value": "all",
+          "cnt": 1114116,
+          "pct": 0.4
+        },
+        {
+          "value": "chronicles",
+          "cnt": 2844,
+          "pct": 0.0
+        }
+      ]
+    },
+    {
+      "column": "teamPositions",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "teamTogether",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "treatyLength",
+      "i3_classification": "PRE_GAME",
+      "null_count": 249389,
+      "null_pct": 0.09,
+      "cardinality": 30,
+      "uniqueness_ratio": 1.1e-07,
+      "zero_count": 267323811,
+      "zero_pct": 96.4723,
+      "mean": 0.87,
+      "std": 6.02,
+      "min": 0,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p95": 0.0,
+      "max": 90,
+      "skewness": 9.309,
+      "kurtosis": 103.0427,
+      "iqr_outlier": {
+        "iqr": 0.0,
+        "lower_fence": 0.0,
+        "upper_fence": 0.0,
+        "outlier_count": null,
+        "note": "IQR=0 (near-constant); IQR outlier detection not meaningful"
+      }
+    },
+    {
+      "column": "turboMode",
+      "i3_classification": "PRE_GAME",
+      "null_count": 415649,
+      "null_pct": 0.15,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "victory",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 6,
+      "uniqueness_ratio": 2e-08,
+      "top_k": [
+        {
+          "value": "conquest",
+          "cnt": 204971854,
+          "pct": 73.97
+        },
+        {
+          "value": "standard",
+          "cnt": 59656465,
+          "pct": 21.53
+        },
+        {
+          "value": "unknown",
+          "cnt": 10709959,
+          "pct": 3.87
+        },
+        {
+          "value": "time_limit",
+          "cnt": 940544,
+          "pct": 0.34
+        },
+        {
+          "value": "last_man_standing",
+          "cnt": 807906,
+          "pct": 0.29
+        }
+      ]
+    },
+    {
+      "column": "revealMap",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 4,
+      "uniqueness_ratio": 1e-08,
+      "top_k": [
+        {
+          "value": "normal",
+          "cnt": 226660893,
+          "pct": 81.8
+        },
+        {
+          "value": "explored",
+          "cnt": 43553406,
+          "pct": 15.72
+        },
+        {
+          "value": "all_visible",
+          "cnt": 6434621,
+          "pct": 2.32
+        },
+        {
+          "value": "unknown",
+          "cnt": 450139,
+          "pct": 0.16
+        }
+      ]
+    },
+    {
+      "column": "scenario",
+      "i3_classification": "PRE_GAME",
+      "null_count": 272305245,
+      "null_pct": 98.27,
+      "cardinality": 30484,
+      "uniqueness_ratio": 0.00011001,
+      "top_k": [
+        {
+          "value": "",
+          "cnt": 114850,
+          "pct": 0.04
+        },
+        {
+          "value": "35319",
+          "cnt": 84907,
+          "pct": 0.03
+        },
+        {
+          "value": "35613",
+          "cnt": 69454,
+          "pct": 0.03
+        },
+        {
+          "value": "35321",
+          "cnt": 63959,
+          "pct": 0.02
+        },
+        {
+          "value": "35229",
+          "cnt": 60125,
+          "pct": 0.02
+        }
+      ]
+    },
+    {
+      "column": "password",
+      "i3_classification": "PRE_GAME",
+      "null_count": 229715120,
+      "null_pct": 82.9,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "modDataset",
+      "i3_classification": "PRE_GAME",
+      "null_count": 276323182,
+      "null_pct": 99.72,
+      "cardinality": 955,
+      "uniqueness_ratio": 3.45e-06,
+      "top_k": [
+        {
+          "value": "251941-New No Collision Trade",
+          "cnt": 131306,
+          "pct": 0.05
+        },
+        {
+          "value": "23222-23222_Fast Villager Defense Club DE 47.1",
+          "cnt": 41742,
+          "pct": 0.02
+        },
+        {
+          "value": "363188-PQ2.41_10xShared_3xtech_10xresources_1xtrees",
+          "cnt": 37695,
+          "pct": 0.01
+        },
+        {
+          "value": "363188-MS2.1_10xShared_3xtech_10xresources_1xtrees",
+          "cnt": 32703,
+          "pct": 0.01
+        },
+        {
+          "value": "858-No Collision Trade",
+          "cnt": 28151,
+          "pct": 0.01
+        }
+      ]
+    },
+    {
+      "column": "profileId",
+      "i3_classification": "IDENTIFIER",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 3387273,
+      "uniqueness_ratio": 0.01222405
+    },
+    {
+      "column": "rating",
+      "i3_classification": "AMBIGUOUS",
+      "null_count": 117656260,
+      "null_pct": 42.46,
+      "cardinality": 4196,
+      "uniqueness_ratio": 1.514e-05,
+      "zero_count": 7792,
+      "zero_pct": 0.0028,
+      "mean": 1120.23,
+      "std": 290.01,
+      "min": -1,
+      "p05": 687.0,
+      "p25": 934.0,
+      "p50": 1093.0,
+      "p75": 1299.0,
+      "p95": 1598.0,
+      "max": 5001,
+      "skewness": 0.5662,
+      "kurtosis": 1.6157,
+      "iqr_outlier": {
+        "iqr": 365.0,
+        "lower_fence": 386.5,
+        "upper_fence": 1846.5,
+        "outlier_count": 3038498,
+        "outlier_pct": 1.9057
+      }
+    },
+    {
+      "column": "ratingDiff",
+      "i3_classification": "POST_GAME",
+      "null_count": 117656260,
+      "null_pct": 42.46,
+      "cardinality": 353,
+      "uniqueness_ratio": 1.27e-06,
+      "zero_count": 6860545,
+      "zero_pct": 2.4758,
+      "mean": -0.19,
+      "std": 17.66,
+      "min": -174,
+      "p05": -20.0,
+      "p25": -16.0,
+      "p50": 0.0,
+      "p75": 16.0,
+      "p95": 20.0,
+      "max": 319,
+      "skewness": 0.1105,
+      "kurtosis": 0.89,
+      "iqr_outlier": {
+        "iqr": 32.0,
+        "lower_fence": -64.0,
+        "upper_fence": 64.0,
+        "outlier_count": 270731,
+        "outlier_pct": 0.1698
+      }
+    },
+    {
+      "column": "color",
+      "i3_classification": "PRE_GAME",
+      "null_count": 27710,
+      "null_pct": 0.01,
+      "cardinality": 43,
+      "uniqueness_ratio": 1.6e-07,
+      "zero_count": 1732,
+      "zero_pct": 0.0006,
+      "mean": 3.37,
+      "std": 2.22,
+      "min": 0,
+      "p05": 1.0,
+      "p25": 2.0,
+      "p50": 3.0,
+      "p75": 5.0,
+      "p95": 8.0,
+      "max": 43,
+      "skewness": 1.6691,
+      "kurtosis": 15.4799,
+      "iqr_outlier": {
+        "iqr": 3.0,
+        "lower_fence": -2.5,
+        "upper_fence": 9.5,
+        "outlier_count": 129407,
+        "outlier_pct": 0.0467
+      }
+    },
+    {
+      "column": "colorHex",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 10,
+      "uniqueness_ratio": 4e-08,
+      "top_k": [
+        {
+          "value": "#405BFF",
+          "cnt": 63942154,
+          "pct": 23.08
+        },
+        {
+          "value": "#FF0000",
+          "cnt": 62612556,
+          "pct": 22.6
+        },
+        {
+          "value": "#00FF00",
+          "cnt": 38744307,
+          "pct": 13.98
+        },
+        {
+          "value": "#FFFF00",
+          "cnt": 35108070,
+          "pct": 12.67
+        },
+        {
+          "value": "#FF57B3",
+          "cnt": 22575878,
+          "pct": 8.15
+        }
+      ]
+    },
+    {
+      "column": "slot",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 9,
+      "uniqueness_ratio": 3e-08,
+      "zero_count": 74781923,
+      "zero_pct": 26.9874,
+      "mean": 2.04,
+      "std": 2.03,
+      "min": 0,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p50": 1.0,
+      "p75": 3.0,
+      "p95": 6.0,
+      "max": 7,
+      "skewness": 0.916,
+      "kurtosis": -0.1918,
+      "iqr_outlier": {
+        "iqr": 3.0,
+        "lower_fence": -4.5,
+        "upper_fence": 7.5,
+        "outlier_count": 0,
+        "outlier_pct": 0.0
+      }
+    },
+    {
+      "column": "status",
+      "i3_classification": "CONTEXT",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08,
+      "top_k": [
+        {
+          "value": "player",
+          "cnt": 264151981,
+          "pct": 95.33
+        },
+        {
+          "value": "ai",
+          "cnt": 12947078,
+          "pct": 4.67
+        }
+      ]
+    },
+    {
+      "column": "team",
+      "i3_classification": "PRE_GAME",
+      "null_count": 13577854,
+      "null_pct": 4.9,
+      "cardinality": 31,
+      "uniqueness_ratio": 1.1e-07,
+      "zero_count": 449,
+      "zero_pct": 0.0002,
+      "mean": 1.82,
+      "std": 1.49,
+      "min": 0,
+      "p05": 1.0,
+      "p25": 1.0,
+      "p50": 2.0,
+      "p75": 2.0,
+      "p95": 5.0,
+      "max": 255,
+      "skewness": 3.8741,
+      "kurtosis": 30.6175,
+      "iqr_outlier": {
+        "iqr": 1.0,
+        "lower_fence": -0.5,
+        "upper_fence": 3.5,
+        "outlier_count": 17925743,
+        "outlier_pct": 6.8024
+      }
+    },
+    {
+      "column": "won",
+      "i3_classification": "TARGET",
+      "null_count": 12985561,
+      "null_pct": 4.69,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "country",
+      "i3_classification": "CONTEXT",
+      "null_count": 34914481,
+      "null_pct": 12.6,
+      "cardinality": 222,
+      "uniqueness_ratio": 8e-07,
+      "top_k": [
+        {
+          "value": "us",
+          "cnt": 28753281,
+          "pct": 10.38
+        },
+        {
+          "value": "cn",
+          "cnt": 24482525,
+          "pct": 8.84
+        },
+        {
+          "value": "ar",
+          "cnt": 20013544,
+          "pct": 7.22
+        },
+        {
+          "value": "de",
+          "cnt": 17572509,
+          "pct": 6.34
+        },
+        {
+          "value": "mx",
+          "cnt": 11633734,
+          "pct": 4.2
+        }
+      ]
+    },
+    {
+      "column": "shared",
+      "i3_classification": "CONTEXT",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "verified",
+      "i3_classification": "CONTEXT",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 1e-08
+    },
+    {
+      "column": "civ",
+      "i3_classification": "PRE_GAME",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 68,
+      "uniqueness_ratio": 2.5e-07,
+      "top_k": [
+        {
+          "value": "franks",
+          "cnt": 15745563,
+          "pct": 5.68
+        },
+        {
+          "value": "mongols",
+          "cnt": 12320535,
+          "pct": 4.45
+        },
+        {
+          "value": "britons",
+          "cnt": 11814240,
+          "pct": 4.26
+        },
+        {
+          "value": "persians",
+          "cnt": 10762563,
+          "pct": 3.88
+        },
+        {
+          "value": "spanish",
+          "cnt": 10455030,
+          "pct": 3.77
+        }
+      ]
+    },
+    {
+      "column": "filename",
+      "i3_classification": "IDENTIFIER",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2210,
+      "uniqueness_ratio": 7.98e-06
+    }
+  ],
+  "dataset_profile": {
+    "total_rows": 277099059,
+    "total_columns": 55,
+    "duplicate_detection": {
+      "has_duplicates": true,
+      "dup_groups": 3589428,
+      "total_dup_rows": 12401433,
+      "sample_dups": [
+        {
+          "matchId": 70010280,
+          "profileId": -1,
+          "cnt": 8
+        },
+        {
+          "matchId": 326681601,
+          "profileId": -1,
+          "cnt": 8
+        },
+        {
+          "matchId": 68070047,
+          "profileId": -1,
+          "cnt": 8
+        },
+        {
+          "matchId": 172533416,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 159809463,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184288749,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 192321406,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184945346,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184575672,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 156839600,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 174212648,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 191528711,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 174347427,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184633797,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184594552,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 187958248,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 148899533,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 171129952,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 183638356,
+          "profileId": -1,
+          "cnt": 7
+        },
+        {
+          "matchId": 184268594,
+          "profileId": -1,
+          "cnt": 7
+        }
+      ]
+    },
+    "class_balance": {
+      "target_column": "won",
+      "distribution": [
+        {
+          "won": false,
+          "cnt": 132150323,
+          "pct": 47.69
+        },
+        {
+          "won": true,
+          "cnt": 131963175,
+          "pct": 47.62
+        },
+        {
+          "won": null,
+          "cnt": 12985561,
+          "pct": 4.69
+        }
+      ],
+      "note": "GROUP BY count is authoritative for the prediction target."
+    },
+    "completeness_data": [
+      {
+        "column": "modDataset",
+        "null_pct": 99.72,
+        "completeness_pct": 0.28
+      },
+      {
+        "column": "scenario",
+        "null_pct": 98.27,
+        "completeness_pct": 1.73
+      },
+      {
+        "column": "server",
+        "null_pct": 97.99,
+        "completeness_pct": 2.01
+      },
+      {
+        "column": "password",
+        "null_pct": 82.9,
+        "completeness_pct": 17.1
+      },
+      {
+        "column": "antiquityMode",
+        "null_pct": 68.66,
+        "completeness_pct": 31.34
+      },
+      {
+        "column": "hideCivs",
+        "null_pct": 49.3,
+        "completeness_pct": 50.7
+      },
+      {
+        "column": "rating",
+        "null_pct": 42.46,
+        "completeness_pct": 57.54
+      },
+      {
+        "column": "ratingDiff",
+        "null_pct": 42.46,
+        "completeness_pct": 57.54
+      },
+      {
+        "column": "country",
+        "null_pct": 12.6,
+        "completeness_pct": 87.4
+      },
+      {
+        "column": "regicideMode",
+        "null_pct": 7.39,
+        "completeness_pct": 92.61
+      },
+      {
+        "column": "team",
+        "null_pct": 4.9,
+        "completeness_pct": 95.1
+      },
+      {
+        "column": "won",
+        "null_pct": 4.69,
+        "completeness_pct": 95.31
+      },
+      {
+        "column": "empireWarsMode",
+        "null_pct": 1.06,
+        "completeness_pct": 98.94
+      },
+      {
+        "column": "suddenDeathMode",
+        "null_pct": 1.04,
+        "completeness_pct": 98.96
+      },
+      {
+        "column": "internalLeaderboardId",
+        "null_pct": 0.48,
+        "completeness_pct": 99.52
+      },
+      {
+        "column": "fullTechTree",
+        "null_pct": 0.16,
+        "completeness_pct": 99.84
+      },
+      {
+        "column": "population",
+        "null_pct": 0.16,
+        "completeness_pct": 99.84
+      },
+      {
+        "column": "allowCheats",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "lockSpeed",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "lockTeams",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "recordGame",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "sharedExploration",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "teamPositions",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "teamTogether",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "turboMode",
+        "null_pct": 0.15,
+        "completeness_pct": 99.85
+      },
+      {
+        "column": "treatyLength",
+        "null_pct": 0.09,
+        "completeness_pct": 99.91
+      },
+      {
+        "column": "name",
+        "null_pct": 0.01,
+        "completeness_pct": 99.99
+      },
+      {
+        "column": "color",
+        "null_pct": 0.01,
+        "completeness_pct": 99.99
+      },
+      {
+        "column": "matchId",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "started",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "finished",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "leaderboard",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "privacy",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "mod",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "map",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "difficulty",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "startingAge",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "endingAge",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "gameMode",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "mapSize",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "gameVariant",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "resources",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "speed",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "speedFactor",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "civilizationSet",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "victory",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "revealMap",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "profileId",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "colorHex",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "slot",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "status",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "shared",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "verified",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "civ",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      },
+      {
+        "column": "filename",
+        "null_pct": 0.0,
+        "completeness_pct": 100.0
+      }
+    ],
+    "memory_footprint": {
+      "total_bytes": 22542548992,
+      "used_bytes": 11763712000,
+      "total_gb": 20.99,
+      "used_gb": 10.96,
+      "total_rows": 277099059,
+      "note": "DuckDB 1.5.1: pragma_database_size() whole-DB block counts. total_bytes=allocated blocks*block_size; used_bytes=used blocks*block_size. Per-table footprint not available via pragma_storage_info in this DuckDB version."
+    }
+  },
+  "critical_findings": {
+    "dead_fields": [],
+    "dead_fields_count": 0,
+    "constant_columns": [],
+    "constant_columns_count": 0,
+    "near_constant_columns": [
+      {
+        "column": "leaderboard",
+        "cardinality": 22,
+        "uniqueness_ratio": 8e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000008 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "server",
+        "cardinality": 11,
+        "uniqueness_ratio": 4e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000004 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "internalLeaderboardId",
+        "cardinality": 122,
+        "uniqueness_ratio": 4.4e-07,
+        "iqr": 9.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000044 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "privacy",
+        "cardinality": 3,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "mod",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "map",
+        "cardinality": 261,
+        "uniqueness_ratio": 9.4e-07,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000094 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "difficulty",
+        "cardinality": 7,
+        "uniqueness_ratio": 3e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000003 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "startingAge",
+        "cardinality": 12,
+        "uniqueness_ratio": 4e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000004 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "fullTechTree",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "allowCheats",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "empireWarsMode",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "endingAge",
+        "cardinality": 11,
+        "uniqueness_ratio": 4e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000004 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "gameMode",
+        "cardinality": 16,
+        "uniqueness_ratio": 6e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000006 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "lockSpeed",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "lockTeams",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "mapSize",
+        "cardinality": 14,
+        "uniqueness_ratio": 5e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000005 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "population",
+        "cardinality": 21,
+        "uniqueness_ratio": 8e-08,
+        "iqr": 0.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000008 < 0.001",
+          "IQR=0"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "hideCivs",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "recordGame",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "regicideMode",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "gameVariant",
+        "cardinality": 3,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "resources",
+        "cardinality": 9,
+        "uniqueness_ratio": 3e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000003 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "sharedExploration",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "speed",
+        "cardinality": 5,
+        "uniqueness_ratio": 2e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000002 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "speedFactor",
+        "cardinality": 4,
+        "uniqueness_ratio": 1e-08,
+        "iqr": 0.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001",
+          "IQR=0"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "suddenDeathMode",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "antiquityMode",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "civilizationSet",
+        "cardinality": 3,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "teamPositions",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "teamTogether",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "treatyLength",
+        "cardinality": 30,
+        "uniqueness_ratio": 1.1e-07,
+        "iqr": 0.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000011 < 0.001",
+          "IQR=0"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "turboMode",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "victory",
+        "cardinality": 6,
+        "uniqueness_ratio": 2e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000002 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "revealMap",
+        "cardinality": 4,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "scenario",
+        "cardinality": 30484,
+        "uniqueness_ratio": 0.00011001,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00011001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "password",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "modDataset",
+        "cardinality": 955,
+        "uniqueness_ratio": 3.45e-06,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000345 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "rating",
+        "cardinality": 4196,
+        "uniqueness_ratio": 1.514e-05,
+        "iqr": 365.0,
+        "reasons": [
+          "uniqueness_ratio=0.00001514 < 0.001"
+        ],
+        "i3_classification": "AMBIGUOUS"
+      },
+      {
+        "column": "ratingDiff",
+        "cardinality": 353,
+        "uniqueness_ratio": 1.27e-06,
+        "iqr": 32.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000127 < 0.001"
+        ],
+        "i3_classification": "POST_GAME"
+      },
+      {
+        "column": "color",
+        "cardinality": 43,
+        "uniqueness_ratio": 1.6e-07,
+        "iqr": 3.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000016 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "colorHex",
+        "cardinality": 10,
+        "uniqueness_ratio": 4e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000004 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "slot",
+        "cardinality": 9,
+        "uniqueness_ratio": 3e-08,
+        "iqr": 3.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000003 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "status",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "team",
+        "cardinality": 31,
+        "uniqueness_ratio": 1.1e-07,
+        "iqr": 1.0,
+        "reasons": [
+          "uniqueness_ratio=0.00000011 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "won",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "TARGET"
+      },
+      {
+        "column": "country",
+        "cardinality": 222,
+        "uniqueness_ratio": 8e-07,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000080 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "shared",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "verified",
+        "cardinality": 2,
+        "uniqueness_ratio": 1e-08,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000001 < 0.001"
+        ],
+        "i3_classification": "CONTEXT"
+      },
+      {
+        "column": "civ",
+        "cardinality": 68,
+        "uniqueness_ratio": 2.5e-07,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000025 < 0.001"
+        ],
+        "i3_classification": "PRE_GAME"
+      },
+      {
+        "column": "filename",
+        "cardinality": 2210,
+        "uniqueness_ratio": 7.98e-06,
+        "iqr": null,
+        "reasons": [
+          "uniqueness_ratio=0.00000798 < 0.001"
+        ],
+        "i3_classification": "IDENTIFIER"
+      }
+    ],
+    "near_constant_columns_count": 50,
+    "thresholds": {
+      "near_constant_uniqueness_ratio": 0.001,
+      "iqr_zero_flagged": true,
+      "source": "Manual 3.3 + census percentiles (I7)"
+    }
+  },
+  "rating_stratified": [
+    {
+      "scope": "full_table",
+      "n_rows": 277099059,
+      "rating_null": 117642466.0,
+      "rating_null_pct": 42.46,
+      "rating_mean": 1120.23,
+      "rating_std": 290.01,
+      "rating_median": 1093.0,
+      "ratingdiff_null": 117643436.0,
+      "ratingdiff_mean": -0.1905
+    },
+    {
+      "scope": "1v1_ranked",
+      "n_rows": 61071799,
+      "rating_null": 16004199.0,
+      "rating_null_pct": 26.21,
+      "rating_mean": 1091.65,
+      "rating_std": 346.84,
+      "rating_median": 1049.0,
+      "ratingdiff_null": 16004441.0,
+      "ratingdiff_mean": -0.4691
+    }
+  ],
+  "sample_info": {
+    "bernoulli_pct_viz": 0.02,
+    "skewness_kurtosis_method": "DuckDB native SKEWNESS()/KURTOSIS() -- exact, full table",
+    "skewness_kurtosis_columns": 10,
+    "kurtosis_convention": "excess kurtosis (kurtosis - 3); DuckDB KURTOSIS() default",
+    "qq_ecdf_sample_rows": 55414
+  },
+  "sql_queries": {
+    "zero_count_numeric": "SELECT\n    SUM(CASE WHEN rating = 0 THEN 1 ELSE 0 END) AS rating_zero_count,\n    SUM(CASE WHEN ratingDiff = 0 THEN 1 ELSE 0 END) AS ratingDiff_zero_count,\n    SUM(CASE WHEN population = 0 THEN 1 ELSE 0 END) AS population_zero_count,\n    SUM(CASE WHEN slot = 0 THEN 1 ELSE 0 END) AS slot_zero_count,\n    SUM(CASE WHEN color = 0 THEN 1 ELSE 0 END) AS color_zero_count,\n    SUM(CASE WHEN team = 0 THEN 1 ELSE 0 END) AS team_zero_count,\n    SUM(CASE WHEN speedFactor = 0 THEN 1 ELSE 0 END) AS speedFactor_zero_count,\n    SUM(CASE WHEN treatyLength = 0 THEN 1 ELSE 0 END) AS treatyLength_zero_count,\n    SUM(CASE WHEN internalLeaderboardId = 0 THEN 1 ELSE 0 END) AS internalLeaderboardId_zero_count\nFROM matches_raw",
+    "skewness_kurtosis": "\nSELECT\n    SKEWNESS(rating) AS rating_skew,       KURTOSIS(rating) AS rating_kurt,\n    SKEWNESS(ratingDiff) AS ratingDiff_skew, KURTOSIS(ratingDiff) AS ratingDiff_kurt,\n    SKEWNESS(population) AS population_skew, KURTOSIS(population) AS population_kurt,\n    SKEWNESS(slot) AS slot_skew,            KURTOSIS(slot) AS slot_kurt,\n    SKEWNESS(color) AS color_skew,          KURTOSIS(color) AS color_kurt,\n    SKEWNESS(team) AS team_skew,            KURTOSIS(team) AS team_kurt,\n    SKEWNESS(speedFactor) AS speedFactor_skew, KURTOSIS(speedFactor) AS speedFactor_kurt,\n    SKEWNESS(treatyLength) AS treatyLength_skew, KURTOSIS(treatyLength) AS treatyLength_kurt,\n    SKEWNESS(internalLeaderboardId) AS internalLeaderboardId_skew,\n    KURTOSIS(internalLeaderboardId) AS internalLeaderboardId_kurt,\n    SKEWNESS(EXTRACT(EPOCH FROM (finished - started)) / 60.0)\n        FILTER (WHERE finished > started) AS duration_min_skew,\n    KURTOSIS(EXTRACT(EPOCH FROM (finished - started)) / 60.0)\n        FILTER (WHERE finished > started) AS duration_min_kurt\nFROM matches_raw\n",
+    "iqr_outlier_all": "SELECT\n    COUNT(*) FILTER (WHERE rating IS NOT NULL AND (rating < 386.5 OR rating > 1846.5)) AS rating_iqr_outliers,\n    COUNT(*) FILTER (WHERE ratingDiff IS NOT NULL AND (ratingDiff < -64.0 OR ratingDiff > 64.0)) AS ratingDiff_iqr_outliers,\n    COUNT(*) FILTER (WHERE slot IS NOT NULL AND (slot < -4.5 OR slot > 7.5)) AS slot_iqr_outliers,\n    COUNT(*) FILTER (WHERE color IS NOT NULL AND (color < -2.5 OR color > 9.5)) AS color_iqr_outliers,\n    COUNT(*) FILTER (WHERE team IS NOT NULL AND (team < -0.5 OR team > 3.5)) AS team_iqr_outliers,\n    COUNT(*) FILTER (WHERE internalLeaderboardId IS NOT NULL AND (internalLeaderboardId < -13.5 OR internalLeaderboardId > 22.5)) AS internalLeaderboardId_iqr_outliers\nFROM matches_raw",
+    "topk_leaderboard": "\nSELECT leaderboard AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE leaderboard IS NOT NULL\nGROUP BY leaderboard\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_civ": "\nSELECT civ AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE civ IS NOT NULL\nGROUP BY civ\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_map": "\nSELECT map AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE map IS NOT NULL\nGROUP BY map\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_gameMode": "\nSELECT gameMode AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE gameMode IS NOT NULL\nGROUP BY gameMode\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_gameVariant": "\nSELECT gameVariant AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE gameVariant IS NOT NULL\nGROUP BY gameVariant\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_speed": "\nSELECT speed AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE speed IS NOT NULL\nGROUP BY speed\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_difficulty": "\nSELECT difficulty AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE difficulty IS NOT NULL\nGROUP BY difficulty\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_startingAge": "\nSELECT startingAge AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE startingAge IS NOT NULL\nGROUP BY startingAge\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_endingAge": "\nSELECT endingAge AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE endingAge IS NOT NULL\nGROUP BY endingAge\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_mapSize": "\nSELECT mapSize AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE mapSize IS NOT NULL\nGROUP BY mapSize\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_resources": "\nSELECT resources AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE resources IS NOT NULL\nGROUP BY resources\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_victory": "\nSELECT victory AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE victory IS NOT NULL\nGROUP BY victory\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_civilizationSet": "\nSELECT civilizationSet AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE civilizationSet IS NOT NULL\nGROUP BY civilizationSet\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_revealMap": "\nSELECT revealMap AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE revealMap IS NOT NULL\nGROUP BY revealMap\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_server": "\nSELECT server AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE server IS NOT NULL\nGROUP BY server\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_privacy": "\nSELECT privacy AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE privacy IS NOT NULL\nGROUP BY privacy\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_status": "\nSELECT status AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE status IS NOT NULL\nGROUP BY status\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_country": "\nSELECT country AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE country IS NOT NULL\nGROUP BY country\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_scenario": "\nSELECT scenario AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE scenario IS NOT NULL\nGROUP BY scenario\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_modDataset": "\nSELECT modDataset AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE modDataset IS NOT NULL\nGROUP BY modDataset\nORDER BY cnt DESC\nLIMIT 5\n",
+    "topk_colorHex": "\nSELECT colorHex AS value, COUNT(*) AS cnt,\n       ROUND(COUNT(*) * 100.0 / 277099059, 2) AS pct\nFROM matches_raw\nWHERE colorHex IS NOT NULL\nGROUP BY colorHex\nORDER BY cnt DESC\nLIMIT 5\n",
+    "duplicate_detection": "\nSELECT matchId, profileId, COUNT(*) AS cnt\nFROM matches_raw\nGROUP BY matchId, profileId\nHAVING COUNT(*) > 1\nORDER BY cnt DESC\nLIMIT 20\n",
+    "duplicate_totals": "\nSELECT SUM(cnt) AS total_dup_rows, COUNT(*) AS dup_groups\nFROM (\n    SELECT matchId, profileId, COUNT(*) AS cnt\n    FROM matches_raw\n    GROUP BY matchId, profileId\n    HAVING COUNT(*) > 1\n)\n",
+    "memory_footprint": "\nSELECT\n    total_blocks * block_size AS total_bytes,\n    used_blocks * block_size AS used_bytes\nFROM pragma_database_size()\n",
+    "rating_stratified": "\nSELECT\n    'full_table' AS scope,\n    COUNT(*) AS n_rows,\n    SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS rating_null,\n    ROUND(SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS rating_null_pct,\n    ROUND(AVG(rating), 2) AS rating_mean,\n    ROUND(STDDEV(rating), 2) AS rating_std,\n    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rating) AS rating_median,\n    SUM(CASE WHEN ratingDiff IS NULL THEN 1 ELSE 0 END) AS ratingdiff_null,\n    ROUND(AVG(ratingDiff), 4) AS ratingdiff_mean\nFROM matches_raw\n\nUNION ALL\n\nSELECT\n    '1v1_ranked' AS scope,\n    COUNT(*) AS n_rows,\n    SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS rating_null,\n    ROUND(SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS rating_null_pct,\n    ROUND(AVG(rating), 2) AS rating_mean,\n    ROUND(STDDEV(rating), 2) AS rating_std,\n    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rating) AS rating_median,\n    SUM(CASE WHEN ratingDiff IS NULL THEN 1 ELSE 0 END) AS ratingdiff_null,\n    ROUND(AVG(ratingDiff), 4) AS ratingdiff_mean\nFROM matches_raw\nWHERE leaderboard IN ('rm_1v1', 'qp_rm_1v1')\n",
+    "qq_ecdf_sample": "\nSELECT\n    rating,\n    ratingDiff,\n    EXTRACT(EPOCH FROM (finished - started)) / 60.0 AS duration_min,\n    population,\n    speedFactor\nFROM (\n    SELECT *\n    FROM matches_raw\n    TABLESAMPLE BERNOULLI(0.020000 PERCENT)\n) sub\nWHERE finished > started\n"
+  }
+}

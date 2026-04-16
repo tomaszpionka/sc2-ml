@@ -1,0 +1,1097 @@
+{
+  "step": "01_03_01",
+  "dataset": "aoestats",
+  "dataset_level": {
+    "matches_raw_rows": 30690651,
+    "players_raw_rows": 107627584,
+    "matches_raw_columns": 18,
+    "players_raw_columns": 14,
+    "duplicate_matches_groups": 0,
+    "duplicate_matches_sample": [],
+    "duplicate_players_total": 107627584,
+    "duplicate_players_distinct_pairs": 107627095,
+    "duplicate_players_rows": 489,
+    "duplicate_players_methodology": "COALESCE string-concatenation key (census-aligned)",
+    "players_without_match": 0,
+    "matches_without_players": 212890,
+    "db_memory_footprint_bytes": 45386313728,
+    "winner_class_balance": [
+      {
+        "winner_int": 0,
+        "cnt": 53816397
+      },
+      {
+        "winner_int": 1,
+        "cnt": 53811187
+      }
+    ]
+  },
+  "critical_findings": {
+    "dead_fields": [],
+    "constant_columns": [
+      {
+        "column": "game_type",
+        "table": "matches_raw",
+        "value": "random_map"
+      },
+      {
+        "column": "game_speed",
+        "table": "matches_raw",
+        "value": "normal"
+      }
+    ],
+    "near_constant": [
+      {
+        "column": "leaderboard",
+        "table": "matches_raw",
+        "cardinality": 4,
+        "uniqueness_ratio": 0.0,
+        "iqr": "N/A"
+      },
+      {
+        "column": "starting_age",
+        "table": "matches_raw",
+        "cardinality": 2,
+        "uniqueness_ratio": 0.0,
+        "iqr": "N/A"
+      },
+      {
+        "column": "replay_enhanced",
+        "table": "matches_raw",
+        "cardinality": 2,
+        "uniqueness_ratio": 0.0,
+        "iqr": "N/A"
+      },
+      {
+        "column": "mirror",
+        "table": "matches_raw",
+        "cardinality": 2,
+        "uniqueness_ratio": 0.0,
+        "iqr": "N/A"
+      },
+      {
+        "column": "team",
+        "table": "players_raw",
+        "cardinality": 2,
+        "uniqueness_ratio": 0.0,
+        "iqr": null
+      },
+      {
+        "column": "winner",
+        "table": "players_raw",
+        "cardinality": 2,
+        "uniqueness_ratio": 0.0,
+        "iqr": null
+      }
+    ]
+  },
+  "column_profiles_matches": {
+    "duration": {
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 13164,
+      "uniqueness_ratio": 0.000429,
+      "mean": 2613.6788,
+      "std": 1857.495,
+      "min": 3.4,
+      "p05": 285.6,
+      "p25": 1824.1,
+      "p50": 2619.7,
+      "p75": 3292.9,
+      "p95": 4714.1,
+      "max": 5574815.1,
+      "skewness": 1032.6426,
+      "kurtosis": 2808033.6539,
+      "iqr": 1468.8,
+      "iqr_outlier_count": 715749,
+      "iqr_outlier_pct": 2.3321,
+      "iqr_lower_fence": -379.1,
+      "iqr_upper_fence": 5496.1
+    },
+    "irl_duration": {
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 13164,
+      "uniqueness_ratio": 0.000429,
+      "mean": 1537.4581,
+      "std": 1092.6441,
+      "min": 2.0,
+      "p05": 168.0,
+      "p25": 1073.0,
+      "p50": 1541.0,
+      "p75": 1937.0,
+      "p95": 2773.0,
+      "max": 3279303.0,
+      "skewness": 1032.6426,
+      "kurtosis": 2808033.6539,
+      "iqr": 864.0,
+      "iqr_outlier_count": 715749,
+      "iqr_outlier_pct": 2.3321,
+      "iqr_lower_fence": -223.0,
+      "iqr_upper_fence": 3233.0
+    },
+    "avg_elo": {
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 121,
+      "zero_pct": 0.0004,
+      "cardinality": 22432,
+      "uniqueness_ratio": 0.000731,
+      "mean": 1087.5992,
+      "std": 309.5389,
+      "min": 0.0,
+      "p05": 637.0,
+      "p25": 886.5,
+      "p50": 1055.0,
+      "p75": 1260.5,
+      "p95": 1630.0,
+      "max": 2976.5,
+      "skewness": 0.6648,
+      "kurtosis": 1.5165,
+      "iqr": 374.0,
+      "iqr_outlier_count": 779388,
+      "iqr_outlier_pct": 2.5395,
+      "iqr_lower_fence": 325.5,
+      "iqr_upper_fence": 1821.5
+    },
+    "team_0_elo": {
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 4824,
+      "zero_pct": 0.0157,
+      "cardinality": 12037,
+      "uniqueness_ratio": 0.000392,
+      "mean": 1082.6683,
+      "std": 312.3147,
+      "min": -1.0,
+      "p05": 625.5,
+      "p25": 881.5,
+      "p50": 1051.5,
+      "p75": 1258.0,
+      "p95": 1629.0,
+      "max": 3038.0,
+      "skewness": 0.6103,
+      "kurtosis": 1.4823,
+      "iqr": 376.5,
+      "iqr_outlier_count": 793770,
+      "iqr_outlier_pct": 2.5864,
+      "iqr_lower_fence": 316.75,
+      "iqr_upper_fence": 1822.75,
+      "stats_excluding_sentinel": {
+        "n_nonnull": 30690612,
+        "mean": 1082.6695,
+        "std": 312.3128,
+        "min": 0.0,
+        "p05": 625.5,
+        "p25": 881.5,
+        "p50": 1051.5,
+        "p75": 1258.0,
+        "p95": 1629.0,
+        "max": 3038.0,
+        "skewness": 0.6104,
+        "kurtosis": 1.4822
+      }
+    },
+    "team_1_elo": {
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 192,
+      "zero_pct": 0.0006,
+      "cardinality": 11587,
+      "uniqueness_ratio": 0.000378,
+      "mean": 1092.5277,
+      "std": 309.3223,
+      "min": -1.0,
+      "p05": 646.0,
+      "p25": 890.5,
+      "p50": 1058.0,
+      "p75": 1264.0,
+      "p95": 1636.0,
+      "max": 3045.0,
+      "skewness": 0.7295,
+      "kurtosis": 1.6468,
+      "iqr": 373.5,
+      "iqr_outlier_count": 777904,
+      "iqr_outlier_pct": 2.5347,
+      "iqr_lower_fence": 330.25,
+      "iqr_upper_fence": 1824.25,
+      "stats_excluding_sentinel": {
+        "n_nonnull": 30690612,
+        "mean": 1092.529,
+        "std": 309.32,
+        "min": 0.0,
+        "p05": 646.0,
+        "p25": 890.5,
+        "p50": 1058.0,
+        "p75": 1264.0,
+        "p95": 1636.0,
+        "max": 3045.0,
+        "skewness": 0.7296,
+        "kurtosis": 1.6467
+      }
+    },
+    "raw_match_type": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "numeric",
+      "null_count": 12504,
+      "null_pct": 0.0407,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 8,
+      "uniqueness_ratio": 0.0,
+      "mean": 9.1344,
+      "std": 11.7226,
+      "min": 6.0,
+      "p05": 6.0,
+      "p25": 6.0,
+      "p50": 6.0,
+      "p75": 8.0,
+      "p95": 9.0,
+      "max": 69.0,
+      "skewness": 4.6654,
+      "kurtosis": 19.9837,
+      "iqr": 2.0,
+      "iqr_outlier_count": 1211728,
+      "iqr_outlier_pct": 3.9482,
+      "iqr_lower_fence": 3.0,
+      "iqr_upper_fence": 11.0
+    },
+    "patch": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 19,
+      "uniqueness_ratio": 1e-06,
+      "mean": 115148.3321,
+      "std": 25595.9215,
+      "min": 66692.0,
+      "p05": 78174.0,
+      "p25": 93001.0,
+      "p50": 111772.0,
+      "p75": 141935.0,
+      "p95": 162286.0,
+      "max": 162286.0,
+      "skewness": 0.1964,
+      "kurtosis": -1.1006,
+      "iqr": 48934.0,
+      "iqr_outlier_count": 0,
+      "iqr_outlier_pct": 0.0,
+      "iqr_lower_fence": 19600.0,
+      "iqr_upper_fence": 215336.0
+    },
+    "num_players": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 8,
+      "uniqueness_ratio": 0.0,
+      "mean": 3.5289,
+      "std": 2.1918,
+      "min": 1.0,
+      "p05": 2.0,
+      "p25": 2.0,
+      "p50": 2.0,
+      "p75": 4.0,
+      "p95": 8.0,
+      "max": 8.0,
+      "skewness": 1.116,
+      "kurtosis": -0.2805,
+      "iqr": 2.0,
+      "iqr_outlier_count": 4309749,
+      "iqr_outlier_pct": 14.0425,
+      "iqr_lower_fence": -1.0,
+      "iqr_upper_fence": 7.0
+    },
+    "map": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 93,
+      "uniqueness_ratio": 3e-06,
+      "top_5": [
+        {
+          "val": "arabia",
+          "cnt": 10722310
+        },
+        {
+          "val": "arena",
+          "cnt": 5838677
+        },
+        {
+          "val": "nomad",
+          "cnt": 2130289
+        },
+        {
+          "val": "black_forest",
+          "cnt": 1969451
+        },
+        {
+          "val": "megarandom",
+          "cnt": 1894927
+        }
+      ]
+    },
+    "leaderboard": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 4,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "random_map",
+          "cnt": 17959543
+        },
+        {
+          "val": "team_random_map",
+          "cnt": 11518477
+        },
+        {
+          "val": "co_random_map",
+          "cnt": 626542
+        },
+        {
+          "val": "co_team_random_map",
+          "cnt": 586089
+        }
+      ]
+    },
+    "game_type": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 1,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "random_map",
+          "cnt": 30690651
+        }
+      ]
+    },
+    "game_speed": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 1,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "normal",
+          "cnt": 30690651
+        }
+      ]
+    },
+    "starting_age": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "dark",
+          "cnt": 30690632
+        },
+        {
+          "val": "standard",
+          "cnt": 19
+        }
+      ]
+    },
+    "replay_enhanced": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "boolean",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "false",
+          "cnt": 26359887
+        },
+        {
+          "val": "true",
+          "cnt": 4330764
+        }
+      ]
+    },
+    "mirror": {
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "dtype": "boolean",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "false",
+          "cnt": 29977520
+        },
+        {
+          "val": "true",
+          "cnt": 713131
+        }
+      ]
+    },
+    "game_id": {
+      "table": "matches_raw",
+      "temporal_class": "IDENTIFIER",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 30690651,
+      "uniqueness_ratio": 1.0,
+      "top_5": [
+        {
+          "val": "187227905",
+          "cnt": 1
+        },
+        {
+          "val": "187490264",
+          "cnt": 1
+        },
+        {
+          "val": "187375510",
+          "cnt": 1
+        },
+        {
+          "val": "186638418",
+          "cnt": 1
+        },
+        {
+          "val": "187514629",
+          "cnt": 1
+        }
+      ]
+    },
+    "filename": {
+      "table": "matches_raw",
+      "temporal_class": "IDENTIFIER",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 172,
+      "uniqueness_ratio": 6e-06,
+      "top_5": [
+        {
+          "val": "matches/2023-04-02_2023-04-08_matches.parquet",
+          "cnt": 264843
+        },
+        {
+          "val": "matches/2023-04-09_2023-04-15_matches.parquet",
+          "cnt": 254265
+        },
+        {
+          "val": "matches/2024-03-24_2024-03-30_matches.parquet",
+          "cnt": 253893
+        },
+        {
+          "val": "matches/2023-04-30_2023-05-06_matches.parquet",
+          "cnt": 252322
+        },
+        {
+          "val": "matches/2023-03-26_2023-04-01_matches.parquet",
+          "cnt": 250604
+        }
+      ]
+    },
+    "started_timestamp": {
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "timestamp",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 24385989,
+      "uniqueness_ratio": 0.794574,
+      "min": "2022-08-29 02:00:34+02:00",
+      "max": "2026-02-06 07:32:24+01:00"
+    }
+  },
+  "column_profiles_players": {
+    "old_rating": {
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 5937,
+      "zero_pct": 0.0055,
+      "cardinality": 3032,
+      "uniqueness_ratio": 2.8e-05,
+      "mean": 1091.0974,
+      "std": 286.8588,
+      "min": 0.0,
+      "p05": 665.0,
+      "p25": 900.0,
+      "p50": 1066.0,
+      "p75": 1263.0,
+      "p95": 1580.0,
+      "max": 3045.0,
+      "skewness": 0.5419,
+      "kurtosis": 1.3,
+      "iqr": 363.0,
+      "iqr_outlier_count": 1933860,
+      "iqr_outlier_pct": 1.7968,
+      "iqr_lower_fence": 355.5,
+      "iqr_upper_fence": 1807.5
+    },
+    "new_rating": {
+      "table": "players_raw",
+      "temporal_class": "POST-GAME",
+      "dtype": "numeric",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "zero_count": 5187,
+      "zero_pct": 0.0048,
+      "cardinality": 3039,
+      "uniqueness_ratio": 2.8e-05,
+      "mean": 1090.8073,
+      "std": 287.4813,
+      "min": -5.0,
+      "p05": 663.0,
+      "p25": 899.0,
+      "p50": 1067.0,
+      "p75": 1263.0,
+      "p95": 1581.0,
+      "max": 3045.0,
+      "skewness": 0.5371,
+      "kurtosis": 1.2841,
+      "iqr": 364.0,
+      "iqr_outlier_count": 1916076,
+      "iqr_outlier_pct": 1.7803,
+      "iqr_lower_fence": 353.0,
+      "iqr_upper_fence": 1809.0
+    },
+    "match_rating_diff": {
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "numeric",
+      "null_count": 39,
+      "null_pct": 0.0,
+      "zero_count": 1117846,
+      "zero_pct": 1.0386,
+      "cardinality": 24919,
+      "uniqueness_ratio": 0.000232,
+      "mean": 0.0,
+      "std": 55.2307,
+      "min": -2185.0,
+      "p05": -59.0,
+      "p25": -17.0,
+      "p50": 0.0,
+      "p75": 17.0,
+      "p95": 59.0,
+      "max": 2185.0,
+      "skewness": 0.0,
+      "kurtosis": 65.6753,
+      "iqr": 34.0,
+      "iqr_outlier_count": 8259845,
+      "iqr_outlier_pct": 7.6745,
+      "iqr_lower_fence": -68.0,
+      "iqr_upper_fence": 68.0
+    },
+    "feudal_age_uptime": {
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "dtype": "numeric",
+      "null_count": 93726448,
+      "null_pct": 87.084,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 978519,
+      "uniqueness_ratio": 0.009092,
+      "mean": 706.8249,
+      "std": 143.069,
+      "min": 104.3183,
+      "p05": 535.106,
+      "p25": 611.515,
+      "p50": 680.217,
+      "p75": 774.379,
+      "p95": 962.585,
+      "max": 12551.634,
+      "skewness": 2.0437,
+      "kurtosis": 18.3849,
+      "iqr": 162.864,
+      "iqr_outlier_count": 433324,
+      "iqr_outlier_pct": 0.4026,
+      "iqr_lower_fence": 367.219,
+      "iqr_upper_fence": 1018.675
+    },
+    "castle_age_uptime": {
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "dtype": "numeric",
+      "null_count": 94641831,
+      "null_pct": 87.9345,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 1564065,
+      "uniqueness_ratio": 0.014532,
+      "mean": 1275.4019,
+      "std": 282.5959,
+      "min": 301.2543,
+      "p05": 889.068,
+      "p25": 1069.656,
+      "p50": 1262.911,
+      "p75": 1427.344,
+      "p95": 1752.127,
+      "max": 15545.251,
+      "skewness": 1.1732,
+      "kurtosis": 5.2887,
+      "iqr": 357.688,
+      "iqr_outlier_count": 258183,
+      "iqr_outlier_pct": 0.2399,
+      "iqr_lower_fence": 533.124,
+      "iqr_upper_fence": 1963.876
+    },
+    "imperial_age_uptime": {
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "dtype": "numeric",
+      "null_count": 98468904,
+      "null_pct": 91.4904,
+      "zero_count": 0,
+      "zero_pct": 0.0,
+      "cardinality": 1924964,
+      "uniqueness_ratio": 0.017885,
+      "mean": 2240.8682,
+      "std": 404.9665,
+      "min": 769.3973,
+      "p05": 1681.083,
+      "p25": 1966.158,
+      "p50": 2208.64,
+      "p75": 2462.872,
+      "p95": 2932.959,
+      "max": 24264.405,
+      "skewness": 0.9882,
+      "kurtosis": 4.802,
+      "iqr": 496.714,
+      "iqr_outlier_count": 202445,
+      "iqr_outlier_pct": 0.1881,
+      "iqr_lower_fence": 1221.087,
+      "iqr_upper_fence": 3207.943
+    },
+    "profile_id": {
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "dtype": "numeric",
+      "null_count": 1185,
+      "null_pct": 0.0011,
+      "zero_count": 0,
+      "cardinality": 641662,
+      "uniqueness_ratio": 0.005962,
+      "mean": 7800638.5976,
+      "min": 18.0,
+      "max": 24853897.0,
+      "iqr": null
+    },
+    "team": {
+      "table": "players_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 0.0,
+      "iqr": null
+    },
+    "game_id": {
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 30477761,
+      "uniqueness_ratio": 0.283178,
+      "top_5": [
+        {
+          "val": "183957467",
+          "cnt": 8
+        },
+        {
+          "val": "184068916",
+          "cnt": 8
+        },
+        {
+          "val": "183893634",
+          "cnt": 8
+        },
+        {
+          "val": "183734368",
+          "cnt": 8
+        },
+        {
+          "val": "183481346",
+          "cnt": 8
+        }
+      ]
+    },
+    "civ": {
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 50,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "franks",
+          "cnt": 6018585
+        },
+        {
+          "val": "mongols",
+          "cnt": 5638014
+        },
+        {
+          "val": "persians",
+          "cnt": 4619647
+        },
+        {
+          "val": "britons",
+          "cnt": 4341837
+        },
+        {
+          "val": "spanish",
+          "cnt": 4177105
+        }
+      ]
+    },
+    "opening": {
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "dtype": "categorical",
+      "null_count": 92616290,
+      "null_pct": 86.0526,
+      "cardinality": 10,
+      "uniqueness_ratio": 0.0,
+      "top_5": [
+        {
+          "val": "fast_castle",
+          "cnt": 4200028
+        },
+        {
+          "val": "unknown",
+          "cnt": 3589615
+        },
+        {
+          "val": "scouts",
+          "cnt": 2117251
+        },
+        {
+          "val": "archers",
+          "cnt": 1974622
+        },
+        {
+          "val": "trash",
+          "cnt": 1099518
+        }
+      ]
+    },
+    "replay_summary_raw": {
+      "table": "players_raw",
+      "temporal_class": "CONTEXT",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 13983149,
+      "uniqueness_ratio": 0.129922,
+      "top_5": [
+        {
+          "val": "{}",
+          "cnt": 92616290
+        },
+        {
+          "val": "{'age_stats': {'dark': {'uptime': 0, 'research': [], 'unit_counts': {}, 'age_researched': True, 'building_counts': {}}, 'castle': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'feudal': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'imperial': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}}, 'opening_name': 'unknown'}",
+          "cnt": 240647
+        },
+        {
+          "val": "{'age_stats': {'dark': {'uptime': 0, 'research': [], 'unit_counts': {'villager': 4}, 'age_researched': True, 'building_counts': {'house': 2}}, 'castle': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'feudal': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'imperial': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}}, 'opening_name': 'unknown'}",
+          "cnt": 51187
+        },
+        {
+          "val": "{'age_stats': {'dark': {'uptime': 0, 'research': [], 'unit_counts': {'villager': 5}, 'age_researched': True, 'building_counts': {'house': 2}}, 'castle': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'feudal': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'imperial': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}}, 'opening_name': 'unknown'}",
+          "cnt": 38308
+        },
+        {
+          "val": "{'age_stats': {'dark': {'uptime': 0, 'research': [], 'unit_counts': {}, 'age_researched': True, 'building_counts': {'town center': 1}}, 'castle': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'feudal': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}, 'imperial': {'uptime': -1, 'research': [], 'unit_counts': {}, 'age_researched': False, 'building_counts': {}}}, 'opening_name': 'unknown'}",
+          "cnt": 18324
+        }
+      ]
+    },
+    "filename": {
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "dtype": "categorical",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 171,
+      "uniqueness_ratio": 2e-06,
+      "top_5": [
+        {
+          "val": "players/2023-04-02_2023-04-08_players.parquet",
+          "cnt": 930677
+        },
+        {
+          "val": "players/2023-03-26_2023-04-01_players.parquet",
+          "cnt": 898970
+        },
+        {
+          "val": "players/2023-04-09_2023-04-15_players.parquet",
+          "cnt": 891226
+        },
+        {
+          "val": "players/2023-04-30_2023-05-06_players.parquet",
+          "cnt": 883796
+        },
+        {
+          "val": "players/2024-03-24_2024-03-30_players.parquet",
+          "cnt": 882440
+        }
+      ]
+    },
+    "winner": {
+      "table": "players_raw",
+      "temporal_class": "TARGET",
+      "dtype": "boolean",
+      "null_count": 0,
+      "null_pct": 0.0,
+      "cardinality": 2,
+      "uniqueness_ratio": 0.0,
+      "iqr": null,
+      "class_balance": [
+        {
+          "winner_int": 0,
+          "cnt": 53816397
+        },
+        {
+          "winner_int": 1,
+          "cnt": 53811187
+        }
+      ]
+    }
+  },
+  "completeness_matrix": [
+    {
+      "column": "avg_elo",
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "castle_age_uptime",
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "null_pct": 87.9345
+    },
+    {
+      "column": "civ",
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "duration",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "feudal_age_uptime",
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "null_pct": 87.084
+    },
+    {
+      "column": "filename",
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_id",
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_speed",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "game_type",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "imperial_age_uptime",
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "null_pct": 91.4904
+    },
+    {
+      "column": "irl_duration",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "leaderboard",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "map",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "match_rating_diff",
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "mirror",
+      "table": "matches_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "new_rating",
+      "table": "players_raw",
+      "temporal_class": "POST-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "num_players",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "old_rating",
+      "table": "players_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "opening",
+      "table": "players_raw",
+      "temporal_class": "IN-GAME",
+      "null_pct": 86.0526
+    },
+    {
+      "column": "patch",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "profile_id",
+      "table": "players_raw",
+      "temporal_class": "IDENTIFIER",
+      "null_pct": 0.0011
+    },
+    {
+      "column": "raw_match_type",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0407
+    },
+    {
+      "column": "replay_enhanced",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "replay_summary_raw",
+      "table": "players_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "started_timestamp",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "starting_age",
+      "table": "matches_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "team",
+      "table": "players_raw",
+      "temporal_class": "CONTEXT",
+      "null_pct": 0.0
+    },
+    {
+      "column": "team_0_elo",
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "team_1_elo",
+      "table": "matches_raw",
+      "temporal_class": "PRE-GAME",
+      "null_pct": 0.0
+    },
+    {
+      "column": "winner",
+      "table": "players_raw",
+      "temporal_class": "TARGET",
+      "null_pct": 0.0
+    }
+  ]
+}

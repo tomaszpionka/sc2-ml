@@ -1,0 +1,199 @@
+{
+  "step": "01_02_06",
+  "dataset": "sc2egset",
+  "n_rows_total": 44817,
+  "n_rows_winloss": 44791,
+  "n_undecided": 24,
+  "n_tie": 2,
+  "mmr_zero_count": 37489,
+  "sq_sentinel_count": 2,
+  "test_results": {
+    "mmr_by_result": {
+      "test": "Mann-Whitney U",
+      "U_statistic": 7285393.5,
+      "p_value": 2.4115446588409107e-11,
+      "rank_biserial_r": -0.0902,
+      "n_win": 3506,
+      "n_loss": 3812,
+      "median_win": 6151.0,
+      "median_loss": 5945.0
+    },
+    "race_winrate_chi2": {
+      "test": "chi-square",
+      "chi2_statistic": 39.840522932965214,
+      "p_value": 2.2322373321257157e-09,
+      "dof": 2,
+      "races": [
+        "Prot",
+        "Terr",
+        "Zerg"
+      ],
+      "win_pcts": [
+        48.12,
+        50.31,
+        51.61
+      ]
+    },
+    "apm_by_result": {
+      "test": "Mann-Whitney U",
+      "U_statistic": 275580382.0,
+      "p_value": 1.9695674937276185e-73,
+      "rank_biserial_r": -0.0989,
+      "n_win": 22382,
+      "n_loss": 22409,
+      "median_win": 356.0,
+      "median_loss": 344.0
+    },
+    "sq_by_result": {
+      "test": "Mann-Whitney U",
+      "U_statistic": 296794093.0,
+      "p_value": 2.8084060676451194e-248,
+      "rank_biserial_r": -0.1836,
+      "n_win": 22381,
+      "n_loss": 22408,
+      "median_win": 127.0,
+      "median_loss": 120.0,
+      "sentinel_excluded": 2
+    },
+    "supplycapped_by_result": {
+      "test": "Mann-Whitney U",
+      "U_statistic": 253214553.0,
+      "p_value": 0.07409898883193576,
+      "rank_biserial_r": -0.0097,
+      "n_win": 22382,
+      "n_loss": 22409,
+      "median_win": 6.0,
+      "median_loss": 6.0
+    },
+    "clan_winrate_chi2": {
+      "test": "chi-square",
+      "chi2_statistic": 7.745154869344322,
+      "p_value": 0.005385684166095585,
+      "dof": 1,
+      "contingency_table": [
+        [
+          16716,
+          16477
+        ],
+        [
+          5666,
+          5932
+        ]
+      ]
+    },
+    "spearman_matrix_all": {
+      "method": "spearman",
+      "subset": "all_rows_sq_sentinel_excluded",
+      "n_rows": 44789,
+      "columns": [
+        "MMR",
+        "APM",
+        "SQ",
+        "supplyCappedPercent",
+        "result_binary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          -0.013080272620397604,
+          -0.009182437066283588,
+          0.012088186118655407,
+          -0.01064183906619886
+        ],
+        [
+          -0.013080272620397604,
+          1.0,
+          0.40489589531014586,
+          -0.0022891326730433525,
+          0.08560817996169467
+        ],
+        [
+          -0.009182437066283588,
+          0.40489589531014586,
+          1.0,
+          -0.12463817204048556,
+          0.1590172721335717
+        ],
+        [
+          0.012088186118655407,
+          -0.0022891326730433525,
+          -0.12463817204048556,
+          1.0,
+          0.008439719113959425
+        ],
+        [
+          -0.01064183906619886,
+          0.08560817996169467,
+          0.1590172721335717,
+          0.008439719113959425,
+          1.0
+        ]
+      ],
+      "sq_sentinel_excluded": true,
+      "mmr_zero_included": true
+    },
+    "spearman_matrix_rated": {
+      "method": "spearman",
+      "subset": "mmr_gt_0_rated_players",
+      "n_rows": 7159,
+      "columns": [
+        "MMR",
+        "APM",
+        "SQ",
+        "supplyCappedPercent",
+        "result_binary"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.20614524791778716,
+          0.15932175504327728,
+          -0.011775262520850966,
+          0.07306611125831776
+        ],
+        [
+          0.20614524791778716,
+          1.0,
+          0.344480824709881,
+          -0.026328856191342603,
+          0.09826909415213056
+        ],
+        [
+          0.15932175504327728,
+          0.344480824709881,
+          1.0,
+          -0.16105657026962664,
+          0.15841935919561276
+        ],
+        [
+          -0.011775262520850966,
+          -0.026328856191342603,
+          -0.16105657026962664,
+          1.0,
+          0.030934197385916684
+        ],
+        [
+          0.07306611125831776,
+          0.09826909415213056,
+          0.15841935919561276,
+          0.030934197385916684,
+          1.0
+        ]
+      ],
+      "sq_sentinel_excluded": true,
+      "mmr_zero_included": false
+    }
+  },
+  "sql_queries": {
+    "mmr_by_result": "\nSELECT MMR, result\nFROM replay_players_raw\nWHERE MMR != 0\n  AND result IN ('Win', 'Loss')\n",
+    "race_winrate": "\nSELECT\n    race,\n    COUNT(*) AS total,\n    SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) AS wins,\n    ROUND(100.0 * SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_pct\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND race IN ('Prot', 'Zerg', 'Terr')\nGROUP BY race\nORDER BY race\n",
+    "apm_by_result": "\nSELECT APM, result\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n",
+    "sq_by_result": "\nSELECT SQ, result\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n",
+    "supplycapped_by_result": "\nSELECT supplyCappedPercent, result\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n",
+    "league_winrate": "\nSELECT\n    highestLeague,\n    COUNT(*) AS total,\n    SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) AS wins,\n    ROUND(100.0 * SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_pct\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\nGROUP BY highestLeague\nORDER BY total DESC\n",
+    "clan_winrate": "\nSELECT\n    isInClan,\n    COUNT(*) AS total,\n    SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) AS wins,\n    ROUND(100.0 * SUM(CASE WHEN result = 'Win' THEN 1 ELSE 0 END) / COUNT(*), 2) AS win_pct\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\nGROUP BY isInClan\nORDER BY isInClan\n",
+    "numeric_by_result": "\nSELECT MMR, APM, SQ, supplyCappedPercent, result\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n",
+    "spearman_all": "\nSELECT\n    MMR,\n    APM,\n    SQ,\n    supplyCappedPercent,\n    CASE WHEN result = 'Win' THEN 1 ELSE 0 END AS result_binary\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n",
+    "spearman_rated": "\nSELECT\n    MMR,\n    APM,\n    SQ,\n    supplyCappedPercent,\n    CASE WHEN result = 'Win' THEN 1 ELSE 0 END AS result_binary\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n  AND MMR > 0\n  -- I7: mmr > 0 filter excludes zero-sentinel rows (83.65% of data, census:\n  --     zero_counts.replay_players_raw.MMR_zero = 37489). Without this filter,\n  --     the MMR-correlation row/column is dominated by the zero-spike and\n  --     shows near-zero rho regardless of true association. Consistent with\n  --     T03 violin which also filters mmr > 0.\n"
+  }
+}

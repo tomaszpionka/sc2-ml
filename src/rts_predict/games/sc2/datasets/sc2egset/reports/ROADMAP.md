@@ -316,15 +316,216 @@ notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_04_univariate_c
 ```yaml
 step_number: "01_02_05"
 name: "Univariate EDA Visualizations"
-description: "Dedicated visualization notebook for all univariate distributions profiled in 01_02_04."
+description: "14 visualization plots for the sc2egset univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on in-game columns (APM, SQ, supplyCappedPercent) and post-game column (elapsed_game_loops) per Invariant #3."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
 dataset: "sc2egset"
-question: "What do the distributions from 01_02_04 look like visually?"
-method: "Histograms for numeric, bar charts for categorical, line plot for temporal."
+question: "What do the distributions from 01_02_04 look like visually, and do the visual patterns confirm or challenge the statistical summaries?"
+method: "Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (MMR, APM, SQ, supplyCappedPercent, duration). Produce 14 plots: result 2-bar, categorical 3-panel (race/highestLeague/region), selectedRace bar, MMR split view, APM histogram (IN-GAME), SQ split view (IN-GAME), supplyCappedPercent histogram (IN-GAME), duration dual-panel (POST-GAME), MMR zero-spike cross-tab, temporal coverage line, isInClan bar, clanTag top-20, map top-20 barh, player repeat frequency. Markdown artifact with SQL queries."
 predecessors: "01_02_04"
 notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_05_visualizations.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+    - "replays_meta_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_result_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_categorical_bars.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_selectedrace_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_mmr_split.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_apm_hist.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_sq_split.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_supplycapped_hist.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_duration_hist.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_mmr_zero_interpretation.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_temporal_coverage.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_isinclan_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_clantag_top20.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_map_top20.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_player_repeat_frequency.png"
+  report: "artifacts/01_exploration/02_eda/01_02_05_visualizations.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >-
+      Three in-game columns (APM, SQ, supplyCappedPercent) carry
+      'IN-GAME — not available at prediction time (Inv. #3)'.
+      Post-game column (elapsed_game_loops) carries
+      'POST-GAME — total duration; only known after match ends (Inv. #3)'.
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All bin widths, clip boundaries, sentinel thresholds derived from census JSON at runtime. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Visualization of 01_02_04 findings only. No new analytical computation."
+gate:
+  artifact_check: "All 14 PNG files and 01_02_05_visualizations.md exist and are non-empty."
+  continue_predicate: "All 14 PNG files exist. Markdown artifact contains plot index table with Temporal Annotation column and all SQL queries. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_02_06 — Bivariate EDA
+
+```yaml
+step_number: "01_02_06"
+name: "Bivariate EDA"
+description: "9 bivariate visualization plots examining pairwise relationships between features and match result in sc2egset. Reads the 01_02_04 JSON artifact for sentinel thresholds and queries DuckDB for conditional distributions. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on in-game columns (APM, SQ, supplyCappedPercent) per Invariant #3. Statistical tests (chi-square, Mann-Whitney U, Spearman) with p-values annotated on plots."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
+dataset: "sc2egset"
+question: "Which features associate with match outcome (Win vs Loss), and how strongly? Do in-game metrics show stronger separation than pre-game features?"
+method: "DuckDB queries for conditional distributions by result. Violin plots for continuous features, grouped bar charts for categorical features. Spearman correlation matrix for numeric columns. Chi-square tests for categorical-by-result associations. Mann-Whitney U for continuous-by-result comparisons. All sentinel thresholds data-derived from 01_02_04 census at runtime."
+predecessors: "01_02_05"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_06_bivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_mmr_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_race_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_apm_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_sq_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_supplycapped_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_league_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_clan_winrate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_numeric_by_result.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_spearman_correlation.png"
+  report: "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+  data_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "All three in-game columns (APM, SQ, supplyCappedPercent) carry a visible annotation: 'IN-GAME -- not available at prediction time (Inv. #3)' on every plot where they appear. Spearman heatmap marks in-game columns with red asterisks in tick labels."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All sentinel thresholds (MMR=0 count, SQ INT32_MIN count, Undecided/Tie counts) derived from census JSON at runtime. No hardcoded numbers. Chi-square and Mann-Whitney p-values computed, not assumed."
+  - number: "9"
+    how_upheld: "Bivariate analysis of existing columns only. No new feature computation. Builds on 01_02_04 census findings and 01_02_05 univariate visualizations."
+gate:
+  artifact_check: "All 9 PNG files, 01_02_06_bivariate_eda.md, and 01_02_06_bivariate_eda.json exist and are non-empty."
+  continue_predicate: "All 9 PNG files exist. JSON artifact contains statistical test results. Markdown artifact contains plot index table with Temporal Annotation column and all SQL queries. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 — Data and Methodology > 4.1.1 SC2EGSet"
+  - "Chapter 5 — Results > feature importance discussion"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_02_07 -- Multivariate EDA
+
+```yaml
+step_number: "01_02_07"
+name: "Multivariate EDA"
+description: "Multivariate analysis of all numeric features (cluster-ordered Spearman heatmap) and pre-game feature space visualization (MMR faceted by selectedRace and highestLeague). Addresses the degenerate PCA case: only 1 pre-game numeric feature (mmr), so standard PCA is skipped in favor of a scientifically defensible alternative. Produces 2 PNG files and a markdown artifact."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 2.1, 3.4"
+dataset: "sc2egset"
+question: "What is the joint covariance structure of all numeric features, and what multivariate structure exists in the pre-game feature space?"
+method: "Spearman rank correlation on all 4 numeric columns (mmr, apm, sq, supplyCappedPercent), cluster-ordered via scipy hierarchical clustering. Two-panel heatmap: all rows vs MMR>0. Pre-game multivariate view: MMR distribution faceted by selectedRace x highestLeague."
+predecessors: "01_02_06"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/02_eda/01_02_07_multivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pregame_multivariate_faceted.png"
+  report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Axis tick labels on Spearman heatmap annotated with I3 classification. Pre-game faceted plot uses only pre-game features."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All sentinel thresholds derived from census JSON at runtime. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Multivariate visualization of existing columns only. No new feature computation."
+gate:
+  artifact_check: "Both PNG files and 01_02_07_multivariate_analysis.md exist and are non-empty."
+  continue_predicate: "Both PNG files exist. Markdown artifact contains plot index, column classification table, all SQL queries, and PCA-alternative justification. Notebook executes end-to-end without errors."
+  halt_predicate: "Any PNG file is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet"
+research_log_entry: "Required on completion."
+```
+
+---
+
+## Phase 01 — Pipeline Section 01_03: Systematic Data Profiling
+
+### Step 01_03_01 -- Systematic Data Profiling
+
+```yaml
+step_number: "01_03_01"
+name: "Systematic Data Profiling"
+description: "Column-level and dataset-level profiling of all three sc2egset raw tables (replay_players_raw, replays_meta_raw struct-flat fields, map_aliases_raw). Detects dead fields, constant columns, near-constant columns, IQR outliers. Produces QQ plots and ECDFs for key numeric columns. Cross-table linkage check via replayId."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "sc2egset"
+question: "What is the full column-level and dataset-level quality profile of all sc2egset raw tables, including dead fields, constant columns, outlier rates, and distribution shapes?"
+method: "DuckDB SQL aggregations: NULL/zero census per column per table, cardinality, descriptive stats, skewness/kurtosis, IQR outlier detection (Tukey fence at 1.5*IQR). QQ plots against normal distribution for 5 key columns. ECDFs for 3 key columns. Cross-table linkage via replayId derived from filename. Completeness heatmap across all tables."
+predecessors: "01_02_05"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_01_systematic_profiling.py"
+inputs:
+  duckdb_tables:
+    - "replay_players_raw"
+    - "replays_meta_raw"
+    - "map_aliases_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+  plots:
+    - "artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png"
+    - "artifacts/01_exploration/03_profiling/01_03_01_qq_plots.png"
+    - "artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png"
+  report: "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md"
+reproducibility: "Code and output in the paired notebook."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Every column carries I3 temporal classification. elapsed_game_loops annotated as POST-GAME (reclassified 2026-04-15). APM, SQ, supplyCappedPercent annotated as IN-GAME."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "IQR fence multiplier 1.5 cited to Tukey (1977). All sentinel thresholds derived from census JSON at runtime."
+  - number: "9"
+    how_upheld: "Profiling of existing tables only. No new feature computation. Builds on 01_02_04 census and all 01_02 EDA findings."
+gate:
+  artifact_check: "All 5 artifacts (JSON, 3 PNGs, MD) exist and are non-empty."
+  continue_predicate: "JSON contains critical_findings key with constant_columns list of exactly 5 entries. MD contains I3 classification table. All PNG files exist."
+  halt_predicate: "Any artifact is missing or notebook execution fails."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.1 SC2EGSet (StarCraft II)"
+research_log_entry: "Required on completion."
 ```
 
 ---

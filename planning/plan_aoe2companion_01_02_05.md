@@ -6,541 +6,840 @@ planner_model: claude-opus-4-6
 dataset: aoe2companion
 phase: "01"
 pipeline_section: "01_02 -- Exploratory Data Analysis"
-invariants_touched: [3, 6, 7, 8, 9]
-source_artifacts:
-  - sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md
-  - sandbox/aoe2/aoestats/01_exploration/02_eda/01_02_05_visualizations.py
-  - .claude/scientific-invariants.md
-  - docs/ml_experiment_lifecycle/01_DATA_EXPLORATION_MANUAL.md
+invariants_touched: [3, 6, 7, 9]
 critique_required: true
-research_log_ref: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md#2026-04-15-01-02-05-viz-revision
 ---
 
-# Plan: aoe2companion 01_02_05 -- Univariate Census Visualizations (revision)
+# Plan: aoe2companion Step 01_02_05 — Univariate Census Visualizations
 
 ## Scope
 
-Revision of the existing Step 01_02_05 notebook and ROADMAP entry for the aoe2companion dataset.
-The existing 13-plot notebook executed successfully and all PNGs exist on disk, but a
-pre-execution adversarial audit identified 3 BLOCKERs and 3 WARNINGs. This plan
-adds 2 new plots (match duration histogram, NULL co-occurrence timeline), modifies
-2 existing plots (ratingDiff with leakage annotation, completeness matrix with
-harmonized thresholds), modifies 1 existing plot (won distribution to Win/Loss
-2-bar + NULL annotation), updates the ROADMAP entry, and regenerates the markdown artifact.
-Final plot count: 16.
+**Phase/Step:** 01 / 01_02_05
+**Branch:** feat/census-pass3
+**Action:** CREATE (all prior 01_02_05 artifacts deleted; STEP_STATUS reset to not_started)
+**Predecessor:** 01_02_04 (Univariate Census — complete, artifacts on disk)
 
-Phase 01, Pipeline Section 01_02 (EDA), Step 01_02_05 (revision).
+Create a visualization notebook that reads the 01_02_04 JSON census artifact and
+DuckDB tables, produces 17 thesis-grade PNG plots, and writes a markdown artifact
+with all SQL queries (Invariant #6). No new analytics — visualization of existing
+01_02_04 findings only (Invariant #9).
 
 ## Problem Statement
 
-Three BLOCKERs prevent thesis-grade cross-dataset comparability:
+Step 01_02_04 produced quantitative census results (NULL rates, distributions,
+skewness, cardinality, temporal ranges, target balance) for all four aoe2companion
+raw tables. Those numbers exist only as JSON and markdown text. Step 01_02_05
+translates them into visual form for three purposes: (1) validate that visual
+distributions match statistical summaries, (2) produce thesis-ready figures for
+Chapter 4, and (3) reveal patterns (bimodality, cliff shapes, co-occurrence
+structure) invisible in summary statistics alone.
 
-1. **No match duration histogram.** aoestats and sc2egset both have dual-panel duration
-   histograms. The census JSON has `match_duration_stats` (median=1,678s, p95=3,789s,
-   max=3.28M s) and `duration_excluded_rows` (2,941 non-positive). Without a comparable
-   plot, Chapter 4 cannot compare match duration distributions across all three datasets.
+## Assumptions & Unknowns
 
-2. **PNG output paths in ROADMAP.** The ROADMAP `outputs` list says `artifacts/01_exploration/02_eda/plots/01_02_05_*.png`
-   but does not enumerate filenames. Must list all 16.
+- The census JSON at `reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.json`
+  is the single source of truth for all plotted values.
+- DuckDB queries are needed only where the census JSON does not contain bin-level
+  data (histograms for rating, ratingDiff, duration, temporal volume).
+- `matches_raw.rating` temporal status remains ambiguous — the rating histogram
+  carries no leakage annotation, but a subtitle note flags the ambiguity.
+- Duration p95 clip value: 3,789s = 63.15 min (from census key
+  `match_duration_stats[0]["p95_secs"]`). This differs from aoestats, which clips
+  at p95=4,714s = 78.6 min. Both use p95-derived clipping; the difference reflects
+  genuinely different game-length distributions. Subtitle annotation documents this.
 
-3. **`ratingDiff` plotted without temporal classification annotation.** `ratingDiff` is
-   classified `post_game` in the JSON `post_game_fields` key. Invariant #3 requires
-   visible annotation. Examiner question: "Is this feature available at prediction time?"
-   Answer must be visible on the plot.
+## Literature Context
 
-Three WARNINGs require resolution:
+Not applicable for a visualization step. Threshold derivations reference the
+01_02_04 census artifact, not external literature.
 
-4. NULL co-occurrence clusters (A: 8 boolean cols, 426K rows; B: fullTechTree+population,
-   431K rows) not visualized. At minimum, a monthly timeline tests the API schema change
-   hypothesis.
+## Scientific Questions
 
-5. NULL severity color thresholds diverge from aoestats: aoestats uses green=0%,
-   gold=>0 and <5%, orange=5-50%, red>=50%. aoe2companion uses green=<1%, orange=1-10%,
-   red=>10%. Must harmonize to 4-tier aoestats scheme.
+These questions drive the notebook structure and plot selection. Each maps to one
+or more tasks.
 
-6. `won` bar chart shows NULL as third bar. For thesis comparability with aoestats
-   (boolean 2-bar), restructure to Win/Loss 2-bar with NULL annotated separately.
+**Q1 — Target balance:** Is the win/loss split near 50/50 for aoe2companion, and how
+does the 4.69% NULL rate compare visually to the win/loss counts? (Comparable to
+sc2egset's near-perfect balance and aoestats's zero-NULL target.)
 
-## Assumptions & unknowns
+**Q2 — Intra-match consistency:** What fraction of 2-row matches have internally
+consistent (complementary) outcomes, and how do the anomalous categories (both_true,
+both_false, mixed_null) compare in magnitude?
 
-- **Assumption:** The existing 01_02_05 notebook executed successfully and all 13 PNGs
-  are on disk. This revision modifies the notebook in-place.
-- **Assumption:** The JSON artifact `match_duration_stats`, `duration_excluded_rows`,
-  `matches_raw_null_cooccurrence`, and `post_game_fields` keys contain the data needed.
-  Verified: all four keys present in artifact.
-- **Unknown:** Whether the monthly NULL co-occurrence timeline shows a clear temporal
-  cutoff (supporting the API schema change hypothesis) or a diffuse pattern. Resolves
-  by: execution (DuckDB query + plot).
+**Q3 — Map concentration:** Does the map distribution show power-law concentration
+(a few maps dominating) or a flat distribution? How does the top-3 coverage (49%)
+compare to aoestats (60.9% for top-3)?
 
-## Literature context
+**Q4 — Leaderboard distribution:** What is the relative volume across leaderboard
+types? Does the rm_1v1 + qp_rm_1v1 subset (30.5M matches, the primary prediction
+scope) dominate?
 
-EDA Manual Section 3.4 recommends dual-panel histograms for heavily skewed distributions:
-body view (linear scale, clipped at a quantile) to show the main mass, and full-range
-(log-y) to show the tail. This is the design used by aoestats (body clipped at 120 min,
-full-range log-y) and sc2egset.
+**Q5 — Civilization pick rates:** Are civilization pick rates uniform or concentrated?
+Does the top civ (Franks 5.68%) stand out, and how does the distribution compare to
+aoestats (Franks 5.59%)?
 
-Tukey (1977) on temporal stability of missingness patterns: NULL co-occurrence clusters
-should be plotted over time to distinguish schema changes (step function) from gradual
-data quality degradation (trend).
+**Q6 — Rating distribution shape:** Is the Elo distribution unimodal and bell-shaped
+around the anchor, or does it show bimodality (two player populations)?
+Note: `matches_raw.rating` has ambiguous temporal status — subtitle must flag this.
 
-Invariant #3 (temporal discipline) requires that any column classified as `post_game`
-or `in_game` carry a visible annotation when plotted, so that thesis readers and examiners
-can immediately identify which features would constitute temporal leakage if used for
-prediction.
+**Q7 — ratingDiff leakage visualization:** What does the post-game ratingDiff
+distribution look like? The plot must carry a POST-GAME annotation since ratingDiff
+is confirmed post-game (Invariant #3).
 
-Invariant #8 (cross-game comparability) requires the same core plot types across all
-three datasets: target distribution, map top-k, match duration histogram, rating histogram.
+**Q8 — Duration distribution:** How extreme is the right tail (max 38 days)?
+Does the body (clipped at p95=63 min) show a unimodal right-skew or bimodality?
+How does p95=63 min compare to aoestats p95=79 min?
 
-## Execution Steps
+**Q9 — NULL landscape:** Which columns are data-rich (0% NULL) and which are
+effectively dead (>50% NULL)? Does the 4-tier severity coloring reveal clusters?
 
-### T01 -- Patch ROADMAP.md Step 01_02_05 entry
+**Q10 — NULL co-occurrence:** Do the 428K jointly-NULL rows in Cluster A (8 boolean
+settings) and Cluster B (fullTechTree, population) represent a single historical
+schema change event?
 
-**Objective:** Update the ROADMAP entry to reflect the revised plot count (16), the
-`plots/` subdirectory in all output paths, the harmonized gate condition, and
-the I3 annotation requirement.
+**Q11 — Leaderboards_raw numeric boxplots:** How do wins, losses, games, streak,
+drops distribute across the leaderboard snapshot? Do they confirm the heavy
+right-tail (skewness 8.51 for games)?
+
+**Q12 — Profiles_raw NULL rates:** Which of the 14 profile columns are populated
+vs. the 7 dead columns (100% NULL)?
+
+**Q13 — Leaderboards_raw leaderboard type distribution:** What is the relative
+volume across leaderboard types in the snapshot table?
+
+**Q14 — Boolean settings:** What fraction of matches have each boolean setting
+enabled? Do the 8 Cluster A columns show identical non-NULL rates (confirming
+co-occurrence)?
+
+**Q15 — Temporal volume:** Does match volume increase steadily over 2020–2026, or
+are there plateaus, dips, or inflection points?
+
+**Q16 — Cross-dataset comparison:** Can the four mandatory cross-dataset plots
+(target bar, map top-20, duration histogram, rating histogram) be placed side-by-side
+with aoestats and sc2egset equivalents?
+
+## Part A — ROADMAP Patch
+
+The following fields in ROADMAP.md Step 01_02_05 entry must be updated:
+
+**`description`:** Replace with:
+```
+"17 visualization plots for the aoe2companion univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on post-game columns per Invariant #3."
+```
+
+**`method`:** Replace with:
+```
+"Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (rating, ratingDiff, duration, monthly volume). Produce 17 plots: won 2-bar, won consistency stacked, leaderboard bar, civ top-20, map top-20 barh, rating histogram, ratingDiff histogram (POST-GAME annotated), duration dual-panel histogram, NULL rate bar (4-tier), NULL co-occurrence annotated 2x2 table, leaderboards_raw numeric boxplots, profiles_raw NULL rate bar, leaderboards_raw leaderboard bar, boolean stacked bar, monthly volume line chart, ratings_raw rating histogram, rating/ratingDiff NULL rate timeline. Markdown artifact with SQL queries and plot index table."
+```
+
+**`outputs.plots`:** Replace with the full list of 17 PNG files:
+```yaml
+plots:
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_won_distribution.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_won_consistency.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboard_distribution.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_civ_top20.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_map_top20.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_rating_histogram.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_ratingdiff_histogram.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_duration_histogram.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_null_rate_bar.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboards_numeric_boxplots.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_profiles_null_rate.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboards_leaderboard_bar.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_boolean_stacked_bar.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_monthly_volume.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_ratings_raw_rating_histogram.png"
+  - "artifacts/01_exploration/02_eda/plots/01_02_05_rating_null_timeline.png"
+```
+
+**`gate.artifact_check`:** Replace with:
+```
+"All 17 PNG files exist under plots/. 01_02_05_visualizations.md exists with SQL queries (Invariant #6) and plot index table including Temporal Annotation column."
+```
+
+**Add `scientific_invariants_applied` block:**
+```yaml
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "ratingDiff histogram carries POST-GAME annotation. matches_raw.rating subtitle notes ambiguous temporal status."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All bin widths, clip boundaries, color thresholds, and annotation values derived from census JSON at runtime. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Visualization of 01_02_04 findings only. No new analytical computation."
+```
+
+## Part B — Notebook Task List
+
+### T01 — ROADMAP Patch
+
+**Objective:** Update the ROADMAP.md Step 01_02_05 entry with the final plot list,
+gate condition, invariants, and thesis mapping.
 
 **Instructions:**
-
-1. In `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`, locate
-   the `### Step 01_02_05` YAML block.
-
-2. Change `description` field: replace "13 visualization plots" with "16 visualization plots".
-
-3. Change `method` field: append to the existing method text: ", match duration dual-panel histogram, NULL co-occurrence monthly timeline, post-game temporal classification annotation on ratingDiff (Invariant #3)."
-
-4. Replace the `outputs` block with the full 16-file enumerated list:
-   ```yaml
-   outputs:
-     plots:
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_won_distribution.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_won_consistency.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboard_distribution.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_civ_top30.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_map_top30.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_rating_histogram.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_ratingDiff_histogram.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboards_boxplots.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_completeness_matrix.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_profiles_null_rates.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_lb_leaderboard_distribution.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_boolean_stacked.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_monthly_volume.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_duration_histogram.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence_timeline.png"
-       - "artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence_heatmap.png"
-     report: "artifacts/01_exploration/02_eda/01_02_05_visualizations.md"
-   ```
-
-5. Replace the `gate` block:
-   ```yaml
-   gate:
-     artifact_check: "All 16 PNG files exist under artifacts/01_exploration/02_eda/plots/. 01_02_05_visualizations.md exists with SQL queries (Invariant #6)."
-     continue_predicate: "Notebook executes end-to-end without errors. All 16 PNGs present. Markdown artifact references all 16 PNGs."
-     halt_predicate: "Any plot fails to render or DuckDB query errors."
-   ```
-
-6. Replace the `scientific_invariants_applied` block:
-   ```yaml
-   scientific_invariants_applied:
-     - number: "3"
-       how_upheld: "ratingDiff histogram carries visible 'POST-GAME -- not available at prediction time' annotation. All plots of post-game columns carry temporal classification label."
-     - number: "6"
-       how_upheld: "All DuckDB SQL queries reproduced verbatim in the markdown artifact."
-     - number: "7"
-       how_upheld: "Bin widths, color thresholds, and cutoffs justified inline with I7 comments."
-     - number: "8"
-       how_upheld: "Cross-dataset comparability: target distribution, map top-k, match duration histogram, rating histogram all present -- matching aoestats and sc2egset."
-     - number: "9"
-       how_upheld: "Visualization-only step -- reads 01_02_04 JSON artifact and DuckDB read-only."
-   ```
+1. Open `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`.
+2. Replace the Step 01_02_05 YAML block fields as specified in Part A above.
+3. This is an INSERT for `scientific_invariants_applied` (the current ROADMAP entry
+   lacks this block).
 
 **Verification:**
-- ROADMAP entry shows 16 plots, `plots/` subdirectory paths, I3 in invariants list.
+- ROADMAP.md Step 01_02_05 lists 17 PNG outputs under `plots/` subdirectory.
+- `scientific_invariants_applied` block present with I3, I6, I7, I9.
 
 **File scope:**
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md`
 
----
+### T02 — Notebook Setup
 
-### T02 -- Modify won distribution to 2-bar + NULL annotation (BLOCKER #6 / WARNING #6)
-
-**Objective:** Restructure the won bar chart from 3-bar (True/False/NULL) to 2-bar
-(Win/Loss) with NULL count annotated separately, matching aoestats boolean 2-bar design
-for thesis comparability.
+**Objective:** Create the notebook skeleton with imports, DuckDB connection,
+census JSON load, path setup, and sql_queries dict.
 
 **Instructions:**
-
-1. In the existing T02 plot cell (line ~80 onward), replace the current 3-bar
-   implementation with:
-   - Extract only the True and False rows from `census["won_distribution"]`.
-   - Plot 2 vertical bars: "Win" (green #2ecc71) and "Loss" (red #e74c3c).
-   - Annotate each bar with count and percentage as before.
-   - Add a text annotation below the chart or in subtitle:
-     `f"NULL (target unknown): {null_cnt:,} rows ({null_pct:.2f}%) -- excluded from bars"`
-     where `null_cnt` and `null_pct` come from the NULL entry in `won_distribution`.
-
-2. Keep the filename `01_02_05_won_distribution.png` unchanged (same path).
+1. Create `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
+   with jupytext percent-format header.
+2. Markdown header cell: Step 01_02_05, dataset, phase, question, invariants, predecessor, step scope.
+3. Imports: `json`, `pathlib.Path`, `duckdb`, `matplotlib`, `matplotlib.pyplot as plt`,
+   `pandas as pd`, `from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging`,
+   `from rts_predict.games.aoe2.config import AOE2COMPANION_DB_FILE`.
+4. `matplotlib.use("Agg")`, logger setup.
+5. Connect to DuckDB read-only: `con = duckdb.connect(str(AOE2COMPANION_DB_FILE), read_only=True)`.
+6. Load census JSON: `census_json_path = get_reports_dir("aoe2", "aoe2companion") / "artifacts" / "01_exploration" / "02_eda" / "01_02_04_univariate_census.json"`.
+7. Assert required keys present: `won_distribution`, `won_consistency_2row`, `categorical_profiles`, `matches_raw_null_census`, `match_duration_stats`, `boolean_census`, `cross_cluster_overlap`, `matches_raw_total_rows`.
+8. Set up paths: `artifacts_dir`, `plots_dir = artifacts_dir / "plots"`, `plots_dir.mkdir(parents=True, exist_ok=True)`.
+9. Initialize: `sql_queries = {}`.
 
 **Verification:**
-- Plot shows exactly 2 bars (Win, Loss). NULL count visible as text annotation, not as a bar.
+- Notebook imports and runs through setup without error.
+- Census JSON loads and key assertion passes.
 
 **File scope:**
 - `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
 
----
+### T03 — Won Distribution 2-Bar (Q1)
 
-### T03 -- Add ratingDiff leakage annotation (BLOCKER #3)
+**Scientific question answered:** Q1 — Target balance.
 
-**Objective:** Add a visible "POST-GAME -- not available at prediction time" annotation
-to the ratingDiff histogram, satisfying Invariant #3.
+**Input:** `census["won_distribution"]` (list of dicts with keys `won`, `cnt`, `pct`).
+
+**Output:** `plots/01_02_05_won_distribution.png`
+
+**Plot design:**
+- 2-bar chart (Win and Loss only). Filter with: `[r for r in census["won_distribution"] if r["won"] is not None]`
+  (identity check — JSON null becomes Python None).
+- Colors: Win=steelblue, Loss=salmon.
+- Bar annotations: count and percentage.
+- Title: `f"Target Variable Distribution — won (N={total_n:,})"` where `total_n = sum(r["cnt"] for r in census["won_distribution"])`.
+- Text annotation below chart: `f"Excluded: {null_cnt:,} NULL ({null_pct:.2f}%)"` where null values extracted with `[r for r in census["won_distribution"] if r["won"] is None][0]`.
+- Y-axis comma formatter.
+
+**Temporal classification annotation:** None (target variable, not a feature).
+
+**Invariant notes:**
+- I7: all values from census JSON at runtime. No hardcoded counts.
+
+### T04 — Won Consistency Stacked Bar (Q2)
+
+**Scientific question answered:** Q2 — Intra-match consistency.
+
+**Input:** `census["won_consistency_2row"]` (list of dicts with keys `outcome_pattern`, `match_count`, `pct`).
+
+**Output:** `plots/01_02_05_won_consistency.png`
+
+**Plot design:**
+- Horizontal stacked bar chart showing proportions of `complementary`, `both_true`, `both_false`, `mixed_null` categories.
+- Colors: complementary=green, both_true=red, both_false=orange, mixed_null=gray.
+- Annotated with counts and percentages.
+- Title: "Intra-Match Won Consistency (2-Row Matches)".
+
+**Invariant notes:**
+- I7: values from census JSON.
+
+### T05 — Leaderboard Distribution Bar (Q4)
+
+**Scientific question answered:** Q4 — Leaderboard volume.
+
+**Input:** `census["categorical_profiles"]["leaderboard"]` (top-k list).
+
+**Output:** `plots/01_02_05_leaderboard_distribution.png`
+
+**Plot design:**
+- Vertical bar chart, all leaderboard types, sorted by count descending.
+- Bar annotations: count and percentage.
+- Highlight rm_1v1 and qp_rm_1v1 bars with a distinct color (accent) and bracket annotation showing combined count.
+- Title: `f"Leaderboard Distribution — matches_raw (N={census['matches_raw_total_rows']:,})"`.
+
+**Invariant notes:**
+- I7: total_rows from `census["matches_raw_total_rows"]`.
+
+### T06 — Civilization Top-20 Barh (Q5)
+
+**Scientific question answered:** Q5 — Civilization pick rates.
+
+**Input:** `census["categorical_profiles"]["civ"]` (top-20 list with keys `civ`, `cnt`, `pct`).
+
+**Output:** `plots/01_02_05_civ_top20.png`
+
+**Plot design:**
+- Horizontal barh, top-20, sorted descending (highest at top).
+- Bar annotations: count and percentage.
+- Title: `f"Civilization Pick Rates — Top 20 of {cardinality} (matches_raw)"` where cardinality from census null_census `civ` entry `approx_cardinality`.
+- Subtitle: coverage percentage of top-20.
+
+**Invariant notes:**
+- I7: cardinality from census.
+
+### T07 — Map Top-20 Barh (Q3, cross-dataset mandatory)
+
+**Scientific question answered:** Q3 — Map concentration.
+
+**Input:** `census["categorical_profiles"]["map"]` (top-20 list with keys `map`, `cnt`, `pct`).
+
+**Output:** `plots/01_02_05_map_top20.png`
+
+**Plot design:**
+- Horizontal barh, top-20, sorted descending (highest at top).
+- Bar annotations: count and percentage.
+- Title: `f"Map Distribution — Top 20 of {cardinality} (matches_raw)"` where cardinality from census null_census `map` entry `approx_cardinality` (261).
+- Subtitle: `f"Top-20 coverage: {top20_pct:.1f}% of {census['matches_raw_total_rows']:,} rows"`.
+
+**Invariant notes:**
+- I7: cardinality 261 from census, not hardcoded.
+
+### T08 — Rating Histogram (Q6, cross-dataset mandatory)
+
+**Scientific question answered:** Q6 — Rating distribution shape.
+
+**Input:** DuckDB query on matches_raw. Census stats: mean=1,120, median=1,093, std=290, p05=687, p95=1,598, sentinel min=-1.
+
+**Output:** `plots/01_02_05_rating_histogram.png`
+
+**SQL (store in sql_queries["hist_rating"]):**
+```sql
+SELECT
+    FLOOR(rating / 25) * 25 AS bin,
+    COUNT(*) AS cnt
+FROM matches_raw
+WHERE rating IS NOT NULL AND rating > 0
+GROUP BY bin
+ORDER BY bin
+```
+I7 justification: bin width 25 chosen as ~0.09 stddev (stddev=290 from census key
+`matches_raw_numeric_stats` where `column_name="rating"`, `stddev_val=290.01`);
+provides ~64 bins across p05-p95 range for smooth histogram with 159M non-NULL rows.
+Sentinel -1 excluded with `rating > 0`.
+
+**Plot design:**
+- Single-panel histogram. X-axis: Elo rating. Y-axis: count.
+- Title: `f"Elo Rating Distribution — matches_raw (N={n_nonnull:,}, sentinel -1 excluded)"`.
+- Subtitle: `f"mean={mean:.0f}, median={median:.0f}, std={std:.0f} | AMBIGUOUS TEMPORAL STATUS — see Phase 02"`.
+- Vertical dashed lines at mean and median.
+
+**Temporal classification annotation:** None (ambiguous — not annotated as leakage, but subtitle flags the ambiguity).
+
+**Invariant notes:**
+- I7: bin width 25, sentinel exclusion, and all stats from census.
+- I6: SQL stored in sql_queries dict.
+
+### T09 — ratingDiff Histogram with POST-GAME Annotation (Q7)
+
+**Scientific question answered:** Q7 — ratingDiff leakage visualization.
+
+**Input:** DuckDB query on matches_raw. Census stats: mean=-0.19, median=0, std=17.66, p05=-20, p95=20, min=-174, max=319.
+
+**Output:** `plots/01_02_05_ratingdiff_histogram.png`
+
+**SQL (store in sql_queries["hist_ratingdiff"]):**
+```sql
+SELECT
+    ratingDiff AS val,
+    COUNT(*) AS cnt
+FROM matches_raw
+WHERE ratingDiff IS NOT NULL
+GROUP BY ratingDiff
+ORDER BY ratingDiff
+```
+I7 justification: ratingDiff has integer values in range [-174, +319]; plotting all
+distinct values (no binning needed) since the range is narrow enough for direct
+value-count bars.
+
+**Plot design:**
+- Single-panel bar/step chart. X-axis: ratingDiff value. Y-axis: count.
+- Title: `f"Rating Difference Distribution — matches_raw (N={n_nonnull:,})"`.
+- Subtitle: `f"mean={mean:.2f}, median={median:.0f}, std={std:.2f}, skew={skew:.4f}"`.
+
+**Temporal classification annotation:**
+```python
+ax.annotate(
+    "POST-GAME — not available at prediction time (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+```
+
+**Invariant notes:**
+- I3: POST-GAME annotation confirms ratingDiff is temporal leakage.
+- I6: SQL in sql_queries dict.
+
+### T10 — Duration Dual-Panel Histogram (Q8, cross-dataset mandatory)
+
+**Scientific question answered:** Q8 — Duration distribution extremes.
+
+**Input:** DuckDB query on matches_raw. Census stats: median=1,678s, p95=3,789s,
+max=3,279,303s. Non-positive duration count: 2,941 rows.
+
+**Output:** `plots/01_02_05_duration_histogram.png`
+
+**SQL (store in sql_queries["hist_duration_body"]):**
+```sql
+SELECT
+    FLOOR(EXTRACT(EPOCH FROM (finished - started)) / 60) AS bin_min,
+    COUNT(*) AS cnt
+FROM matches_raw
+WHERE finished > started
+  AND EXTRACT(EPOCH FROM (finished - started)) <= 3789
+GROUP BY bin_min
+ORDER BY bin_min
+```
+
+**SQL (store in sql_queries["hist_duration_full_log"]):**
+```sql
+SELECT
+    FLOOR(LOG10(GREATEST(EXTRACT(EPOCH FROM (finished - started)), 1))) AS log_bin,
+    COUNT(*) AS cnt
+FROM matches_raw
+WHERE finished > started
+GROUP BY log_bin
+ORDER BY log_bin
+```
+
+I7 justification: p95 clip value 3,789s from census key
+`match_duration_stats[0]["p95_secs"]`. Bin width 1 minute for body panel (~63 bins).
+Non-positive durations excluded with `finished > started` (2,941 rows per census key
+`duration_excluded_rows[0]["non_positive_duration_count"]`).
+
+**Plot design:**
+- 2-panel (1x2): left = body clipped at p95=63 min, right = full range log-y.
+- Left panel title: `f"Match Duration — Body (clipped at p95={p95_min:.0f} min)"`.
+- Right panel title: "Match Duration — Full Range (log scale)".
+- Suptitle: `f"Match Duration — matches_raw (N={n_valid:,}, excl. {n_excluded:,} non-positive)"`.
+- Subtitle annotation on left panel: `f"p95 clip = {p95_min:.0f} min; cf. aoestats p95 = 79 min — both use p95 clipping"`.
+- Vertical dashed line at median on left panel.
+
+**Temporal classification annotation:** None (duration is derived from `finished - started`;
+`finished` is post-game but duration itself is a match-level descriptor that is
+known post-game but is not a direct leakage vector for win/loss prediction in the
+same way ratingDiff is. It will be formally classified in Phase 02.)
+
+**Invariant notes:**
+- I7: clip at p95=3,789s from census. Bin width 1 min. Exclusion count 2,941 from census.
+- I6: both SQL queries in sql_queries dict.
+
+### T11 — NULL Rate Bar Chart with 4-Tier Severity (Q9)
+
+**Scientific question answered:** Q9 — NULL landscape.
+
+**Input:** `census["matches_raw_null_census"]` (list of dicts with `column_name`, `null_pct`).
+
+**Output:** `plots/01_02_05_null_rate_bar.png`
+
+**Plot design:**
+- Horizontal barh, all 55 columns sorted by null_pct descending.
+- 4-tier color scheme:
+  - green: 0% NULL
+  - gold: >0% and <5% NULL
+  - orange: 5-50% NULL
+  - red: >=50% NULL
+- Bar annotations: null_pct value.
+- Title: `f"NULL Rate by Column — matches_raw ({len(null_data)} columns)"`.
+- Legend showing the 4 tiers.
+
+**Invariant notes:**
+- I7: thresholds (0%, 5%, 50%) are the standardized 4-tier scheme used across all
+  three datasets for cross-dataset comparability.
+
+### T12 — NULL Co-occurrence Annotated Table (Q10)
+
+**Scientific question answered:** Q10 — NULL co-occurrence structure.
+
+**Input:** `census["cross_cluster_overlap"]` (dict with keys `both_clusters_null`,
+`cluster_a_only_null`, `cluster_b_only_null`). Total rows from `census["matches_raw_total_rows"]`.
+
+**Output:** `plots/01_02_05_null_cooccurrence.png`
+
+**Plot design:**
+- Annotated 2x2 table (NOT a raw-count heatmap — the 6-orders-of-magnitude range
+  makes linear colormaps uninformative). Use `matplotlib` table or `ax.text()` to
+  render a formatted 2x2 grid.
+- Rows: allowCheats NULL (proxy for Cluster A) / NOT NULL
+- Columns: fullTechTree NULL (proxy for Cluster B) / NOT NULL
+- Cells show: count and percentage of total rows.
+- Derive `total_rows = census["matches_raw_total_rows"]` (277,099,059).
+- Derive non-cluster counts:
+  `neither_null = total_rows - both - a_only - b_only`.
+- Title: "NULL Co-occurrence: allowCheats (proxy Cluster A) vs fullTechTree (proxy Cluster B)".
+- Footnote: "Cluster A proxy: allowCheats IS NULL captures 428,338 rows; exact
+  all-8-NULL count is 426,472 (1,866-row gap). Cluster B proxy: fullTechTree IS NULL."
+
+**Invariant notes:**
+- I7: all counts from census JSON. total_rows from `census["matches_raw_total_rows"]`.
+
+### T13 — Leaderboards_raw Numeric Boxplots (Q11)
+
+**Scientific question answered:** Q11 — Leaderboard snapshot distributions.
+
+**Input:** DuckDB query on leaderboards_raw.
+
+**Output:** `plots/01_02_05_leaderboards_numeric_boxplots.png`
+
+**SQL (store in sql_queries["leaderboards_boxplots"]):**
+```sql
+SELECT wins, losses, games, streak, drops
+FROM leaderboards_raw
+WHERE rank IS NOT NULL
+```
+
+**Plot design:**
+- 1x5 subplot panel, one boxplot per column. Log-y scale for games (skewness 8.51).
+- Title: "Leaderboards_raw Numeric Distributions (ranked entries only)".
+- WHERE clause excludes 25.61% unranked entries (co-NULL block).
+
+**Invariant notes:**
+- I7: skewness 8.51 from census; unranked exclusion rate 25.61% from census.
+- I6: SQL in sql_queries dict.
+
+### T14 — Profiles_raw NULL Rate Bar (Q12)
+
+**Scientific question answered:** Q12 — Profile column data availability.
+
+**Input:** Census JSON profiles_raw null census data (from full JSON scan; key path
+depends on census structure — look for profiles_raw null counts).
+
+**Output:** `plots/01_02_05_profiles_null_rate.png`
+
+**Plot design:**
+- Horizontal barh, all 14 columns, sorted by null_pct descending.
+- Same 4-tier color scheme as T11.
+- Highlight the 7 dead columns (100% NULL) with explicit label annotation.
+- Title: "NULL Rate by Column — profiles_raw (14 columns)".
+
+**Invariant notes:**
+- I7: 4-tier thresholds consistent with T11.
+
+### T15 — Leaderboards_raw Leaderboard Type Bar (Q13)
+
+**Scientific question answered:** Q13 — Leaderboard type distribution.
+
+**Input:** Census JSON leaderboards_raw categorical profile for `leaderboard` column.
+
+**Output:** `plots/01_02_05_leaderboards_leaderboard_bar.png`
+
+**Plot design:**
+- Vertical bar chart, all leaderboard types, sorted descending.
+- Bar annotations: count and percentage.
+- Title: "Leaderboard Type Distribution — leaderboards_raw".
+
+### T16 — Boolean Settings Stacked Bar (Q14)
+
+**Scientific question answered:** Q14 — Boolean settings distribution.
+
+**Input:** `census["boolean_census"]` (list of dicts with `column_name`, `true_count`,
+`false_count`, `null_count`).
+
+**Output:** `plots/01_02_05_boolean_stacked_bar.png`
+
+**Plot design:**
+- Horizontal stacked barh, one row per boolean column.
+- Three segments: True (blue), False (orange), NULL (gray).
+- Annotations: percentage for each segment.
+- Title: "Boolean Column Distribution — matches_raw".
+
+### T17 — Ratings_raw Rating Histogram (supplementary Q6)
+
+**Scientific question answered:** Q6 supplementary — Compare ratings_raw.rating
+distribution to matches_raw.rating.
+
+**Input:** DuckDB query on ratings_raw. Census stats: mean=1,120, median=1,093, std=267.
+
+**Output:** `plots/01_02_05_ratings_raw_rating_histogram.png`
+
+**SQL (store in sql_queries["hist_ratings_raw_rating"]):**
+```sql
+SELECT
+    FLOOR(rating / 25) * 25 AS bin,
+    COUNT(*) AS cnt
+FROM ratings_raw
+WHERE rating IS NOT NULL
+GROUP BY bin
+ORDER BY bin
+```
+
+**Plot design:**
+- Single-panel histogram. Bin width 25 (same as T08 for comparability).
+- Title: `f"Rating Distribution — ratings_raw (N={n_nonnull:,})"`.
+- Subtitle: `f"mean={mean:.0f}, median={median:.0f}, std={std:.0f}"`.
+
+**Invariant notes:**
+- I7: bin width 25 matches T08. Stats from census.
+- I6: SQL in sql_queries dict.
+
+### T18 — Monthly Volume Line Chart (Q15)
+
+**Scientific question answered:** Q15 — Temporal volume trends.
+
+**Input:** DuckDB query on matches_raw.
+
+**Output:** `plots/01_02_05_monthly_volume.png`
+
+**SQL (store in sql_queries["monthly_volume"]):**
+```sql
+SELECT
+    DATE_TRUNC('month', started) AS month,
+    COUNT(*) AS match_count
+FROM matches_raw
+WHERE started IS NOT NULL
+GROUP BY month
+ORDER BY month
+```
+
+**Plot design:**
+- Line chart with markers. X-axis: month. Y-axis: match count.
+- Title: `f"Monthly Match Volume — matches_raw"`.
+- Y-axis comma formatter.
+- Soft assertion: `len(monthly_df) <= census["temporal_range_matches"][0]["distinct_match_dates"]` (approximate check).
+
+**Invariant notes:**
+- I6: SQL in sql_queries dict.
+
+### T19 — Rating & ratingDiff NULL Rate Timeline
+
+**Scientific question answered:** Is the 42.46% co-NULL rate for `rating` and `ratingDiff`
+in matches_raw explained by a discrete schema change at a temporal boundary
+(step-function NULL rate over time), or is missingness gradual? Determines whether
+pre-change rows can ever carry rating features in Phase 02 feature engineering.
+
+**Input:** DuckDB query on matches_raw. Census facts:
+- `rating` NULL rate: 42.46% (117,656,260 / 277,099,059) from `matches_raw_null_census`
+- `ratingDiff` NULL rate: 42.46% (117,656,260 / 277,099,059) — identical count confirms row-level co-occurrence
+- Temporal column: `started` (TIMESTAMP, 0% NULL, range 2020-07-31 to 2026-04-04)
+- Total rows: 277,099,059 from `census["matches_raw_total_rows"]`
+
+**Output:** `plots/01_02_05_rating_null_timeline.png`
+
+**SQL (store in `sql_queries["rating_null_timeline"]`):**
+```sql
+SELECT
+    DATE_TRUNC('month', started) AS month,
+    COUNT(*) AS total_rows,
+    ROUND(100.0 * SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2)
+        AS rating_null_pct,
+    ROUND(100.0 * SUM(CASE WHEN "ratingDiff" IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2)
+        AS ratingdiff_null_pct
+FROM matches_raw
+WHERE started IS NOT NULL
+GROUP BY month
+ORDER BY month
+```
+I7: no hardcoded date bounds — query groups all rows by `started` month.
+Column names `rating` and `ratingDiff` identified as co-NULL in census
+`matches_raw_null_census`. Total row count from `census["matches_raw_total_rows"]`.
+
+**Python:**
+```python
+# --- T19: Rating & ratingDiff NULL Rate Timeline ---
+# I7: overall NULL rates derived from census at runtime
+rating_null_pct = next(
+    c["null_pct"]
+    for c in census["matches_raw_null_census"]["columns"]
+    if c["column"] == "rating"
+)
+ratingdiff_null_pct = next(
+    c["null_pct"]
+    for c in census["matches_raw_null_census"]["columns"]
+    if c["column"] == "ratingDiff"
+)
+
+sql_queries["rating_null_timeline"] = """
+SELECT
+    DATE_TRUNC('month', started) AS month,
+    COUNT(*) AS total_rows,
+    ROUND(100.0 * SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2)
+        AS rating_null_pct,
+    ROUND(100.0 * SUM(CASE WHEN "ratingDiff" IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2)
+        AS ratingdiff_null_pct
+FROM matches_raw
+WHERE started IS NOT NULL
+GROUP BY month
+ORDER BY month
+"""
+
+df_null_timeline = conn.execute(sql_queries["rating_null_timeline"]).fetchdf()
+df_null_timeline["month"] = pd.to_datetime(df_null_timeline["month"])
+
+fig, ax = plt.subplots(figsize=(14, 5))
+ax.plot(
+    df_null_timeline["month"],
+    df_null_timeline["rating_null_pct"],
+    color="steelblue", linewidth=1.5, label="rating NULL %",
+)
+ax.plot(
+    df_null_timeline["month"],
+    df_null_timeline["ratingdiff_null_pct"],
+    color="darkorange", linewidth=1.5, linestyle="--", label="ratingDiff NULL %",
+)
+
+ax.set_xlabel("Month")
+ax.set_ylabel("NULL Rate (%)")
+ax.set_ylim(0, 105)
+ax.set_title(
+    f"Monthly NULL Rate — rating & ratingDiff\n"
+    f"(matches_raw, N={census['matches_raw_total_rows']:,})"
+)
+ax.legend(loc="upper right", fontsize=9)
+ax.grid(axis="y", alpha=0.3)
+fig.autofmt_xdate()
+
+# I7: detect schema-change breakpoint algorithmically — no hardcoded date
+months_high = df_null_timeline[df_null_timeline["rating_null_pct"] > 90]["month"]
+months_low = df_null_timeline[df_null_timeline["rating_null_pct"] < 10]["month"]
+if len(months_high) > 0 and len(months_low) > 0:
+    breakpoint_month = months_low.min()
+    ax.axvline(breakpoint_month, color="red", linestyle=":", linewidth=1.2,
+               label=f"Schema change ~{breakpoint_month.strftime('%Y-%m')}")
+    ax.legend(loc="upper right", fontsize=9)
+
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_rating_null_timeline.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
+print(f"Saved: {plots_dir / '01_02_05_rating_null_timeline.png'}")
+```
+
+**Temporal annotation:** None. NULL rate is a data-quality diagnostic, not an in-game feature.
+
+**Invariant notes:**
+- I7: no hardcoded date bounds; overall NULL rates derived from `census["matches_raw_null_census"]`; total rows from `census["matches_raw_total_rows"]`; breakpoint detected algorithmically.
+- I6: SQL stored in `sql_queries["rating_null_timeline"]` and written to markdown artifact.
+- I9: Visualizes 01_02_04 NULL census finding (42.46% co-NULL rate) decomposed into monthly temporal bins. No new analytics.
+
+### T20 — Markdown Artifact and Verification
+
+**Objective:** Write the markdown artifact with plot index table, SQL queries, and
+verification cell. Close DuckDB connection.
 
 **Instructions:**
-
-1. In the existing T05 ratingDiff plot cell (line ~304 onward), after setting the title,
-   add a subtitle or prominent text annotation:
-   ```python
-   ax.text(
-       0.5, 0.97,
-       "POST-GAME -- not available at prediction time (Invariant #3)",
-       transform=ax.transAxes, ha="center", va="top",
-       fontsize=10, fontweight="bold", color="#c0392b",
-       bbox=dict(boxstyle="round,pad=0.3", facecolor="#fadbd8", edgecolor="#c0392b", alpha=0.9)
-   )
-   ```
-
-2. The title remains as-is (N=..., skew=..., kurt=...). The leakage label is a separate
-   annotation positioned at the top center of the plot area.
-
-3. Keep the filename `01_02_05_ratingDiff_histogram.png` unchanged.
+1. Define `expected_plots` list with all 17 PNG filenames.
+2. Assert all exist on disk.
+3. Build markdown string with:
+   - Header (step, dataset, phase, predecessor, invariants).
+   - Plot index table with columns: #, Title, Filename, Observation, Temporal Annotation.
+     The Temporal Annotation column must say "POST-GAME (Inv. #3)" for ratingDiff,
+     "AMBIGUOUS — see Phase 02" for rating, and "N/A" for all others.
+   - SQL Queries section: iterate over `sql_queries` dict and write each query verbatim
+     in a fenced code block. This must enumerate ALL queries including:
+     `hist_rating`, `hist_ratingdiff`, `hist_duration_body`, `hist_duration_full_log`,
+     `leaderboards_boxplots`, `hist_ratings_raw_rating`, `monthly_volume`.
+   - Data Sources section.
+4. Write to `artifacts_dir / "01_02_05_visualizations.md"`.
+5. Close DuckDB connection.
+6. Print summary line.
 
 **Verification:**
-- ratingDiff histogram visually displays the "POST-GAME" annotation in red.
+- All 17 PNG files exist.
+- Markdown artifact exists and contains all 7 SQL queries.
 
 **File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
+- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py` (continuation)
+- `reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md` (generated)
 
----
+### T21 — STEP_STATUS Update
 
-### T04 -- Harmonize completeness matrix color thresholds (WARNING #5)
-
-**Objective:** Change the NULL severity color scheme from 3-tier (green <1%, orange
-1-10%, red >10%) to 4-tier matching aoestats: green=0%, gold=>0 and <5%, orange=5-50%,
-red>=50%.
+**Objective:** Mark 01_02_05 as complete.
 
 **Instructions:**
-
-1. In the existing T07 cell (line ~430 onward), replace the color assignment logic with:
-   ```python
-   # I7: Thresholds harmonized with aoestats (4-tier severity, Invariant #8 cross-game
-   # comparability). green=0% NULL, gold=>0% and <5% NULL, orange=5-50% NULL, red>=50% NULL.
-   # aoestats uses identical bands: sandbox/aoe2/aoestats/.../01_02_05_visualizations.py L690-698.
-   def null_color(pct: float) -> str:
-       if pct >= 50:
-           return "#e74c3c"    # red: >= 50%
-       elif pct >= 5:
-           return "#f39c12"    # orange: 5-50%
-       elif pct > 0:
-           return "#f1c40f"    # gold: > 0% and < 5%
-       else:
-           return "#2ecc71"    # green: 0%
-   colors = [null_color(pct) for pct in null_df_sorted["null_pct"]]
-   ```
-
-2. Update the reference lines: replace the 1% and 10% vertical lines with 5% and 50%
-   lines, and add a legend with all 4 tiers:
-   ```python
-   ax.axvline(x=5, color="gray", linestyle="--", alpha=0.5)
-   ax.axvline(x=50, color="gray", linestyle=":", alpha=0.5)
-   from matplotlib.patches import Patch as MPatch
-   legend_elements = [
-       MPatch(facecolor="#e74c3c", label=">= 50% NULL"),
-       MPatch(facecolor="#f39c12", label="5-50% NULL"),
-       MPatch(facecolor="#f1c40f", label="> 0% and < 5% NULL"),
-       MPatch(facecolor="#2ecc71", label="0% NULL"),
-   ]
-   ax.legend(handles=legend_elements, loc="lower right")
-   ```
-
-3. Update the I7 comment to reference the harmonization rationale.
-
-4. Keep the filename `01_02_05_completeness_matrix.png` unchanged.
-
-**Verification:**
-- Completeness matrix shows 4 color tiers with 5%/50% reference lines.
-- Color scheme matches aoestats `null_color()` function.
+1. Update `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml`:
+   set `01_02_05.status` to `complete` and `01_02_05.completed_at` to the execution date.
 
 **File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml`
 
----
+## Cross-Dataset Comparability Checklist
 
-### T05 -- Add match duration dual-panel histogram (BLOCKER #1)
+| Mandatory Plot | Column | p95 Clip | Dataset-Specific Handling |
+|---|---|---|---|
+| (a) Target 2-bar | `won` (BOOLEAN) | N/A | NULL (4.69%) annotated as text below chart, not as a third bar |
+| (b) Map top-20 barh | `map` (VARCHAR, 261 distinct) | N/A | Direct from census categorical_profiles |
+| (c) Duration dual-panel | `finished - started` (derived seconds) | p95=3,789s=63 min | Subtitle notes "cf. aoestats p95=79 min — both use p95 clipping" |
+| (d) Rating histogram | `rating` (INTEGER, sentinel -1) | N/A | Sentinel -1 excluded. Subtitle notes AMBIGUOUS temporal status. |
 
-**Objective:** Add a new dual-panel match duration histogram to achieve cross-dataset
-comparability with aoestats and sc2egset. Design: left panel shows body (linear scale,
-clipped at p95), right panel shows full range (log-y scale).
+All four present: confirmed.
 
-**Instructions:**
+## NULL Severity Thresholds
 
-1. Insert a new section after T11 (monthly volume, line ~600) and before T12 (markdown
-   artifact), with markdown header:
-   ```
-   ## T05-new -- Plot 14: Match Duration Dual-Panel Histogram
-   ```
+T11 and T14 both use the standardized 4-tier scheme:
+- green: 0% NULL
+- gold: >0% and <5% NULL
+- orange: 5-50% NULL
+- red: >=50% NULL
 
-2. DuckDB queries for bin data. Two queries:
+## Gate Condition
 
-   **Left panel (body, clipped at p95=3789s ~ 63 min):**
-   ```sql
-   SELECT FLOOR(EXTRACT(EPOCH FROM (finished - started)) / 60) AS minute_bin,
-          COUNT(*) AS cnt
-   FROM matches_raw
-   WHERE finished > started
-     AND EXTRACT(EPOCH FROM (finished - started)) <= 3789
-   GROUP BY minute_bin
-   ORDER BY minute_bin
-   ```
-   I7 justification: `p95=3789s from census["match_duration_stats"][0]["p95_secs"]; clipped at p95 to show body distribution. 1-minute bins: range 0-63 min = 63 bins.`
-
-   **Right panel (full range, log-y, 10-minute bins):**
-   ```sql
-   SELECT FLOOR(EXTRACT(EPOCH FROM (finished - started)) / 600) * 10 AS ten_min_bin,
-          COUNT(*) AS cnt
-   FROM matches_raw
-   WHERE finished > started
-   GROUP BY ten_min_bin
-   ORDER BY ten_min_bin
-   ```
-   I7 justification: `Full range 1s to 3.28M s. 10-minute bins for the full range to keep bin count manageable.`
-
-3. Verification cells: print both DataFrames (head+tail).
-
-4. Load annotation values from census JSON:
-   ```python
-   dur_stats = census["match_duration_stats"][0]
-   median_min = dur_stats["median_duration_secs"] / 60
-   p95_min = dur_stats["p95_secs"] / 60
-   excluded = census["duration_excluded_rows"][0]
-   non_positive = excluded["non_positive_duration_count"]
-   max_secs = dur_stats["max_duration_secs"]
-   ```
-
-5. Two-panel plot:
-   ```python
-   fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(14, 6))
-   ```
-   - **Left panel:** bar chart with 1-minute bins, linear y-axis.
-     - Red dashed vertical line at median (28.0 min).
-     - Orange dashed vertical line at p95 (63.2 min).
-     - Title: "Duration (body, <= p95)"
-   - **Right panel:** bar chart with 10-minute bins, log y-axis (`ax_right.set_yscale("log")`).
-     - Annotation text box:
-       `f"max = {max_secs:,.0f}s ({max_secs/86400:.0f} days)\n{non_positive:,} rows excluded (finished <= started)"`
-     - Title: "Duration (full range, log scale)"
-   - Suptitle: "Match Duration Distribution (matches_raw)"
-
-6. Save as `plots_dir / "01_02_05_duration_histogram.png"`.
-
-7. Add both SQL queries to the `sql_queries` dict for the markdown artifact.
-
-**Verification:**
-- `01_02_05_duration_histogram.png` exists with 2 panels.
-- Left panel clipped at p95, right panel shows full range on log scale.
-
-**File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
-
----
-
-### T06 -- Add NULL co-occurrence visualization (WARNING #4)
-
-**Objective:** Add visualizations of the NULL co-occurrence clusters. A monthly timeline
-plot tests the "API schema change" hypothesis by showing whether Cluster A/B NULLs
-appear as a temporal step function. A small heatmap shows the cross-cluster overlap.
-
-**Instructions:**
-
-1. Insert a new section after T05-new, with markdown header:
-   ```
-   ## T06-new -- Plots 15-16: NULL Co-occurrence Timeline and Heatmap
-   ```
-
-2. **Plot 15: Monthly NULL cluster timeline.** DuckDB query:
-   ```sql
-   SELECT DATE_TRUNC('month', started) AS month,
-          COUNT(*) FILTER (WHERE "allowCheats" IS NULL
-              AND "lockSpeed" IS NULL AND "lockTeams" IS NULL
-              AND "recordGame" IS NULL AND "sharedExploration" IS NULL
-              AND "teamPositions" IS NULL AND "teamTogether" IS NULL
-              AND "turboMode" IS NULL) AS cluster_a_null,
-          COUNT(*) FILTER (WHERE "fullTechTree" IS NULL
-              AND population IS NULL) AS cluster_b_null,
-          COUNT(*) AS total_rows
-   FROM matches_raw
-   WHERE started IS NOT NULL
-   GROUP BY month
-   ORDER BY month
-   ```
-
-3. Verification cell: print DataFrame head+tail.
-
-4. Compute rates:
-   ```python
-   cooc_df["cluster_a_pct"] = 100.0 * cooc_df["cluster_a_null"] / cooc_df["total_rows"]
-   cooc_df["cluster_b_pct"] = 100.0 * cooc_df["cluster_b_null"] / cooc_df["total_rows"]
-   ```
-
-5. Line chart with two lines (Cluster A %, Cluster B %) over time.
-   Title: "NULL Co-occurrence Cluster Frequency by Month (matches_raw)"
-   Subtitle: "Tests API schema change hypothesis -- step function = schema addition"
-   If the pattern shows a clear temporal cutoff, annotate with the approximate date.
-   Save as `plots_dir / "01_02_05_null_cooccurrence_timeline.png"`.
-
-6. **Plot 16: Cross-cluster overlap heatmap.** Using the data from
-   `census["matches_raw_null_cooccurrence"]["cross_cluster_overlap"][0]`:
-   - 2x2 matrix: rows = Cluster A (NULL / non-NULL), cols = Cluster B (NULL / non-NULL)
-   - Values from the artifact:
-     - both_clusters_null = 428,321
-     - cluster_a_only_null = 17
-     - cluster_b_only_null = 3,173
-     - neither = total_rows - (428321 + 17 + 3173) (compute from matches_raw_total_rows)
-   - Use `matplotlib.pyplot.imshow` or `sns.heatmap` equivalent with annotated counts.
-   Title: "NULL Co-occurrence: Cluster A vs Cluster B"
-   Save as `plots_dir / "01_02_05_null_cooccurrence_heatmap.png"`.
-
-7. Add a deferred-debt markdown cell:
-   ```python
-   # DEFERRED: Full N-column co-occurrence heatmap (55x55) deferred to 01_03 (systematic profiling).
-   # Justification: the 2-cluster structure identified in 01_02_04 is adequately visualized
-   # by the timeline + 2x2 overlap. A 55x55 heatmap would add visual noise without new insight
-   # at this univariate step.
-   ```
-
-8. Add the monthly query to `sql_queries` dict.
-
-**Verification:**
-- `01_02_05_null_cooccurrence_timeline.png` exists (line chart).
-- `01_02_05_null_cooccurrence_heatmap.png` exists (2x2 matrix).
-
-**File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
-
----
-
-### T07 -- Update markdown artifact and re-execute notebook
-
-**Objective:** Regenerate the markdown summary artifact to include all 16 plots and
-the new SQL queries. Re-execute the notebook end-to-end.
-
-**Instructions:**
-
-1. In the T12 cell, update the `plots_info` list to include 16 entries (add entries
-   for duration_histogram, null_cooccurrence_timeline, null_cooccurrence_heatmap).
-
-2. Update the `sql_queries` dict to include the new queries:
-   - `hist_duration_body` (T05 left panel query)
-   - `hist_duration_full_log` (T05 right panel query)
-   - `null_cooccurrence_monthly` (T06 timeline query)
-
-3. Update the verification loop to check for 16 PNG files.
-
-4. Update the final print statement to report "All 16 plots present".
-
-5. Re-execute the notebook:
-   ```bash
-   source .venv/bin/activate && poetry run jupytext --execute sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py --to notebook --output sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.ipynb --ExecutePreprocessor.timeout=1800
-   ```
-
-6. Verify all 16 PNGs exist on disk.
-
-**Verification:**
-- `01_02_05_visualizations.md` lists all 16 PNGs with captions.
-- `01_02_05_visualizations.md` includes SQL queries for duration histograms, NULL co-occurrence timeline, rating histogram, ratingDiff histogram, and monthly volume.
-- All 16 PNG files exist under `reports/artifacts/01_exploration/02_eda/plots/`.
-- Notebook `.ipynb` regenerated.
-
-**File scope:**
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py`
-- `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.ipynb`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md`
-
----
+- [ ] `plots/01_02_05_won_distribution.png`
+- [ ] `plots/01_02_05_won_consistency.png`
+- [ ] `plots/01_02_05_leaderboard_distribution.png`
+- [ ] `plots/01_02_05_civ_top20.png`
+- [ ] `plots/01_02_05_map_top20.png`
+- [ ] `plots/01_02_05_rating_histogram.png`
+- [ ] `plots/01_02_05_ratingdiff_histogram.png`
+- [ ] `plots/01_02_05_duration_histogram.png`
+- [ ] `plots/01_02_05_null_rate_bar.png`
+- [ ] `plots/01_02_05_null_cooccurrence.png`
+- [ ] `plots/01_02_05_leaderboards_numeric_boxplots.png`
+- [ ] `plots/01_02_05_profiles_null_rate.png`
+- [ ] `plots/01_02_05_leaderboards_leaderboard_bar.png`
+- [ ] `plots/01_02_05_boolean_stacked_bar.png`
+- [ ] `plots/01_02_05_monthly_volume.png`
+- [ ] `plots/01_02_05_ratings_raw_rating_histogram.png`
+- [ ] `plots/01_02_05_rating_null_timeline.png`
+- [ ] `01_02_05_visualizations.md` with SQL queries and plot index table including Temporal Annotation column
+- [ ] ROADMAP.md Step 01_02_05 patched
+- [ ] STEP_STATUS.yaml `01_02_05` -> complete
+- [ ] Notebook executes end-to-end without error
 
 ## File Manifest
 
 | File | Action |
 |------|--------|
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` | Update |
-| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py` | Rewrite |
-| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.ipynb` | Rewrite |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md` | Rewrite |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_won_distribution.png` | Rewrite |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_ratingDiff_histogram.png` | Rewrite |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_completeness_matrix.png` | Rewrite |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_duration_histogram.png` | Create |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence_timeline.png` | Create |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence_heatmap.png` | Create |
+| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py` | Create |
+| `sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.ipynb` | Create (jupytext sync) |
+| `reports/artifacts/01_exploration/02_eda/plots/01_02_05_*.png` (17 files) | Create |
+| `reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md` | Create |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` | Modify |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml` | Modify |
 
-## Gate Condition
+All paths relative to `src/rts_predict/games/aoe2/datasets/aoe2companion/` except sandbox and ROADMAP.
 
-- [ ] All 16 PNG files exist under `reports/artifacts/01_exploration/02_eda/plots/`:
-  1. `01_02_05_won_distribution.png` (2-bar Win/Loss + NULL annotation)
-  2. `01_02_05_won_consistency.png` (unchanged)
-  3. `01_02_05_leaderboard_distribution.png` (unchanged)
-  4. `01_02_05_civ_top30.png` (unchanged)
-  5. `01_02_05_map_top30.png` (unchanged)
-  6. `01_02_05_rating_histogram.png` (unchanged)
-  7. `01_02_05_ratingDiff_histogram.png` (with POST-GAME leakage annotation)
-  8. `01_02_05_leaderboards_boxplots.png` (unchanged)
-  9. `01_02_05_completeness_matrix.png` (4-tier colors harmonized with aoestats)
-  10. `01_02_05_profiles_null_rates.png` (unchanged)
-  11. `01_02_05_lb_leaderboard_distribution.png` (unchanged)
-  12. `01_02_05_boolean_stacked.png` (unchanged)
-  13. `01_02_05_monthly_volume.png` (unchanged)
-  14. `01_02_05_duration_histogram.png` (NEW: dual-panel)
-  15. `01_02_05_null_cooccurrence_timeline.png` (NEW: monthly line chart)
-  16. `01_02_05_null_cooccurrence_heatmap.png` (NEW: 2x2 overlap matrix)
-- [ ] `01_02_05_visualizations.md` exists, references all 16 PNGs, includes SQL queries for all DuckDB-sourced plots.
-- [ ] `ratingDiff` histogram visually displays "POST-GAME -- not available at prediction time" annotation.
-- [ ] `won` distribution shows exactly 2 bars (Win, Loss) with NULL annotated as text.
-- [ ] Completeness matrix uses 4-tier color scheme: green/gold/orange/red with 5%/50% thresholds.
-- [ ] ROADMAP.md Step 01_02_05 entry updated with 16 plots, `plots/` paths, I3/I6/I7/I8/I9 invariants.
-- [ ] Cross-dataset comparability: target distribution (check), map top-k (check), match duration histogram (check), rating histogram (check) -- all 4 core plots present.
-- [ ] Notebook executes end-to-end without errors (timeout=1800s).
-- [ ] No DuckDB writes (read-only notebook).
+## Out of Scope
 
-## Out of scope
+- New analytics beyond 01_02_04 findings (Invariant #9)
+- Bivariate or multivariate analysis (future steps)
+- Research log entry (written post-execution by the parent session)
+- Resolution of `matches_raw.rating` temporal ambiguity (Phase 02)
+- Cleaning or filtering decisions (Step 01_04)
+- Color palette harmonization across datasets beyond the 4 mandatory cross-dataset plots
 
-- Quantitative analytics (all in 01_02_04 -- visualization only here).
-- Bivariate or multivariate plots (Pipeline Section 01_03+).
-- Research log entry (post-execution responsibility).
-- Full 55x55 NULL co-occurrence heatmap (deferred to 01_03 systematic profiling).
-- Per-leaderboard stratification of any plots (deferred to bivariate analysis 01_03+).
-- STEP_STATUS.yaml re-update (already marked complete; revision does not change status).
-- Matching the exact aoestats duration clip point (aoestats clips at 120 min because its
-  p95 is different; aoe2companion clips at p95=63 min per its own distribution).
+## Open Questions
 
-## Open questions
-
-- Whether the NULL co-occurrence timeline shows a sharp step function (confirming API
-  schema change) or a gradual pattern. Resolves by: execution of T06 DuckDB query.
-- Whether the max duration outlier (3.28M s = 38 days) should be annotated on the
-  right panel or is sufficiently visible on log scale. Resolves by: visual inspection
-  at execution time; include annotation text box regardless.
-
-## Deferred Debt
-
-| Item | Target Step | Rationale |
-|------|-------------|-----------|
-| Full 55x55 NULL co-occurrence heatmap | 01_03 | Two-cluster structure adequately shown by timeline + 2x2; full matrix adds noise at univariate step |
-| Per-leaderboard boxplot stratification | 01_03+ | Requires leaderboard_id as grouping variable (bivariate) |
-| Temporal classification annotations on `rating` (ambiguous) | Phase 02 | Rating classified as ambiguous_pre_or_post; annotation deferred until row-level co-occurrence check resolves the ambiguity |
-| KDE / QQ plots | 01_03+ | More informative when comparing groups |
+- Should the rating histogram be split into ranked vs. unranked subpopulations?
+  (deferred to 01_03 or Phase 02)
+- The 4.69% NULL won rate — is it concentrated in specific leaderboards?
+  (already answered in 01_02_04 census: yes, unranked/unknown leaderboards)
 
 ---
 
-**Critique gate:** For Category A, adversarial critique is required before execution.
+For Category A, adversarial critique is required before execution.
 Dispatch reviewer-adversarial to produce `planning/plan_aoe2companion_01_02_05.critique.md`.
+```
+
+---

@@ -2416,13 +2416,13 @@
       "cnt": 18
     },
     {
-      "map_size_x": 160,
-      "map_size_y": 152,
+      "map_size_x": 200,
+      "map_size_y": 0,
       "cnt": 17
     },
     {
-      "map_size_x": 200,
-      "map_size_y": 0,
+      "map_size_x": 160,
+      "map_size_y": 152,
       "cnt": 17
     },
     {
@@ -2441,13 +2441,13 @@
       "cnt": 4
     },
     {
-      "map_size_x": 136,
-      "map_size_y": 160,
+      "map_size_x": 160,
+      "map_size_y": 208,
       "cnt": 3
     },
     {
-      "map_size_x": 160,
-      "map_size_y": 208,
+      "map_size_x": 136,
+      "map_size_y": 160,
       "cnt": 3
     },
     {
@@ -2554,7 +2554,8 @@
         "is_blizzard_map",
         "is_blizzard_map_init"
       ],
-      "in_game": [
+      "in_game": [],
+      "post_game": [
         "elapsed_game_loops"
       ],
       "constant": [
@@ -2568,6 +2569,7 @@
     "classification_notes": {
       "pre_game": "Available before match start. Usable as prediction features without temporal leakage.",
       "in_game": "Computed from replay actions; available only post-game. Using these as features requires in-game prediction framing (Phase 02 decision).",
+      "post_game": "Terminal match metadata knowable only after the result is set. elapsed_game_loops (total match duration) is only defined once the match concludes \u2014 unlike APM/SQ which are computed incrementally from action streams. Post-game scalars are excluded from all predictive feature sets (Invariant #3).",
       "identifier": "Player/replay identity columns. Not features.",
       "target": "Prediction target. Never a feature.",
       "constant": "Single-value columns. No predictive information."
@@ -5024,7 +5026,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"filename\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"filename\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"filename\") AS cardinality\nFROM game_events_raw",
       "sql_top_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nGROUP BY \"filename\"\nORDER BY cnt DESC, \"filename\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nWHERE \"filename\" IS NOT NULL\nGROUP BY \"filename\"\nORDER BY cnt ASC, \"filename\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.87
+      "elapsed_seconds": 0.82
     },
     "loop": {
       "column": "loop",
@@ -5093,7 +5095,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"loop\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"loop\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"loop\") AS cardinality,\n    COUNT(*) FILTER (WHERE \"loop\" = 0) AS zero_count,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE \"loop\" = 0) / NULLIF(COUNT(*) FILTER (WHERE \"loop\" IS NOT NULL), 0), 4) AS zero_pct\nFROM game_events_raw",
       "sql_top_n": "SELECT\n    \"loop\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nGROUP BY \"loop\"\nORDER BY cnt DESC, \"loop\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"loop\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nWHERE \"loop\" IS NOT NULL\nGROUP BY \"loop\"\nORDER BY cnt ASC, \"loop\" ASC\nLIMIT 5",
-      "elapsed_seconds": 2.28
+      "elapsed_seconds": 2.26
     },
     "evtTypeName": {
       "column": "evtTypeName",
@@ -5162,7 +5164,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"evtTypeName\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"evtTypeName\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"evtTypeName\") AS cardinality\nFROM game_events_raw",
       "sql_top_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nGROUP BY \"evtTypeName\"\nORDER BY cnt DESC, \"evtTypeName\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM game_events_raw\nWHERE \"evtTypeName\" IS NOT NULL\nGROUP BY \"evtTypeName\"\nORDER BY cnt ASC, \"evtTypeName\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.91
+      "elapsed_seconds": 0.9
     },
     "event_data": {
       "column": "event_data",
@@ -5179,7 +5181,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"event_data\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"event_data\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"event_data\") AS cardinality\nFROM game_events_raw",
       "sql_top_n": "-- Skipped: skip_topn=True",
       "sql_bottom_n": "-- Skipped: skip_topn=True",
-      "elapsed_seconds": 84.85
+      "elapsed_seconds": 116.44
     }
   },
   "tracker_events_raw_census": {
@@ -5250,7 +5252,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"filename\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"filename\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"filename\") AS cardinality\nFROM tracker_events_raw",
       "sql_top_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nGROUP BY \"filename\"\nORDER BY cnt DESC, \"filename\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nWHERE \"filename\" IS NOT NULL\nGROUP BY \"filename\"\nORDER BY cnt ASC, \"filename\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.18
+      "elapsed_seconds": 0.12
     },
     "loop": {
       "column": "loop",
@@ -5319,7 +5321,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"loop\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"loop\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"loop\") AS cardinality,\n    COUNT(*) FILTER (WHERE \"loop\" = 0) AS zero_count,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE \"loop\" = 0) / NULLIF(COUNT(*) FILTER (WHERE \"loop\" IS NOT NULL), 0), 4) AS zero_pct\nFROM tracker_events_raw",
       "sql_top_n": "SELECT\n    \"loop\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nGROUP BY \"loop\"\nORDER BY cnt DESC, \"loop\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"loop\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nWHERE \"loop\" IS NOT NULL\nGROUP BY \"loop\"\nORDER BY cnt ASC, \"loop\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.34
+      "elapsed_seconds": 0.33
     },
     "evtTypeName": {
       "column": "evtTypeName",
@@ -5388,7 +5390,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"evtTypeName\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"evtTypeName\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"evtTypeName\") AS cardinality\nFROM tracker_events_raw",
       "sql_top_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nGROUP BY \"evtTypeName\"\nORDER BY cnt DESC, \"evtTypeName\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nWHERE \"evtTypeName\" IS NOT NULL\nGROUP BY \"evtTypeName\"\nORDER BY cnt ASC, \"evtTypeName\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.09
+      "elapsed_seconds": 0.1
     },
     "event_data": {
       "column": "event_data",
@@ -5457,7 +5459,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"event_data\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"event_data\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"event_data\") AS cardinality\nFROM tracker_events_raw",
       "sql_top_n": "SELECT\n    \"event_data\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nGROUP BY \"event_data\"\nORDER BY cnt DESC, \"event_data\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"event_data\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM tracker_events_raw\nWHERE \"event_data\" IS NOT NULL\nGROUP BY \"event_data\"\nORDER BY cnt ASC, \"event_data\" ASC\nLIMIT 5",
-      "elapsed_seconds": 30.33
+      "elapsed_seconds": 28.11
     }
   },
   "message_events_raw_census": {
@@ -5528,7 +5530,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"filename\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"filename\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"filename\") AS cardinality\nFROM message_events_raw",
       "sql_top_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM message_events_raw\nGROUP BY \"filename\"\nORDER BY cnt DESC, \"filename\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"filename\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM message_events_raw\nWHERE \"filename\" IS NOT NULL\nGROUP BY \"filename\"\nORDER BY cnt ASC, \"filename\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.09
+      "elapsed_seconds": 0.05
     },
     "loop": {
       "column": "loop",
@@ -5646,7 +5648,7 @@
       "sql_null": "SELECT\n    COUNT(*) AS total_rows,\n    COUNT(*) - COUNT(\"evtTypeName\") AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(\"evtTypeName\")) / NULLIF(COUNT(*), 0), 4) AS null_pct,\n    COUNT(DISTINCT \"evtTypeName\") AS cardinality\nFROM message_events_raw",
       "sql_top_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM message_events_raw\nGROUP BY \"evtTypeName\"\nORDER BY cnt DESC, \"evtTypeName\" ASC\nLIMIT 5",
       "sql_bottom_n": "SELECT\n    \"evtTypeName\" AS value,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 4) AS pct\nFROM message_events_raw\nWHERE \"evtTypeName\" IS NOT NULL\nGROUP BY \"evtTypeName\"\nORDER BY cnt ASC, \"evtTypeName\" ASC\nLIMIT 5",
-      "elapsed_seconds": 0.03
+      "elapsed_seconds": 0.02
     },
     "event_data": {
       "column": "event_data",

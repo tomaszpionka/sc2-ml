@@ -1,0 +1,802 @@
+{
+  "step": "01_03_01",
+  "dataset": "sc2egset",
+  "tables": {
+    "replay_players_raw": {
+      "n_rows": 44817,
+      "n_cols": 25,
+      "column_profiles": {
+        "filename": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 22390,
+          "uniqueness_ratio": 0.499587,
+          "numeric": false
+        },
+        "toon_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 2495,
+          "uniqueness_ratio": 0.055671,
+          "numeric": false
+        },
+        "nickname": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 1106,
+          "uniqueness_ratio": 0.024678,
+          "numeric": false
+        },
+        "playerID": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 9,
+          "uniqueness_ratio": 0.000201,
+          "numeric": false
+        },
+        "userID": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 16,
+          "uniqueness_ratio": 0.000357,
+          "numeric": false
+        },
+        "isInClan": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 2,
+          "uniqueness_ratio": 4.5e-05,
+          "numeric": false
+        },
+        "clanTag": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 257,
+          "uniqueness_ratio": 0.005734,
+          "numeric": false
+        },
+        "MMR": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 1031,
+          "uniqueness_ratio": 0.023005,
+          "numeric": true,
+          "min_val": -36400,
+          "max_val": 7464,
+          "mean_val": 738.7145,
+          "std_val": 3035.5301,
+          "skewness": -5.759,
+          "kurtosis": 77.8914,
+          "p25": 0.0,
+          "p75": 0.0,
+          "iqr": 0.0
+        },
+        "race": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 6,
+          "uniqueness_ratio": 0.000134,
+          "numeric": false
+        },
+        "selectedRace": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 8,
+          "uniqueness_ratio": 0.000179,
+          "numeric": false
+        },
+        "handicap": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 2,
+          "uniqueness_ratio": 4.5e-05,
+          "numeric": true,
+          "min_val": 0,
+          "max_val": 100,
+          "mean_val": 99.9955,
+          "std_val": 0.668,
+          "skewness": -149.6897,
+          "kurtosis": 22405.9998,
+          "p25": 100.0,
+          "p75": 100.0,
+          "iqr": 0.0
+        },
+        "region": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 6,
+          "uniqueness_ratio": 0.000134,
+          "numeric": false
+        },
+        "realm": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 9,
+          "uniqueness_ratio": 0.000201,
+          "numeric": false
+        },
+        "highestLeague": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 10,
+          "uniqueness_ratio": 0.000223,
+          "numeric": false
+        },
+        "result": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 4,
+          "uniqueness_ratio": 8.9e-05,
+          "numeric": false
+        },
+        "APM": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 556,
+          "uniqueness_ratio": 0.012406,
+          "numeric": true,
+          "min_val": 0,
+          "max_val": 1248,
+          "mean_val": 355.5657,
+          "std_val": 104.872,
+          "skewness": -0.2024,
+          "kurtosis": 3.6247,
+          "p25": 303.0,
+          "p75": 410.0,
+          "iqr": 107.0
+        },
+        "SQ": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 171,
+          "uniqueness_ratio": 0.003816,
+          "numeric": true,
+          "min_val": -2147483648,
+          "max_val": 187,
+          "mean_val": -95711.0609,
+          "std_val": 14345597.8406,
+          "skewness": -149.6897,
+          "kurtosis": 22405.9998,
+          "p25": 110.0,
+          "p75": 136.0,
+          "iqr": 26.0
+        },
+        "supplyCappedPercent": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 51,
+          "uniqueness_ratio": 0.001138,
+          "numeric": true,
+          "min_val": 0,
+          "max_val": 100,
+          "mean_val": 7.2399,
+          "std_val": 4.7121,
+          "skewness": 2.2456,
+          "kurtosis": 18.1756,
+          "p25": 4.0,
+          "p75": 9.0,
+          "iqr": 5.0
+        },
+        "startDir": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 13,
+          "uniqueness_ratio": 0.00029,
+          "numeric": false
+        },
+        "startLocX": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 117,
+          "uniqueness_ratio": 0.002611,
+          "numeric": false
+        },
+        "startLocY": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 115,
+          "uniqueness_ratio": 0.002566,
+          "numeric": false
+        },
+        "color_a": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 2,
+          "uniqueness_ratio": 4.5e-05,
+          "numeric": false
+        },
+        "color_b": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 18,
+          "uniqueness_ratio": 0.000402,
+          "numeric": false
+        },
+        "color_g": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 18,
+          "uniqueness_ratio": 0.000402,
+          "numeric": false
+        },
+        "color_r": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "cardinality": 18,
+          "uniqueness_ratio": 0.000402,
+          "numeric": false
+        }
+      },
+      "iqr_outliers": {
+        "all_rows": {
+          "mmr_iqr_outliers": 7328.0,
+          "apm_iqr_outliers": 2425.0,
+          "sq_iqr_outliers": 265.0,
+          "sc_iqr_outliers": 1848.0
+        },
+        "MMR": {
+          "iqr_outliers_all": 7328.0,
+          "iqr_outliers_rated_only": 0.0,
+          "mmr_p25_rated": 4203.0,
+          "mmr_p75_rated": 6584.0,
+          "mmr_iqr_rated": 2381.0,
+          "note": "MMR IQR outlier count for all rows is degenerate (IQR=0 since Q1=Q3=0); rated-only (MMR>0) IQR outlier count is also reported."
+        }
+      },
+      "topk_categorical": {
+        "result": [
+          {
+            "value": "Loss",
+            "cnt": 22409,
+            "pct": 50.0011
+          },
+          {
+            "value": "Win",
+            "cnt": 22382,
+            "pct": 49.9409
+          },
+          {
+            "value": "Undecided",
+            "cnt": 24,
+            "pct": 0.0536
+          },
+          {
+            "value": "Tie",
+            "cnt": 2,
+            "pct": 0.0045
+          }
+        ],
+        "race": [
+          {
+            "value": "Prot",
+            "cnt": 16228,
+            "pct": 36.2095
+          },
+          {
+            "value": "Zerg",
+            "cnt": 15695,
+            "pct": 35.0202
+          },
+          {
+            "value": "Terr",
+            "cnt": 12891,
+            "pct": 28.7636
+          },
+          {
+            "value": "BWPr",
+            "cnt": 1,
+            "pct": 0.0022
+          },
+          {
+            "value": "BWZe",
+            "cnt": 1,
+            "pct": 0.0022
+          }
+        ],
+        "selectedRace": [
+          {
+            "value": "Prot",
+            "cnt": 15948,
+            "pct": 35.5847
+          },
+          {
+            "value": "Zerg",
+            "cnt": 15123,
+            "pct": 33.7439
+          },
+          {
+            "value": "Terr",
+            "cnt": 12623,
+            "pct": 28.1657
+          },
+          {
+            "value": "",
+            "cnt": 1110,
+            "pct": 2.4767
+          },
+          {
+            "value": "Rand",
+            "cnt": 10,
+            "pct": 0.0223
+          }
+        ],
+        "highestLeague": [
+          {
+            "value": "Unknown",
+            "cnt": 32338,
+            "pct": 72.1557
+          },
+          {
+            "value": "Master",
+            "cnt": 6458,
+            "pct": 14.4097
+          },
+          {
+            "value": "Grandmaster",
+            "cnt": 4745,
+            "pct": 10.5875
+          },
+          {
+            "value": "Diamond",
+            "cnt": 718,
+            "pct": 1.6021
+          },
+          {
+            "value": "Unranked",
+            "cnt": 224,
+            "pct": 0.4998
+          }
+        ],
+        "region": [
+          {
+            "value": "Europe",
+            "cnt": 21022,
+            "pct": 46.9063
+          },
+          {
+            "value": "US",
+            "cnt": 12699,
+            "pct": 28.3352
+          },
+          {
+            "value": "Unknown",
+            "cnt": 5748,
+            "pct": 12.8255
+          },
+          {
+            "value": "Korea",
+            "cnt": 3604,
+            "pct": 8.0416
+          },
+          {
+            "value": "China",
+            "cnt": 1742,
+            "pct": 3.8869
+          }
+        ],
+        "realm": [
+          {
+            "value": "Europe",
+            "cnt": 20777,
+            "pct": 46.3596
+          },
+          {
+            "value": "North America",
+            "cnt": 12490,
+            "pct": 27.8689
+          },
+          {
+            "value": "Unknown",
+            "cnt": 5748,
+            "pct": 12.8255
+          },
+          {
+            "value": "Korea",
+            "cnt": 2835,
+            "pct": 6.3257
+          },
+          {
+            "value": "China",
+            "cnt": 1742,
+            "pct": 3.8869
+          }
+        ],
+        "isInClan": [
+          {
+            "value": "false",
+            "cnt": 33210,
+            "pct": 74.1013
+          },
+          {
+            "value": "true",
+            "cnt": 11607,
+            "pct": 25.8987
+          }
+        ],
+        "clanTag": [
+          {
+            "value": "",
+            "cnt": 33210,
+            "pct": 74.1013
+          },
+          {
+            "value": "\u03b1X",
+            "cnt": 778,
+            "pct": 1.7359
+          },
+          {
+            "value": "PSISTM",
+            "cnt": 532,
+            "pct": 1.187
+          },
+          {
+            "value": "mouz",
+            "cnt": 513,
+            "pct": 1.1447
+          },
+          {
+            "value": "RBLN",
+            "cnt": 466,
+            "pct": 1.0398
+          }
+        ]
+      }
+    },
+    "replays_meta_raw": {
+      "n_rows": 22390,
+      "n_top_level_cols": 9,
+      "n_struct_flat_fields": 17,
+      "struct_field_profiles": {
+        "elapsed_game_loops": {
+          "null_pct": 0.0,
+          "cardinality": 14045,
+          "uniqueness_ratio": 0.6272889682894149,
+          "numeric": true,
+          "iqr": 8279.5
+        },
+        "game_speed": {
+          "null_pct": 0.0,
+          "cardinality": 1,
+          "uniqueness_ratio": 4.466279589102278e-05,
+          "numeric": false
+        },
+        "game_speed_init": {
+          "null_pct": 0.0,
+          "cardinality": 1,
+          "uniqueness_ratio": 4.466279589102278e-05,
+          "numeric": false
+        },
+        "gameEventsErr": {
+          "null_pct": 0.0,
+          "cardinality": 1,
+          "uniqueness_ratio": 4.466279589102278e-05,
+          "numeric": false
+        },
+        "messageEventsErr": {
+          "null_pct": 0.0,
+          "cardinality": 1,
+          "uniqueness_ratio": 4.466279589102278e-05,
+          "numeric": false
+        },
+        "trackerEvtsErr": {
+          "null_pct": 0.0,
+          "cardinality": 1,
+          "uniqueness_ratio": 4.466279589102278e-05,
+          "numeric": false
+        },
+        "map_name": {
+          "null_pct": 0.0,
+          "cardinality": 188,
+          "uniqueness_ratio": 0.008396605627512281,
+          "numeric": false
+        },
+        "max_players": {
+          "null_pct": 0.0,
+          "cardinality": 5,
+          "uniqueness_ratio": 0.00022331397945511388,
+          "numeric": true,
+          "iqr": 0.0
+        },
+        "map_size_x": {
+          "null_pct": 0.0,
+          "cardinality": 14,
+          "uniqueness_ratio": 0.0006252791424743189,
+          "numeric": true,
+          "iqr": 0.0
+        },
+        "map_size_y": {
+          "null_pct": 0.0,
+          "cardinality": 13,
+          "uniqueness_ratio": 0.0005806163465832961,
+          "numeric": true,
+          "iqr": 0.0
+        },
+        "is_blizzard_map": {
+          "null_pct": 0.0,
+          "cardinality": 2,
+          "uniqueness_ratio": 8.932559178204556e-05,
+          "numeric": false
+        },
+        "is_blizzard_map_init": {
+          "null_pct": 0.0,
+          "cardinality": 2,
+          "uniqueness_ratio": 8.932559178204556e-05,
+          "numeric": false
+        }
+      },
+      "elapsed_game_loops_iqr": {
+        "q1": 11111.25,
+        "q3": 19390.75,
+        "iqr": 8279.5,
+        "lower_fence": -1308.0,
+        "upper_fence": 31810.0,
+        "iqr_outlier_count": 897.0,
+        "classification": "POST-GAME (reclassified 2026-04-15)"
+      }
+    },
+    "map_aliases_raw": {
+      "n_rows": 104160,
+      "n_cols": 4,
+      "column_profiles": {
+        "tournament": {
+          "null_count": 0,
+          "cardinality": 70
+        },
+        "foreign_name": {
+          "null_count": 0,
+          "cardinality": 1488
+        },
+        "english_name": {
+          "null_count": 0,
+          "cardinality": 215
+        },
+        "filename": {
+          "null_count": 0,
+          "cardinality": 70
+        }
+      }
+    }
+  },
+  "dataset_level": {
+    "row_counts": [
+      {
+        "table_name": "replay_players_raw",
+        "n_rows": 44817
+      },
+      {
+        "table_name": "replays_meta_raw",
+        "n_rows": 22390
+      },
+      {
+        "table_name": "map_aliases_raw",
+        "n_rows": 104160
+      }
+    ],
+    "duplicate_check": {
+      "total_rows": 44817,
+      "distinct_pairs": 44817,
+      "duplicate_rows": 0,
+      "key": "(filename, playerID)"
+    },
+    "class_balance": [
+      {
+        "result": "Loss",
+        "cnt": 22409,
+        "pct": 50.0011
+      },
+      {
+        "result": "Win",
+        "cnt": 22382,
+        "pct": 49.9409
+      },
+      {
+        "result": "Undecided",
+        "cnt": 24,
+        "pct": 0.0536
+      },
+      {
+        "result": "Tie",
+        "cnt": 2,
+        "pct": 0.0045
+      }
+    ],
+    "cross_table_linkage": {
+      "rp_distinct_replays": 22390,
+      "rm_distinct_replays": 22390,
+      "rp_orphans": 0,
+      "rm_orphans": 0
+    },
+    "memory_footprint": [
+      {
+        "database_name": "db",
+        "table_name": "map_aliases_raw",
+        "estimated_size": 104160,
+        "column_count": 4,
+        "index_count": 0
+      },
+      {
+        "database_name": "db",
+        "table_name": "replay_players_raw",
+        "estimated_size": 44817,
+        "column_count": 25,
+        "index_count": 0
+      },
+      {
+        "database_name": "db",
+        "table_name": "replays_meta_raw",
+        "estimated_size": 22390,
+        "column_count": 9,
+        "index_count": 0
+      }
+    ]
+  },
+  "critical_findings": {
+    "dead_fields": [],
+    "constant_columns": [
+      "game_speed",
+      "game_speed_init",
+      "gameEventsErr",
+      "messageEventsErr",
+      "trackerEvtsErr"
+    ],
+    "near_constant": [
+      "userID",
+      "color_g",
+      "map_size_x",
+      "selectedRace",
+      "is_blizzard_map",
+      "color_b",
+      "isInClan",
+      "race",
+      "MMR",
+      "color_a",
+      "is_blizzard_map_init",
+      "realm",
+      "region",
+      "map_size_y",
+      "result",
+      "max_players",
+      "highestLeague",
+      "color_r",
+      "startDir",
+      "handicap",
+      "playerID"
+    ],
+    "sentinel_columns": [
+      {
+        "column": "MMR",
+        "table": "replay_players_raw",
+        "sentinel_value": 0,
+        "sentinel_count": 37489,
+        "sentinel_pct": 83.65,
+        "interpretation": "MMR=0 means unrated player"
+      },
+      {
+        "column": "SQ",
+        "table": "replay_players_raw",
+        "sentinel_value": -2147483648,
+        "sentinel_count": 2,
+        "sentinel_pct": 0.0045,
+        "interpretation": "INT32_MIN sentinel for missing SQ value"
+      }
+    ]
+  },
+  "field_classification": {
+    "replay_players_raw": {
+      "identifier": [
+        "filename",
+        "toon_id",
+        "nickname",
+        "playerID",
+        "userID"
+      ],
+      "pre_game": [
+        "MMR",
+        "race",
+        "selectedRace",
+        "handicap",
+        "region",
+        "realm",
+        "highestLeague",
+        "isInClan",
+        "clanTag",
+        "startDir",
+        "startLocX",
+        "startLocY",
+        "color_a",
+        "color_b",
+        "color_g",
+        "color_r"
+      ],
+      "in_game": [
+        "APM",
+        "SQ",
+        "supplyCappedPercent"
+      ],
+      "target": [
+        "result"
+      ]
+    },
+    "replays_meta_raw_struct_flat": {
+      "identifier": [
+        "filename"
+      ],
+      "pre_game": [
+        "time_utc",
+        "game_version_header",
+        "base_build",
+        "data_build",
+        "game_version_meta",
+        "map_name",
+        "max_players",
+        "map_size_x",
+        "map_size_y",
+        "is_blizzard_map",
+        "is_blizzard_map_init"
+      ],
+      "in_game": [],
+      "post_game": [
+        "elapsed_game_loops"
+      ],
+      "constant": [
+        "game_speed",
+        "game_speed_init",
+        "gameEventsErr",
+        "messageEventsErr",
+        "trackerEvtsErr"
+      ]
+    },
+    "classification_notes": {
+      "pre_game": "Available before match start. Usable as prediction features without temporal leakage.",
+      "in_game": "Computed from replay actions; available only post-game. Using these as features requires in-game prediction framing (Phase 02 decision).",
+      "post_game": "Terminal match metadata knowable only after the result is set. elapsed_game_loops (total match duration) is only defined once the match concludes \u2014 unlike APM/SQ which are computed incrementally from action streams. Post-game scalars are excluded from all predictive feature sets (Invariant #3).",
+      "identifier": "Player/replay identity columns. Not features.",
+      "target": "Prediction target. Never a feature.",
+      "constant": "Single-value columns. No predictive information."
+    }
+  },
+  "elapsed_game_loops_reclassification": "elapsed_game_loops reclassified as POST-GAME on 2026-04-15. The census JSON (01_02_04) still shows it as 'in_game'; this profiling step records the corrected classification.",
+  "sql_queries": {
+    "rp_numeric_profile": "\nWITH base AS (\n    SELECT *\n    FROM replay_players_raw\n)\nSELECT\n    'MMR' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(MMR) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(MMR)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN MMR = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN MMR = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT MMR) AS cardinality,\n    ROUND(COUNT(DISTINCT MMR)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(MMR) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY MMR) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY MMR) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY MMR) AS p95,\n    MAX(MMR) AS max_val,\n    ROUND(AVG(MMR), 4) AS mean_val,\n    ROUND(STDDEV(MMR), 4) AS std_val,\n    ROUND(SKEWNESS(MMR), 4) AS skewness,\n    ROUND(KURTOSIS(MMR), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'MMR_rated_only' AS column_name,\n    SUM(CASE WHEN MMR > 0 THEN 1 ELSE 0 END) AS n_rows,\n    0 AS null_count,\n    0.0 AS null_pct,\n    0 AS zero_count,\n    0.0 AS zero_pct,\n    COUNT(DISTINCT CASE WHEN MMR > 0 THEN MMR END) AS cardinality,\n    ROUND(COUNT(DISTINCT CASE WHEN MMR > 0 THEN MMR END)::DOUBLE\n          / NULLIF(SUM(CASE WHEN MMR > 0 THEN 1 ELSE 0 END), 0), 6) AS uniqueness_ratio,\n    MIN(CASE WHEN MMR > 0 THEN MMR END) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY MMR) FILTER (WHERE MMR > 0) AS p95,\n    MAX(CASE WHEN MMR > 0 THEN MMR END) AS max_val,\n    ROUND(AVG(CASE WHEN MMR > 0 THEN MMR END), 4) AS mean_val,\n    ROUND(STDDEV(CASE WHEN MMR > 0 THEN MMR END), 4) AS std_val,\n    ROUND(SKEWNESS(MMR) FILTER (WHERE MMR > 0), 4) AS skewness,\n    ROUND(KURTOSIS(MMR) FILTER (WHERE MMR > 0), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'APM' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(APM) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(APM)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN APM = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN APM = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT APM) AS cardinality,\n    ROUND(COUNT(DISTINCT APM)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(APM) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY APM) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY APM) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY APM) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY APM) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY APM) AS p95,\n    MAX(APM) AS max_val,\n    ROUND(AVG(APM), 4) AS mean_val,\n    ROUND(STDDEV(APM), 4) AS std_val,\n    ROUND(SKEWNESS(APM), 4) AS skewness,\n    ROUND(KURTOSIS(APM), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'SQ' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(SQ) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(SQ)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN SQ = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN SQ = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT SQ) AS cardinality,\n    ROUND(COUNT(DISTINCT SQ)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(SQ) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY SQ) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY SQ) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY SQ) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY SQ) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY SQ) AS p95,\n    MAX(SQ) AS max_val,\n    ROUND(AVG(SQ), 4) AS mean_val,\n    ROUND(STDDEV(SQ), 4) AS std_val,\n    ROUND(SKEWNESS(SQ), 4) AS skewness,\n    ROUND(KURTOSIS(SQ), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'SQ_no_sentinel' AS column_name,\n    SUM(CASE WHEN SQ > -2147483648 THEN 1 ELSE 0 END) AS n_rows,\n    0 AS null_count,\n    0.0 AS null_pct,\n    SUM(CASE WHEN SQ = 0 AND SQ > -2147483648 THEN 1 ELSE 0 END) AS zero_count,\n    0.0 AS zero_pct,\n    COUNT(DISTINCT CASE WHEN SQ > -2147483648 THEN SQ END) AS cardinality,\n    ROUND(COUNT(DISTINCT CASE WHEN SQ > -2147483648 THEN SQ END)::DOUBLE\n          / NULLIF(SUM(CASE WHEN SQ > -2147483648 THEN 1 ELSE 0 END), 0), 6) AS uniqueness_ratio,\n    MIN(CASE WHEN SQ > -2147483648 THEN SQ END) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS p95,\n    MAX(CASE WHEN SQ > -2147483648 THEN SQ END) AS max_val,\n    ROUND(AVG(CASE WHEN SQ > -2147483648 THEN SQ END), 4) AS mean_val,\n    ROUND(STDDEV(CASE WHEN SQ > -2147483648 THEN SQ END), 4) AS std_val,\n    ROUND(SKEWNESS(SQ) FILTER (WHERE SQ > -2147483648), 4) AS skewness,\n    ROUND(KURTOSIS(SQ) FILTER (WHERE SQ > -2147483648), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'supplyCappedPercent' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(supplyCappedPercent) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(supplyCappedPercent)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN supplyCappedPercent = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN supplyCappedPercent = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT supplyCappedPercent) AS cardinality,\n    ROUND(COUNT(DISTINCT supplyCappedPercent)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(supplyCappedPercent) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY supplyCappedPercent) AS p95,\n    MAX(supplyCappedPercent) AS max_val,\n    ROUND(AVG(supplyCappedPercent), 4) AS mean_val,\n    ROUND(STDDEV(supplyCappedPercent), 4) AS std_val,\n    ROUND(SKEWNESS(supplyCappedPercent), 4) AS skewness,\n    ROUND(KURTOSIS(supplyCappedPercent), 4) AS kurtosis\nFROM base\n\nUNION ALL\n\nSELECT\n    'handicap' AS column_name,\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(handicap) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(handicap)) / COUNT(*), 4) AS null_pct,\n    SUM(CASE WHEN handicap = 0 THEN 1 ELSE 0 END) AS zero_count,\n    ROUND(100.0 * SUM(CASE WHEN handicap = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS zero_pct,\n    COUNT(DISTINCT handicap) AS cardinality,\n    ROUND(COUNT(DISTINCT handicap)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio,\n    MIN(handicap) AS min_val,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY handicap) AS p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY handicap) AS p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY handicap) AS p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY handicap) AS p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY handicap) AS p95,\n    MAX(handicap) AS max_val,\n    ROUND(AVG(handicap), 4) AS mean_val,\n    ROUND(STDDEV(handicap), 4) AS std_val,\n    ROUND(SKEWNESS(handicap), 4) AS skewness,\n    ROUND(KURTOSIS(handicap), 4) AS kurtosis\nFROM base\n",
+    "rp_null_cardinality": "\nSELECT\n    column_name,\n    COUNT(*) - COUNT(col_val) AS null_count,\n    ROUND(100.0 * (COUNT(*) - COUNT(col_val)) / COUNT(*), 4) AS null_pct,\n    COUNT(DISTINCT col_val) AS cardinality,\n    ROUND(COUNT(DISTINCT col_val)::DOUBLE / COUNT(*), 6) AS uniqueness_ratio\nFROM (\n    UNPIVOT replay_players_raw\n    ON COLUMNS(*)\n    INTO NAME column_name VALUE col_val\n)\nGROUP BY column_name\nORDER BY column_name\n",
+    "rp_null_cardinality_fallback": "\nSELECT 'filename' AS col, COUNT(*) AS total, COUNT(filename) AS non_null,\n       COUNT(DISTINCT filename) AS cardinality FROM replay_players_raw\nUNION ALL\nSELECT 'toon_id', COUNT(*), COUNT(toon_id), COUNT(DISTINCT toon_id) FROM replay_players_raw\nUNION ALL\nSELECT 'nickname', COUNT(*), COUNT(nickname), COUNT(DISTINCT nickname) FROM replay_players_raw\nUNION ALL\nSELECT 'playerID', COUNT(*), COUNT(playerID), COUNT(DISTINCT playerID) FROM replay_players_raw\nUNION ALL\nSELECT 'userID', COUNT(*), COUNT(userID), COUNT(DISTINCT userID) FROM replay_players_raw\nUNION ALL\nSELECT 'isInClan', COUNT(*), COUNT(isInClan), COUNT(DISTINCT isInClan) FROM replay_players_raw\nUNION ALL\nSELECT 'clanTag', COUNT(*), COUNT(clanTag), COUNT(DISTINCT clanTag) FROM replay_players_raw\nUNION ALL\nSELECT 'MMR', COUNT(*), COUNT(MMR), COUNT(DISTINCT MMR) FROM replay_players_raw\nUNION ALL\nSELECT 'race', COUNT(*), COUNT(race), COUNT(DISTINCT race) FROM replay_players_raw\nUNION ALL\nSELECT 'selectedRace', COUNT(*), COUNT(selectedRace),\n       COUNT(DISTINCT selectedRace) FROM replay_players_raw\nUNION ALL\nSELECT 'handicap', COUNT(*), COUNT(handicap), COUNT(DISTINCT handicap) FROM replay_players_raw\nUNION ALL\nSELECT 'region', COUNT(*), COUNT(region), COUNT(DISTINCT region) FROM replay_players_raw\nUNION ALL\nSELECT 'realm', COUNT(*), COUNT(realm), COUNT(DISTINCT realm) FROM replay_players_raw\nUNION ALL\nSELECT 'highestLeague', COUNT(*), COUNT(highestLeague),\n       COUNT(DISTINCT highestLeague) FROM replay_players_raw\nUNION ALL\nSELECT 'result', COUNT(*), COUNT(result), COUNT(DISTINCT result) FROM replay_players_raw\nUNION ALL\nSELECT 'APM', COUNT(*), COUNT(APM), COUNT(DISTINCT APM) FROM replay_players_raw\nUNION ALL\nSELECT 'SQ', COUNT(*), COUNT(SQ), COUNT(DISTINCT SQ) FROM replay_players_raw\nUNION ALL\nSELECT 'supplyCappedPercent', COUNT(*), COUNT(supplyCappedPercent),\n       COUNT(DISTINCT supplyCappedPercent) FROM replay_players_raw\nUNION ALL\nSELECT 'startDir', COUNT(*), COUNT(startDir), COUNT(DISTINCT startDir) FROM replay_players_raw\nUNION ALL\nSELECT 'startLocX', COUNT(*), COUNT(startLocX), COUNT(DISTINCT startLocX) FROM replay_players_raw\nUNION ALL\nSELECT 'startLocY', COUNT(*), COUNT(startLocY), COUNT(DISTINCT startLocY) FROM replay_players_raw\nUNION ALL\nSELECT 'color_a', COUNT(*), COUNT(color_a), COUNT(DISTINCT color_a) FROM replay_players_raw\nUNION ALL\nSELECT 'color_b', COUNT(*), COUNT(color_b), COUNT(DISTINCT color_b) FROM replay_players_raw\nUNION ALL\nSELECT 'color_g', COUNT(*), COUNT(color_g), COUNT(DISTINCT color_g) FROM replay_players_raw\nUNION ALL\nSELECT 'color_r', COUNT(*), COUNT(color_r), COUNT(DISTINCT color_r) FROM replay_players_raw\n",
+    "rp_topk": {
+      "result": "\n    SELECT\n        CAST(result AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY result\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "race": "\n    SELECT\n        CAST(race AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY race\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "selectedRace": "\n    SELECT\n        CAST(selectedRace AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY selectedRace\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "highestLeague": "\n    SELECT\n        CAST(highestLeague AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY highestLeague\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "region": "\n    SELECT\n        CAST(region AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY region\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "realm": "\n    SELECT\n        CAST(realm AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY realm\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "isInClan": "\n    SELECT\n        CAST(isInClan AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY isInClan\n    ORDER BY cnt DESC\n    LIMIT 5\n    ",
+      "clanTag": "\n    SELECT\n        CAST(clanTag AS VARCHAR) AS value,\n        COUNT(*) AS cnt,\n        ROUND(100.0 * COUNT(*) / 44817, 4) AS pct\n    FROM replay_players_raw\n    GROUP BY clanTag\n    ORDER BY cnt DESC\n    LIMIT 5\n    "
+    },
+    "rp_iqr_outliers": "\nWITH stats AS (\n    SELECT\n        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) AS mmr_q1,\n        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) AS mmr_q3,\n        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY APM) AS apm_q1,\n        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY APM) AS apm_q3,\n        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS sq_q1,\n        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY SQ) FILTER (WHERE SQ > -2147483648) AS sq_q3,\n        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY supplyCappedPercent) AS sc_q1,\n        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY supplyCappedPercent) AS sc_q3\n    FROM replay_players_raw\n)\nSELECT\n    SUM(CASE WHEN MMR < (s.mmr_q1 - 1.5 * (s.mmr_q3 - s.mmr_q1))\n              OR MMR > (s.mmr_q3 + 1.5 * (s.mmr_q3 - s.mmr_q1))\n         THEN 1 ELSE 0 END) AS mmr_iqr_outliers,\n    SUM(CASE WHEN APM < (s.apm_q1 - 1.5 * (s.apm_q3 - s.apm_q1))\n              OR APM > (s.apm_q3 + 1.5 * (s.apm_q3 - s.apm_q1))\n         THEN 1 ELSE 0 END) AS apm_iqr_outliers,\n    SUM(CASE WHEN SQ > -2147483648\n              AND (SQ < (s.sq_q1 - 1.5 * (s.sq_q3 - s.sq_q1))\n                   OR SQ > (s.sq_q3 + 1.5 * (s.sq_q3 - s.sq_q1)))\n         THEN 1 ELSE 0 END) AS sq_iqr_outliers,\n    SUM(CASE WHEN supplyCappedPercent < (s.sc_q1 - 1.5 * (s.sc_q3 - s.sc_q1))\n              OR supplyCappedPercent > (s.sc_q3 + 1.5 * (s.sc_q3 - s.sc_q1))\n         THEN 1 ELSE 0 END) AS sc_iqr_outliers\nFROM replay_players_raw, stats s\n",
+    "rp_iqr_outliers_mmr_rated": "\nWITH rated AS (SELECT MMR FROM replay_players_raw WHERE MMR > 0),\n     fences AS (\n       SELECT\n         PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY MMR) AS p25,\n         PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY MMR) AS p75\n       FROM rated\n     ),\n     fences_scalar AS (\n       SELECT p25, p75, p75 - p25 AS iqr,\n              p25 - 1.5 * (p75 - p25) AS lower_fence,\n              p75 + 1.5 * (p75 - p25) AS upper_fence\n       FROM fences\n     )\nSELECT\n  f.p25, f.p75, f.iqr,\n  COUNT(*) FILTER (WHERE r.MMR < f.lower_fence OR r.MMR > f.upper_fence)\n      AS mmr_iqr_outliers_rated\nFROM rated r CROSS JOIN fences_scalar f\nGROUP BY f.p25, f.p75, f.iqr\n",
+    "rm_struct_profile": "\nSELECT\n    COUNT(*) AS n_rows,\n    -- elapsed_game_loops (POST-GAME, reclassified 2026-04-15)\n    COUNT(*) - COUNT(header.elapsedGameLoops) AS elapsed_game_loops_null,\n    COUNT(DISTINCT header.elapsedGameLoops) AS elapsed_game_loops_cardinality,\n    MIN(header.elapsedGameLoops) AS elapsed_game_loops_min,\n    MAX(header.elapsedGameLoops) AS elapsed_game_loops_max,\n    ROUND(AVG(header.elapsedGameLoops), 4) AS elapsed_game_loops_mean,\n    ROUND(STDDEV(header.elapsedGameLoops), 4) AS elapsed_game_loops_std,\n    ROUND(SKEWNESS(header.elapsedGameLoops), 4) AS elapsed_game_loops_skew,\n    ROUND(KURTOSIS(header.elapsedGameLoops), 4) AS elapsed_game_loops_kurt,\n    PERCENTILE_CONT(0.05) WITHIN GROUP (ORDER BY header.elapsedGameLoops)\n        AS elapsed_game_loops_p05,\n    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY header.elapsedGameLoops)\n        AS elapsed_game_loops_p25,\n    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY header.elapsedGameLoops)\n        AS elapsed_game_loops_p50,\n    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY header.elapsedGameLoops)\n        AS elapsed_game_loops_p75,\n    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY header.elapsedGameLoops)\n        AS elapsed_game_loops_p95,\n    -- map_name\n    COUNT(*) - COUNT(metadata.mapName) AS map_name_null,\n    COUNT(DISTINCT metadata.mapName) AS map_name_cardinality,\n    -- max_players\n    COUNT(*) - COUNT(initData.gameDescription.maxPlayers) AS max_players_null,\n    COUNT(DISTINCT initData.gameDescription.maxPlayers) AS max_players_cardinality,\n    -- game_speed (CONSTANT expected)\n    COUNT(DISTINCT details.gameSpeed) AS game_speed_cardinality,\n    -- game_speed_init (CONSTANT expected)\n    COUNT(DISTINCT initData.gameDescription.gameSpeed) AS game_speed_init_cardinality,\n    -- map_size\n    COUNT(DISTINCT initData.gameDescription.mapSizeX) AS map_size_x_cardinality,\n    COUNT(DISTINCT initData.gameDescription.mapSizeY) AS map_size_y_cardinality,\n    -- error booleans (CONSTANT expected: all FALSE)\n    COUNT(DISTINCT gameEventsErr) AS gameEventsErr_cardinality,\n    COUNT(DISTINCT messageEventsErr) AS messageEventsErr_cardinality,\n    COUNT(DISTINCT trackerEvtsErr) AS trackerEvtsErr_cardinality,\n    -- version / build\n    COUNT(DISTINCT metadata.gameVersion) AS game_version_meta_cardinality,\n    COUNT(DISTINCT header.\"version\") AS game_version_header_cardinality,\n    COUNT(DISTINCT metadata.baseBuild) AS base_build_cardinality,\n    COUNT(DISTINCT metadata.dataBuild) AS data_build_cardinality,\n    -- blizzard map flags\n    COUNT(DISTINCT details.isBlizzardMap) AS is_blizzard_map_cardinality,\n    COUNT(DISTINCT initData.gameDescription.isBlizzardMap) AS is_blizzard_map_init_cardinality,\n    -- time_utc\n    COUNT(*) - COUNT(details.timeUTC) AS time_utc_null,\n    COUNT(DISTINCT details.timeUTC) AS time_utc_cardinality\nFROM replays_meta_raw\n",
+    "rm_egl_iqr_outliers": "\nWITH stats AS (\n    SELECT\n        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY header.elapsedGameLoops) AS q1,\n        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY header.elapsedGameLoops) AS q3\n    FROM replays_meta_raw\n)\nSELECT\n    q1,\n    q3,\n    q3 - q1 AS iqr,\n    q1 - 1.5 * (q3 - q1) AS lower_fence,\n    q3 + 1.5 * (q3 - q1) AS upper_fence,\n    SUM(CASE WHEN header.elapsedGameLoops < (s.q1 - 1.5 * (s.q3 - s.q1))\n              OR header.elapsedGameLoops > (s.q3 + 1.5 * (s.q3 - s.q1))\n         THEN 1 ELSE 0 END) AS iqr_outlier_count\nFROM replays_meta_raw, stats s\nGROUP BY q1, q3\n",
+    "ma_profile": "\nSELECT\n    COUNT(*) AS n_rows,\n    COUNT(*) - COUNT(tournament) AS tournament_null,\n    COUNT(*) - COUNT(foreign_name) AS foreign_name_null,\n    COUNT(*) - COUNT(english_name) AS english_name_null,\n    COUNT(*) - COUNT(filename) AS filename_null,\n    COUNT(DISTINCT tournament) AS tournament_cardinality,\n    COUNT(DISTINCT foreign_name) AS foreign_name_cardinality,\n    COUNT(DISTINCT english_name) AS english_name_cardinality,\n    COUNT(DISTINCT filename) AS filename_cardinality\nFROM map_aliases_raw\n",
+    "ma_topk_tournament": "\nSELECT\n    tournament,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM map_aliases_raw), 4) AS pct\nFROM map_aliases_raw\nGROUP BY tournament\nORDER BY cnt DESC\nLIMIT 5\n",
+    "row_counts": "\nSELECT 'replay_players_raw' AS table_name, COUNT(*) AS n_rows FROM replay_players_raw\nUNION ALL\nSELECT 'replays_meta_raw', COUNT(*) FROM replays_meta_raw\nUNION ALL\nSELECT 'map_aliases_raw', COUNT(*) FROM map_aliases_raw\n",
+    "rp_duplicates": "\nSELECT\n    COUNT(*) AS total_rows,\n    COUNT(DISTINCT (filename, playerID)) AS distinct_pairs,\n    COUNT(*) - COUNT(DISTINCT (filename, playerID)) AS duplicate_rows\nFROM replay_players_raw\n-- W-04: (filename, playerID) = natural key.\n-- filename contains the replay hash; playerID is per-replay slot index (0/1).\n-- toon_id is global Battle.net ID; not the correct duplication detection key here.\n",
+    "class_balance": "\nSELECT\n    result,\n    COUNT(*) AS cnt,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS pct\nFROM replay_players_raw\nGROUP BY result\nORDER BY cnt DESC\n",
+    "cross_table_linkage": "\nWITH rp_replays AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replay_players_raw\n),\nrm_replays AS (\n    SELECT DISTINCT\n        regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json$', 1) AS replay_id\n    FROM replays_meta_raw\n)\nSELECT\n    (SELECT COUNT(*) FROM rp_replays) AS rp_distinct_replays,\n    (SELECT COUNT(*) FROM rm_replays) AS rm_distinct_replays,\n    (SELECT COUNT(*) FROM rp_replays\n     WHERE replay_id NOT IN (SELECT replay_id FROM rm_replays)) AS rp_orphans,\n    (SELECT COUNT(*) FROM rm_replays\n     WHERE replay_id NOT IN (SELECT replay_id FROM rp_replays)) AS rm_orphans\n",
+    "memory_footprint": "\nSELECT\n    database_name,\n    table_name,\n    estimated_size,\n    column_count,\n    index_count\nFROM duckdb_tables()\nWHERE table_name IN ('replay_players_raw', 'replays_meta_raw', 'map_aliases_raw')\nORDER BY table_name\n",
+    "qq_mmr": "\nSELECT MMR\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss') AND MMR > 0\n-- I7: MMR > 0 excludes unrated sentinel (83.65% of rows). Rated-only QQ.\n",
+    "qq_ingame": "\nSELECT APM, SQ, supplyCappedPercent\nFROM replay_players_raw\nWHERE result IN ('Win', 'Loss')\n  AND SQ > -2147483648\n-- I7: SQ > INT32_MIN excludes 2 sentinel rows. APM/supplyCappedPercent unfiltered.\n",
+    "qq_egl_data": "\nSELECT header.elapsedGameLoops AS elapsed_game_loops\nFROM replays_meta_raw\n"
+  },
+  "sentinel_summary": {
+    "MMR": {
+      "sentinel_value": 0,
+      "count": 37489,
+      "pct": 83.65,
+      "interpretation": "MMR=0 means unrated player"
+    },
+    "SQ": {
+      "sentinel_value": -2147483648,
+      "count": 2,
+      "pct": 0.0045,
+      "interpretation": "INT32_MIN sentinel for missing SQ value"
+    }
+  }
+}

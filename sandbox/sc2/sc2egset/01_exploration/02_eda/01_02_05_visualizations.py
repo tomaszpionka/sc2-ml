@@ -22,11 +22,14 @@
 # **Dataset:** sc2egset
 # **Question:** What do the distributions from 01_02_04 look like visually,
 # and do the visual patterns confirm or challenge the statistical summaries?
-# **Invariants applied:** #6 (reproducibility -- queries inlined),
+# **Invariants applied:** #3 (in-game annotations), #6 (reproducibility -- queries inlined),
 # #7 (no magic numbers), #9 (step scope: visualization of 01_02_04 findings)
 # **Predecessor:** 01_02_04 (univariate census -- JSON artifact required)
 # **Step scope:** visualize
 # **Type:** Read-only -- no DuckDB writes
+
+# %% [markdown]
+# ## T02 -- Setup: Imports, DuckDB connection, census load, paths
 
 # %%
 import json
@@ -45,7 +48,7 @@ logger = setup_notebook_logging()
 logger.info("DB_FILE: %s", DB_FILE)
 
 # %%
-con = duckdb.connect(str(DB_FILE), read_only=True)
+conn = duckdb.connect(str(DB_FILE), read_only=True)
 print(f"Connected (read-only): {DB_FILE}")
 
 # %%
@@ -70,7 +73,7 @@ REQUIRED_KEYS = [
 missing = [k for k in REQUIRED_KEYS if k not in census]
 assert not missing, (
     f"BLOCKER: 01_02_04 artifact incomplete. Missing keys: {missing}. "
-    "Execute plan_sc2egset_01_02_04_pass2 before running this notebook."
+    "Execute plan_sc2egset_01_02_04 before running this notebook."
 )
 print(f"Prerequisite check PASSED. All {len(REQUIRED_KEYS)} required keys present.")
 
@@ -81,59 +84,76 @@ artifacts_dir = (
 )
 plots_dir = artifacts_dir / "plots"
 plots_dir.mkdir(parents=True, exist_ok=True)
+sql_queries: dict = {}
 print(f"Artifacts dir: {artifacts_dir}")
 print(f"Plots dir: {plots_dir}")
 
 # %% [markdown]
-# ## Plot 1: Result Distribution
+# ## T03 -- Plot 1: Result Distribution 2-Bar (Q1)
 
 # %%
-result_dist = pd.DataFrame(census["result_distribution"])
+df_result = pd.DataFrame(census["result_distribution"])
 print("=== Result distribution data for plot ===")
-print(result_dist.to_string(index=False))
+print(df_result.to_string(index=False))
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 6))
-bars = ax.bar(result_dist["result"], result_dist["cnt"], color="steelblue")
-for bar, cnt in zip(bars, result_dist["cnt"]):
+# I7: all values from census JSON -- no hardcoded counts
+n_undecided = int(df_result.loc[df_result["result"] == "Undecided", "cnt"].values[0])
+n_tie = int(df_result.loc[df_result["result"] == "Tie", "cnt"].values[0])
+total_n = int(df_result["cnt"].sum())
+n_excluded_replays = (n_undecided + n_tie) // 2
+print(f"Undecided: {n_undecided}, Tie: {n_tie}, total_n: {total_n}, excluded_replays: {n_excluded_replays}")
+
+df_plot = df_result[df_result["result"].isin(["Win", "Loss"])].copy()
+colors = {"Win": "steelblue", "Loss": "salmon"}
+
+fig, ax = plt.subplots(figsize=(8, 6))
+bars = ax.bar(
+    df_plot["result"],
+    df_plot["cnt"],
+    color=[colors[r] for r in df_plot["result"]],
+)
+for bar, row in zip(bars, df_plot.itertuples()):
+    pct = row.pct
     ax.annotate(
-        f"{cnt:,}",
+        f"{row.cnt:,}\n({pct:.2f}%)",
         xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
         xytext=(0, 4),
         textcoords="offset points",
         ha="center",
         va="bottom",
-        fontsize=10,
+        fontsize=11,
     )
 ax.set_xlabel("Result")
 ax.set_ylabel("Count")
-ax.set_title("Result Distribution (replay_players_raw)")
+ax.set_title(f"Result Distribution (N={total_n:,})")
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_result_bar.png", dpi=120)
-plt.close()
+ax.annotate(
+    f"Excluded: Undecided ({n_undecided}), Tie ({n_tie}) — {n_excluded_replays} replays total",
+    xy=(0.5, 0.02),
+    xycoords="axes fraction",
+    ha="center",
+    va="bottom",
+    fontsize=9,
+    color="gray",
+)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_result_bar.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_result_bar.png'}")
 
 # %% [markdown]
-# ## Plot 2: Categorical Distributions
+# ## T04 -- Plot 2: Categorical Distributions 3-Panel (Q2, Q12)
 
 # %%
 cat_race = pd.DataFrame(census["categorical_profiles"]["race"])
+cat_league = pd.DataFrame(census["categorical_profiles"]["highestLeague"])
+cat_region = pd.DataFrame(census["categorical_profiles"]["region"])
 print("=== race data for plot ===")
 print(cat_race.to_string(index=False))
 
 # %%
-cat_league = pd.DataFrame(census["categorical_profiles"]["highestLeague"])
-print("=== highestLeague data for plot ===")
-print(cat_league.to_string(index=False))
-
-# %%
-cat_region = pd.DataFrame(census["categorical_profiles"]["region"])
-print("=== region data for plot ===")
-print(cat_region.to_string(index=False))
-
-# %%
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 for ax, col, df in zip(
     axes,
     ["race", "highestLeague", "region"],
@@ -155,13 +175,13 @@ for ax, col, df in zip(
     ax.set_xlabel("Count")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
 plt.suptitle("Categorical Distributions (replay_players_raw)", fontsize=13)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_categorical_bars.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_categorical_bars.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_categorical_bars.png'}")
 
 # %% [markdown]
-# ## Plot 3: selectedRace Distribution
+# ## T05 -- Plot 3: selectedRace Bar (Q2 supplement)
 
 # %%
 sel_race_data = pd.DataFrame(census["categorical_profiles"]["selectedRace"])
@@ -170,14 +190,17 @@ print(sel_race_data.to_string(index=False))
 
 # %%
 sel_race_sorted = sel_race_data.sort_values("cnt", ascending=True)
-colors = [
+colors_sel = [
     "tomato" if r == "" else "steelblue"
     for r in sel_race_sorted["selectedRace"]
 ]
-labels = [r if r != "" else "(empty string)" for r in sel_race_sorted["selectedRace"]]
+labels_sel = [
+    r if r != "" else "(empty string)"
+    for r in sel_race_sorted["selectedRace"]
+]
 
 fig, ax = plt.subplots(figsize=(10, 6))
-bars = ax.barh(labels, sel_race_sorted["cnt"], color=colors)
+bars = ax.barh(labels_sel, sel_race_sorted["cnt"], color=colors_sel)
 for bar, cnt in zip(bars, sel_race_sorted["cnt"]):
     ax.annotate(
         f"{cnt:,}",
@@ -191,308 +214,317 @@ for bar, cnt in zip(bars, sel_race_sorted["cnt"]):
 ax.set_xlabel("Count")
 ax.set_title("selectedRace Distribution (replay_players_raw)")
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-print("Compare with race: 1,110 empty strings (2.48%), 10 Rand picks (0.02%)")
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_selectedrace_bar.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_selectedrace_bar.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_selectedrace_bar.png'}")
 
 # %% [markdown]
-# ## Plot 4: MMR Distribution (Split View)
+# ## T06 -- Plot 4: MMR Split View (Q3)
 
 # %%
-mmr_data = con.execute(
-    "SELECT MMR FROM replay_players_raw WHERE MMR IS NOT NULL"
-).df()
-print(f"=== Full MMR data for plot ({len(mmr_data):,} rows) ===")
+sql_queries["hist_mmr"] = "SELECT MMR FROM replay_players_raw WHERE MMR IS NOT NULL"
+mmr_data = conn.execute(sql_queries["hist_mmr"]).fetchdf()
+print(f"=== Full MMR data ({len(mmr_data):,} rows) ===")
 print(mmr_data["MMR"].describe().to_string())
 
 # %%
-n_zero = (mmr_data["MMR"] == 0).sum()
-n_negative = (mmr_data["MMR"] < 0).sum()
-n_positive = (mmr_data["MMR"] > 0).sum()
-print(f"MMR=0: {n_zero:,}, MMR<0: {n_negative:,}, MMR>0: {n_positive:,}")
-mmr_annotation = (
-    f"N={n_zero + n_negative:,} rows with MMR<=0 excluded"
-    f" (incl. {n_negative:,} negative-MMR)"
-)
-print(f"Annotation: {mmr_annotation}")
+# I7: zero count from census, not recomputed
+mmr_zero_cnt = census["zero_counts"]["replay_players_raw"]["MMR_zero"]
+total_mmr_rows = len(mmr_data)
+mmr_zero_pct = 100.0 * mmr_zero_cnt / total_mmr_rows
+print(f"MMR=0: {mmr_zero_cnt:,} ({mmr_zero_pct:.2f}%)")
+
+mmr_nonzero = mmr_data[mmr_data["MMR"] > 0]
+print(f"MMR > 0: {len(mmr_nonzero):,} rows")
 
 # %%
-mmr_positive = mmr_data[mmr_data["MMR"] > 0]
-print(f"=== MMR > 0 data for plot ({len(mmr_positive):,} rows) ===")
-print(mmr_positive["MMR"].describe().to_string())
+fig, (ax_all, ax_nonzero) = plt.subplots(1, 2, figsize=(14, 5))
 
-# %%
-fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(14, 5))
-
-# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins provides
-# finer resolution for shape assessment per Tukey (1977) visual consistency
-# recommendation for exploratory work
-ax_a.hist(mmr_data["MMR"], bins=50, color="steelblue", edgecolor="white")
-ax_a.set_title("MMR (all rows)")
-ax_a.set_xlabel("MMR")
-ax_a.set_ylabel("Count")
-ax_a.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-
-# I7: same justification as subplot (a)
-ax_b.hist(mmr_positive["MMR"], bins=50, color="steelblue", edgecolor="white")
-ax_b.set_title("MMR (excluding zero)")
-ax_b.set_xlabel("MMR")
-ax_b.set_ylabel("Count")
-ax_b.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-ax_b.annotate(
-    mmr_annotation,
-    xy=(0.97, 0.97),
-    xycoords="axes fraction",
-    ha="right",
-    va="top",
-    fontsize=8,
-    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow"),
+# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins gives
+# finer resolution per Tukey (1977) EDA recommendation
+ax_all.hist(mmr_data["MMR"], bins=50, color="steelblue", edgecolor="white")
+ax_all.set_title(
+    f"MMR — all rows (N={total_mmr_rows:,})\n"
+    f"{mmr_zero_pct:.2f}% zero-valued (sentinel = not reported)"
 )
+ax_all.set_xlabel("MMR")
+ax_all.set_ylabel("Count")
+ax_all.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
 
-plt.suptitle("MMR Distribution (replay_players_raw)", fontsize=13)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_mmr_split.png", dpi=120)
-plt.close()
+ax_nonzero.hist(mmr_nonzero["MMR"], bins=50, color="steelblue", edgecolor="white")
+ax_nonzero.set_title(f"MMR — non-zero only (N={len(mmr_nonzero):,})")
+ax_nonzero.set_xlabel("MMR")
+ax_nonzero.set_ylabel("Count")
+ax_nonzero.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
+
+plt.suptitle(f"MMR Distribution — replay_players_raw (N={total_mmr_rows:,})", fontsize=13)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_mmr_split.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_mmr_split.png'}")
 
 # %% [markdown]
-# ## Plot 5: APM Distribution
+# ## T07 -- Plot 5: APM Histogram with IN-GAME Annotation (Q4)
 
 # %%
-apm_data = con.execute(
-    "SELECT APM FROM replay_players_raw WHERE APM IS NOT NULL"
-).df()
-print(f"=== APM data for plot ({len(apm_data):,} rows) ===")
+sql_queries["hist_apm"] = "SELECT APM FROM replay_players_raw WHERE APM IS NOT NULL"
+apm_data = conn.execute(sql_queries["hist_apm"]).fetchdf()
+print(f"=== APM data ({len(apm_data):,} rows) ===")
 print(apm_data["APM"].describe().to_string())
 
 # %%
+apm_mean = apm_data["APM"].mean()
 apm_median = apm_data["APM"].median()
-apm_max = apm_data["APM"].max()
+print(f"APM mean={apm_mean:.1f}, median={apm_median:.0f}")
 
 fig, ax = plt.subplots(figsize=(10, 6))
-# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins provides
-# finer resolution for shape assessment per Tukey (1977) visual consistency
-# recommendation for exploratory work
+# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins for finer shape
 ax.hist(apm_data["APM"], bins=50, color="steelblue", edgecolor="white")
-ax.axvline(apm_median, color="darkorange", linestyle="--", linewidth=1.5,
-           label=f"Median={apm_median:.0f}")
-ax.annotate(
-    f"Max APM={apm_max:,.0f}",
-    xy=(0.97, 0.97),
-    xycoords="axes fraction",
-    ha="right",
-    va="top",
-    fontsize=9,
-    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow"),
-)
+ax.axvline(apm_mean, color="darkorange", linestyle="--", linewidth=1.5,
+           label=f"mean = {apm_mean:.0f}")
+ax.axvline(apm_median, color="red", linestyle=":", linewidth=1.5,
+           label=f"median = {apm_median:.0f}")
 ax.set_xlabel("APM")
 ax.set_ylabel("Count")
-ax.set_title("APM Distribution (replay_players_raw)")
-ax.legend()
+ax.set_title(
+    f"APM Distribution (replay_players_raw)\n"
+    f"N={len(apm_data):,}  |  mean={apm_mean:.0f}  |  median={apm_median:.0f}"
+)
+ax.legend(fontsize=9)
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_apm_hist.png", dpi=120)
-plt.close()
+ax.annotate(
+    "IN-GAME \u2014 not available at prediction time (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_apm_hist.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_apm_hist.png'}")
 
 # %% [markdown]
-# ## Plot 6: SQ Distribution (Split View)
+# ## T08 -- Plot 6: SQ Split View with IN-GAME Annotation (Q5)
 
 # %%
-sq_data = con.execute(
-    "SELECT SQ FROM replay_players_raw WHERE SQ IS NOT NULL"
-).df()
-print(f"=== Full SQ data for plot ({len(sq_data):,} rows) ===")
+sql_queries["hist_sq"] = "SELECT SQ FROM replay_players_raw WHERE SQ IS NOT NULL"
+sq_data = conn.execute(sql_queries["hist_sq"]).fetchdf()
+print(f"=== Full SQ data ({len(sq_data):,} rows) ===")
 print(sq_data["SQ"].describe().to_string())
 
 # %%
-sq_clean = sq_data[sq_data["SQ"] != -2147483648]
-print(f"=== SQ excluding sentinel ({len(sq_clean):,} rows) ===")
+# I7: sentinel value from census, not hardcoded independent of artifact
+sq_sentinel_count = census["zero_counts"]["replay_players_raw"]["SQ_sentinel"]
+INT32_MIN = -2147483648  # I7: standard INT32 minimum -- architecture constant
+sq_clean = sq_data[sq_data["SQ"] != INT32_MIN]
+print(f"SQ sentinel rows excluded: {sq_sentinel_count} (INT32_MIN={INT32_MIN:,})")
+print(f"SQ clean rows: {len(sq_clean):,}")
 print(sq_clean["SQ"].describe().to_string())
 
 # %%
-fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(14, 5))
+fig, (ax_all, ax_clean) = plt.subplots(1, 2, figsize=(14, 5))
 
-# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins provides
-# finer resolution for shape assessment per Tukey (1977) visual consistency
-# recommendation for exploratory work
-ax_a.hist(sq_data["SQ"], bins=50, color="steelblue", edgecolor="white")
-ax_a.set_title("SQ (all rows, sentinel visible)")
-ax_a.set_xlabel("SQ")
-ax_a.set_ylabel("Count")
-ax_a.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
+# I7: 50 bins per Tukey (1977) EDA recommendation
+ax_all.hist(sq_data["SQ"], bins=50, color="steelblue", edgecolor="white")
+ax_all.set_title(f"SQ — all rows (N={len(sq_data):,})\n(INT32_MIN sentinel spike visible)")
+ax_all.set_xlabel("SQ")
+ax_all.set_ylabel("Count")
+ax_all.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
 
-# I7: same justification as subplot (a)
-ax_b.hist(sq_clean["SQ"], bins=50, color="steelblue", edgecolor="white")
-ax_b.set_title("SQ (sentinel excluded, range -51 to 187)")
-ax_b.set_xlabel("SQ")
-ax_b.set_ylabel("Count")
-ax_b.annotate(
-    "2 sentinel rows excluded (INT32_MIN = -2,147,483,648)",
-    xy=(0.97, 0.97),
-    xycoords="axes fraction",
-    ha="right",
-    va="top",
-    fontsize=8,
-    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow"),
+ax_clean.hist(sq_clean["SQ"], bins=50, color="steelblue", edgecolor="white")
+ax_clean.set_title(
+    f"SQ — sentinel excluded (N={len(sq_clean):,})\n"
+    f"{sq_sentinel_count} INT32_MIN rows removed"
 )
+ax_clean.set_xlabel("SQ")
+ax_clean.set_ylabel("Count")
+
+for ax_panel in [ax_all, ax_clean]:
+    ax_panel.annotate(
+        "IN-GAME \u2014 not available at prediction time (Inv. #3)",
+        xy=(0.02, 0.98), xycoords="axes fraction",
+        ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+        bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+    )
 
 plt.suptitle("SQ Distribution (replay_players_raw)", fontsize=13)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_sq_split.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_sq_split.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_sq_split.png'}")
 
 # %% [markdown]
-# ## Plot 7: supplyCappedPercent Distribution
+# ## T09 -- Plot 7: supplyCappedPercent Histogram with IN-GAME Annotation (Q6)
 
 # %%
-sc_data = con.execute(
-    "SELECT supplyCappedPercent"
-    " FROM replay_players_raw"
+sql_queries["hist_supplycapped"] = (
+    "SELECT supplyCappedPercent FROM replay_players_raw"
     " WHERE supplyCappedPercent IS NOT NULL"
-).df()
+)
+sc_data = conn.execute(sql_queries["hist_supplycapped"]).fetchdf()
 print(f"=== supplyCappedPercent data ({len(sc_data):,} rows) ===")
 print(sc_data["supplyCappedPercent"].describe().to_string())
 
 # %%
 sc_median = sc_data["supplyCappedPercent"].median()
+sc_mean = sc_data["supplyCappedPercent"].mean()
+print(f"supplyCappedPercent median={sc_median:.1f}, mean={sc_mean:.2f}")
 
 fig, ax = plt.subplots(figsize=(10, 6))
-# I7: Sturges rule: ceil(1+log2(44817))=16 bins minimum; 50 bins provides
-# finer resolution for shape assessment per Tukey (1977) visual consistency
-# recommendation for exploratory work
+# I7: 50 bins per Tukey (1977) EDA recommendation
 ax.hist(sc_data["supplyCappedPercent"], bins=50, color="steelblue", edgecolor="white")
 ax.axvline(sc_median, color="darkorange", linestyle="--", linewidth=1.5,
-           label=f"Median={sc_median:.1f}")
+           label=f"median = {sc_median:.1f}")
+ax.axvline(sc_mean, color="red", linestyle=":", linewidth=1.5,
+           label=f"mean = {sc_mean:.2f}")
 ax.set_xlabel("supplyCappedPercent")
 ax.set_ylabel("Count")
-ax.set_title("supplyCappedPercent Distribution (replay_players_raw)")
-ax.legend()
+ax.set_title(
+    f"supplyCappedPercent Distribution (replay_players_raw)\n"
+    f"N={len(sc_data):,}  |  median={sc_median:.1f}  |  mean={sc_mean:.2f}"
+)
+ax.legend(fontsize=9)
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_supplycapped_hist.png", dpi=120)
-plt.close()
+ax.annotate(
+    "IN-GAME \u2014 not available at prediction time (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_supplycapped_hist.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_supplycapped_hist.png'}")
 
 # %% [markdown]
-# ## Plot 8: Game Duration (elapsed_game_loops)
+# ## T10 -- Plot 8: Duration Dual-Panel with POST-GAME Annotation (Q7)
 
 # %%
-duration_data = con.execute(
+sql_queries["hist_duration"] = (
     "SELECT header.elapsedGameLoops AS elapsed_game_loops"
     " FROM replays_meta_raw"
     " WHERE header.elapsedGameLoops IS NOT NULL"
-).df()
-# Convert game loops to seconds: SC2 Faster speed = 22.4 loops/second
-LOOPS_PER_SECOND = 22.4  # I7: SC2 engine constant for Faster speed
-duration_data["duration_sec"] = (
-    duration_data["elapsed_game_loops"] / LOOPS_PER_SECOND
 )
+duration_data = conn.execute(sql_queries["hist_duration"]).fetchdf()
 print(f"=== Duration data ({len(duration_data):,} replays) ===")
-print(duration_data["duration_sec"].describe().to_string())
+
+# I7: SC2 Faster game speed = 22.4 game loops per real second
+# Source: Blizzard SC2 engine specification (Faster speed constant)
+LOOPS_PER_SECOND = 22.4
+duration_data["duration_min"] = (
+    duration_data["elapsed_game_loops"] / LOOPS_PER_SECOND / 60
+)
+print(duration_data["duration_min"].describe().to_string())
 
 # %%
-CLIP_SECONDS = 2400  # I7: 40 minutes = standard "long game" boundary
-n_over_40min = (duration_data["duration_sec"] > CLIP_SECONDS).sum()
+# I7: CLIP_SECONDS is data-derived from census p95, not hardcoded
+p95_loops = census["duration_stats"]["p95"]
+CLIP_MINUTES = p95_loops / LOOPS_PER_SECOND / 60
+print(f"p95 game loops = {p95_loops:.1f} => {CLIP_MINUTES:.1f} min clip threshold")
 
-fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(14, 5))
+n_over_p95 = (duration_data["duration_min"] > CLIP_MINUTES).sum()
+dur_body = duration_data[duration_data["duration_min"] <= CLIP_MINUTES]
+print(f"Rows <= p95 clip: {len(dur_body):,}, rows > p95 clip: {n_over_p95:,}")
 
-# I7: Sturges rule: ceil(1+log2(22390))=15 bins minimum; 50 bins provides
-# finer resolution for shape assessment per Tukey (1977) visual consistency
-# recommendation for exploratory work
-ax_a.hist(duration_data["duration_sec"], bins=50, color="steelblue", edgecolor="white")
-ax_a.set_title("Game Duration (full range)")
-ax_a.set_xlabel("Duration (seconds)")
-ax_a.set_ylabel("Count")
-ax_a.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
+# %%
+fig, (ax_body, ax_full) = plt.subplots(1, 2, figsize=(14, 5))
 
-# I7: same justification as subplot (a)
-clipped = duration_data[duration_data["duration_sec"] <= CLIP_SECONDS]
-ax_b.hist(clipped["duration_sec"], bins=50, color="steelblue", edgecolor="white")
-ax_b.set_title("Game Duration (clipped at 40 min)")
-ax_b.set_xlabel("Duration (seconds)")
-ax_b.set_ylabel("Count")
-ax_b.annotate(
-    f"N={n_over_40min:,} replays > 40 min (not shown)",
-    xy=(0.95, 0.95),
-    xycoords="axes fraction",
-    ha="right",
-    va="top",
-    fontsize=9,
-    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow"),
+# I7: 50 bins per Tukey (1977) EDA recommendation
+ax_body.hist(dur_body["duration_min"], bins=50, color="steelblue", edgecolor="white")
+ax_body.set_title(f"Game Duration — Body (clipped at p95={CLIP_MINUTES:.0f} min)")
+ax_body.set_xlabel("Duration (minutes)")
+ax_body.set_ylabel("Count")
+ax_body.annotate(
+    f"p95 clip = {CLIP_MINUTES:.0f} min; cf. aoe2companion 63 min, aoestats 79 min",
+    xy=(0.5, 0.97), xycoords="axes fraction",
+    ha="center", va="top", fontsize=7, color="gray",
 )
 
-plt.suptitle("Game Duration from elapsed_game_loops (replays_meta_raw)", fontsize=13)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_duration_hist.png", dpi=120)
-plt.close()
+ax_full.hist(duration_data["duration_min"], bins=50, color="steelblue", edgecolor="white")
+ax_full.set_yscale("log")
+ax_full.set_title("Game Duration — Full Range (log y-scale)")
+ax_full.set_xlabel("Duration (minutes)")
+ax_full.set_ylabel("Count (log scale)")
+ax_full.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}"))
+
+for ax_panel in [ax_body, ax_full]:
+    ax_panel.annotate(
+        "POST-GAME \u2014 total duration; only known after match ends (Inv. #3)",
+        xy=(0.02, 0.98), xycoords="axes fraction",
+        ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+        bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+    )
+
+plt.suptitle(
+    f"Game Duration — elapsed_game_loops / {LOOPS_PER_SECOND} / 60 (replays_meta_raw)",
+    fontsize=12,
+)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_duration_hist.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_duration_hist.png'}")
 
 # %% [markdown]
-# ## Plot 9: MMR Zero-Spike by Result and by highestLeague
+# ## T11 -- Plot 9: MMR Zero-Spike Cross-Tab (Q8)
 
 # %%
-mmr_by_result = pd.DataFrame(
-    census["mmr_zero_interpretation"]["by_result"]
-)
+mmr_by_result = pd.DataFrame(census["mmr_zero_interpretation"]["by_result"])
+mmr_by_league = pd.DataFrame(census["mmr_zero_interpretation"]["by_highestLeague"])
 print("=== MMR=0 by result ===")
 print(mmr_by_result.to_string(index=False))
-
-# %%
-mmr_by_league = pd.DataFrame(
-    census["mmr_zero_interpretation"]["by_highestLeague"]
-)
 print("=== MMR=0 by highestLeague ===")
 print(mmr_by_league.to_string(index=False))
 
 # %%
+# I7: overall rate computed from census cross-tab, not hardcoded
 overall_mmr_zero_pct = 100.0 * sum(
-    r["mmr_zero_cnt"]
-    for r in census["mmr_zero_interpretation"]["by_result"]
+    r["mmr_zero_cnt"] for r in census["mmr_zero_interpretation"]["by_result"]
 ) / sum(
-    r["total_cnt"]
-    for r in census["mmr_zero_interpretation"]["by_result"]
+    r["total_cnt"] for r in census["mmr_zero_interpretation"]["by_result"]
 )
 print(f"Overall MMR=0 rate: {overall_mmr_zero_pct:.2f}%")
 
-fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(14, 5))
+fig, (ax_result, ax_league) = plt.subplots(1, 2, figsize=(14, 5))
 
-ax_a.bar(mmr_by_result["result"], mmr_by_result["mmr_zero_pct"], color="steelblue")
-ax_a.axhline(overall_mmr_zero_pct, color="darkorange", linestyle="--",
-             linewidth=1.5, label=f"Overall {overall_mmr_zero_pct:.1f}%")
-ax_a.set_title("MMR=0 Rate by Result")
-ax_a.set_xlabel("Result")
-ax_a.set_ylabel("MMR=0 %")
-ax_a.set_ylim(0, 100)
-ax_a.legend(fontsize=8)
+ax_result.bar(mmr_by_result["result"], mmr_by_result["mmr_zero_pct"], color="steelblue")
+ax_result.axhline(
+    overall_mmr_zero_pct, color="darkorange", linestyle="--", linewidth=1.5,
+    label=f"Overall {overall_mmr_zero_pct:.1f}%",
+)
+ax_result.set_title("MMR=0 Rate by Result")
+ax_result.set_xlabel("Result")
+ax_result.set_ylabel("MMR=0 %")
+ax_result.set_ylim(0, 100)
+ax_result.legend(fontsize=8)
 
-ax_b.bar(mmr_by_league["highestLeague"], mmr_by_league["mmr_zero_pct"],
-         color="steelblue")
-ax_b.axhline(overall_mmr_zero_pct, color="darkorange", linestyle="--",
-             linewidth=1.5, label=f"Overall {overall_mmr_zero_pct:.1f}%")
-ax_b.set_title("MMR=0 Rate by highestLeague")
-ax_b.set_xlabel("highestLeague")
-ax_b.set_ylabel("MMR=0 %")
-ax_b.set_ylim(0, 100)
-ax_b.legend(fontsize=8)
-plt.setp(ax_b.get_xticklabels(), rotation=30, ha="right")
+ax_league.bar(
+    mmr_by_league["highestLeague"], mmr_by_league["mmr_zero_pct"], color="steelblue"
+)
+ax_league.axhline(
+    overall_mmr_zero_pct, color="darkorange", linestyle="--", linewidth=1.5,
+    label=f"Overall {overall_mmr_zero_pct:.1f}%",
+)
+ax_league.set_title("MMR=0 Rate by highestLeague")
+ax_league.set_xlabel("highestLeague")
+ax_league.set_ylabel("MMR=0 %")
+ax_league.set_ylim(0, 100)
+ax_league.legend(fontsize=8)
+plt.setp(ax_league.get_xticklabels(), rotation=30, ha="right")
 
 plt.suptitle("MMR Zero-Spike Cross-Tabulation (replay_players_raw)", fontsize=13)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_mmr_zero_interpretation.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_mmr_zero_interpretation.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_mmr_zero_interpretation.png'}")
 
 # %% [markdown]
-# ## Plot 10: Temporal Coverage
+# ## T12 -- Plot 10: Temporal Coverage Line Chart (Q9)
 
 # %%
 monthly = pd.DataFrame(census["monthly_counts"])
 print(f"=== Monthly counts ({len(monthly)} months) ===")
-print(monthly.to_string(index=False))
+print(monthly.head(10).to_string(index=False))
 
 # %%
 monthly["month"] = pd.to_datetime(monthly["month"])
@@ -515,16 +547,16 @@ for _, row in low_months.iterrows():
 
 ax.set_xlabel("Month")
 ax.set_ylabel("Replay Count")
-ax.set_title("Temporal Coverage — Monthly Replay Counts (replays_meta_raw)")
+ax.set_title("Monthly Replay Volume — sc2egset")
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
 fig.autofmt_xdate()
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_temporal_coverage.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_temporal_coverage.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_temporal_coverage.png'}")
 
 # %% [markdown]
-# ## Plot 11: isInClan Distribution
+# ## T13 -- Plot 11: isInClan Bar (Q10)
 
 # %%
 clan_dist = pd.DataFrame(census["isInClan_distribution"])
@@ -532,9 +564,9 @@ print("=== isInClan distribution ===")
 print(clan_dist.to_string(index=False))
 
 # %%
-total_clan = clan_dist["cnt"].sum()
+total_clan = int(clan_dist["cnt"].sum())
 
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(8, 5))
 bars = ax.bar(
     [str(v) for v in clan_dist["isInClan"]],
     clan_dist["cnt"],
@@ -553,15 +585,15 @@ for bar, row in zip(bars, clan_dist.itertuples()):
     )
 ax.set_xlabel("isInClan")
 ax.set_ylabel("Count")
-ax.set_title("isInClan Distribution (replay_players_raw)")
+ax.set_title(f"isInClan Distribution (replay_players_raw, N={total_clan:,})")
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_isinclan_bar.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_isinclan_bar.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_isinclan_bar.png'}")
 
 # %% [markdown]
-# ## Plot 12: clanTag Top-20
+# ## T14 -- Plot 12: clanTag Top-20 Barh (Q10 supplement)
 
 # %%
 clan_top20 = pd.DataFrame(census["clanTag_top20"])
@@ -586,16 +618,125 @@ for bar, cnt in zip(bars, clan_sorted["cnt"]):
 ax.set_xlabel("Count")
 ax.set_title("Top-20 clanTag by Frequency (replay_players_raw)")
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_clantag_top20.png", dpi=120)
-plt.close()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_clantag_top20.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print(f"Saved: {plots_dir / '01_02_05_clantag_top20.png'}")
 
 # %% [markdown]
-# ## Summary and Markdown Artifact
+# ## T15 -- Plot 13: Map Top-20 Barh (Q11)
 
 # %%
-# Verify all 12 plot files exist
+map_data = pd.DataFrame(census["categorical_profiles"]["map_name"])
+# I7: total_replays from census, not hardcoded
+total_replays = census["null_census"]["replays_meta_raw_filename"]["total_rows"]
+# I7: cardinality from census cardinality list
+map_cardinality_entry = next(
+    c for c in census["cardinality"] if c["column"] == "map_name"
+)
+map_cardinality = int(map_cardinality_entry["cardinality"])
+total_in_top20 = int(map_data["cnt"].sum())
+pct_top20 = 100.0 * total_in_top20 / total_replays
+print(f"Total replays: {total_replays:,}, map cardinality: {map_cardinality}")
+print(f"Top-20 coverage: {total_in_top20:,} / {total_replays:,} = {pct_top20:.1f}%")
+
+# %%
+map_sorted = map_data.sort_values("cnt", ascending=True)
+
+fig, ax = plt.subplots(figsize=(12, 10))
+bars = ax.barh(map_sorted["map_name"], map_sorted["cnt"], color="steelblue")
+for bar, row in zip(bars, map_sorted.itertuples()):
+    pct = 100.0 * row.cnt / total_replays
+    ax.annotate(
+        f"{row.cnt:,} ({pct:.1f}%)",
+        xy=(bar.get_width(), bar.get_y() + bar.get_height() / 2),
+        xytext=(4, 0),
+        textcoords="offset points",
+        ha="left",
+        va="center",
+        fontsize=8,
+    )
+ax.set_xlabel("Count")
+ax.set_title(
+    f"Map Distribution — Top 20 of {map_cardinality} (replays_meta_raw)\n"
+    f"Top-20 coverage: {pct_top20:.1f}% of {total_replays:,} replays"
+)
+ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x):,}"))
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_map_top20.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
+print(f"Saved: {plots_dir / '01_02_05_map_top20.png'}")
+
+# %% [markdown]
+# ## T16 -- Plot 14: Player Repeat Frequency (Games per toon_id)
+
+# %%
+# I7: n_unique_players and total_n derived from census at runtime
+cardinality_entry = next(
+    (c for c in census["cardinality"] if c["column"] == "toon_id" and "replay" in c.get("table", "")),
+    next(c for c in census["cardinality"] if c["column"] == "toon_id")
+)
+n_unique_players = int(cardinality_entry["cardinality"])
+total_n = int(census["null_census"]["replay_players_raw"]["total_rows"])
+mean_games = total_n / n_unique_players
+print(f"n_unique_players={n_unique_players:,}, total_n={total_n:,}, mean_games={mean_games:.1f}")
+
+# %%
+sql_queries["hist_player_repeat"] = """
+SELECT games_per_player, COUNT(*) AS player_count
+FROM (
+    SELECT toon_id, COUNT(*) AS games_per_player
+    FROM replay_players_raw
+    GROUP BY toon_id
+)
+GROUP BY games_per_player
+ORDER BY games_per_player
+"""
+
+df_repeat = conn.execute(sql_queries["hist_player_repeat"]).fetchdf()
+print(f"Distinct games_per_player values: {len(df_repeat)}")
+print(df_repeat.head(10).to_string(index=False))
+
+# %%
+# Compute median from distribution (cumulative sum approach)
+df_repeat["cum_players"] = df_repeat["player_count"].cumsum()
+median_games = int(
+    df_repeat.loc[
+        df_repeat["cum_players"] >= n_unique_players / 2, "games_per_player"
+    ].iloc[0]
+)
+print(f"Median games per player: {median_games}")
+
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.bar(
+    df_repeat["games_per_player"],
+    df_repeat["player_count"],
+    color="steelblue", alpha=0.8, width=0.8,
+)
+ax.set_yscale("log")
+ax.set_xlabel("Games per player (toon_id)")
+ax.set_ylabel("Number of players (log scale)")
+ax.set_title(
+    f"Player Repeat Frequency — replay_players_raw\n"
+    f"N_players = {n_unique_players:,}  |  N_rows = {total_n:,}  |  "
+    f"mean = {mean_games:.1f} games/player"
+)
+ax.axvline(mean_games, color="darkorange", linestyle="--", linewidth=1.2,
+           label=f"mean = {mean_games:.1f}")
+ax.axvline(median_games, color="red", linestyle=":", linewidth=1.2,
+           label=f"median = {median_games}")
+ax.legend(fontsize=9)
+ax.grid(axis="y", alpha=0.3)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_player_repeat_frequency.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
+print(f"Saved: {plots_dir / '01_02_05_player_repeat_frequency.png'}")
+
+# %% [markdown]
+# ## T17 -- Markdown Artifact, Verification, Connection Close
+
+# %%
+# Verify all 14 plot files exist
 expected_plots = [
     "01_02_05_result_bar.png",
     "01_02_05_categorical_bars.png",
@@ -609,79 +750,91 @@ expected_plots = [
     "01_02_05_temporal_coverage.png",
     "01_02_05_isinclan_bar.png",
     "01_02_05_clantag_top20.png",
+    "01_02_05_map_top20.png",
+    "01_02_05_player_repeat_frequency.png",
 ]
 missing_plots = [p for p in expected_plots if not (plots_dir / p).exists()]
 assert not missing_plots, f"Missing plots: {missing_plots}"
 print(f"All {len(expected_plots)} plot files verified present.")
 
 # %%
-md_content = f"""# Step 01_02_05 -- Univariate EDA Visualizations
+md_lines = [
+    "# Step 01_02_05 -- Univariate EDA Visualizations",
+    "",
+    "**Dataset:** sc2egset",
+    "**Phase:** 01 -- Data Exploration",
+    "**Pipeline Section:** 01_02 -- EDA (Tukey-style)",
+    "**Predecessor:** 01_02_04 (univariate census)",
+    "**Invariants applied:** #3 (IN-GAME annotations), #6 (SQL queries inlined), #7 (no magic numbers), #9 (step scope: visualize)",
+    "",
+    "## Plot Index",
+    "",
+    "| # | Title | Filename | Observation | Temporal Annotation |",
+    "|---|-------|----------|-------------|---------------------|",
+    "| 1 | Result Distribution | 01_02_05_result_bar.png | Near-perfect 50/50 Win/Loss split (22,382 vs 22,409). Undecided=24 and Tie=2 excluded (13 replays total). Confirms clean binary outcome for modeling. | N/A |",
+    "| 2 | Categorical Distributions | 01_02_05_categorical_bars.png | race: Prot/Zerg/Terr ~36/35/29%. highestLeague: 72% Unknown, 14% Master, 11% Grandmaster. region: 47% Europe, 28% US. | N/A |",
+    "| 3 | selectedRace Distribution | 01_02_05_selectedrace_bar.png | 1,110 empty strings (2.48%, red bar) and 10 Rand picks; anomalous entries absent from the race column. | N/A |",
+    "| 4 | MMR Split View | 01_02_05_mmr_split.png | Left panel dominated by zero-spike (83.65% sentinel). Right panel (MMR>0) reveals unimodal distribution with long right tail toward Grandmaster. | N/A |",
+    "| 5 | APM Histogram | 01_02_05_apm_hist.png | Near-symmetric distribution (skewness=-0.20) centered around median. Esports-grade players: median ~349 APM. | IN-GAME (Inv. #3) |",
+    "| 6 | SQ Split View | 01_02_05_sq_split.png | Left panel shows INT32_MIN sentinel as isolated spike far below main mass. Right panel (sentinel excluded) shows continuous distribution in -51 to 187 range. | IN-GAME (Inv. #3) |",
+    "| 7 | supplyCappedPercent Histogram | 01_02_05_supplycapped_hist.png | Right-skewed (skewness=2.25) with median near 6; 95th percentile at 16, confirming most players rarely hit supply cap. | IN-GAME (Inv. #3) |",
+    "| 8 | Duration Dual-Panel | 01_02_05_duration_hist.png | Body panel clipped at p95=22.5 min shows main mass. Full-range log-y panel reveals extreme outliers. SC2 games shorter than AoE2 (cf. 63 min / 79 min). | POST-GAME (Inv. #3) |",
+    "| 9 | MMR Zero Cross-Tab | 01_02_05_mmr_zero_interpretation.png | MMR=0 rate uniform across result categories (~83%) and league tiers, confirming zero is a missing-data sentinel not correlated with outcome. | N/A |",
+    "| 10 | Temporal Coverage | 01_02_05_temporal_coverage.png | 2016-2024 span. Monthly volume generally increases through mid-period with visible gap in early 2016. Low-count months annotated. | N/A |",
+    "| 11 | isInClan Bar | 01_02_05_isinclan_bar.png | 74% not in clan, 26% in clan. Minority feature worth retaining for feature engineering. | N/A |",
+    "| 12 | clanTag Top-20 | 01_02_05_clantag_top20.png | Top esports organizations dominate clan tags; top-20 clans account for a substantial share of non-empty clan entries. | N/A |",
+    "| 13 | Map Top-20 | 01_02_05_map_top20.png | 188 distinct maps. Top-20 shown as barh with count and percentage. Ladder map rotation pattern visible. | N/A |",
+    "| 14 | Player Repeat Frequency | 01_02_05_player_repeat_frequency.png | 2,495 unique players across 44,817 rows (~18 games/player average). Heavily right-skewed: small pool of recurring tournament regulars. Informs Phase 03 player-aware splitting strategy. | N/A |",
+    "",
+    "## SQL Queries",
+    "",
+    "All DuckDB SQL queries used in this notebook (Invariant #6: reproducibility):",
+    "",
+    "**hist_mmr:**",
+    "```sql",
+    sql_queries["hist_mmr"],
+    "```",
+    "",
+    "**hist_apm:**",
+    "```sql",
+    sql_queries["hist_apm"],
+    "```",
+    "",
+    "**hist_sq:**",
+    "```sql",
+    sql_queries["hist_sq"],
+    "```",
+    "",
+    "**hist_supplycapped:**",
+    "```sql",
+    sql_queries["hist_supplycapped"],
+    "```",
+    "",
+    "**hist_duration:**",
+    "```sql",
+    sql_queries["hist_duration"],
+    "```",
+    "",
+    "**hist_player_repeat:**",
+    "```sql",
+    sql_queries["hist_player_repeat"].strip(),
+    "```",
+    "",
+    "## Data Sources",
+    "",
+    "- `replay_players_raw` (DuckDB persistent table): player-level fields",
+    "- `replays_meta_raw` (DuckDB persistent table): replay-level metadata including elapsed_game_loops",
+    "- `01_02_04_univariate_census.json`: pre-computed distributions for result, categorical profiles,",
+    "  monthly counts, MMR zero-spike cross-tabulation, isInClan, clanTag top-20, cardinality",
+]
 
-**Dataset:** sc2egset
-**Phase:** 01 -- Data Exploration
-**Pipeline Section:** 01_02 -- EDA (Tukey-style)
-**Predecessor:** 01_02_04 (univariate census)
-**Invariants applied:** #6 (SQL queries inlined), #7 (no magic numbers), #9 (step scope: visualize)
-
-## Plots Produced
-
-| # | Title | Filename | Observation |
-|---|-------|----------|-------------|
-| 1 | Result Distribution | 01_02_05_result_bar.png | Near-perfect 50/50 Win/Loss split (22,409 vs 22,382) with 7 Undecided and 2 Tie -- confirms clean binary outcome for modeling. |
-| 2 | Categorical Distributions | 01_02_05_categorical_bars.png | Race is dominated by Prot/Zerg/Terr; highestLeague has 72% Unknown; region skews European (47%). |
-| 3 | selectedRace Distribution | 01_02_05_selectedrace_bar.png | 8 categories including 1,110 empty strings (2.48%, highlighted red) and 10 Rand picks; anomalous entries absent from the race column. |
-| 4 | MMR Distribution (Split View) | 01_02_05_mmr_split.png | Left panel dominated by zero-spike; right panel (MMR>0) reveals unimodal MMR distribution with long right tail toward Grandmaster ratings. |
-| 5 | APM Distribution | 01_02_05_apm_hist.png | Near-symmetric distribution (skewness=-0.20) centered around median; extreme outlier visible at high APM values. |
-| 6 | SQ Distribution (Split View) | 01_02_05_sq_split.png | Left panel shows INT32_MIN sentinel as isolated spike far below main mass; right panel (sentinel excluded) shows continuous distribution in -51 to 187 range. |
-| 7 | supplyCappedPercent Distribution | 01_02_05_supplycapped_hist.png | Strong right-skew (skewness=2.25) with median near 0; 95th percentile at 16, confirming most players rarely hit supply cap. |
-| 8 | Game Duration (elapsed_game_loops) | 01_02_05_duration_hist.png | Right-skewed duration; full-range panel compressed by extreme outliers; clipped panel at 40 min reveals main mass with long-game annotation. |
-| 9 | MMR Zero-Spike by Result and highestLeague | 01_02_05_mmr_zero_interpretation.png | MMR=0 rate uniform across result categories (~83%) and across most league tiers, confirming zero is a missing-data sentinel not correlated with outcome. |
-| 10 | Temporal Coverage | 01_02_05_temporal_coverage.png | Dataset spans 2016-2024 with visible gap in 2016-04 through 2016-06; monthly counts generally increase through mid-period before declining in later years. |
-| 11 | isInClan Distribution | 01_02_05_isinclan_bar.png | 74% of players are not in a clan; 26% are clan members -- clan membership is a minority feature worth retaining for feature engineering. |
-| 12 | clanTag Top-20 | 01_02_05_clantag_top20.png | Team liquid (αX) dominates clan tags; top-20 clans account for a substantial share of non-empty clan entries. |
-
-## SQL Queries
-
-All DuckDB SQL queries used in this notebook (Invariant #6: reproducibility):
-
-**T05 (MMR):**
-```sql
-SELECT MMR FROM replay_players_raw WHERE MMR IS NOT NULL
-```
-
-**T06 (APM):**
-```sql
-SELECT APM FROM replay_players_raw WHERE APM IS NOT NULL
-```
-
-**T07 (SQ):**
-```sql
-SELECT SQ FROM replay_players_raw WHERE SQ IS NOT NULL
-```
-
-**T08 (supplyCappedPercent):**
-```sql
-SELECT supplyCappedPercent FROM replay_players_raw WHERE supplyCappedPercent IS NOT NULL
-```
-
-**T09 (duration):**
-```sql
-SELECT header.elapsedGameLoops AS elapsed_game_loops FROM replays_meta_raw WHERE header.elapsedGameLoops IS NOT NULL
-```
-
-## Data Sources
-
-- `replay_players_raw` (DuckDB persistent table): player-level fields
-- `replays_meta_raw` (DuckDB persistent table): replay-level metadata including elapsed_game_loops
-- `01_02_04_univariate_census.json`: pre-computed distributions for result, categorical profiles, monthly counts, MMR zero-spike cross-tabulation, isInClan, and clanTag top-20
-"""
-
+md_content = "\n".join(md_lines) + "\n"
 md_path = artifacts_dir / "01_02_05_visualizations.md"
 with open(md_path, "w") as f:
     f.write(md_content)
 print(f"Written markdown artifact: {md_path}")
 
 # %%
-con.close()
+conn.close()
 print("DuckDB connection closed.")
 print(f"Step 01_02_05 complete. {len(expected_plots)} plots + 1 markdown artifact produced.")

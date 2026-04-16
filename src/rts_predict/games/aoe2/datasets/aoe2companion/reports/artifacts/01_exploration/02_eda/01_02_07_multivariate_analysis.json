@@ -1,0 +1,86 @@
+{
+  "step": "01_02_07",
+  "dataset": "aoe2companion",
+  "spearman_matrix": {
+    "rating": {
+      "rating": 1.0,
+      "ratingDiff": 0.0082,
+      "duration_min": -0.1337,
+      "population": 0.0,
+      "speedFactor": 0.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": -0.0349
+    },
+    "ratingDiff": {
+      "rating": 0.0082,
+      "ratingDiff": 1.0,
+      "duration_min": 0.0142,
+      "population": 0.0,
+      "speedFactor": 0.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": -0.0064
+    },
+    "duration_min": {
+      "rating": -0.1337,
+      "ratingDiff": 0.0142,
+      "duration_min": 1.0,
+      "population": 0.0,
+      "speedFactor": 0.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": -0.0104
+    },
+    "population": {
+      "rating": 0.0,
+      "ratingDiff": 0.0,
+      "duration_min": 0.0,
+      "population": 1.0,
+      "speedFactor": 0.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": 0.0
+    },
+    "speedFactor": {
+      "rating": 0.0,
+      "ratingDiff": 0.0,
+      "duration_min": 0.0,
+      "population": 0.0,
+      "speedFactor": 1.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": 0.0
+    },
+    "treatyLength": {
+      "rating": 0.0,
+      "ratingDiff": 0.0,
+      "duration_min": 0.0,
+      "population": 0.0,
+      "speedFactor": 0.0,
+      "treatyLength": 1.0,
+      "internalLeaderboardId": 0.0
+    },
+    "internalLeaderboardId": {
+      "rating": -0.0349,
+      "ratingDiff": -0.0064,
+      "duration_min": -0.0104,
+      "population": 0.0,
+      "speedFactor": 0.0,
+      "treatyLength": 0.0,
+      "internalLeaderboardId": 1.0
+    }
+  },
+  "pca_decision": {
+    "degenerate": true,
+    "viable_features": 0,
+    "reason": "All pre-game numeric features have IQR=0 (near-constant)"
+  },
+  "column_classification": {
+    "rating": "AMBIGUOUS",
+    "ratingDiff": "POST-GAME",
+    "duration_min": "POST-GAME",
+    "population": "PRE-GAME",
+    "speedFactor": "PRE-GAME",
+    "treatyLength": "PRE-GAME",
+    "internalLeaderboardId": "PRE-GAME",
+    "slot": "NOT-A-FEATURE",
+    "color": "NOT-A-FEATURE",
+    "team": "NOT-A-FEATURE"
+  }
+}

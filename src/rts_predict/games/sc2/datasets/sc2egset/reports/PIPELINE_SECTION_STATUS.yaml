@@ -35,7 +35,7 @@ pipeline_sections:
   "01_03":
     name: "Systematic Data Profiling"
     phase: "01"
-    status: not_started
+    status: in_progress
   "01_04":
     name: "Data Cleaning"
     phase: "01"

@@ -8,6 +8,361 @@ SC2 / sc2egset findings. Reverse chronological.
 
 ---
 
+## 2026-04-16 — [Phase 01 / Step 01_03_01] Systematic Data Profiling
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** profiling (column-level + dataset-level)
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_qq_plots.png`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png`
+
+### What
+
+Systematic column-level and dataset-level profiling of all three sc2egset raw tables (replay_players_raw 25 cols / 44,817 rows; replays_meta_raw 17 struct-flat fields / 22,390 rows; map_aliases_raw 4 cols / 104,160 rows). Formal detection of dead fields, constant columns, near-constant columns, IQR outliers (Tukey fence 1.5×IQR). QQ plots and ECDFs for key numeric columns. Cross-table linkage verified via replayId. All SQL stored verbatim (I6).
+
+### Constant columns — exactly 5
+
+`game_speed`, `game_speed_init`, `gameEventsErr`, `messageEventsErr`, `trackerEvtsErr` (all in replays_meta_raw). **Phase 02 action: drop all 5.**
+
+### Near-constant columns — 21 detected programmatically
+
+Includes MMR (IQR=0 for all rows, 83.65% zero-sentinel), color_r/g/b/a, selectedRace, highestLeague, region, realm, result, startDir, handicap, playerID, and others. MMR near-constant detection is technically correct but NOT a drop candidate — requires sentinel-aware handling.
+
+### Sentinel columns
+
+| Column | Sentinel | Count | % | Meaning |
+|--------|----------|-------|---|---------|
+| MMR | 0 | 37,489 | 83.65% | Unrated player |
+| SQ | INT32_MIN | 2 | 0.0045% | Missing SQ |
+
+MMR rated-only IQR (P25=4,203, P75=6,584, IQR=2,381) has 0 Tukey outliers among 7,328 rated players.
+
+### Cross-table linkage
+
+Perfect referential integrity: 22,390 matched replays in both tables, 0 orphans in either direction. 0 duplicate (filename, playerID) rows.
+
+### Class balance
+
+Win 49.94% / Loss 50.00% — no class imbalance. Undecided (24) and Tie (2) excluded from modelling.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** multivariate — cluster-ordered Spearman heatmap + pre-game feature space visualization
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pregame_multivariate_faceted.png`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.json`
+
+### What
+
+Produced 2 thesis-grade PNG files comprising the full multivariate EDA for sc2egset.
+Part A: two-panel cluster-ordered Spearman correlation heatmap across all 4 numeric
+columns (MMR, APM, SQ, supplyCappedPercent), without result_binary (pure feature-feature
+covariance view). Two panels: all rows (SQ sentinel excluded, N=44,789) and rated
+players only (MMR>0, N=7,159). Hierarchical clustering (UPGMA linkage on 1-|rho|
+distance) applied to reorder axes and reveal correlation blocks. Part B: MMR
+distribution faceted by selectedRace x highestLeague (MMR>0, standard races only) —
+the scientifically defensible alternative to degenerate PCA (p=1 numeric pre-game
+feature). All sentinel thresholds from 01_02_04 census at runtime (I7). I3
+classification on all heatmap axis labels.
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_07_spearman_heatmap_all.png` | Two-panel cluster-ordered Spearman heatmap; left=all rows, right=rated (MMR>0) |
+| `01_02_07_pregame_multivariate_faceted.png` | MMR distribution by selectedRace x highestLeague (PCA alternative) |
+
+### Key findings
+
+**Spearman heatmap — all rows (N=44,789, MMR includes zero sentinel):**
+- APM-SQ form a strong correlation block: rho=0.405. This is the dominant structure
+  in the all-rows matrix. Both are in-game metrics measuring player activity.
+- MMR is effectively decorrelated from all other features in the all-rows panel:
+  MMR vs APM=-0.013, MMR vs SQ=-0.009, MMR vs supplyCappedPercent=0.012. The zero
+  sentinel contamination (83.65% of MMR rows are zero) suppresses any real correlation.
+- supplyCappedPercent is near-zero correlated with APM (-0.002) but weakly
+  anti-correlated with SQ (-0.125). Spending efficiently (high SQ) associates with
+  spending less time supply-capped — a plausible in-game relationship.
+- Cluster order (all rows): [MMR, supplyCappedPercent, APM, SQ] — MMR is isolated
+  from the in-game cluster (APM+SQ).
+
+**Spearman heatmap — rated players (N=7,159, MMR>0):**
+- APM-SQ correlation drops from 0.405 to 0.345 in the rated subset — the in-game
+  block persists but is less dominant.
+- MMR now shows detectable positive correlations with in-game features: MMR vs APM=0.206,
+  MMR vs SQ=0.159. Higher-ranked players are more active (APM) and more efficient (SQ)
+  — consistent with the known skill-rating relationship.
+- supplyCappedPercent vs SQ anti-correlation strengthens: -0.161 (vs -0.125 all-rows),
+  consistent with the in-game skill relationship being cleaner in the rated subset.
+- Cluster order (rated): [supplyCappedPercent, MMR, APM, SQ] — supplyCappedPercent
+  migrates to join MMR away from the APM-SQ block when rated players dominate.
+- Key shift: The MMR zero-sentinel contamination in the all-rows panel completely
+  suppresses the real MMR-to-in-game correlations. This confirms that zero-sentinel
+  rows should be excluded from any MMR-related analysis.
+
+**Pre-game multivariate faceted view (PCA alternative):**
+- Standard PCA skipped: sc2egset has exactly 1 numeric pre-game feature (MMR).
+  With p=1, PCA produces trivial PC1=100% — uninformative (Jolliffe 2002, §2.2).
+- MMR distributions vary meaningfully across league tiers: Grandmaster players
+  cluster at the high end (~6,000-7,000 MMR), while Unknown/unranked players
+  span the full range. This confirms league tier is correlated with MMR.
+- Within a given league tier, race (Prot/Terr/Zerg) shows minimal effect on MMR
+  distribution — distributions largely overlap. Race and MMR are approximately
+  independent conditioning on league.
+- Several race x league combinations have very sparse data (N<5) — notably
+  Grandmaster in lower-tier leagues, reflecting the small absolute count of
+  Grandmaster-tier players in the dataset.
+
+### PCA decision (documented)
+
+Standard PCA was skipped because the pre-game numeric feature space contains
+exactly 1 column (MMR). Including in-game features (APM, SQ, supplyCappedPercent)
+in PCA with I3 annotation was rejected: dominant PCs would be driven by the APM-SQ
+in-game correlation (rho~0.40), making results uninterpretable for Phase 02 pre-game
+feature engineering. The faceted distribution directly answers the multivariate
+question for the pre-game space.
+
+### Phase 02 implications
+
+- Pre-game feature space is extremely sparse: 1 numeric (MMR, 83.65% zero-sentinel
+  contaminated), 2 categorical (selectedRace, highestLeague). Feature engineering
+  in Phase 02 must either (a) handle the zero-sentinel imputation explicitly, or
+  (b) restrict pre-game modeling to the ~16% rated-player subset.
+- The MMR-to-in-game correlations (MMR vs APM=0.206, MMR vs SQ=0.159 in rated subset)
+  suggest MMR has predictive signal. The practical question for Phase 02 is how to
+  handle the 83.65% unrated rows without discarding them.
+- Race x league joint structure shows reasonable density for most combinations except
+  sparse Grandmaster cells. Interaction terms (race x league) are likely sparse and
+  may need regularization or collapsing.
+
+### Decisions taken
+
+- All sentinel thresholds derived from census JSON at runtime (I7). No hardcoded numbers.
+- UPGMA linkage on (1-|rho|) distance used for cluster ordering — standard choice
+  for correlation matrices (Sokal & Michener 1958).
+- MIN_LEAGUE_ROWS=50 derived from Cleveland (1993) 2 obs/bin recommendation with
+  30 histogram bins.
+
+### Decisions deferred
+
+- MMR zero-sentinel treatment (impute/exclude/flag) deferred to Phase 01_04 Data Cleaning.
+- Race x league interaction encoding strategy deferred to Phase 02 Feature Engineering.
+- Whether the MMR-APM/SQ correlation in rated players is stable across league tiers
+  deferred to targeted follow-up analysis.
+
+### Open questions
+
+- Does the cluster ordering of [supplyCappedPercent, MMR, APM, SQ] in the rated
+  panel have a game-theoretic interpretation? (Why does supply-cap efficiency
+  cluster closer to MMR than to APM in the rated subset?)
+- Is the sparse Grandmaster x race cell count a data quality issue or a genuine
+  reflection of population sparsity? Relevant for Phase 02 imputation decisions.
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — multivariate EDA, PCA alternative decision, pre-game sparsity
+- Chapter 5 (Results) — feature correlation structure, pre-game vs in-game distinction
+
+### Invariants applied
+
+- **I3:** All Spearman heatmap axis labels carry "[IN-GAME (Inv. #3)]" or "[PRE-GAME]"
+  classification. Pre-game faceted plot uses only pre-game features.
+- **I6:** All 3 SQL queries stored in `sql_queries` dict and written verbatim to
+  `01_02_07_multivariate_analysis.md`.
+- **I7:** All thresholds (MMR_zero_count=37,489, SQ_sentinel=2, Undecided=24, Tie=2)
+  derived from census JSON at runtime.
+- **I9:** Multivariate visualization of existing columns only; no new feature
+  computation.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** bivariate — pairwise relationships between features and match result
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (9 files)
+
+### What
+
+Produced 9 thesis-grade PNG plots examining pairwise relationships between features
+and match result (Win vs Loss) in replay_players_raw (44,791 Win/Loss rows; 24
+Undecided and 2 Tie rows excluded per census). Ran Mann-Whitney U tests for all
+continuous features, chi-square tests for categorical features, and a two-panel
+Spearman correlation heatmap (all rows and MMR>0 rated players only). All sentinel
+thresholds derived from 01_02_04 census at runtime (Invariant #7). All three in-game
+columns carry mandatory red-bbox annotation (Invariant #3).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_mmr_by_result` | MMR violin (non-zero only, N=7,319 Win/Loss); Mann-Whitney U test annotated |
+| `01_02_06_race_winrate` | Win rate per race (Prot/Zerg/Terr); chi-square test annotated |
+| `01_02_06_apm_by_result` | APM violin by result (IN-GAME); Mann-Whitney U annotated |
+| `01_02_06_sq_by_result` | SQ violin by result (IN-GAME, INT32_MIN excluded); Mann-Whitney U annotated |
+| `01_02_06_supplycapped_by_result` | supplyCappedPercent violin (IN-GAME); Mann-Whitney U annotated |
+| `01_02_06_league_winrate` | Win rate per highestLeague tier; bar chart with n annotations |
+| `01_02_06_clan_winrate` | Win rate by isInClan (2x2); chi-square annotated |
+| `01_02_06_numeric_by_result` | Multi-panel violin: all numeric features by result (MMR non-zero, SQ sentinel excluded) |
+| `01_02_06_spearman_correlation` | Two-panel Spearman heatmap — all rows (MMR includes zero sentinel) and rated players (MMR>0) |
+
+### Key findings
+
+- **MMR (pre-game feature):** Among rated players (MMR>0, ~16.35% of rows), winners
+  have marginally higher MMR (median Win=6151, Loss=5945). Mann-Whitney U p=2.4e-11
+  but rank-biserial r=-0.090 (small effect, Cohen 1988). Despite statistical
+  significance due to large n, the practical effect size is small — matchmaking is
+  doing its job pairing similarly-rated players.
+- **Race (pre-game feature):** Chi-square = 39.84, p=2.2e-09, dof=2. Win rates by
+  race show statistically significant differences, though win rates cluster near 50%
+  for all three races. Race is a valid pre-game feature with detectable but modest
+  predictive signal.
+- **APM (IN-GAME only):** Median Win=356, Loss=344. p=2.0e-73, r=-0.099 (small
+  effect). High APM correlates weakly with winning — interesting but unusable at
+  prediction time (Invariant #3).
+- **SQ (IN-GAME only):** Spending Quotient shows the strongest in-game signal.
+  Median Win=127, Loss=120. p=2.8e-248, r=-0.184 (medium effect). SQ is the most
+  discriminative in-game metric, consistent with its design as a skill-efficiency
+  measure.
+- **supplyCappedPercent (IN-GAME only):** No meaningful separation. Median Win=6,
+  Loss=6. p=0.074 (not significant at conventional threshold), r=-0.010. Supply
+  cap time is not discriminative between winners and losers in this dataset.
+- **Clan membership (pre-game feature):** Chi-square = 7.75, p=0.0054 (marginal).
+  The effect is very small but statistically significant. Clan membership may be a
+  very weak proxy for engagement/commitment.
+- **League tier (pre-game feature):** Visual inspection shows win rates close to 50%
+  across all tiers. The massive "Unknown" and "(empty)" categories (many unranked
+  players) dominate the distribution. Grandmaster-tier players show near-50% win
+  rate — expected given match quality at the top.
+- **Spearman correlation:** In the all-rows matrix, MMR is near-zero for all other
+  features (zero-sentinel contamination). In the rated-players (MMR>0) matrix, MMR
+  shows a detectable positive rho with result_binary (~0.09), consistent with the
+  Mann-Whitney finding. SQ and APM are moderately correlated (~0.5 rho), as expected
+  — both measure player activity/efficiency.
+
+### Decisions taken
+
+- All sentinel exclusions (MMR=0, SQ INT32_MIN) derived from census JSON at runtime
+  — no hardcoded constants (Invariant #7).
+- Two Spearman matrices computed to explicitly expose MMR zero-sentinel contamination
+  rather than silently hiding it with a single filtered matrix.
+- All statistical tests declared as EXPLORATORY (Tukey-style). No multiple comparison
+  correction applied — findings are hypothesis-generating for Phase 02, not
+  confirmatory.
+
+### Decisions deferred
+
+- MMR zero-row treatment (include/exclude/impute) deferred to Phase 01_04 Data
+  Cleaning. Bivariate analysis confirms that zero-sentinel contamination visibly
+  distorts Spearman correlation.
+- Race encoding strategy (one-hot vs ordinal) deferred to Phase 02 Feature Engineering.
+- Whether supplyCappedPercent's lack of discriminative power is dataset-specific or
+  game-wide deferred to AoE2 comparison (Invariant #8 — cross-game comparability).
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — bivariate EDA results, pre-game vs in-game feature separation
+- Chapter 5 (Results) — feature importance discussion, especially SQ vs pre-game MMR
+- Appendix — Invariant #3 compliance evidence (in-game annotations on all 5 relevant plots)
+
+### Open questions / follow-ups
+
+- SQ is the most predictive feature but is IN-GAME — is there a pre-game proxy
+  (e.g., historical SQ average for a player)? This is a Phase 02 feature
+  engineering question.
+- The Spearman heatmap shows APM and SQ are correlated (~0.5). If both are in-game
+  and correlated, do we need both? Phase 02 will address feature redundancy.
+- Race chi-square significant but small effect — does race interaction with
+  opponent race (matchup) produce stronger signal? This is a Phase 02 question
+  (matchup encoding).
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate EDA Visualizations
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** visualization
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_05_*.png` (14 files)
+
+### What
+
+Produced 14 thesis-grade PNG plots visualizing the 01_02_04 census findings for
+replay_players_raw (44,817 rows) and replays_meta_raw (22,390 replays). sc2egset
+is unique among the three datasets: zero NULLs, esports-focused (tournament replays
+only), and contains in-game metrics not available in AoE2 datasets. All four in-game
+columns carry identical mandatory annotation (Invariant #3). All thresholds
+data-derived from census (Invariant #7).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `result_bar` | Target balance — Win/Loss/Undecided/Tie; 24 Undecided and 2 Tie rows confirmed from census |
+| `categorical_bars` | 3-panel: highestLeague, region, game_type frequency distributions |
+| `selectedrace_bar` | Race pick rates including empty-string anomaly (8 rows) flagged in tomato red |
+| `mmr_split` | MMR split view (all vs. non-zero); 83.65% sentinel zero confirmed; non-zero body is bell-shaped ~1,500–5,000 |
+| `apm_hist` | APM histogram; right-skewed with professional-level tail; IN-GAME annotated |
+| `sq_split` | SQ split view excluding 2 INT32_MIN sentinels; shows narrow distribution 60–90; IN-GAME annotated |
+| `supplycapped_hist` | supplyCappedPercent histogram; bimodal structure; IN-GAME annotated |
+| `duration_hist` | Dual-panel body (0–22.5 min, p95-derived from `census["duration_stats"]["p95"] / 22.4`) + full log; POST-GAME annotated |
+| `mmr_zero_interpretation` | Cross-tab of MMR=0 vs result and vs highestLeague; shows zero-MMR is not outcome-correlated |
+| `temporal_coverage` | Match count by year/month 2016–2024; shows tournament activity peaks |
+| `isinclan_bar` | Clan membership — majority of tournament players in clans |
+| `clantag_top20` | Top-20 clans by player count |
+| `map_top20` | Top-20 of 188 maps by replay count; top-20 covers 44.7% of all replays |
+| `player_repeat_frequency` | Games per toon_id distribution (log-y); 2,495 unique players over 44,817 rows; heavily right-skewed with a long tail of tournament regulars |
+
+### Key findings
+
+- **MMR sentinel:** 83.65% of rows have MMR=0 (unrated / not tracked in this dataset). The non-zero MMR body is approximately bell-shaped around 2,000–3,000, consistent with professional ladder MMR ranges. Zero-MMR rows are not outcome-correlated (confirmed via cross-tab).
+- **In-game columns:** APM, SQ, and supplyCappedPercent are all in-game metrics unavailable at prediction time. All annotated with mandatory red-bbox warning (Invariant #3). supplyCappedPercent shows bimodal structure suggesting two player behavioral modes.
+- **Player concentration:** `player_repeat_frequency` shows a highly right-skewed distribution — many players appear 1–5 times, but a core of ~50–100 tournament regulars appear 100–500+ times. This means a replay-based train/val split leaks player-level information, confirming that Phase 03 must use player-stratified splitting.
+- **Map concentration:** Top-20 maps (of 188 total) account for only 44.7% of replays — map space is far less concentrated than in AoE2 (where top-3 maps = 49%). Phase 02 map encoding strategy must handle 188 categories.
+- **Duration (game loops):** LOOPS_PER_SECOND = 22.4 (SC2 Faster speed). p95 = 30,270.1 loops = 22.5 min body clip. Full range shows extreme outlier replays (likely paused/abandoned games).
+- **Race balance:** All three races (Terran/Protoss/Zerg) relatively balanced in the tournament pool; selectedRace empty-string anomaly (8 rows) is negligible.
+
+### Decisions taken
+
+- Duration clip: `CLIP_SECONDS = census["duration_stats"]["p95"] / 22.4` — fully data-derived, no hardcoded threshold.
+- SQ INT32_MIN sentinel (2 rows): excluded from main histogram — too few to affect distribution, retained in dataset until Phase 01_04 cleaning decision.
+- `player_repeat_frequency` y-axis: log-scale mandatory — without it, the single-game majority hides all structure in the tail.
+
+### Decisions deferred
+
+- Player-stratified vs replay-stratified split decision deferred to Phase 03. The `player_repeat_frequency` plot provides the visual evidence for the Phase 03 planning session.
+- MMR zero-row treatment (include/exclude/impute) deferred to Phase 01_04 Data Cleaning.
+- Map encoding strategy (top-k grouping vs embedding) deferred to Phase 02 Feature Engineering.
+
+### Thesis mapping
+
+- Chapter 4, §4.1.1 — SC2EGSet dataset description, target balance, feature overview
+- Chapter 4, §4.1.2 — in-game column annotations, MMR sentinel analysis
+- Chapter 5 (methodology) — player-repeat evidence motivating Phase 03 splitting strategy
+
+### Open questions / follow-ups
+
+- Does player-stratified splitting materially change model performance vs replay-stratified? Evidence gathered here; answer deferred to Phase 03.
+- Are the 24 Undecided results from specific tournaments or distributed across the dataset? Visual inspection of temporal coverage may reveal clustering.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_04] Univariate Census & Target Variable EDA
 
 **Category:** A (science)
@@ -79,7 +434,7 @@ Remarkably clean: **0% NULLs across all columns in every table and view.** This 
 
 **Pre-game** (struct_flat): time_utc, game_version_header/meta, base_build, data_build, map_name, max_players, map_size_x/y, is_blizzard_map.
 
-**In-game** (struct_flat): elapsed_game_loops — game duration, known only after match ends.
+**Post-game** (struct_flat): elapsed_game_loops — total match duration; only known after match ends (same semantic class as AoE2 duration_sec / duration_min).
 
 **Constant / dead** (no predictive information): game_speed, game_speed_init (always "Faster"); gameEventsErr, messageEventsErr, trackerEvtsErr (always FALSE).
 

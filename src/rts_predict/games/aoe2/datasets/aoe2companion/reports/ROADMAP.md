@@ -324,25 +324,202 @@ research_log_entry: "Required on completion."
 ```yaml
 step_number: "01_02_05"
 name: "Univariate Census Visualizations"
-description: "13 visualization plots for the aoe2companion univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/."
+description: "17 visualization plots for the aoe2companion univariate census findings from 01_02_04. Reads the 01_02_04 JSON artifact and queries DuckDB for histogram bin data. All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations on post-game columns per Invariant #3."
 phase: "01 — Data Exploration"
 pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
 manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3.4"
 dataset: "aoe2companion"
 question: "What do the univariate distributions from 01_02_04 look like visually?"
-method: "Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (rating, ratingDiff). Produce 13 plots: won distribution, won consistency, leaderboard/civ/map top-k bars, rating/ratingDiff histograms, leaderboards_raw boxplots, NULL-rate completeness matrix, profiles_raw NULL rates, leaderboards_raw leaderboard bar, boolean stacked bar, monthly volume line chart."
+method: "Read 01_02_04 JSON artifact. Query DuckDB for histogram bins (rating, ratingDiff, duration, monthly volume). Produce 17 plots: won 2-bar, won consistency stacked, leaderboard bar, civ top-20, map top-20 barh, rating histogram, ratingDiff histogram (POST-GAME annotated), duration dual-panel histogram, NULL rate bar (4-tier), NULL co-occurrence annotated 2x2 table, leaderboards_raw numeric boxplots, profiles_raw NULL rate bar, leaderboards_raw leaderboard bar, boolean stacked bar, monthly volume line chart, ratings_raw rating histogram, rating/ratingDiff NULL rate timeline. Markdown artifact with SQL queries and plot index table."
 predecessors:
   - "01_02_04"
 notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_05_visualizations.py"
 outputs:
   plots:
-    - "artifacts/01_exploration/02_eda/plots/01_02_05_*.png (13 files)"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_won_distribution.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_won_consistency.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboard_distribution.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_civ_top20.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_map_top20.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_rating_histogram.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_ratingdiff_histogram.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_duration_histogram.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_null_rate_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_null_cooccurrence.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboards_numeric_boxplots.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_profiles_null_rate.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_leaderboards_leaderboard_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_boolean_stacked_bar.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_monthly_volume.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_ratings_raw_rating_histogram.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_05_rating_null_timeline.png"
   report: "artifacts/01_exploration/02_eda/01_02_05_visualizations.md"
 gate:
-  artifact_check: "All 13 PNG files exist. 01_02_05_visualizations.md exists with SQL queries (Invariant #6)."
+  artifact_check: "All 17 PNG files exist under plots/. 01_02_05_visualizations.md exists with SQL queries (Invariant #6) and plot index table including Temporal Annotation column."
   continue_predicate: "Notebook executes end-to-end without errors."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "ratingDiff histogram carries POST-GAME annotation. matches_raw.rating subtitle notes ambiguous temporal status."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "All bin widths, clip boundaries, color thresholds, and annotation values derived from census JSON at runtime. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Visualization of 01_02_04 findings only. No new analytical computation."
 thesis_mapping:
   - "Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_02_06 — Bivariate EDA
+
+```yaml
+step_number: "01_02_06"
+name: "Bivariate EDA"
+description: "Bivariate exploratory data analysis for aoe2companion. Conditional distributions of numeric features by won (violin plots), Spearman correlation matrix, rating vs ratingDiff scatter (sampled), ratingDiff by leaderboard. Resolves temporal leakage status of ratingDiff (Q1) and investigates rating ambiguity (Q2). All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations per Invariant #3."
+phase: "01 — Data Exploration"
+pipeline_section: "01_02 — Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "Which numeric features differ by outcome (won)? Which feature pairs are correlated? Is ratingDiff definitively post-game? Is rating pre- or post-game?"
+method: "DuckDB aggregated queries for conditional distributions (PERCENTILE_CONT by won). TABLESAMPLE BERNOULLI for scatter plots (sample fraction derived from census total_rows at runtime, I7). Spearman correlation via scipy.stats.spearmanr on BERNOULLI-sampled rows (DuckDB CORR computes Pearson only). 8 plots. Markdown artifact with all SQL (I6)."
+stratification: "By leaderboard (1v1 focus: rm_1v1 + qp_rm_1v1)."
+predecessors:
+  - "01_02_04"
+  - "01_02_05"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_06_bivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "ratings_raw"
+    - "leaderboards_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_rating_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_rating_vs_ratingdiff.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_duration_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_numeric_by_won.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_spearman_correlation.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_leaderboard.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_06_ratingdiff_by_won_by_leaderboard.png"
+  report: "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+gate:
+  artifact_check: "All 8 PNG files exist under plots/. 01_02_06_bivariate_eda.md exists with SQL queries (Invariant #6) and plot index table including Temporal Annotation column."
+  continue_predicate: "Notebook executes end-to-end without error. ratingDiff temporal status resolved."
+  halt_predicate: "DuckDB queries fail on matches_raw or sampling yields zero rows."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "ratingDiff violin carries POST-GAME annotation. rating violin carries AMBIGUOUS annotation. Q1 result resolves ratingDiff status definitively."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "Sample fraction derived from census total_rows at runtime. All clip boundaries, bin widths, and annotation values from census JSON. No hardcoded numbers."
+  - number: "9"
+    how_upheld: "Bivariate analysis of features established in 01_02_04. No new column discovery or schema changes."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+  - "Chapter 4 -- Data and Methodology > 4.1.4 Temporal Leakage Audit"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_02_07 -- Multivariate EDA
+
+```yaml
+step_number: "01_02_07"
+name: "Multivariate EDA"
+description: "Multivariate exploratory data analysis for aoe2companion. Spearman cluster-ordered heatmap for all numeric columns with I3 classification labels. PCA scree + biplot on pre-game numeric features only (degenerate fallback if <3 features survive). All plots saved to artifacts/01_exploration/02_eda/plots/. Temporal annotations per Invariant #3."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_02 -- Exploratory Data Analysis (Tukey-style)"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "How do numeric features cluster together (redundancy)? What is the effective dimensionality of the pre-game feature space?"
+method: "Spearman via scipy.stats.spearmanr on BERNOULLI-sampled rows. Hierarchical clustering for axis ordering (scipy.cluster.hierarchy). PCA on StandardScaler-transformed pre-game numeric features (sklearn). Scree plot + biplot or degenerate scatter fallback. Markdown artifact with all SQL (I6)."
+stratification: "1v1 ranked scope (rm_1v1 + qp_rm_1v1)."
+predecessors:
+  - "01_02_04"
+  - "01_02_06"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/02_eda/01_02_07_multivariate_eda.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+outputs:
+  plots:
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png"
+    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png"
+  report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+gate:
+  artifact_check: "01_02_07_spearman_heatmap_all.png exists. At least one PCA plot (scree or degenerate scatter) exists. 01_02_07_multivariate_analysis.md exists with SQL queries (Invariant #6) and feature classification table."
+  continue_predicate: "Notebook executes end-to-end without error. Feature classification table complete."
+  halt_predicate: "DuckDB queries fail on matches_raw or sampling yields zero rows."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Axis tick labels on Spearman heatmap carry I3 classification (POST-GAME, AMBIGUOUS, PRE-GAME). PCA excludes all POST-GAME and AMBIGUOUS columns."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "TARGET_SAMPLE_ROWS derived from census total_rows at runtime. Column selection derived from census numeric_stats. No hardcoded thresholds."
+  - number: "9"
+    how_upheld: "Multivariate visualization of features established in 01_02_04 and classified in 01_02_06. No new analytical computation beyond visualization."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_03_01 -- Systematic Data Profiling
+
+```yaml
+step_number: "01_03_01"
+name: "Systematic Data Profiling"
+description: "Systematic profiling of matches_raw per Manual Section 3. Column-level profiling (null, cardinality, descriptive stats, skewness, kurtosis, IQR outliers, top-k). Dataset-level profiling (duplicates, class balance, completeness matrix, memory footprint). Critical detection (dead fields, constant columns, near-constant columns). Distribution analysis (QQ plots, ECDFs on BERNOULLI sample). All columns carry I3 temporal classification."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "aoe2companion"
+question: "What is the complete statistical profile of every column in matches_raw? Are there dead fields, constant columns, near-constant columns, or primary key violations? What are the distributional shapes of key numeric columns?"
+method: "DuckDB aggregate queries for exact column-level stats including native SKEWNESS() and KURTOSIS(). BERNOULLI sampled data for QQ plots and ECDFs. Critical detection via programmatic thresholds from census. I3 classification inherited from 01_02_04 field_classification and 01_02_06 bivariate findings."
+stratification: "Full table for aggregate stats. Leaderboard-stratified (rm_1v1 + qp_rm_1v1) for rating analysis."
+predecessors:
+  - "01_02_04"
+  - "01_02_06"
+  - "01_02_07"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/03_profiling/01_03_01_systematic_profiling.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json"
+    - "artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md"
+    - "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json"
+  plots:
+    - "artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png"
+    - "artifacts/01_exploration/03_profiling/01_03_01_qq_plot.png"
+    - "artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png"
+  report: "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md"
+gate:
+  artifact_check: "All 5 artifact files exist and are non-empty. JSON contains critical_findings key. MD contains I3 classification table."
+  continue_predicate: "Notebook executes end-to-end without error. Profile JSON validates against required schema."
+  halt_predicate: "DuckDB queries fail on matches_raw or BERNOULLI sample yields zero rows."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: "Every column carries I3 temporal classification in both JSON and MD artifacts. POST-GAME and AMBIGUOUS columns flagged in distribution analysis."
+  - number: "6"
+    how_upheld: "All SQL queries stored in sql_queries dict and written verbatim to markdown artifact."
+  - number: "7"
+    how_upheld: "Near-constant threshold (uniqueness_ratio < 0.001 or IQR == 0) from Manual 3.3. Sample fraction justified by Cleveland (1993) and Wilk & Gnanadesikan (1968). IQR fences from census percentiles."
+  - number: "9"
+    how_upheld: "Profile consolidates and extends 01_02 findings. No new column discovery or schema changes."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."
 ```
 

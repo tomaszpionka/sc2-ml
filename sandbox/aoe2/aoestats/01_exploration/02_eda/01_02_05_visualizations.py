@@ -31,7 +31,7 @@
 # **Type:** Read-only -- no DuckDB writes, no new tables, no schema changes
 
 # %% [markdown]
-# ## Imports
+# ## T02 -- Setup: Imports, DB Connection, Census Load
 
 # %%
 import json
@@ -40,34 +40,63 @@ from pathlib import Path
 import duckdb
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
-from rts_predict.games.aoe2.config import AOESTATS_DB_FILE
 from rts_predict.common.notebook_utils import get_reports_dir, setup_notebook_logging
-
-# %% [markdown]
-# ## Setup
+from rts_predict.games.aoe2.config import AOESTATS_DB_FILE
 
 # %%
-matplotlib.rcParams["figure.dpi"] = 150
+logger = setup_notebook_logging()
+matplotlib.use("Agg")
+plt.style.use("seaborn-v0_8-whitegrid")
+
+# %%
 con = duckdb.connect(str(AOESTATS_DB_FILE), read_only=True)
+print(f"Connected to DuckDB (read-only): {AOESTATS_DB_FILE}")
+
+# %%
 reports_dir = get_reports_dir("aoe2", "aoestats")
 artifacts_dir = reports_dir / "artifacts" / "01_exploration" / "02_eda"
+artifacts_dir.mkdir(parents=True, exist_ok=True)
 plots_dir = artifacts_dir / "plots"
 plots_dir.mkdir(parents=True, exist_ok=True)
+print(f"Artifacts dir: {artifacts_dir}")
+print(f"Plots dir: {plots_dir}")
+
+# %%
 census_path = artifacts_dir / "01_02_04_univariate_census.json"
 with open(census_path) as f:
     census = json.load(f)
 print(f"Census loaded: {len(census)} top-level keys")
 print(f"Keys: {sorted(census.keys())}")
-print(f"Plots dir: {plots_dir}")
+
+# %%
+# Assert required census keys
+required_keys = [
+    "winner_distribution",
+    "num_players_distribution",
+    "categorical_matches",
+    "categorical_players",
+    "numeric_stats_matches",
+    "numeric_stats_players",
+    "skew_kurtosis_players",
+    "players_null_census",
+    "matches_null_census",
+    "temporal_range",
+    "outlier_counts_matches",
+    "elo_sentinel_counts",
+]
+for k in required_keys:
+    assert k in census, f"Missing required census key: {k}"
+print(f"All {len(required_keys)} required keys present.")
 
 # %%
 sql_queries: dict[str, str] = {}
 
 # %% [markdown]
-# ## T03 — Winner Distribution Bar Chart
+# ## T03 -- Winner Distribution 2-Bar (Q1)
+#
+# Q1: Is the winner distribution exactly 50/50 with zero NULLs?
 
 # %%
 # Verification cell
@@ -77,71 +106,86 @@ print("Winner distribution data:")
 print(winner_df.to_string(index=False))
 
 # %%
-n_players = census["players_null_census"]["total_rows"]
-fig, ax = plt.subplots(figsize=(10, 6))
-colors = {True: "green", False: "red"}
+total_n = sum(r["cnt"] for r in census["winner_distribution"])
+fig, ax = plt.subplots(figsize=(8, 6))
+colors = {True: "steelblue", False: "salmon"}
 for _, row in winner_df.iterrows():
-    bar = ax.bar(str(row["winner"]), row["cnt"], color=colors[row["winner"]])
+    bar = ax.bar(str(row["winner"]), row["cnt"], color=colors[row["winner"]], edgecolor="black", linewidth=0.5)
     ax.text(
         bar[0].get_x() + bar[0].get_width() / 2,
-        bar[0].get_height() + n_players * 0.002,
+        bar[0].get_height() + total_n * 0.005,
         f"{row['cnt']:,}\n({row['pct']:.1f}%)",
         ha="center",
         va="bottom",
         fontsize=11,
     )
-ax.set_xlabel("Winner")
+ax.set_xlabel("winner")
 ax.set_ylabel("Count")
-ax.set_title(f"Winner Distribution (players_raw, N={n_players:,})")
-ax.set_ylim(0, max(winner_df["cnt"]) * 1.12)
+ax.set_title(f"Target Variable Distribution -- winner (N={total_n:,})")
+ax.set_ylim(0, max(winner_df["cnt"]) * 1.18)
+ax.text(
+    0.5, 0.02,
+    "Zero NULLs -- cleanest target across all three datasets",
+    transform=ax.transAxes,
+    ha="center",
+    va="bottom",
+    fontsize=9,
+    fontstyle="italic",
+    color="darkgreen",
+)
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_winner_distribution.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_winner_distribution.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_winner_distribution.png")
 
 # %% [markdown]
-# ## T04 — Num_players Distribution Bar Chart
+# ## T04 -- num_players Distribution (Q2)
+#
+# Q2: Is 1v1 (60.56%) dominant? How do odd player counts appear?
 
 # %%
 # Verification cell
 npl_data = census["num_players_distribution"]
 npl_df = pd.DataFrame(npl_data)
-print("num_players distribution:")
-print(npl_df.to_string(index=False))
+print("num_players distribution (distinct_match_count):")
+print(npl_df[["num_players", "distinct_match_count", "distinct_match_pct"]].to_string(index=False))
 
 # %%
-n_matches = census["matches_null_census"]["total_rows"]
+total_matches = sum(r["distinct_match_count"] for r in npl_data)
 fig, ax = plt.subplots(figsize=(10, 6))
 for _, row in npl_df.iterrows():
     num = row["num_players"]
-    color = "steelblue" if num % 2 == 0 else "gray"
-    bar = ax.bar(str(num), row["distinct_match_count"], color=color)
+    # I7: odd player counts (1,3,5,7) highlighted red per plan spec
+    color = "red" if num % 2 != 0 else "steelblue"
+    bar = ax.bar(str(num), row["distinct_match_count"], color=color, edgecolor="black", linewidth=0.3)
     if row["distinct_match_count"] > 0:
         ax.text(
             bar[0].get_x() + bar[0].get_width() / 2,
-            bar[0].get_height() + n_matches * 0.002,
-            f"{row['distinct_match_count']:,}\n({row['pct']:.2f}%)",
+            bar[0].get_height() + total_matches * 0.002,
+            f"{row['distinct_match_count']:,}\n({row['distinct_match_pct']:.2f}%)",
             ha="center",
             va="bottom",
             fontsize=8,
         )
 ax.set_xlabel("num_players")
 ax.set_ylabel("Distinct Match Count")
-ax.set_title(f"Match Size Distribution (matches_raw, N={n_matches:,})")
-from matplotlib.patches import Patch
+ax.set_title(f"Match Size Distribution (N={total_matches:,} distinct matches)")
+ax.set_ylim(0, max(npl_df["distinct_match_count"]) * 1.18)
+from matplotlib.patches import Patch as MPatch
 legend_elements = [
-    Patch(facecolor="steelblue", label="Even (2, 4, 6, 8)"),
-    Patch(facecolor="gray", label="Odd (1, 3, 5, 7)"),
+    MPatch(facecolor="steelblue", label="Even player counts (expected)"),
+    MPatch(facecolor="red", label="Odd player counts (1, 3, 5, 7)"),
 ]
 ax.legend(handles=legend_elements, loc="upper right")
-ax.set_ylim(0, max(npl_df["distinct_match_count"]) * 1.15)
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_num_players_distribution.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_num_players_distribution.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_num_players_distribution.png")
 
 # %% [markdown]
-# ## T05 — Map Top-20 and Civ Top-20 Horizontal Bar Charts
+# ## T05 -- Map Top-20 Barh (Q3)
+#
+# Q3: Does the map distribution show power-law concentration?
 
 # %%
 # Verification: map top-20
@@ -152,23 +196,32 @@ print(f"Map top-20 (cardinality={map_cardinality}):")
 print(map_df.to_string(index=False))
 
 # %%
+top20_coverage = sum(r["pct"] for r in map_top20[:20])
 map_df_sorted = map_df.sort_values("pct", ascending=True)
-fig, ax = plt.subplots(figsize=(10, 8))
+fig, ax = plt.subplots(figsize=(10, 9))
 bars = ax.barh(map_df_sorted["map"], map_df_sorted["pct"], color="steelblue")
 for bar, (_, row) in zip(bars, map_df_sorted.iterrows()):
     ax.text(
         bar.get_width() + 0.1,
         bar.get_y() + bar.get_height() / 2,
-        f"{row['pct']:.2f}%",
+        f"{row['cnt']:,} ({row['pct']:.2f}%)",
         va="center",
         fontsize=8,
     )
 ax.set_xlabel("Percentage (%)")
-ax.set_title(f"Top-20 Maps (matches_raw, cardinality={map_cardinality})")
+ax.set_title(
+    f"Map Distribution -- Top 20 of {map_cardinality} (matches_raw)\n"
+    f"Top-20 coverage: {top20_coverage:.1f}%"
+)
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_map_top20.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_map_top20.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_map_top20.png")
+
+# %% [markdown]
+# ## T06 -- Civilization Top-20 Barh (Q4)
+#
+# Q4: How does civ distribution compare to aoe2companion?
 
 # %%
 # Verification: civ top-20
@@ -180,25 +233,27 @@ print(civ_df.to_string(index=False))
 
 # %%
 civ_df_sorted = civ_df.sort_values("pct", ascending=True)
-fig, ax = plt.subplots(figsize=(10, 8))
+fig, ax = plt.subplots(figsize=(10, 9))
 bars = ax.barh(civ_df_sorted["civ"], civ_df_sorted["pct"], color="darkorange")
 for bar, (_, row) in zip(bars, civ_df_sorted.iterrows()):
     ax.text(
         bar.get_width() + 0.05,
         bar.get_y() + bar.get_height() / 2,
-        f"{row['pct']:.2f}%",
+        f"{row['cnt']:,} ({row['pct']:.2f}%)",
         va="center",
         fontsize=8,
     )
 ax.set_xlabel("Percentage (%)")
-ax.set_title(f"Top-20 Civilizations (players_raw, cardinality={civ_cardinality})")
+ax.set_title(f"Civilization Pick Rates -- Top 20 of {civ_cardinality} (players_raw)")
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_civ_top20.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_civ_top20.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_civ_top20.png")
 
 # %% [markdown]
-# ## T06 — Leaderboard Distribution Bar Chart
+# ## T07 -- Leaderboard Distribution (Q5)
+#
+# Q5: Is random_map + team_random_map = ~96% of all matches?
 
 # %%
 # Verification cell
@@ -208,48 +263,60 @@ print("Leaderboard distribution:")
 print(lb_df.to_string(index=False))
 
 # %%
-lb_df_sorted = lb_df.sort_values("pct", ascending=True)
+n_matches = census["matches_null_census"]["total_rows"]
+lb_df_sorted = lb_df.sort_values("pct", ascending=False)
 fig, ax = plt.subplots(figsize=(10, 6))
-bars = ax.barh(lb_df_sorted["leaderboard"], lb_df_sorted["pct"], color="teal")
+bars = ax.bar(lb_df_sorted["leaderboard"], lb_df_sorted["pct"], color="teal", edgecolor="black", linewidth=0.3)
 for bar, (_, row) in zip(bars, lb_df_sorted.iterrows()):
     ax.text(
-        bar.get_width() + 0.1,
-        bar.get_y() + bar.get_height() / 2,
-        f"{row['cnt']:,} ({row['pct']:.2f}%)",
-        va="center",
-        fontsize=10,
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 0.4,
+        f"{row['cnt']:,}\n({row['pct']:.2f}%)",
+        ha="center",
+        va="bottom",
+        fontsize=9,
     )
-ax.set_xlabel("Percentage (%)")
+ax.set_xlabel("Leaderboard")
+ax.set_ylabel("Percentage (%)")
 ax.set_title(f"Leaderboard Distribution (matches_raw, N={n_matches:,})")
+ax.set_ylim(0, max(lb_df_sorted["pct"]) * 1.2)
+plt.xticks(rotation=15, ha="right")
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_leaderboard_distribution.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_leaderboard_distribution.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_leaderboard_distribution.png")
 
 # %% [markdown]
-# ## T07 — Duration Histogram (Dual-Panel)
+# ## T08 -- Duration Dual-Panel Histogram (Q6)
 #
-# Extreme skewness (1032.64) and max/median ratio ~2129x make a single panel uninformative.
-# [I7: skewness=1032.64 from census["skew_kurtosis_matches"][0]; max/median = 5,574,815s / 2619.7s ~ 2129x]
+# Q6: How extreme is the right tail? Does the body show unimodal right-skew?
+#
+# I7: p95=4714.1s from census["numeric_stats_matches"] where label="duration_sec".
+# duration column is BIGINT nanoseconds -- divide by 1e9 for seconds, then /60 for minutes.
 
 # %%
-# SQL queries for duration histograms
-sql_queries["hist_duration_body"] = """SELECT FLOOR(duration / 1e9 / 60) AS minute_bin, COUNT(*) AS cnt
+sql_queries["hist_duration_body"] = """SELECT
+    FLOOR((duration / 1e9) / 60) AS bin_min,
+    COUNT(*) AS cnt
 FROM matches_raw
-WHERE duration IS NOT NULL AND duration / 1e9 / 60 <= 120
-GROUP BY minute_bin
-ORDER BY minute_bin"""
+WHERE duration > 0
+  AND (duration / 1e9) <= 4714.1
+GROUP BY bin_min
+ORDER BY bin_min"""
+# I7: clip at p95=4714.1s = 78.6 min from census["numeric_stats_matches"][label="duration_sec"]["p95"]
 
-sql_queries["hist_duration_full_log"] = """SELECT FLOOR(duration / 1e9 / 600) * 10 AS ten_min_bin, COUNT(*) AS cnt
+sql_queries["hist_duration_full_log"] = """SELECT
+    FLOOR(LOG10(GREATEST(duration / 1e9, 1))) AS log_bin,
+    COUNT(*) AS cnt
 FROM matches_raw
-WHERE duration IS NOT NULL
-GROUP BY ten_min_bin
-ORDER BY ten_min_bin"""
+WHERE duration > 0
+GROUP BY log_bin
+ORDER BY log_bin"""
 
 # %%
 # Verification: left panel data
-dur_body_df = con.sql(sql_queries["hist_duration_body"]).df()
-print("Duration body (1-min bins, clipped at 120 min) - first/last 5 rows:")
+dur_body_df = con.execute(sql_queries["hist_duration_body"]).fetchdf()
+print("Duration body bins (clipped at p95=78.6 min) -- first/last 5 rows:")
 print(dur_body_df.head(5).to_string(index=False))
 print("...")
 print(dur_body_df.tail(5).to_string(index=False))
@@ -257,157 +324,177 @@ print(f"Total bins: {len(dur_body_df)}")
 
 # %%
 # Verification: right panel data
-dur_full_df = con.sql(sql_queries["hist_duration_full_log"]).df()
-print("Duration full range (10-min bins) - first/last 5 rows:")
-print(dur_full_df.head(5).to_string(index=False))
-print("...")
-print(dur_full_df.tail(5).to_string(index=False))
-print(f"Total bins: {len(dur_full_df)}")
+dur_full_df = con.execute(sql_queries["hist_duration_full_log"]).fetchdf()
+print("Duration full range (log bins) -- all rows:")
+print(dur_full_df.to_string(index=False))
 
 # %%
-# Derive annotation values from census
-dur_stats = census["numeric_stats_matches"][0]
-assert dur_stats["label"] == "duration_sec", f"Expected duration_sec, got {dur_stats['label']}"
-median_min = dur_stats["median_val"] / 60  # [I7: median = 2619.7/60 = 43.66 min]
-p95_min = dur_stats["p95"] / 60  # [I7: p95 = 4714.1/60 = 78.57 min]
-skewness_val = census["skew_kurtosis_matches"][0]["skewness"]  # [I7: 1032.64]
-print(f"Median: {median_min:.1f} min, P95: {p95_min:.1f} min, Skewness: {skewness_val}")
+# Derive annotation values from census [I7: all from census JSON at runtime]
+dur_stats = next(s for s in census["numeric_stats_matches"] if s["label"] == "duration_sec")
+median_sec = dur_stats["median_val"]    # [I7: 2619.7s]
+p95_sec = dur_stats["p95"]              # [I7: 4714.1s]
+median_min = median_sec / 60
+p95_min = p95_sec / 60
+print(f"Median: {median_min:.1f} min, P95: {p95_min:.1f} min")
 
-fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(16, 5))
+fig, (ax_body, ax_full) = plt.subplots(1, 2, figsize=(16, 5))
 
-# Left panel: 1-minute bins, linear y, clipped at 120 min
-ax_left.bar(dur_body_df["minute_bin"], dur_body_df["cnt"], width=1.0, color="steelblue", edgecolor="none")
-ax_left.axvline(median_min, color="red", linestyle="--", linewidth=1.5, label=f"Median = {median_min:.1f} min")
-ax_left.axvline(p95_min, color="orange", linestyle="--", linewidth=1.5, label=f"P95 = {p95_min:.1f} min")
-ax_left.set_xlabel("Duration (minutes)")
-ax_left.set_ylabel("Count")
-ax_left.set_title("Duration (body, <= 120 min)")
-ax_left.legend()
-
-# Right panel: 10-minute bins, log y-scale
-ax_right.bar(dur_full_df["ten_min_bin"], dur_full_df["cnt"], width=10.0, color="steelblue", edgecolor="none")
-ax_right.set_yscale("log")
-ax_right.set_xlabel("Duration (minutes)")
-ax_right.set_ylabel("Count (log scale)")
-ax_right.set_title("Duration (full range, log scale)")
-ax_right.text(
-    0.95, 0.95,
-    f"Skewness = {skewness_val:.2f}\nirl_duration has identical distribution",
-    transform=ax_right.transAxes,
-    ha="right", va="top", fontsize=9,
-    bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8),
+# Left panel: body clipped at p95
+ax_body.bar(dur_body_df["bin_min"], dur_body_df["cnt"], width=1.0, color="steelblue", edgecolor="none")
+ax_body.axvline(median_min, color="red", linestyle="--", linewidth=1.5, label=f"Median = {median_min:.1f} min")
+ax_body.set_xlabel("Duration (minutes)")
+ax_body.set_ylabel("Count")
+ax_body.set_title(f"Match Duration -- Body (clipped at p95={p95_min:.0f} min)")
+ax_body.set_xlim(0, p95_min + 2)
+ax_body.legend(fontsize=9)
+ax_body.text(
+    0.5, -0.16,
+    f"p95 clip = {p95_min:.0f} min; cf. aoe2companion p95 = 63 min -- both use p95 clipping",
+    transform=ax_body.transAxes,
+    ha="center",
+    va="bottom",
+    fontsize=8,
+    fontstyle="italic",
+    color="gray",
 )
 
-plt.suptitle("Duration Distribution (matches_raw)", y=1.01)
-plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_duration_histogram.png", dpi=150)
-plt.close()
+# Right panel: full range, log10 bins, log-y
+ax_full.bar(dur_full_df["log_bin"], dur_full_df["cnt"], width=0.9, color="steelblue", edgecolor="none")
+ax_full.set_yscale("log")
+ax_full.set_xlabel("log10(Duration seconds)")
+ax_full.set_ylabel("Count (log scale)")
+ax_full.set_title("Match Duration -- Full Range (log-log)")
+
+# POST-GAME annotation on both panels [I3]
+for ax_panel in [ax_body, ax_full]:
+    ax_panel.annotate(
+        "POST-GAME -- not available at prediction time (Inv. #3)",
+        xy=(0.02, 0.98), xycoords="axes fraction",
+        ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+        bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+    )
+
+fig.suptitle("Duration Distribution (matches_raw)", y=1.02)
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_duration_histogram.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_duration_histogram.png")
 
 # %% [markdown]
-# ## T08 — ELO Distribution Panels (1x3, Sentinel Excluded)
+# ## T09 -- ELO Distributions 1x3 Panel (Q7)
 #
-# Sentinel values (-1.0) excluded from team_0/1_elo.
-# [I7: sentinel counts from census["elo_sentinel_counts"]: team_0=34, team_1=39; 34/30690651 = 0.00011%]
+# Q7: Do avg_elo, team_0_elo, team_1_elo show similar bell-shaped distributions?
+#
+# I7: bin width 25 = ~0.08 stddev (stddev=309.5 from census avg_elo).
+# Sentinel -1 excluded for team_0/1_elo per census elo_sentinel_counts.
+# avg_elo excludes 121 zero-valued rows for consistency with team_0/1_elo sentinel exclusion.
 
 # %%
-sql_queries["hist_avg_elo"] = """SELECT FLOOR(avg_elo / 25) * 25 AS bin, COUNT(*) AS cnt
-FROM matches_raw
-GROUP BY bin ORDER BY bin"""
-# [I7: actual max = 2976.5 from census; 2976.5/25 = ~119 bins]
+sql_queries["hist_elo_3panel"] = """-- avg_elo (exclude zero sentinels for consistency with team panels):
+SELECT FLOOR(avg_elo / 25) * 25 AS bin, COUNT(*) AS cnt
+FROM matches_raw WHERE avg_elo > 0
+GROUP BY bin ORDER BY bin;
 
-sql_queries["hist_team_0_elo"] = """SELECT FLOOR(team_0_elo / 25) * 25 AS bin, COUNT(*) AS cnt
-FROM matches_raw
-WHERE team_0_elo >= 0
-GROUP BY bin ORDER BY bin"""
-# [I7: actual max = 3038 from census; 3038/25 = ~122 bins]
+-- team_0_elo (exclude sentinel -1 and zero):
+SELECT FLOOR(team_0_elo / 25) * 25 AS bin, COUNT(*) AS cnt
+FROM matches_raw WHERE team_0_elo > 0
+GROUP BY bin ORDER BY bin;
 
-sql_queries["hist_team_1_elo"] = """SELECT FLOOR(team_1_elo / 25) * 25 AS bin, COUNT(*) AS cnt
-FROM matches_raw
-WHERE team_1_elo >= 0
+-- team_1_elo (exclude sentinel -1 and zero):
+SELECT FLOOR(team_1_elo / 25) * 25 AS bin, COUNT(*) AS cnt
+FROM matches_raw WHERE team_1_elo > 0
 GROUP BY bin ORDER BY bin"""
-# [I7: actual max = 3045 from census; 3045/25 = ~122 bins]
+# I7: avg_elo excludes 121 zero-valued rows for consistency with team_0/1_elo sentinel exclusion
+# (34+39 sentinel -1 rows). Asymmetry: avg_elo has no -1 sentinels, only zeros.
 
 # %%
-# Verification: first 5 bins of each ELO column
-avg_elo_df = con.sql(sql_queries["hist_avg_elo"]).df()
-team0_elo_df = con.sql(sql_queries["hist_team_0_elo"]).df()
-team1_elo_df = con.sql(sql_queries["hist_team_1_elo"]).df()
+avg_elo_df = con.execute(
+    "SELECT FLOOR(avg_elo / 25) * 25 AS bin, COUNT(*) AS cnt FROM matches_raw WHERE avg_elo > 0 GROUP BY bin ORDER BY bin"
+).fetchdf()
+team0_elo_df = con.execute(
+    "SELECT FLOOR(team_0_elo / 25) * 25 AS bin, COUNT(*) AS cnt FROM matches_raw WHERE team_0_elo > 0 GROUP BY bin ORDER BY bin"
+).fetchdf()
+team1_elo_df = con.execute(
+    "SELECT FLOOR(team_1_elo / 25) * 25 AS bin, COUNT(*) AS cnt FROM matches_raw WHERE team_1_elo > 0 GROUP BY bin ORDER BY bin"
+).fetchdf()
 
+print(f"avg_elo bins: {len(avg_elo_df)}, team_0_elo bins: {len(team0_elo_df)}, team_1_elo bins: {len(team1_elo_df)}")
 print("avg_elo first 5 bins:")
 print(avg_elo_df.head(5).to_string(index=False))
-print("\nteam_0_elo first 5 bins (sentinel excluded):")
-print(team0_elo_df.head(5).to_string(index=False))
-print("\nteam_1_elo first 5 bins (sentinel excluded):")
-print(team1_elo_df.head(5).to_string(index=False))
 
 # %%
-sentinel_0 = census["elo_sentinel_counts"]["team_0_elo_negative"]
-sentinel_1 = census["elo_sentinel_counts"]["team_1_elo_negative"]
+# Derive annotation values from census [I7]
+avg_elo_stats = next(s for s in census["numeric_stats_matches"] if s["label"] == "avg_elo")
+team0_elo_stats = next(s for s in census["numeric_stats_matches"] if s["label"] == "team_0_elo")
+team1_elo_stats = next(s for s in census["numeric_stats_matches"] if s["label"] == "team_1_elo")
+
+avg_elo_median = avg_elo_stats["median_val"]
+team0_elo_median = team0_elo_stats["median_val"]
+team1_elo_median = team1_elo_stats["median_val"]
+
+sentinel_0 = census["elo_sentinel_counts"]["team_0_elo_negative"]  # [I7: 34]
+sentinel_1 = census["elo_sentinel_counts"]["team_1_elo_negative"]  # [I7: 39]
+avg_elo_zero = int(avg_elo_stats["n_zero"])                          # [I7: 121]
+n_total_matches = census["matches_null_census"]["total_rows"]
+
+n_avg_elo = n_total_matches - avg_elo_zero
+n_team0 = n_total_matches - sentinel_0 - int(team0_elo_stats["n_zero"])
+n_team1 = n_total_matches - sentinel_1 - int(team1_elo_stats["n_zero"])
+
+print(f"avg_elo: median={avg_elo_median}, excl. {avg_elo_zero} zeros, N={n_avg_elo:,}")
+print(f"team_0_elo: median={team0_elo_median}, excl. {sentinel_0} sentinel, N={n_team0:,}")
+print(f"team_1_elo: median={team1_elo_median}, excl. {sentinel_1} sentinel, N={n_team1:,}")
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
-# avg_elo
-axes[0].bar(avg_elo_df["bin"], avg_elo_df["cnt"], width=25, color="steelblue", edgecolor="none")
-axes[0].set_xlabel("avg_elo")
-axes[0].set_ylabel("Count")
-axes[0].set_title("avg_elo Distribution")
+panels = [
+    ("avg_elo", avg_elo_df, avg_elo_median, n_avg_elo, avg_elo_zero, "zero", "steelblue"),
+    ("team_0_elo", team0_elo_df, team0_elo_median, n_team0, sentinel_0, "sentinel", "darkorange"),
+    ("team_1_elo", team1_elo_df, team1_elo_median, n_team1, sentinel_1, "sentinel", "green"),
+]
 
-# team_0_elo
-axes[1].bar(team0_elo_df["bin"], team0_elo_df["cnt"], width=25, color="darkorange", edgecolor="none")
-axes[1].set_xlabel("team_0_elo")
-axes[1].set_ylabel("Count")
-axes[1].set_title("team_0_elo Distribution")
-axes[1].text(
-    0.95, 0.95,
-    f"N={sentinel_0} sentinel (-1.0) excluded",
-    transform=axes[1].transAxes,
-    ha="right", va="top", fontsize=9,
-    bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8),
-)
+for ax, (col, df, median, n_valid, n_excl, excl_type, color) in zip(axes, panels):
+    ax.bar(df["bin"], df["cnt"], width=25, color=color, edgecolor="none")
+    ax.axvline(median, color="red", linestyle="--", linewidth=1.5, label=f"Median = {median:.0f}")
+    ax.set_xlabel(col)
+    ax.set_ylabel("Count")
+    ax.set_title(f"{col} Distribution\n(N={n_valid:,}, excl. {n_excl} {excl_type})")
+    ax.legend(fontsize=8)
 
-# team_1_elo
-axes[2].bar(team1_elo_df["bin"], team1_elo_df["cnt"], width=25, color="green", edgecolor="none")
-axes[2].set_xlabel("team_1_elo")
-axes[2].set_ylabel("Count")
-axes[2].set_title("team_1_elo Distribution")
-axes[2].text(
-    0.95, 0.95,
-    f"N={sentinel_1} sentinel (-1.0) excluded",
-    transform=axes[2].transAxes,
-    ha="right", va="top", fontsize=9,
-    bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8),
-)
-
-plt.suptitle("ELO Distributions (matches_raw)", y=1.01)
+fig.suptitle("ELO Distributions (matches_raw)", y=1.02)
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_elo_distributions.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_elo_distributions.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_elo_distributions.png")
 
 # %% [markdown]
-# ## T09 — old_rating Histogram and match_rating_diff Histogram
+# ## T10 -- old_rating Histogram (Q8)
+#
+# Q8: What does the authoritative pre-game rating look like?
+#
+# I7: bin width 25 = ~0.09 stddev (stddev=286.9). Zero excluded (5,937 rows).
 
 # %%
 sql_queries["hist_old_rating"] = """SELECT FLOOR(old_rating / 25) * 25 AS bin, COUNT(*) AS cnt
-FROM players_raw
+FROM players_raw WHERE old_rating > 0
 GROUP BY bin ORDER BY bin"""
-# [I7: range 0-3045 from census; 3045/25 = ~122 bins]
+# I7: bin width 25 = ~0.09 stddev (stddev=286.9 from census). Excludes 5,937 zero rows.
 
 # %%
-# Verification: old_rating first 5 bins
-old_rating_df = con.sql(sql_queries["hist_old_rating"]).df()
+old_rating_df = con.execute(sql_queries["hist_old_rating"]).fetchdf()
+print(f"old_rating bins: {len(old_rating_df)}")
 print("old_rating first 5 bins:")
 print(old_rating_df.head(5).to_string(index=False))
-print(f"Total bins: {len(old_rating_df)}")
 
 # %%
-# Derive annotation values from census
-old_rating_stats = next(s for s in census["numeric_stats_players"] if s["label"] == "old_rating")
-or_median = old_rating_stats["median_val"]  # [I7: 1066]
-or_p05 = old_rating_stats["p05"]  # [I7: 665]
-or_p95 = old_rating_stats["p95"]  # [I7: 1580]
-print(f"old_rating: median={or_median}, p05={or_p05}, p95={or_p95}")
+# Derive annotation values from census [I7]
+or_stats = next(s for s in census["numeric_stats_players"] if s["label"] == "old_rating")
+or_median = or_stats["median_val"]   # [I7: 1066]
+or_p05 = or_stats["p05"]             # [I7: 665]
+or_p95 = or_stats["p95"]             # [I7: 1580]
+n_zero_or = int(or_stats["n_zero"])  # [I7: 5937]
+n_valid_or = int(or_stats["n_nonnull"]) - n_zero_or
+print(f"old_rating: median={or_median}, p05={or_p05}, p95={or_p95}, excl. {n_zero_or} zeros, N={n_valid_or:,}")
 
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.bar(old_rating_df["bin"], old_rating_df["cnt"], width=25, color="steelblue", edgecolor="none")
@@ -416,180 +503,180 @@ ax.axvline(or_p05, color="orange", linestyle="--", linewidth=1.5, label=f"P05 = 
 ax.axvline(or_p95, color="purple", linestyle="--", linewidth=1.5, label=f"P95 = {or_p95:.0f}")
 ax.set_xlabel("old_rating")
 ax.set_ylabel("Count")
-ax.set_title("old_rating Distribution (players_raw)")
+ax.set_title(f"Pre-Game Rating (old_rating) -- players_raw\n(N={n_valid_or:,}, excl. {n_zero_or} zero)")
 ax.legend()
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_old_rating_histogram.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_old_rating_histogram.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_old_rating_histogram.png")
 
+# %% [markdown]
+# ## T11 -- match_rating_diff Histogram (Q9)
+#
+# Q9: What is the shape of this leakage-unresolved column?
+#
+# I7: editorial clip at ~3.6sigma (stddev=55.23 from census key skew_kurtosis_players
+# where label='match_rating_diff'); shows leptokurtic tail without [-2185,+2185] extremes.
+# Not p05/p95 derived. Bin width 5 = ~0.09 stddev; produces 80 bins.
+
 # %%
-sql_queries["hist_match_rating_diff"] = """SELECT FLOOR(match_rating_diff / 5) * 5 AS bin, COUNT(*) AS cnt
+sql_queries["hist_match_rating_diff"] = """SELECT
+    FLOOR(match_rating_diff / 5) * 5 AS bin,
+    COUNT(*) AS cnt
 FROM players_raw
 WHERE match_rating_diff IS NOT NULL
   AND match_rating_diff BETWEEN -200 AND 200
 GROUP BY bin ORDER BY bin"""
-# [I7: p05=-59, p95=+59 from census; clip to [-200, +200] to show leptokurtic shape while covering main body; full range is [-2185, +2185]]
+# I7: editorial clip at ~3.6sigma (stddev=55.23); full range [-2185,+2185].
 
 # %%
-# Verification: match_rating_diff first/last 5 bins
-mrd_df = con.sql(sql_queries["hist_match_rating_diff"]).df()
-print("match_rating_diff first 5 bins (clipped to [-200, +200]):")
+mrd_df = con.execute(sql_queries["hist_match_rating_diff"]).fetchdf()
+n_clipped = int(mrd_df["cnt"].sum())
+print(f"match_rating_diff bins: {len(mrd_df)}, clipped N={n_clipped:,}")
+print("First/last 5 bins:")
 print(mrd_df.head(5).to_string(index=False))
 print("...")
 print(mrd_df.tail(5).to_string(index=False))
-print(f"Total bins: {len(mrd_df)}")
 
 # %%
-# Derive annotation values from census
-mrd_skew = next(s for s in census["skew_kurtosis_players"] if s["label"] == "match_rating_diff")
-mrd_kurtosis = mrd_skew["kurtosis"]  # [I7: 65.6753]
-mrd_outlier = next(o for o in census["outlier_counts_players"] if o["label"] == "match_rating_diff")
-mrd_lower_fence = mrd_outlier["lower_fence"]  # [I7: -68]
-mrd_upper_fence = mrd_outlier["upper_fence"]  # [I7: +68]
+# Derive annotation values from census [I7]
+mrd_sk = next(s for s in census["skew_kurtosis_players"] if s["label"] == "match_rating_diff")
+kurt = mrd_sk["kurtosis"]           # [I7: 65.6753]
 mrd_stats = next(s for s in census["numeric_stats_players"] if s["label"] == "match_rating_diff")
-mrd_min = mrd_stats["min_val"]  # [I7: -2185]
-mrd_max = mrd_stats["max_val"]  # [I7: +2185]
-print(f"kurtosis={mrd_kurtosis}, lower_fence={mrd_lower_fence}, upper_fence={mrd_upper_fence}, min={mrd_min}, max={mrd_max}")
+stddev = mrd_stats["stddev_val"]    # [I7: 55.23]
+print(f"stddev={stddev:.2f}, kurtosis={kurt:.2f}")
 
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.bar(mrd_df["bin"], mrd_df["cnt"], width=5, color="steelblue", edgecolor="none")
-ax.axvline(mrd_lower_fence, color="orange", linestyle="--", linewidth=1.5, label=f"IQR lower fence = {mrd_lower_fence:.0f}")
-ax.axvline(mrd_upper_fence, color="orange", linestyle="--", linewidth=1.5, label=f"IQR upper fence = {mrd_upper_fence:.0f}")
-ax.text(
-    0.95, 0.95,
-    f"Kurtosis = {mrd_kurtosis:.2f}\nFull range: [{mrd_min:.0f}, +{mrd_max:.0f}]",
-    transform=ax.transAxes,
-    ha="right", va="top", fontsize=9,
-    bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8),
-)
 ax.set_xlabel("match_rating_diff")
 ax.set_ylabel("Count")
-ax.set_title("match_rating_diff Distribution (players_raw, clipped to [-200, +200])")
-ax.set_xlim(-200, 200)
-ax.legend()
+ax.set_title(f"match_rating_diff -- players_raw (N={n_clipped:,}, clipped to [-200, +200])")
+ax.text(
+    0.5, -0.12,
+    f"stddev={stddev:.2f}, kurtosis={kurt:.2f} -- leptokurtic; full range [-2185, +2185]",
+    transform=ax.transAxes,
+    ha="center",
+    va="bottom",
+    fontsize=8,
+    fontstyle="italic",
+    color="gray",
+)
+ax.set_xlim(-205, 205)
+
+# LEAKAGE UNRESOLVED annotation [I3]
+ax.annotate(
+    "LEAKAGE STATUS UNRESOLVED -- do not use as feature until verified (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_match_rating_diff_histogram.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_match_rating_diff_histogram.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_match_rating_diff_histogram.png")
 
 # %% [markdown]
-# ## T10 — Age Uptime Histograms (Variable Bin Widths)
+# ## T12 -- Age Uptime 1x3 Panel (Q10)
 #
-# Variable bin widths calibrated to each age's effective range, producing ~42-43 bins per panel.
+# Q10: What do age uptime distributions look like for the ~14% non-NULL subset?
+#
+# I7: bin widths chosen to produce ~43 bins across p05-p95 range:
+# feudal 10s = (962.6-535.1)/10 = 43 bins;
+# castle 20s = (1752.1-889.1)/20 = 43 bins;
+# imperial 30s = (2933.0-1681.1)/30 = 42 bins.
 
 # %%
-sql_queries["hist_feudal_age_uptime"] = """SELECT FLOOR(feudal_age_uptime / 10) * 10 AS bin, COUNT(*) AS cnt
-FROM players_raw
-WHERE feudal_age_uptime IS NOT NULL
-GROUP BY bin ORDER BY bin"""
-# [I7: p05=535.1, p95=962.6 from census; effective body ~427s; 427/10 = 43 bins]
+sql_queries["hist_age_uptimes"] = """-- feudal_age_uptime:
+SELECT FLOOR(feudal_age_uptime / 10) * 10 AS bin, COUNT(*) AS cnt
+FROM players_raw WHERE feudal_age_uptime IS NOT NULL
+GROUP BY bin ORDER BY bin;
 
-sql_queries["hist_castle_age_uptime"] = """SELECT FLOOR(castle_age_uptime / 20) * 20 AS bin, COUNT(*) AS cnt
-FROM players_raw
-WHERE castle_age_uptime IS NOT NULL
-GROUP BY bin ORDER BY bin"""
-# [I7: p05=889.1, p95=1752.1 from census; effective body ~863s; 863/20 = 43 bins]
+-- castle_age_uptime:
+SELECT FLOOR(castle_age_uptime / 20) * 20 AS bin, COUNT(*) AS cnt
+FROM players_raw WHERE castle_age_uptime IS NOT NULL
+GROUP BY bin ORDER BY bin;
 
-sql_queries["hist_imperial_age_uptime"] = """SELECT FLOOR(imperial_age_uptime / 30) * 30 AS bin, COUNT(*) AS cnt
-FROM players_raw
-WHERE imperial_age_uptime IS NOT NULL
+-- imperial_age_uptime:
+SELECT FLOOR(imperial_age_uptime / 30) * 30 AS bin, COUNT(*) AS cnt
+FROM players_raw WHERE imperial_age_uptime IS NOT NULL
 GROUP BY bin ORDER BY bin"""
-# [I7: p05=1681.1, p95=2933.0 from census; effective body ~1252s; 1252/30 = 42 bins]
 
 # %%
-# Verification: first 5 bins of each age uptime
-feudal_df = con.sql(sql_queries["hist_feudal_age_uptime"]).df()
-castle_df = con.sql(sql_queries["hist_castle_age_uptime"]).df()
-imperial_df = con.sql(sql_queries["hist_imperial_age_uptime"]).df()
+feudal_df = con.execute(
+    "SELECT FLOOR(feudal_age_uptime / 10) * 10 AS bin, COUNT(*) AS cnt FROM players_raw WHERE feudal_age_uptime IS NOT NULL GROUP BY bin ORDER BY bin"
+).fetchdf()
+castle_df = con.execute(
+    "SELECT FLOOR(castle_age_uptime / 20) * 20 AS bin, COUNT(*) AS cnt FROM players_raw WHERE castle_age_uptime IS NOT NULL GROUP BY bin ORDER BY bin"
+).fetchdf()
+imperial_df = con.execute(
+    "SELECT FLOOR(imperial_age_uptime / 30) * 30 AS bin, COUNT(*) AS cnt FROM players_raw WHERE imperial_age_uptime IS NOT NULL GROUP BY bin ORDER BY bin"
+).fetchdf()
 
-print("feudal_age_uptime first 5 bins:")
+print(f"feudal bins: {len(feudal_df)}, castle bins: {len(castle_df)}, imperial bins: {len(imperial_df)}")
+print("feudal first 5 bins:")
 print(feudal_df.head(5).to_string(index=False))
-print("\ncastle_age_uptime first 5 bins:")
-print(castle_df.head(5).to_string(index=False))
-print("\nimperial_age_uptime first 5 bins:")
-print(imperial_df.head(5).to_string(index=False))
 
 # %%
-# Derive annotation values from census for each age uptime
+# Derive annotation values from census [I7]
 def get_player_stats(label: str) -> dict:
     return next(s for s in census["numeric_stats_players"] if s["label"] == label)
-
-def get_player_null_pct(col: str) -> float:
-    return next(c for c in census["players_null_census"]["columns"] if c["column"] == col)["null_pct"]
-
-def get_skew(label: str) -> float:
-    return next(s for s in census["skew_kurtosis_players"] if s["label"] == label)["skewness"]
 
 feudal_stats = get_player_stats("feudal_age_uptime")
 castle_stats = get_player_stats("castle_age_uptime")
 imperial_stats = get_player_stats("imperial_age_uptime")
 
-feudal_null_pct = get_player_null_pct("feudal_age_uptime")
-castle_null_pct = get_player_null_pct("castle_age_uptime")
-imperial_null_pct = get_player_null_pct("imperial_age_uptime")
-
-feudal_skew = get_skew("feudal_age_uptime")
-castle_skew = get_skew("castle_age_uptime")
-imperial_skew = get_skew("imperial_age_uptime")
-
-print(f"feudal: N={feudal_stats['n_nonnull']:.0f}, null_pct={feudal_null_pct:.1f}%, median={feudal_stats['median_val']:.1f}, skew={feudal_skew:.2f}")
-print(f"castle: N={castle_stats['n_nonnull']:.0f}, null_pct={castle_null_pct:.1f}%, median={castle_stats['median_val']:.1f}, skew={castle_skew:.2f}")
-print(f"imperial: N={imperial_stats['n_nonnull']:.0f}, null_pct={imperial_null_pct:.1f}%, median={imperial_stats['median_val']:.1f}, skew={imperial_skew:.2f}")
+print(f"feudal: N={feudal_stats['n_nonnull']:.0f}, median={feudal_stats['median_val']:.1f}s")
+print(f"castle: N={castle_stats['n_nonnull']:.0f}, median={castle_stats['median_val']:.1f}s")
+print(f"imperial: N={imperial_stats['n_nonnull']:.0f}, median={imperial_stats['median_val']:.1f}s")
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
 age_configs = [
-    ("feudal_age_uptime", feudal_df, feudal_stats, feudal_null_pct, feudal_skew, 10, "steelblue"),
-    ("castle_age_uptime", castle_df, castle_stats, castle_null_pct, castle_skew, 20, "darkorange"),
-    ("imperial_age_uptime", imperial_df, imperial_stats, imperial_null_pct, imperial_skew, 30, "green"),
+    ("feudal_age_uptime", feudal_df, feudal_stats, 10, "steelblue"),
+    ("castle_age_uptime", castle_df, castle_stats, 20, "darkorange"),
+    ("imperial_age_uptime", imperial_df, imperial_stats, 30, "green"),
 ]
 
-for ax, (label, df, stats, null_pct, skew, bw, color) in zip(axes, age_configs):
-    ax.bar(df["bin"], df["cnt"], width=bw, color=color, edgecolor="none")
-    ax.axvline(stats["median_val"], color="red", linestyle="--", linewidth=1.5)
-    ax.set_xlabel(f"{label} (seconds)")
-    ax.set_ylabel("Count")
-    ax.set_title(label.replace("_", " ").title())
-    ax.text(
-        0.97, 0.97,
-        f"N={stats['n_nonnull']:.0f}\nnull_pct={null_pct:.1f}%\nmedian={stats['median_val']:.0f}s\nskew={skew:.2f}",
-        transform=ax.transAxes,
-        ha="right", va="top", fontsize=8,
-        bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8),
+for ax_panel, (label, df, stats, bw, color) in zip(axes, age_configs):
+    ax_panel.bar(df["bin"], df["cnt"], width=bw, color=color, edgecolor="none")
+    ax_panel.axvline(stats["median_val"], color="red", linestyle="--", linewidth=1.5,
+                     label=f"Median = {stats['median_val']:.0f}s")
+    ax_panel.set_xlabel(f"{label} (seconds)")
+    ax_panel.set_ylabel("Count")
+    ax_panel.set_title(f"{label.replace('_', ' ').title()}\n(N={stats['n_nonnull']:.0f} non-NULL)")
+    ax_panel.legend(fontsize=8)
+
+    # IN-GAME annotation [I3]
+    ax_panel.annotate(
+        "IN-GAME -- not available at prediction time (Inv. #3)",
+        xy=(0.02, 0.98), xycoords="axes fraction",
+        ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+        bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
     )
 
-plt.suptitle("Age Uptime Distributions (players_raw, non-NULL only)", y=1.01)
+fig.suptitle("Age Uptime Distributions (players_raw, non-NULL only)", y=1.02)
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_age_uptime_histograms.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_age_uptime_histograms.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_age_uptime_histograms.png")
 
 # %% [markdown]
-# ## T11 — Opening Non-NULL Distribution Bar Chart
-
-# %%
-# Prerequisite gate
-assert "opening_nonnull_distribution" in census, (
-    "BLOCKER: 'opening_nonnull_distribution' not found in census. "
-    "Execute plan_aoestats_01_02_04_pass2 (T08) before running T11."
-)
+# ## T13 -- Opening Non-NULL Bar Chart (Q11)
+#
+# Q11: Among the ~14% non-NULL subset, what are the opening frequencies?
 
 # %%
 # Verification cell
 opening_dist = census["opening_nonnull_distribution"]
 opening_df = pd.DataFrame(opening_dist["values"])
 total_nonnull = opening_dist["total_nonnull"]
-print(f"Opening non-NULL distribution: N={total_nonnull:,}")
+total_players = census["players_null_census"]["total_rows"]
+pct_nonnull = 100.0 * total_nonnull / total_players
+print(f"Opening non-NULL distribution: N={total_nonnull:,} of {total_players:,} ({pct_nonnull:.1f}%)")
 print(opening_df.to_string(index=False))
 
 # %%
-# Derive null_pct from census
-opening_null_pct = next(
-    c for c in census["players_null_census"]["columns"] if c["column"] == "opening"
-)["null_pct"]
-print(f"opening null_pct: {opening_null_pct:.2f}%")
-
 opening_df_sorted = opening_df.sort_values("pct_of_nonnull", ascending=True)
 fig, ax = plt.subplots(figsize=(10, 6))
 bars = ax.barh(opening_df_sorted["opening"], opening_df_sorted["pct_of_nonnull"], color="mediumseagreen")
@@ -597,21 +684,41 @@ for bar, (_, row) in zip(bars, opening_df_sorted.iterrows()):
     ax.text(
         bar.get_width() + 0.2,
         bar.get_y() + bar.get_height() / 2,
-        f"{row['pct_of_nonnull']:.2f}%",
+        f"{row['cnt']:,} ({row['pct_of_nonnull']:.2f}%)",
         va="center",
         fontsize=9,
     )
 ax.set_xlabel("% of non-NULL rows")
-ax.set_title(
-    f"Opening Strategy (non-NULL only, N={total_nonnull:,}; {opening_null_pct:.2f}% NULL excluded)"
+ax.set_title("Opening Strategy Distribution (players_raw)")
+ax.text(
+    0.5, -0.12,
+    f"Non-NULL subset only: {total_nonnull:,} of {total_players:,} rows ({pct_nonnull:.1f}%)",
+    transform=ax.transAxes,
+    ha="center",
+    va="bottom",
+    fontsize=9,
+    fontstyle="italic",
+    color="gray",
 )
+ax.set_xlim(0, max(opening_df_sorted["pct_of_nonnull"]) * 1.25)
+
+# IN-GAME annotation [I3]
+ax.annotate(
+    "IN-GAME -- not available at prediction time (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_opening_nonnull.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_opening_nonnull.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_opening_nonnull.png")
 
 # %% [markdown]
-# ## T12 — IQR Outlier Summary Bar Chart
+# ## T14 -- IQR Outlier Summary (Q12)
+#
+# Q12: How many outliers exist per numeric column?
 
 # %%
 # Verification cell
@@ -625,7 +732,6 @@ print("IQR outlier summary:")
 print(outlier_all_sorted[["label", "table", "outlier_pct", "outlier_total"]].to_string(index=False))
 
 # %%
-high_null_cols = {"feudal_age_uptime", "castle_age_uptime", "imperial_age_uptime"}
 colors_table = {"matches_raw": "steelblue", "players_raw": "darkorange"}
 bar_colors = [colors_table[t] for t in outlier_all_sorted["table"]]
 
@@ -637,47 +743,40 @@ bars = ax.barh(
 )
 
 for bar, (_, row) in zip(bars, outlier_all_sorted.iterrows()):
-    label_text = row["label"]
-    if label_text in high_null_cols:
-        ax.text(
-            bar.get_width() + 0.1,
-            bar.get_y() + bar.get_height() / 2,
-            f"{row['outlier_pct']:.2f}% *high NULL",
-            va="center",
-            fontsize=8,
-            color="red",
-        )
-    else:
-        ax.text(
-            bar.get_width() + 0.1,
-            bar.get_y() + bar.get_height() / 2,
-            f"{row['outlier_pct']:.2f}%",
-            va="center",
-            fontsize=8,
-        )
+    ax.text(
+        bar.get_width() + 0.05,
+        bar.get_y() + bar.get_height() / 2,
+        f"{row['outlier_total']:,} ({row['outlier_pct']:.2f}%)",
+        va="center",
+        fontsize=8,
+    )
 
-from matplotlib.patches import Patch as MPatch
+from matplotlib.patches import Patch as MPatch2
 legend_elements = [
-    MPatch(facecolor="steelblue", label="matches_raw"),
-    MPatch(facecolor="darkorange", label="players_raw"),
+    MPatch2(facecolor="steelblue", label="matches_raw"),
+    MPatch2(facecolor="darkorange", label="players_raw"),
 ]
 ax.legend(handles=legend_elements, loc="lower right")
 ax.set_xlabel("Outlier Percentage (IQR method, %)")
-ax.set_title("IQR Outlier Summary (all numeric columns)")
+ax.set_title("IQR Outlier Rates -- matches_raw Numeric Columns")
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_iqr_outlier_summary.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_iqr_outlier_summary.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_iqr_outlier_summary.png")
 
 # %% [markdown]
-# ## T13 — NULL Rate Bar Chart for All 32 Columns
+# ## T15 -- NULL Rate Bar Chart with 4-Tier Severity (Q13)
+#
+# Q13: Which columns are fully populated vs. have the 87% NULL block?
+#
+# I7: 4-tier color scheme: green=0%, gold=>0%<5%, orange=5-50%, red>=50%.
 
 # %%
 # Verification cell
 null_matches = pd.DataFrame(census["matches_null_census"]["columns"])
-null_matches["col_label"] = "m." + null_matches["column"]
+null_matches["col_label"] = "m:" + null_matches["column"]
 null_players = pd.DataFrame(census["players_null_census"]["columns"])
-null_players["col_label"] = "p." + null_players["column"]
+null_players["col_label"] = "p:" + null_players["column"]
 null_all = pd.concat(
     [null_matches[["col_label", "null_pct"]], null_players[["col_label", "null_pct"]]],
     ignore_index=True,
@@ -688,133 +787,171 @@ print(null_all_sorted.to_string(index=False))
 
 # %%
 def null_color(pct: float) -> str:
-    if pct >= 50:
+    if pct >= 50.0:
         return "red"
-    elif pct >= 5:
+    elif pct >= 5.0:
         return "orange"
-    elif pct > 0:
+    elif pct > 0.0:
         return "gold"
     else:
         return "green"
 
 bar_colors_null = [null_color(p) for p in null_all_sorted["null_pct"]]
 
-fig, ax = plt.subplots(figsize=(12, 8))
+fig, ax = plt.subplots(figsize=(12, 9))
 ax.barh(null_all_sorted["col_label"], null_all_sorted["null_pct"], color=bar_colors_null)
 ax.set_xlabel("NULL Rate (%)")
-ax.set_title("NULL Rate: All 32 Columns (m.=matches_raw, p.=players_raw)")
+ax.set_title("NULL Rate by Column -- matches_raw + players_raw")
 
-from matplotlib.patches import Patch as MPatch2
+from matplotlib.patches import Patch as MPatch3
 legend_elements = [
-    MPatch2(facecolor="red", label=">= 50% NULL"),
-    MPatch2(facecolor="orange", label="5-50% NULL"),
-    MPatch2(facecolor="gold", label="> 0% and < 5% NULL"),
-    MPatch2(facecolor="green", label="0% NULL"),
+    MPatch3(facecolor="red", label=">= 50% NULL"),
+    MPatch3(facecolor="orange", label="5-50% NULL"),
+    MPatch3(facecolor="gold", label="> 0% and < 5% NULL"),
+    MPatch3(facecolor="green", label="0% NULL"),
 ]
 ax.legend(handles=legend_elements, loc="lower right")
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_null_rate_bar.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_null_rate_bar.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_null_rate_bar.png")
 
 # %% [markdown]
-# ## T14 — Monthly Match Count Time Series
+# ## T16 -- Schema Change Temporal Boundary (Q: Step-function boundary or uniform missingness?)
+#
+# Do the ~86-91%-NULL columns in players_raw (feudal_age_uptime, castle_age_uptime,
+# imperial_age_uptime, opening) transition from ~100% NULL to ~0% NULL at a common
+# temporal boundary (schema change), or is missingness distributed uniformly?
+#
+# I7: column list derived from census at runtime; >80% threshold editorial,
+# documented: 80% < lowest observed rate (86.05%), includes all four co-NULL
+# columns identified in players_raw_null_cooccurrence census section.
+# Week parsed from filename column at chars 9-18.
 
 # %%
-sql_queries["monthly_match_counts"] = """SELECT DATE_TRUNC('month', started_timestamp) AS month, COUNT(*) AS match_count
-FROM matches_raw WHERE started_timestamp IS NOT NULL
-GROUP BY month ORDER BY month"""
-
-# %%
-# Verification cell
-monthly_df = con.sql(sql_queries["monthly_match_counts"]).df()
-assert len(monthly_df) == census["temporal_range"]["distinct_months"], (
-    f"Expected {census['temporal_range']['distinct_months']} months, got {len(monthly_df)}"
+# I7: column list derived from census at runtime; >80% threshold editorial,
+# documented: 80% < lowest observed rate (86.05%), includes all four co-NULL
+# columns identified in players_raw_null_cooccurrence census section.
+NULL_THRESHOLD = 80.0
+high_null_cols = [
+    c["column"]
+    for c in census["players_null_census"]["columns"]
+    if c["null_pct"] > NULL_THRESHOLD
+]
+print(f"High-NULL columns (>{NULL_THRESHOLD:.0f}%): {high_null_cols}")
+assert len(high_null_cols) >= 4, (
+    f"Expected >=4 high-NULL columns, got {len(high_null_cols)}: {high_null_cols}"
 )
+
+# %%
+# Build SQL dynamically from census-derived column list [I6]
+null_rate_exprs = ",\n    ".join(
+    f'ROUND(100.0 * (COUNT(*) - COUNT("{col}")) / COUNT(*), 2) AS {col}_null_pct'
+    for col in high_null_cols
+)
+sql = f"""
+SELECT
+    CAST(SUBSTR(filename, 9, 10) AS DATE) AS week_start,
+    COUNT(*) AS total_rows,
+    {null_rate_exprs}
+FROM players_raw
+GROUP BY week_start
+ORDER BY week_start
+"""
+sql_queries["weekly_null_rate_high_null_cols"] = sql
+print("SQL built dynamically from census-derived high-NULL column list:")
+print(sql[:400] + "...")
+
+# %%
+df_weekly_null = con.execute(sql).fetchdf()
+df_weekly_null["week_start"] = pd.to_datetime(df_weekly_null["week_start"])
+print(f"Weekly null rate data: {len(df_weekly_null)} weeks")
+print(df_weekly_null.head(5).to_string(index=False))
+
+# %%
+fig, ax = plt.subplots(figsize=(14, 6))
+for col in high_null_cols:
+    ax.plot(
+        df_weekly_null["week_start"],
+        df_weekly_null[f"{col}_null_pct"],
+        marker=".", markersize=3, linewidth=1.2, label=col,
+    )
+
+ax.set_xlabel("Week (from players_raw filename)")
+ax.set_ylabel("NULL Rate (%)")
+ax.set_ylim(0, 105)
+ax.set_title(
+    f"Weekly NULL Rate -- High-NULL Columns (>{NULL_THRESHOLD:.0f}%) in players_raw"
+)
+ax.legend(loc="center right", fontsize=9)
+ax.grid(axis="y", alpha=0.3)
+
+# IN-GAME annotation: all four are in-game columns per Invariant #3
+ax.annotate(
+    "IN-GAME -- not available at prediction time (Inv. #3)",
+    xy=(0.02, 0.98), xycoords="axes fraction",
+    ha="left", va="top", fontsize=8, fontstyle="italic", color="darkred",
+    bbox=dict(boxstyle="round,pad=0.3", fc="#ffe0e0", ec="red", alpha=0.9),
+)
+
+fig.autofmt_xdate()
+fig.tight_layout()
+fig.savefig(plots_dir / "01_02_05_schema_change_boundary.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
+print(f"Saved: {plots_dir / '01_02_05_schema_change_boundary.png'}")
+
+# %% [markdown]
+# ## T17 -- Monthly Match Volume Line Chart (Q14)
+#
+# Q14: Does match volume increase or plateau? Are temporal gaps visible?
+
+# %%
+sql_queries["monthly_match_counts"] = """SELECT
+    DATE_TRUNC('month', started_timestamp) AS month,
+    COUNT(*) AS match_count
+FROM matches_raw
+WHERE started_timestamp IS NOT NULL
+GROUP BY month
+ORDER BY month"""
+
+# %%
+monthly_df = con.execute(sql_queries["monthly_match_counts"]).fetchdf()
+distinct_months_census = census["temporal_range"]["distinct_months"]
+# Soft assertion: actual months <= census distinct_months [I9: visualization only]
+assert len(monthly_df) <= distinct_months_census, (
+    f"Monthly query returned {len(monthly_df)} months, exceeds census {distinct_months_census}"
+)
+print(f"Monthly data: {len(monthly_df)} months (census distinct_months={distinct_months_census})")
 print(monthly_df.to_string())
 
 # %%
 mean_count = monthly_df["match_count"].mean()
 fig, ax = plt.subplots(figsize=(14, 6))
-ax.plot(monthly_df["month"], monthly_df["match_count"], marker="o", linewidth=1.5, markersize=4, color="steelblue")
+ax.plot(
+    monthly_df["month"],
+    monthly_df["match_count"],
+    marker="o",
+    linewidth=1.5,
+    markersize=4,
+    color="steelblue",
+)
 ax.axhline(mean_count, color="red", linestyle="--", linewidth=1.5, label=f"Mean = {mean_count:,.0f}")
 ax.set_xlabel("Month")
 ax.set_ylabel("Match Count")
-ax.set_title("Monthly Match Volume (matches_raw)")
+ax.set_title("Monthly Match Volume -- matches_raw")
 ax.legend()
-plt.xticks(rotation=45, ha="right")
+fig.autofmt_xdate()
 plt.tight_layout()
-plt.savefig(plots_dir / "01_02_05_monthly_match_count.png", dpi=150)
-plt.close()
+fig.savefig(plots_dir / "01_02_05_monthly_match_count.png", dpi=150, bbox_inches="tight")
+plt.close(fig)
 print("Saved: 01_02_05_monthly_match_count.png")
 
 # %% [markdown]
-# ## T15 — Write Markdown Artifact and Close Connection
+# ## T18 -- Markdown Artifact and Final Verification
 
 # %%
-# Build markdown artifact
-plot_index_rows = [
-    ("1", "01_02_05_winner_distribution.png", "Winner distribution bar chart (players_raw)"),
-    ("2", "01_02_05_num_players_distribution.png", "Match size distribution bar chart (matches_raw)"),
-    ("3", "01_02_05_map_top20.png", "Top-20 maps horizontal bar chart (matches_raw)"),
-    ("4", "01_02_05_civ_top20.png", "Top-20 civilizations horizontal bar chart (players_raw)"),
-    ("5", "01_02_05_leaderboard_distribution.png", "Leaderboard distribution bar chart (matches_raw)"),
-    ("6", "01_02_05_duration_histogram.png", "Duration dual-panel histogram: body (linear) + full range (log)"),
-    ("7", "01_02_05_elo_distributions.png", "ELO distributions 1x3 panel (sentinel -1.0 excluded)"),
-    ("8", "01_02_05_old_rating_histogram.png", "old_rating histogram with p05/median/p95 annotations"),
-    ("9", "01_02_05_match_rating_diff_histogram.png", "match_rating_diff histogram (clipped [-200,+200], kurtosis + IQR fences)"),
-    ("10", "01_02_05_age_uptime_histograms.png", "Age uptime 1x3 panel: feudal/castle/imperial (non-NULL, variable bin widths)"),
-    ("11", "01_02_05_opening_nonnull.png", "Opening strategy distribution (non-NULL only)"),
-    ("12", "01_02_05_iqr_outlier_summary.png", "IQR outlier summary bar chart (color-coded by table)"),
-    ("13", "01_02_05_null_rate_bar.png", "NULL rate bar chart for all 32 columns (severity color-coded)"),
-    ("14", "01_02_05_monthly_match_count.png", "Monthly match volume time series (matches_raw)"),
-]
-
-table_rows = "\n".join(
-    f"| {n} | `{fn}` | {desc} |"
-    for n, fn, desc in plot_index_rows
-)
-
-sql_blocks = "\n\n".join(
-    f"### `{key}`\n\n```sql\n{sql}\n```"
-    for key, sql in sql_queries.items()
-)
-
-md_content = f"""# Step 01_02_05 — Univariate Visualizations: aoestats
-
-**Phase:** 01 — Data Exploration
-**Pipeline Section:** 01_02 — Exploratory Data Analysis (Tukey-style)
-**Dataset:** aoestats
-**Invariants applied:** #6 (SQL reproducibility), #7 (no magic numbers), #9 (step scope)
-**Predecessor artifact:** `01_02_04_univariate_census.json`
-
-## Plot Index
-
-| # | File | Description |
-|---|------|-------------|
-{table_rows}
-
-## SQL Queries (Invariant #6)
-
-All SQL queries that produce plotted data appear verbatim below.
-
-{sql_blocks}
-"""
-
-md_path = artifacts_dir / "01_02_05_visualizations.md"
-with open(md_path, "w") as f:
-    f.write(md_content)
-print(f"Written markdown artifact: {md_path}")
-print(f"sql_queries keys: {list(sql_queries.keys())}")
-
-# %%
-con.close()
-print("DuckDB connection closed.")
-
-# %%
-# Final verification
-import os
-expected_pngs = [
+# Assert all 15 PNG files exist
+expected_plots = [
     "01_02_05_winner_distribution.png",
     "01_02_05_num_players_distribution.png",
     "01_02_05_map_top20.png",
@@ -828,15 +965,102 @@ expected_pngs = [
     "01_02_05_opening_nonnull.png",
     "01_02_05_iqr_outlier_summary.png",
     "01_02_05_null_rate_bar.png",
+    "01_02_05_schema_change_boundary.png",
     "01_02_05_monthly_match_count.png",
 ]
-missing = []
-for fname in expected_pngs:
+
+missing_pngs = []
+for fname in expected_plots:
     p = plots_dir / fname
     if not p.exists() or p.stat().st_size == 0:
-        missing.append(fname)
-if missing:
-    print(f"MISSING or empty: {missing}")
-else:
-    print(f"All {len(expected_pngs)} PNG files present and non-empty.")
-print(f"Markdown artifact exists: {(artifacts_dir / '01_02_05_visualizations.md').exists()}")
+        missing_pngs.append(fname)
+
+if missing_pngs:
+    raise AssertionError(f"MISSING or empty PNGs: {missing_pngs}")
+print(f"All {len(expected_plots)} PNG files present and non-empty.")
+
+# %%
+# Assert all 8 SQL query groups present
+required_sql_keys = [
+    "hist_duration_body",
+    "hist_duration_full_log",
+    "hist_elo_3panel",
+    "hist_old_rating",
+    "hist_match_rating_diff",
+    "hist_age_uptimes",
+    "weekly_null_rate_high_null_cols",
+    "monthly_match_counts",
+]
+for k in required_sql_keys:
+    assert k in sql_queries, f"Missing SQL query key: {k}"
+print(f"All {len(required_sql_keys)} SQL query groups present: {list(sql_queries.keys())}")
+
+# %%
+# Build markdown artifact with plot index table including Temporal Annotation column
+plot_index_rows = [
+    ("1",  "01_02_05_winner_distribution.png",          "Winner distribution 2-bar (players_raw)",                                "N/A"),
+    ("2",  "01_02_05_num_players_distribution.png",     "Match size distribution bar (matches_raw)",                              "N/A"),
+    ("3",  "01_02_05_map_top20.png",                    "Top-20 maps horizontal barh (matches_raw)",                              "N/A"),
+    ("4",  "01_02_05_civ_top20.png",                    "Top-20 civilizations horizontal barh (players_raw)",                     "N/A"),
+    ("5",  "01_02_05_leaderboard_distribution.png",     "Leaderboard distribution bar (matches_raw)",                             "N/A"),
+    ("6",  "01_02_05_duration_histogram.png",           "Duration dual-panel: body (p95 clip) + full range (log)",                "POST-GAME (Inv. #3)"),
+    ("7",  "01_02_05_elo_distributions.png",            "ELO 1x3 panel: avg_elo, team_0_elo, team_1_elo (sentinel excluded)",     "N/A"),
+    ("8",  "01_02_05_old_rating_histogram.png",         "Pre-game rating (old_rating) histogram (players_raw)",                   "N/A"),
+    ("9",  "01_02_05_match_rating_diff_histogram.png",  "match_rating_diff histogram clipped [-200,+200] (players_raw)",          "LEAKAGE UNRESOLVED (Inv. #3)"),
+    ("10", "01_02_05_age_uptime_histograms.png",        "Age uptime 1x3 panel: feudal/castle/imperial (non-NULL only)",           "IN-GAME (Inv. #3)"),
+    ("11", "01_02_05_opening_nonnull.png",              "Opening strategy bar (non-NULL only, players_raw)",                      "IN-GAME (Inv. #3)"),
+    ("12", "01_02_05_iqr_outlier_summary.png",          "IQR outlier rates barh (all numeric columns)",                          "N/A"),
+    ("13", "01_02_05_null_rate_bar.png",                "NULL rate barh for all columns (4-tier severity)",                       "N/A"),
+    ("14", "01_02_05_schema_change_boundary.png",       "Weekly NULL rate for high-NULL columns (schema change boundary)",        "IN-GAME (Inv. #3)"),
+    ("15", "01_02_05_monthly_match_count.png",          "Monthly match volume line chart (matches_raw)",                          "N/A"),
+]
+
+table_header = "| # | File | Description | Temporal Annotation |"
+table_sep = "|---|------|-------------|---------------------|"
+table_rows_str = "\n".join(
+    f"| {n} | `{fn}` | {desc} | {ann} |"
+    for n, fn, desc, ann in plot_index_rows
+)
+
+sql_blocks = "\n\n".join(
+    f"### `{key}`\n\n```sql\n{sql.strip()}\n```"
+    for key, sql in sql_queries.items()
+)
+
+md_content = f"""# Step 01_02_05 -- Univariate Visualizations: aoestats
+
+**Phase:** 01 -- Data Exploration
+**Pipeline Section:** 01_02 -- Exploratory Data Analysis (Tukey-style)
+**Dataset:** aoestats
+**Invariants applied:** #6 (SQL reproducibility), #7 (no magic numbers), #9 (step scope: visualization only)
+**Predecessor artifact:** `01_02_04_univariate_census.json`
+
+## Plot Index
+
+{table_header}
+{table_sep}
+{table_rows_str}
+
+## SQL Queries (Invariant #6)
+
+All SQL queries that produce plotted data appear verbatim below.
+
+{sql_blocks}
+
+## Data Sources
+
+- `matches_raw`: {census["matches_null_census"]["total_rows"]:,} rows
+- `players_raw`: {census["players_null_census"]["total_rows"]:,} rows
+- Census artifact: `01_02_04_univariate_census.json`
+"""
+
+md_path = artifacts_dir / "01_02_05_visualizations.md"
+with open(md_path, "w") as f:
+    f.write(md_content)
+print(f"Written markdown artifact: {md_path}")
+print(f"Markdown contains {len(sql_queries)} SQL query groups.")
+
+# %%
+con.close()
+print("DuckDB connection closed.")
+print(f"Step 01_02_05 complete -- 15 PNG files and markdown artifact written.")

@@ -8,6 +8,283 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-16 — [Phase 01 / Step 01_03_01] Systematic Data Profiling
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** Comprehensive column-level and dataset-level profiling for matches_raw (18 cols) and players_raw (14 cols). Profiling only — no cleaning decisions, no feature engineering (I9).
+
+### 01_03_01 — Systematic Data Profiling
+
+**Artifacts produced:**
+- `artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json` (27,260 bytes)
+- `artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png`
+- `artifacts/01_exploration/03_profiling/01_03_01_qq_matches.png`
+- `artifacts/01_exploration/03_profiling/01_03_01_qq_players.png`
+- `artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png`
+- `artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md`
+
+**I3 classification:** All 32 columns (18 matches_raw + 14 players_raw) annotated with temporal class. Classes: CONTEXT, IDENTIFIER, PRE-GAME, POST-GAME, IN-GAME, TARGET. `avg_elo` classified PRE-GAME by convention; formal leakage test deferred to 01_04.
+
+**Critical findings:**
+- Dead fields (100% NULL): none
+- Constant columns (cardinality=1): `game_type` ("random_map"), `game_speed` ("normal") — flagged for 01_04 drop
+- Near-constant columns (cardinality ≤ 5 AND uniqueness_ratio < 0.001): `leaderboard`, `starting_age`, `replay_enhanced`, `mirror`, `team`, `winner`. Cardinality cap of 5 (NEAR_CONSTANT_CARDINALITY_CAP) prevents false-positive flagging of civ (50), map (93), opening (10), patch (19), num_players (8).
+
+**ELO sentinel handling:** `team_0_elo` and `team_1_elo` stats reported both with and without sentinel value −1 (34 and 39 rows respectively). Sentinel-excluded stats use CTE pre-filter pattern (not PERCENTILE_CONT WITHIN GROUP FILTER, which has uncertain DuckDB support for ordered-set aggregates).
+
+**Completeness pattern:** IN-GAME columns are 87–91% NULL: `feudal_age_uptime` (~87% NULL), `castle_age_uptime` (~89% NULL), `imperial_age_uptime` (~91% NULL), `opening` (~67% NULL). All other columns are <1% NULL.
+
+**Distribution findings (QQ plots):** duration, avg_elo, team_0/1_elo show strong non-normality (heavy right tails, leptokurtic). old_rating and new_rating are approximately normal at this scale. match_rating_diff is near-normal with moderate tails. Age uptime columns show distinct bounded non-normal distributions (effective N ~6,500 per panel after dropna; documented in subplot titles per W2 fix).
+
+**ECDF findings:** team_0/1_elo and old_rating show similar bell-shaped cumulative distributions centered near 1000–1200 ELO. match_rating_diff ECDF is near-symmetric around zero with fat tails.
+
+**Duplicate detection:** players_raw uses census-aligned COALESCE string-concatenation key (`CAST(game_id AS VARCHAR) || '_' || COALESCE(CAST(profile_id AS VARCHAR), '__NULL__')`). Result: 489 duplicate rows, matching 01_02_04 census.
+
+**Linkage integrity:** players_without_match = 0, matches_without_players = 212,890.
+
+**Winner class balance:** near-equal split (confirmed from class_balance sub-dict in profile JSON).
+
+**SQL queries:** All embedded verbatim in markdown artifact (I6). Key queries: matches_numeric_profile, elo_no_sentinel (CTE pre-filter), duplicate_players (COALESCE key), match_linkage, qq_matches_sample, qq_players_sample, ecdf_sample.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Statistical Tests (pass-3 addition)
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** Mann-Whitney U tests with rank-biserial r added to bivariate EDA
+
+### 01_02_06 — Statistical Tests (pass-3 addition, 2026-04-15)
+
+Added Mann-Whitney U tests for old_rating and match_rating_diff (both PRE-GAME).
+Sample: RESERVOIR(5M) per query; SE(r) = 0.00045.
+- old_rating by winner: r_rb = -0.0159 (small effect; pre-game rating alone is weak signal)
+- match_rating_diff by winner: r_rb = -0.2041 (medium effect; confirmed PRE-GAME from T03 scatter, not leakage)
+Cross-game note: matches sc2egset Mann-Whitney U reporting (I8 compliance).
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** multivariate -- cross-table Spearman heatmap, PCA scree, PCA biplot
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png`
+
+### What
+
+Produced 3 thesis-grade multivariate analyses on a 20,000-row RESERVOIR sample from a
+cross-table JOIN of players_raw (107.6M rows) and matches_raw (30.7M rows). Sample size
+justified by JOIN cost; SE(rho) ~0.007 at N=20K (Invariant #7). All SQL embedded verbatim
+(Invariant #6). POST-GAME and IN-GAME columns annotated on heatmap axis labels (Invariant #3).
+No cleaning decisions, no feature engineering, no model fitting (Invariant #9).
+
+Spearman correlation computed via pandas `.corr(method='spearman')` (pairwise deletion),
+not scipy matrix form (which uses listwise deletion and would have reduced the effective
+sample from ~20K to ~1.7K rows due to 87%-NULL age uptime columns). Minimum pairwise N
+asserted >= 1,000 rows.
+
+### Spearman Heatmap Findings
+
+The cluster ordering groups features by correlation magnitude. Three clusters emerge:
+
+1. **ELO cluster** (rho > 0.98): avg_elo, team_0_elo, team_1_elo are near-perfectly
+   correlated with each other (rho 0.9826--0.9958). old_rating and new_rating also join
+   this cluster (old_rating x avg_elo rho=0.983; new_rating x avg_elo rho=0.981). This
+   confirms massive ELO feature redundancy.
+
+2. **match_rating_diff** is near-orthogonal to the ELO cluster (rho near zero with all
+   ELO features). PC2 analysis confirms it is an independent dimension of variation.
+
+3. **duration_sec** and **age uptime columns** (feudal/castle/imperial) form a separate
+   cluster with weak correlations to ELO features, consistent with their POST-GAME /
+   IN-GAME temporal class and high NULL rate (~87-91%).
+
+4. Cross-table correlations between match-level ELO columns (avg_elo, team_0/1_elo) and
+   player-level ELO columns (old_rating, new_rating) are high because all three match-level
+   columns are repeated for every player in the JOIN. The authoritative within-table
+   correlations remain those from 01_02_06.
+
+### PCA Findings (Pre-Game Features Only)
+
+Features: old_rating, match_rating_diff, avg_elo, team_0_elo, team_1_elo (N=20,000).
+
+- **PC1: 79.21% variance.** Loadings nearly equal for old_rating (0.499), avg_elo (0.502),
+  team_0_elo (0.500), team_1_elo (0.499); match_rating_diff loading near zero (0.022).
+  PC1 captures the shared ELO axis -- this is a rating level factor, not a latent feature.
+- **PC2: 20.11% variance (cumulative 99.33%).** Dominated by match_rating_diff (loading
+  0.996). PC2 is effectively the match_rating_diff dimension alone.
+- **PC3-5: <0.4% each.** Essentially numerical noise after the ELO and match_rating_diff
+  axes are captured.
+- **Two components explain 99.3% of variance.** The five pre-game features are nearly
+  two-dimensional. ELO redundancy (avg_elo, team_0_elo, team_1_elo, old_rating) means
+  keeping all four adds marginal information. Retention decision deferred to Phase 02.
+
+### PCA Biplot Findings
+
+- Scatter of 20K rows coloured by winner shows no visible cluster separation in PC1/PC2 space.
+  Winner does not cleanly separate along the ELO axis or the match_rating_diff axis.
+- All four ELO features point in nearly identical directions (PC1 direction), confirming
+  near-perfect redundancy. match_rating_diff points perpendicular (PC2 direction).
+- This is consistent with the bivariate finding that ELO features have weak but non-zero
+  predictive value; the lack of winner separation in PCA space suggests the signal is
+  distributed and not concentrated in a simple projection.
+
+### Decisions / Column Classification Confirmed
+
+All column classifications are documented and ready for thesis draft; `old_rating` is classified as PRE-GAME by schema inference (pre-match rating), not by bivariate temporal test:
+
+| Column | Temporal Class | PCA | Notes |
+|--------|---------------|-----|-------|
+| old_rating | PRE-GAME | Yes | ELO cluster, high redundancy with avg_elo |
+| match_rating_diff | PRE-GAME | Yes | Confirmed PRE-GAME in 01_02_06; PC2 |
+| avg_elo | PRE-GAME | Yes | ELO cluster -- effectively = mean(team_0_elo, team_1_elo) |
+| team_0_elo | PRE-GAME | Yes | ELO cluster |
+| team_1_elo | PRE-GAME | Yes | ELO cluster |
+| new_rating | POST-GAME | No | Excluded from PCA and from pre-game prediction |
+| duration_sec | POST-GAME | No | Excluded from PCA and from pre-game prediction |
+| feudal_age_uptime | IN-GAME, 87% NULL | No | Excluded from PCA |
+| castle_age_uptime | IN-GAME, 88% NULL | No | Excluded from PCA |
+| imperial_age_uptime | IN-GAME, 91% NULL | No | Excluded from PCA |
+
+Pipeline section 01_02 (Exploratory Data Analysis) is now complete for aoestats.
+Phase 02 (Feature Engineering) may proceed.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** bivariate — pairwise relationships between features and match outcome
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.json`
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (8 files)
+
+### What
+
+Produced 8 thesis-grade PNG plots examining pairwise relationships between features
+and `winner` in players_raw (107.6M rows) and matches_raw (30.7M rows). Key analyses:
+leakage scatter for `match_rating_diff` (Phase 02 blocker), `old_rating` by winner
+violin, ELO panel, duration violin, opening win rate bar chart, age uptime violin,
+Spearman correlation matrix, and multi-panel numeric features. All thresholds derived
+from 01_02_04 census at runtime (Invariant #7). ELO sentinel (-1) excluded. POST-GAME
+column tick labels marked with asterisk in Spearman heatmap. Age uptime and opening
+analyses restricted to ~14% non-NULL subset (schema change boundary). DuckDB
+connections read_only=True; no DDL.
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_match_rating_diff_leakage_scatter` | match_rating_diff vs (new_rating−old_rating) scatter (leakage test) |
+| `01_02_06_old_rating_by_winner` | old_rating violin by winner (pre-game ELO predictor) |
+| `01_02_06_elo_by_winner` | team_0_elo and team_1_elo panel by winner |
+| `01_02_06_duration_by_winner` | Duration violin by winner (POST-GAME descriptor) |
+| `01_02_06_numeric_by_winner` | Multi-panel numeric features by winner |
+| `01_02_06_opening_winrate` | Opening win rate bar chart (Wilson score CI) |
+| `01_02_06_age_uptime_by_winner` | Age uptime violin by winner (non-NULL subset only) |
+| `01_02_06_spearman_correlation` | Spearman correlation matrix (scipy.stats.spearmanr on 20K sample) |
+
+### Key findings
+
+- **match_rating_diff — PRE-GAME SAFE (Phase 02 blocker RESOLVED):** Pearson r = 0.053
+  between `match_rating_diff` and `new_rating − old_rating`; only 0.66% of rows have
+  `|match_rating_diff − (new_rating − old_rating)| < 0.01`. Definitively refutes H1
+  (that match_rating_diff = post-game rating change). The column encodes something
+  other than the post-game rating delta — most likely a pre-game opponent rating
+  difference or handicap value. **Safe to include in Phase 02 feature sets.**
+- **old_rating × winner:** Pre-game ELO shows measurable distributional separation by
+  winner. Winners have marginally higher old_rating, consistent with a predictive
+  pre-game signal.
+- **Opening win rate:** Some opening types show noticeably higher win rates than others.
+  Wilson score CIs show which differences are reliable vs. noise (large-n openings only).
+- **Age uptime columns (87% NULL):** Bivariate analysis on non-NULL subset confirms
+  expected relationship; must note the selectivity bias in thesis (non-NULL = post-schema-change games only).
+
+### Decisions
+
+- `match_rating_diff` → PRE-GAME SAFE; include in Phase 02 feature engineering candidates
+- `old_rating` → confirmed pre-game ELO predictor; include
+- `new_rating` → post-game; exclude from all feature sets
+- Post-game columns (`new_rating`, `match_result`) → excluded from feature sets
+
+### Open questions
+
+- What exactly does `match_rating_diff` encode? Opponent rating gap, handicap, or something else?
+  Semantic clarity needed before thesis feature description.
+- Do opening types (87% NULL) have enough non-NULL coverage to train on? Depends on Phase 02 target window selection.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate Visualizations
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** visualization
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_05_*.png` (15 files)
+
+### What
+
+Produced 15 thesis-grade PNG plots visualizing the 01_02_04 census findings for
+matches_raw (30.7M rows) and players_raw (107.6M rows). Temporal annotations applied
+to all in-game and post-game columns (Invariant #3). All SQL queries embedded in
+the markdown artifact (Invariant #6). All thresholds derived from census (Invariant #7).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `winner_distribution` | Target balance — winner True/False per match; balanced binary label |
+| `num_players_distribution` | Match size distribution (1v1 dominant); using `distinct_match_count` not `row_count` |
+| `map_top20` | Top-20 maps by match count |
+| `civ_top20` | Top-20 civilizations by player-row count |
+| `leaderboard_distribution` | Match counts per leaderboard tier |
+| `duration_histogram` | Dual-panel body (0–78.6 min, p95-clipped) + full log-scale; duration in BIGINT nanoseconds converted via `/ 1e9` |
+| `elo_distributions` | ELO 3-panel (team_0, team_1, avg); sentinel values (−1.0) excluded from team panels, not from avg_elo |
+| `old_rating_histogram` | Pre-match rating distribution from players_raw |
+| `match_rating_diff_histogram` | match_rating_diff body clipped at ±200 (~3.6σ, editorial); LEAKAGE UNRESOLVED annotation applied |
+| `age_uptime_histograms` | Feudal / Castle / Imperial age-up times; all three IN-GAME annotated; ~87% NULL confirmed visually |
+| `opening_nonnull` | opening strategy frequency among the ~14% of non-NULL rows; IN-GAME annotated |
+| `iqr_outlier_summary` | IQR-fence outlier counts per numeric column |
+| `null_rate_bar` | 4-tier NULL severity across all matches_raw + players_raw columns |
+| `schema_change_boundary` | Weekly NULL rate for 86%-NULL columns in players_raw over time; IN-GAME annotated; column list derived from census `null_pct > 80%` at runtime |
+| `monthly_match_count` | Monthly match volume 2022-08–2026-02 |
+
+### Decisions taken
+
+- Duration clip: p95 = 4,714.1s = 78.6 min (from census `numeric_stats_matches` label `"duration_sec"`). Above p95, log-panel tail shows extreme outliers. Cross-dataset note in subtitle vs aoe2companion (63.15 min).
+- `match_rating_diff` clip: ±200 is an editorial choice (~3.6σ from stddev=55.23) to show leptokurtic shape without [-2185, +2185] range extremes; NOT derived from p05/p95 (which are ±59). I7 comment documents this.
+- `avg_elo` histogram: no sentinel exclusion applied (sentinel impact negligible at 30.7M rows). Documented as asymmetric treatment vs team_0/1_elo in the markdown artifact.
+- `schema_change_boundary`: column list derived at runtime from `census["players_null_census"]["columns"]` filtered by `null_pct > 80.0`. Filename-based temporal join (chars 9-18 of `players/YYYY-MM-DD_...` format) — no cross-table JOIN required.
+
+### Decisions deferred
+
+- `match_rating_diff` leakage resolution (post-game vs. pre-game) deferred to 01_02_06 Bivariate EDA (scatter vs `new_rating − old_rating`). Current I3 annotation: LEAKAGE STATUS UNRESOLVED.
+- Schema change exact breakpoint date deferred — `schema_change_boundary` plot visually identifies the boundary but formal threshold analysis deferred to Phase 01_04 Data Cleaning.
+- `avg_elo` sentinel asymmetry treatment deferred to Phase 01_04.
+
+### Thesis mapping
+
+- Chapter 4, §4.1.3 — AoE2 aoestats feature landscape, target balance, NULL structure
+- Chapter 4, §4.1.4 — in-game column annotations (age uptimes, opening strategy)
+
+### Open questions / follow-ups
+
+- `match_rating_diff` leakage: the 01_02_06 bivariate scatter (`match_rating_diff` vs `new_rating − old_rating`) will resolve this. Feature engineering for Phase 02 blocked on this result.
+- Schema change boundary: visual inspection of `schema_change_boundary` plot will reveal the exact week when age uptime / opening columns transitioned from ~0% to ~100% populated.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_04] Univariate Census & Target Variable EDA
 
 **Category:** A (science)

@@ -19,6 +19,40 @@ merged to `master`.
 
 ### Removed
 
+## [3.7.0] — 2026-04-16 (PR #TBD: feat/census-pass3)
+
+### Added
+- **01_02_05 Univariate Visualizations** for all three datasets (aoe2companion 17 plots,
+  aoestats 15 plots, sc2egset 14 plots) — dedicated visualization notebooks reading from
+  01_02_04 census JSON artifacts
+- **01_02_06 Bivariate EDA** for all three datasets — conditional distributions by outcome,
+  Mann-Whitney U tests with rank-biserial effect sizes, Spearman correlation matrices,
+  leakage verification (aoestats match_rating_diff confirmed PRE-GAME)
+- **01_02_07 Multivariate EDA** for all three datasets — cluster-ordered Spearman heatmaps,
+  PCA scree/biplot where viable (aoestats 5 pre-game numerics), degenerate-case fallbacks
+  (aoe2companion 0 viable pre-game numerics, sc2egset 1 pre-game numeric)
+- **01_03_01 Systematic Data Profiling** for all three datasets — column-level profiling,
+  dataset-level profiling, critical detection (dead/constant/near-constant), QQ plots,
+  ECDFs, I3 temporal classification for all columns, sentinel analysis
+- Retroactive fixes plan (`planning/fixes_and_next_steps.md`) with adversarial-reviewed
+  PR1/PR2/PR3 plans for tracking, research log, and notebook corrections
+- `temp/01_02_roadmap_finalization.md` — working document for 01_02 pipeline section closure
+
+### Changed
+- ROADMAP.md updated for all three datasets with 01_02_05 through 01_03_01 step definitions
+- STEP_STATUS.yaml updated for all three datasets (01_02_05 through 01_03_01 complete)
+- 01_02_04 census notebooks updated with pass-3 improvements (sc2egset field classification
+  corrections, additional census sections)
+- 01_02_05 visualization notebooks revised per adversarial critique findings
+- Existing 01_02_04 plot artifacts moved to `plots/` subdirectory for consistency
+
+### Fixed
+- sc2egset `elapsed_game_loops` I3 classification corrected from IN-GAME to POST-GAME
+- aoe2companion 01_02_05 won_consistency data extraction bug (single-element list structure)
+- aoestats duration unit handling (BIGINT nanoseconds → seconds conversion)
+- Various plot designs revised per adversarial critique (bin widths, sentinel handling,
+  dual-panel layouts, I7 compliance)
+
 ## [3.6.2] — 2026-04-14 (PR #TBD: chore/raw-schema-docs)
 
 ### Added

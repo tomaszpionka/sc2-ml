@@ -8,6 +8,273 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-16 — [Phase 01 / Step 01_03_01] Systematic Data Profiling
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** profiling (read-only — no DuckDB writes, no new tables)
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_completeness_heatmap.png`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_qq_plot.png`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_ecdf_key_columns.png`
+- `reports/artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.md`
+
+### What
+
+Systematic profiling of matches_raw (277,099,059 rows, 55 columns) per Manual Section 3. Consolidates and extends 01_02 census findings into a structured, machine-readable profile. All SQL queries written verbatim to artifacts (Invariant #6).
+
+### Column-level profiling
+
+55 columns profiled with: null count/pct, approximate cardinality, uniqueness ratio, zero count for numeric columns, descriptive stats (mean, std, percentiles from census), exact skewness/kurtosis for all 10 numeric columns (9 from census + derived duration_min) via DuckDB native SKEWNESS()/KURTOSIS() aggregation over the full table (no sampling, no listwise deletion), IQR outlier counts via consolidated single-scan query, and top-5 values for 21 categorical columns.
+
+All columns carry I3 temporal classification (Invariant #3). Rating classified as AMBIGUOUS per 01_02_06 finding. Resolution deferred to 01_04.
+
+### Dataset-level profiling
+
+- **Primary key integrity (matchId, profileId):** No duplicates — primary key is clean.
+- **Class balance (won):** False=132,150,323 (47.69%), True=131,963,175 (47.62%), NULL=12,985,561 (4.69%). Balanced binary classification target.
+- **Memory footprint:** Computed via DuckDB `pragma_database_size()`.
+
+### Critical findings
+
+- **Dead fields (0):** None.
+- **Constant columns (0):** None.
+- **Near-constant columns (50):** speedFactor (IQR=0), population (IQR=0), treatyLength (IQR=0) confirmed; many categorical game-setting columns flagged. Inform Phase 02 feature exclusion decisions.
+
+### Distribution analysis
+
+QQ plots (5 columns) and ECDFs (3 columns) from BERNOULLI 0.02% sample (~55,414 rows). Skewness/kurtosis exact over full 277M rows:
+- rating: skew=0.4654, excess kurtosis=0.3047 (slightly right-skewed, near-symmetric)
+- duration_min: right-skewed (long-tail matches)
+
+### Rating stratification
+
+| Scope | N Rows | Rating NULL % | Rating Mean |
+|-------|--------|---------------|-------------|
+| full_table | 277,099,059 | 42.46% | 1120.23 |
+| 1v1_ranked (rm_1v1 + qp_rm_1v1) | 61,071,799 | 26.21% | 1091.65 |
+
+Rating NULL rate notably lower in 1v1 ranked matches. Remaining 26.21% NULL in 1v1 requires 01_04 join with ratings_raw for resolution.
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Statistical Tests (pass-3 addition)
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** Mann-Whitney U tests with rank-biserial r added to bivariate EDA
+
+### 01_02_06 — Statistical Tests (pass-3 addition, 2026-04-15)
+
+Added Mann-Whitney U tests for ratingDiff (POST-GAME leakage diagnostic) and rating (AMBIGUOUS).
+- ratingDiff by won: r_rb = -1.0 (near -1.0 confirms POST-GAME leakage — winners have ratingDiff > 0, losers < 0, perfectly separated)
+- rating by won: r_rb = -0.0086 (near 0 supports AMBIGUOUS classification — negligible discriminative power)
+Cross-game note: PRE-GAME effect sizes now comparable to sc2egset MMR (r=-0.09).
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_07] Multivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** multivariate — feature cluster structure and effective dimensionality of the pre-game numeric space
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png` (degenerate fallback)
+
+### What
+
+Produced 2 thesis-grade PNG plots examining the multivariate structure of numeric
+features in matches_raw (277M rows; sampled to ~100K via BERNOULLI for Spearman).
+Analysis A: Spearman cluster-ordered correlation heatmap for all 7 numeric columns
+with I3 classification labels on axes (POST-GAME, AMBIGUOUS, PRE-GAME).
+Hierarchical clustering on 1-|rho| distance matrix (UPGMA). Analysis B: PCA
+degeneracy determination from census IQR statistics (I7 -- no magic numbers).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_07_spearman_heatmap_all` | Spearman heatmap, all 7 numeric columns, cluster-ordered, I3-labelled axes |
+| `01_02_07_pca_biplot` | Degenerate PCA fallback -- text summary (0 viable pre-game features) |
+
+### Key findings
+
+- **Spearman heatmap:** ratingDiff and rating show strong positive correlation
+  (rho approximately +0.5–0.7), consistent with rating encoding a mix of pre-game
+  and post-game information. duration_min is largely independent of the pre-game
+  features. speedFactor, treatyLength, and population show near-zero correlation
+  with all other features and with each other, consistent with their near-constant
+  distributions in 1v1 ranked play.
+- **NaN handling in Spearman matrix:** Near-constant columns (speedFactor, treatyLength,
+  population, internalLeaderboardId) produced NaN entries in the scipy spearmanr
+  output due to zero rank variance in the filtered sample. NaNs filled with 0
+  (uncorrelated) for clustering distance computation; p-values set to 1.0 (not
+  significant). This is documented in the notebook output and is expected behavior.
+- **PCA DEGENERATE -- confirmed:** All 3 PCA candidates fail the IQR==0 near-constant
+  filter (population p25==p75==200.0; speedFactor p25==p75==1.70; treatyLength
+  p25==p75==0.0). internalLeaderboardId excluded by design (nominal categorical).
+  Result: 0 viable pre-game numeric features survive. PCA is meaningless.
+- **Pre-game feature poverty -- confirmed:** aoe2companion matches_raw has effectively
+  zero numeric pre-game features usable for machine learning without engineering.
+  This is the central finding of the 01_02 EDA stack for this dataset.
+
+### Decisions
+
+- `speedFactor`, `treatyLength`, `population` → near-constant in 1v1 ranked; exclude
+  from Phase 02 raw numeric feature set (IQR==0 confirmed from census)
+- `internalLeaderboardId` → retained in heatmap (rank-correlation meaningful); excluded
+  from PCA (nominal categorical with arbitrary integer codes)
+- PCA branch → degenerate path; Phase 02 must engineer features from temporal history
+
+### I3 classification applied
+
+| Column | Classification | Applied |
+|--------|----------------|---------|
+| rating | AMBIGUOUS | Deferred to Phase 02 (row-level verification with ratings_raw) |
+| ratingDiff | POST-GAME | Excluded from all pre-game feature sets |
+| duration_min | POST-GAME | EDA characterization only; not prediction feature |
+| population | PRE-GAME | Near-constant; excluded from PCA |
+| speedFactor | PRE-GAME | Near-constant; excluded from PCA |
+| treatyLength | PRE-GAME | Near-constant; excluded from PCA |
+| internalLeaderboardId | PRE-GAME | Nominal categorical; in heatmap, excluded from PCA |
+
+### Open questions
+
+- Does the ratingDiff/rating cluster in the Spearman heatmap confirm that rating
+  is partially post-game? Requires Phase 02 row-level join with ratings_raw.
+- Can engineered features (rolling win rates, Elo trajectories, civ matchup stats)
+  recover sufficient pre-game signal for Phase 02 modelling?
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_06] Bivariate EDA
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** bivariate — pairwise relationships between features and match outcome
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_06_bivariate_eda.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_06_*.png` (8 files)
+
+### What
+
+Produced 8 thesis-grade PNG plots examining pairwise relationships between numeric
+features and `won` (True/False) in matches_raw (277M rows; sampled to 100K via
+BERNOULLI for Spearman). Ran conditional histograms and violin/box plots for all
+primary numeric features, a Spearman correlation matrix (scipy.stats.spearmanr on
+sample), and leaderboard-faceted ratingDiff distributions. All thresholds derived
+from 01_02_04 census at runtime (Invariant #7). POST-GAME annotations applied to
+`ratingDiff` and `duration` (Invariant #3).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `01_02_06_ratingdiff_by_won` | ratingDiff conditional histogram (POST-GAME annotated) |
+| `01_02_06_rating_by_won` | rating overlapping histogram by outcome (sentinel -1 excluded) |
+| `01_02_06_rating_vs_ratingdiff` | rating vs ratingDiff scatter (BERNOULLI sample) |
+| `01_02_06_duration_by_won` | Duration histogram by outcome (POST-GAME annotated, p95-clipped) |
+| `01_02_06_numeric_by_won` | Multi-panel box-and-whisker: rating, ratingDiff, duration_min |
+| `01_02_06_spearman_correlation` | Spearman correlation heatmap (6 numeric features, sampled) |
+| `01_02_06_ratingdiff_by_leaderboard` | ratingDiff std by leaderboard bar chart |
+| `01_02_06_ratingdiff_by_won_by_leaderboard` | Mean ratingDiff by outcome, faceted by leaderboard |
+
+### Key findings
+
+- **ratingDiff (Q1 — I3 resolution) — POST-GAME CONFIRMED:** won=True mean ratingDiff
+  = +16.6, won=False mean = −17.6. Perfect sign separation. ratingDiff encodes the
+  match outcome directly in its sign (positive = won, negative = lost). **Must be
+  excluded from all pre-game feature sets.** This is a hard constraint for Phase 02.
+- **rating (Q2 — temporal ambiguity) — INCONCLUSIVE:** Mean rating difference = +7.0
+  Elo (won=True: 1095, won=False: 1088). This is ~2% of the rating stddev (~344).
+  Falls between the decision thresholds of 5 (likely pre-game) and 50 (likely
+  post-game). Cannot resolve with bivariate analysis alone.
+- **rating temporal status — deferred to Phase 02:** Row-level verification required:
+  check `rating = pre_rating + ratingDiff` via temporal join with ratings_raw. If
+  true, `rating` is post-game and must be excluded alongside `ratingDiff`.
+- **ratingDiff × leaderboard:** The ratingDiff magnitude varies substantially across
+  leaderboards (higher-ELO leaderboards have larger absolute ratingDiff per match).
+  Leaderboard ID may be a useful pre-game feature.
+
+### Decisions
+
+- `ratingDiff` → excluded from all pre-game feature sets (confirmed leakage, I3)
+- `rating` → ambiguous; Phase 02 row-level verification required before use
+- `duration` → post-game descriptor; usable for EDA characterization but not prediction
+
+### Open questions
+
+- Is `rating` = pre_game_rating + ratingDiff (post-game)? Requires Phase 02 join with ratings_raw.
+- Does leaderboard_id (pre-game) have independent predictive power beyond rating?
+
+---
+
+## 2026-04-15 — [Phase 01 / Step 01_02_05] Univariate Census Visualizations
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** visualization
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/02_eda/01_02_05_visualizations.md`
+- `reports/artifacts/01_exploration/02_eda/plots/01_02_05_*.png` (17 files)
+
+### What
+
+Produced 17 thesis-grade PNG plots visualizing the 01_02_04 census findings.
+All DuckDB queries embedded verbatim in the markdown artifact (Invariant #6).
+All post-game and ambiguous columns annotated on plots (Invariant #3).
+All clip thresholds and bin widths derived from census artifact at runtime (Invariant #7).
+
+### Plots produced
+
+| Plot | Subject |
+|------|---------|
+| `won_distribution` | Target balance — 47.69% false / 47.62% true / 4.69% NULL, visually near-perfectly balanced |
+| `won_consistency` | Per-leaderboard win consistency — intra-match both_true (6.2%) and both_false (4.7%) flagged |
+| `leaderboard_distribution` | 6 leaderboard tiers; rm_1v1 dominant (26.8M), qp_rm_1v1 secondary |
+| `civ_top20` | Top-20 civilizations by pick rate; Franks 5.68% leads |
+| `map_top20` | Top-20 maps; Arabia 19.53%, Arena 16.80%, Black Forest 12.42% |
+| `rating_histogram` | Rating distribution; ambiguous temporal status flagged in subtitle |
+| `ratingdiff_histogram` | ratingDiff distribution — symmetric around 0, range [−174, +319]; POST-GAME annotation |
+| `duration_histogram` | Dual-panel body (0–63.15 min, p95-clipped) + full log-scale; clip derived from census p95 |
+| `null_rate_bar` | 4-tier NULL severity (green/gold/orange/red) across all 55 matches_raw columns |
+| `null_cooccurrence` | 2×2 annotated table: Cluster A (426,472 rows) vs Cluster B (431,288 rows), 428,321 overlap |
+| `leaderboards_numeric_boxplots` | wins/losses/streak/drops box by leaderboard tier |
+| `profiles_null_rate` | profiles_raw column completeness; 7 fully dead (100% NULL) deprecated API fields |
+| `leaderboards_leaderboard_bar` | leaderboards_raw entry counts per tier |
+| `boolean_stacked_bar` | Cluster A boolean settings distribution (trueFalseNull stacked) |
+| `ratings_raw_rating_histogram` | ratings_raw rating distribution — safe for temporal join use |
+| `monthly_volume` | Monthly match volume 2020-08–2026-04; shows stable growth with no major gaps |
+| `rating_null_timeline` | Monthly NULL rate for `rating` and `ratingDiff` — tests schema-change hypothesis (42.46% overall) |
+
+### Decisions taken
+
+- Duration clip: p95 = 3,789s = 63.15 min (derived from census `match_duration_stats[0]["p95_secs"]`). Differs from aoestats (p95 = 78.6 min) — both use p95-derived clipping; subtitle documents cross-dataset difference.
+- NULL co-occurrence: rendered as annotated 2×2 matplotlib table (not imshow) — 4-cell values span 6 orders of magnitude, making any linear colormap uninformative.
+- `rating` histogram: no I3 annotation applied; subtitle flags the ambiguity pending Phase 02 row-level co-occurrence check.
+- `ratingDiff` histogram: POST-GAME annotation applied (range [-174, +319] is outcome-derived).
+
+### Decisions deferred
+
+- Bivariate analysis of `ratingDiff × won` and `rating × won` deferred to Step 01_02_06 (Bivariate EDA).
+- `rating` temporal classification (ambiguous_pre_or_post) resolution deferred to Phase 02.
+- `won` inconsistency (both_true / both_false rows) cleaning strategy deferred to Phase 01_04 (Data Cleaning).
+
+### Thesis mapping
+
+- Chapter 4, §4.1.3 — AoE2 feature landscape, target balance, NULL structure visualized
+- Chapter 4, §4.1.4 — temporal leakage annotation for ratingDiff
+
+### Open questions / follow-ups
+
+- Does `rating_null_timeline` show a step-function (schema change) or gradual missingness? Visual inspection of the artifact determines whether pre-change rows need special handling.
+- Cross-dataset: aoestats duration body at p95 = 78.6 min vs aoe2companion at 63.15 min — difference noted in plot subtitle for thesis comparability.
+
+---
+
 ## 2026-04-15 — [Phase 01 / Step 01_02_04] Univariate Census & Target Variable EDA
 
 **Category:** A (science)

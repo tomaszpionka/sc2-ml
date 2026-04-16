@@ -1,7 +1,7 @@
 # Step 01_02_04 -- Metadata STRUCT Extraction & Replay-Level EDA
 
 **Dataset:** sc2egset
-**Generated:** 2026-04-15 11:57
+**Generated:** 2026-04-15 22:27
 
 ---
 
@@ -663,7 +663,7 @@ assert set(speed_counts["game_speed"].dropna()) == {"Faster"}
 
 ## Section E: Numeric Descriptive Statistics
 
-Note: APM, SQ, and supplyCappedPercent are in-game-only fields. See `field_classification` in the JSON artifact for the full pre-game/in-game/identifier/target/constant taxonomy.
+Note: APM, SQ, and supplyCappedPercent are in-game-only fields. See `field_classification` in the JSON artifact for the full pre-game/in-game/post-game/identifier/target/constant taxonomy.
 
 ### MMR
 
@@ -853,13 +853,13 @@ ORDER BY cnt DESC
 |          224 |          160 |    27 |
 |          192 |          128 |    24 |
 |          152 |          208 |    18 |
-|          160 |          152 |    17 |
 |          200 |            0 |    17 |
+|          160 |          152 |    17 |
 |          208 |          200 |     7 |
 |          136 |          208 |     6 |
 |          168 |          144 |     4 |
-|          136 |          160 |     3 |
 |          160 |          208 |     3 |
+|          136 |          160 |     3 |
 |          248 |            0 |     2 |
 |          200 |          224 |     1 |
 
