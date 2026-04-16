@@ -19,6 +19,20 @@ merged to `master`.
 
 ### Removed
 
+## [3.10.0] — 2026-04-16 (PR #TBD: feat/data-cleaning-01-04)
+
+### Added
+- Step 01_04_00 — Source Normalisation to Canonical Long Skeleton (all three datasets):
+  `matches_long_raw` VIEW per dataset, 10-column unified schema, one row per player per match.
+  Includes I5 symmetry audit; documents ~5pp slot asymmetry in both AoE2 datasets.
+- Step 01_04_01 — Data Cleaning (all three datasets):
+  `matches_1v1_clean` and `player_history_all` VIEWs per dataset.
+  Prediction-scope vs feature-scope separation: 1v1 target scope in `matches_1v1_clean`,
+  full-game-history feature source in `player_history_all`.
+- Schema YAMLs for all new VIEWs (`matches_long_raw.yaml`, `player_history_all.yaml`).
+- Planning artifacts, critiques, and research log entries for 01_04_00 and 01_04_01.
+- `temp/follow_up_01_04.md` documenting open I3 violations to fix in next session.
+
 ## [3.9.1] — 2026-04-16 (PR #TBD: chore/sc2egset-schema-descriptions)
 
 ### Changed
