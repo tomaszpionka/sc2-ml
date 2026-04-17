@@ -524,7 +524,7 @@ The 01_04_01 cleaning registry has 7 rules. 01_04_02 adds the following rules:
 | drop_mapsize_pred_view | Always | DROP gd_mapSizeX/Y/is_map_size_missing from matches_flat_clean | DS-SC2-06: redundant with metadata_mapName; retained in history | -3 cols matches_flat_clean |
 | drop_mapauthor_pred_view | Always | DROP gd_mapAuthorName from matches_flat_clean | DS-SC2-07: domain-judgement non-predictive metadata | -1 col matches_flat_clean |
 | drop_go_constants | n_distinct=1 in either VIEW | DROP 12 constant go_* cols from both VIEWs | DS-SC2-08: ledger constants-detection; zero information | -12 cols each VIEW |
-| drop_handicap_near_constant | Always | DROP handicap + is_handicap_anomalous | DS-SC2-09: 2 anomalies in 44k = effectively constant | -1 (or -2) cols |
+| drop_handicap_near_constant | Always | DROP handicap + is_handicap_anomalous | DS-SC2-09: 2 anomalies in 44k = effectively constant | -2 cols matches_flat_clean (handicap + is_handicap_anomalous); -1 col player_history_all (handicap only — is_handicap_anomalous not present in player_history_all DDL) |
 | nullif_apm_history | APM = 0 in player_history_all | APM → NULL via NULLIF; ADD is_apm_unparseable flag | DS-SC2-10: low-rate sentinel + indicator pattern (Manual §4.2) | 1,132 APM values → NULL; +1 col player_history_all |
 
 ### 3.9 Artifact: 01_04_02_post_cleaning_validation.json
@@ -692,11 +692,36 @@ research_log_entry: "Required on completion."
 22. **Cell — Cleaning registry update** (Section 3.8) — Build the 9 new rule-rows.
 23. **Cell — Build artifact JSON** (Section 3.9) — Single dict with all sections; write to `artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json`.
 24. **Cell — Build markdown report** — Mirror 01_04_01 markdown format; write to `01_04_02_post_cleaning_validation.md`. Sections: Summary, Per-DS Resolutions (table + rationale), Cleaning Registry (table), CONSORT Column-Count Flow, Subgroup Impact, Validation Results.
-25. **Cell — Update player_history_all schema YAML** — Re-run `DESCRIBE player_history_all`; rewrite `data/db/schemas/views/player_history_all.yaml` with new column list (drop MMR, handicap, highestLeague, clanTag, 12 go_* constants; add is_decisive_result, is_apm_unparseable; update APM description). Generated_date 2026-04-17. Step "01_04_02". **CRITICAL I3 metadata for new flag columns (BLOCKER-4 / BLOCKER-5 fixes):**
-    - `is_decisive_result` entry MUST include `notes: "POST_GAME_HISTORICAL — derived from result IN ('Win','Loss'). For any prediction at game T, Phase 02 MUST filter match_time < T before aggregating any function of this flag (e.g., decisive-rate features). Use as historical-context signal only; never as a within-game feature for matches_flat_clean prediction VIEW."`
-    - `is_apm_unparseable` entry MUST include `notes: "IN_GAME_HISTORICAL — derived from APM = 0 (an in-game-derived signal). Inherits APM's IN_GAME provenance. For any prediction at game T, Phase 02 MUST filter match_time < T before aggregating. The flag exists in player_history_all only (NOT in matches_flat_clean) precisely to enforce I3."`
-    - Update the YAML's invariants block to add a new provenance category 'POST_GAME_HISTORICAL' alongside the existing 'PRE_GAME' / 'IN_GAME_HISTORICAL' descriptions, with a Phase-02-must-filter-by-match_time-T constraint stated explicitly.
+25. **Cell — Update player_history_all schema YAML** — Re-run `DESCRIBE player_history_all`; rewrite `data/db/schemas/views/player_history_all.yaml` with new column list (drop MMR, handicap, highestLeague, clanTag, 12 go_* constants; add is_decisive_result, is_apm_unparseable; update APM description). Generated_date 2026-04-17. Step "01_04_02".
+
+    **Schema YAML I3 enforcement (v2-BLOCKER-1 fix per round-2 critique):** The project's existing convention uses **single-token** `notes:` provenance categories on each column (vocabulary in current YAML: IDENTITY, TARGET, PRE_GAME, IN_GAME_HISTORICAL, CONTEXT). Operational instructions (e.g., "Phase 02 MUST filter match_time < T before aggregation") belong in the file's machine-readable `invariants:` block, NOT in per-column `notes:` prose. Round-1 BLOCKER-4/5 was correctly raised; the round-1 verbose-notes fix violated the file's convention without adding enforcement. v3 fix (per round-2 v2-BLOCKER-1):
+
+    **(a) Per-column notes — single-token tags only:**
+    - `is_decisive_result.notes`: `POST_GAME_HISTORICAL` (single token; new provenance category)
+    - `is_apm_unparseable.notes`: `IN_GAME_HISTORICAL` (single token; matches APM's existing tag)
+    - Also (per v2-WARNING-1): `result.notes` updated from `TARGET` to `POST_GAME_HISTORICAL` — TARGET is a sub-class of POST_GAME_HISTORICAL by definition (the prediction target is, semantically, a post-game observation). This eliminates the asymmetry where the derived child carries POST_GAME_HISTORICAL but the source parent does not.
+
+    **(b) Invariants block extension — single-source operational meaning:** Extend the existing `invariants:` block (currently lines 271-282 of player_history_all.yaml carrying I3/I6/I9 entries) so that the I3 entry enumerates the four provenance categories and states the filter requirement once. Concrete addition (executor pastes verbatim into the invariants.I3 section):
+
+    ```yaml
+    provenance_categories:
+      - PRE_GAME: "Available before game T starts. Safe to use as feature for game T without temporal filtering."
+      - IN_GAME_HISTORICAL: "Available during/after game completion. SAFE only when used as a player-history aggregate FILTERED by match_time < T (e.g., 'mean APM in last 30 days excluding T'). UNSAFE as direct game-T feature."
+      - POST_GAME_HISTORICAL: "Derived from game-T outcome (Win/Loss/Undecided/Tie). SAFE only when used as a player-history aggregate FILTERED by match_time < T (e.g., 'win-rate in last 30 days excluding T'). UNSAFE as direct game-T feature. The prediction target itself is in this category; never aggregate it without temporal exclusion."
+      - IDENTITY: "Stable identifiers (replay_id, toon_id). No temporal constraint."
+      - CONTEXT: "Game/match metadata (started_timestamp, mapName, etc.). PRE_GAME-equivalent for temporal purposes."
+    ```
+
 26. **Cell — Create matches_flat_clean schema YAML (NEW)** — Mirror **the existing `player_history_all.yaml` flat-list shape** (top-level `table:`, `dataset:`, `columns: - name: ...` entries); the richer `docs/templates/duckdb_schema_template.yaml` Section A/`value:`/`required:` shape is NOT used here because no current schema YAML in the project follows it. `DESCRIBE matches_flat_clean`; write to `data/db/schemas/views/matches_flat_clean.yaml`. **Column ordering in YAML:** match the DDL SELECT-list order from `CREATE OR REPLACE matches_flat_clean` cell 14 verbatim (no re-sorting); this gives downstream reviewers a line-by-line diff that mirrors the SQL.
+
+    **Invariants block (v2-NOTE-1 fix per round-2 critique):** The new YAML MUST include a top-level `invariants:` block analogous to the player_history_all.yaml structure (currently lines 271-282 there). Required entries:
+    - **I3** (PRE_GAME-only column set): "matches_flat_clean is the prediction-target VIEW. ALL columns must be PRE_GAME (available before game T starts). IN_GAME_HISTORICAL and POST_GAME_HISTORICAL columns are excluded by construction. Verified by §3.3a/§3.3b assertions: APM/SQ/supplyCappedPercent/header_elapsedGameLoops/result-derived-flags absent."
+    - **I5** (symmetry): "Every replay_id has exactly 2 rows: 1 with result='Win', 1 with result='Loss'. Verified by §3.2 assertion."
+    - **I6** (reproducibility): "DDL is reproducible from raw + 01_04_00 + 01_04_01 + this notebook (01_04_02). All SQL stored verbatim in 01_04_02_post_cleaning_validation.json sql_queries block."
+    - **I9** (no feature computation in cleaning step): "01_04_02 modifies the column SET (drops/adds), never the values. No imputation, scaling, or encoding. Phase 02 owns those transforms."
+    - **I10** (filename relative to raw_dir): "All replay_id derivation traces back to filename relative to raw_dir per Invariant I10."
+
+    Also use single-token `notes:` provenance categories per the v2-BLOCKER-1 convention (PRE_GAME / IDENTITY / CONTEXT — matches_flat_clean has no IN_GAME_HISTORICAL or POST_GAME_HISTORICAL columns by I3 construction).
 27. **Cell — Close connection** — `db.close()`.
 28. **Cell — Final summary print** — Column counts before/after, drops applied, 9 new cleaning registry rules, gate predicate verdict.
 
