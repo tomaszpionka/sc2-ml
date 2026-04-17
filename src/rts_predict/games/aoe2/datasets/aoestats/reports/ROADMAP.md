@@ -938,6 +938,137 @@ research_log_entry: >
   artifact paths, summarise decisions surfaced for downstream resolution.
 ```
 
+### Step 01_04_02 -- Data Cleaning Execution
+
+```yaml
+step_number: "01_04_02"
+name: "Data Cleaning Execution -- Act on DS-AOESTATS-01..08"
+description: >
+  Acts on the 8 cleaning decisions surfaced by 01_04_01. Modifies VIEW DDL
+  for matches_1v1_clean and player_history_all (no raw table changes per
+  Invariant I9): drops leaderboard + num_players (DS-AOESTATS-08 constants),
+  drops raw_match_type (DS-AOESTATS-04 redundant), applies NULLIF on
+  p0/p1/avg_elo + old_rating (DS-AOESTATS-02/03) plus 3 new is_unrated
+  indicator flags. Documents DS-AOESTATS-01 (sentinel ABSENT in 1v1 scope,
+  RETAIN_AS_IS with scope-expansion contingency), DS-AOESTATS-05/06 (zero
+  NULLs verified), DS-AOESTATS-07 (overviews_raw out-of-analytical-scope).
+  Reports CONSORT-style column-count flow + subgroup impact + post-cleaning
+  invariant re-validation.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4"
+dataset: "aoestats"
+question: >
+  Which of the 8 decisions surfaced by 01_04_01 (DS-AOESTATS-01..08) are
+  resolved by DDL modifications, what is the column-count and subgroup
+  impact, and do all post-cleaning invariants still hold?
+method: >
+  Modify CREATE OR REPLACE VIEW DDL for matches_1v1_clean and
+  player_history_all per per-DS resolutions (see plan Section 1). Apply
+  column drops, NULLIF transformations, and 3 new derived is_unrated
+  indicator columns. Re-run the assertion battery from 01_04_01 plus
+  01_04_02-specific assertions on the new column set. Produce a
+  CONSORT-style column-count table and per-DS resolution log.
+stratification: "By VIEW (matches_1v1_clean vs player_history_all) and by DS-AOESTATS-NN."
+predecessors:
+  - "01_04_01"
+methodology_citations:
+  - "Manual 01_DATA_EXPLORATION_MANUAL.md §4.1 (cleaning registry), §4.2 (non-destructive), §4.3 (CONSORT impact), §4.4 (post-validation)"
+  - "Liu, X. et al. (2020). CONSORT-AI extension. BMJ, 370."
+  - "Jeanselme, V. et al. (2024). Participant Flow Diagrams for Health Equity in AI. JBI, 152."
+  - "Schafer, J.L. & Graham, J.W. (2002). Missing data: Our view of the state of the art. Psych Methods, 7(2)."
+  - "van Buuren, S. (2018). Flexible Imputation of Missing Data, 2nd ed. CRC Press."
+  - "Sambasivan, N. et al. (2021). Data Cascades in High-Stakes AI. CHI '21."
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py"
+inputs:
+  duckdb_views:
+    - "matches_1v1_clean (17,814,947 rows / 21 cols -- pre-01_04_02)"
+    - "player_history_all (107,626,399 rows / 13 cols -- pre-01_04_02)"
+  prior_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json (cleaning_registry, missingness_audit, consort_flow)"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv (34 rows, per-DS empirical evidence)"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md (decisions_surfaced reference)"
+  schema_yamls:
+    - "data/db/schemas/views/player_history_all.yaml (current -- to be UPDATED)"
+outputs:
+  duckdb_views:
+    - "matches_1v1_clean (replaced via CREATE OR REPLACE -- 20 cols, 17,814,947 rows)"
+    - "player_history_all (replaced via CREATE OR REPLACE -- 14 cols, 107,626,399 rows)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_1v1_clean.yaml (NEW)"
+    - "data/db/schemas/views/player_history_all.yaml (UPDATED)"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.md"
+reproducibility: >
+  Code and output in the paired notebook. All DDL stored verbatim in the
+  validation JSON sql_queries block (Invariant I6). All thresholds derived
+  from the 01_04_01 ledger CSV at runtime (Invariant I7). Re-runs deterministically.
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >
+      No new feature computation. matches_1v1_clean retains only PRE_GAME
+      + IDENTITY + TARGET columns. player_history_all retains PRE_GAME
+      and CONTEXT columns (old_rating PRE_GAME-safe; no IN-GAME or
+      POST-GAME columns introduced).
+  - number: "5"
+    how_upheld: >
+      Player-slot symmetry warning preserved as DDL comment (team=1 wins
+      ~52.27% per 01_04_01 t1_win_pct finding); the p0/p1 columns are
+      symmetrically modified (NULLIF + is_unrated applied to both slots
+      identically). Phase 02 must randomise focal/opponent assignment.
+  - number: "6"
+    how_upheld: >
+      All DDL queries stored verbatim in JSON sql_queries. All assertion
+      SQL stored verbatim. All per-DS rationale references the ledger row
+      + ledger recommendation_justification by view+column.
+  - number: "7"
+    how_upheld: >
+      Thresholds (5/40/80%) come from the 01_04_01 framework block
+      (Schafer & Graham 2002 boundary; van Buuren 2018 warning). Per-DS
+      empirical evidence (n_sentinel, pct_missing_total, n_distinct) is
+      read from the 01_04_01 ledger CSV at runtime, not hardcoded.
+  - number: "9"
+    how_upheld: >
+      No raw tables modified. matches_long_raw (canonical skeleton from
+      01_04_00) unmodified. Only matches_1v1_clean and player_history_all
+      VIEWs are replaced via CREATE OR REPLACE. All inputs are 01_04_01
+      artifacts (predecessor) or this step's own DDL output.
+  - number: "10"
+    how_upheld: >
+      No filename derivation changes. The aoestats raw tables already
+      satisfy I10 from 01_02_02 ingestion.
+gate:
+  artifact_check: >
+    artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
+    and .md exist and are non-empty. Both schema YAMLs
+    (matches_1v1_clean.yaml NEW, player_history_all.yaml UPDATED) exist
+    with correct column counts.
+  continue_predicate: >
+    matches_1v1_clean has exactly 20 columns. player_history_all has
+    exactly 14 columns. All zero-NULL assertions pass (game_id,
+    started_timestamp, p0/p1_profile_id, p0/p1_winner, team1_wins in
+    matches_1v1_clean; profile_id, game_id, started_timestamp, winner in
+    player_history_all). Forbidden columns absent (DS-AOESTATS-04/-08
+    drops + I3 pre-existing exclusions). NULLIF effects match ledger-derived
+    expected_p0_unrated / expected_p1_unrated / expected_avg_elo_sentinel /
+    expected_unrated values within +-1 row (loaded at runtime per I7).
+    is_unrated indicator counts equal NULLIF NULL counts (consistency).
+    Row counts unchanged. CONSORT
+    column-count table reproduces drop counts per DS-AOESTATS-01..08.
+    STEP_STATUS.yaml has 01_04_02: complete. PIPELINE_SECTION_STATUS for
+    01_04 transitions to complete (no further 01_04_NN steps defined in
+    ROADMAP).
+  halt_predicate: >
+    Any zero-NULL assertion fails; any inconsistent winner row appears;
+    any forbidden column appears; any expected NEW column missing; column
+    count off by even one from spec; NULLIF count diverges from ledger
+    by more than +-1 row.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data > Data Cleaning Decisions"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ---

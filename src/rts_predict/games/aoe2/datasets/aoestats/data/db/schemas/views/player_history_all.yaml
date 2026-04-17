@@ -2,137 +2,148 @@ table: player_history_all
 dataset: aoestats
 game: aoe2
 object_type: view
-step: "01_04_01"
+step: '01_04_02'
 row_count: 107626399
-describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json
-generated_date: "2026-04-16"
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
+generated_date: '2026-04-17'
 columns:
-  - name: profile_id
-    type: BIGINT
-    nullable: true
-    description: Player account identifier, cast from DOUBLE to BIGINT (R01).
-    notes: "IDENTITY. CAST from DOUBLE -- safe per T01 (max=24,853,897 < 2^53). Use as player FK."
+- name: profile_id
+  type: BIGINT
+  nullable: true
+  description: Player account identifier, cast from DOUBLE to BIGINT (R01).
+  notes: IDENTITY. CAST from DOUBLE -- safe per T01 (max=24,853,897 < 2^53). Use as
+    player FK.
+- name: game_id
+  type: VARCHAR
+  nullable: true
+  description: Match identifier, shared with matches_raw.
+  notes: IDENTITY. Join key to matches_raw.
+- name: started_timestamp
+  type: TIMESTAMP WITH TIME ZONE
+  nullable: true
+  description: Match start time (UTC-aware). Temporal anchor for I3 enforcement.
+  notes: 'CONTEXT. I3: Downstream feature queries MUST add
 
-  - name: game_id
-    type: VARCHAR
-    nullable: true
-    description: Match identifier, shared with matches_raw.
-    notes: "IDENTITY. Join key to matches_raw."
+    WHERE ph.started_timestamp < target_match.started_timestamp.
 
-  - name: started_timestamp
-    type: TIMESTAMP WITH TIME ZONE
-    nullable: true
-    description: Match start time (UTC-aware). Temporal anchor for I3 enforcement.
-    notes: >
-      CONTEXT. I3: Downstream feature queries MUST add
-      WHERE ph.started_timestamp < target_match.started_timestamp.
-      Rows with NULL started_timestamp excluded by VIEW predicate.
-
-  - name: leaderboard
-    type: VARCHAR
-    nullable: true
-    description: Ladder or game-type identifier (e.g., random_map, team_random_map, co_random_map).
-    notes: "CONTEXT. No leaderboard restriction -- all game types included for full-history feature computation."
-
-  - name: map
-    type: VARCHAR
-    nullable: true
-    description: Map name for the match.
-    notes: "PRE_GAME (selected before match starts)."
-
-  - name: patch
-    type: BIGINT
-    nullable: true
-    description: Game patch number at match time.
-    notes: "CONTEXT. Temporal stratification variable."
-
-  - name: player_count
-    type: BIGINT
-    nullable: true
-    description: Total number of player rows for this game_id in players_raw.
-    notes: "CONTEXT. Computed via COUNT(*) GROUP BY game_id. Includes 1v1 (2), team (4, 6, 8), and edge cases."
-
-  - name: mirror
-    type: BOOLEAN
-    nullable: true
-    description: Whether both players played the same civilization.
-    notes: "PRE_GAME descriptive. From matches_raw."
-
-  - name: replay_enhanced
-    type: BOOLEAN
-    nullable: true
-    description: Whether the match record was enhanced via replay parsing.
-    notes: "CONTEXT. From matches_raw."
-
-  - name: civ
-    type: VARCHAR
-    nullable: true
-    description: Civilization chosen by this player for this match.
-    notes: "PRE_GAME. Key feature for faction proficiency computation in Phase 02."
-
-  - name: team
-    type: BIGINT
-    nullable: true
-    description: Team identifier (0 or 1 for 1v1 matches; higher for team games).
-    notes: "CONTEXT. Retained for player-row orientation. No wide-format pivot in this VIEW."
-
-  - name: old_rating
-    type: BIGINT
-    nullable: true
-    description: Player ELO rating before the match started.
-    notes: "PRE_GAME. I3-safe: recorded before match. Key feature for Phase 02."
-
-  - name: winner
-    type: BOOLEAN
-    nullable: true
-    description: Whether this player won the match.
-    notes: "TARGET. Used as prediction label in matches_1v1_clean (via p0_winner/p1_winner). Retained here for win-rate feature computation across all game types."
-
+    Rows with NULL started_timestamp excluded by VIEW predicate.'
+- name: leaderboard
+  type: VARCHAR
+  nullable: true
+  description: Ladder or game-type identifier (e.g., random_map, team_random_map,
+    co_random_map).
+  notes: CONTEXT. No leaderboard restriction -- all game types included for full-history
+    feature computation.
+- name: map
+  type: VARCHAR
+  nullable: true
+  description: Map name for the match.
+  notes: PRE_GAME (selected before match starts).
+- name: patch
+  type: BIGINT
+  nullable: true
+  description: Game patch number at match time.
+  notes: CONTEXT. Temporal stratification variable.
+- name: player_count
+  type: BIGINT
+  nullable: true
+  description: Total number of player rows for this game_id in players_raw.
+  notes: CONTEXT. Computed via COUNT(*) GROUP BY game_id. Includes 1v1 (2), team (4,
+    6, 8), and edge cases.
+- name: mirror
+  type: BOOLEAN
+  nullable: true
+  description: Whether both players played the same civilization.
+  notes: PRE_GAME descriptive. From matches_raw.
+- name: replay_enhanced
+  type: BOOLEAN
+  nullable: true
+  description: Whether the match record was enhanced via replay parsing.
+  notes: CONTEXT. From matches_raw.
+- name: civ
+  type: VARCHAR
+  nullable: true
+  description: Civilization chosen by this player for this match.
+  notes: PRE_GAME. Key feature for faction proficiency computation in Phase 02.
+- name: team
+  type: BIGINT
+  nullable: true
+  description: Team identifier (0 or 1 for 1v1 matches; higher for team games).
+  notes: CONTEXT. Retained for player-row orientation. No wide-format pivot in this
+    VIEW.
+- name: old_rating
+  type: BIGINT
+  nullable: true
+  description: Player ELO rating before the match started. NULL if player was unrated
+    (old_rating=0 sentinel).
+  notes: 'PRE_GAME. I3-safe: recorded before match. Key feature for Phase 02. Sentinel=0
+    (unrated player) converted to NULL via NULLIF in 01_04_02 (DS-AOESTATS-02); see
+    is_unrated companion flag for missingness-as-signal preservation.'
+- name: is_unrated
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if this player was unrated (old_rating=0 before NULLIF). Preserves
+    missingness-as-signal.
+  notes: PRE_GAME. Indicator flag for unrated players (old_rating=0 sentinel). Derives
+    from PRE_GAME old_rating; safe as feature without temporal filter. New in 01_04_02.
+- name: winner
+  type: BOOLEAN
+  nullable: true
+  description: Whether this player won the match.
+  notes: TARGET. Used as prediction label in matches_1v1_clean (via p0_winner/p1_winner).
+    Retained here for win-rate feature computation across all game types.
 provenance:
-  source_tables: [players_raw, matches_raw]
-  filter: "profile_id IS NOT NULL; started_timestamp IS NOT NULL"
-  scope: "All leaderboards and game types (no leaderboard restriction). Prediction scope != feature scope."
-  created_by: sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_01_data_cleaning.py
+  source_tables:
+  - players_raw
+  - matches_raw
+  filter: profile_id IS NOT NULL; started_timestamp IS NOT NULL
+  scope: All leaderboards and game types (no leaderboard restriction). Prediction
+    scope != feature scope.
+  created_by: sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py
   excluded_columns:
-    - name: new_rating
-      reason: "POST-GAME; I3 violation (R06)"
-    - name: game_type
-      reason: "Constant (cardinality=1); R04"
-    - name: game_speed
-      reason: "Constant (cardinality=1); R04"
-    - name: starting_age
-      reason: "Near-dead (99.99994% single value); R05"
-    - name: opening
-      reason: "IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)"
-    - name: feudal_age_uptime
-      reason: "IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)"
-    - name: castle_age_uptime
-      reason: "IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)"
-    - name: imperial_age_uptime
-      reason: "IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)"
-    - name: replay_summary_raw
-      reason: "PARTIAL UTILITY; deferred to Phase 02"
-    - name: filename
-      reason: "Provenance only; not needed in analytical VIEW"
-    - name: duration
-      reason: "POST-GAME (match length known only after completion)"
-    - name: irl_duration
-      reason: "POST-GAME (wall-clock duration known only after completion)"
-    - name: match_rating_diff
-      reason: "POST-GAME (I3 violation); ELO delta from this match (new_rating - old_rating). Removed in 01_04_01 I3 fix."
-
+  - name: new_rating
+    reason: POST-GAME; I3 violation (R06)
+  - name: game_type
+    reason: Constant (cardinality=1); R04
+  - name: game_speed
+    reason: Constant (cardinality=1); R04
+  - name: starting_age
+    reason: Near-dead (99.99994% single value); R05
+  - name: opening
+    reason: IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)
+  - name: feudal_age_uptime
+    reason: IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)
+  - name: castle_age_uptime
+    reason: IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)
+  - name: imperial_age_uptime
+    reason: IN-GAME; 86-91% NULL; feature-inclusion deferred to Phase 02 (I9)
+  - name: replay_summary_raw
+    reason: PARTIAL UTILITY; deferred to Phase 02
+  - name: filename
+    reason: Provenance only; not needed in analytical VIEW
+  - name: duration
+    reason: POST-GAME (match length known only after completion)
+  - name: irl_duration
+    reason: POST-GAME (wall-clock duration known only after completion)
+  - name: match_rating_diff
+    reason: POST-GAME (I3 violation); ELO delta from this match (new_rating - old_rating).
+      Removed in 01_04_01 I3 fix.
 invariants:
-  - id: I3
-    description: >
-      new_rating and match_rating_diff (POST-GAME) excluded. Temporal anchor
-      (started_timestamp) exposed for downstream WHERE ph.started_timestamp < target_match.started_timestamp.
-  - id: I5
-    description: >
-      Player-row-oriented (one row per player per match). No wide-format pivoting.
-      profile_id is the identity key. No player-slot asymmetry risk in this VIEW.
-  - id: I6
-    description: "VIEW DDL stored verbatim in 01_04_01_data_cleaning.json sql_queries."
-  - id: I9
-    description: >
-      No features computed. VIEW is a JOIN projection of players_raw x matches_raw.
-      Age-uptime columns excluded pending Phase 02 feature-inclusion decision.
+- id: I3
+  description: new_rating and match_rating_diff (POST-GAME) excluded. Temporal anchor
+    (started_timestamp) exposed for downstream WHERE ph.started_timestamp < target_match.started_timestamp.
+    old_rating is PRE_GAME-safe (rating before match).
+- id: I5
+  description: Player-row-oriented (one row per player per match). No wide-format
+    pivoting. profile_id is the identity key. No player-slot asymmetry risk in this
+    VIEW.
+- id: I6
+  description: VIEW DDL stored verbatim in 01_04_02_post_cleaning_validation.json
+    sql_queries.
+- id: I9
+  description: No features computed. VIEW is a JOIN projection of players_raw x matches_raw.
+    01_04_02 modifies the column SET (old_rating NULLIF; +is_unrated indicator), never
+    the underlying raw tables. No imputation, scaling, or encoding.
+- id: I10
+  description: No filename derivation changes. The aoestats raw tables already satisfy
+    I10 from 01_02_02 ingestion.

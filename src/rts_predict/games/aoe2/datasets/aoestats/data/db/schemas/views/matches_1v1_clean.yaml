@@ -1,0 +1,204 @@
+table: matches_1v1_clean
+dataset: aoestats
+game: aoe2
+object_type: view
+step: '01_04_02'
+row_count: 17814947
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
+generated_date: '2026-04-17'
+columns:
+- name: game_id
+  type: VARCHAR
+  nullable: true
+  description: Match identifier, shared with matches_raw. Join key.
+  notes: IDENTITY. Primary key; 1-row-per-match invariant (asserted in 01_04_02).
+- name: started_timestamp
+  type: TIMESTAMP WITH TIME ZONE
+  nullable: true
+  description: Match start time (UTC-aware). Temporal anchor for I3 enforcement.
+  notes: 'CONTEXT. I3: Downstream feature queries MUST filter player_history_all by
+    ph.started_timestamp < this value.'
+- name: map
+  type: VARCHAR
+  nullable: true
+  description: Map name for the match.
+  notes: PRE_GAME. Selected before match starts. 77 distinct maps in 1v1 ranked scope.
+- name: mirror
+  type: BOOLEAN
+  nullable: true
+  description: Whether both players played the same civilization.
+  notes: PRE_GAME. From matches_raw. TRUE if both players chose the same civilization.
+- name: patch
+  type: BIGINT
+  nullable: true
+  description: Game patch number at match time.
+  notes: CONTEXT. Temporal stratification variable. 19 distinct patches in scope.
+- name: replay_enhanced
+  type: BOOLEAN
+  nullable: true
+  description: Whether the match record was enhanced via replay parsing.
+  notes: CONTEXT. From matches_raw.
+- name: avg_elo
+  type: DOUBLE
+  nullable: true
+  description: Average ELO of both players. NULL if either player was unrated (avg_elo=0
+    sentinel).
+  notes: PRE_GAME. Average of team_0_elo and team_1_elo. Sentinel=0 converted to NULL
+    via NULLIF in 01_04_02 (DS-AOESTATS-03). ~118 rows affected.
+- name: team_0_elo
+  type: DOUBLE
+  nullable: true
+  description: Team 0 ELO rating before the match.
+  notes: PRE_GAME. Team 0 aggregate ELO. Sentinel=-1 absent in 1v1 ranked scope (DS-AOESTATS-01;
+    F1 override).
+- name: team_1_elo
+  type: DOUBLE
+  nullable: true
+  description: Team 1 ELO rating before the match.
+  notes: PRE_GAME. Team 1 aggregate ELO. Sentinel=-1 absent in 1v1 ranked scope (DS-AOESTATS-01;
+    F1 override).
+- name: p0_profile_id
+  type: BIGINT
+  nullable: true
+  description: Player 0 profile identifier.
+  notes: IDENTITY. Player 0 account identifier (team=0). CAST from DOUBLE to BIGINT.
+- name: p0_civ
+  type: VARCHAR
+  nullable: true
+  description: Civilization chosen by player 0.
+  notes: PRE_GAME. Player 0 civilization choice. 50 distinct civilizations in scope.
+- name: p0_old_rating
+  type: BIGINT
+  nullable: true
+  description: Player 0 ELO rating before the match. NULL if player was unrated (sentinel=0).
+  notes: PRE_GAME. Player 0 ELO before the match. Sentinel=0 converted to NULL via
+    NULLIF in 01_04_02 (DS-AOESTATS-02). ~4,730 rows affected. See p0_is_unrated for
+    missingness-as-signal flag.
+- name: p0_is_unrated
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if player 0 was unrated (p0_old_rating=0 before NULLIF). BOOLEAN.
+  notes: PRE_GAME. Indicator flag for unrated players (old_rating=0 sentinel). Derives
+    from PRE_GAME p0_old_rating; safe as feature without temporal filter. New in 01_04_02.
+- name: p0_winner
+  type: BOOLEAN
+  nullable: true
+  description: Whether player 0 won the match.
+  notes: POST_GAME_HISTORICAL. Whether player 0 (team=0) won. Zero NULLs (F1 override).
+    Used internally for target derivation; NOT a direct feature for game T.
+- name: p1_profile_id
+  type: BIGINT
+  nullable: true
+  description: Player 1 profile identifier.
+  notes: IDENTITY. Player 1 account identifier (team=1). CAST from DOUBLE to BIGINT.
+- name: p1_civ
+  type: VARCHAR
+  nullable: true
+  description: Civilization chosen by player 1.
+  notes: PRE_GAME. Player 1 civilization choice. 50 distinct civilizations in scope.
+- name: p1_old_rating
+  type: BIGINT
+  nullable: true
+  description: Player 1 ELO rating before the match. NULL if player was unrated (sentinel=0).
+  notes: PRE_GAME. Player 1 ELO before the match. Sentinel=0 converted to NULL via
+    NULLIF in 01_04_02 (DS-AOESTATS-02). ~188 rows affected. See p1_is_unrated for
+    missingness-as-signal flag.
+- name: p1_is_unrated
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if player 1 was unrated (p1_old_rating=0 before NULLIF). BOOLEAN.
+  notes: PRE_GAME. Indicator flag for unrated players (old_rating=0 sentinel). Derives
+    from PRE_GAME p1_old_rating; safe as feature without temporal filter. New in 01_04_02.
+- name: p1_winner
+  type: BOOLEAN
+  nullable: true
+  description: Whether player 1 won the match.
+  notes: POST_GAME_HISTORICAL. Whether player 1 (team=1) won. Zero NULLs (F1 override).
+    Used internally for target derivation; NOT a direct feature for game T.
+- name: team1_wins
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if team 1 (player 1) won the match. Prediction target.
+  notes: 'TARGET. Primary prediction label. Derived as p1.winner AS team1_wins. BOOLEAN
+    strict 0/1 -- no Undecided/Tie analog in aoestats (CRITICAL ASYMMETRY). WARNING
+    (I5): team=1 wins ~52.27% of matches (slot asymmetry). Phase 02 MUST randomise
+    focal/opponent assignment before training.'
+provenance:
+  source_tables:
+  - matches_raw
+  - players_raw
+  filter: 'Ranked 1v1 decisive matches only: leaderboard=''random_map''; COUNT(DISTINCT
+    players_raw.team)=2; COUNT(players_raw rows per game_id)=2; p0.winner != p1.winner
+    (decisive -- no ties).'
+  scope: Ranked 1v1 decisive matches only. Prediction scope only (not full feature
+    history).
+  row_multiplicity: 1 row per match (NOT 2-per-match like sc2egset).
+  created_by: sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py
+  excluded_columns:
+  - name: leaderboard
+    reason: Constant (n_distinct=1) in 1v1 ranked scope; DS-AOESTATS-08
+  - name: num_players
+    reason: Constant (n_distinct=1) in 1v1 ranked scope; DS-AOESTATS-08
+  - name: raw_match_type
+    reason: n_distinct=1 in non-NULL scope; redundant with upstream filter; DS-AOESTATS-04
+  - name: new_rating
+    reason: POST-GAME; I3 violation
+  - name: p0_new_rating
+    reason: POST-GAME; I3 violation
+  - name: p1_new_rating
+    reason: POST-GAME; I3 violation
+  - name: duration
+    reason: POST-GAME; I3 violation
+  - name: irl_duration
+    reason: POST-GAME; I3 violation
+  - name: match_rating_diff
+    reason: POST-GAME; I3 violation
+  - name: p0_match_rating_diff
+    reason: POST-GAME; I3 violation
+  - name: p1_match_rating_diff
+    reason: POST-GAME; I3 violation
+  - name: p0_opening
+    reason: IN-GAME; I3 violation
+  - name: p1_opening
+    reason: IN-GAME; I3 violation
+  - name: p0_feudal_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: p1_feudal_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: p0_castle_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: p1_castle_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: p0_imperial_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: p1_imperial_age_uptime
+    reason: IN-GAME; I3 violation
+  - name: game_type
+    reason: Constant (cardinality=1) in scope
+  - name: game_speed
+    reason: Constant (cardinality=1) in scope
+  - name: starting_age
+    reason: Near-dead (99.99994% single value) in scope
+invariants:
+- id: I3
+  description: 'All columns are PRE_GAME, IDENTITY, or TARGET. No IN-GAME or POST-GAME
+    columns present (post-game columns removed in prior PRs; in-game columns never
+    included). p0_winner / p1_winner are POST_GAME_HISTORICAL but used only for target
+    derivation (team1_wins = p1.winner) within this VIEW; they are not direct feature
+    inputs for game T. Temporal anchor: started_timestamp exposed for downstream I3-compliant
+    feature queries against player_history_all.'
+- id: I5
+  description: 1-row-per-match invariant (asserted in 01_04_02). NOT 2-rows-per-replay
+    like sc2egset. p0/p1 columns are symmetric (NULLIF + is_unrated applied identically
+    to both slots). Phase 02 MUST randomise focal/opponent assignment before training
+    to avoid slot asymmetry (team=1 wins ~52.27% per 01_04_01 audit).
+- id: I6
+  description: VIEW DDL stored verbatim in 01_04_02_post_cleaning_validation.json
+    sql_queries.
+- id: I9
+  description: No features computed. VIEW is a JOIN projection of matches_raw x players_raw
+    with column drops (DS-AOESTATS-04/08) and NULLIF transformations (DS-AOESTATS-02/03).
+    No imputation, scaling, or encoding. Phase 02 owns those transforms.
+- id: I10
+  description: No filename derivation changes. The aoestats raw tables already satisfy
+    I10 from 01_02_02 ingestion.

@@ -1,0 +1,243 @@
+{
+  "step": "01_04_02",
+  "dataset": "aoestats",
+  "generated_date": "2026-04-17",
+  "cleaning_registry": [
+    {
+      "rule_id": "drop_matches_1v1_clean_constants",
+      "condition": "n_distinct=1 in matches_1v1_clean scope",
+      "action": "DROP leaderboard and num_players from matches_1v1_clean",
+      "justification": "DS-AOESTATS-08: ledger constants-detection (n_distinct=1 across 17,814,947 rows); zero information content. Mirror of sc2egset DS-SC2-08 pattern.",
+      "impact": "-2 cols matches_1v1_clean"
+    },
+    {
+      "rule_id": "drop_raw_match_type_redundant",
+      "condition": "n_distinct=1 in non-NULL filtered scope of matches_1v1_clean",
+      "action": "DROP raw_match_type from matches_1v1_clean",
+      "justification": "DS-AOESTATS-04: NOTE-1 critique fix -- constants-detection overrides RETAIN_AS_IS; redundant with upstream leaderboard='random_map' + COUNT(*)=2 filters; 7,055 NULLs are MCAR but contribute zero signal beyond what upstream filter encodes.",
+      "impact": "-1 col matches_1v1_clean"
+    },
+    {
+      "rule_id": "nullif_old_rating_indicator",
+      "condition": "old_rating = 0 in either VIEW",
+      "action": "NULLIF(old_rating, 0) + ADD is_unrated BOOLEAN flag in both VIEWs",
+      "justification": "DS-AOESTATS-02: low-rate sentinel with semantic content; NULLIF makes IS NULL semantics consistent for Phase 02 imputation; is_unrated flag preserves missingness-as-signal (sklearn MissingIndicator pattern).",
+      "impact": "matches_1v1_clean: 0 dropped / +2 (p0_is_unrated, p1_is_unrated) / 2 modified; player_history_all: 0 dropped / +1 (is_unrated) / 1 modified"
+    },
+    {
+      "rule_id": "nullif_avg_elo",
+      "condition": "avg_elo = 0 in matches_1v1_clean",
+      "action": "NULLIF(avg_elo, 0) AS avg_elo",
+      "justification": "DS-AOESTATS-03: lowest sentinel rate (0.0007%); NULLIF makes column safe for Phase 02 averaging operations without 0-sentinel skewing means. p0_is_unrated/p1_is_unrated already convey the unrated subgroup membership.",
+      "impact": "1 modified col, 0 added"
+    },
+    {
+      "rule_id": "declare_overviews_oos",
+      "condition": "Always (documentation)",
+      "action": "OVERVIEWS_RAW formally declared out-of-analytical-scope in this registry",
+      "justification": "DS-AOESTATS-07: singleton metadata table (1 row), not used by any VIEW. Registry declaration prevents inadvertent feature-source use in Phase 02+.",
+      "impact": "None (registry-only resolution)"
+    }
+  ],
+  "consort_flow_columns": {
+    "matches_1v1_clean": {
+      "cols_before": 21,
+      "cols_dropped": 3,
+      "cols_added": 2,
+      "cols_modified": 3,
+      "cols_after": 20
+    },
+    "player_history_all": {
+      "cols_before": 13,
+      "cols_dropped": 0,
+      "cols_added": 1,
+      "cols_modified": 1,
+      "cols_after": 14
+    }
+  },
+  "consort_flow_matches": {
+    "matches_1v1_clean": {
+      "game_ids_before_01_04_02": 17814947,
+      "rows_before_01_04_02": 17814947,
+      "game_ids_after_01_04_02": 17814947,
+      "rows_after_01_04_02": 17814947,
+      "note": "Column-only cleaning step: row counts unchanged."
+    },
+    "player_history_all": {
+      "rows_before_01_04_02": 107626399,
+      "rows_after_01_04_02": 107626399,
+      "note": "Column-only cleaning step: row counts unchanged."
+    }
+  },
+  "subgroup_impact": [
+    {
+      "affected_column": "leaderboard (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOESTATS-08",
+      "subgroup_most_affected": "Constant in scope -- none affected",
+      "impact": "Information neutral (n_distinct=1 in 17,814,947 rows); no subgroup differentially affected"
+    },
+    {
+      "affected_column": "num_players (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOESTATS-08",
+      "subgroup_most_affected": "Constant in scope -- none affected",
+      "impact": "Information neutral (n_distinct=1 in 17,814,947 rows); no subgroup differentially affected"
+    },
+    {
+      "affected_column": "raw_match_type (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOESTATS-04",
+      "subgroup_most_affected": "n_distinct=1 in non-NULL filtered scope",
+      "impact": "Information neutral; 7,055 NULL rows remain in VIEW (MCAR <5% boundary per Schafer & Graham 2002)"
+    },
+    {
+      "affected_column": "p0_old_rating NULLIF + p0_is_unrated",
+      "source_decision": "DS-AOESTATS-02",
+      "subgroup_most_affected": "Unrated-team0 players (4730 of 17,814,947 = 0.0266%)",
+      "impact": "Sentinel->NULL converts 0-rating to missing-rating; p0_is_unrated flag preserves rated/unrated signal"
+    },
+    {
+      "affected_column": "p1_old_rating NULLIF + p1_is_unrated",
+      "source_decision": "DS-AOESTATS-02",
+      "subgroup_most_affected": "Unrated-team1 players (188 of 17,814,947 = 0.0011%)",
+      "impact": "Same as p0 -- symmetric NULLIF+flag applied"
+    },
+    {
+      "affected_column": "old_rating NULLIF + is_unrated (player_history_all)",
+      "source_decision": "DS-AOESTATS-02",
+      "subgroup_most_affected": "Unrated-player rows (5937 of 107,626,399 = 0.0055%)",
+      "impact": "Sentinel->NULL; is_unrated flag preserves signal for Phase 02 win-rate denominator selection"
+    },
+    {
+      "affected_column": "avg_elo NULLIF",
+      "source_decision": "DS-AOESTATS-03",
+      "subgroup_most_affected": "Matches with >=1 unrated player (118 of 17,814,947 = 0.0007%)",
+      "impact": "Sentinel->NULL eliminates 0-skew in ELO averaging operations; p0/p1_is_unrated already capture the subgroup"
+    }
+  ],
+  "validation_assertions": {
+    "col_count_clean_20": true,
+    "col_count_hist_14": true,
+    "zero_null_game_id_clean": true,
+    "zero_null_started_timestamp_clean": true,
+    "zero_null_p0_profile_id_clean": true,
+    "zero_null_p1_profile_id_clean": true,
+    "zero_null_p0_winner_clean": true,
+    "zero_null_p1_winner_clean": true,
+    "zero_null_team1_wins_clean": true,
+    "zero_null_profile_id_hist": true,
+    "zero_null_game_id_hist": true,
+    "zero_null_started_timestamp_hist": true,
+    "zero_null_winner_hist": true,
+    "no_duplicate_game_id": true,
+    "no_inconsistent_winner_rows": true,
+    "team1_wins_equals_p1_winner": true,
+    "forbidden_newly_dropped_absent_clean": true,
+    "forbidden_prior_i3_absent_clean": true,
+    "new_col_p0_is_unrated_present": true,
+    "new_col_p1_is_unrated_present": true,
+    "new_col_is_unrated_hist_present": true,
+    "new_cols_boolean_type": true,
+    "p0_nullif_count_matches_ledger": true,
+    "p0_is_unrated_consistency": true,
+    "p1_nullif_count_matches_ledger": true,
+    "p1_is_unrated_consistency": true,
+    "avg_elo_nullif_count_matches_ledger": true,
+    "hist_nullif_count_matches_ledger": true,
+    "hist_is_unrated_consistency": true,
+    "row_count_clean_unchanged": true,
+    "row_count_hist_unchanged": true,
+    "hist_leaderboard_retained": true,
+    "hist_player_count_retained": true
+  },
+  "sql_queries": {
+    "create_matches_1v1_clean_v2": "\nCREATE OR REPLACE VIEW matches_1v1_clean AS\n-- Purpose: Prediction-target VIEW. Ranked 1v1 decisive matches only.\n-- Row multiplicity: 1 row per match (NOT 2-per-match like sc2egset matches_flat_clean).\n-- Target column: team1_wins (BOOLEAN; 0/1 strict -- no Undecided/Tie analog in aoestats).\n-- Column set: 20 PRE_GAME + IDENTITY + TARGET columns (post 01_04_02).\n-- All cleaning decisions (DS-AOESTATS-01..08) documented in 01_04_02_post_cleaning_validation.json.\nWITH ranked_1v1 AS (\n    SELECT m.game_id\n    FROM matches_raw m\n    INNER JOIN (\n        SELECT game_id\n        FROM players_raw\n        GROUP BY game_id\n        HAVING COUNT(*) = 2 AND COUNT(DISTINCT team) = 2\n    ) pc ON m.game_id = pc.game_id\n    WHERE m.leaderboard = 'random_map'\n),\np0 AS (SELECT * FROM players_raw WHERE team = 0),\np1 AS (SELECT * FROM players_raw WHERE team = 1)\nSELECT\n    -- IDENTITY\n    m.game_id,\n    m.started_timestamp,\n\n    -- DS-AOESTATS-08: leaderboard DROPPED (constant n_distinct=1 in this scope)\n    m.map,\n    m.mirror,\n    -- DS-AOESTATS-08: num_players DROPPED (constant n_distinct=1 in this scope)\n    m.patch,\n    -- DS-AOESTATS-04: raw_match_type DROPPED (n_distinct=1 in non-NULL filtered scope; redundant with upstream filter)\n    m.replay_enhanced,\n\n    -- ELO (DS-AOESTATS-03: avg_elo NULLIF applied)\n    NULLIF(m.avg_elo, 0) AS avg_elo,\n    -- DS-AOESTATS-01: team_0_elo / team_1_elo RETAIN_AS_IS (sentinel=-1 absent in this scope per F1 override)\n    m.team_0_elo,\n    m.team_1_elo,\n\n    -- Player 0 (DS-AOESTATS-02: NULLIF + is_unrated indicator)\n    CAST(p0.profile_id AS BIGINT) AS p0_profile_id,\n    p0.civ AS p0_civ,\n    NULLIF(p0.old_rating, 0) AS p0_old_rating,\n    (p0.old_rating = 0) AS p0_is_unrated,\n    p0.winner AS p0_winner,\n\n    -- Player 1 (DS-AOESTATS-02: symmetric NULLIF + is_unrated)\n    CAST(p1.profile_id AS BIGINT) AS p1_profile_id,\n    p1.civ AS p1_civ,\n    NULLIF(p1.old_rating, 0) AS p1_old_rating,\n    (p1.old_rating = 0) AS p1_is_unrated,\n    p1.winner AS p1_winner,\n\n    -- TARGET (DS-AOESTATS-05: RETAIN_AS_IS, F1 override)\n    -- WARNING (I5): p0=team=0, p1=team=1. team=1 wins ~52.27% (slot asymmetry from 01_04_01).\n    -- Phase 02 feature engineering MUST randomise focal/opponent assignment before training.\n    p1.winner AS team1_wins\nFROM ranked_1v1 r\nINNER JOIN matches_raw m ON m.game_id = r.game_id\nINNER JOIN p0 ON p0.game_id = r.game_id\nINNER JOIN p1 ON p1.game_id = r.game_id\nWHERE p0.winner != p1.winner;\n",
+    "create_player_history_all_v2": "\nCREATE OR REPLACE VIEW player_history_all AS\n-- Purpose: Player feature history VIEW. ALL game types and ALL leaderboards.\n-- Row multiplicity: 1 row per player per match (107,626,399 rows pre/post).\n-- Column set: 14 columns (was 13; +1 is_unrated indicator from DS-AOESTATS-02).\n-- Changes from 01_04_01: old_rating NULLIF; +is_unrated; leaderboard/player_count RETAINED\n--   (only constant in matches_1v1_clean, not here).\nWITH player_counts AS (\n    SELECT game_id, COUNT(*) AS player_count\n    FROM players_raw\n    GROUP BY game_id\n)\nSELECT\n    -- IDENTITY\n    CAST(p.profile_id AS BIGINT) AS profile_id,\n    p.game_id,\n    m.started_timestamp,\n\n    -- CONTEXT (NOT constant in player_history_all -- covers all leaderboards/team-sizes)\n    m.leaderboard,\n    m.map,\n    m.patch,\n    pc.player_count,\n    m.mirror,\n    m.replay_enhanced,\n    p.civ,\n    p.team,\n\n    -- PRE_GAME rating (DS-AOESTATS-02: NULLIF + is_unrated indicator)\n    NULLIF(p.old_rating, 0) AS old_rating,\n    (p.old_rating = 0) AS is_unrated,\n\n    -- TARGET (DS-AOESTATS-06: RETAIN_AS_IS, F1 override)\n    p.winner\nFROM players_raw p\nINNER JOIN matches_raw m ON p.game_id = m.game_id\nINNER JOIN player_counts pc ON p.game_id = pc.game_id\nWHERE p.profile_id IS NOT NULL\n  AND m.started_timestamp IS NOT NULL;\n",
+    "zero_null_clean": "\nSELECT\n    COUNT(*) FILTER (WHERE game_id IS NULL) AS null_game_id,\n    COUNT(*) FILTER (WHERE started_timestamp IS NULL) AS null_started_timestamp,\n    COUNT(*) FILTER (WHERE p0_profile_id IS NULL) AS null_p0_profile_id,\n    COUNT(*) FILTER (WHERE p1_profile_id IS NULL) AS null_p1_profile_id,\n    COUNT(*) FILTER (WHERE p0_winner IS NULL) AS null_p0_winner,\n    COUNT(*) FILTER (WHERE p1_winner IS NULL) AS null_p1_winner,\n    COUNT(*) FILTER (WHERE team1_wins IS NULL) AS null_team1_wins\nFROM matches_1v1_clean\n",
+    "zero_null_hist": "\nSELECT\n    COUNT(*) FILTER (WHERE profile_id IS NULL) AS null_profile_id,\n    COUNT(*) FILTER (WHERE game_id IS NULL) AS null_game_id,\n    COUNT(*) FILTER (WHERE started_timestamp IS NULL) AS null_started_timestamp,\n    COUNT(*) FILTER (WHERE winner IS NULL) AS null_winner\nFROM player_history_all\n",
+    "dup_match": "\nSELECT COUNT(*) AS dup_match_count\nFROM (\n    SELECT game_id, COUNT(*) AS n\n    FROM matches_1v1_clean\n    GROUP BY game_id\n    HAVING n > 1\n) d\n",
+    "target_consistency": "\nSELECT\n    COUNT(*) AS total,\n    COUNT(*) FILTER (WHERE p0_winner = TRUE AND p1_winner = FALSE) AS p0_wins,\n    COUNT(*) FILTER (WHERE p0_winner = FALSE AND p1_winner = TRUE) AS p1_wins,\n    COUNT(*) FILTER (WHERE p0_winner = p1_winner) AS inconsistent,\n    COUNT(*) FILTER (WHERE team1_wins != p1_winner) AS team1_wins_inconsistent\nFROM matches_1v1_clean\n",
+    "nullif_clean": "\nSELECT\n    COUNT(*) FILTER (WHERE p0_old_rating IS NULL) AS p0_or_null_after,\n    COUNT(*) FILTER (WHERE p0_is_unrated = TRUE) AS p0_unrated_flag,\n    COUNT(*) FILTER (WHERE p0_is_unrated = FALSE AND p0_old_rating IS NULL) AS p0_inconsistent,\n    COUNT(*) FILTER (WHERE p1_old_rating IS NULL) AS p1_or_null_after,\n    COUNT(*) FILTER (WHERE p1_is_unrated = TRUE) AS p1_unrated_flag,\n    COUNT(*) FILTER (WHERE p1_is_unrated = FALSE AND p1_old_rating IS NULL) AS p1_inconsistent,\n    COUNT(*) FILTER (WHERE avg_elo IS NULL) AS avg_elo_null_after\nFROM matches_1v1_clean\n",
+    "nullif_hist": "\nSELECT\n    COUNT(*) FILTER (WHERE old_rating IS NULL) AS or_null_after,\n    COUNT(*) FILTER (WHERE is_unrated = TRUE) AS unrated_flag,\n    COUNT(*) FILTER (WHERE is_unrated = FALSE AND old_rating IS NULL) AS inconsistent\nFROM player_history_all\n",
+    "boolean_type_check": "\nSELECT column_name, data_type\nFROM information_schema.columns\nWHERE (table_name = 'matches_1v1_clean' AND column_name IN ('p0_is_unrated', 'p1_is_unrated', 'team1_wins'))\n   OR (table_name = 'player_history_all' AND column_name = 'is_unrated')\nORDER BY table_name, column_name\n"
+  },
+  "decisions_resolved": [
+    {
+      "id": "DS-AOESTATS-01",
+      "column": "team_0_elo, team_1_elo",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "0.00% (n_sentinel=0; sentinel=-1 absent in this scope)",
+      "recommendation": "RETAIN_AS_IS",
+      "decision": "NO-OP (RETAIN_AS_IS). F1 override: sentinel=-1 absent in 1v1 ranked scope.",
+      "ddl_effect": "None"
+    },
+    {
+      "id": "DS-AOESTATS-02",
+      "column": "p0_old_rating, p1_old_rating (matches_1v1_clean); old_rating (player_history_all)",
+      "views": "both",
+      "ledger_rate": "0.0266% p0 / 0.0011% p1 (matches_1v1_clean); 0.0055% (player_history_all)",
+      "recommendation": "CONVERT_SENTINEL_TO_NULL (non-binding; carries_semantic_content=True)",
+      "decision": "NULLIF(old_rating, 0) + ADD is_unrated flag in both VIEWs. mirrors sc2egset DS-SC2-10 pattern.",
+      "ddl_effect": "matches_1v1_clean: NULLIF(p0_old_rating,0), NULLIF(p1_old_rating,0), +p0_is_unrated BOOLEAN, +p1_is_unrated BOOLEAN. player_history_all: NULLIF(old_rating,0), +is_unrated BOOLEAN."
+    },
+    {
+      "id": "DS-AOESTATS-03",
+      "column": "avg_elo",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "0.0007% (n_sentinel=118)",
+      "recommendation": "CONVERT_SENTINEL_TO_NULL (non-binding; carries_semantic_content=True)",
+      "decision": "NULLIF(avg_elo, 0) AS avg_elo. No companion flag (p0/p1_is_unrated covers semantic).",
+      "ddl_effect": "matches_1v1_clean: NULLIF(avg_elo,0) AS avg_elo."
+    },
+    {
+      "id": "DS-AOESTATS-04",
+      "column": "raw_match_type",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "0.0396% NULL (n_null=7,055); n_distinct=1 in non-NULL scope",
+      "recommendation": "RETAIN_AS_IS (original ledger, rate < 5% MCAR boundary)",
+      "decision": "DROP_COLUMN override (NOTE-1 critique fix): n_distinct=1 in non-NULL scope overrides RETAIN_AS_IS. Column is informationally redundant with upstream leaderboard + player_count filters.",
+      "ddl_effect": "matches_1v1_clean: raw_match_type removed from SELECT."
+    },
+    {
+      "id": "DS-AOESTATS-05",
+      "column": "team1_wins",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "0.00% (n_null=0; BOOLEAN strict 0/1)",
+      "recommendation": "RETAIN_AS_IS / mechanism=N/A",
+      "decision": "NO-OP (RETAIN_AS_IS). F1 override: zero NULLs; decisive by upstream filter.",
+      "ddl_effect": "None"
+    },
+    {
+      "id": "DS-AOESTATS-06",
+      "column": "winner",
+      "views": "player_history_all",
+      "ledger_rate": "0.00% (n_null=0)",
+      "recommendation": "RETAIN_AS_IS / mechanism=N/A",
+      "decision": "NO-OP (RETAIN_AS_IS). Zero NULLs confirmed.",
+      "ddl_effect": "None"
+    },
+    {
+      "id": "DS-AOESTATS-07",
+      "column": "overviews_raw (table)",
+      "views": "N/A (not used by any VIEW)",
+      "ledger_rate": "N/A (out of analytical scope)",
+      "recommendation": "N/A",
+      "decision": "FORMALLY DECLARED OUT-OF-ANALYTICAL-SCOPE in cleaning registry. No DDL change.",
+      "ddl_effect": "None (registry-only resolution)."
+    },
+    {
+      "id": "DS-AOESTATS-08",
+      "column": "leaderboard, num_players",
+      "views": "matches_1v1_clean (constants); player_history_all (RETAINED -- NOT constants there)",
+      "ledger_rate": "n_distinct=1 in matches_1v1_clean scope for both columns",
+      "recommendation": "DROP_COLUMN",
+      "decision": "DROP leaderboard + num_players from matches_1v1_clean only. RETAIN in player_history_all.",
+      "ddl_effect": "matches_1v1_clean: leaderboard and num_players removed from SELECT."
+    }
+  ],
+  "ledger_derived_expected_values": {
+    "expected_p0_unrated": 4730,
+    "expected_p1_unrated": 188,
+    "expected_avg_elo_sentinel": 118,
+    "expected_unrated": 5937
+  },
+  "all_assertions_pass": true
+}

@@ -8,6 +8,50 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-17 — [Phase 01 / Step 01_04_02] Data Cleaning Execution
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Step scope:** Acts on all 8 cleaning decisions (DS-AOESTATS-01..08) surfaced by 01_04_01. Modifies VIEW DDL for matches_1v1_clean and player_history_all via CREATE OR REPLACE (no raw table changes per Invariant I9). Produces post-cleaning validation artifact (JSON+MD), creates matches_1v1_clean.yaml (NEW), updates player_history_all.yaml. All sentinel counts loaded from 01_04_01 ledger at runtime (I7). PIPELINE_SECTION_STATUS 01_04 → complete (no 01_04_03+ steps defined).
+
+**CONSORT column-count flow:**
+- matches_1v1_clean: 21 → 20 cols (drop 3: leaderboard/num_players/raw_match_type; add 2: p0_is_unrated/p1_is_unrated; modify 3: avg_elo/p0_old_rating/p1_old_rating NULLIF)
+- player_history_all: 13 → 14 cols (drop 0; add 1: is_unrated; modify 1: old_rating NULLIF)
+
+**CONSORT row-count flow (column-only — unchanged):**
+- matches_1v1_clean: 17,814,947 rows / 17,814,947 game_ids
+- player_history_all: 107,626,399 rows
+
+**NULLIF effect counts (ledger-derived, I7):**
+- p0_old_rating → NULL: 4,730 rows (expected 4,730 from ledger row 16)
+- p1_old_rating → NULL: 188 rows (expected 188 from ledger row 20)
+- avg_elo → NULL: 118 rows (expected 118 from ledger row 11)
+- old_rating → NULL (player_history_all): 5,937 rows (expected 5,937 from ledger row 34)
+
+**Per-DS resolutions:**
+- DS-AOESTATS-01: team_0/1_elo sentinel=-1 ABSENT in scope → NO-OP (RETAIN_AS_IS, F1 override)
+- DS-AOESTATS-02: p0/p1_old_rating + old_rating sentinel=0 → NULLIF + is_unrated indicator (both VIEWs)
+- DS-AOESTATS-03: avg_elo sentinel=0 → NULLIF (no flag; p0/p1_is_unrated covers semantic)
+- DS-AOESTATS-04: raw_match_type (n_distinct=1 in scope) → DROP_COLUMN override of ledger RETAIN_AS_IS
+- DS-AOESTATS-05: team1_wins n_null=0 → NO-OP (RETAIN_AS_IS, F1 override)
+- DS-AOESTATS-06: winner in player_history_all n_null=0 → NO-OP (RETAIN_AS_IS, F1 override)
+- DS-AOESTATS-07: overviews_raw → FORMALLY DECLARED OUT-OF-ANALYTICAL-SCOPE in registry (no DDL)
+- DS-AOESTATS-08: leaderboard + num_players (n_distinct=1 in matches_1v1_clean) → DROP_COLUMN; RETAINED in player_history_all
+
+**All 33 validation assertions pass** (zero-NULL identity, target consistency, forbidden cols absent, new cols BOOLEAN, NULLIF counts within ±1 of ledger, row counts unchanged, leaderboard/player_count retained in player_history_all).
+
+**Artifacts produced:**
+- `reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json` (NEW)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.md` (NEW)
+- `data/db/schemas/views/matches_1v1_clean.yaml` (NEW — 20 cols + invariants block; prose-format notes)
+- `data/db/schemas/views/player_history_all.yaml` (UPDATED — 14 cols; is_unrated added; old_rating description updated; step bumped to 01_04_02)
+
+**Status updates:**
+- STEP_STATUS.yaml: 01_04_02 → complete (2026-04-17)
+- PIPELINE_SECTION_STATUS.yaml: 01_04 → complete
+
+---
+
 ## 2026-04-17 — [Phase 01 / Step 01_04_01] Missingness Audit (Part B — insight-gathering)
 
 **Category:** A (science)
