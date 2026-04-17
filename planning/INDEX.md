@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- [Current Plan](current_plan.md) — _no active plan_
+- [Current Plan](current_plan.md) — NOTE-3 + W2 missingness-audit refactor (Cat B; PR #140)
 
 ## Agent routing
 
