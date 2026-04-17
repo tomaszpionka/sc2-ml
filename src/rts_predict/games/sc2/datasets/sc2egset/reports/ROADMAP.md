@@ -783,92 +783,217 @@ research_log_entry: "Required on completion."
 
 ```yaml
 step_number: "01_04_01"
-name: "Data Cleaning"
+name: "Data Cleaning — VIEW DDL + Missingness Audit (insight-gathering)"
 description: >
-  Non-destructive cleaning of replay_players_raw and replays_meta_raw. Creates three
-  DuckDB VIEWs: matches_flat (structural JOIN of all replay data via replay_id extracted
-  from filename), matches_flat_clean (prediction targets: 1v1 decisive results only,
-  PRE-GAME features only per temporal discipline), and player_history_all (player history
-  features: all replays including non-1v1 and indecisive, retaining in-game metrics as
-  valid historical signals for prior matches). Resolves the structural blocker from
-  fixes_and_next_steps.md requiring the matches_flat JOIN before any downstream work.
+  Two-part step with one execution pass.
+  PART A (already executed in PRs #138/#139): non-destructive cleaning of
+  replay_players_raw and replays_meta_raw via three DuckDB VIEWs (matches_flat,
+  matches_flat_clean, player_history_all) — all DDL changes resolved in prior PRs.
+  PART B (this revision): consolidated missingness audit over the analytical VIEWs
+  (matches_flat_clean, player_history_all). Two coordinated census passes per VIEW —
+  SQL NULL census plus sentinel census driven by per-column _missingness_spec — plus
+  a runtime constants-detection check, feed one missingness ledger (CSV+JSON) per
+  VIEW. The audit gathers insights for downstream cleaning decisions in 01_04_02+;
+  it does NOT execute decisions, modify VIEWs, drop columns, or impute. Ends with
+  an explicit "Decisions surfaced for downstream cleaning" section listing
+  per-dataset open questions.
 phase: "01 — Data Exploration"
 pipeline_section: "01_04 — Data Cleaning"
-manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 3 (Profiling) and 4 (Cleaning)"
 dataset: "sc2egset"
 question: >
-  Which replays are suitable for binary classification of 1v1 match outcomes? How
-  should pre-game features be separated from in-game features? What player history
-  is valid for feature computation?
+  What is the complete missingness picture (NULL + sentinel-encoded + constant
+  columns) per analytical VIEW column, classified by mechanism (Rubin 1976
+  MCAR/MAR/MNAR), and which open questions must downstream 01_04 steps resolve
+  before Phase 02 imputation design?
 method: >
-  Three VIEWs built in sequence.
-  matches_flat: structural JOIN of replay_players_raw and replays_meta_raw via
-  replay_id extracted from filename using regexp with NULLIF guard (empty-string
-  protection). All 31 struct leaf fields from replays_meta_raw extracted. Constant
-  columns (gameSpeed cardinality=1) and duplicate isBlizzardMap column excluded
-  after empirical verification of zero mismatches.
-  matches_flat_clean (prediction target): filters to true 1v1 decisive replays
-  (exactly 2 players, one Win and one Loss); applies replay-level MMR exclusion
-  (any replay with at least one MMR<0 player excluded entirely, preserving the
-  2-players-per-replay invariant); normalises selectedRace empty string to 'Random';
-  corrects SQ parse-failure sentinel to NULL; flags MMR=0 unrated players, map_size=0
-  anomalies, and handicap=0 anomalies; excludes all in-game metrics (APM, SQ,
-  supplyCappedPercent, elapsed game loops) per temporal discipline.
-  player_history_all (feature history source): all replays in matches_flat, no
-  1v1/decisive filter; retains APM, SQ, supplyCappedPercent as valid historical
-  signals for prior matches (temporal discipline applies at the target match level,
-  not to historical records).
-  CONSORT flow tracks exclusions in replay units (not row units).
+  Three-step per-VIEW audit (matches_flat_clean, player_history_all):
+  Step 1 (kept verbatim): SQL NULL census per column via
+  COUNT(*) FILTER (WHERE col IS NULL) over the full VIEW.
+  Step 2 (NEW): sentinel census per column driven by _missingness_spec dict
+  (per-column override is preferred; auto-detection from prior census artifacts is
+  the secondary fallback). Sentinel SQL per column matches the spec's declared
+  sentinel value(s).
+  Step 3 (NEW): runtime constants detection — SELECT COUNT(DISTINCT col) per VIEW
+  column; columns with n_distinct=1 get mechanism="N/A" + recommendation="DROP_COLUMN".
+  Per-row recommendation derived from pct_missing_total = pct_null + pct_sentinel
+  via the decision tree in temp/null_handling_recommendations.md §3.1, applying
+  Rules S1-S6, with two override layers: (a) F1 zero-missingness override and
+  (b) target-column override per Rule S2. The notebook produces RECOMMENDATIONS
+  only; downstream 01_04 steps decide and execute.
+  Reads the empirical sentinel patterns from
+  artifacts/01_exploration/02_eda/01_02_04_univariate_census.json — the audit
+  consolidates prior findings; it does not re-derive them.
 predecessors:
   - "01_03_04"
+methodology_citations:
+  - "Rubin, D.B. (1976). Inference and missing data. Biometrika, 63(3), 581-592. — MCAR/MAR/MNAR taxonomy."
+  - "Little, R.J. & Rubin, D.B. (2019). Statistical Analysis with Missing Data, 3rd ed. Wiley. — Authoritative mechanism classification."
+  - "van Buuren, S. (2018). Flexible Imputation of Missing Data, 2nd ed. CRC Press. — Warns against rigid percentage thresholds; threshold S4 used as starting heuristic only."
+  - "Schafer, J.L. & Graham, J.W. (2002). Missing data: Our view of the state of the art. Psychological Methods, 7(2), 147-177. — Listwise deletion acceptable at <5% MCAR (boundary citation, not threshold derivation)."
+  - "Sambasivan, N. et al. (2021). Everyone wants to do the model work, not the data work: Data Cascades in High-Stakes AI. CHI '21. — Rationale for surfacing decisions explicitly rather than deferring."
+  - "Davis, J. et al. (2024). Methodology and Evaluation in Sports Analytics. Machine Learning, 113, 6977-7010. — Domain precedent for sports outcome data quality protocols (retained for future Phase 02/03 reference; not load-bearing in this audit step)."
+  - "scikit-learn v1.8 documentation. Imputation of missing values; sklearn.impute.MissingIndicator. — Missingness-as-signal principle for Phase 02."
+  - "Wirth, R. & Hipp, J. (2000). CRISP-DM: Towards a standard process model for data mining. — Cleaning report convention adopted in artifact format."
+  - "Manual 01_DATA_EXPLORATION_MANUAL.md §3 (Profiling) and §4 (Cleaning) — pipeline phase boundary (Phase 01 documents, Phase 02 transforms)."
 notebook_path: "sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py"
 inputs:
   duckdb_tables:
     - "replay_players_raw (44,817 rows)"
     - "replays_meta_raw (22,390 rows)"
-outputs:
   duckdb_views:
     - "matches_flat (44,817 rows / 22,390 replays)"
     - "matches_flat_clean (44,418 rows / 22,209 replays)"
     - "player_history_all (44,817 rows / 22,390 replays)"
+  prior_artifacts:
+    - "artifacts/01_exploration/02_eda/01_02_04_univariate_census.json (sentinel and zero-distribution evidence)"
+    - "artifacts/01_exploration/03_profiling/* (column-level mechanism evidence — see prior steps)"
+outputs:
+  duckdb_views:
+    - "matches_flat (unchanged)"
+    - "matches_flat_clean (unchanged)"
+    - "player_history_all (unchanged)"
   schema_yamls:
-    - "data/db/schemas/views/player_history_all.yaml"
+    - "data/db/schemas/views/player_history_all.yaml (unchanged from PR #138/#139)"
   data_artifacts:
-    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
-  report: "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md"
-reproducibility: "Code and output in the paired notebook."
-key_findings:
-  - "157 replays excluded due to at least one player having MMR<0; replay-level exclusion preserves the 2-players-per-replay invariant"
-  - "181 replays present in player_history_all but not in matches_flat_clean (non-1v1, indecisive, or MMR<0 — retained as player history)"
-  - "2,495 distinct players (toon_ids) across all replays"
-  - "gd_isBlizzardMap confirmed identical to details_isBlizzardMap (zero mismatches) — duplicate column dropped"
-  - "gameSpeed column is constant across all replays — excluded from both VIEWs"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json (extended with missingness_audit block)"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv (NEW — one row per (view, column); full-coverage Option B; zero-missingness columns tagged RETAIN_AS_IS / mechanism=N/A; constant columns tagged DROP_COLUMN / mechanism=N/A)"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.json (NEW — same content, machine-readable)"
+  report: "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md (extended)"
+reproducibility: >
+  Code and output in the paired notebook. All SQL verbatim in JSON sql_queries.
+  Audit re-runs deterministically from raw tables.
+key_findings_carried_forward:
+  - "157 replays excluded due to MMR<0 (PR predecessor — kept)"
+  - "MMR=0 sentinel covers 83.66% of true_1v1_decisive rows (audit confirms)"
+  - "highestLeague='Unknown' covers ~72% (audit confirms)"
+  - "clanTag='' covers ~74% (audit confirms via sentinel pass)"
+  - "matches_flat_clean's 1v1_decisive filter excludes ~0.06% Undecided/Tie rows from result (CONSORT verified each run; Rule S2 enforced upstream of the audit)"
+decisions_surfaced:
+  - id: "DS-SC2-01"
+    column: "MMR (sentinel=0, ~83.66%)"
+    question: >
+      Convert MMR=0 to NULL and drop the column from matches_flat_clean
+      (per Rule S4 / >80%), OR retain MMR=0 as an explicit `unranked` categorical
+      encoding alongside `is_mmr_missing`, OR run the analysis on the rated subset
+      only as a sensitivity arm (per Sambasivan 2021 cascade-prevention)?
+    mechanism_note: >
+      Resolve MMR mechanism contradiction: this plan classifies MMR=0 as
+      MAR-primary (tournament replays without ladder MMR — missingness depends
+      on observed replay source); MNAR (private pro accounts) is documented as a
+      sensitivity branch. Source: 01_03_01 + 01_03_03 cleaning_registry rules.
+  - id: "DS-SC2-02"
+    column: "highestLeague (sentinel='Unknown', ~72.16%)"
+    question: >
+      Drop the column entirely (Rule S4 / >50% non-primary), OR retain 'Unknown'
+      as its own category (Phase 02 decides if predictive)?
+  - id: "DS-SC2-03"
+    column: "clanTag (sentinel='', ~74%)"
+    question: >
+      Drop the column (likely non-predictive at this rate), OR retain as a derived
+      `is_in_clan` boolean only?
+  - id: "DS-SC2-04"
+    column: "result in player_history_all (Undecided/Tie sentinel; non-zero rate in player_history_all)"
+    question: >
+      How should NULL-target rows in player_history_all be handled when computing
+      player history features (e.g., expanding-window win-rate)? Drop these rows,
+      mark them as a DRAW outcome category, or retain with NaN target value (so
+      games-played counts include them but win-rate denominators exclude)?
+  - id: "DS-SC2-05"
+    column: "selectedRace (sentinel='', ~2.48%)"
+    question: >
+      Already converted to 'Random' in VIEWs (PR predecessor); the audit confirms
+      zero residual empty-string occurrences in the cleaned VIEWs.
+  - id: "DS-SC2-06"
+    columns: "gd_mapSizeX / gd_mapSizeY (sentinel=0, ~1.22%)"
+    question: >
+      VIEWs already CASE-WHEN to NULL (PR predecessor); audit confirms ledger
+      reports the converted NULLs, not the original sentinel.
+  - id: "DS-SC2-07"
+    column: "gd_mapAuthorName"
+    question: >
+      Drop column on grounds of being a non-predictive metadata field even before
+      missingness considered? Decision deferred to 01_04_02+.
+  - id: "DS-SC2-08"
+    columns: "go_* constants surfaced by runtime constants-detection branch"
+    question: >
+      Confirm the runtime constants-detection branch reports n_distinct=1 for the
+      go_* columns flagged in 01_03_03 (and which exact columns are identified as
+      constant in matches_flat_clean vs player_history_all). Drop these per
+      Rule S4 / N/A-mechanism in 01_04_02+?
+  - id: "DS-SC2-09"
+    column: "handicap (sentinel=0, ~0.0045% — 2 anomalous rows)"
+    question: >
+      NULLIF the 2 anomalous handicap=0 rows + listwise deletion per Rule S3
+      (negligible rate), OR retain 0 as an explicit `is_anomalous_handicap` flag?
+      B6 deferral note — same pattern as DS-AOESTATS-02: audit will recommend
+      CONVERT_SENTINEL_TO_NULL via W3 branch; spec marks
+      carries_semantic_content=True (0 is documented as "anomalous game"
+      indicator, semantically meaningful); downstream chooses without prejudice
+      from the ledger.
+  - id: "DS-SC2-10"
+    column: "APM in player_history_all (sentinel=0, ~2.53%; 97.9% overlap with selectedRace='')"
+    question: >
+      Convert APM=0 to NULL via NULLIF in 01_04_02+ (per audit recommendation)
+      OR retain APM=0 as a categorical encoding for "extremely short / unparseable
+      game"? B6 deferral note — audit will recommend CONVERT_SENTINEL_TO_NULL
+      via W3 branch; spec marks carries_semantic_content=True (APM=0 documented
+      as correlating with selectedRace='' — meaningful game-state signal);
+      downstream chooses without prejudice from the ledger.
 scientific_invariants_applied:
   - number: "3"
     how_upheld: >
-      matches_flat_clean excludes APM, SQ, supplyCappedPercent, elapsed game loops
-      (all in-game metrics). player_history_all retains them as valid historical signals
-      for prior matches. Temporal discipline applies at the target match level only,
-      not to historical records. Python assertion confirms forbidden columns absent
-      from matches_flat_clean.
+      No new feature computation. No use of game T data. Audit is read-only over
+      VIEWs whose I3 compliance was established in the predecessor PRs.
   - number: "6"
-    how_upheld: "All VIEW DDL and SQL queries stored verbatim in JSON artifact under sql_queries."
+    how_upheld: >
+      All three SQL templates (NULL census, sentinel census, constants detection)
+      stored verbatim in JSON sql_queries. The per-column sentinel queries are
+      reconstructible from the template + the _missingness_spec dict (also stored
+      in the artifact).
   - number: "7"
     how_upheld: >
-      All cleaning thresholds sourced from prior profiling artifacts: MMR<0 from
-      impossibility argument confirmed in 01_03_01, SQ parse-failure sentinel from
-      01_03_01, map_size=0 from 01_02_04 and 01_03_01. No hard-coded magic numbers.
+      Thresholds (5%/40%/80%) follow the operational starting heuristics in
+      temp/null_handling_recommendations.md §1.2; cite Schafer & Graham 2002 for
+      the <5% MCAR boundary and van Buuren 2018 for the warning against rigid
+      global thresholds. Each threshold-driven recommendation surfaces as a
+      downstream decision per §3.1; the audit recommends, the downstream step
+      decides. Per-column mechanism justifications cite either a prior step's
+      artifact (with path) or a sentinel-meaning interpretation explicitly grounded
+      in domain context.
   - number: "9"
-    how_upheld: "No rows deleted. Raw tables untouched. All three VIEWs are non-destructive projections."
+    how_upheld: >
+      All facts derive from this step's SQL or from cited predecessor artifacts.
+      No raw tables, no VIEWs, no schema YAMLs are modified. Audit is purely
+      additive: extends artifact JSON, adds two new ledger files. No future-step
+      citations.
 gate:
   artifact_check: >
-    JSON and MD artifacts exist. Schema YAML for player_history_all exists with
-    row_count populated and in-game historical annotation on APM/SQ columns.
+    JSON has "missingness_audit" block with two VIEW sub-blocks, each containing
+    a "ledger" array (one row per column in the VIEW — full-coverage Option B) and the
+    "_missingness_spec" used. The two new ledger files (CSV + JSON) exist at the
+    paths above. MD has a "Missingness Ledger" section per VIEW + a final
+    "Decisions surfaced for downstream cleaning (01_04_02+)" section reproducing
+    DS-SC2-01..10 with current observed rates filled in.
   continue_predicate: >
-    matches_flat returns 44,817 rows. matches_flat_clean returns rows with APM column
-    absent. player_history_all returns 44,817 rows with APM column present. CONSORT
-    arithmetic verified. Zero symmetry violations. STEP_STATUS.yaml has 01_04_01: complete.
-  halt_predicate: "Any VIEW fails to create or validation assertions fail."
+    Every column in the VIEW appears in the ledger (full-coverage Option B).
+    Every column with non-zero missingness has a _missingness_spec entry; zero-
+    missingness rows carry mechanism=N/A, recommendation=RETAIN_AS_IS, and
+    justification="Zero missingness observed; no action needed." regardless of
+    spec. Constant columns (n_distinct=1) carry mechanism=N/A,
+    recommendation=DROP_COLUMN with constants-detection justification.
+    Every ledger row has non-empty mechanism_justification, recommendation,
+    recommendation_justification, and explicit carries_semantic_content boolean.
+    Existing zero-NULL assertions (replay_id, toon_id, result in both VIEWs) still
+    pass. STEP_STATUS.yaml has 01_04_01: complete.
+  halt_predicate: >
+    Any column in the VIEW missing from the ledger (full-coverage violation);
+    any column with non-zero missingness lacking a _missingness_spec entry; any
+    ledger row missing mandatory fields; any zero-NULL identity assertion failure;
+    any contradictory pairing of mechanism="N/A" with non-N/A justification.
+research_log_entry: >
+  Required on completion: list per-VIEW row counts in ledger, reference the
+  artifact paths, summarise decisions surfaced for downstream resolution.
 ```
 
 ---

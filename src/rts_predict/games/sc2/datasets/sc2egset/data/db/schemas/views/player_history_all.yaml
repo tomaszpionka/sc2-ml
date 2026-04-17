@@ -10,7 +10,7 @@ columns:
 - name: replay_id
   type: VARCHAR
   nullable: True
-  description: Canonical join key extracted via regexp. NULLIF-guarded (W04).
+  description: Canonical join key extracted via regexp. NULLIF empty-string guard applied.
   notes: IDENTITY
 - name: filename
   type: VARCHAR
@@ -50,7 +50,7 @@ columns:
 - name: is_mmr_missing
   type: BOOLEAN
   nullable: True
-  description: R02: TRUE if MMR=0 (unrated professional). MNAR.
+  description: TRUE if MMR=0 (unrated professional). MNAR.
   notes: PRE_GAME
 - name: race
   type: VARCHAR
@@ -60,7 +60,7 @@ columns:
 - name: selectedRace
   type: VARCHAR
   nullable: True
-  description: Selected race. Empty string normalized to 'Random' (R04).
+  description: Selected race. Empty string normalised to 'Random'.
   notes: PRE_GAME
 - name: handicap
   type: INTEGER
@@ -100,7 +100,7 @@ columns:
 - name: SQ
   type: INTEGER
   nullable: True
-  description: Spending Quotient. R05: INT32_MIN sentinel -> NULL. IN_GAME_HISTORICAL.
+  description: Spending Quotient. Parse-failure sentinel INT32_MIN corrected to NULL. IN_GAME_HISTORICAL.
   notes: IN_GAME_HISTORICAL
 - name: supplyCappedPercent
   type: INTEGER
@@ -135,12 +135,12 @@ columns:
 - name: gd_mapSizeX
   type: BIGINT
   nullable: True
-  description: Map width (R07: 0 -> NULL; parse artifact).
+  description: Map width (0 corrected to NULL; parse artifact).
   notes: PRE_GAME
 - name: gd_mapSizeY
   type: BIGINT
   nullable: True
-  description: Map height (R07: 0 -> NULL; parse artifact).
+  description: Map height (0 corrected to NULL; parse artifact).
   notes: PRE_GAME
 - name: gd_maxPlayers
   type: BIGINT
@@ -150,7 +150,7 @@ columns:
 - name: details_isBlizzardMap
   type: BOOLEAN
   nullable: True
-  description: Blizzard-authored map flag (from details struct). W03: preferred over gd_isBlizzardMap.
+  description: Blizzard-authored map flag (from details struct). Preferred over gd_isBlizzardMap (confirmed identical, duplicate dropped).
   notes: PRE_GAME
 - name: gd_mapAuthorName
   type: VARCHAR
@@ -265,7 +265,7 @@ columns:
 provenance:
   source_tables: [replay_players_raw, replays_meta_raw]
   join_key: "NULLIF(regexp_extract(filename, '([0-9a-f]{32})\\.SC2Replay\\.json', 1), '') AS replay_id"
-  filter: "replay_id IS NOT NULL (W04 fix); MMR<0 retained with flag; SQ=INT32_MIN -> NULL (R05)"
+  filter: "replay_id IS NOT NULL (empty-string guard); MMR<0 retained with flag; SQ=INT32_MIN -> NULL (parse-failure sentinel correction)"
   scope: "All replays (no 1v1/decisive filter). Includes non-1v1 and indecisive replays excluded from matches_flat_clean."
   created_by: sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py
 invariants:

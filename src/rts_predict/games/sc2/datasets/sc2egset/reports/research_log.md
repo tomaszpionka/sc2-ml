@@ -2,6 +2,65 @@
 
 ---
 
+## 2026-04-17 -- [Phase 01 / Step 01_04_01 — PART B] Missingness Audit (insight-gathering)
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Step scope:** Consolidated missingness audit over matches_flat_clean and player_history_all.
+Two coordinated census passes (NULL + sentinel) per VIEW plus runtime constants detection,
+feeding one missingness ledger (CSV+JSON) per VIEW. Audit is read-only (I9);
+no VIEWs modified, no columns dropped or imputed.
+
+### Ledger summary
+
+| VIEW | Total columns | With missingness | Constants (DROP) |
+|------|--------------|-----------------|------------------|
+| matches_flat_clean | 49 | per ledger | 0 |
+| player_history_all | 51 | per ledger | 0 |
+
+(Combined ledger: 100 rows, 17 columns per Deliverable 5.B)
+
+### Key sentinel findings (from ledger)
+
+- **MMR**: sentinel=0, n_sentinel=37,290 in matches_flat_clean (83.95%), n_sentinel=37,489 in player_history_all (83.65%). Recommendation: DROP_COLUMN (>80% Rule S4). Source: 01_03_01 MAR-primary mechanism.
+- **highestLeague**: sentinel='Unknown', ~72% in both VIEWs. Recommendation: DROP_COLUMN.
+- **clanTag**: sentinel='', ~73.93% in player_history_all. Recommendation: DROP_COLUMN.
+- **result** in matches_flat_clean: 0 NULLs, 0 sentinels → F1 override → mechanism=N/A, recommendation=RETAIN_AS_IS.
+- **result** in player_history_all: n_sentinel=26 (Undecided/Tie rows, 0.058%) → target-override (B4) → EXCLUDE_TARGET_NULL_ROWS.
+- **gd_mapSizeX/Y**: n_sentinel=0 in both VIEWs (VIEW CASE-WHEN converts 0 to NULL; audit sees the NULLs not the original 0s).
+- **handicap**: sentinel=0, n_sentinel=2 (0.0045%) → CONVERT_SENTINEL_TO_NULL (W3 branch, carries_semantic_content=True — non-binding).
+- **APM** (player_history_all only): sentinel=0, n_sentinel=1,132 (2.53%) → CONVERT_SENTINEL_TO_NULL (non-binding; DS-SC2-10).
+- **go_*** columns: no constants detected (all have n_distinct > 1 in both VIEWs per runtime detection).
+
+### Decisions surfaced for 01_04_02+
+
+DS-SC2-01 through DS-SC2-10 — see artifact and ROADMAP `decisions_surfaced` block.
+New decisions added in this revision: DS-SC2-09 (handicap anomalous 0) and DS-SC2-10 (APM=0 sentinel).
+
+### Artifacts produced
+
+- `artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv` (NEW)
+- `artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.json` (NEW)
+- `artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json` (extended with `missingness_audit` block)
+- `artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md` (extended with Missingness Ledger + Decisions sections)
+- `ROADMAP.md` 01_04_01 step block replaced with Deliverable 1.A (decisions_surfaced DS-SC2-01..10)
+
+### Connection normalization (W4)
+
+All 58 existing `con.con.execute(...)` calls in the sc2egset notebook converted to `con.execute(...)`
+via the two-step rename: `con = get_notebook_db(...)` → `db = get_notebook_db(...)` + `con = db.con`.
+Verified: `grep -c 'con.con.execute'` returns 0.
+
+### Schema YAML cleanup (N1, post-reviewer-deep)
+
+Plan-code annotations (`R02`/`R04`/`R05`/`R07`/`W03`/`W04`) stripped from
+`data/db/schemas/views/player_history_all.yaml` column descriptions per
+`feedback_no_plan_codes_in_docs`. Description-only edits — no DDL, type, or
+nullability changes. Flagged by reviewer-deep NOTE-1; documented here for
+audit-trail completeness.
+
+---
+
 ## 2026-04-16 -- [Phase 01 / Step 01_04_00] Source Normalization to Canonical Long Skeleton
 
 **Category:** A (science)
