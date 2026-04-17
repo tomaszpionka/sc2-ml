@@ -697,20 +697,43 @@ research_log_entry: "Required on completion."
     **Schema YAML I3 enforcement (v2-BLOCKER-1 fix per round-2 critique):** The project's existing convention uses **single-token** `notes:` provenance categories on each column (vocabulary in current YAML: IDENTITY, TARGET, PRE_GAME, IN_GAME_HISTORICAL, CONTEXT). Operational instructions (e.g., "Phase 02 MUST filter match_time < T before aggregation") belong in the file's machine-readable `invariants:` block, NOT in per-column `notes:` prose. Round-1 BLOCKER-4/5 was correctly raised; the round-1 verbose-notes fix violated the file's convention without adding enforcement. v3 fix (per round-2 v2-BLOCKER-1):
 
     **(a) Per-column notes — single-token tags only:**
-    - `is_decisive_result.notes`: `POST_GAME_HISTORICAL` (single token; new provenance category)
+    - `is_decisive_result.notes`: `POST_GAME_HISTORICAL` (single token; new provenance category for outcome-DERIVED features)
     - `is_apm_unparseable.notes`: `IN_GAME_HISTORICAL` (single token; matches APM's existing tag)
-    - Also (per v2-WARNING-1): `result.notes` updated from `TARGET` to `POST_GAME_HISTORICAL` — TARGET is a sub-class of POST_GAME_HISTORICAL by definition (the prediction target is, semantically, a post-game observation). This eliminates the asymmetry where the derived child carries POST_GAME_HISTORICAL but the source parent does not.
+    - **`result.notes`: `TARGET` (UNCHANGED per round-3 v3-BLOCKER-1 fix).** Round-2 v2-WARNING-1 proposed updating `result.notes` from TARGET to POST_GAME_HISTORICAL for "vocabulary parity"; round-3 review surfaced this as cross-dataset divergence (AoE2 sibling files at aoe2companion player_history_all.yaml:104 and aoestats player_history_all.yaml:89 retain TARGET vocabulary; changing only sc2egset would violate Invariant #8 cross-game protocol). v3-BLOCKER-1 fix: REVERT v2-WARNING-1 — KEEP TARGET on result. **Vocabulary distinction codified:** TARGET is a singleton sentinel for THE prediction label (the game-T outcome itself); POST_GAME_HISTORICAL is for DERIVATIONS of the outcome (the new is_decisive_result flag, future Phase 02 win-rate aggregates, etc.). The two tokens are NOT synonyms — the distinction is load-bearing for any tool that wants to "exclude all outcome-derived columns from features while keeping the outcome itself as the label".
 
-    **(b) Invariants block extension — single-source operational meaning:** Extend the existing `invariants:` block (currently lines 271-282 of player_history_all.yaml carrying I3/I6/I9 entries) so that the I3 entry enumerates the four provenance categories and states the filter requirement once. Concrete addition (executor pastes verbatim into the invariants.I3 section):
+    **(b) Invariants block extension — single-source operational meaning:** Extend the existing `invariants:` block (currently lines 271-282 of player_history_all.yaml carrying I3/I6/I9 entries) so that the I3 entry enumerates **all 5 provenance categories** (TARGET / IDENTITY / PRE_GAME / IN_GAME_HISTORICAL / POST_GAME_HISTORICAL / CONTEXT — note CONTEXT counts as a 6th category technically, but it's PRE_GAME-equivalent for temporal purposes; treat the distinct temporal-discipline categories as 5: TARGET, PRE_GAME, IN_GAME_HISTORICAL, POST_GAME_HISTORICAL, IDENTITY+CONTEXT-grouped) and states the filter requirement once.
+
+    **Concrete I3 entry POST-insertion (executor copies verbatim into player_history_all.yaml invariants block, replacing the current single-string I3 description with this multi-key mapping):**
 
     ```yaml
-    provenance_categories:
-      - PRE_GAME: "Available before game T starts. Safe to use as feature for game T without temporal filtering."
-      - IN_GAME_HISTORICAL: "Available during/after game completion. SAFE only when used as a player-history aggregate FILTERED by match_time < T (e.g., 'mean APM in last 30 days excluding T'). UNSAFE as direct game-T feature."
-      - POST_GAME_HISTORICAL: "Derived from game-T outcome (Win/Loss/Undecided/Tie). SAFE only when used as a player-history aggregate FILTERED by match_time < T (e.g., 'win-rate in last 30 days excluding T'). UNSAFE as direct game-T feature. The prediction target itself is in this category; never aggregate it without temporal exclusion."
-      - IDENTITY: "Stable identifiers (replay_id, toon_id). No temporal constraint."
-      - CONTEXT: "Game/match metadata (started_timestamp, mapName, etc.). PRE_GAME-equivalent for temporal purposes."
+    invariants:
+      - id: I3
+        description: >
+          Temporal discipline / no future leakage. Each column carries a single-token
+          provenance category in its notes: field. The vocabulary, with operational
+          rules, is enumerated under provenance_categories below. Phase 02 MUST
+          filter by match_time < T (the prediction target's started_timestamp)
+          before aggregating ANY column tagged TARGET, IN_GAME_HISTORICAL, or
+          POST_GAME_HISTORICAL into a feature for game T.
+        provenance_categories:
+          - TARGET: "THE prediction label itself (Win/Loss/Undecided/Tie). Singleton sentinel — only the result column carries this tag. Never aggregate without temporal exclusion (match_time < T); using it as a direct game-T feature IS target leakage."
+          - POST_GAME_HISTORICAL: "The game-T outcome itself or any feature derived from it (e.g., is_decisive_result, future Phase-02 win-rate aggregates). SAFE only when used as a player-history aggregate FILTERED by match_time < T. UNSAFE as direct game-T feature. The TARGET singleton is conceptually a sub-class of this category but tagged separately for sentinel-clarity."
+          - IN_GAME_HISTORICAL: "Available during/after game completion (e.g., APM, SQ, supplyCappedPercent, header_elapsedGameLoops, is_apm_unparseable). SAFE only when used as a player-history aggregate FILTERED by match_time < T. UNSAFE as direct game-T feature."
+          - PRE_GAME: "Available before game T starts (e.g., MMR, leaderboard, race, map). Safe to use as feature for game T without temporal filtering."
+          - IDENTITY: "Stable identifiers (replay_id, toon_id, profileId). No temporal constraint; not a feature input but a join key."
+          - CONTEXT: "Game/match metadata (started_timestamp, mapName, gameLoops). PRE_GAME-equivalent for temporal purposes; available before game T."
+      - id: I6
+        description: "<existing I6 text — preserve verbatim>"
+      - id: I9
+        description: "<existing I9 text — preserve verbatim>"
+      - id: I10
+        description: "All replay_id derivation traces back to filename relative to raw_dir (per Invariant I10). Both VIEWs in this dataset (matches_flat_clean and player_history_all) share this constraint."
     ```
+
+    **Notes on this YAML:**
+    - 6 provenance categories listed (TARGET / POST_GAME_HISTORICAL / IN_GAME_HISTORICAL / PRE_GAME / IDENTITY / CONTEXT) — round-3 v3-WARNING-1 / v3-NOTE-1 fix: count is now explicit and consistent.
+    - POST_GAME_HISTORICAL definition (round-3 v3-WARNING-2 fix) explicitly says "outcome itself or any feature derived from it" — eliminates the self-derivation contradiction.
+    - I10 added as new entry to player_history_all.yaml invariants (round-3 v3-NOTE-2 fix) — parity with new matches_flat_clean.yaml which also gets I10 (cell 26).
 
 26. **Cell — Create matches_flat_clean schema YAML (NEW)** — Mirror **the existing `player_history_all.yaml` flat-list shape** (top-level `table:`, `dataset:`, `columns: - name: ...` entries); the richer `docs/templates/duckdb_schema_template.yaml` Section A/`value:`/`required:` shape is NOT used here because no current schema YAML in the project follows it. `DESCRIBE matches_flat_clean`; write to `data/db/schemas/views/matches_flat_clean.yaml`. **Column ordering in YAML:** match the DDL SELECT-list order from `CREATE OR REPLACE matches_flat_clean` cell 14 verbatim (no re-sorting); this gives downstream reviewers a line-by-line diff that mirrors the SQL.
 
@@ -721,7 +744,15 @@ research_log_entry: "Required on completion."
     - **I9** (no feature computation in cleaning step): "01_04_02 modifies the column SET (drops/adds), never the values. No imputation, scaling, or encoding. Phase 02 owns those transforms."
     - **I10** (filename relative to raw_dir): "All replay_id derivation traces back to filename relative to raw_dir per Invariant I10."
 
-    Also use single-token `notes:` provenance categories per the v2-BLOCKER-1 convention (PRE_GAME / IDENTITY / CONTEXT — matches_flat_clean has no IN_GAME_HISTORICAL or POST_GAME_HISTORICAL columns by I3 construction).
+    Also use single-token `notes:` provenance categories per the v2-BLOCKER-1 convention. matches_flat_clean's column-by-category breakdown after 01_04_02:
+    - **TARGET** (1 col): `result` (the prediction label)
+    - **IDENTITY** (2 cols): `replay_id`, `toon_id`
+    - **CONTEXT** (~6 cols): `started_timestamp`, `mapName`, `gameLoops`, etc. (PRE_GAME-equivalent for temporal purposes)
+    - **PRE_GAME** (~19 cols): all remaining feature-eligible columns (race, leaderboard, etc.)
+    - **IN_GAME_HISTORICAL**: NONE (excluded by I3 — APM, SQ, supplyCappedPercent, header_elapsedGameLoops are absent)
+    - **POST_GAME_HISTORICAL**: NONE (excluded by I3 — is_decisive_result and other outcome-derivations are in player_history_all only, not in the prediction VIEW)
+
+    matches_flat_clean.yaml invariants block must include the same `provenance_categories:` enumeration as player_history_all.yaml (above) for vocabulary consistency, even though only 4 of the 6 categories appear in this VIEW. Single source of truth for the vocabulary.
 27. **Cell — Close connection** — `db.close()`.
 28. **Cell — Final summary print** — Column counts before/after, drops applied, 9 new cleaning registry rules, gate predicate verdict.
 
