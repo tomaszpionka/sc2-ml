@@ -2,7 +2,7 @@
   "step": "01_04_01",
   "dataset": "aoe2companion",
   "game": "aoe2",
-  "generated_date": "2026-04-16",
+  "generated_date": "2026-04-17",
   "cleaning_registry": {
     "R00": {
       "id": "R00",
@@ -96,26 +96,37 @@
       "description": "Rating (PRE-GAME, confirmed 01_03_03) coverage in matches_1v1_clean"
     },
     "V2_no_postgame_leakage": {
-      "n_postgame_cols_found": 0,
-      "columns_checked": [
-        "ratingDiff",
-        "finished"
-      ],
+      "player_history_all": {
+        "n_postgame_cols_found": 0,
+        "columns_checked": [
+          "ratingDiff",
+          "finished"
+        ],
+        "pass": true
+      },
+      "matches_1v1_clean": {
+        "n_postgame_cols_found": 0,
+        "columns_checked": [
+          "ratingDiff",
+          "finished"
+        ],
+        "pass": true
+      },
       "pass": true,
-      "description": "No POST-GAME columns in player_history_all (I3)"
+      "description": "No POST-GAME columns in player_history_all or matches_1v1_clean (I3)"
     },
     "V3_rating_sanity": {
       "n_negative_rating": 0,
       "pass": true
     },
     "V4_leaderboard_distribution": {
-      "qp_rm_1v1": {
-        "internalLeaderboardId": 18,
-        "n_rows": 7376228
-      },
       "rm_1v1": {
         "internalLeaderboardId": 6,
         "n_rows": 53686164
+      },
+      "qp_rm_1v1": {
+        "internalLeaderboardId": 18,
+        "n_rows": 7376228
       }
     },
     "V5_null_cluster_proportion": {
@@ -585,17 +596,2267 @@
     }
   ],
   "sql_queries": {
-    "T01_scope_restriction": "\n-- R01: Scope restriction -- count rows before/after\nSELECT\n    'total' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\n\nUNION ALL\n\nSELECT\n    'in_scope_1v1' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\nWHERE internalLeaderboardId IN (6, 18)\n\nUNION ALL\n\nSELECT\n    'out_of_scope' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\nWHERE internalLeaderboardId NOT IN (6, 18)\n   OR internalLeaderboardId IS NULL;\n",
-    "T02_dup_stratification": "\n-- R02: Duplicate stratification (in-scope only)\nWITH in_scope AS (\n    SELECT *\n    FROM matches_raw\n    WHERE internalLeaderboardId IN (6, 18)\n),\ndup_groups AS (\n    SELECT matchId, profileId, COUNT(*) AS row_count\n    FROM in_scope\n    GROUP BY matchId, profileId\n    HAVING COUNT(*) > 1\n)\nSELECT\n    CASE WHEN d.profileId = -1 THEN 'profileId_minus1' ELSE 'real_profileId' END AS stratum,\n    COUNT(*) AS n_dup_groups,\n    SUM(d.row_count) AS total_dup_rows,\n    SUM(d.row_count) - COUNT(*) AS excess_rows\nFROM dup_groups d\nGROUP BY\n    CASE WHEN d.profileId = -1 THEN 'profileId_minus1' ELSE 'real_profileId' END;\n",
+    "T01_scope_restriction": "\n-- Scope restriction -- count rows before/after\nSELECT\n    'total' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\n\nUNION ALL\n\nSELECT\n    'in_scope_1v1' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\nWHERE internalLeaderboardId IN (6, 18)\n\nUNION ALL\n\nSELECT\n    'out_of_scope' AS scope,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT matchId) AS n_matches\nFROM matches_raw\nWHERE internalLeaderboardId NOT IN (6, 18)\n   OR internalLeaderboardId IS NULL;\n",
+    "T02_dup_stratification": "\n-- Duplicate stratification (in-scope only)\nWITH in_scope AS (\n    SELECT *\n    FROM matches_raw\n    WHERE internalLeaderboardId IN (6, 18)\n),\ndup_groups AS (\n    SELECT matchId, profileId, COUNT(*) AS row_count\n    FROM in_scope\n    GROUP BY matchId, profileId\n    HAVING COUNT(*) > 1\n)\nSELECT\n    CASE WHEN d.profileId = -1 THEN 'profileId_minus1' ELSE 'real_profileId' END AS stratum,\n    COUNT(*) AS n_dup_groups,\n    SUM(d.row_count) AS total_dup_rows,\n    SUM(d.row_count) - COUNT(*) AS excess_rows\nFROM dup_groups d\nGROUP BY\n    CASE WHEN d.profileId = -1 THEN 'profileId_minus1' ELSE 'real_profileId' END;\n",
     "T02_minus1_investigation": "\n-- profileId=-1 investigation in 1v1 scope\nSELECT\n    COUNT(*) AS total_minus1_rows,\n    COUNT(DISTINCT matchId) AS n_matches_with_minus1\nFROM matches_raw\nWHERE internalLeaderboardId IN (6, 18)\n  AND profileId = -1;\n",
-    "T03_won_consistency": "\n-- R03: Won consistency check (in-scope, 2-row matches only)\nWITH in_scope_dedup AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n),\nmatch_pairs AS (\n    SELECT\n        matchId,\n        COUNT(*) AS n_rows,\n        COUNT(*) FILTER (WHERE won = TRUE) AS n_won_true,\n        COUNT(*) FILTER (WHERE won = FALSE) AS n_won_false,\n        COUNT(*) FILTER (WHERE won IS NULL) AS n_won_null\n    FROM in_scope_dedup\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n)\nSELECT\n    CASE\n        WHEN n_won_true = 1 AND n_won_false = 1 THEN 'complementary'\n        WHEN n_won_true = 2 THEN 'both_true'\n        WHEN n_won_false = 2 THEN 'both_false'\n        WHEN n_won_null > 0 THEN 'has_null'\n        ELSE 'other'\n    END AS won_pattern,\n    COUNT(*) AS n_matches,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct\nFROM match_pairs\nGROUP BY won_pattern\nORDER BY n_matches DESC;\n",
+    "T03_won_consistency": "\n-- Won consistency check (in-scope, 2-row matches only)\nWITH in_scope_dedup AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n),\nmatch_pairs AS (\n    SELECT\n        matchId,\n        COUNT(*) AS n_rows,\n        COUNT(*) FILTER (WHERE won = TRUE) AS n_won_true,\n        COUNT(*) FILTER (WHERE won = FALSE) AS n_won_false,\n        COUNT(*) FILTER (WHERE won IS NULL) AS n_won_null\n    FROM in_scope_dedup\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n)\nSELECT\n    CASE\n        WHEN n_won_true = 1 AND n_won_false = 1 THEN 'complementary'\n        WHEN n_won_true = 2 THEN 'both_true'\n        WHEN n_won_false = 2 THEN 'both_false'\n        WHEN n_won_null > 0 THEN 'has_null'\n        ELSE 'other'\n    END AS won_pattern,\n    COUNT(*) AS n_matches,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS pct\nFROM match_pairs\nGROUP BY won_pattern\nORDER BY n_matches DESC;\n",
     "T03_match_sizes": "\n-- Non-2-row match counts in scope after dedup\nWITH in_scope_dedup AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n),\nmatch_sizes AS (\n    SELECT matchId, COUNT(*) AS n_rows FROM in_scope_dedup GROUP BY matchId\n)\nSELECT\n    CASE WHEN n_rows = 1 THEN '1_row'\n         WHEN n_rows = 2 THEN '2_rows'\n         ELSE '3_plus_rows' END AS size_bucket,\n    COUNT(*) AS n_matches,\n    SUM(n_rows) AS total_rows\nFROM match_sizes\nGROUP BY size_bucket\nORDER BY size_bucket;\n",
-    "T04_null_cluster": "\n-- R04: NULL cluster temporal stratification (in-scope)\nWITH in_scope AS (\n    SELECT * FROM matches_raw WHERE internalLeaderboardId IN (6, 18)\n),\nnull_cluster AS (\n    SELECT\n        matchId, started,\n        CASE\n            WHEN allowCheats IS NULL AND lockSpeed IS NULL AND lockTeams IS NULL\n             AND recordGame IS NULL AND sharedExploration IS NULL\n             AND teamPositions IS NULL AND teamTogether IS NULL\n             AND turboMode IS NULL AND fullTechTree IS NULL AND population IS NULL\n            THEN TRUE ELSE FALSE\n        END AS is_null_cluster\n    FROM in_scope\n)\nSELECT is_null_cluster, COUNT(*) AS n_rows,\n       MIN(started) AS min_date, MAX(started) AS max_date,\n       COUNT(DISTINCT DATE_TRUNC('month', started)) AS n_months\nFROM null_cluster\nGROUP BY is_null_cluster;\n",
-    "T04_null_monthly": "\n-- R04 addendum: monthly breakdown of NULL cluster (W01 temporal stratification)\nWITH in_scope AS (\n    SELECT * FROM matches_raw WHERE internalLeaderboardId IN (6, 18)\n),\nnull_cluster AS (\n    SELECT\n        started,\n        CASE\n            WHEN allowCheats IS NULL AND lockSpeed IS NULL AND lockTeams IS NULL\n             AND recordGame IS NULL AND sharedExploration IS NULL\n             AND teamPositions IS NULL AND teamTogether IS NULL\n             AND turboMode IS NULL AND fullTechTree IS NULL AND population IS NULL\n            THEN TRUE ELSE FALSE\n        END AS is_null_cluster\n    FROM in_scope\n)\nSELECT\n    DATE_TRUNC('month', started) AS month,\n    COUNT(*) FILTER (WHERE is_null_cluster) AS null_cluster_rows,\n    COUNT(*) FILTER (WHERE NOT is_null_cluster) AS normal_rows,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE is_null_cluster) / COUNT(*), 2) AS null_pct\nFROM null_cluster\nGROUP BY DATE_TRUNC('month', started)\nORDER BY month;\n",
-    "T04_null_survival": "\n-- NULL cluster survival after R01+R02+R03\nWITH in_scope_dedup AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (PARTITION BY matchId, profileId ORDER BY started) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18) AND profileId != -1\n    ) sub\n    WHERE rn = 1\n),\nvalid_matches AS (\n    SELECT matchId FROM in_scope_dedup\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE won = TRUE) = 1\n       AND COUNT(*) FILTER (WHERE won = FALSE) = 1\n)\nSELECT\n    CASE\n        WHEN d.allowCheats IS NULL AND d.lockSpeed IS NULL AND d.lockTeams IS NULL\n         AND d.recordGame IS NULL AND d.sharedExploration IS NULL\n         AND d.teamPositions IS NULL AND d.teamTogether IS NULL\n         AND d.turboMode IS NULL AND d.fullTechTree IS NULL AND d.population IS NULL\n        THEN 'null_cluster' ELSE 'normal'\n    END AS cluster_status,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT d.matchId) AS n_matches\nFROM in_scope_dedup d\nINNER JOIN valid_matches v ON d.matchId = v.matchId\nGROUP BY cluster_status;\n",
+    "T04_null_cluster": "\n-- NULL cluster temporal stratification (in-scope)\nWITH in_scope AS (\n    SELECT * FROM matches_raw WHERE internalLeaderboardId IN (6, 18)\n),\nnull_cluster AS (\n    SELECT\n        matchId, started,\n        CASE\n            WHEN allowCheats IS NULL AND lockSpeed IS NULL AND lockTeams IS NULL\n             AND recordGame IS NULL AND sharedExploration IS NULL\n             AND teamPositions IS NULL AND teamTogether IS NULL\n             AND turboMode IS NULL AND fullTechTree IS NULL AND population IS NULL\n            THEN TRUE ELSE FALSE\n        END AS is_null_cluster\n    FROM in_scope\n)\nSELECT is_null_cluster, COUNT(*) AS n_rows,\n       MIN(started) AS min_date, MAX(started) AS max_date,\n       COUNT(DISTINCT DATE_TRUNC('month', started)) AS n_months\nFROM null_cluster\nGROUP BY is_null_cluster;\n",
+    "T04_null_monthly": "\n-- Monthly breakdown: monthly temporal stratification of NULL cluster\nWITH in_scope AS (\n    SELECT * FROM matches_raw WHERE internalLeaderboardId IN (6, 18)\n),\nnull_cluster AS (\n    SELECT\n        started,\n        CASE\n            WHEN allowCheats IS NULL AND lockSpeed IS NULL AND lockTeams IS NULL\n             AND recordGame IS NULL AND sharedExploration IS NULL\n             AND teamPositions IS NULL AND teamTogether IS NULL\n             AND turboMode IS NULL AND fullTechTree IS NULL AND population IS NULL\n            THEN TRUE ELSE FALSE\n        END AS is_null_cluster\n    FROM in_scope\n)\nSELECT\n    DATE_TRUNC('month', started) AS month,\n    COUNT(*) FILTER (WHERE is_null_cluster) AS null_cluster_rows,\n    COUNT(*) FILTER (WHERE NOT is_null_cluster) AS normal_rows,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE is_null_cluster) / COUNT(*), 2) AS null_pct\nFROM null_cluster\nGROUP BY DATE_TRUNC('month', started)\nORDER BY month;\n",
+    "T04_null_survival": "\n-- NULL cluster survival after scope restriction, deduplication, and consistency filtering\nWITH in_scope_dedup AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (PARTITION BY matchId, profileId ORDER BY started) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18) AND profileId != -1\n    ) sub\n    WHERE rn = 1\n),\nvalid_matches AS (\n    SELECT matchId FROM in_scope_dedup\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE won = TRUE) = 1\n       AND COUNT(*) FILTER (WHERE won = FALSE) = 1\n)\nSELECT\n    CASE\n        WHEN d.allowCheats IS NULL AND d.lockSpeed IS NULL AND d.lockTeams IS NULL\n         AND d.recordGame IS NULL AND d.sharedExploration IS NULL\n         AND d.teamPositions IS NULL AND d.teamTogether IS NULL\n         AND d.turboMode IS NULL AND d.fullTechTree IS NULL AND d.population IS NULL\n        THEN 'null_cluster' ELSE 'normal'\n    END AS cluster_status,\n    COUNT(*) AS n_rows,\n    COUNT(DISTINCT d.matchId) AS n_matches\nFROM in_scope_dedup d\nINNER JOIN valid_matches v ON d.matchId = v.matchId\nGROUP BY cluster_status;\n",
     "T05_outlier_analysis": "\nSELECT\n    COUNT(*) AS total_rows,\n    PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY games) AS p99,\n    PERCENTILE_CONT(0.999) WITHIN GROUP (ORDER BY games) AS p999,\n    PERCENTILE_CONT(0.9999) WITHIN GROUP (ORDER BY games) AS p9999,\n    MAX(games) AS max_val,\n    COUNT(*) FILTER (WHERE games > 50000) AS n_above_50k,\n    COUNT(*) FILTER (WHERE games > 100000) AS n_above_100k,\n    COUNT(*) FILTER (WHERE games > 1000000) AS n_above_1M\nFROM ratings_raw;\n",
     "T05_ratings_clean_view": "\nCREATE OR REPLACE VIEW ratings_clean AS\nSELECT\n    profile_id, LEAST(games, 1775011321) AS games,\n    rating, date, leaderboard_id, rating_diff, season, filename\nFROM ratings_raw;\n",
     "T06_player_history_all_view": "\nCREATE OR REPLACE VIEW player_history_all AS\nWITH deduped AS (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE profileId != -1\n    ) sub\n    WHERE rn = 1\n)\nSELECT\n    matchId,\n    profileId,\n    name,\n    started,\n    leaderboard,\n    internalLeaderboardId,\n    map,\n    civ,\n    rating,\n    color,\n    slot,\n    team,\n    startingAge,\n    gameMode,\n    speed,\n    won,\n    country,\n    status,\n    verified,\n    filename\nFROM deduped;\n",
-    "T07_matches_1v1_clean_view": "\nCREATE OR REPLACE VIEW matches_1v1_clean AS\nSELECT\n    d.matchId,\n    d.started,\n    d.finished,\n    d.leaderboard,\n    d.name,\n    d.server,\n    d.internalLeaderboardId,\n    d.privacy,\n    d.mod,\n    d.map,\n    d.difficulty,\n    d.startingAge,\n    d.fullTechTree,\n    d.allowCheats,\n    d.empireWarsMode,\n    d.endingAge,\n    d.gameMode,\n    d.lockSpeed,\n    d.lockTeams,\n    d.mapSize,\n    d.population,\n    d.hideCivs,\n    d.recordGame,\n    d.regicideMode,\n    d.gameVariant,\n    d.resources,\n    d.sharedExploration,\n    d.speed,\n    d.speedFactor,\n    d.suddenDeathMode,\n    d.antiquityMode,\n    d.civilizationSet,\n    d.teamPositions,\n    d.teamTogether,\n    d.treatyLength,\n    d.turboMode,\n    d.victory,\n    d.revealMap,\n    d.scenario,\n    d.password,\n    d.modDataset,\n    d.profileId,\n    d.rating,\n    d.ratingDiff,\n    d.color,\n    d.colorHex,\n    d.slot,\n    d.status,\n    d.team,\n    d.won,\n    d.country,\n    d.shared,\n    d.verified,\n    d.civ,\n    d.filename,\n    CASE\n        WHEN d.allowCheats IS NULL AND d.lockSpeed IS NULL AND d.lockTeams IS NULL\n         AND d.recordGame IS NULL AND d.sharedExploration IS NULL\n         AND d.teamPositions IS NULL AND d.teamTogether IS NULL\n         AND d.turboMode IS NULL AND d.fullTechTree IS NULL AND d.population IS NULL\n        THEN TRUE ELSE FALSE\n    END AS is_null_cluster\nFROM (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) raw_rn\n    WHERE rn = 1\n) d\nWHERE d.matchId IN (\n    SELECT matchId\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE won = TRUE) = 1\n       AND COUNT(*) FILTER (WHERE won = FALSE) = 1\n);\n"
+    "T07_matches_1v1_clean_view": "\nCREATE OR REPLACE VIEW matches_1v1_clean AS\nSELECT\n    d.matchId,\n    d.started,\n    d.leaderboard,\n    d.name,\n    d.server,\n    d.internalLeaderboardId,\n    d.privacy,\n    d.mod,\n    d.map,\n    d.difficulty,\n    d.startingAge,\n    d.fullTechTree,\n    d.allowCheats,\n    d.empireWarsMode,\n    d.endingAge,\n    d.gameMode,\n    d.lockSpeed,\n    d.lockTeams,\n    d.mapSize,\n    d.population,\n    d.hideCivs,\n    d.recordGame,\n    d.regicideMode,\n    d.gameVariant,\n    d.resources,\n    d.sharedExploration,\n    d.speed,\n    d.speedFactor,\n    d.suddenDeathMode,\n    d.antiquityMode,\n    d.civilizationSet,\n    d.teamPositions,\n    d.teamTogether,\n    d.treatyLength,\n    d.turboMode,\n    d.victory,\n    d.revealMap,\n    d.scenario,\n    d.password,\n    d.modDataset,\n    d.profileId,\n    d.rating,\n    d.color,\n    d.colorHex,\n    d.slot,\n    d.status,\n    d.team,\n    d.won,\n    d.country,\n    d.shared,\n    d.verified,\n    d.civ,\n    d.filename,\n    CASE\n        WHEN d.allowCheats IS NULL AND d.lockSpeed IS NULL AND d.lockTeams IS NULL\n         AND d.recordGame IS NULL AND d.sharedExploration IS NULL\n         AND d.teamPositions IS NULL AND d.teamTogether IS NULL\n         AND d.turboMode IS NULL AND d.fullTechTree IS NULL AND d.population IS NULL\n        THEN TRUE ELSE FALSE\n    END AS is_null_cluster\nFROM (\n    SELECT * EXCLUDE (rn)\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) raw_rn\n    WHERE rn = 1\n) d\nWHERE d.matchId IN (\n    SELECT matchId\n    FROM (\n        SELECT *,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND COUNT(*) FILTER (WHERE won = TRUE) = 1\n       AND COUNT(*) FILTER (WHERE won = FALSE) = 1\n);\n",
+    "null_audit_matches_cols": "\nWITH col_list AS (\n    SELECT column_name\n    FROM information_schema.columns\n    WHERE table_name = 'matches_1v1_clean'\n    ORDER BY ordinal_position\n)\nSELECT * FROM col_list;\n",
+    "null_audit_hist_cols": "\nWITH col_list AS (\n    SELECT column_name\n    FROM information_schema.columns\n    WHERE table_name = 'player_history_all'\n    ORDER BY ordinal_position\n)\nSELECT * FROM col_list;\n",
+    "null_audit_per_column_template": "SELECT COUNT(*) FILTER (WHERE \"{column_name}\" IS NULL) AS null_count FROM {view_name}",
+    "missingness_sentinel_template": "SELECT COUNT(*) FILTER (WHERE \"{col}\" {predicate}) FROM {view_name}",
+    "missingness_constants_template": "SELECT COUNT(DISTINCT \"{col}\") FROM {view_name}"
+  },
+  "null_audit": {
+    "matches_1v1_clean": {
+      "total_rows": 61062392,
+      "columns": [
+        {
+          "column": "matchId",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "started",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "leaderboard",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "name",
+          "null_count": 37,
+          "null_pct": 0.0001
+        },
+        {
+          "column": "server",
+          "null_count": 59469814,
+          "null_pct": 97.3919
+        },
+        {
+          "column": "internalLeaderboardId",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "privacy",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "mod",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "map",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "difficulty",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "startingAge",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "fullTechTree",
+          "null_count": 11198,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "allowCheats",
+          "null_count": 11196,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "empireWarsMode",
+          "null_count": 215820,
+          "null_pct": 0.3534
+        },
+        {
+          "column": "endingAge",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "gameMode",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "lockSpeed",
+          "null_count": 11196,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "lockTeams",
+          "null_count": 11186,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "mapSize",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "population",
+          "null_count": 11198,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "hideCivs",
+          "null_count": 22701220,
+          "null_pct": 37.1771
+        },
+        {
+          "column": "recordGame",
+          "null_count": 11196,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "regicideMode",
+          "null_count": 1862388,
+          "null_pct": 3.05
+        },
+        {
+          "column": "gameVariant",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "resources",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "sharedExploration",
+          "null_count": 11186,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "speed",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "speedFactor",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "suddenDeathMode",
+          "null_count": 214514,
+          "null_pct": 0.3513
+        },
+        {
+          "column": "antiquityMode",
+          "null_count": 36676142,
+          "null_pct": 60.0634
+        },
+        {
+          "column": "civilizationSet",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "teamPositions",
+          "null_count": 11196,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "teamTogether",
+          "null_count": 11196,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "treatyLength",
+          "null_count": 4392,
+          "null_pct": 0.0072
+        },
+        {
+          "column": "turboMode",
+          "null_count": 11184,
+          "null_pct": 0.0183
+        },
+        {
+          "column": "victory",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "revealMap",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "scenario",
+          "null_count": 61062388,
+          "null_pct": 100.0
+        },
+        {
+          "column": "password",
+          "null_count": 47367192,
+          "null_pct": 77.5718
+        },
+        {
+          "column": "modDataset",
+          "null_count": 61062392,
+          "null_pct": 100.0
+        },
+        {
+          "column": "profileId",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "rating",
+          "null_count": 15999234,
+          "null_pct": 26.2015
+        },
+        {
+          "column": "color",
+          "null_count": 1591,
+          "null_pct": 0.0026
+        },
+        {
+          "column": "colorHex",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "slot",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "status",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "team",
+          "null_count": 1222484,
+          "null_pct": 2.002
+        },
+        {
+          "column": "won",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "country",
+          "null_count": 1373052,
+          "null_pct": 2.2486
+        },
+        {
+          "column": "shared",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "verified",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "civ",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "filename",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "is_null_cluster",
+          "null_count": 0,
+          "null_pct": 0.0
+        }
+      ],
+      "zero_null_assertions": {
+        "matchId": true,
+        "profileId": true,
+        "started": true,
+        "won": true
+      },
+      "nullable_findings": {
+        "won": {
+          "null_count": 0,
+          "note": "guaranteed 0 by complementary-won filter R03"
+        }
+      }
+    },
+    "player_history_all": {
+      "total_rows": 264132745,
+      "columns": [
+        {
+          "column": "matchId",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "profileId",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "name",
+          "null_count": 625,
+          "null_pct": 0.0002
+        },
+        {
+          "column": "started",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "leaderboard",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "internalLeaderboardId",
+          "null_count": 1209089,
+          "null_pct": 0.4578
+        },
+        {
+          "column": "map",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "civ",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "rating",
+          "null_count": 104676152,
+          "null_pct": 39.6301
+        },
+        {
+          "column": "color",
+          "null_count": 7089,
+          "null_pct": 0.0027
+        },
+        {
+          "column": "slot",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "team",
+          "null_count": 13270235,
+          "null_pct": 5.0241
+        },
+        {
+          "column": "startingAge",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "gameMode",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "speed",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "won",
+          "null_count": 19251,
+          "null_pct": 0.0073
+        },
+        {
+          "column": "country",
+          "null_count": 21936289,
+          "null_pct": 8.305
+        },
+        {
+          "column": "status",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "verified",
+          "null_count": 0,
+          "null_pct": 0.0
+        },
+        {
+          "column": "filename",
+          "null_count": 0,
+          "null_pct": 0.0
+        }
+      ],
+      "zero_null_assertions": {
+        "matchId": true,
+        "profileId": true,
+        "started": true
+      },
+      "zero_null_evidence": "01_02_04 census (matches_raw_null_census) reports null_count=0 for matchId, profileId, started across 277,099,059 rows in matches_raw. player_history_all is a filtered projection (WHERE profileId != -1, dedup by matchId/profileId) that cannot introduce NULLs.",
+      "nullable_findings": {
+        "won": {
+          "null_count": 19251,
+          "null_pct": 0.0073,
+          "note": "nullable field; VIEW covers all game types; no won IS NOT NULL filter applied"
+        }
+      }
+    }
+  },
+  "missingness_audit": {
+    "framework": {
+      "source_doc": "temp/null_handling_recommendations.md",
+      "rules_applied": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "mechanism_taxonomy": "Rubin (1976); Little & Rubin (2019, 3rd ed.)",
+      "phase_boundary": "Phase 01 documents (I9). Phase 02 transforms.",
+      "note_on_rates": "All triage rates in the ledger derive from VIEWs (filtered scope), not raw tables. A column with 42% NULL in matches_raw can be ~26% NULL in matches_1v1_clean. The ledger is authoritative for downstream decisions because Phase 02 features are computed from the VIEWs.",
+      "thresholds": {
+        "low_rate_pct": 5.0,
+        "mid_rate_pct": 40.0,
+        "high_rate_pct": 80.0,
+        "threshold_source": "Operational starting heuristics from temp/null_handling_recommendations.md \u00a71.2; <5% MCAR boundary citation: Schafer & Graham 2002; warning against rigid global thresholds: van Buuren 2018"
+      },
+      "override_priority": [
+        "1. Identity-column branch (B5): identity cols routed to mechanism=N/A, RETAIN_AS_IS",
+        "2. Constants detection (n_distinct == 1 AND zero NULLs AND zero sentinels) -> mechanism=N/A, DROP_COLUMN",
+        "3. F1 zero-missingness (n_total_missing == 0) -> mechanism=N/A, RETAIN_AS_IS",
+        "4. _recommend() per spec/fallback (incl. CONVERT_SENTINEL_TO_NULL for sentinel-only low-rate cases)",
+        "5. Target-column post-step (col in target_cols AND n_total_missing > 0) -> EXCLUDE_TARGET_NULL_ROWS"
+      ],
+      "per_view_target_cols": {
+        "matches_1v1_clean": [
+          "won"
+        ],
+        "player_history_all": [
+          "won"
+        ]
+      },
+      "per_view_identity_cols": {
+        "matches_1v1_clean": [
+          "profileId",
+          "matchId"
+        ],
+        "player_history_all": [
+          "profileId",
+          "matchId"
+        ]
+      }
+    },
+    "missingness_spec": {
+      "rating": {
+        "mechanism": "MAR",
+        "justification": "Unranked matches lack rating. In matches_1v1_clean (ranked scope), effective NULL rate is ~26% -- primary feature, not dropped per Rule S4 exception. The matches_1v1_clean VIEW asserts `rating >= 0` upstream, so the -1 sentinel is filtered before the audit sees it; n_sentinel=0 in the ledger reflects upstream filtering, not absence of the encoding. Source: 01_03_03 + this audit.",
+        "sentinel_value": null,
+        "carries_semantic_content": true,
+        "is_primary_feature": true
+      },
+      "country": {
+        "mechanism": "MAR",
+        "justification": "Player chose not to disclose country. Source: 01_02_04 distribution.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "won": {
+        "mechanism": "MAR",
+        "justification": "Unranked / unknown leaderboards lack won. Excluded from prediction scope (matches_1v1_clean enforces via R03); retained in player_history_all for feature computation. Source: 01_03_02 + R03.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "server": {
+        "mechanism": "MNAR",
+        "justification": "Structurally absent for certain API versions. 01_02_04 reports null_pct=97.99%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "modDataset": {
+        "mechanism": "MAR",
+        "justification": "Scenario-specific; absent for ranked random map. 01_02_04 reports null_pct=99.72%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "scenario": {
+        "mechanism": "MAR",
+        "justification": "Custom scenario only; absent for ranked random map. 01_02_04 reports null_pct=98.27%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "password": {
+        "mechanism": "MAR",
+        "justification": "Password-protected lobbies only. 01_02_04 reports null_pct=82.90%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "antiquityMode": {
+        "mechanism": "MAR",
+        "justification": "Schema-evolution column: introduced in a later patch; missingness depends on observed match patch (a recorded variable). 01_02_04 reports null_pct=68.66%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "hideCivs": {
+        "mechanism": "MAR",
+        "justification": "Schema-evolution column (patch-dependent). 01_02_04 reports null_pct=49.30%.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "mod": {
+        "mechanism": "MAR",
+        "justification": "Group C boolean game setting; 01_02_04 evidence -- ranked-1v1 default. Constants-detection backstop applies.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "map": {
+        "mechanism": "MCAR",
+        "justification": "Map name; near-zero null in ranked 1v1 scope per 01_02_04. Categorical feature.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "difficulty": {
+        "mechanism": "MAR",
+        "justification": "AI difficulty; near-zero null in ranked-1v1 scope per 01_02_04. Constants-detection backstop applies (likely constant in ranked).",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "startingAge": {
+        "mechanism": "MAR",
+        "justification": "Game setting; near-zero null in ranked-1v1 scope per 01_02_04. Constants-detection backstop applies.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "fullTechTree": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence -- ranked-1v1 default.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "allowCheats": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence -- ranked-1v1 default. NULL-cluster member (R04).",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "empireWarsMode": {
+        "mechanism": "MAR",
+        "justification": "Boolean game mode; 01_02_04 evidence -- variant indicator.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "endingAge": {
+        "mechanism": "MAR",
+        "justification": "Game setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "gameMode": {
+        "mechanism": "MAR",
+        "justification": "Game mode setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "lockSpeed": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "lockTeams": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "mapSize": {
+        "mechanism": "MAR",
+        "justification": "Map size setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "population": {
+        "mechanism": "MAR",
+        "justification": "Population cap; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "recordGame": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "regicideMode": {
+        "mechanism": "MAR",
+        "justification": "Boolean game mode; 01_02_04 evidence -- variant indicator.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "gameVariant": {
+        "mechanism": "MAR",
+        "justification": "Game variant identifier; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "resources": {
+        "mechanism": "MAR",
+        "justification": "Starting resources setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "sharedExploration": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "speed": {
+        "mechanism": "MAR",
+        "justification": "Game speed name; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "speedFactor": {
+        "mechanism": "MAR",
+        "justification": "Game speed multiplier; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "suddenDeathMode": {
+        "mechanism": "MAR",
+        "justification": "Boolean game mode; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "civilizationSet": {
+        "mechanism": "MAR",
+        "justification": "Civilization-set restriction; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "teamPositions": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "teamTogether": {
+        "mechanism": "MAR",
+        "justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "treatyLength": {
+        "mechanism": "MAR",
+        "justification": "Treaty duration; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "turboMode": {
+        "mechanism": "MAR",
+        "justification": "Boolean game mode; 01_02_04 evidence. NULL-cluster member.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "victory": {
+        "mechanism": "MAR",
+        "justification": "Victory condition; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "revealMap": {
+        "mechanism": "MAR",
+        "justification": "Map reveal setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "color": {
+        "mechanism": "MCAR",
+        "justification": "In-game color code; near-zero null per 01_02_04.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "colorHex": {
+        "mechanism": "MCAR",
+        "justification": "Color as hex; near-zero null per 01_02_04.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "slot": {
+        "mechanism": "MCAR",
+        "justification": "Player slot index; near-zero null per 01_02_04.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "status": {
+        "mechanism": "MCAR",
+        "justification": "Player status; near-zero null per 01_02_04.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "team": {
+        "mechanism": "MAR",
+        "justification": "Team number; sentinel 255 per matches_raw schema YAML notes.",
+        "sentinel_value": "255",
+        "carries_semantic_content": true,
+        "is_primary_feature": false
+      },
+      "shared": {
+        "mechanism": "MAR",
+        "justification": "Boolean shared-control flag; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "verified": {
+        "mechanism": "MAR",
+        "justification": "Boolean verified flag; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "privacy": {
+        "mechanism": "MAR",
+        "justification": "Privacy/visibility setting; 01_02_04 evidence.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "name": {
+        "mechanism": "MCAR",
+        "justification": "Display name; near-zero null per 01_02_04.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      },
+      "is_null_cluster": {
+        "mechanism": "N/A",
+        "justification": "Derived flag from VIEW DDL (R04). Always non-NULL by construction.",
+        "sentinel_value": null,
+        "carries_semantic_content": false,
+        "is_primary_feature": false
+      }
+    },
+    "matches_1v1_clean": {
+      "total_rows": 61062392,
+      "n_cols": 54,
+      "ledger": [
+        {
+          "view": "matches_1v1_clean",
+          "column": "matchId",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": NaN,
+          "mechanism": "N/A",
+          "mechanism_justification": "Identity column; n_distinct check skipped per W6 (constants-detection runtime budget). Zero NULLs by definition (asserted upstream).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Identity column; no missingness possible by upstream assertion.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "started",
+          "dtype": "TIMESTAMP",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 26623674.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "leaderboard",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "name",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 37,
+          "pct_null": 0.0001,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0001,
+          "n_distinct": 654896.0,
+          "mechanism": "MCAR",
+          "mechanism_justification": "Display name; near-zero null per 01_02_04.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.00% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "server",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 59469814,
+          "pct_null": 97.3919,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 97.3919,
+          "n_distinct": 9.0,
+          "mechanism": "MNAR",
+          "mechanism_justification": "Structurally absent for certain API versions. 01_02_04 reports null_pct=97.99%.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "NULL+sentinel rate 97.39% exceeds 80% (Rule S4 / van Buuren 2018). Imputation indefensible at this rate.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "internalLeaderboardId",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "privacy",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "mod",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 1.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "True constant column; n_distinct=1 across 61,062,392 rows (zero NULLs, zero sentinels). No information content for prediction.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "True constant column; n_distinct=1; no information content.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "map",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 94.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "difficulty",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "startingAge",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 4.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "fullTechTree",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11198,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 1.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence -- ranked-1v1 default.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "allowCheats",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11196,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence -- ranked-1v1 default. NULL-cluster member (R04).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "empireWarsMode",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 215820,
+          "pct_null": 0.3534,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.3534,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game mode; 01_02_04 evidence -- variant indicator.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.35% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "endingAge",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 4.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "gameMode",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 4.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "lockSpeed",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11196,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "lockTeams",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11186,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "mapSize",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 5.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "population",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 11198,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Population cap; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "hideCivs",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 22701220,
+          "pct_null": 37.1771,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 37.1771,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Schema-evolution column (patch-dependent). 01_02_04 reports null_pct=49.30%.",
+          "recommendation": "FLAG_FOR_IMPUTATION",
+          "recommendation_justification": "Rate 37.18% in 5-40%; flag for Phase 02 imputation.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "recordGame",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11196,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "regicideMode",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 1862388,
+          "pct_null": 3.05,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 3.05,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game mode; 01_02_04 evidence -- variant indicator.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 3.05% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "gameVariant",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "resources",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 4.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "sharedExploration",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11186,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "speed",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "speedFactor",
+          "dtype": "FLOAT",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "suddenDeathMode",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 214514,
+          "pct_null": 0.3513,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.3513,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game mode; 01_02_04 evidence.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.35% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "antiquityMode",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 36676142,
+          "pct_null": 60.0634,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 60.0634,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Schema-evolution column: introduced in a later patch; missingness depends on observed match patch (a recorded variable). 01_02_04 reports null_pct=68.66%.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "Rate 60.06% in 40-80%; non-primary feature; cost/benefit favors simplicity per Rule S4.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "civilizationSet",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "teamPositions",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11196,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "teamTogether",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11196,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game setting; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "treatyLength",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 4392,
+          "pct_null": 0.0072,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0072,
+          "n_distinct": 15.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Treaty duration; 01_02_04 evidence.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.01% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "turboMode",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 11184,
+          "pct_null": 0.0183,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0183,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Boolean game mode; 01_02_04 evidence. NULL-cluster member.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.02% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "victory",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 3.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "revealMap",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 4.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "scenario",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 61062388,
+          "pct_null": 100.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 100.0,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Custom scenario only; absent for ranked random map. 01_02_04 reports null_pct=98.27%.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "NULL+sentinel rate 100.00% exceeds 80% (Rule S4 / van Buuren 2018). Imputation indefensible at this rate.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "password",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 47367192,
+          "pct_null": 77.5718,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 77.5718,
+          "n_distinct": 1.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Password-protected lobbies only. 01_02_04 reports null_pct=82.90%.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "Rate 77.57% in 40-80%; non-primary feature; cost/benefit favors simplicity per Rule S4.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "modDataset",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 61062392,
+          "pct_null": 100.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 100.0,
+          "n_distinct": 0.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Scenario-specific; absent for ranked random map. 01_02_04 reports null_pct=99.72%.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "NULL+sentinel rate 100.00% exceeds 80% (Rule S4 / van Buuren 2018). Imputation indefensible at this rate.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "profileId",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": NaN,
+          "mechanism": "N/A",
+          "mechanism_justification": "Identity column; n_distinct check skipped per W6 (constants-detection runtime budget). Zero NULLs by definition (asserted upstream).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Identity column; no missingness possible by upstream assertion.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "rating",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 15999234,
+          "pct_null": 26.2015,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 26.2015,
+          "n_distinct": 3035.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Unranked matches lack rating. In matches_1v1_clean (ranked scope), effective NULL rate is ~26% -- primary feature, not dropped per Rule S4 exception. The matches_1v1_clean VIEW asserts `rating >= 0` upstream, so the -1 sentinel is filtered before the audit sees it; n_sentinel=0 in the ledger reflects upstream filtering, not absence of the encoding. Source: 01_03_03 + this audit.",
+          "recommendation": "FLAG_FOR_IMPUTATION",
+          "recommendation_justification": "Rate 26.20% in 5-40%; flag for Phase 02 imputation.",
+          "carries_semantic_content": true,
+          "is_primary_feature": true
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "color",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 1591,
+          "pct_null": 0.0026,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0026,
+          "n_distinct": 44.0,
+          "mechanism": "MCAR",
+          "mechanism_justification": "In-game color code; near-zero null per 01_02_04.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.00% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "colorHex",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 9.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "slot",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "status",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 1.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "True constant column; n_distinct=1 across 61,062,392 rows (zero NULLs, zero sentinels). No information content for prediction.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "True constant column; n_distinct=1; no information content.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "team",
+          "dtype": "INTEGER",
+          "n_total": 61062392,
+          "n_null": 1222484,
+          "pct_null": 2.002,
+          "sentinel_value": "255",
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 2.002,
+          "n_distinct": 6.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Team number; sentinel 255 per matches_raw schema YAML notes.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 2.00% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": true,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "won",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "country",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 1373052,
+          "pct_null": 2.2486,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 2.2486,
+          "n_distinct": 206.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Player chose not to disclose country. Source: 01_02_04 distribution.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 2.25% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "shared",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "verified",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "civ",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 56.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "filename",
+          "dtype": "VARCHAR",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2073.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "matches_1v1_clean",
+          "column": "is_null_cluster",
+          "dtype": "BOOLEAN",
+          "n_total": 61062392,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        }
+      ]
+    },
+    "player_history_all": {
+      "total_rows": 264132745,
+      "n_cols": 20,
+      "ledger": [
+        {
+          "view": "player_history_all",
+          "column": "matchId",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": NaN,
+          "mechanism": "N/A",
+          "mechanism_justification": "Identity column; n_distinct check skipped per W6 (constants-detection runtime budget). Zero NULLs by definition (asserted upstream).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Identity column; no missingness possible by upstream assertion.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "profileId",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": NaN,
+          "mechanism": "N/A",
+          "mechanism_justification": "Identity column; n_distinct check skipped per W6 (constants-detection runtime budget). Zero NULLs by definition (asserted upstream).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Identity column; no missingness possible by upstream assertion.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "name",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 625,
+          "pct_null": 0.0002,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0002,
+          "n_distinct": 2468341.0,
+          "mechanism": "MCAR",
+          "mechanism_justification": "Display name; near-zero null per 01_02_04.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.00% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "started",
+          "dtype": "TIMESTAMP",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 54133792.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "leaderboard",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 21.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "internalLeaderboardId",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 1209089,
+          "pct_null": 0.4578,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.4578,
+          "n_distinct": 118.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "No _missingness_spec entry; conservative MAR assumption. Effective missingness 0.46% (NULL: 0.46%, sentinel: 0.00%).",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.46% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "map",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 223.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "civ",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 75.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "rating",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 104676152,
+          "pct_null": 39.6301,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 39.6301,
+          "n_distinct": 3666.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Unranked matches lack rating. In matches_1v1_clean (ranked scope), effective NULL rate is ~26% -- primary feature, not dropped per Rule S4 exception. The matches_1v1_clean VIEW asserts `rating >= 0` upstream, so the -1 sentinel is filtered before the audit sees it; n_sentinel=0 in the ledger reflects upstream filtering, not absence of the encoding. Source: 01_03_03 + this audit.",
+          "recommendation": "FLAG_FOR_IMPUTATION",
+          "recommendation_justification": "Rate 39.63% in 5-40%; flag for Phase 02 imputation.",
+          "carries_semantic_content": true,
+          "is_primary_feature": true
+        },
+        {
+          "view": "player_history_all",
+          "column": "color",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 7089,
+          "pct_null": 0.0027,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0027,
+          "n_distinct": 44.0,
+          "mechanism": "MCAR",
+          "mechanism_justification": "In-game color code; near-zero null per 01_02_04.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Rate 0.00% < 5% (Schafer & Graham 2002 boundary citation). Listwise deletion or simple imputation acceptable in Phase 02.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "slot",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 8.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "team",
+          "dtype": "INTEGER",
+          "n_total": 264132745,
+          "n_null": 13270235,
+          "pct_null": 5.0241,
+          "sentinel_value": "255",
+          "n_sentinel": 2,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 5.0241,
+          "n_distinct": 29.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Team number; sentinel 255 per matches_raw schema YAML notes.",
+          "recommendation": "FLAG_FOR_IMPUTATION",
+          "recommendation_justification": "Rate 5.02% in 5-40%; flag for Phase 02 imputation.",
+          "carries_semantic_content": true,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "startingAge",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 12.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "gameMode",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 14.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "speed",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 5.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "won",
+          "dtype": "BOOLEAN",
+          "n_total": 264132745,
+          "n_null": 19251,
+          "pct_null": 0.0073,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0073,
+          "n_distinct": 2.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Unranked / unknown leaderboards lack won. Excluded from prediction scope (matches_1v1_clean enforces via R03); retained in player_history_all for feature computation. Source: 01_03_02 + R03.",
+          "recommendation": "EXCLUDE_TARGET_NULL_ROWS",
+          "recommendation_justification": "Per Rule S2: target NULLs/sentinels excluded from prediction scope, retained in history for feature computation. NEVER impute target.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "country",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 21936289,
+          "pct_null": 8.305,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 8.305,
+          "n_distinct": 216.0,
+          "mechanism": "MAR",
+          "mechanism_justification": "Player chose not to disclose country. Source: 01_02_04 distribution.",
+          "recommendation": "FLAG_FOR_IMPUTATION",
+          "recommendation_justification": "Rate 8.30% in 5-40%; flag for Phase 02 imputation.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "status",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 1.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "True constant column; n_distinct=1 across 264,132,745 rows (zero NULLs, zero sentinels). No information content for prediction.",
+          "recommendation": "DROP_COLUMN",
+          "recommendation_justification": "True constant column; n_distinct=1; no information content.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "verified",
+          "dtype": "BOOLEAN",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        },
+        {
+          "view": "player_history_all",
+          "column": "filename",
+          "dtype": "VARCHAR",
+          "n_total": 264132745,
+          "n_null": 0,
+          "pct_null": 0.0,
+          "sentinel_value": NaN,
+          "n_sentinel": 0,
+          "pct_sentinel": 0.0,
+          "pct_missing_total": 0.0,
+          "n_distinct": 2073.0,
+          "mechanism": "N/A",
+          "mechanism_justification": "Zero missingness observed; no action needed.",
+          "recommendation": "RETAIN_AS_IS",
+          "recommendation_justification": "Zero missingness observed; no action needed.",
+          "carries_semantic_content": false,
+          "is_primary_feature": false
+        }
+      ]
+    },
+    "decisions_surfaced": [
+      {
+        "id": "DS-AOEC-01",
+        "columns": "server (97.39% in matches_1v1_clean / ~98% in raw matches_raw), scenario (100.00% / ~98.3%), modDataset (100.00% / ~99.7%), password (77.57% via 40-80% MAR-non-primary path / ~82.9% raw)",
+        "question": "All four -> DROP_COLUMN at 01_04_02+ (per Rule S4). 'scenario' and 'modDataset' are 100% NULL in cleaned scope (every row is NULL -- drop is unambiguous). 'password' falls below the 80% boundary in the cleaned scope and is routed through the 40-80% non-primary cost-benefit path; intent (drop) is the same. Note: VIEW rates differ from raw rates due to the matches_1v1_clean ranked-1v1 filter -- see the plan's note_on_rates for the principle."
+      },
+      {
+        "id": "DS-AOEC-02",
+        "columns": "antiquityMode (60.06% in matches_1v1_clean / ~68.66% in raw -- falls in 40-80% non-primary band -> DROP_COLUMN), hideCivs (37.18% in matches_1v1_clean / ~49.30% in raw -- now falls in 5-40% band -> FLAG_FOR_IMPUTATION, NOT DROP_COLUMN as raw-rate framing implied)",
+        "question": "Phase 02 decides if the imputed-with-indicator hideCivs is predictive; if not, drop in 01_04_02+. The recommendation drift between raw-rate (~49% suggesting drop) and VIEW-rate (37% suggesting flag) is a direct consequence of the matches_1v1_clean filter narrowing the scope; the audit reports VIEW-rate as authoritative."
+      },
+      {
+        "id": "DS-AOEC-03",
+        "columns": "mod, map, difficulty, startingAge, fullTechTree, allowCheats, empireWarsMode, endingAge, gameMode, lockSpeed, lockTeams, mapSize, population, recordGame, regicideMode, gameVariant, resources, sharedExploration, speed, speedFactor, suddenDeathMode, civilizationSet, teamPositions, teamTogether, treatyLength, turboMode, victory, revealMap",
+        "question": "Low-NULL game settings group. Each gets individual 01_02_04-grounded justification. Downstream disposition is RETAIN_AS_IS / FLAG_FOR_IMPUTATION per rate."
+      },
+      {
+        "id": "DS-AOEC-04",
+        "column": "rating in matches_1v1_clean (~26% NULL in 1v1 scope per VIEW)",
+        "question": "Primary feature exception per Rule S4. Phase 02 imputation strategy (median-within-leaderboard + add_indicator) must be specified before Phase 02 begins."
+      },
+      {
+        "id": "DS-AOEC-05",
+        "column": "country (~12.6% in raw, lower in 1v1 VIEW)",
+        "question": "Phase 02 -- 'Unknown' category encoding or add_indicator."
+      },
+      {
+        "id": "DS-AOEC-06",
+        "column": "won in matches_1v1_clean",
+        "question": "0 NULLs (R03 guarantees) -- per F1 zero-missingness override, ledger reports RETAIN_AS_IS / mechanism=N/A. Target-override post-step does NOT fire."
+      },
+      {
+        "id": "DS-AOEC-07",
+        "column": "won in player_history_all (~5%)",
+        "question": "MAR; per the target-override post-step, recommendation becomes EXCLUDE_TARGET_NULL_ROWS. Feature computation must skip NULL-target rows."
+      },
+      {
+        "id": "DS-AOEC-08",
+        "columns": "leaderboards_raw, profiles_raw",
+        "question": "NOT_USABLE per 01_03_03; profiles_raw has 7 dead columns (100% NULL). Formally declare out-of-analytical-scope at 01_04_02+ -- these tables do not enter any VIEW and do not need triage."
+      }
+    ]
   }
 }

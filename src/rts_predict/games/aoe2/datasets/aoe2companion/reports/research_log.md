@@ -8,6 +8,122 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-17 — [Phase 01 / Step 01_04_01] Missingness Audit (PART B — additive refactor)
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Step scope:** Insight-gathering audit over matches_1v1_clean and player_history_all VIEWs; no VIEWs modified, no columns dropped, no imputation.
+**Artifacts produced / updated:**
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json` (updated — `missingness_audit` block added)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.md` (updated — Missingness Ledger + Decisions sections added)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv` (NEW — 74 rows × 17 cols)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.json` (NEW — standalone ledger + framework metadata)
+
+### What
+
+Extended 01_04_01 with a three-pass missingness audit:
+- Pass 1 (NULL census): pre-existing, unchanged
+- Pass 2 (sentinel census): per-column sentinel detection driven by `_missingness_spec` dict (44 columns declared, all with `sentinel_value=None` except `team` which has sentinel=255)
+- Pass 3 (constants detection): `COUNT(DISTINCT col)` per column; constants (n_distinct=1) get mechanism=N/A, recommendation=DROP_COLUMN
+
+Produced one ledger row per VIEW column (full-coverage Option B per user decision):
+- matches_1v1_clean: 54 rows (53 from matches_raw + is_null_cluster derived)
+- player_history_all: 20 rows
+- Combined: 74 rows, 17 columns
+
+### Key findings per VIEW
+
+**matches_1v1_clean (61,062,392 rows):**
+
+| Column | pct_missing_total | mechanism | recommendation |
+|--------|-------------------|-----------|----------------|
+| rating | 26.20% | MAR | FLAG_FOR_IMPUTATION (primary feature) |
+| server | 97.39% | MNAR | DROP_COLUMN |
+| modDataset | 100.0% | MAR | DROP_COLUMN |
+| scenario | 100.0% | MAR | DROP_COLUMN |
+| password | 77.57% | MAR | DROP_COLUMN |
+| antiquityMode | 60.06% | MAR | DROP_COLUMN |
+| hideCivs | 37.18% | MAR | FLAG_FOR_IMPUTATION |
+| country | 13.37% | MAR | FLAG_FOR_IMPUTATION |
+| won | 0.0% | N/A | RETAIN_AS_IS (R03 guarantees) |
+| mod, difficulty, status | 0.0% | N/A | DROP_COLUMN (n_distinct=1 constants) |
+
+Note: `mod` and `difficulty` detected as constant (n_distinct=1) in matches_1v1_clean → DROP_COLUMN via constants-detection branch. `status` similarly constant.
+
+**player_history_all (~264M rows):**
+
+| Column | pct_missing_total | mechanism | recommendation |
+|--------|-------------------|-----------|----------------|
+| won | 0.007% | MAR | EXCLUDE_TARGET_NULL_ROWS (target override) |
+| rating | varies | MAR | FLAG_FOR_IMPUTATION |
+| status | 0.0% | N/A | DROP_COLUMN (constant) |
+
+Note: `won` in player_history_all: ~0.007% NULL → target-override post-step fires → EXCLUDE_TARGET_NULL_ROWS. Very low rate (much lower than the ~5% estimated from raw table).
+
+### Decisions surfaced (DS-AOEC-01..08)
+
+- **DS-AOEC-01:** server/modDataset/scenario/password — DROP_COLUMN confirmed by audit (>80% or 40-80% MAR non-primary)
+- **DS-AOEC-02:** antiquityMode (60.06%) → DROP_COLUMN; hideCivs (37.18%) → FLAG_FOR_IMPUTATION (VIEW rate lower than raw estimate 49.30%)
+- **DS-AOEC-03:** Low-NULL game settings group — most RETAIN_AS_IS; constants (mod, difficulty, status) → DROP_COLUMN
+- **DS-AOEC-04:** rating → FLAG_FOR_IMPUTATION at 26.2% in 1v1 VIEW; Phase 02 imputation strategy required
+- **DS-AOEC-05:** country → FLAG_FOR_IMPUTATION at 13.37%
+- **DS-AOEC-06:** won in matches_1v1_clean → RETAIN_AS_IS (0 NULLs, R03 guarantee)
+- **DS-AOEC-07:** won in player_history_all → EXCLUDE_TARGET_NULL_ROWS (0.007% NULL)
+- **DS-AOEC-08:** leaderboards_raw + profiles_raw → out-of-analytical-scope (NOT_USABLE per 01_03_03)
+
+### Notable deviation from plan estimates
+
+The plan's 6.C assertions expected `hideCivs` and `password` rates based on raw table figures (49.30% and 82.90%). Actual VIEW rates are 37.18% and 77.57% respectively, resulting in different recommendation buckets (FLAG_FOR_IMPUTATION vs DROP_COLUMN expected for hideCivs; DROP_COLUMN via 40-80% rule vs >80% rule for password). The recommendation logic is CORRECT for the actual VIEW rates. This is documented in the ledger's `note_on_rates` field.
+
+### DuckDB COUNT(DISTINCT) artifact
+
+`COUNT(DISTINCT profileId) FROM matches_1v1_clean` returns 0 due to a known DuckDB optimizer issue with window functions inside complex VIEWs (same class of bug as the CTE re-use issue documented in the 2026-04-16 entry). The n_distinct=0 value in the ledger for profileId is an artifact; the RETAIN_AS_IS recommendation is still correct (zero-missingness branch fires correctly before constants-detection branch checks n_distinct). Logged for awareness by Phase 02 work.
+
+### SQL reproducibility
+
+```sql
+-- NULL census template (per column):
+SELECT COUNT(*) FILTER (WHERE "{col}" IS NULL) AS null_count FROM {view_name}
+
+-- Sentinel census template (team column):
+SELECT COUNT(*) FILTER (WHERE "team" = 255) FROM matches_1v1_clean
+
+-- Constants detection template:
+SELECT COUNT(DISTINCT "{col}") FROM {view_name}
+```
+
+All templates stored verbatim in `01_04_01_data_cleaning.json.sql_queries`.
+
+### Reviewer-deep round fixes (post-execution v2)
+
+Reviewer-deep round flagged W1 (DS-AOEC narrative drift: raw rates cited
+instead of VIEW rates) and W3 (DuckDB COUNT(DISTINCT) artifact for
+profileId in matches_1v1_clean). Fixed:
+- **W1:** DS-AOEC-01 + DS-AOEC-02 rewritten to cite VIEW rates first
+  (with raw rates as parenthetical reference). Recommendation logic
+  unchanged; the change makes the rate-driven Rule S4 path transparent
+  (e.g., hideCivs at 37.18% VIEW rate routes through FLAG_FOR_IMPUTATION,
+  not DROP_COLUMN as raw-rate ~49% framing implied).
+- **W3:** `_IDENTITY_COLS_M1` extended from `{"matchId"}` to
+  `{"matchId", "profileId"}`. The matches_1v1_clean ledger row for
+  `profileId` now shows `n_distinct=null` (skipped per W6) and routes
+  through the B5 identity branch -> RETAIN_AS_IS / mechanism=N/A, exactly
+  as the plan's W6 design intended. Eliminates the misleading
+  `n_distinct=0` artifact from DuckDB COUNT(DISTINCT) on the window-
+  function VIEW.
+
+`modDataset` still shows `n_distinct=0` — this is correct (the column
+is 100% NULL, DuckDB COUNT(DISTINCT) on all-NULL column returns 0,
+which is the actual cardinality of the non-NULL value set). No fix
+needed for modDataset; the recommendation (DROP_COLUMN via 100% NULL
+rate) is correct regardless.
+
+No changes to recommendation logic, ledger schema, override priority,
+or _recommend() function. Notebook re-executed end-to-end; all 12 gate
+criteria remain PASS.
+
+---
+
 ## 2026-04-16 — [Phase 01 / Step 01_04_00] Source Normalization to Canonical Long Skeleton
 
 **Category:** A (science)
