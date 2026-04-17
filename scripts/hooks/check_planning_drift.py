@@ -161,6 +161,13 @@ def validate_current_plan(path: Path, repo_root: Path | None = None) -> list[str
     root = repo_root if repo_root is not None else REPO_ROOT
     errors: list[str] = []
     text = path.read_text()
+
+    # Post-merge purge state: per planning/README.md lifecycle step 5,
+    # current_plan.md is replaced with the literal "<!-- No active plan -->"
+    # marker. Skip frontmatter + section checks for this canonical empty state.
+    if text.strip() == "<!-- No active plan -->":
+        return errors
+
     frontmatter, is_legacy = _extract_yaml_frontmatter(text)
 
     try:
