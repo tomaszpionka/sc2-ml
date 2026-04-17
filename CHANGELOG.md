@@ -76,6 +76,27 @@ merged to `master`.
 - N/A (audit is additive on existing artifacts; no VIEW DDL changes; no schema
   YAML semantic changes; no STEP_STATUS bumps).
 
+### Added (NOTE-3 + W2 refactor)
+- `src/rts_predict/common/missingness_audit.py` — shared missingness-audit
+  helpers extracted from 3 inline notebook definitions (`_build_sentinel_predicate`,
+  `_sentinel_census`, `_detect_constants`, `_recommend`, `_consolidate_ledger`);
+  new `build_audit_views_block` helper for canonical `views.<view_name>:` JSON shape;
+  100% unit-test coverage at `tests/rts_predict/common/test_missingness_audit.py`.
+
+### Changed (NOTE-3 + W2 refactor)
+- All 3 cleaning notebooks (`01_04_01_data_cleaning.py`) now import helpers from
+  `rts_predict.common.missingness_audit` instead of defining them inline. Inline
+  `missingness_audit.views` JSON block standardized to canonical
+  `views.<view_name>: {total_rows, columns_audited, ledger}` shape across all 3
+  datasets (W2 fix); aoec `_recommend` body upgraded from contracted to canonical
+  (recommendation codes unchanged, free-text `recommendation_justification` for
+  affected rows now carries the full B6 deferral sentence and expanded §3.1
+  references). **aoec inline `missingness_audit.<view>.n_cols` field renamed to
+  `views.<view>.columns_audited` as part of W2 canonicalization** (per WARNING-2
+  critique fix — explicit because downstream consumers referencing `n_cols` would
+  otherwise break silently). aoestats `missingness_audit.ledger_<view_name>` flat
+  keys replaced by canonical `views.<view_name>:` shape (W2 fix; no data change).
+
 ## [3.10.2] — 2026-04-16 (PR #TBD: fix/01-04-aoestats-ingame-cols)
 
 ### Fixed
