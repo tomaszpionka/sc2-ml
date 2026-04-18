@@ -15,6 +15,36 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-04-18 — [Meta-methodology] Identity resolution meta-rule + per-dataset INVARIANTS scaffolds
+
+**Source:** `.claude/scientific-invariants.md` I2 extension; 3 new `src/rts_predict/games/<game>/datasets/<dataset>/reports/INVARIANTS.md` files
+**Invariants:** I2 (extended), I6 (per-dataset measurement SQL cited)
+
+Three datasets adopted locally-defensible but inconsistent identity strategies
+in 01_04_04 / 01_04_04b (sc2egset → player_id_worldwide; aoec → profileId;
+aoestats → profile_id). I2 as originally stated (lowercased nickname) fails
+empirically for all three.
+
+I2 extended with a 4-step operational decision procedure (measure migration
+rate + collision rate; select from 5 branches). No universal 5% threshold;
+tolerance is argued per-dataset in INVARIANTS.md §2. Branch (v)
+"structurally-forced" added for aoestats (no visible handle column).
+
+Per-dataset INVARIANTS.md scaffolds created per scientific-invariants.md
+L206–207 expectation. §4 empirical findings is a prose stub; populated by
+01_05 and Phase 02. §5 cross-reference lists exceptions only
+(VIOLATED/PARTIAL) — rows with no deviation omitted for sustainability.
+
+Dataset branch selection:
+- sc2egset → (iii) server-scoped `player_id_worldwide` with 12% documented bias
+- aoe2companion → (i) API-namespace `profileId`
+- aoestats → (v) structurally-forced `profile_id`
+
+Deferred: thesis §4.2.2 revision and Tabela 4.5 row 247 correction
+(requires 01_05 within-profile stability findings; follow-up PR).
+
+---
+
 ## [CROSS] 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution — aoec/aoestats shared namespace confirmed
 
 **Source:** aoe2companion 01_04_04 (this step); aoestats cross-dataset feasibility preview
