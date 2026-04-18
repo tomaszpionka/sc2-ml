@@ -1,35 +1,4 @@
----
-category: F
-branch: docs/thesis-4.2-session
-date: 2026-04-18
-planner_model: claude-opus-4-7
-dataset: null
-phase: null
-pipeline_section: null
-invariants_touched: [I2, I3, I4, I5, I6, I7, I8, I9, I10]
-source_artifacts:
-  - thesis/chapters/04_data_and_methodology.md
-  - thesis/pass2_evidence/sec_4_1_crosswalk.md
-  - thesis/WRITING_STATUS.md
-  - thesis/chapters/REVIEW_QUEUE.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/04_cleaning/
-  - temp/plan_4_2_v1.md
-  - temp/plan_4_2_v2.md
-  - temp/plan_4_2_v3.md
-  - temp/critique_4_2_r1.md
-  - temp/critique_4_2_r2.md
-  - temp/r2_user_decisions.md
-critique_required: true
-research_log_ref: reports/research_log.md#2026-04-18-thesis-42-data-preprocessing
----
-
-# Plan: §4.2 Data preprocessing (Polish thesis draft)
-
-## Scope
-
-Draft Polish-language thesis section §4.2 Data preprocessing in `thesis/chapters/04_data_and_methodology.md`, covering three subsections (§4.2.1 Ingestion & validation, §4.2.2 Player identity resolution, §4.2.3 Cleaning rules & valid corpus) across all three datasets (sc2egset, aoestats, aoe2companion). Feeding from Phase 01 Steps 01_01–01_04 (all complete). Combined target 24.0–30.5k Polish characters. Plan passed three adversarial rounds (R1 + R2 + autonomous-mode R3 resolution); captured in temp/plan_4_2_v{1,2,3}.md and temp/critique_4_2_r{1,2}.md. Execution also performs a §4.1 MMR MAR/MNAR consistency repair at lines 41 + 195 (per B1 closure), because the drafted §4.1 text contradicts the Phase 01 ledger.
+# Plan v3: Category F — §4.2 Data preprocessing (Polish)
 
 ## Change log — R1 critique responses
 

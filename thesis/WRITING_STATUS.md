@@ -61,12 +61,15 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §4.1 Opening framing + §4.1.1 SC2EGSet description | `DRAFTED` | Phase 01 (Data Exploration, sections 01_01–01_04 for sc2egset) | Drafted 2026-04-17. ~18.5k znaków polskich. 5 [REVIEW] flags. Phase 01 sections 01_01–01_04 fully cited; sections 01_05 (Temporal & Panel EDA), 01_06 (Decision Gates) deferred — flagged where claims await them. Tabela 4.1 (CONSORT flow) present. |
+| §4.1 Opening framing + §4.1.1 SC2EGSet description | `DRAFTED` | Phase 01 (Data Exploration, sections 01_01–01_04 for sc2egset) | Drafted 2026-04-17. ~18.5k znaków polskich. 5 [REVIEW] flags. Phase 01 sections 01_01–01_04 fully cited; sections 01_05 (Temporal & Panel EDA), 01_06 (Decision Gates) deferred — flagged where claims await them. Tabela 4.1 (CONSORT flow) present. **2026-04-18: §4.1.1.4 line 41 narrative + Tabela 4.4b line 195 cell repaired to MAR-primary / MNAR-sensitivity per ledger row 35 (MMR classification consistency with §4.2.3).** |
 | §4.1.2 AoE2 datasets (aoestats + aoe2companion) | `DRAFTED` | Phase 01 (Data Exploration, sections 01_01–01_04 for both AoE2 datasets) | Drafted 2026-04-17. ~22.5k znaków polskich. 4 [REVIEW] flags. Dual-corpus framing §4.1.2.0 + aoestats §4.1.2.1 + aoe2companion §4.1.2.2 + closing forward-ref to §4.1.3. Tabela 4.2 + 4.3 (CONSORT flows) present. |
 | §4.1.3 Data asymmetry acknowledgement | `DRAFTED` | Phase 01 (cross-corpus synthesis) | Drafted 2026-04-17. ~5.7k znaków polskich. 1 [REVIEW] flag. Hosts canonical Tabela 4.4a (Skala i akwizycja) + Tabela 4.4b (Asymetria analityczna). 3 new bibtex entries added: Rubin1976, vanBuuren2018, SchaferGraham2002. |
+| §4.2.1 Ingestion i walidacja | `DRAFTED` | Phase 01 (Data Exploration, sections 01_01–01_02 all three corpora) | Drafted 2026-04-18. ~6.8k znaków polskich. 1 [REVIEW] flag. No new bib entries (all reused). Argues two-path ingestion (SC2 nested-JSON→DuckDB; aoestats union_by_name variant-Parquet; aoe2companion Parquet+CSV) as preprocessing decision; defends I6/I9/I10. |
+| §4.2.2 Rozpoznanie tożsamości gracza | `DRAFTED` | Phase 01 (Data Exploration, sections 01_02–01_03 all three corpora) | Drafted 2026-04-18. ~7.5k znaków polskich. 3 [REVIEW] flags. Bib entries added: FellegiSunter1969, Christen2012DataMatching. Classifies three identifier schemes (toon_id / profile_id / profileId), argues trust-the-ID + defer canonicalization per I2; Tabela 4.5 cross-dataset identifier matrix. |
+| §4.2.3 Reguły czyszczenia i ważny korpus | `DRAFTED` | Phase 01 (Data Exploration, section 01_04 all three corpora) | Drafted 2026-04-18. ~13.2k znaków polskich. 3 [REVIEW] flags. Bib entries added: Jakobsen2017, MadleyDowd2019. Tabela 4.6 typology (8 rows × 3 corpora) + Tabela 4.6a singleton footnote. MissingIndicator I3-compliance defence; Madley-Dowd 2019 rebuttal (Phase 01 fold-agnostic). I7 threshold provenance: 5% Schafer & Graham 2002; 40% Jakobsen 2017; 80% operational heuristic. MMR MAR-primary / MNAR-sensitivity per ledger. DS-AOEC-04 "exception" phrasing prose acknowledgment (cosmetic taxonomy divergence, not routing error). |
 | §4.4.4 Evaluation metrics | `DRAFTABLE` | — | Literature |
 
-Remaining 9 sections all `BLOCKED` — waiting on Phase 01 (01_05+), Phase 02–04 (SC2) and AoE2 roadmap phases.
+Remaining 6 sections all `BLOCKED` — waiting on Phase 01 (01_05+), Phase 02–04 (SC2) and AoE2 roadmap phases.
 
 ## Chapter 5 — Experiments and Results
 

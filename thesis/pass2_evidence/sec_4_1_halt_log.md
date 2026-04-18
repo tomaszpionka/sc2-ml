@@ -1,0 +1,1 @@
+No halt events occurred during T03–T06b drafting (2026-04-17 execution). All artifact lookups resolved against `thesis/pass2_evidence/sec_4_1_crosswalk.md` (originally at `temp/plan_4.1_crosswalk.md`); no >5 mismatches per task.
