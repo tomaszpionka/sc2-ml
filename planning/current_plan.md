@@ -274,3 +274,103 @@ None blocking. Empirical preconditions verified pre-planning.
 ## Adversarial summary (to be filled by reviewer)
 
 Plan ready for one adversarial round before execution. Expected: APPROVE or APPROVE_WITH_WARNINGS.
+
+---
+
+## ADDENDUM — Extension: `duration_seconds` across all 3 datasets (not just aoe2)
+
+**User directive (2026-04-18 post-exec):** add `duration_seconds BIGINT` as 9th column to `matches_history_minimal` in **all 3 datasets** (sc2egset already on master from PR #152 + aoestats + aoec on this branch). Classified as POST_GAME_HISTORICAL (quasi post-game, excluded from PRE_GAME features but useful for learning-progress tracking / rating-update weighting / retrospective analyses). Consumer can easily exclude from PRE_GAME feature set.
+
+### New 9-column contract
+
+Prepend after `won`, before `dataset_tag`:
+
+| col | dtype | semantics |
+|---|---|---|
+| ... | ... | ...cols 1-7 unchanged... |
+| `won` | BOOLEAN | TARGET (unchanged) |
+| **`duration_seconds`** | **BIGINT** | **POST_GAME_HISTORICAL. Match duration in seconds. Available after match end. NOT safe as PRE_GAME feature for match T. Use cases: retrospective rating-update weighting, learning-curve analysis, game-length-conditioned BTL.** |
+| `dataset_tag` | VARCHAR | IDENTITY (unchanged) |
+
+### Per-dataset derivation (R1 BLOCKERs resolved)
+
+| dataset | source | derivation |
+|---|---|---|
+| sc2egset | **`player_history_all.header_elapsedGameLoops` BIGINT** (R1-BLOCKER-A2 fix: `matches_long_raw` + `matches_flat_clean` both exclude this col per I3; `player_history_all` at line 112 retains it) | **Aggregate first per replay (A3 fix):** `JOIN (SELECT replay_id, ANY_VALUE(header_elapsedGameLoops) AS loops FROM player_history_all GROUP BY replay_id) ph ON ph.replay_id = mfc.replay_id` → `CAST(ph.loops / 22.4 AS BIGINT) AS duration_seconds`. 22.4 constant: SC2 "Faster" game-speed loops/sec, empirically justified by `details.gameSpeed` cardinality=1 in sc2egset (W02 census, 01_02_04 artifact). Cite in SQL comment (I7): `details.gameSpeed cardinality=1 per sc2egset/reports/research_log.md:333; 22.4 loops/sec per Blizzard SC2 Faster-speed constant (Liquipedia)`. |
+| aoestats | `matches_raw.duration` BIGINT **(NANOSECONDS — R1-BLOCKER-A1 fix; NOT seconds)** | `CAST(r.duration / 1000000000 AS BIGINT) AS duration_seconds`. Arrow `duration[ns]` mapped to BIGINT nanoseconds per DuckDB 1.5.1 behavior. I7 provenance: `aoestats/pre_ingestion.py:271` + `aoestats/reports/research_log.md:684,867,988,996`. Both UNION halves use identical expression (symmetric; same source row). |
+| aoec | `matches_raw.started` / `matches_raw.finished` TIMESTAMPs — **R1-WARNING-A6 fix: compute IN-PLACE in `_mhm_base` staging; NO additional JOIN** (matches_raw already joined at staging level — add as column). | `CAST(EXTRACT(EPOCH FROM (r.finished - r.started)) AS BIGINT) AS duration_seconds`. Gate +6 (NEW): measure NULL fraction; halt if > 1% (R1-WARNING-A7 fix — aoec `finished` is nullable for abandoned/crashed matches). |
+
+### Invariants
+
+- **I3:** `duration_seconds` is POST_GAME_HISTORICAL (machine-grep-able token per R1-WARNING-A8 fix). Schema YAML `notes` field first token MUST be exactly `POST_GAME_HISTORICAL.` (matching the existing IDENTITY/CONTEXT/PRE_GAME/TARGET vocabulary established in 01_04_02 + 01_04_03 sc2egset). Phase 02 feature extractors that drop POST_GAME_HISTORICAL tokens will automatically exclude this column. Plan-level doc + YAML machine-token enforce I3 at both the human-review and tooling levels.
+- **I5-analog:** Both rows of a match have identical `duration_seconds` (mirror symmetry extended). Symmetry SQL extended: `a.duration_seconds IS NOT DISTINCT FROM b.duration_seconds` (NULL-safe DuckDB-verified per R1-WARNING-A5).
+- **I6:** DDL + assertion SQL verbatim; describe_table_rows reflects 9-col schema.
+- **I7 (EXPANDED):** Three magic-number provenance citations in schema YAMLs:
+  - sc2egset: 22.4 loops/sec — cite `details.gameSpeed cardinality=1` (research_log.md:333, W02 census) + Blizzard "Faster" constant (Liquipedia SC2 Game Speed).
+  - aoestats: 1_000_000_000 nanoseconds-to-seconds divisor — cite `pre_ingestion.py:271` (Arrow duration[ns] → BIGINT behavior) + `research_log.md:684,867,988,996`.
+  - aoec: `EXTRACT(EPOCH FROM)` standard DuckDB function — no magic constant (empirical DuckDB test in R1-WARNING-A5).
+- **I8:** All 3 datasets emit `duration_seconds` BIGINT in column 8. Cross-dataset unit: **seconds** (sc2egset `/22.4`; aoestats `/1e9`; aoec `EXTRACT EPOCH`). BIGINT across all datasets via `CAST(... AS BIGINT)`.
+- **I9:** JOINs to `player_history_all` (sc2egset), `matches_raw` (aoestats, aoec) are READ-ONLY. No raw or clean mutation.
+
+### Scope adjustment
+
+**sc2egset (already merged in PR #152 at 8 cols) — needs UPDATE** in this PR:
+- Update VIEW DDL via `CREATE OR REPLACE` with 9 cols.
+- Update schema YAML (add duration_seconds col).
+- Re-execute notebook (sibling cells added).
+- Update validation JSON + MD.
+- Append addendum entry to research_log.
+
+**aoestats + aoec (on this branch, 8 cols in commit fa15963) — needs EXTENSION** in new commit:
+- Same updates.
+
+**Branch name `feat/01-04-03-aoe2-minimal-history`** becomes mildly misleading (now covers 3 datasets) — acceptable; PR title at creation time: "feat(01-04-03): add duration_seconds across all 3 datasets + aoe2 minimal history views (sc2egset update + aoestats/aoe2companion new)".
+
+### Extended Gate Condition (per dataset)
+
+Prior gates unchanged; **add**:
+- Gate +1: DESCRIBE returns 9 cols in order `[..., won BOOLEAN, duration_seconds BIGINT, dataset_tag VARCHAR]`.
+- Gate +2: `duration_seconds` non-null count reported; NULL count reported. Halt threshold: aoec NULL fraction > 1% halts (R1-WARNING-A7 fix); sc2egset + aoestats have no NULL expected, report-only.
+- Gate +3: `duration_seconds > 0` for all non-NULL rows (sanity).
+- Gate +4: Duration symmetry: `(a.duration_seconds IS NOT DISTINCT FROM b.duration_seconds)` for all match-mirror pairs — 0 violations required.
+- Gate +5: Duration range reasonable: min ≥ 0, max ≤ 86400 (24 hours — sanity bound). **HALTING (R1-WARNING-A7 upgrade): if max > 86400, something is wrong (e.g., unit bug repeats A1).** This gate protects against silent nanosecond-unit regression.
+- **Gate +6 (aoec-specific NEW, R1-WARNING-A7):** NULL fraction on `duration_seconds` (= NULL `finished`) ≤ 1% (else HALT). sc2egset + aoestats: N/A.
+
+Total gates: sc2egset 17 (was 12, +5 from duration; slot-bias N/A), aoestats 18 (was 13, +5 from duration), aoec 18 (was 12, +6 from duration including A7 NULL-fraction gate).
+
+### Assumptions (new)
+
+- **A-D1:** sc2egset replays are recorded at "Faster" game speed (22.4 loops/sec). Corner cases with "Normal" (16 loops/sec) would underestimate duration by ~30%. Accept as minor for thesis-level precision; flag in sc2egset YAML notes as a calibration caveat. If the upstream `matches_long_raw` has a `gameSpeed` column, use it for per-replay correction; otherwise assume Faster.
+- **A-D2:** aoestats `duration` column is in-game seconds (per raw YAML description "in-game duration"). Use directly; ignore `irl_duration` (wall-clock including pauses — less useful for game-length analysis).
+- **A-D3:** aoec `finished - started` TIMESTAMP diff yields wall-clock duration (no pauses). Good approximation of game duration for unpaused matches.
+- **A-D4:** sc2egset's join to matches_long_raw adds row multiplier concern: matches_flat_clean has 1 row per replay (wide); matches_long_raw has 2 rows per replay (long). Use aggregated subquery (`GROUP BY replay_id`) to get 1 duration per replay before joining.
+
+### Open questions (user decision — defaults chosen, flag if override)
+
+1. **Default:** sc2egset duration assumes 22.4 loops/sec constant. Override to per-replay lookup of `gameSpeed` if you want stricter provenance.
+2. **Default:** aoestats uses `duration` (in-game seconds), not `irl_duration`. Override if you prefer wall-clock.
+3. **Default:** aoec derives from `finished - started` (wall-clock). No in-game duration column available — accept wall-clock.
+
+### Files additionally impacted (vs parent plan)
+
+**sc2egset (UPDATE — 5 files; on master, will modify):**
+- `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_03_minimal_history_view.{py,ipynb}`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.{json,md}`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` (addendum entry)
+
+**aoestats + aoec (UPDATE — 5 files each):**
+- Same pattern, on current branch, replacing the 8-col versions shipped in fa15963.
+
+**CHANGELOG.md:** extend [3.14.0] entry with sc2egset update + duration_seconds column. No version re-bump (same PR scope).
+
+### Execution order
+
+One coordinated executor session (serial — not parallel) to keep 9-col contract consistent across all 3 datasets. Pattern:
+1. sc2egset update (CREATE OR REPLACE VIEW with JOIN to matches_long_raw).
+2. aoestats extension (DDL extends UNION ALL CTEs with duration_seconds).
+3. aoec extension (DDL extends base CTE with JOIN to matches_raw; re-materialize TABLE).
+4. All 3 research_logs addendum entries.
+5. CHANGELOG extension.
+
+---
