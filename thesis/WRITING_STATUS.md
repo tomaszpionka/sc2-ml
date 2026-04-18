@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-12
+Last updated: 2026-04-17
 
 ---
 
@@ -44,7 +44,7 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 | §2.2 StarCraft II | `DRAFTABLE` | Phase 01 (Data Exploration — timing, mechanics) | Literature part draftable; data-derived details added after Phase 01 |
 | §2.3 Age of Empires II | `BLOCKED` | AoE2 roadmap | Future |
 | §2.4 ML methods for classification | `DRAFTABLE` | — | Literature |
-| §2.5 Player skill rating systems | `DRAFTABLE` | — | Literature; Glicko-2 refs ready |
+| §2.5 Player skill rating systems | `DRAFTED` | — | Literature; Gate 0.5 calibration draft (2026-04-17). 14 distinct keys / 24 inline citations, 4 [REVIEW] flags. ~20.9k chars Polish. **Gate 0.5: PASS_FOR_PRODUCTION_SCALING.** |
 | §2.6 Evaluation metrics | `DRAFTABLE` | — | Literature |
 
 ## Chapter 3 — Related Work
