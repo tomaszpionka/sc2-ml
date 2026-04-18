@@ -1,0 +1,102 @@
+# Empirical Invariants — aoe2/aoestats
+
+Dataset-specific empirical findings. Counterpart to `.claude/scientific-invariants.md` (universal invariants) per L206–207.
+
+## §1 Data-source invariants
+
+(Seeded from 01_01/01_02 research_log entries: schema facts, raw cardinality, NULL/sentinel policies.)
+
+- **File layout:** 171 Parquet files for `players_raw` (107.6M rows); Parquet files for `matches_raw` (30,690,651 rows); 1 JSON file `overview.json` for `overviews_raw` (1 row). Sourced from aoestats.io (aoe2insights.com API). (01_02_02)
+- **Raw tables:** `matches_raw` (30,690,651 rows, 18 columns); `players_raw` (107,627,584 rows, 14 columns); `overviews_raw` (1 row) — singleton lookup for 19 patches (release dates 2022-08-29 to 2025-12-02), 50 civs, 10 openings. (01_02_02, 01_03_03)
+- **Key types:** `profile_id` in `players_raw` ingested as DOUBLE (promoted from mixed int64/double variant across 171 files). Precision-loss risk assessed in 01_04_01: all actual `profile_id` values fall below 2^53 (min=18, max=24,853,897), so `CAST(profile_id AS BIGINT)` is lossless. Always apply `CAST(profile_id AS BIGINT)` before use. (DS-AOESTATS-IDENTITY-04; 01_04_04)
+- **NULL policy:** `players_raw.profile_id` has 1,185 NULLs (0.0011%); all other identity columns zero-NULL. `matches_1v1_clean` filters `profile_id IS NOT NULL`. `player_history_all` applies the same filter. (01_04_01, 01_04_02)
+- **No `name` column:** Neither `matches_raw` nor `players_raw` exposes a visible handle (player name). Identity resolution is structurally forced to use `profile_id` alone. (01_04_04)
+- **No `ratings_raw` table:** `ratings_raw` does not exist for aoestats. Rating signals are available only via `players_raw.old_rating` and `players_raw.new_rating`. (01_02_02)
+- **Duplicate policy:** 489 duplicate `(game_id, profile_id)` rows in `players_raw` (negligible; 0.00045%). Handled by deduplication in `player_history_all`. (01_04_01)
+- **Cleaned prediction table:** `matches_1v1_clean` — 17,814,947 rows (rm_1v1 scope, `leaderboard='random_map'`). Natively one-row-per-match-half; UNION ALL pivot used in `matches_history_minimal`. (01_04_02)
+- **Slot asymmetry:** Upstream `matches_raw` shows `team1_wins ≈ 52.27%` slot asymmetry (documented in `matches_1v1_clean.yaml` lines 118–125). The UNION ALL pivot in `matches_history_minimal` erases this: `overall_won_rate = 0.5` exactly post-pivot. (01_04_03)
+- **Duration:** `duration_seconds` computed as `CAST(duration / 1_000_000_000 AS BIGINT)` — source is `matches_raw.duration` in Arrow `duration[ns]` mapped to BIGINT NANOSECONDS by DuckDB 1.5.1 (cites `aoestats/pre_ingestion.py:271`). 28 corrupted matches (56 player-rows, 0.00016%) with `duration > 86,400s`. Max: 5,574,815s. (01_04_02 ADDENDUM)
+
+## §2 Identity invariants
+
+(Cites I2 meta-rule in `.claude/scientific-invariants.md`.)
+
+**I2 decision for aoestats: Branch (v) — structurally-forced API-namespace ID.**
+
+- **Chosen key:** `profile_id` (BIGINT after cast) — sole identity signal in the dataset. (DS-AOESTATS-IDENTITY-01; 01_04_04)
+- **Identity scope:** Global aoe2insights.com namespace (same as aoe2companion `profileId`, confirmed by VERDICT A cross-dataset bridge; 01_04_04).
+
+**Measured rates (Step 2):**
+
+No `name` or visible handle column exists in aoestats. Steps 2 and 3 of the I2 operational procedure are unevaluable for this dataset: there is no candidate other than `profile_id` to measure rates against. Branch (v) applies.
+
+```sql
+-- Confirm: no name column in players_raw or matches_raw
+SELECT column_name FROM information_schema.columns
+WHERE table_name IN ('players_raw', 'matches_raw')
+  AND column_name ILIKE '%name%';
+-- Result: 0 rows (no name column exists) — 01_04_04
+```
+
+- `migration_rate`: N/A — no visible handle to compare against.
+- `cross_scope_collision_rate`: N/A — no visible handle to compare against.
+
+**Cross-dataset bridge to aoe2companion:**
+
+The aoestats `profile_id` and aoe2companion `profileId` share the same namespace (both sourced from the aoe2insights.com API). Empirical validation (01_04_04):
+
+```sql
+-- Reservoir sample (seed=20260418): 1,000 aoec matches, 2026-01-25..2026-01-31, rm_1v1
+-- filtered_hits = 993, profile_id_agreement_rate = 0.9960
+-- 95% CI lower bound = 0.867 > 0.50 threshold → VERDICT A: STRONG
+SELECT
+    COUNT(*) FILTER (WHERE a.profile_id = c.profileId) * 1.0 / COUNT(*) AS agreement_rate
+FROM aoestats_sample a
+JOIN aoec_matches_raw c
+  ON CAST(a.profile_id AS BIGINT) = c.profileId
+ AND c.started BETWEEN '2026-01-25' AND '2026-01-31';
+-- Result: 0.9960, CI lower bound 0.867 — 01_04_04
+```
+
+This bridge means aoestats can obtain I2-compliant canonical nicknames via a LEFT JOIN on `aoec.matches_raw.profileId = aoestats.players_raw.profile_id` when a visible handle is needed. (DS-AOESTATS-IDENTITY-05; 01_04_04)
+
+**Branch selected:** (v) — structurally forced. No visible handle column exists in aoestats. `profile_id` is the only identity signal; its namespace alignment with aoec `profileId` is empirically confirmed (VERDICT A).
+
+**Tolerance:** N/A (branch (v) — no comparison candidate exists within the dataset).
+
+**Rejected candidates:** None evaluable — dataset lacks columns required to compare candidates (no `name` column; no visible handle of any kind).
+
+## §3 Temporal invariants
+
+(Seeded from 01_04_01.)
+
+- **Temporal anchor:** `started_timestamp` (TIMESTAMPTZ) in `matches_raw` — zero NULLs in rm_1v1 scope. Cast to TIMESTAMP via `CAST(started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)` in `matches_history_minimal`. (01_04_03)
+- **Coverage:** min=2022-08-29, max=2026-02-06. Zero NULL `started_at`. (01_04_03)
+- **`overviews_raw` patch map:** 19 patches with release dates 2022-08-29 to 2025-12-02. Useful for temporal version stratification in Phase 02. (01_03_03)
+- **`old_rating` is PRE-GAME by schema inference:** Classified PRE-GAME based on column semantics (pre-match rating). Formal bivariate temporal leakage test deferred to Phase 02. (01_03_01)
+- **Age uptimes (feudal/castle/imperial) are IN-GAME:** High NULL rate (~87–91%) and bounded to in-match execution. Excluded from pre-game feature sets. (01_03_01)
+- **duration_seconds is POST_GAME_HISTORICAL:** Derived from `duration` (NANOSECONDS); only known after match ends. Excluded from PRE_GAME feature sets by default via I3 token. (01_04_02 ADDENDUM; 01_04_03)
+- **Slot bias:** Upstream `team1_wins ≈ 52.27%` documented in `matches_1v1_clean.yaml`. UNION ALL pivot in `matches_history_minimal` corrects to `won_rate = 0.5` exactly. (01_04_03)
+
+## §4 Per-dataset empirical findings
+
+### I5 finding from 01_04_05 (Team-Slot Asymmetry Diagnosis)
+
+The upstream 52.27% team=1 win rate in `matches_1v1_clean` is an API-assigned ordering
+artifact (ARTEFACT_EDGE verdict, Step 01_04_05). Team=1 has higher ELO in 80.3% of games
+(mean +11.9 ELO points), consistent with the aoestats API assigning team=1 to the
+invite-initiating or better-matched player. After stratifying by civ-pair and year-quarter
+(13,509 strata, Mantel-Haenszel CMH), the civ-lexicographic-first win rate is 0.4928
+(effect = -0.72pp), well below the 1.5pp GENUINE_EDGE floor. The `team` field reflects
+upstream API ordering, NOT a game-mechanical slot identity; it must NOT be used as a
+Phase 02 feature. The UNION-ALL pivot in `matches_history_minimal` (produces `won_rate = 0.5`
+exactly) is confirmed correct and I5-compliant. Source: `01_04_05_i5_diagnosis.{json,md}`.
+
+## §5 Cross-reference to `.claude/scientific-invariants.md`
+
+See the universal invariants file linked above for the full I1–I10+ list. Exceptions (VIOLATED or PARTIAL status) for this dataset are enumerated below; rows with no deviation are omitted by design.
+
+| Invariant | Status | Notes |
+|---|---|---|
+| I2 | PARTIAL | Structurally forced to branch (v): `profile_id` is the sole identity signal — no visible handle column exists. Migration/collision rates are unevaluable within aoestats alone. Cross-dataset namespace bridge to aoec `profileId` confirmed at VERDICT A (agreement 0.9960, CI-lower 0.867; 01_04_04). See §2. |
+| I5 | PARTIAL — asymmetry characterised, see §4 finding from 01_04_05 | Upstream `matches_raw` slot asymmetry `team1_wins ≈ 52.27%` diagnosed as ARTEFACT_EDGE (01_04_05): API assigns team=1 to higher-ELO player in 80.3% of games. UNION-ALL pivot in `matches_history_minimal` confirmed I5-compliant (`won_rate = 0.5` exactly). `team` field MUST NOT be used as a Phase 02 feature. Schema amendment required (W4 coupling). |

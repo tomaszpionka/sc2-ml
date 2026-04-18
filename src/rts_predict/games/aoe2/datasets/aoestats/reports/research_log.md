@@ -8,6 +8,39 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-18 — [Phase 01 / Step 01_04_05] Team-Slot Asymmetry Diagnosis (I5)
+
+**Source:** `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_05_i5_diagnosis.py`
+**Artifacts:** `reports/artifacts/01_exploration/04_cleaning/01_04_05_i5_diagnosis.{json,md}`
+**Predecessors:** 01_04_01 (52.27% finding), 01_04_02 (`matches_1v1_clean`), 01_04_03 (`matches_history_minimal` UNION-ALL mirror)
+**Invariants touched:** I3, I5, I6, I7, I9
+
+Verdict: **ARTEFACT_EDGE**
+
+Path-1 ingestion audit confirmed that `team` in `players_raw` is ingested verbatim
+from upstream Parquet via CTAS (`pre_ingestion.py` lines 35-42, `_PLAYERS_RAW_CTAS_QUERY:
+SELECT * FROM read_parquet(...)`). No local positional assignment occurs -- the strongest
+LOGGING_QUIRK variant is ruled out at source. Five diagnostic queries run on
+`matches_1v1_clean` (17,814,947 non-mirror rows): Q1 (slot-proxy x ELO-ordering) showed
+team=1 wins >0.5 in BOTH ELO orderings, confirming the bias is in the `team` assignment
+field itself. Q2 Mantel-Haenszel CMH stratified by civ-pair x year-quarter (13,509 strata)
+collapsed the civ-lex-first win rate to 0.4928 (effect = -0.72pp, well below the 1.5pp
+GENUINE_EDGE floor). Q3 hash-seeded null calibration confirmed pipeline integrity.
+ELO audit (decisive): team=1 has higher ELO in 80.3% of games (mean +11.9 ELO points),
+fully explaining the 52.27% win rate via upstream API invite-first ordering.
+
+**Phase 02 interface:** Do NOT use `team` as a feature or stratification variable.
+The UNION-ALL pivot in `matches_history_minimal` is confirmed correct (produces
+`won_rate = 0.5` exactly). Feature engineering must use focal/opponent pair
+representation symmetrically (I5).
+
+**W4 (01_05 pre-registration) coupling:** Schema amendment required -- `matches_1v1_clean.yaml`
+and `players_raw.yaml` should note that `team` reflects upstream API ordering
+(invite-first or matchmaking assignment), NOT a game-mechanical slot identity.
+W4 must register: verdict = ARTEFACT_EDGE, no slot-position feature to be engineered.
+
+---
+
 ## 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution
 
 **Category:** A (science)

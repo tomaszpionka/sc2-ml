@@ -17,9 +17,22 @@ merged to `master`.
 
 ### Fixed
 
-- Post-PR #158 hygiene: dedup duplicate `01_04_04b` block in sc2egset `STEP_STATUS.yaml`; relocate misplaced `01_04_04b` step YAML in sc2egset `ROADMAP.md` from Phase 07 back under Phase 01 / Pipeline Section 01_04; purge merged-PR planning artifacts per `planning/README.md`.
-
 ### Removed
+
+## [3.18.0] — 2026-04-18 (PR #TBD: feat/pre-01-05-cleanup)
+
+### Added
+
+- **Identity-resolution meta-rule (Invariant I2 extension)** with 4-step decision procedure + 5 precedence branches (i–v). Reconciles 3 locally-defensible but inconsistent per-dataset identity strategies (sc2egset → branch (iii); aoe2companion → (i); aoestats → (v) structurally-forced). No universal Christen-2012 5% threshold; each dataset declares tolerance empirically in its `INVARIANTS.md` §2.
+- **Per-dataset `INVARIANTS.md` scaffolds** for sc2egset, aoe2companion, aoestats per `scientific-invariants.md` L206–207. §1 Data-source, §2 Identity, §3 Temporal seeded from prior 01_04 research_log entries. §4 Empirical findings is a prose stub populated by 01_05 / Phase 02. §5 cross-reference lists only VIOLATED/PARTIAL exceptions.
+- **aoestats 01_04_05 — Team-Slot Asymmetry Diagnosis (I5)**. Diagnostic battery of 5 SQL queries + Cochran–Mantel–Haenszel stratified by civ-pair × quarter (13,509 strata) produces verdict **ARTEFACT_EDGE**: upstream API assigns team=1 to the higher-ELO player in 80.3% of games (mean ELO diff +11.9), masking as a 52.27% team=1 win rate. Not a game-mechanical effect; canonical_slot column required before Phase 02 feature engineering.
+- **Cross-dataset 01_05 pre-registration spec** at `reports/specs/01_05_preregistration.md` (spec_id `CROSS-01-05-v1`, v1.0.1). Locks 9 parameter groups (Q1–Q9) binding sc2egset / aoe2companion / aoestats 01_05 to identical protocol for Phase 06 Cross-Domain Transfer compatibility. Key decisions: overlap window 2022-Q3→2024-Q4; ADF/KPSS forbidden cross-dataset (effect sizes + PSI only); reference period non-overlapping with tested; `regime_id ≡ calendar quarter` (honest acknowledgment); triple survivorship analysis; POST_GAME diagnostics in dedicated §10; aoestats leakage audit incorporates W3 verdict.
+- **Pre-commit spec-binding hook** `scripts/check_01_05_binding.py` (~134 LOC). Scans `sandbox/*/01_exploration/05_temporal_panel_eda/*.py` for `# spec: reports/specs/01_05_preregistration.md@<SHA>` docstring binding; validates SHA via `git cat-file -e`. No-op during Phase 01_04. Both `--check` (staged) and `--all` (CI) modes.
+
+### Fixed
+
+- **Post-PR #158 hygiene** (merged in PR #159): dedup duplicate `01_04_04b` block in sc2egset `STEP_STATUS.yaml`; relocate misplaced `01_04_04b` step YAML in sc2egset `ROADMAP.md` from Phase 07 back under Phase 01 / Pipeline Section 01_04; purge merged-PR planning artifacts per `planning/README.md`.
+- **aoe2companion 01_04_04 CI-drift reconciliation (Invariant I6)**. Narrative cited `p̂=0.8818, CI=[0.8671, 0.8964]`; artifact JSON cited `p̂=0.8782, CI=[0.8634, 0.8931]`. Root cause: DuckDB `REPEATABLE(seed)` reservoir sampling is deterministic only for fixed input row-order; `matches_raw` was rebuilt between narrative and artifact runs (DB mtime preceded artifact mtime by ~1h24m). Both triples preserved forensically via strikethrough + footnote at 3 aoec sites + 1 root CROSS site. Permanent reproducibility caveat added to aoec `INVARIANTS.md` §3. Christen VERDICT A is preserved under either triple.
 
 ## [3.17.0] — 2026-04-18 (PR #TBD: feat/01-04-04-sc2egset-worldwide-identity)
 

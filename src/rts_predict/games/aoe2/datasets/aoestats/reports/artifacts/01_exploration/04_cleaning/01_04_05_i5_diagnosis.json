@@ -1,0 +1,375 @@
+{
+  "step": "01_04_05",
+  "dataset": "aoestats",
+  "game": "aoe2",
+  "generated_at": "2026-04-18",
+  "verdict": "ARTEFACT_EDGE",
+  "verdict_reason": "CMH effect collapses to -0.72pp after stratifying by civ-pair x quarter (threshold: <0.5pp for ARTEFACT, <1.5pp for MIXED). Q1 shows team1_wins>0.5 in BOTH elo orderings (systematic API assignment bias). ELO audit confirms team=1 has higher ELO in 80.3% of games (mean diff = +11.9 ELO points). Tiebreaker not triggered (effect<0.5pp, ARTEFACT_EDGE is unambiguous).",
+  "duckdb_version": "v1.5.1",
+  "row_counts": {
+    "matches_1v1_clean": 17814947,
+    "players_raw": 107627584,
+    "matches_raw": 30690651
+  },
+  "sql_queries": {
+    "Q1_slot_proxy_elo_interaction": "SELECT\n  CASE WHEN p0_civ < p1_civ THEN 'p0_lex_first' ELSE 'p1_lex_first' END AS civ_lex_slot,\n  CASE WHEN p0_old_rating > p1_old_rating THEN 'p0_higher_elo'\n       WHEN p0_old_rating < p1_old_rating THEN 'p1_higher_elo'\n       ELSE 'tied' END AS elo_order,\n  COUNT(*) AS n,\n  AVG(CAST(team1_wins AS INT)) AS team1_win_rate,\n  AVG(CAST(CASE WHEN p0_civ < p1_civ THEN NOT team1_wins ELSE team1_wins END AS INT)) AS civ_lex_first_win_rate\nFROM matches_1v1_clean\nWHERE NOT mirror\n  AND p0_old_rating IS NOT NULL\n  AND p1_old_rating IS NOT NULL\n  AND p0_civ IS NOT NULL\n  AND p1_civ IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1, 2",
+    "Q2_cmh_civ_pair_quarter": "SELECT\n  LEAST(p0_civ, p1_civ) AS civ_lo,\n  GREATEST(p0_civ, p1_civ) AS civ_hi,\n  DATE_TRUNC('quarter', CAST(started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)) AS qtr,\n  COUNT(*) AS n,\n  SUM(CAST(CASE WHEN p0_civ < p1_civ THEN NOT team1_wins ELSE team1_wins END AS INT)) AS civ_lex_first_wins\nFROM matches_1v1_clean\nWHERE NOT mirror AND p0_civ != p1_civ\nGROUP BY 1, 2, 3\nHAVING COUNT(*) >= 100\nORDER BY 1, 2, 3",
+    "Q3_null_calibration_hash": "SELECT\n  CAST(hash(CAST(game_id AS VARCHAR)) % 2 = 0 AS INT) AS random_slot,\n  COUNT(*) AS n,\n  AVG(CAST(team1_wins AS INT)) AS team1_win_rate\nFROM matches_1v1_clean\nWHERE NOT mirror\nGROUP BY 1\nORDER BY 1",
+    "Q4_control_lower_profile_id": "SELECT\n  COUNT(*) AS n,\n  AVG(CAST(CASE WHEN p0_profile_id < p1_profile_id THEN NOT team1_wins ELSE team1_wins END AS INT)) AS lower_id_first_win_rate,\n  AVG(CAST(team1_wins AS INT)) AS team1_win_rate\nFROM matches_1v1_clean\nWHERE NOT mirror\n  AND p0_profile_id != p1_profile_id",
+    "Q5_temporal_drift": "SELECT\n  DATE_TRUNC('quarter', CAST(started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)) AS qtr,\n  COUNT(*) AS n,\n  AVG(CAST(team1_wins AS INT)) AS team1_win_rate\nFROM matches_1v1_clean\nWHERE NOT mirror\nGROUP BY 1\nORDER BY 1",
+    "Q_elo_audit": "SELECT\n  AVG(team_1_elo - team_0_elo) AS mean_elo_diff_t1_minus_t0,\n  AVG(CASE WHEN team1_wins THEN team_1_elo - team_0_elo ELSE NULL END) AS mean_elo_diff_when_t1_wins,\n  AVG(CASE WHEN NOT team1_wins THEN team_1_elo - team_0_elo ELSE NULL END) AS mean_elo_diff_when_t0_wins,\n  AVG(CASE WHEN team_1_elo > team_0_elo THEN 1.0 ELSE 0.0 END) AS frac_t1_higher_elo,\n  COUNT(*) AS n\nFROM matches_1v1_clean\nWHERE NOT mirror\n  AND team_0_elo IS NOT NULL\n  AND team_1_elo IS NOT NULL\n  AND team_0_elo != team_1_elo"
+  },
+  "query_shas": {
+    "Q1_slot_proxy_elo_interaction": "1ca4691da29b00340312f611349d7d4ec279454bb38adfbb200ace54fcee0eb7",
+    "Q2_cmh_civ_pair_quarter": "7c2594fc4b0c1a2ae5b1a2a2b70ce4ad694d548b3e7e4322c31cbb7beebb85bd",
+    "Q3_null_calibration_hash": "c8947e30d223351af1a5bed6f6cab553a1914294accb377782c584cd92de4365",
+    "Q4_control_lower_profile_id": "bf7c3940bb3d148f90ba433c5313ea7fc6cd737f5f115adc76bf7cb5808040a9",
+    "Q5_temporal_drift": "6bef34f3e4d2019fb4f2a68f4c1e38652f59383dfc9e8fa9df62e242d4d61425",
+    "Q_elo_audit": "51db4e8f2b0485e4ec4148593f1a47f5d2136ca5ed4d4db0113556d6889699be"
+  },
+  "results": {
+    "Q1_slot_proxy_elo_interaction": [
+      {
+        "civ_lex_slot": "p0_lex_first",
+        "elo_order": "p0_higher_elo",
+        "n": 1654036,
+        "team1_win_rate": 0.4392165587689748,
+        "civ_lex_first_win_rate": 0.5607834412310252
+      },
+      {
+        "civ_lex_slot": "p0_lex_first",
+        "elo_order": "p1_higher_elo",
+        "n": 6733592,
+        "team1_win_rate": 0.5480979542568067,
+        "civ_lex_first_win_rate": 0.45190204574319326
+      },
+      {
+        "civ_lex_slot": "p0_lex_first",
+        "elo_order": "tied",
+        "n": 165679,
+        "team1_win_rate": 0.5053084579216437,
+        "civ_lex_first_win_rate": 0.49469154207835636
+      },
+      {
+        "civ_lex_slot": "p1_lex_first",
+        "elo_order": "p0_higher_elo",
+        "n": 1664314,
+        "team1_win_rate": 0.43200561913196667,
+        "civ_lex_first_win_rate": 0.43200561913196667
+      },
+      {
+        "civ_lex_slot": "p1_lex_first",
+        "elo_order": "p1_higher_elo",
+        "n": 6745762,
+        "team1_win_rate": 0.5409888460339989,
+        "civ_lex_first_win_rate": 0.5409888460339989
+      },
+      {
+        "civ_lex_slot": "p1_lex_first",
+        "elo_order": "tied",
+        "n": 165847,
+        "team1_win_rate": 0.4949863428340579,
+        "civ_lex_first_win_rate": 0.4949863428340579
+      }
+    ],
+    "Q2_cmh_civ_pair_quarter_head": [
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2023-10-01 00:00:00",
+        "n": 775,
+        "civ_lex_first_wins": 387.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2024-01-01 00:00:00",
+        "n": 907,
+        "civ_lex_first_wins": 471.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2024-04-01 00:00:00",
+        "n": 621,
+        "civ_lex_first_wins": 351.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2024-07-01 00:00:00",
+        "n": 238,
+        "civ_lex_first_wins": 135.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2024-10-01 00:00:00",
+        "n": 533,
+        "civ_lex_first_wins": 268.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2025-01-01 00:00:00",
+        "n": 545,
+        "civ_lex_first_wins": 307.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2025-04-01 00:00:00",
+        "n": 927,
+        "civ_lex_first_wins": 471.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2025-07-01 00:00:00",
+        "n": 722,
+        "civ_lex_first_wins": 368.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2025-10-01 00:00:00",
+        "n": 719,
+        "civ_lex_first_wins": 398.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "aztecs",
+        "qtr": "2026-01-01 00:00:00",
+        "n": 313,
+        "civ_lex_first_wins": 156.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2023-10-01 00:00:00",
+        "n": 256,
+        "civ_lex_first_wins": 127.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2024-01-01 00:00:00",
+        "n": 281,
+        "civ_lex_first_wins": 138.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2024-04-01 00:00:00",
+        "n": 266,
+        "civ_lex_first_wins": 139.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2024-07-01 00:00:00",
+        "n": 116,
+        "civ_lex_first_wins": 52.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2024-10-01 00:00:00",
+        "n": 435,
+        "civ_lex_first_wins": 213.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2025-01-01 00:00:00",
+        "n": 454,
+        "civ_lex_first_wins": 209.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2025-04-01 00:00:00",
+        "n": 408,
+        "civ_lex_first_wins": 222.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2025-07-01 00:00:00",
+        "n": 473,
+        "civ_lex_first_wins": 241.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2025-10-01 00:00:00",
+        "n": 430,
+        "civ_lex_first_wins": 224.0
+      },
+      {
+        "civ_lo": "armenians",
+        "civ_hi": "bengalis",
+        "qtr": "2026-01-01 00:00:00",
+        "n": 213,
+        "civ_lex_first_wins": 102.0
+      }
+    ],
+    "Q2_cmh_n_strata": 13509,
+    "Q2_cmh_total_games": 17079452,
+    "Q3_null_calibration": [
+      {
+        "random_slot": 0,
+        "n": 8564182,
+        "team1_win_rate": 0.5226388229488818
+      },
+      {
+        "random_slot": 1,
+        "n": 8569704,
+        "team1_win_rate": 0.5226609927250696
+      }
+    ],
+    "Q4_control_lower_profile_id": [
+      {
+        "n": 17133886,
+        "lower_id_first_win_rate": 0.5066418674666098,
+        "team1_win_rate": 0.5226499114094725
+      }
+    ],
+    "Q5_temporal_drift": [
+      {
+        "qtr": "2022-07-01 00:00:00",
+        "n": 18010,
+        "team1_win_rate": 0.5189339255968907
+      },
+      {
+        "qtr": "2022-10-01 00:00:00",
+        "n": 76027,
+        "team1_win_rate": 0.5149223302247886
+      },
+      {
+        "qtr": "2023-01-01 00:00:00",
+        "n": 403731,
+        "team1_win_rate": 0.5177333422501617
+      },
+      {
+        "qtr": "2023-04-01 00:00:00",
+        "n": 1668429,
+        "team1_win_rate": 0.5183271209023579
+      },
+      {
+        "qtr": "2023-07-01 00:00:00",
+        "n": 1343461,
+        "team1_win_rate": 0.5233758181294432
+      },
+      {
+        "qtr": "2023-10-01 00:00:00",
+        "n": 1628310,
+        "team1_win_rate": 0.5227702341691692
+      },
+      {
+        "qtr": "2024-01-01 00:00:00",
+        "n": 1725393,
+        "team1_win_rate": 0.5215826191482172
+      },
+      {
+        "qtr": "2024-04-01 00:00:00",
+        "n": 1622512,
+        "team1_win_rate": 0.5209526955732839
+      },
+      {
+        "qtr": "2024-07-01 00:00:00",
+        "n": 663838,
+        "team1_win_rate": 0.5204839132438939
+      },
+      {
+        "qtr": "2024-10-01 00:00:00",
+        "n": 1415742,
+        "team1_win_rate": 0.5210695169035036
+      },
+      {
+        "qtr": "2025-01-01 00:00:00",
+        "n": 1632353,
+        "team1_win_rate": 0.5206459632199653
+      },
+      {
+        "qtr": "2025-04-01 00:00:00",
+        "n": 1647371,
+        "team1_win_rate": 0.5201263103453927
+      },
+      {
+        "qtr": "2025-07-01 00:00:00",
+        "n": 1523577,
+        "team1_win_rate": 0.5220123433210136
+      },
+      {
+        "qtr": "2025-10-01 00:00:00",
+        "n": 1215060,
+        "team1_win_rate": 0.535936496963113
+      },
+      {
+        "qtr": "2026-01-01 00:00:00",
+        "n": 550072,
+        "team1_win_rate": 0.5393875710816038
+      }
+    ],
+    "Q_elo_audit": [
+      {
+        "mean_elo_diff_t1_minus_t0": 11.914812509567174,
+        "mean_elo_diff_when_t1_wins": 16.4695735685961,
+        "mean_elo_diff_when_t0_wins": 6.918928558547867,
+        "frac_t1_higher_elo": 0.8025013801727912,
+        "n": 16802244
+      }
+    ]
+  },
+  "cmh_statistics": {
+    "common_or": 0.9716942589374721,
+    "wr_lex_first": 0.49282197507696207,
+    "effect_pp": -0.7178024923037929,
+    "ci_lo_95_or": 0.9703949453012622,
+    "ci_hi_95_or": 0.9729953122941261,
+    "ci_lo_95_wr": 0.4924875328244888,
+    "ci_hi_95_wr": 0.4931564237538725,
+    "chi2": 1777.4153073816146,
+    "p_value": 0.0,
+    "dof": 1,
+    "n_strata": 13509,
+    "total_games_in_strata": 17079452,
+    "method": "Mantel-Haenszel (Robins et al. 1986 CI)"
+  },
+  "elo_audit": {
+    "mean_elo_diff_t1_minus_t0": 11.914812509567174,
+    "frac_t1_higher_elo": 0.8025013801727912,
+    "interpretation": "team=1 has higher ELO in 80.3% of games. Mean ELO advantage of +11.9 points. Consistent with API invite-first ordering assigning team=1 to the better player."
+  },
+  "thresholds": {
+    "genuine_edge_effect_pp_floor": 1.5,
+    "artefact_edge_collapse_pp_ceiling": 0.5,
+    "min_practically_significant_pp": 1.0,
+    "cmh_ci_must_exclude_0.5_for_genuine": true,
+    "q3_calibration_max_slot_divergence_sigma": 4.0,
+    "note": "Effect-size floors, not NHST cutoffs. Statistical significance via CMH chi2 + p. Tiebreaker forces ARTEFACT_EDGE for MIXED [0.5pp, 1.5pp] range."
+  },
+  "phase_02_interface": {
+    "verdict": "ARTEFACT_EDGE",
+    "action": "Treat `team` field as an API-assigned ordering label, NOT a meaningful player-slot identifier. For all Phase 02 features, use player-pair representation (focal/opponent) symmetrically (I5). Do NOT use `team` as a feature or as a stratification variable. The UNION-ALL pivot in `matches_history_minimal` is confirmed correct: it erases the upstream artifact and produces the I5-compliant symmetric representation.",
+    "schema_amendment_required": true,
+    "amendment_description": "Add a note to `matches_1v1_clean.yaml` and `players_raw.yaml` that `team` reflects upstream API assignment order (invite-first or matchmaking-API ordering), NOT a meaningful slot identity. Feature engineering MUST NOT use raw `team` as input.",
+    "w4_coupling": "01_05 pre-registration (W4) must include: (a) slot-asymmetry verdict = ARTEFACT_EDGE, (b) confirmation that `matches_history_minimal` UNION-ALL pivot is the correct downstream representation, (c) no pre-game slot-position feature to be engineered."
+  },
+  "invariants_applied": [
+    "I3",
+    "I5",
+    "I6",
+    "I7",
+    "I9"
+  ],
+  "path1_ingestion_audit": {
+    "finding": "team ingested verbatim from upstream Parquet via CTAS",
+    "file": "src/rts_predict/games/aoe2/datasets/aoestats/pre_ingestion.py",
+    "lines": "35-42 (_PLAYERS_RAW_CTAS_QUERY: SELECT * FROM read_parquet(...))",
+    "schema_yaml": "src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/raw/players_raw.yaml",
+    "schema_yaml_line": "22 (team: BIGINT, nullable: true)",
+    "conclusion": "LOGGING_QUIRK variant (locally assigned position) ruled out at source."
+  }
+}

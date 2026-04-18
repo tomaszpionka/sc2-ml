@@ -15,6 +15,62 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-04-18 — [Phase 01 / 01_05 pre-registration] 3-dataset binding spec locked
+
+**Source:** `reports/specs/01_05_preregistration.md` (spec_id CROSS-01-05-v1, version 1.0.1)
+**Invariants:** I3, I6, I7, I8, I9
+
+Cross-dataset pre-registration for 01_05 Temporal & Panel EDA across sc2egset,
+aoe2companion, aoestats. Locks 9 parameter groups (Q1–Q9) to ensure
+Phase 06 Cross-Domain Transfer compatibility.
+
+Key decisions:
+- Overlap window 2022-Q3 → 2024-Q4 (10 quarters); tested 2023-Q1→2024-Q4 (8)
+- ADF/KPSS forbidden cross-dataset; effect sizes + PSI only
+- Reference period non-overlapping with tested: 2022-08-29..2022-12-31 (sc2egset+aoec); 2022-08-29..2022-10-27 single-patch (aoestats, path-c per W4')
+- `regime_id ≡ calendar quarter` (honest acknowledgment; no additional variance reduction beyond Q1 grain)
+- Triple survivorship analysis (unconditional + sensitivity {5,10,20} + conditional labels)
+- POST_GAME diagnostics in dedicated §10 (not mixed with pre-game PSI)
+- aoestats leakage audit incorporates W3 verdict (ARTEFACT_EDGE, commit ab23ab1d) — requires canonical_slot column from Phase 02 amendment
+
+Binding: notebook docstrings cite spec SHA; `scripts/check_01_05_binding.py`
+pre-commit hook enforces.
+
+Deferred: per-dataset 01_05 step execution (3 downstream PRs, one per dataset,
+bound to this spec).
+
+---
+
+## [CROSS] 2026-04-18 — [Meta-methodology] Identity resolution meta-rule + per-dataset INVARIANTS scaffolds
+
+**Source:** `.claude/scientific-invariants.md` I2 extension; 3 new `src/rts_predict/games/<game>/datasets/<dataset>/reports/INVARIANTS.md` files
+**Invariants:** I2 (extended), I6 (per-dataset measurement SQL cited)
+
+Three datasets adopted locally-defensible but inconsistent identity strategies
+in 01_04_04 / 01_04_04b (sc2egset → player_id_worldwide; aoec → profileId;
+aoestats → profile_id). I2 as originally stated (lowercased nickname) fails
+empirically for all three.
+
+I2 extended with a 4-step operational decision procedure (measure migration
+rate + collision rate; select from 5 branches). No universal 5% threshold;
+tolerance is argued per-dataset in INVARIANTS.md §2. Branch (v)
+"structurally-forced" added for aoestats (no visible handle column).
+
+Per-dataset INVARIANTS.md scaffolds created per scientific-invariants.md
+L206–207 expectation. §4 empirical findings is a prose stub; populated by
+01_05 and Phase 02. §5 cross-reference lists exceptions only
+(VIOLATED/PARTIAL) — rows with no deviation omitted for sustainability.
+
+Dataset branch selection:
+- sc2egset → (iii) server-scoped `player_id_worldwide` with 12% documented bias
+- aoe2companion → (i) API-namespace `profileId`
+- aoestats → (v) structurally-forced `profile_id`
+
+Deferred: thesis §4.2.2 revision and Tabela 4.5 row 247 correction
+(requires 01_05 within-profile stability findings; follow-up PR).
+
+---
+
 ## [CROSS] 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution — aoec/aoestats shared namespace confirmed
 
 **Source:** aoe2companion 01_04_04 (this step); aoestats cross-dataset feasibility preview
@@ -25,8 +81,8 @@ same namespace (both sourced from the aoe2insights.com API).
 
 Empirical evidence (2026-01-25..2026-01-31 window, rm_1v1 filter both sides):
 - Full-window: 100% of aoestats profiles (28,921) appear in aoec matches_raw.
-- Reservoir sample (1,000 aoec matches, seed=20260418): p_hat=0.8818, 95% CI=[0.8671, 0.8964].
-- VERDICT A: STRONG -- CI lower bound (0.867) > 0.50 threshold.
+- Reservoir sample (1,000 aoec matches, seed=20260418): ~~p_hat=0.8818, 95% CI=[0.8671, 0.8964]~~ → p_hat=0.8782, 95% CI=[0.8634, 0.8931] (canonical, from artifact JSON) [^cross-ci-drift-2026-04-18].
+- VERDICT A: STRONG -- CI lower bound (0.863) > 0.50 threshold. [was: 0.867]
 
 **Implication for Phase 02:**
 1. aoestats (which has no name column) can obtain I2-compliant canonical nicknames via
@@ -37,6 +93,8 @@ Empirical evidence (2026-01-25..2026-01-31 window, rm_1v1 filter both sides):
 **Pending:** aoestats 01_04_04 executor must confirm the same VERDICT (per plan cross-dataset
 gate 6: "aoestats T03 and aoec T06 feasibility verdicts agree"). If aoestats executor finds
 VERDICT B or C, dispatch adversarial review per plan gate instructions.
+
+[^cross-ci-drift-2026-04-18]: **Reconciliation — CI drift (2026-04-18 → 2026-04-19).** Narrative originally recorded `p_hat=0.8818, CI=[0.8671, 0.8964]`; artifact JSON records `p_hat=0.8782, CI=[0.8634, 0.8931]` (Δp̂=0.0036). Both clear Christen (2012) VERDICT A. Caused by DuckDB reservoir sampling non-determinism under row-order shifts from a DB rebuild between narrative-run and artifact-run (`stat` evidence: DB mtime ~1h24m before artifact mtime on 2026-04-18). Artifact JSON is now canonical. See aoec `research_log.md` footnote [^ci-drift-2026-04-18] for full detail.
 
 ---
 

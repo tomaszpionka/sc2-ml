@@ -54,7 +54,7 @@ join integrity, country stability, cross-dataset feasibility preview vs aoestats
 **Cross-dataset feasibility (2026-01-25..2026-01-31 window, rm_1v1 filter both sides):**
 - VERDICT A -- STRONG -- shared namespace confirmed. CI lower bound > 0.50.
 - Full window: aoec 37,495 profiles; aoestats 28,921 profiles; intersection 28,921 (100% of aoestats)
-- Reservoir sample (1,000 matches, seed=20260418): p_hat=0.8818, 95% CI=[0.8671, 0.8964]
+- Reservoir sample (1,000 matches, seed=20260418): ~~p_hat=0.8818, 95% CI=[0.8671, 0.8964]~~ → p_hat=0.8782, 95% CI=[0.8634, 0.8931] (canonical, from artifact JSON) [^ci-drift-2026-04-18]
 - Rating agreement (50-ELO): 95.3% of 60s-window pairs
 
 ### DS-AOEC-IDENTITY Decisions
@@ -72,7 +72,7 @@ join integrity, country stability, cross-dataset feasibility preview vs aoestats
 - Gate 2 (all 6 JSON blocks populated + sql_queries verbatim I6): PASS (20 SQL queries)
 - Gate 3 (5+ DS-AOEC-IDENTITY-* decisions): PASS (5 decisions)
 - Gate 4 (I9 empty diff: aoestats ATTACH READ_ONLY only): PASS
-- Gate 5 (cross-dataset verdict with CI + sample size): PASS (VERDICT A, CI=[0.867, 0.896])
+- Gate 5 (cross-dataset verdict with CI + sample size): PASS (VERDICT A, CI=[0.863, 0.893] [was: 0.8818, CI=[0.867, 0.896]] [^ci-drift-2026-04-18])
 - Gate 6 (status files correct): PASS
 
 ### Artifacts
@@ -84,6 +84,8 @@ join integrity, country stability, cross-dataset feasibility preview vs aoestats
 **[CROSS]** VERDICT A (shared namespace) has cross-dataset implications: aoestats profile_id
 and aoec profileId are the same namespace, enabling a name-bridge for Invariant I2 in aoestats.
 See `reports/research_log.md` for the CROSS entry.
+
+[^ci-drift-2026-04-18]: **Reconciliation — CI drift (2026-04-18 → 2026-04-19).** The artifact JSON `reports/artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json` reports `p_hat = 0.8782, 95% CI = [0.8634, 0.8931]`, differing from the narrative as originally written by Δp̂ = 0.0036. Both triples clear Christen (2012) VERDICT A (CI-lower ≫ 0.50 threshold). The disagreement is attributable to DuckDB's `USING SAMPLE reservoir(N ROWS) REPEATABLE(seed)` being deterministic only for fixed input order: `matches_raw` physical/segment order shifts on any rebuild, so the same seed yields a different sample. `stat -f '%m'` evidence at reconciliation time showed `data/db/db.duckdb` mtime preceded the artifact mtime by ~1h24m on 2026-04-18, indicating a rebuild between the narrative-run and artifact-run. Bit-exact reproduction of either triple across rebuilds is not guaranteed; the artifact JSON is now canonical because it was produced by the last post-rebuild pass before commit. The VERDICT A identity-resolution conclusion is preserved under either triple. See aoec `INVARIANTS.md` §3 for the permanent reproducibility caveat.
 
 ---
 

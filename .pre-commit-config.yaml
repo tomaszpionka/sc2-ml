@@ -64,6 +64,21 @@ repos:
         files: ^\.claude/rules/
         pass_filenames: false
 
+  # ── 01_05 spec-binding check ──────────────────────────────────────────────
+  # Fires when any 01_05 Temporal & Panel EDA Python file is staged.
+  # Verifies that each file's first 40 lines contain a spec-binding line:
+  #   # spec: reports/specs/01_05_preregistration.md@<git-SHA>
+  # No-op when no matching files are staged (Phase 01_05 not yet begun).
+  - repo: local
+    hooks:
+      - id: check-01-05-binding
+        name: Check 01_05 notebook spec-binding
+        entry: python scripts/check_01_05_binding.py --check
+        language: system
+        files: ^sandbox/.+/01_exploration/05_temporal_panel_eda/.+\.py$
+        pass_filenames: false
+        stages: [commit]
+
   # ── Jupytext sync (notebook pairs in sandbox/) ─────────────────────────────
   # Keeps .py and .ipynb paired files in sync. Both files must be staged
   # together when committing a notebook change (sandbox/README.md rule 4).

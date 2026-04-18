@@ -28,6 +28,104 @@ Violating them produces results that cannot be defended at examination.
    cases must be classified (server switch, rename, ambiguous) during the
    identity resolution phase.
 
+   #### Operational procedure when I2 default fails empirically
+
+   When empirical measurement shows that `LOWER(nickname)` produces an
+   unacceptable collision or migration rate for a given dataset, apply the
+   following 4-step procedure before deviating from the default.
+
+   **Step 1 — Name the identity scope.**
+   Identify the namespace partition in which identity collision is meaningful
+   for this dataset (e.g., global, per-region, per-leaderboard). All rates
+   in Steps 2–4 are measured within this declared scope.
+
+   **Step 2 — Measure two distinct rates.**
+   Compute both metrics and report their SQL verbatim (Invariant I6):
+
+   - `migration_rate`: fraction of cases where the same physical player
+     appears under multiple candidate IDs within the declared scope
+     (identity fragmentation).
+   - `cross_scope_collision_rate`: fraction of cases where the same visible
+     handle resolves to multiple candidate IDs across scope boundaries
+     (identity ambiguity).
+
+   Example SQL pattern (adapt per dataset schema):
+
+   ```sql
+   -- migration_rate: toon_ids sharing a nickname across regions
+   SELECT COUNT(*) FILTER (WHERE region_count > 1) * 1.0 / COUNT(*)
+   FROM (
+       SELECT LOWER(nickname), COUNT(DISTINCT region) AS region_count
+       FROM player_identity_worldwide
+       GROUP BY 1
+   ) sub;
+
+   -- cross_scope_collision_rate: nicknames mapping to multiple IDs
+   SELECT COUNT(*) FILTER (WHERE id_count > 1) * 1.0 / COUNT(*)
+   FROM (
+       SELECT LOWER(nickname), COUNT(DISTINCT player_id) AS id_count
+       FROM player_identity_worldwide
+       GROUP BY 1
+   ) sub;
+   ```
+
+   **Step 3 — Select the candidate minimising `max(migration_rate, cross_scope_collision_rate)`.**
+   Apply the following 5 precedence branches in order; use the first branch
+   whose preconditions are satisfied:
+
+   - **(i) API-namespace ID** — preferred when `migration_rate < collision_rate`
+     on the visible handle. The API-issued identifier is rename-stable and
+     globally scoped within the provider's system.
+
+   - **(ii) Canonical visible handle (`LOWER(nickname)`)** — preferred only
+     when the API namespace is missing or proven unstable AND the collision
+     rate falls below the project-set tolerance. Each dataset declares its
+     tolerance empirically in its `INVARIANTS.md` §2; there is no universal
+     threshold.
+
+   - **(iii) Server/region-scoped ID** — preferred when the API-namespace ID
+     is globally unique in design but the dataset exposes only the
+     server-scoped segment (e.g., Blizzard Battle.net `R-S2-G-P` toon_id).
+     The resulting key is correct within scope; cross-scope fragmentation
+     must be documented as an accepted bias.
+
+   - **(iv) Composite `(visible_handle, scope)`** — preferred only when both
+     atomic candidates fail the tolerance gate. Composite keys are harder to
+     maintain and must be justified by measured rates.
+
+   - **(v) Structurally-forced API-namespace ID** — recorded when branches
+     (i)–(iv) are unevaluable because the dataset lacks the columns required
+     to compare candidates (e.g., no visible handle column exists). This
+     branch must be declared explicitly, not silently chosen.
+
+   **Step 4 — Publish the decision.**
+   Record in the dataset's `INVARIANTS.md` §2:
+   - chosen key and its formula
+   - measured `migration_rate` and `cross_scope_collision_rate`
+   - branch invoked ((i)–(v))
+   - deviation from the I2 default (`LOWER(nickname)`) and its justification
+   - uniqueness scope
+
+   **Explicit disclaimer.** The 5% record-linkage blocking heuristic from
+   the entity-resolution literature is NOT used as an identity-validity
+   threshold here. Each dataset's tolerance is derived empirically and
+   argued in its `INVARIANTS.md` §2.
+
+   **Rejected candidates — worked examples.**
+
+   - *sc2egset `(LOWER(nickname), server-hash)` composite* — rejected because
+     within-region collision rate is 30.6% (451 / 1,473 `(nick, region)`
+     pairs) and the atomic `player_id_worldwide` (full `R-S2-G-P` toon_id)
+     already delivers a lower `max(migration_rate, cross_scope_collision_rate)`.
+     The composite adds no advantage over the scoped atomic key and introduces
+     maintenance cost. Branch (iii) applied instead (01_04_04b).
+
+   - *Hypothetical Steam dataset `(handle, current-Steam-ID)` composite* —
+     composite rejected in favour of the stable API-namespace `steamId` when
+     `current-Steam-ID` migrates on family-sharing re-issue. Branch (i)
+     applies: `migration_rate` on the composite exceeds `collision_rate`
+     on the stable `steamId` alone.
+
 ### Temporal discipline
 
 3. **No feature for game T may use information from game T or later.**
