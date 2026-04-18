@@ -76,10 +76,10 @@ Create notebook `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_04b_world
 ### T02 — Per-pair agreement signals (5 channels)
 
 Cells G-M:
-- G: **APM-JSD** (direct Hahn 2020). Shared deciles of pooled non-null APM; Laplace-smoothed; JSD base-2 in [0,1]. Same-entity null (5-fold split, seed=42) + 1,000-pair cross-entity control. Skip pairs where either entity <5 games.
+- G: **APM-JSD** (direct Hahn 2020). Shared deciles of pooled non-null APM; Laplace-smoothed; JSD base-2 in [0,1]. Same-entity null (5-fold split, seed=42) + 1,000-pair cross-entity control. Skip pairs where either entity <5 games. **P1-WARNING mitigation:** same-entity null assumes single-human-per-(region,realm,toon_id); smurf handoff / account-selling documented in SC2 tournament scene could contaminate null. Report per-entity APM-JSD variance — if within-entity JSD is multimodal (two peaks detected via simple bimodality check), flag in MD as "contamination candidate". Threat-to-validity declared in T03 Cell N.
 - H: **race_overlap** — sum of min(p_a[r], p_b[r]) over 3 races; Bhattacharyya-like
 - I: **clanTag status** — {AGREE, OVERLAP, DISJOINT, ONE_EMPTY, BOTH_EMPTY_AGREE}
-- J: **MMR trajectory overlap** — p10-p90 interval overlap; skip entities <5 rated games
+- J: **MMR trajectory overlap** — **P4-WARNING fix: Jaccard over p10-p90 intervals** (`|A∩B| / |A∪B|` — symmetric, penalizes size-mismatch) + guard: if `range_a < 200 OR range_b < 200` MMR points, mark `sufficient_data_mmr = false` (insufficient trajectory for discrimination — narrow-range entities produce spurious high-overlap scores). Skip entities <5 rated games.
 - K: **temporal_class** — A/B/C from T01
 - L: assemble `pairs_with_signals_df` → CSV
 - M: 4-panel signal-distribution PNG
@@ -100,12 +100,12 @@ Cells N-T:
 Cells U-Y:
 - U: per-pair 5-element agreement vector
 - V: composite rule:
+  - **P2-BLOCKER fix (HARD-SPLIT case-variant guard):** BEFORE composite scoring runs, if `LOWER(nickname_a) == LOWER(nickname_b) AND nickname_a != nickname_b` → `decision = SPLIT` unconditionally (user directive: case-variants stay SPLIT unless literal case match — differ-by-case fails literal match by definition).
   - `n_agree ≥ 3 AND n_disagree ≤ 1` → MERGE
   - `n_disagree ≥ 3 AND n_agree ≤ 1` → SPLIT
   - otherwise → UNCERTAIN
-  - **Case-variant guard:** nickname_a != nickname_b (same LOWER, different case) → decision downgrade one level
-  - **Within-region collision special-case:** same server + handle, MERGE only if temporal_class=A_overlap
-- W: self-pair sanity (split-half same entity → MERGE). HALT if >5% fail.
+  - **Within-region collision special-case:** same server + handle, MERGE only if temporal_class=A_overlap AND **P3-WARNING fix (shared-account disambiguator):** match-timestamps minute-granular overlap check — if two entities' timestamps interleave within a single day (minute granularity), downgrade to UNCERTAIN as "shared-account suspect" (pro-team coaching / smurfing practice accounts documented empirically in SC2 tournament scene).
+- W: self-pair sanity (split-half same entity → MERGE). **P8-WARNING fix:** raise minimum to `n_games_with_apm ≥ 20` (10 per half; JSD variance O(1/n)). Report per-entity pass rate stratified by game count so low-game entities' reliability is visible. HALT if >5% fail at ≥20-games cohort (not at ≥10 as originally specified).
 - X: decision-distribution PNG (MERGE/SPLIT/UNCERTAIN × cross-region/within-region × temporal_class)
 - Y: UNCERTAIN audit CSV for manual review
 
@@ -114,17 +114,20 @@ Cells U-Y:
 Cells Z-FF:
 - Z: Extract `UnionFind` to `src/rts_predict/common/union_find.py` + tests at `tests/rts_predict/common/test_union_find.py` (per sandbox "no inline defs" rule). Standard path-compression + union-by-rank with type hints.
 - AA: Apply MERGE edges deterministically (sorted by nickname, toon_a, toon_b)
-- BB: Extract components → player_id_worldwide = `"sc2egset::wid::" + sha256(representative_nick + "|" + canonical_region)[:16]`. Representative = entity with most games in component.
+- BB: Extract components → player_id_worldwide = `"sc2egset::wid::" + sha256(representative_nick + "|" + canonical_region + "|" + component_fingerprint)[:16]`. **P7-BLOCKER fix:** `component_fingerprint` = sha256 of sorted-tuple string `"|".join(f"{r}:{rl}:{tid}" for r,rl,tid in sorted(component_entities))` — prevents two distinct components (both correctly SPLIT but sharing rep_nick + canonical_region; e.g., two different physical "Serral"s) from getting identical WIDs by construction. Representative = entity with most games in component.
 - CC: `entity_to_wid_df` CSV
 - DD: `component_detail` CSV
 - EE: component-size-distribution PNG
-- FF: sanity checks (unique WID per component, every entity mapped exactly once)
+- FF: sanity checks + **P7-BLOCKER assertion: `len(set(component_to_wid.values())) == n_components`** (every distinct component gets a distinct WID — catches construction-level hash collision if component_fingerprint weren't included). Plus: unique WID per entity mapping, every entity mapped exactly once.
 
 ### T06 — VIEW decision gate
 
-Cell GG evaluates:
+Cell GG evaluates (**P6-BLOCKER fix — empirical threshold derivation in T03 + literature citation, NO magic numbers**):
 - `uncertain_rate = n_uncertain / n_class_ab`
-- **IF** uncertain_rate < 0.10 AND n_self_pair_failures=0 AND apm_jsd_discriminates → **sub-case A: CREATE VIEW**
+- **Thresholds derived in T03 Cell S (not embedded magic):**
+  - `uncertain_rate_threshold` = the uncertain-fraction at which ≥4 of 5 signals achieve pairwise discrimination per the T03 null/control distributions. If 4/5 signals discriminate → threshold = p50 of expected-uncertain distribution over a simulated draw (inherit from Fellegi-Sunter 1969 "possible match" fraction bound at 0.5 * (u_prob + m_prob)). If only 3/5 discriminate → threshold relaxes. Derivation written to JSON + MD.
+  - `self_pair_pass_rate_threshold` = 1 - (type-I-error budget for record-linkage false-split per Christen 2012 Ch. 6 "acceptable F-measure"). Christen's worked example uses type-I = 5%, hence 95%. Cite Christen 2012 Ch. 6 p. 167-180 directly in T06 Cell GG comment.
+- **IF** uncertain_rate < uncertain_rate_threshold AND self_pair_pass_rate >= self_pair_pass_rate_threshold AND apm_jsd_discriminates → **sub-case A: CREATE VIEW**
 - **ELSE** → **sub-case B: DEFER**
 
 Sub-case A (HH-A, II-A, JJ-A): CREATE OR REPLACE VIEW player_identity_worldwide (5 cols) + schema YAML with I2/I3/I9/I10 invariants. PIPELINE_SECTION 01_04 flip-then-flip-back.
@@ -136,7 +139,7 @@ Cell KK: append DS-SC2-IDENTITY-01 ADDENDUM to new 01_04_04b JSON (not overwriti
 ### T07 — Artifacts + research_log + status
 
 Cells LL-QQ:
-- LL: assemble `01_04_04b_worldwide_identity.json` (all sections + ≥8 SQL queries verbatim + ≥5 literature citations)
+- LL: assemble `01_04_04b_worldwide_identity.json` (all sections + ≥8 SQL queries verbatim + ≥5 literature citations). **P10-WARNING fix (temporal scope declaration):** add top-level JSON key `identity_key_temporal_scope` = "computed from full entity history (all games per (region, realm, toon_id)); identity is offline cleaning-layer artifact, not per-game feature; methodologically defensible — standard record-linkage practice (Christen 2012 Ch. 5) — but downstream Phase 02 per-time-T rating features MUST filter matches by match_time < T independently of this identity grouping. No feature-level temporal leakage, but group membership at T is decided using T+Δ data. Declared as controlled assumption." **P5-WARNING fix (UNCERTAIN methodology declaration):** add key `uncertain_resolution_policy` = "UNCERTAIN pairs treated as SPLIT for composition (conservative default). Sensitivity analysis (all-UNCERTAIN-to-MERGE alternative) run in Cell LL and reported as additional `player_id_worldwide_sensitivity_merge_all` mapping. Difference in n_components between default and sensitivity is the measurement of UNCERTAIN's impact on Phase 02 rating backtests." CSV `01_04_04b_uncertain_pairs_for_review.csv` preserved for future manual review but with no blocking dependency.
 - MM: MD report
 - NN: research_log addendum (prepend dated entry, remove [REVIEW] if sub-case A, keep if B)
 - OO: STEP_STATUS new step `01_04_04b: complete`. PHASE_STATUS unchanged.
