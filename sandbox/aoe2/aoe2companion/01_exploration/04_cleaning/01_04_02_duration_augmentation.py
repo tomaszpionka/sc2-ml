@@ -772,7 +772,12 @@ new_columns = [
         ),
     },
 ]
-clean_schema["columns"].extend(new_columns)
+# Idempotent: only extend if duration_seconds not already present (avoid duplicates on re-run)
+existing_col_names = {c["name"] for c in clean_schema["columns"]}
+if "duration_seconds" not in existing_col_names:
+    clean_schema["columns"].extend(new_columns)
+else:
+    print("IDEMPOTENT: duration_seconds already present in YAML columns -- skipping extend.")
 
 # Extend I3 invariant to mention new POST_GAME_HISTORICAL cols
 for inv in clean_schema.get("invariants", []):

@@ -97,9 +97,10 @@ print("DuckDB connection opened (read-write).")
 # %% [markdown]
 # ## Cell 4 -- Source-view sanity check
 #
-# DESCRIBE matches_1v1_clean; assert 48 cols + presence of required columns.
-# Verifies the expected schema from matches_1v1_clean.yaml (01_04_02 artifact).
-# Required cols: matchId, started, profileId, civ, won (+ other 01_04_02 cols; 48 total).
+# DESCRIBE matches_1v1_clean; assert 51 cols + presence of required columns.
+# Verifies the expected schema from matches_1v1_clean.yaml (01_04_02 ADDENDUM artifact).
+# Required cols: matchId, started, profileId, civ, won (+ other 01_04_02 cols; 51 total).
+# NOTE: Updated 48->51 after 01_04_02 ADDENDUM (duration_seconds + 2 flags added 2026-04-18).
 
 # %%
 describe_src = con.execute("DESCRIBE matches_1v1_clean").fetchall()
@@ -107,9 +108,9 @@ src_col_names = [row[0] for row in describe_src]
 print(f"matches_1v1_clean column count: {len(src_col_names)}")
 print(f"Columns: {src_col_names}")
 
-# Assert 48 columns (per matches_1v1_clean.yaml step 01_04_02)
-assert len(src_col_names) == 48, (
-    f"Expected 48 columns in matches_1v1_clean, got {len(src_col_names)}"
+# Assert 51 columns (per matches_1v1_clean.yaml step 01_04_02 ADDENDUM: 48 + 3 duration cols)
+assert len(src_col_names) == 51, (
+    f"Expected 51 columns in matches_1v1_clean, got {len(src_col_names)}"
 )
 
 # Assert required columns are present
@@ -119,7 +120,7 @@ for col in required_cols:
         f"Required column '{col}' missing from matches_1v1_clean"
     )
 
-print("Source-view sanity check PASSED: 48 cols + all required columns present.")
+print("Source-view sanity check PASSED: 51 cols + all required columns present.")
 
 # %% [markdown]
 # ## Cell 4b -- matches_raw finished column sanity check
@@ -789,7 +790,7 @@ describe_table_rows = [
 ]
 
 assertion_results = {
-    "src_col_count_48": len(describe_src) == 48,
+    "src_col_count_51": len(describe_src) == 51,  # updated 48->51 post 01_04_02 ADDENDUM
     "required_src_cols_present": all(c in src_col_names for c in required_cols),
     "col_count_9": len(view_col_names) == 9,
     "col_names_match": view_col_names == expected_col_names,

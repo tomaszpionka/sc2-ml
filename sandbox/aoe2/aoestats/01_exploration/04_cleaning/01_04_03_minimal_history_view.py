@@ -80,9 +80,10 @@ print("DuckDB connection opened (read-write).")
 # %% [markdown]
 # ## Cell 4 -- Source-view sanity check
 #
-# DESCRIBE matches_1v1_clean; assert 20 cols + presence of required columns.
+# DESCRIBE matches_1v1_clean; assert 22 cols + presence of required columns.
 # Verifies the expected schema from matches_1v1_clean.yaml (01_04_02 artifact).
 # aoestats has 1-row-per-match grain; UNION ALL pivot produces 2-rows-per-match.
+# NOTE: 22 cols post-PR#155 duration augmentation (added duration_seconds + is_duration_suspicious).
 
 # %%
 describe_src = con.execute("DESCRIBE matches_1v1_clean").fetchall()
@@ -90,9 +91,9 @@ src_col_names = [row[0] for row in describe_src]
 print(f"matches_1v1_clean column count: {len(src_col_names)}")
 print(f"Columns: {src_col_names}")
 
-# Assert 20 columns
-assert len(src_col_names) == 20, (
-    f"Expected 20 columns in matches_1v1_clean, got {len(src_col_names)}"
+# Assert 22 columns (post-PR#155: 20 + duration_seconds + is_duration_suspicious)
+assert len(src_col_names) == 22, (
+    f"Expected 22 columns in matches_1v1_clean, got {len(src_col_names)}"
 )
 
 # Assert required columns are present
@@ -107,7 +108,7 @@ for col in required_cols:
         f"Required column '{col}' missing from matches_1v1_clean"
     )
 
-print("Source-view sanity check PASSED: 20 cols + all required columns present.")
+print("Source-view sanity check PASSED: 22 cols + all required columns present.")
 
 # %% [markdown]
 # ## Cell 4b -- matches_raw duration column sanity check
@@ -663,7 +664,7 @@ describe_table_rows = [
 ]
 
 assertion_results = {
-    "src_col_count_20": len(describe_src) == 20,
+    "src_col_count_22": len(describe_src) == 22,
     "required_src_cols_present": all(c in src_col_names for c in required_cols),
     "col_count_9": len(view_col_names) == 9,
     "col_names_match": view_col_names == expected_col_names,

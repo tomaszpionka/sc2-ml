@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- [Current Plan](current_plan.md) — 01_04_02 augmentation: duration_seconds + outlier flags across all 3 clean views
+- [Current Plan](current_plan.md) — _no active plan_
 
 ## Agent routing
 

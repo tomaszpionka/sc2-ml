@@ -1,0 +1,76 @@
+table: ratings_clean
+dataset: aoe2companion
+game: aoe2
+object_type: view
+step: "01_04_01"
+row_count: 58317433
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json
+generated_date: "2026-04-18"
+columns:
+- name: profile_id
+  type: BIGINT
+  nullable: true
+  description: "Player profile ID (snake_case; maps to matches_raw.profileId via CAST). Cross-dataset identity stability concern — see 01_04_04 identity resolution."
+  notes: "IDENTITY. Per-dataset identifier."
+- name: games
+  type: BIGINT
+  nullable: true
+  description: "Cumulative total games played at this time point, clamped to LEAST(games, 1775011321) to guard against a known overflow value in the upstream CSV."
+  notes: "POST_GAME_HISTORICAL. Clamp applied at ratings_clean level (DS-AOEC cleaning decision; see 01_04_01)."
+- name: rating
+  type: BIGINT
+  nullable: true
+  description: "Player rating at this time point (post-game: rating = prev_rating + rating_diff)."
+  notes: "POST_GAME_HISTORICAL. Snapshot after the corresponding match; use only via ASOF JOIN with match_time < T per I3."
+- name: date
+  type: TIMESTAMP
+  nullable: true
+  description: "Match/rating event timestamp. Temporal key for ASOF joins with matches_raw.started."
+  notes: "CONTEXT. Temporal anchor; enables I3-safe historical rating lookups."
+- name: leaderboard_id
+  type: BIGINT
+  nullable: true
+  description: "Ladder ID (0=Unranked, 1=DM 1v1, 2=DM Team, 3=RM 1v1, 4=RM Team). NOTE: leaderboard_id=6 (rm_1v1 in matches_raw) has zero rows in ratings_raw — asymmetric with matches_raw.internalLeaderboardId coverage."
+  notes: "CONTEXT. Ladder discriminator; matches_raw uses internalLeaderboardId with different encoding — join carefully."
+- name: rating_diff
+  type: BIGINT
+  nullable: true
+  description: "Rating change from this game (post - pre)."
+  notes: "POST_GAME_HISTORICAL. Signed delta; DS-AOEC-04 considered as missingness-as-signal source (NULL ↔ no rating event)."
+- name: season
+  type: BIGINT
+  nullable: true
+  description: "Season identifier. Constant -1 across all rows in current aoec data."
+  notes: "CONTEXT. Near-constant; low feature utility."
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: "Rating CSV file path relative to raw_dir (Invariant I10)."
+  notes: "IDENTITY (provenance). Per-file attribution for reproducibility."
+provenance:
+  source_tables:
+  - ratings_raw
+  ddl: |
+    CREATE OR REPLACE VIEW ratings_clean AS
+    SELECT
+        profile_id,
+        LEAST(games, 1775011321) AS games,
+        rating, date, leaderboard_id, rating_diff, season, filename
+    FROM ratings_raw;
+  filter: "No row filtering — pure column-level clean (games overflow clamp only)."
+  scope: "58,317,433 rating events across aoe2companion leaderboards. 1:1 row projection of ratings_raw (no filter)."
+  created_by: "01_04_01 T05 ratings_clean view creation (see 01_04_01_data_cleaning.json sql_queries.T05_ratings_clean_view)"
+invariants:
+- id: I6
+  description: "CREATE OR REPLACE VIEW DDL stored verbatim in 01_04_01_data_cleaning.json sql_queries.T05_ratings_clean_view."
+- id: I7
+  description: "Magic literal 1775011321 = overflow-guard clamp for games column. Provenance: observed BIGINT overflow in upstream CSV rows; clamp applied at ratings_clean to protect downstream aggregates. Cite 01_04_01 data cleaning artifact for empirical evidence."
+- id: I9
+  description: "Pure non-destructive projection. ratings_raw remains untouched. Only VIEW created via CREATE OR REPLACE."
+- id: I10
+  description: "filename column passes through relative-to-raw_dir convention from ratings_raw.filename."
+provenance_categories_note: >
+  Per-column 'notes' field uses the single-token vocabulary (IDENTITY, CONTEXT,
+  POST_GAME_HISTORICAL) established in 01_04_02 + 01_04_03. This view supplies
+  POST_GAME_HISTORICAL player-rating trajectories for Phase 02 ASOF-joined
+  rating-system backtesting (e.g., as ground-truth Elo vs computed Elo comparisons).

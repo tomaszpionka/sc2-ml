@@ -190,7 +190,7 @@
     ]
   },
   "assertion_results": {
-    "src_col_count_20": true,
+    "src_col_count_22": true,
     "required_src_cols_present": true,
     "col_count_9": true,
     "col_names_match": true,
