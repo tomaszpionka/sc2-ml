@@ -8,6 +8,99 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-18 — [Phase 01 / Step 01_04_03] Minimal Cross-Dataset History View
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Branch:** feat/01-04-03-aoe2-minimal-history (bundled PR with aoestats sibling)
+**Step scope:** Created `matches_history_minimal` — 8-column player-row-grain projection of `matches_1v1_clean` via self-join on matchId with unequal profileId (sc2egset pattern). Cross-dataset-harmonized substrate for Phase 02+ rating-system backtesting. Canonical TIMESTAMP `started_at` (pass-through, already TIMESTAMP). Per-dataset polymorphic faction vocabulary (~56 civ names; civ zero-NULL upstream — stricter gate than sc2/aoestats).
+
+### Shape & strategy
+- Source: `matches_1v1_clean` (48 cols, 61,062,392 player-rows / 30,531,196 matches — natively 2-rows-per-match, unlike aoestats 1-row).
+- Output: 8 cols × 61,062,392 rows.
+- Strategy: **self-join** on matchId with `p.player_id <> o.player_id` (sc2egset pattern). NO UNION ALL pivot (contrast aoestats).
+
+### Critical implementation deviation — DuckDB 1.5.1 workaround
+**object_type: table (not view)** — documented in schema YAML's `object_type_note` field.
+
+Two DuckDB 1.5.1 bugs prevented the plan's `CREATE OR REPLACE VIEW` approach:
+1. `matches_1v1_clean` VIEW contains window functions (row_number); self-join on such a VIEW throws `InternalException`.
+2. QUALIFY+CTE self-join inside a single `CREATE TABLE AS` gives wrong row counts (42,866 vs expected 61,062,392).
+
+**Workaround:** 3-step materialization — `good_match_ids` (staging TABLE) → `_mhm_base` (staging TABLE) → `matches_history_minimal` (final TABLE) + drop staging. Schema contract, row counts, and all gate predicates identical to plan spec. 20 assertions pass.
+
+**Trade-off vs VIEW:** TABLE is materialized data (~2GB); must be rebuilt if upstream schema changes (VIEW would auto-update). For Phase 02 UNION ALL consumer, functionally identical. Future DuckDB version upgrade may allow VIEW-based implementation.
+
+### Column mapping (aoe2companion → cross-dataset)
+| cross-dataset | aoec source | transformation |
+|---|---|---|
+| match_id | matchId (INTEGER) | `'aoe2companion::' \|\| CAST(matchId AS VARCHAR)` |
+| started_at | started (TIMESTAMP) | pass-through (NO cast) |
+| player_id | profileId (INTEGER) | `CAST(... AS VARCHAR)` |
+| opponent_id | profileId (sibling row) | self-join mirror |
+| faction | civ (VARCHAR) | pass-through |
+| opponent_faction | civ (sibling row) | self-join mirror |
+| won | won (BOOLEAN) | pass-through |
+| dataset_tag | — | literal `'aoe2companion'` |
+
+### Gate verdict — all 12 PASS
+
+| # | Gate | Value |
+|---|---|---|
+| 1-2 | Artifacts + DESCRIBE (8 cols, dtypes match) | PASS |
+| 3-5 | Row counts 61,062,392 / 30,531,196 / 0-not-2 | PASS |
+| 6 | I5-analog NULL-safe symmetry violations (IS DISTINCT FROM) | 0 |
+| 7 | Zero NULLs: match_id/player_id/opponent_id/won/dataset_tag | all 0 |
+| 8 | Zero NULLs: faction/opponent_faction (civ zero-NULL upstream) | both 0 |
+| 9 | Prefix violations (numeric-tail regex `[0-9]+` + round-trip cast) | 0 |
+| 10 | dataset_tag distinct=1, value='aoe2companion' | PASS |
+| 11 | Validation JSON `all_assertions_pass: true`; SQL verbatim; describe_table_rows | PASS |
+
+**No slot-bias gate** (aoec matches_1v1_clean is natively player-row; no slot column to bias; contrast aoestats).
+
+### Faction vocabulary (top 10 of 56 distinct)
+franks 3,654,980 / mongols 3,637,382 / britons 2,307,906 / magyars 2,083,367 / spanish 2,049,447 / persians 1,961,939 / khmer 1,844,759 / huns 1,835,466 / ethiopians 1,809,660 / lithuanians 1,808,825.
+
+### matchId range (I7 provenance documentation)
+min=32,255,750; max=468,020,658; max_decimal_digits=9. Provenance for numeric-tail regex `[0-9]+`: `data/db/schemas/raw/matches_raw.yaml` line `matchId: INTEGER`.
+
+### Decisions taken
+- Source = matches_1v1_clean (natively 2-row; no pivot; direct self-join).
+- match_id prefix in-view (preserves I9).
+- TIMESTAMP pass-through (no cast; already canonical).
+- IS DISTINCT FROM for NULL-safe symmetry.
+- Numeric-tail regex `[0-9]+` for prefix check (matchId is INTEGER; variable decimal width; no fixed-length gate).
+- TABLE instead of VIEW (DuckDB 1.5.1 workaround — documented in YAML).
+
+### Cross-dataset contract (I8) — 3/3 datasets now shipping
+- sc2egset 01_04_03 (PR #152, MERGED): self-join VIEW; 42-char hex prefix; TRY_CAST from VARCHAR.
+- aoestats 01_04_03 (sibling in this PR): UNION ALL pivot VIEW; opaque VARCHAR prefix; CAST AT TIME ZONE 'UTC' from TIMESTAMPTZ; slot-bias gate.
+- aoe2companion 01_04_03 (THIS): self-join TABLE (DuckDB workaround); numeric-tail regex prefix; TIMESTAMP pass-through.
+
+### Artifacts produced
+- `reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json` (NEW)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.md` (NEW)
+- `data/db/schemas/views/matches_history_minimal.yaml` (NEW — object_type: table, not view; 8 cols + invariants block)
+- DuckDB TABLE `matches_history_minimal` (NEW — 61,062,392 rows)
+
+### Status updates
+- STEP_STATUS.yaml: 01_04_03 → complete (2026-04-18)
+- ROADMAP.md: Step 01_04_03 block appended
+- PIPELINE_SECTION_STATUS.yaml: 01_04 → in_progress → complete
+- PHASE_STATUS.yaml: unchanged
+
+### Adversarial cycle (combined plan — user-directed single round)
+- Pre-exec R1: APPROVE_WITH_WARNINGS — 0 BLOCKERs.
+
+### Thesis mapping
+- Chapter 4 — Data and Methodology > 4.1.2 AoE2 Match Data > Cross-dataset harmonization substrate
+- Chapter 4 — Data and Methodology > 4.3 Rating System Backtesting Design (downstream consumer)
+
+### Open follow-up
+- DuckDB version upgrade (post-1.5.1) may allow rebuilding `matches_history_minimal` as a VIEW — revisit in a future refactor.
+
+---
+
 ## 2026-04-17 — [Phase 01 / Step 01_04_02] Data Cleaning Execution
 
 **Category:** A (science)

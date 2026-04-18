@@ -1010,6 +1010,97 @@ research_log_entry: >
 
 ---
 
+### Step 01_04_03 — Minimal Cross-Dataset History View
+
+```yaml
+step_number: "01_04_03"
+name: "Minimal Cross-Dataset History View"
+description: >
+  Create matches_history_minimal VIEW: 8-column player-row-grain projection
+  of matches_1v1_clean (natively 2-row player-grain) via self-join on
+  matchId with unequal profileId (sc2egset pattern). Cross-dataset-
+  harmonized substrate for Phase 02+ rating-system backtesting. Canonical
+  TIMESTAMP temporal dtype (pass-through). Per-dataset-polymorphic faction
+  vocabulary (full civ names). Sibling of sc2egset 01_04_03 (PR #152) and
+  aoestats 01_04_03 (same bundled PR).
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4.2, Section 4.4"
+dataset: "aoe2companion"
+question: >
+  Can matches_1v1_clean (natively 2-row player-grain) be projected to the
+  cross-dataset 8-column contract via sc2egset-style self-join preserving
+  R03 complementarity and NULL-safe symmetry?
+method: >
+  CREATE OR REPLACE VIEW matches_history_minimal. Self-join on matchId with
+  p.player_id <> o.player_id (sc2egset pattern). started_at pass-through
+  (already TIMESTAMP). Prefix check uses numeric-tail regex [0-9]+ with
+  round-trip cast (aoec matchId is INTEGER, variable decimal width; no
+  fixed-length gate).
+predecessors:
+  - "01_04_02"
+methodology_citations:
+  - "Manual 01_DATA_EXPLORATION_MANUAL.md §4.2, §4.4"
+  - "Tukey, J. W. (1977). Exploratory Data Analysis."
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_03_minimal_history_view.py"
+inputs:
+  duckdb_views:
+    - "matches_1v1_clean (48 cols, 61,062,392 player-rows / 30,531,196 matches -- from 01_04_02)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_1v1_clean.yaml"
+    - "data/db/schemas/raw/matches_raw.yaml  # I7 provenance for matchId INTEGER"
+outputs:
+  duckdb_views:
+    - "matches_history_minimal (NEW -- 8 cols, 61,062,392 rows)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_history_minimal.yaml (NEW)"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.md"
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >
+      TIMESTAMP pass-through (upstream `started` is already TIMESTAMP per
+      matches_raw.yaml; no cast required; chronologically faithful).
+  - number: "5"
+    how_upheld: >
+      Player-row symmetry via self-join. NULL-safe IS DISTINCT FROM. Slot-
+      bias gate N/A for aoec (natively 2-row player-grain; no slot column).
+  - number: "6"
+    how_upheld: >
+      DDL + all assertion SQL verbatim in validation JSON.
+  - number: "7"
+    how_upheld: >
+      Numeric-tail regex [0-9]+ with round-trip cast cites
+      src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/matches_raw.yaml
+      line matchId:INTEGER (no fixed-length gate — contrast sc2egset 32-char hex).
+  - number: "8"
+    how_upheld: >
+      8-col cross-dataset contract (identical to sc2egset and aoestats).
+      Polymorphic faction vocabulary (full civ names; consumers MUST game-
+      condition; civ is zero-NULL upstream — stricter gate than sc2/aoestats).
+  - number: "9"
+    how_upheld: >
+      Pure non-destructive projection. No upstream modification.
+gate:
+  artifact_check: >
+    Validation JSON + MD exist; matches_history_minimal.yaml exists with 8
+    columns + invariants block.
+  continue_predicate: >
+    VIEW exists with 8 columns matching spec. 61,062,392 rows = 30,531,196 × 2.
+    Zero symmetry violations, zero prefix violations, dataset_tag distinct = 1,
+    zero NULLs in 7 non-nullable cols (including faction / opponent_faction).
+  halt_predicate: >
+    Any gate fails; dtype != TIMESTAMP; NULL in any gated non-null col.
+    Manual PIPELINE_SECTION_STATUS revert on T03 failure.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data > Cross-dataset harmonization substrate"
+  - "Chapter 4 -- Data and Methodology > 4.3 Rating System Backtesting Design"
+research_log_entry: "Required on completion."
+```
+
+---
+
 ## Phase 02 — Feature Engineering (placeholder)
 
 Pipeline Sections: see `docs/PHASES.md`.

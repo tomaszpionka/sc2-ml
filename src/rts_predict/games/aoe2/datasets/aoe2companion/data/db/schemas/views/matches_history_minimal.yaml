@@ -1,0 +1,129 @@
+table: matches_history_minimal
+dataset: aoe2companion
+game: aoe2
+object_type: table
+object_type_note: 'DuckDB 1.5.1 bug: self-join on matches_1v1_clean VIEW (row_number
+  + ANY) causes InternalException. Two-step DDL materialization used instead of CREATE
+  OR REPLACE VIEW. Semantics are identical to the planned VIEW -- same 8-column contract,
+  same filtering, same row count. Consumer code works identically for both TABLE and
+  VIEW in DuckDB SQL.'
+step: '01_04_03'
+row_count: 61062392
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json
+generated_date: '2026-04-18'
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  description: 'Cross-dataset unique match identifier. Format: ''<dataset_tag>::<native_id>''.
+    For aoe2companion: ''aoe2companion::<decimal-matchId>''. Prefix guarantees UNION
+    ALL uniqueness across sibling datasets. Length is VARIABLE (aoec matchId is INTEGER,
+    variable decimal width; no fixed-length gate like sc2egset''s 42-char hex). Provenance:
+    numeric-tail regex [0-9]+ cites src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/matches_raw.yaml
+    line `matchId: INTEGER` (I7).'
+  notes: IDENTITY. Prefix applied in DDL only; upstream matchId unchanged (I9).
+- name: started_at
+  type: TIMESTAMP
+  nullable: true
+  description: 'Match start time. TIMESTAMP (no TZ) -- pass-through from matches_raw.started
+    (already TIMESTAMP per data/db/schemas/raw/matches_raw.yaml). No cast. Canonical
+    cross-dataset dtype: sibling objects (sc2egset TRY_CAST from VARCHAR; aoestats
+    CAST from TIMESTAMPTZ AT TIME ZONE ''UTC'') all emit TIMESTAMP.'
+  notes: CONTEXT. Temporal anchor for Phase 02 rating-update loops. Chronologically
+    faithful (TIMESTAMP ordering, not lex).
+- name: player_id
+  type: VARCHAR
+  nullable: true
+  description: 'Focal player identifier. aoe2companion: CAST(profileId AS VARCHAR)
+    (INTEGER -> VARCHAR).'
+  notes: IDENTITY. Per-dataset identifier; cross-dataset identity resolution is a
+    future step (Phase 01_05+).
+- name: opponent_id
+  type: VARCHAR
+  nullable: true
+  description: Opposing player identifier. Same grain and provenance as player_id.
+  notes: IDENTITY.
+- name: faction
+  type: VARCHAR
+  nullable: true
+  description: 'Focal player''s faction. Per-dataset polymorphic vocabulary (cross-dataset
+    column name + dtype only -- values differ in ontology). sc2egset: 4-char race
+    stems Prot/Terr/Zerg (empirically verified; NOT full ''Protoss''/''Terran''/''Zerg'').
+    aoestats: full civilization names (Mongols, Franks, etc.). aoe2companion: full
+    civilization names (from matches_raw.civ -- zero NULLs upstream). CONSUMERS MUST
+    NOT treat faction as a single categorical feature across datasets without game-conditional
+    encoding (e.g., WHERE dataset_tag = ''aoe2companion'' before GROUP BY faction).'
+  notes: PRE_GAME. Raw vocabulary (civilization actually played). Polymorphic I8 contract
+    -- see description. Zero NULLs (civ zero-NULL upstream).
+- name: opponent_faction
+  type: VARCHAR
+  nullable: true
+  description: Opposing player's faction (same per-dataset vocabulary as `faction`).
+  notes: PRE_GAME. Mirror of faction from the opponent row. Zero NULLs (civ zero-NULL
+    upstream).
+- name: won
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if the focal player won, FALSE otherwise. The two rows of a match
+    have complementary `won` values (exactly one TRUE, one FALSE).
+  notes: TARGET. Pass-through from matches_raw.won; prediction label for downstream
+    experiments. Zero NULLs (R03 complementarity filter upstream).
+- name: dataset_tag
+  type: VARCHAR
+  nullable: false
+  description: Dataset discriminator for UNION ALL across sibling datasets. Constant
+    'aoe2companion' in this TABLE.
+  notes: IDENTITY. Matches the prefix before '::' in match_id.
+provenance:
+  source_tables:
+  - matches_raw
+  source_note: 'Reads from matches_raw directly (not matches_1v1_clean VIEW) due to
+    DuckDB 1.5.1 bug with self-join on VIEWs containing window functions. Applies
+    identical filter logic: internalLeaderboardId IN (6, 18); profileId != -1; deduplicated
+    by (matchId, profileId) ORDER BY started; R03 complementarity (HAVING COUNT(*)=2
+    AND n_true=1 AND n_false=1).'
+  join_key: self-join on 'aoe2companion::' || CAST(matchId AS VARCHAR); player_id
+    = CAST(profileId AS VARCHAR); opponent_id from sibling row where profileId <>
+    opponent profileId
+  filter: internalLeaderboardId IN (6, 18); profileId != -1; deduplicated; R03 complementarity
+    (HAVING COUNT(*)=2 AND n_true=1 AND n_false=1).
+  scope: 30,531,196 true 1v1 decisive matches, 61,062,392 player-rows. Cross-dataset
+    harmonization substrate for Phase 02+ rating backtesting.
+  created_by: sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_03_minimal_history_view.py
+invariants:
+- id: I3
+  description: TIMESTAMP-typed temporal anchor. started_at is a pass-through from
+    matches_raw.started (already TIMESTAMP per matches_raw.yaml). No TRY_CAST needed.
+    Chronologically faithful ordering. No windowed aggregations, no shift(), no future
+    joins. Phase 02 consumers use started_at as the strict-less-than anchor for match_time
+    < T feature computation.
+- id: I5
+  description: Player-row symmetry (I5-analog). Every match_id has exactly 2 rows.
+    (player_id, opponent_id) appears once in each direction. The two `won` values
+    are complementary. faction and opponent_faction are mirror images. Assertion SQL
+    uses IS DISTINCT FROM for NULL-safe comparison. Slot-bias gate is N/A for aoec
+    (natively player-row; no slot column).
+- id: I6
+  description: CREATE TABLE DDL + every assertion SQL stored verbatim in 01_04_03_minimal_history_view.json
+    sql_queries block. DESCRIBE result captured in validation JSON describe_table_rows
+    for reproducibility of the nullable flags written to this YAML.
+- id: I7
+  description: 'Magic literal `[0-9]+` numeric-tail regex in PREFIX_CHECK_SQL cites
+    src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/raw/matches_raw.yaml
+    line `matchId: INTEGER`. Round-trip BIGINT cast verifies decimal integrity. Variable
+    decimal width -- no fixed-length gate.'
+- id: I8
+  description: 'Cross-dataset comparability: 8-column names + dtypes are the cross-dataset
+    contract. Canonical temporal dtype = TIMESTAMP (no TZ). Faction vocabulary is
+    per-dataset-polymorphic -- column name and dtype cross-dataset, values per-dataset
+    ontology. aoe2companion uses full civ names (vs sc2egset 4-char stems). match_id
+    prefixed ''aoe2companion::''.'
+- id: I9
+  description: Pure non-destructive projection. No raw table modified. matches_raw
+    is read-only (SELECT only). matches_1v1_clean VIEW unchanged (not used in DDL
+    due to DuckDB 1.5.1 bug, but DESCRIBE still confirms its schema). Staging TABLE
+    _mhm_base created and immediately dropped. Only matches_history_minimal TABLE
+    is the persistent artifact.
+provenance_categories_note: This table inherits provenance categories from matches_raw
+  (applying matches_1v1_clean filter logic). Per-column 'notes' field uses the single-token
+  vocabulary (IDENTITY, CONTEXT, PRE_GAME, TARGET) established in 01_04_02.

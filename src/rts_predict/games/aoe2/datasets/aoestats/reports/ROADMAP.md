@@ -1071,6 +1071,94 @@ research_log_entry: "Required on completion."
 
 ---
 
+### Step 01_04_03 -- Minimal Cross-Dataset History View
+
+```yaml
+step_number: "01_04_03"
+name: "Minimal Cross-Dataset History View"
+description: >
+  Create matches_history_minimal VIEW: 8-column player-row-grain projection
+  of matches_1v1_clean via UNION ALL of p0/p1 halves (pivot from 1-row-per-
+  match to 2-rows-per-match). Cross-dataset-harmonized substrate for Phase
+  02+ rating-system backtesting. Canonical TIMESTAMP temporal dtype (cast
+  from TIMESTAMPTZ via AT TIME ZONE 'UTC'). Per-dataset-polymorphic faction
+  vocabulary (full civ names). Sibling of sc2egset 01_04_03 (PR #152) and
+  aoe2companion 01_04_03 (same bundled PR).
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4.2, Section 4.4"
+dataset: "aoestats"
+question: >
+  Can matches_1v1_clean (1-row-per-match p0/p1) be projected to the cross-
+  dataset 8-column contract (2-rows-per-match) via UNION ALL without slot
+  bias propagation into the output won distribution?
+method: >
+  CREATE OR REPLACE VIEW matches_history_minimal. UNION ALL of p0_half +
+  p1_half CTEs. started_at cast TIMESTAMPTZ -> TIMESTAMP via AT TIME ZONE
+  'UTC'. Slot-bias assertion: AVG(won::INT) = 0.5 exactly (UNION erases
+  upstream team1_wins ~52.27% slot asymmetry at output level because each
+  match contributes exactly 1 won + 1 lost).
+predecessors:
+  - "01_04_02"
+methodology_citations:
+  - "Manual 01_DATA_EXPLORATION_MANUAL.md §4.2, §4.4"
+  - "Tukey, J. W. (1977). Exploratory Data Analysis."
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_03_minimal_history_view.py"
+inputs:
+  duckdb_views:
+    - "matches_1v1_clean (20 cols, 17,814,947 matches -- from 01_04_02)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_1v1_clean.yaml"
+outputs:
+  duckdb_views:
+    - "matches_history_minimal (NEW -- 8 cols, 35,629,894 rows)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_history_minimal.yaml (NEW)"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.md"
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >
+      TIMESTAMP cast from TIMESTAMPTZ via AT TIME ZONE 'UTC'. Chronologically
+      faithful ordering on canonical cross-dataset dtype.
+  - number: "5"
+    how_upheld: >
+      Player-row symmetry (I5-analog) via IS DISTINCT FROM NULL-safe comparison.
+      Slot-bias gate (aoestats-specific): AVG(won::INT) = 0.5 exactly documents
+      UNION ALL erasing upstream slot asymmetry.
+  - number: "6"
+    how_upheld: >
+      DDL + all assertion SQL verbatim in validation JSON sql_queries block.
+  - number: "7"
+    how_upheld: >
+      Prefix check: LIKE 'aoestats::%' + non-empty tail. game_id is VARCHAR
+      opaque (no numeric regex — contrast aoec's matchId INTEGER case).
+  - number: "8"
+    how_upheld: >
+      8-col cross-dataset contract (identical to sc2egset and aoec sibling
+      views). Canonical TIMESTAMP. Polymorphic faction vocabulary (~50 civ
+      names; consumers MUST game-condition).
+  - number: "9"
+    how_upheld: >
+      Pure non-destructive projection. No upstream modification.
+gate:
+  artifact_check: >
+    Validation JSON + MD exist; matches_history_minimal.yaml exists with 8
+    columns + invariants block.
+  continue_predicate: >
+    VIEW exists with 8 columns matching spec. 35,629,894 rows = 17,814,947 × 2.
+    Zero symmetry violations, zero prefix violations, dataset_tag distinct = 1,
+    zero NULLs in 7 non-nullable cols, AVG(won::INT) = 0.5 exactly.
+  halt_predicate: >
+    Any gate fails; dtype != TIMESTAMP; slot-bias AVG deviates from 0.5.
+    Manual PIPELINE_SECTION_STATUS revert on T02 failure.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data > Cross-dataset harmonization substrate"
+  - "Chapter 4 -- Data and Methodology > 4.3 Rating System Backtesting Design"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

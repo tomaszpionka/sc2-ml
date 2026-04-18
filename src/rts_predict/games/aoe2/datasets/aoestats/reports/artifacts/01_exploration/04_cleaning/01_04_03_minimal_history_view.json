@@ -1,0 +1,245 @@
+{
+  "step": "01_04_03",
+  "dataset": "aoestats",
+  "game": "aoe2",
+  "generated_date": "2026-04-18",
+  "view": "matches_history_minimal",
+  "row_counts": {
+    "total_rows": 35629894,
+    "distinct_match_ids": 17814947,
+    "src_rows": 17814947,
+    "matches_with_2_rows": 17814947,
+    "matches_with_not_2_rows": 0
+  },
+  "null_counts": {
+    "null_match_id": 0,
+    "null_started_at": 0,
+    "null_player_id": 0,
+    "null_opponent_id": 0,
+    "null_won": 0,
+    "null_dataset_tag": 0,
+    "null_faction": 0,
+    "null_opponent_faction": 0
+  },
+  "symmetry_violations": 0,
+  "prefix_violations": 0,
+  "dataset_tag_distinct": 1,
+  "dataset_tag_value": "aoestats",
+  "slot_bias": {
+    "overall_won_rate": 0.5,
+    "slot0_rate": 0.49931509759753984,
+    "slot1_rate": 0.5006849024024601,
+    "gate_tolerance": 1e-09,
+    "note": "UNION ALL erases slot bias at output level: every match contributes 1 won=TRUE + 1 won=FALSE. Upstream slot asymmetry (team=1 wins ~52.27%) is preserved at slot level but cancelled at aggregate level."
+  },
+  "temporal_sanity": {
+    "min_started_at": "2022-08-29 00:04:05",
+    "max_started_at": "2026-02-06 06:32:24",
+    "null_started_at": 0,
+    "distinct_started_at": 15837208
+  },
+  "game_id_format": {
+    "min_tail_len": 9,
+    "max_tail_len": 9,
+    "distinct_game_ids": 17814947,
+    "note": "game_id is opaque VARCHAR; no fixed-length gate (I7 provenance)."
+  },
+  "faction_vocab": {
+    "mongols": 2265003,
+    "franks": 2026638,
+    "magyars": 1241182,
+    "britons": 1233417,
+    "spanish": 1179123,
+    "persians": 1170753,
+    "ethiopians": 1074509,
+    "khmer": 1059050,
+    "lithuanians": 1034419,
+    "huns": 1015167,
+    "teutons": 992269,
+    "turks": 943042,
+    "byzantines": 932024,
+    "goths": 866697,
+    "portuguese": 866560,
+    "mayans": 818618,
+    "vietnamese": 802481,
+    "cumans": 798229,
+    "hindustanis": 743151,
+    "japanese": 724910,
+    "bulgarians": 687951,
+    "malians": 683157,
+    "chinese": 658080,
+    "celts": 655068,
+    "aztecs": 638117,
+    "bohemians": 624178,
+    "burgundians": 624006,
+    "saracens": 621252,
+    "incas": 618112,
+    "poles": 610246,
+    "vikings": 599748,
+    "berbers": 594412,
+    "sicilians": 578332,
+    "italians": 574629,
+    "malay": 545978,
+    "slavs": 529330,
+    "koreans": 525268,
+    "tatars": 506783,
+    "romans": 476677,
+    "armenians": 376649,
+    "gurjaras": 375990,
+    "georgians": 373825,
+    "burmese": 364454,
+    "dravidians": 289321,
+    "bengalis": 286509,
+    "khitans": 120186,
+    "wei": 94624,
+    "wu": 89910,
+    "shu": 78213,
+    "jurchens": 41647
+  },
+  "schema_shape": {
+    "col_names": [
+      "match_id",
+      "started_at",
+      "player_id",
+      "opponent_id",
+      "faction",
+      "opponent_faction",
+      "won",
+      "dataset_tag"
+    ],
+    "col_types": [
+      "VARCHAR",
+      "TIMESTAMP",
+      "VARCHAR",
+      "VARCHAR",
+      "VARCHAR",
+      "VARCHAR",
+      "BOOLEAN",
+      "VARCHAR"
+    ]
+  },
+  "assertion_results": {
+    "src_col_count_20": true,
+    "required_src_cols_present": true,
+    "col_count_8": true,
+    "col_names_match": true,
+    "col_dtypes_match": true,
+    "total_rows_35629894": true,
+    "distinct_match_ids_17814947": true,
+    "src_rows_17814947": true,
+    "matches_with_not_2_rows_0": true,
+    "symmetry_violations_0": true,
+    "null_match_id_0": true,
+    "null_player_id_0": true,
+    "null_opponent_id_0": true,
+    "null_won_0": true,
+    "null_dataset_tag_0": true,
+    "null_faction_0": true,
+    "null_opponent_faction_0": true,
+    "prefix_violations_0": true,
+    "n_distinct_tags_1": true,
+    "dataset_tag_aoestats": true,
+    "slot_bias_overall_05": true
+  },
+  "all_assertions_pass": true,
+  "describe_table_rows": [
+    {
+      "column_name": "match_id",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "started_at",
+      "column_type": "TIMESTAMP",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "player_id",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "opponent_id",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "faction",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "opponent_faction",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "won",
+      "column_type": "BOOLEAN",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    },
+    {
+      "column_name": "dataset_tag",
+      "column_type": "VARCHAR",
+      "null": "YES",
+      "key": null,
+      "default": null,
+      "extra": null
+    }
+  ],
+  "sql_queries": {
+    "CREATE_MATCHES_HISTORY_MINIMAL_SQL": "CREATE OR REPLACE VIEW matches_history_minimal AS\n-- aoestats sibling of sc2egset.matches_history_minimal (PR #152 pattern).\n-- Input: matches_1v1_clean (1 row/match, p0/p1 cols). UNION ALL -> 2 rows/match.\n-- Invariants: I3 (TIMESTAMP cast from TIMESTAMPTZ), I5-analog (NULL-safe symmetry +\n--   slot-bias gate), I6 (SQL verbatim in JSON), I7 (prefix cites game_id VARCHAR),\n--   I8 (cross-dataset 8-col contract), I9 (no upstream modification).\nWITH p0_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p0_civ                                                      AS faction,\n        m.p1_civ                                                      AS opponent_faction,\n        m.p0_winner                                                   AS won,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n),\np1_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p1_civ                                                      AS faction,\n        m.p0_civ                                                      AS opponent_faction,\n        m.p1_winner                                                   AS won,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n)\nSELECT * FROM p0_half\nUNION ALL\nSELECT * FROM p1_half\nORDER BY started_at, match_id, player_id",
+    "ROW_COUNT_CHECK_SQL": "SELECT\n    (SELECT COUNT(*) FROM matches_history_minimal)                  AS total_rows,\n    (SELECT COUNT(DISTINCT match_id) FROM matches_history_minimal)  AS distinct_match_ids,\n    (SELECT COUNT(*) FROM matches_1v1_clean)                        AS src_rows,\n    (SELECT COUNT(*) FROM (\n        SELECT match_id, COUNT(*) AS n\n        FROM matches_history_minimal\n        GROUP BY match_id\n        HAVING n = 2\n     ))                                                             AS matches_with_2_rows,\n    (SELECT COUNT(*) FROM (\n        SELECT match_id, COUNT(*) AS n\n        FROM matches_history_minimal\n        GROUP BY match_id\n        HAVING n <> 2\n     ))                                                             AS matches_with_not_2_rows",
+    "SYMMETRY_I5_ANALOG_SQL": "WITH row_pairs AS (\n    SELECT\n        a.match_id,\n        a.player_id         AS a_pid,\n        a.opponent_id       AS a_oid,\n        a.won               AS a_won,\n        a.faction           AS a_fac,\n        a.opponent_faction  AS a_ofac,\n        b.player_id         AS b_pid,\n        b.opponent_id       AS b_oid,\n        b.won               AS b_won,\n        b.faction           AS b_fac,\n        b.opponent_faction  AS b_ofac\n    FROM matches_history_minimal a\n    JOIN matches_history_minimal b\n      ON a.match_id = b.match_id\n     AND a.player_id <> b.player_id\n)\nSELECT COUNT(*) AS symmetry_violations\nFROM row_pairs\nWHERE a_pid <> b_oid\n   OR a_oid <> b_pid\n   OR a_won = b_won\n   OR a_fac IS DISTINCT FROM b_ofac\n   OR a_ofac IS DISTINCT FROM b_fac",
+    "ZERO_NULL_SQL": "SELECT\n    COUNT(*) FILTER (WHERE match_id          IS NULL) AS null_match_id,\n    COUNT(*) FILTER (WHERE started_at        IS NULL) AS null_started_at,\n    COUNT(*) FILTER (WHERE player_id         IS NULL) AS null_player_id,\n    COUNT(*) FILTER (WHERE opponent_id       IS NULL) AS null_opponent_id,\n    COUNT(*) FILTER (WHERE won               IS NULL) AS null_won,\n    COUNT(*) FILTER (WHERE dataset_tag       IS NULL) AS null_dataset_tag,\n    COUNT(*) FILTER (WHERE faction           IS NULL) AS null_faction,\n    COUNT(*) FILTER (WHERE opponent_faction  IS NULL) AS null_opponent_faction\nFROM matches_history_minimal",
+    "PREFIX_CHECK_SQL": "-- game_id is VARCHAR (opaque primary key from aoestats API -- no fixed length).\n-- No numeric-tail regex (unlike aoec INTEGER matchId) -- game_id may be any string.\n-- Provenance: src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/\n--             matches_1v1_clean.yaml column game_id type: VARCHAR (I7).\nSELECT COUNT(*) AS prefix_violations\nFROM matches_history_minimal\nWHERE match_id NOT LIKE 'aoestats::%'\n   OR regexp_extract(match_id, '::(.+)$', 1) = ''",
+    "DATASET_TAG_CHECK_SQL": "SELECT\n    COUNT(DISTINCT dataset_tag) AS n_distinct_tags,\n    MAX(dataset_tag)            AS the_tag\nFROM matches_history_minimal",
+    "SLOT_BIAS_GATE_SQL": "SELECT\n    AVG(won::INT)                                          AS overall_won_rate,\n    AVG(won::INT) FILTER (WHERE player_id < opponent_id)  AS slot0_rate,\n    AVG(won::INT) FILTER (WHERE player_id > opponent_id)  AS slot1_rate\nFROM matches_history_minimal",
+    "FACTION_VOCAB_SQL": "SELECT faction, COUNT(*) AS n\nFROM matches_history_minimal\nGROUP BY faction\nORDER BY n DESC",
+    "TEMPORAL_SANITY_SQL": "SELECT\n    MIN(started_at)            AS min_started_at,\n    MAX(started_at)            AS max_started_at,\n    COUNT(*) FILTER (WHERE started_at IS NULL) AS null_started_at,\n    COUNT(DISTINCT started_at) AS distinct_started_at\nFROM matches_history_minimal",
+    "GAME_ID_FORMAT_SQL": "SELECT\n    MIN(length(regexp_extract(match_id, '::(.+)$', 1))) AS min_tail_len,\n    MAX(length(regexp_extract(match_id, '::(.+)$', 1))) AS max_tail_len,\n    COUNT(DISTINCT regexp_extract(match_id, '::(.+)$', 1)) AS distinct_game_ids\nFROM matches_history_minimal"
+  },
+  "spec_schema": {
+    "expected_col_names": [
+      "match_id",
+      "started_at",
+      "player_id",
+      "opponent_id",
+      "faction",
+      "opponent_faction",
+      "won",
+      "dataset_tag"
+    ],
+    "expected_dtypes": [
+      "VARCHAR",
+      "TIMESTAMP",
+      "VARCHAR",
+      "VARCHAR",
+      "VARCHAR",
+      "VARCHAR",
+      "BOOLEAN",
+      "VARCHAR"
+    ]
+  }
+}

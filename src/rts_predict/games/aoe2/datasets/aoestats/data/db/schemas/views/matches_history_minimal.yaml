@@ -1,0 +1,118 @@
+table: matches_history_minimal
+dataset: aoestats
+game: aoe2
+object_type: view
+step: '01_04_03'
+row_count: 35629894
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json
+generated_date: '2026-04-18'
+columns:
+- name: match_id
+  type: VARCHAR
+  nullable: true
+  description: 'Cross-dataset unique match identifier. Format: ''<dataset_tag>::<native_id>''.
+    For aoestats: ''aoestats::<game_id>'' where game_id is an opaque VARCHAR (variable
+    length, no fixed-length constraint). Prefix guarantees UNION ALL uniqueness across
+    sibling datasets. Provenance: game_id is VARCHAR per src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_1v1_clean.yaml
+    (I7 -- no numeric regex applied).'
+  notes: IDENTITY. Prefix applied in this VIEW only; upstream game_id unchanged (I9).
+- name: started_at
+  type: TIMESTAMP
+  nullable: true
+  description: 'Match start time. TIMESTAMP (no TZ) via CAST(started_timestamp AT
+    TIME ZONE ''UTC'' AS TIMESTAMP). Upstream matches_1v1_clean.started_timestamp
+    is TIMESTAMP WITH TIME ZONE (TIMESTAMPTZ); the AT TIME ZONE ''UTC'' + CAST yields
+    a naive UTC TIMESTAMP consistent with the canonical cross-dataset dtype. Canonical
+    cross-dataset dtype: sc2egset uses TRY_CAST from VARCHAR; aoestats uses explicit
+    TZ cast; aoe2companion passes through TIMESTAMP directly.'
+  notes: CONTEXT. Temporal anchor for Phase 02 rating-update loops. Chronologically
+    faithful (TIMESTAMP ordering; upstream TIMESTAMPTZ preserved semantics).
+- name: player_id
+  type: VARCHAR
+  nullable: true
+  description: 'Focal player identifier. aoestats: CAST(p{0,1}_profile_id AS VARCHAR)
+    (upstream BIGINT). Identifies the AoE2 profile for this player-row.'
+  notes: IDENTITY. Per-dataset identifier; cross-dataset identity resolution is a
+    future step (Phase 01_05+).
+- name: opponent_id
+  type: VARCHAR
+  nullable: true
+  description: Opposing player identifier. Same grain and provenance as player_id.
+  notes: IDENTITY.
+- name: faction
+  type: VARCHAR
+  nullable: true
+  description: 'Focal player''s faction. **Per-dataset polymorphic vocabulary** (cross-dataset
+    column name + dtype only -- values differ in ontology). sc2egset: 4-char race
+    stems Prot/Terr/Zerg. aoestats: full civilization names (Mongols, Franks, etc.
+    -- ~50 distinct). aoe2companion: full civilization names. CONSUMERS MUST NOT treat
+    faction as a single categorical feature across datasets without game-conditional
+    encoding (e.g., WHERE dataset_tag = ''aoestats'' before GROUP BY faction).'
+  notes: PRE_GAME. Full civilization name from p{0,1}_civ. Polymorphic I8 contract
+    -- see description.
+- name: opponent_faction
+  type: VARCHAR
+  nullable: true
+  description: Opposing player's faction (same per-dataset vocabulary as `faction`).
+  notes: PRE_GAME. Mirror of faction from the opponent row.
+- name: won
+  type: BOOLEAN
+  nullable: true
+  description: 'TRUE if the focal player won, FALSE otherwise. The two rows of a match
+    have complementary `won` values (exactly one TRUE, one FALSE). UNION ALL erases
+    upstream slot asymmetry (team=1 wins ~52.27% upstream): overall AVG(won::INT)
+    == 0.5 exactly (slot-bias gate verified in 01_04_03).'
+  notes: TARGET. Direct projection of p{0,1}_winner from matches_1v1_clean. Prediction
+    label for downstream experiments.
+- name: dataset_tag
+  type: VARCHAR
+  nullable: false
+  description: Dataset discriminator for UNION ALL across sibling datasets. Constant
+    'aoestats' in this VIEW.
+  notes: IDENTITY. Matches the prefix before '::' in match_id.
+provenance:
+  source_tables:
+  - matches_1v1_clean
+  join_key: 'UNION ALL pivot: p0_half uses (game_id, p0_profile_id as player_id, p1_profile_id
+    as opponent_id, p0_civ, p0_winner); p1_half mirrors the assignment.'
+  filter: 'Inherited from matches_1v1_clean: ranked 1v1 decisive (leaderboard=random_map,
+    2 players, p0_winner != p1_winner). 17,814,947 source matches.'
+  scope: 17,814,947 matches x 2 rows = 35,629,894 player-rows. Cross-dataset harmonization
+    substrate for Phase 02+ rating backtesting.
+  created_by: sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_03_minimal_history_view.py
+invariants:
+- id: I3
+  description: TIMESTAMP-typed temporal anchor enables chronologically faithful ordering.
+    Upstream started_timestamp is TIMESTAMPTZ; CAST(... AT TIME ZONE 'UTC' AS TIMESTAMP)
+    yields a naive UTC TIMESTAMP. Phase 02 consumers use started_at as the strict-less-than
+    anchor for match_time < T feature computation.
+- id: I5
+  description: 'Player-row symmetry (I5-analog). Every match_id has exactly 2 rows.
+    (player_id, opponent_id) appears once in each direction. The two `won` values
+    are complementary. faction and opponent_faction are mirror images. Assertion SQL
+    uses IS DISTINCT FROM for NULL-safe comparison. aoestats-specific SLOT-BIAS gate:
+    AVG(won::INT) == 0.5 exactly (tolerance 1e-9) -- UNION ALL erases upstream slot
+    asymmetry (team=1 wins ~52.27% in source).'
+- id: I6
+  description: CREATE OR REPLACE VIEW DDL + every assertion SQL stored verbatim in
+    01_04_03_minimal_history_view.json sql_queries block. DESCRIBE result captured
+    in validation JSON describe_table_rows for reproducibility of the nullable flags
+    written to this YAML.
+- id: I7
+  description: 'game_id is VARCHAR (opaque API key; no fixed-length magic literal).
+    Provenance: matches_1v1_clean.yaml column game_id type: VARCHAR. PREFIX_CHECK_SQL
+    uses LIKE ''aoestats::%'' + non-empty tail regex only (no numeric constraint,
+    unlike aoe2companion INTEGER matchId).'
+- id: I8
+  description: 'Cross-dataset comparability: 8-column names + dtypes are the cross-dataset
+    contract. Canonical temporal dtype = TIMESTAMP (no TZ). Faction vocabulary is
+    per-dataset-polymorphic -- column name and dtype cross-dataset, values per-dataset
+    ontology. aoestats uses full civ names; sc2egset uses 4-char race stems. match_id
+    prefixed ''aoestats::''.'
+- id: I9
+  description: Pure non-destructive projection. No raw table modified. matches_1v1_clean
+    unchanged. Only matches_history_minimal VIEW created via CREATE OR REPLACE. Input
+    (matches_1v1_clean) read-only.
+provenance_categories_note: This view inherits provenance categories from matches_1v1_clean.
+  Per-column 'notes' field uses the single-token vocabulary (IDENTITY, CONTEXT, PRE_GAME,
+  TARGET) established in 01_04_02.
