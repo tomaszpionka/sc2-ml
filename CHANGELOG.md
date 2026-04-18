@@ -17,6 +17,8 @@ merged to `master`.
 
 ### Fixed
 
+- Post-PR #158 hygiene: dedup duplicate `01_04_04b` block in sc2egset `STEP_STATUS.yaml`; relocate misplaced `01_04_04b` step YAML in sc2egset `ROADMAP.md` from Phase 07 back under Phase 01 / Pipeline Section 01_04; purge merged-PR planning artifacts per `planning/README.md`.
+
 ### Removed
 
 ## [3.17.0] — 2026-04-18 (PR #TBD: feat/01-04-04-sc2egset-worldwide-identity)
