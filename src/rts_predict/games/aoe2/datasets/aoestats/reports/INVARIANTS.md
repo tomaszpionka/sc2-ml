@@ -80,7 +80,17 @@ This bridge means aoestats can obtain I2-compliant canonical nicknames via a LEF
 
 ## §4 Per-dataset empirical findings
 
-Populated by 01_05 (Temporal & Panel EDA) and Phase 02. No pre-wired subsections.
+### I5 finding from 01_04_05 (Team-Slot Asymmetry Diagnosis)
+
+The upstream 52.27% team=1 win rate in `matches_1v1_clean` is an API-assigned ordering
+artifact (ARTEFACT_EDGE verdict, Step 01_04_05). Team=1 has higher ELO in 80.3% of games
+(mean +11.9 ELO points), consistent with the aoestats API assigning team=1 to the
+invite-initiating or better-matched player. After stratifying by civ-pair and year-quarter
+(13,509 strata, Mantel-Haenszel CMH), the civ-lexicographic-first win rate is 0.4928
+(effect = -0.72pp), well below the 1.5pp GENUINE_EDGE floor. The `team` field reflects
+upstream API ordering, NOT a game-mechanical slot identity; it must NOT be used as a
+Phase 02 feature. The UNION-ALL pivot in `matches_history_minimal` (produces `won_rate = 0.5`
+exactly) is confirmed correct and I5-compliant. Source: `01_04_05_i5_diagnosis.{json,md}`.
 
 ## §5 Cross-reference to `.claude/scientific-invariants.md`
 
@@ -89,4 +99,4 @@ See the universal invariants file linked above for the full I1–I10+ list. Exce
 | Invariant | Status | Notes |
 |---|---|---|
 | I2 | PARTIAL | Structurally forced to branch (v): `profile_id` is the sole identity signal — no visible handle column exists. Migration/collision rates are unevaluable within aoestats alone. Cross-dataset namespace bridge to aoec `profileId` confirmed at VERDICT A (agreement 0.9960, CI-lower 0.867; 01_04_04). See §2. |
-| I5 | PENDING | Upstream `matches_raw` slot asymmetry `team1_wins ≈ 52.27%` (documented `matches_1v1_clean.yaml` L118–125). UNION ALL pivot in `matches_history_minimal` corrects output to `won_rate = 0.5`. Diagnosis of root cause (encoding artifact vs genuine) deferred to Phase 02. |
+| I5 | PARTIAL — asymmetry characterised, see §4 finding from 01_04_05 | Upstream `matches_raw` slot asymmetry `team1_wins ≈ 52.27%` diagnosed as ARTEFACT_EDGE (01_04_05): API assigns team=1 to higher-ELO player in 80.3% of games. UNION-ALL pivot in `matches_history_minimal` confirmed I5-compliant (`won_rate = 0.5` exactly). `team` field MUST NOT be used as a Phase 02 feature. Schema amendment required (W4 coupling). |

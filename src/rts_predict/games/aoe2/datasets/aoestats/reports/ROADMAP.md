@@ -1287,6 +1287,71 @@ research_log_entry: "Required on completion."
 
 ---
 
+### Step 01_04_05 -- Team-Slot Asymmetry Diagnosis (I5)
+
+```yaml
+step_number: "01_04_05"
+name: "Team-Slot Asymmetry Diagnosis (I5)"
+description: >
+  Diagnoses the upstream team=1 win-rate asymmetry (52.27%) found in 01_04_01
+  and documented in matches_1v1_clean.yaml. Determines whether the asymmetry is
+  a genuine competitive slot edge (GENUINE_EDGE), an upstream API logging artifact
+  (ARTEFACT_EDGE), or inconclusive (MIXED). Five diagnostic queries: (Q1) slot-proxy
+  x ELO-ordering cross-tabulation; (Q2) Mantel-Haenszel CMH stratified by civ-pair
+  x year-quarter; (Q3) hash-seeded null calibration; (Q4) profile_id control;
+  (Q5) temporal drift. Supplementary ELO audit provides mechanistic confirmation.
+  Path-1 ingestion audit ruled out locally-assigned team position.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+dataset: "aoestats"
+completed_at: "2026-04-18"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_05_i5_diagnosis.py"
+predecessors:
+  - "01_04_01"
+  - "01_04_02"
+  - "01_04_03"
+key_findings:
+  verdict: "ARTEFACT_EDGE"
+  cmh_effect_pp: -0.72
+  elo_audit: "team=1 has higher ELO in 80.3% of games (mean +11.9 ELO points)"
+  root_cause: >
+    Upstream API assigns team=1 to the invite-initiating or better-matched player.
+    The 52.27% win rate is fully explained by the ELO differential, not by any
+    game-mechanical slot effect. team field MUST NOT be used as a Phase 02 feature.
+  phase_02_action: >
+    Use focal/opponent pair representation symmetrically (I5). Do not use team
+    as a feature or stratification variable. UNION-ALL pivot in
+    matches_history_minimal confirmed I5-compliant.
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_05_i5_diagnosis.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_05_i5_diagnosis.md"
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >
+      No temporal leakage risk in this diagnostic step -- no feature computation,
+      pure observational diagnosis of existing view.
+  - number: "5"
+    how_upheld: >
+      Diagnosis confirms I5 violation in raw team field; UNION-ALL pivot is the
+      correct I5-compliant downstream representation. team field excluded from
+      Phase 02 feature engineering.
+  - number: "6"
+    how_upheld: "All SQL queries verbatim in JSON sql_queries block with SHA-256 checksums."
+  - number: "7"
+    how_upheld: >
+      Effect-size thresholds: 1pp (minimum practical significance), 1.5pp
+      (GENUINE_EDGE floor), 0.5pp (ARTEFACT_EDGE ceiling) -- documented as
+      effect-size floors, not NHST cutoffs. Tiebreaker (MIXED -> ARTEFACT_EDGE)
+      justified by schema-amendment dominance argument.
+  - number: "9"
+    how_upheld: >
+      Exploration only. No new VIEWs, no raw-table modifications, no schema YAML changes.
+research_log_entry: "Added 2026-04-18."
+```
+
+---
+
 ## Phase 02 — Feature Engineering (placeholder)
 
 Pipeline Sections: see `docs/PHASES.md`.
