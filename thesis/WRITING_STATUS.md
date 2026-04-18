@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-12
+Last updated: 2026-04-17
 
 ---
 
@@ -32,28 +32,28 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 |---------|--------|------------|-------|
 | §1.1 Background and motivation | `DRAFTED` | — | Literature + framing. Gate 0 voice calibration draft. |
 | §1.2 Problem statement | `DRAFTABLE` | — | Literature + framing |
-| §1.3 Research questions | `DRAFTABLE` | — | Draft now; finalize after experiments |
-| §1.4 Scope and limitations | `DRAFTABLE` | — | Draft now; revise after AoE2 assessment |
+| §1.3 Research questions | `DRAFTED` | — | Literature + framing. Drafted 2026-04-17. 4 RQs operationalized; 9 inline citations; 2 [REVIEW] flags. ~5.0k chars Polish. Finalize after Phase 03–04. |
+| §1.4 Scope and limitations | `DRAFTED` | — | Literature + framing. Drafted 2026-04-17. 7 inline citations; 1 [REVIEW] flag (AoE2 roadmap). ~4.6k chars Polish. Revise after AoE2 lit review. |
 | §1.5 Thesis outline | `BLOCKED` | All chapters | Write last |
 
 ## Chapter 2 — Theoretical Background
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §2.1 RTS game characteristics | `DRAFTABLE` | — | Literature |
-| §2.2 StarCraft II | `DRAFTABLE` | Phase 01 (Data Exploration — timing, mechanics) | Literature part draftable; data-derived details added after Phase 01 |
-| §2.3 Age of Empires II | `BLOCKED` | AoE2 roadmap | Future |
-| §2.4 ML methods for classification | `DRAFTABLE` | — | Literature |
-| §2.5 Player skill rating systems | `DRAFTABLE` | — | Literature; Glicko-2 refs ready |
-| §2.6 Evaluation metrics | `DRAFTABLE` | — | Literature |
+| §2.1 Gry strategiczne czasu rzeczywistego | `DRAFTED` | — | Literature; Pass 1 + post-adversarial revision (2026-04-17). Adversarial WARNING applied: "operacjonalizuje RQ2/RQ3" softened to "motywuje RQ2/RQ3" (§1.3 owns operationalization). 9 distinct keys, 1 [REVIEW] flag. ~12.0k chars Polish. 1 new bibtex entry (Buro2003; URL fixed post-review). |
+| §2.2 StarCraft II | `DRAFTED` | Phase 01 (Data Exploration — timing + mechanics only; corpus details moved to §4.1.1 staging) | Mixed Literature + Data-fed; Pass 1 + post-adversarial revision (2026-04-17). Adversarial verdict REQUIRE_SUBSTANTIAL_REVISION caught BLOCKER scope creep — §2.2.5 "Korpus SC2EGSet" subsection deleted; corpus statistics deferred to §4.1.1. 12 distinct keys, 1 [REVIEW] flag (grey-literature acceptability). ~12.5k chars Polish (was 14.5k pre-fix). 4 new bibtex entries from Sprint 7 retained. |
+| §2.3 Age of Empires II | `DRAFTED` | Phase 01 (aoestats + aoe2companion — game theory only; corpus details moved to §4.1.2 staging) | Mixed Literature + Data-fed; Pass 1 + post-adversarial revision (2026-04-17). Adversarial verdict REQUIRE_SUBSTANTIAL_REVISION caught BLOCKERs: §2.3.4 trimmed to ≤500 chars (corpus numbers moved to §4.1.2 staging); §2.3.3 first paragraph cut (player roster + commentator list + Red Bull Wololo Londinium narrative removed); K=32 paragraph collapsed to forward-ref to §2.5.4. 7 distinct keys, 2 [REVIEW] flags. ~9.5k chars Polish (was 13.8k pre-fix). 5 new bibtex entries retained (AoE2DE, MgzParser, AoEStats, AoeCompanion, AoE2MapPool); RedBullWololoLondinium retained but no longer cited in §2.3 — flag for future cleanup. |
+| §2.4 ML methods for classification | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 17 distinct keys, 3 [REVIEW] flags. ~14.7k chars Polish. 13 new bibtex entries appended (Hastie2009ESL, Friedman2001GBM, Chen2016XGBoost, Ke2017LightGBM, Goodfellow2016DL, Breiman2001, CortesVapnik1995, Hochreiter1997LSTM, KipfWelling2017, NiculescuMizil2005, etc.). |
+| §2.5 Player skill rating systems | `DRAFTED` | — | Literature; Gate 0.5 calibration draft (2026-04-17). 14 distinct keys / 24 inline citations, 4 [REVIEW] flags. ~20.9k chars Polish. **Gate 0.5: PASS_FOR_PRODUCTION_SCALING.** |
+| §2.6 Evaluation metrics | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 14 distinct keys, 2 [REVIEW] flags. ~12.8k chars Polish. 10 new bibtex entries appended (Brier1950, Murphy1973, HanleyMcNeil1982, Friedman1937, Wilcoxon1945, Holm1979, GarciaHerrera2008, Garcia2010, Benavoli2016, Benavoli2017, Nadeau2003, Dietterich1998, Bouckaert2003). |
 
 ## Chapter 3 — Related Work
 
 | Section | Status | Feeds from | Notes |
 |---------|--------|------------|-------|
-| §3.1 Traditional sports prediction | `DRAFTABLE` | — | Literature |
-| §3.2 StarCraft prediction literature | `DRAFTABLE` | — | Key papers identified |
-| §3.3 MOBA and other esports | `DRAFTABLE` | — | Literature |
+| §3.1 Traditional sports prediction | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 11 distinct keys, 0 [REVIEW] flags. ~7.8k chars Polish. 5 new bibtex entries appended (Dixon1997, Maher1982, Constantinou2013, Bunker2024, Glickman1995). |
+| §3.2 StarCraft prediction literature | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 28 distinct keys / ~46 inline citations, 6 [REVIEW] flags. ~14.8k chars Polish. 15 new bibtex entries appended. Tarassoli2024 flagged as SC-Phi2 misattribution; deferred to user morning review. |
+| §3.3 MOBA and other esports | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 13 distinct keys, 2 [REVIEW] flags. ~11.4k chars Polish. 5 new bibtex entries appended (Yang2017Dota, Bahrololloomi2023, Akhmedov2021, Silva2018LoL, Yangibaev2025). |
 | §3.4 AoE2 prediction | `BLOCKED` | AoE2 lit review | Future |
 | §3.5 Research gap | `BLOCKED` | §3.1-§3.4 | Skeleton draftable from §3.1-§3.3; full draft blocked on §3.4 (AoE2 lit review) |
 

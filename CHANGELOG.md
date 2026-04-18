@@ -19,6 +19,79 @@ merged to `master`.
 
 ### Removed
 
+## [3.11.0] — 2026-04-17 (PR #TBD: feat/01-04-02-aoe2companion)
+
+### Added
+- **aoec 01_04_02 data cleaning execution** (third + final dataset in three-PR
+  Option A sequence; sc2egset PR #142 + aoestats PR #144 already merged). Acts on
+  all 8 user-locked DS-AOEC cleaning resolutions from the 01_04_01 missingness
+  audit. CONSORT: `matches_1v1_clean` 54→48 cols (drop 7: server, scenario,
+  modDataset, password, antiquityMode, mod, status; add 1: `rating_was_null`
+  BOOLEAN missingness flag); `player_history_all` 20→19 cols (drop status). Row
+  counts unchanged (61,062,392 / 264,132,745). All 23 assertion-battery checks
+  pass.
+- New artifacts: `01_04_02_data_cleaning_execution.{py,ipynb}` (jupytext-paired,
+  ~1815 lines), `01_04_02_post_cleaning_validation.{json,md}` with CONSORT block
+  + decisions registry + assertion results, NEW `matches_1v1_clean.yaml` schema
+  (48 cols + invariants + 9-entry excluded_columns enumeration + provenance.notes
+  marker), UPDATED `player_history_all.yaml` (19 cols, status removed).
+- **CROSS PR I8 schema YAML notes vocabulary harmonization** (resolves a
+  cross-dataset asymmetry deferred from PRs #142, #144, and the aoec 01_04_02
+  commit). All 6 view schema YAMLs across the 3 datasets now use prose-format
+  per-column `notes:` and carry a 6-entry `provenance_categories` invariant
+  enumeration sourced verbatim from `sc2egset/player_history_all.yaml`.
+- **Thesis Chapter 1**: §1.3 Pytania badawcze (4 RQs operationalized, ~5.0k
+  chars Polish) and §1.4 Zakres i ograniczenia (~4.6k chars Polish) drafted.
+- **Thesis Chapter 2 (FULLY DRAFTED)**: §2.1 Gry strategiczne czasu rzeczywistego
+  (~12.0k chars), §2.2 StarCraft II (~12.5k post-adversarial), §2.3 Age of
+  Empires II (~9.5k post-adversarial), §2.4 Maszynowe metody klasyfikacji
+  binarnej (~14.7k), §2.5 Player skill rating systems (~20.9k; Gate 0.5
+  PASS_FOR_PRODUCTION_SCALING), §2.6 Metryki ewaluacyjne i porównanie statystyczne
+  (~12.8k) — all in Polish academic register.
+- **Thesis Chapter 3**: §3.1 Predykcja w sportach tradycyjnych (~7.8k chars),
+  §3.2 StarCraft prediction literature (~14.8k), §3.3 MOBA + pozostałe gatunki
+  esportowe (~11.4k) drafted in Polish.
+- 60 new bibtex entries in `thesis/references.bib` (was 13 → 84) covering RTS/SC2/
+  AoE2/MOBA/CS:GO prediction literature, rating systems (Elo, Glicko/Glicko-2,
+  TrueSkill, Aligulac, BTL theoretical foundations), classical ML (Hastie ESL,
+  Friedman GBM, XGBoost, LightGBM, Goodfellow DL, etc.), statistical comparison
+  (Demšar, Wilcoxon, Holm, García & Herrera, Benavoli, Nadeau-Bengio, Dietterich,
+  Bouckaert, etc.), and traditional sports prediction (Dixon-Coles, Constantinou,
+  Bunker tennis ML).
+- `NIGHT_SUMMARY_2026-04-17.md` (autonomous-mode session summary committed for
+  morning user review).
+
+### Changed
+- `STEP_STATUS.yaml` for aoe2companion: 01_04_02 → complete.
+- `PIPELINE_SECTION_STATUS.yaml` for aoe2companion: 01_04 → complete (closes
+  Pipeline Section per derivation rule; `PHASE_STATUS.yaml` unchanged — Phase 01
+  stays in_progress because 01_05 + 01_06 remain not_started for all 3 datasets).
+- `ROADMAP.md` for aoe2companion: new `### Step 01_04_02` block appended.
+- `research_log.md` for aoe2companion: 2026-04-17 [01_04_02] entry with CONSORT
+  table + 8 DS resolutions + Reconciliation notes (country rate 13.37% → 2.25%
+  authoritative; difficulty correctly RETAIN_AS_IS not constant).
+- 8 thesis sections moved from `DRAFTABLE` (or `BLOCKED` for §2.3) to `DRAFTED`
+  in `thesis/WRITING_STATUS.md`. 10 sections enqueued in
+  `thesis/chapters/REVIEW_QUEUE.md` for Pass 2 (Claude Chat) review with 30
+  outstanding `[REVIEW]` flags catalogued.
+
+### Fixed
+- Buro2003 bibtex URL corrected (`IJCAI03.pdf` → `RTS-ijcai03.pdf`) — caught by
+  retrospective adversarial review of Sprint 7.
+- Post-adversarial scope-discipline revision of §2.1 + §2.2 + §2.3 (commit
+  `1492d90`): §2.2.5 "Korpus SC2EGSet — krótkie umiejscowienie" subsection
+  deleted (data-chapter content); §2.3.4 trimmed from 3.7k → 500 chars (corpus
+  numerics deferred to §4.1.2 staging); §2.3.3 first paragraph rewritten (player
+  roster + commentator list + Red Bull Wololo Londinium tournament narrative
+  removed); K-factor paragraph collapsed to forward-reference to §2.5.4.
+
+### Removed
+- Two DuckDB workarounds applied in `01_04_02_data_cleaning_execution.py` (both
+  documented in DDL comment headers): multi-column `SUM(CASE WHEN ...)`
+  aggregation on the `matches_1v1_clean` view replaced with individual per-column
+  `COUNT(*) WHERE col IS NULL` queries (mathematically equivalent); `SELECT *
+  EXCLUDE (rn)` in subqueries replaced with explicit column enumeration.
+
 ## [3.10.3] — 2026-04-17 (PR #TBD: fix/01-04-null-audit)
 
 ### Added

@@ -84,4 +84,9 @@ steps:
     pipeline_section: "01_04"
     status: complete
     completed_at: "2026-04-16"
+  "01_04_02":
+    name: "Data Cleaning Execution (act on DS-AOEC-01..08)"
+    pipeline_section: "01_04"
+    status: complete
+    completed_at: "2026-04-17"
   # Future steps will be added here as they are defined in the ROADMAP.

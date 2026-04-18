@@ -8,6 +8,70 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-17 — [Phase 01 / Step 01_04_02] Data Cleaning Execution
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Branch:** fix/01-04-null-audit
+**Step scope:** Acts on all 8 cleaning decisions (DS-AOEC-01..08) surfaced by 01_04_01. Modifies VIEW DDL for matches_1v1_clean and player_history_all via CREATE OR REPLACE (no raw table changes per Invariant I9). Produces post-cleaning validation artifact (JSON+MD), creates matches_1v1_clean.yaml (NEW), updates player_history_all.yaml. All counts loaded from 01_04_01 ledger at runtime (I7).
+
+### Reconciliation notes (vs prior 01_04_01 research_log entry — per round-2 F2/F3)
+
+- **`country` rate** — Prior 01_04_01 entry cited `country | 13.37%` based on a Pass-1 raw rate. Authoritative ledger row 50 shows `matches_1v1_clean.country | 2.2486%` (1,373,052 / 61,062,392). Authoritative ledger row 72 shows `player_history_all.country | 8.305%`. The 01_04_02 schema YAML and registry use the ledger values.
+- **`difficulty` constant status** — Prior 01_04_01 entry incorrectly grouped `difficulty` with `mod, status` constants for DROP. Authoritative ledger row 11 shows `difficulty,VARCHAR,n_distinct=3.0,RETAIN_AS_IS`. The 01_04_02 DDL retains `difficulty` per the ledger; only `mod` (n_distinct=1) and `status` (n_distinct=1) are constants for DROP per DS-AOEC-03b.
+
+### CONSORT column-count flow
+
+- matches_1v1_clean: 54 → 48 cols (drop 7: server/scenario/modDataset/password/antiquityMode/mod/status; add 1: rating_was_null; modify 0)
+- player_history_all: 20 → 19 cols (drop 1: status; add 0; modify 0)
+
+### CONSORT row-count flow (column-only — no row changes)
+
+- matches_1v1_clean: 61,062,392 rows / 30,531,196 matches (unchanged)
+- player_history_all: 264,132,745 rows (unchanged)
+
+### 8 DS resolutions
+
+- **DS-AOEC-01:** server/scenario/modDataset/password DROPPED per Rule S4 (van Buuren 2018; rates 97/100/100/78%)
+- **DS-AOEC-02:** antiquityMode DROPPED (60.06%, 40-80% non-primary band); hideCivs RETAINED with FLAG_FOR_IMPUTATION (37.18%, 5-40% band) deferred to Phase 02
+- **DS-AOEC-03:** Low-NULL game settings group RETAIN_AS_IS (rates < 5% Schafer & Graham 2002 boundary)
+- **DS-AOEC-03b:** mod (matches_1v1_clean) + status (both VIEWs) DROPPED via constants-detection override (n_distinct=1)
+- **DS-AOEC-04:** rating RETAINED in matches_1v1_clean; rating_was_null BOOLEAN flag ADDED (DS-AOEC-04 / Rule S4 primary feature exception; sklearn MissingIndicator pattern)
+- **DS-AOEC-05:** country FLAG_FOR_IMPUTATION (~2.25% in matches_1v1_clean / ~8.30% in player_history_all); Phase 02 strategy TBD ('Unknown' encoding or country_was_null indicator)
+- **DS-AOEC-06:** won in matches_1v1_clean RETAIN_AS_IS (zero NULLs by R03 complementarity; F1 zero-missingness override)
+- **DS-AOEC-07:** won in player_history_all DOCUMENTED as EXCLUDE_TARGET_NULL_ROWS (~19,251 NULLs / 0.0073%); physical exclusion deferred to Phase 02 feature-computation per Rule S2
+- **DS-AOEC-08:** leaderboards_raw (singleton 2-row) + profiles_raw (7 dead columns) FORMALLY DECLARED OUT-OF-ANALYTICAL-SCOPE in cleaning registry (no DDL change, no DROP TABLE)
+
+### Ledger-derived expected counts (I7)
+
+- rating IS NULL in matches_1v1_clean: 15,999,234 (asserted within ±1 row)
+- rating IS NULL in player_history_all: 104,676,152 (informational; no assertion since not modified by 01_04_02)
+- won IS NULL in player_history_all: 19,251 (DS-AOEC-07 documented count; no physical exclusion)
+
+### Artifacts produced / updated
+
+- `reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json` (NEW)
+- `reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.md` (NEW)
+- `data/db/schemas/views/matches_1v1_clean.yaml` (NEW — 48 cols + invariants block; prose-format notes)
+- `data/db/schemas/views/player_history_all.yaml` (UPDATED — 19 cols; status removed; step bumped to 01_04_02)
+
+### Status updates
+
+- STEP_STATUS.yaml: 01_04_02 → complete (2026-04-17)
+- PIPELINE_SECTION_STATUS.yaml: 01_04 → complete
+- PHASE_STATUS.yaml: phase 01 stays in_progress (01_05 + 01_06 still not_started)
+
+### Cross-dataset note
+
+Third and final dataset in the three-PR Option A sequence:
+- sc2egset 01_04_02 (PR #142, MERGED) — pattern-establisher, single-token notes vocabulary
+- aoestats 01_04_02 (PR #144, MERGED) — first replication, prose-format notes vocabulary
+- **aoec 01_04_02 (THIS PR)** — final replication, prose-format notes vocabulary (matches aoestats per Q3 locked decision)
+
+Cross-dataset I8 vocabulary harmonization (sc2egset single-token vs aoec/aoestats prose) deferred to a CROSS PR after this lands.
+
+---
+
 ## 2026-04-17 — [Phase 01 / Step 01_04_01] Missingness Audit (PART B — additive refactor)
 
 **Category:** A (science)

@@ -885,6 +885,129 @@ research_log_entry: >
   artifact paths, summarise decisions surfaced for downstream resolution.
 ```
 
+### Step 01_04_02 — Data Cleaning Execution (act on DS-AOEC-01..08)
+
+```yaml
+step_number: "01_04_02"
+name: "Data Cleaning Execution (act on DS-AOEC-01..08)"
+description: >
+  Apply VIEW DDL changes implementing all 8 cleaning decisions surfaced
+  by the 01_04_01 missingness audit. Replaces matches_1v1_clean and
+  player_history_all VIEWs via CREATE OR REPLACE (no raw table changes
+  per Invariant I9). Produces post-cleaning validation artifact (JSON+MD),
+  creates matches_1v1_clean.yaml schema, updates player_history_all.yaml.
+  ratings_clean VIEW unchanged.
+phase: "01 — Data Exploration"
+pipeline_section: "01_04 — Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 4 (Cleaning)"
+dataset: "aoe2companion"
+question: >
+  What concrete VIEW DDL implements DS-AOEC-01..08, and does the
+  post-cleaning state satisfy all I3/I5/I6/I7/I9/I10 invariants?
+method: >
+  Per-DS resolution: 7 columns dropped from matches_1v1_clean (4 high-NULL
+  per Rule S4, 1 schema-evolution per Rule S4 cost-benefit, 2 constants
+  via constants-detection override); 1 column added to matches_1v1_clean
+  (rating_was_null BOOLEAN flag, sklearn MissingIndicator pattern for the
+  primary feature exception per van Buuren 2018 Rule S4); 1 column
+  dropped from player_history_all (status constant). Post-cleaning
+  assertion battery covers zero-NULL identity, R03 complementarity,
+  forbidden-column absence, new-column type, and rating_was_null flag
+  consistency (within ±1 row of ledger expected count per I7).
+predecessors:
+  - "01_04_01"
+methodology_citations:
+  - "Rubin, D.B. (1976). Inference and missing data. Biometrika, 63(3)."
+  - "van Buuren, S. (2018). Flexible Imputation of Missing Data, 2nd ed."
+  - "Schafer, J.L. & Graham, J.W. (2002). Missing data: Our view of the state of the art."
+  - "Liu, X. et al. (2020). CONSORT-AI extension. BMJ 370."
+  - "Jeanselme, V. et al. (2024). Participant Flow Diagrams for Health Equity in AI."
+  - "Sambasivan, N. et al. (2021). Data Cascades. CHI '21."
+  - "scikit-learn v1.8 documentation. sklearn.impute.MissingIndicator."
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py"
+inputs:
+  duckdb_views:
+    - "matches_1v1_clean (54 cols, 61,062,392 rows — pre-01_04_02 state)"
+    - "player_history_all (20 cols, 264,132,745 rows — pre-01_04_02 state)"
+  prior_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv"
+    - "artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+outputs:
+  duckdb_views:
+    - "matches_1v1_clean (48 cols, 61,062,392 rows — post-01_04_02; -7 / +1)"
+    - "player_history_all (19 cols, 264,132,745 rows — post-01_04_02; -1 / +0)"
+    - "ratings_clean (unchanged)"
+  schema_yamls:
+    - "data/db/schemas/views/matches_1v1_clean.yaml (NEW — 48 cols + invariants block; prose-format notes)"
+    - "data/db/schemas/views/player_history_all.yaml (UPDATED — 19 cols; status removed; step bumped to 01_04_02)"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+    - "artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.md"
+reproducibility: >
+  All SQL DDL + assertion SQL stored verbatim in
+  01_04_02_post_cleaning_validation.json under sql_queries.
+  ledger_derived_expected_values block records the runtime-derived
+  I7 expected counts. Notebook re-runs deterministically via
+  CREATE OR REPLACE VIEW (idempotent).
+key_findings_carried_forward:
+  - "DS-AOEC-01 resolved: server/scenario/modDataset/password DROPPED from matches_1v1_clean per Rule S4 (van Buuren 2018)."
+  - "DS-AOEC-02 resolved: antiquityMode DROPPED (60.06% NULL, 40-80% non-primary band); hideCivs RETAINED with FLAG_FOR_IMPUTATION deferred to Phase 02."
+  - "DS-AOEC-03b resolved: mod (matches_1v1_clean) + status (both VIEWs) DROPPED via constants-detection override."
+  - "DS-AOEC-04 resolved: rating RETAINED in matches_1v1_clean; rating_was_null BOOLEAN flag ADDED (sklearn MissingIndicator pattern; Phase 02 imputation: median-within-leaderboard)."
+  - "DS-AOEC-05 deferred: country FLAG_FOR_IMPUTATION; Phase 02 strategy TBD."
+  - "DS-AOEC-06 resolved: won in matches_1v1_clean RETAIN_AS_IS (zero NULLs by R03)."
+  - "DS-AOEC-07 documented: won in player_history_all has ~19,251 NULLs (0.0073%); EXCLUDE_TARGET_NULL_ROWS rule documented in cleaning registry; physical exclusion deferred to Phase 02 feature-computation per Rule S2."
+  - "DS-AOEC-08 documented: leaderboards_raw (singleton 2-row reference) + profiles_raw (7 dead columns) FORMALLY DECLARED OUT-OF-ANALYTICAL-SCOPE in cleaning registry."
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >
+      No new POST-GAME columns introduced. ratingDiff and finished
+      remain excluded (verified by Section 3.3b assertion).
+      rating_was_null derives from the PRE_GAME rating column only.
+  - number: "5"
+    how_upheld: >
+      matches_1v1_clean retains player-row orientation (2 rows per match).
+      No slot-asymmetry introduced; both player rows treated identically.
+  - number: "6"
+    how_upheld: >
+      All DDL + assertion SQL stored verbatim in JSON sql_queries.
+  - number: "7"
+    how_upheld: >
+      All expected counts loaded at runtime from
+      01_04_01_missingness_ledger.csv via ledger_val() helper. No
+      magic numbers in notebook code. Plan cites ledger values as
+      expected guidance; notebook derives them.
+  - number: "9"
+    how_upheld: >
+      Raw tables UNTOUCHED. Only VIEW DDL changes via CREATE OR REPLACE.
+      leaderboards_raw + profiles_raw declared out-of-scope but not
+      dropped (no DROP TABLE statements).
+  - number: "10"
+    how_upheld: >
+      No filename derivation changes. The aoec raw tables already
+      satisfy I10 from 01_02_02 ingestion.
+gate:
+  artifact_check: >
+    JSON exists at the path above with all keys: cleaning_registry,
+    consort_flow_columns, consort_flow_matches, subgroup_impact,
+    validation_assertions (all True), sql_queries, decisions_resolved,
+    ledger_derived_expected_values. MD report exists with 6 tables.
+    matches_1v1_clean.yaml exists with 48 column entries + invariants.
+    player_history_all.yaml updated with 19 columns + step="01_04_02".
+  continue_predicate: >
+    Notebook executes end-to-end with all assertions PASS.
+    DESCRIBE matches_1v1_clean returns 48 columns; DESCRIBE
+    player_history_all returns 19 columns. Row counts unchanged.
+    STEP_STATUS.yaml has 01_04_02: complete.
+  halt_predicate: >
+    Any AssertionError in notebook; any forbidden column present;
+    row count change; rating_was_null inconsistent with rating IS NULL;
+    validation_assertions has any False value.
+research_log_entry: >
+  Required on completion: full CONSORT column-flow tables, 8 DS
+  resolutions, ledger-derived expected counts, artifact paths.
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

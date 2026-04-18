@@ -1,0 +1,255 @@
+{
+  "step": "01_04_02",
+  "dataset": "aoe2companion",
+  "generated_date": "2026-04-17",
+  "cleaning_registry": [
+    {
+      "rule_id": "drop_high_null_columns_clean",
+      "condition": "n_null > 40% in matches_1v1_clean scope (Rule S4 / van Buuren 2018)",
+      "action": "DROP server, scenario, modDataset, password from matches_1v1_clean",
+      "justification": "DS-AOEC-01: server (MNAR 97.39%), scenario (MAR 100%), modDataset (MAR 100%), password (MAR 77.57%). Rule S4 threshold crossed; imputation indefensible (van Buuren 2018 Ch. 1.3).",
+      "impact": "-4 cols matches_1v1_clean"
+    },
+    {
+      "rule_id": "drop_schema_evolution_columns_clean",
+      "condition": "n_null in 40-80% band, non-primary feature, schema-evolution column",
+      "action": "DROP antiquityMode from matches_1v1_clean",
+      "justification": "DS-AOEC-02: antiquityMode MAR 60.06% (40-80% non-primary band). Schema-evolution boundary: introduced in a later patch. Cost/benefit favors simplicity per Rule S4.",
+      "impact": "-1 col matches_1v1_clean"
+    },
+    {
+      "rule_id": "drop_constants_clean",
+      "condition": "n_distinct=1 in matches_1v1_clean scope",
+      "action": "DROP mod, status from matches_1v1_clean",
+      "justification": "DS-AOEC-03b: constants-detection override. mod n_distinct=1 (always FALSE), status n_distinct=1 (always 'player'). Zero information content; constants-detection supersedes low-NULL RETAIN_AS_IS.",
+      "impact": "-2 cols matches_1v1_clean"
+    },
+    {
+      "rule_id": "drop_constants_hist",
+      "condition": "n_distinct=1 in player_history_all scope",
+      "action": "DROP status from player_history_all",
+      "justification": "DS-AOEC-03b: constants-detection override. status n_distinct=1 (always 'player' after R00 profileId != -1 filter). Zero information content.",
+      "impact": "-1 col player_history_all"
+    },
+    {
+      "rule_id": "add_rating_was_null_flag_clean",
+      "condition": "rating IS NULL in matches_1v1_clean (primary feature, ~26.20% NULL)",
+      "action": "ADD (rating IS NULL) AS rating_was_null BOOLEAN to matches_1v1_clean",
+      "justification": "DS-AOEC-04: Rule S4 primary feature exception (van Buuren 2018). rating retained despite ~26.20% NULL (primary feature + MAR mechanism). rating_was_null BOOLEAN flag preserves missingness-as-signal (sklearn MissingIndicator pattern) for Phase 02 imputation strategy.",
+      "impact": "+1 col matches_1v1_clean (rating_was_null BOOLEAN)"
+    },
+    {
+      "rule_id": "declare_leaderboards_profiles_oos",
+      "condition": "Always (documentation only)",
+      "action": "leaderboards_raw (2-row singleton reference) + profiles_raw (7 dead columns, 100% NULL) declared OUT-OF-ANALYTICAL-SCOPE",
+      "justification": "DS-AOEC-08: leaderboards_raw is a 2-row singleton reference table (not used by any VIEW). profiles_raw has 7 columns all 100% NULL (no analytical utility). Registry declaration prevents inadvertent feature-source use in Phase 02+. No DROP TABLE statements issued per I9.",
+      "impact": "None (registry-only resolution)"
+    }
+  ],
+  "consort_flow_columns": {
+    "matches_1v1_clean": {
+      "cols_before": 54,
+      "cols_dropped": 7,
+      "cols_added": 1,
+      "cols_modified": 0,
+      "cols_after": 48
+    },
+    "player_history_all": {
+      "cols_before": 20,
+      "cols_dropped": 1,
+      "cols_added": 0,
+      "cols_modified": 0,
+      "cols_after": 19
+    }
+  },
+  "consort_flow_matches": {
+    "matches_1v1_clean": {
+      "n_matches_before": 30531196,
+      "rows_before_01_04_02": 61062392,
+      "n_matches_after": 30531196,
+      "rows_after_01_04_02": 61062392,
+      "note": "Column-only cleaning step: row counts unchanged."
+    },
+    "player_history_all": {
+      "rows_before_01_04_02": 264132745,
+      "rows_after_01_04_02": 264132745,
+      "note": "Column-only cleaning step: row counts unchanged."
+    }
+  },
+  "subgroup_impact": [
+    {
+      "affected_column": "server (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-01",
+      "subgroup_most_affected": "~2.6% of rows had non-NULL server; those matches lose server-location information",
+      "impact": "97.39% NULL; MNAR. ~2.6% of rows (1,592,568) had non-NULL server info. That subgroup loses location information; deemed not predictive for ranked 1v1."
+    },
+    {
+      "affected_column": "scenario (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-01",
+      "subgroup_most_affected": "100% NULL -- no subgroup affected",
+      "impact": "100.00% NULL; MAR. No subgroup loses anything."
+    },
+    {
+      "affected_column": "modDataset (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-01",
+      "subgroup_most_affected": "100% NULL -- no subgroup affected",
+      "impact": "100.00% NULL; MAR. No subgroup loses anything."
+    },
+    {
+      "affected_column": "password (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-01",
+      "subgroup_most_affected": "~22.4% of rows had non-NULL password (password-protected lobby)",
+      "impact": "77.57% NULL; MAR. ~13,695,195 rows had password-protected lobby info. Deemed not predictive for ranked 1v1."
+    },
+    {
+      "affected_column": "antiquityMode (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-02",
+      "subgroup_most_affected": "Pre-patch matches (60.1% NULL) lose this flag; post-patch matches retain downstream patch-stratification",
+      "impact": "60.06% NULL; MAR (schema-evolution boundary). ~24,386,243 non-NULL rows had this flag. Patch-stratification captures the same boundary for Phase 02."
+    },
+    {
+      "affected_column": "mod (dropped from matches_1v1_clean)",
+      "source_decision": "DS-AOEC-03b",
+      "subgroup_most_affected": "Constant -- no subgroup affected",
+      "impact": "n_distinct=1 constant across 61,062,392 rows; zero information content."
+    },
+    {
+      "affected_column": "status (dropped from both VIEWs)",
+      "source_decision": "DS-AOEC-03b",
+      "subgroup_most_affected": "Constant -- no subgroup affected",
+      "impact": "n_distinct=1 constant in both VIEWs (61,062,392 clean, 264,132,745 hist); zero information content."
+    },
+    {
+      "affected_column": "rating_was_null (added to matches_1v1_clean)",
+      "source_decision": "DS-AOEC-04",
+      "subgroup_most_affected": "~26.20% of matches_1v1_clean rows have rating IS NULL (unrated focal player)",
+      "impact": "15,999,234 rows (26.20%) have rating IS NULL. Flag preserves rated/unrated signal for Phase 02 (sklearn MissingIndicator pattern)."
+    }
+  ],
+  "validation_assertions": {
+    "col_count_clean_48": true,
+    "col_count_hist_19": true,
+    "zero_null_matchId_clean": true,
+    "zero_null_started_clean": true,
+    "zero_null_profileId_clean": true,
+    "zero_null_won_clean": true,
+    "zero_null_matchId_hist": true,
+    "zero_null_profileId_hist": true,
+    "zero_null_started_hist": true,
+    "r03_complementarity_0_violations": true,
+    "forbidden_newly_dropped_absent_clean": true,
+    "forbidden_newly_dropped_absent_hist": true,
+    "forbidden_prior_i3_absent_clean": true,
+    "hist_won_retained": true,
+    "hist_rating_retained": true,
+    "hist_country_retained": true,
+    "hist_team_retained": true,
+    "new_col_rating_was_null_present": true,
+    "new_col_rating_was_null_boolean": true,
+    "rating_was_null_equals_rating_is_null": true,
+    "rating_was_null_no_inconsistency": true,
+    "rating_was_null_count_matches_ledger": true,
+    "row_count_clean_unchanged": true,
+    "row_count_hist_unchanged": true
+  },
+  "sql_queries": {
+    "create_matches_1v1_clean_v2": "\nCREATE OR REPLACE VIEW matches_1v1_clean AS\n-- Purpose: Prediction-target VIEW. Ranked 1v1 decisive matches only.\n-- Row multiplicity: 2 rows per match (player-row-oriented; one row per player).\n-- Target column: won (BOOLEAN strict TRUE/FALSE; R03 complementarity: 1 TRUE + 1 FALSE per match).\n-- Column set: 48 PRE_GAME + IDENTITY + TARGET + CONTEXT columns (post 01_04_02).\n-- All cleaning decisions (DS-AOEC-01..08) documented in 01_04_02_post_cleaning_validation.json.\n-- NOTE: Uses explicit column list (no SELECT * EXCLUDE) + subquery IN pattern (not CTE JOIN)\n--       to avoid DuckDB internal errors with multi-column aggregation.\nSELECT\n    d.matchId,\n    d.started,\n    d.leaderboard,\n    d.name,\n    -- DS-AOEC-01: server DROPPED (MNAR 97.39%)\n    d.internalLeaderboardId,\n    d.privacy,\n    -- DS-AOEC-03b: mod DROPPED (n_distinct=1 constant)\n    d.map,\n    d.difficulty,\n    d.startingAge,\n    d.fullTechTree,\n    d.allowCheats,\n    d.empireWarsMode,\n    d.endingAge,\n    d.gameMode,\n    d.lockSpeed,\n    d.lockTeams,\n    d.mapSize,\n    d.population,\n    d.hideCivs,\n    d.recordGame,\n    d.regicideMode,\n    d.gameVariant,\n    d.resources,\n    d.sharedExploration,\n    d.speed,\n    d.speedFactor,\n    d.suddenDeathMode,\n    -- DS-AOEC-02: antiquityMode DROPPED (MAR 60.06%, 40-80% non-primary band)\n    d.civilizationSet,\n    d.teamPositions,\n    d.teamTogether,\n    d.treatyLength,\n    d.turboMode,\n    d.victory,\n    d.revealMap,\n    -- DS-AOEC-01: scenario DROPPED (MAR 100%)\n    -- DS-AOEC-01: password DROPPED (MAR 77.57%)\n    -- DS-AOEC-01: modDataset DROPPED (MAR 100%)\n    d.profileId,\n    d.rating,\n    -- DS-AOEC-04: rating_was_null BOOLEAN flag (missingness-as-signal; sklearn MissingIndicator pattern)\n    (d.rating IS NULL) AS rating_was_null,\n    d.color,\n    d.colorHex,\n    d.slot,\n    -- DS-AOEC-03b: status DROPPED (n_distinct=1 constant)\n    d.team,\n    d.won,\n    d.country,\n    d.shared,\n    d.verified,\n    d.civ,\n    d.filename,\n    CASE\n        WHEN d.allowCheats IS NULL AND d.lockSpeed IS NULL AND d.lockTeams IS NULL\n         AND d.recordGame IS NULL AND d.sharedExploration IS NULL\n         AND d.teamPositions IS NULL AND d.teamTogether IS NULL\n         AND d.turboMode IS NULL AND d.fullTechTree IS NULL AND d.population IS NULL\n        THEN TRUE ELSE FALSE\n    END AS is_null_cluster\nFROM (\n    SELECT\n        matchId, started, leaderboard, name,\n        internalLeaderboardId, privacy, map, difficulty, startingAge, fullTechTree,\n        allowCheats, empireWarsMode, endingAge, gameMode, lockSpeed, lockTeams,\n        mapSize, population, hideCivs, recordGame, regicideMode, gameVariant,\n        resources, sharedExploration, speed, speedFactor, suddenDeathMode,\n        civilizationSet, teamPositions, teamTogether, treatyLength, turboMode,\n        victory, revealMap, profileId, rating, color, colorHex, slot,\n        team, won, country, shared, verified, civ, filename,\n        ROW_NUMBER() OVER (\n            PARTITION BY matchId, profileId\n            ORDER BY started\n        ) AS rn\n    FROM matches_raw\n    WHERE internalLeaderboardId IN (6, 18)\n      AND profileId != -1\n) d\nWHERE d.rn = 1\n  AND d.matchId IN (\n    SELECT matchId\n    FROM (\n        SELECT matchId, profileId, won,\n               ROW_NUMBER() OVER (\n                   PARTITION BY matchId, profileId\n                   ORDER BY started\n               ) AS rn\n        FROM matches_raw\n        WHERE internalLeaderboardId IN (6, 18)\n          AND profileId != -1\n    ) sub\n    WHERE rn = 1\n    GROUP BY matchId\n    HAVING COUNT(*) = 2\n       AND SUM(CASE WHEN won = TRUE THEN 1 ELSE 0 END) = 1\n       AND SUM(CASE WHEN won = FALSE THEN 1 ELSE 0 END) = 1\n);\n",
+    "create_player_history_all_v2": "\nCREATE OR REPLACE VIEW player_history_all AS\n-- Purpose: Player feature history VIEW. ALL game types and ALL leaderboards.\n-- Row multiplicity: 1 row per player per match (264,132,745 rows pre/post).\n-- Column set: 19 columns (was 20; -1 status dropped per DS-AOEC-03b).\n-- Changes from 01_04_01: status constant DROPPED.\n-- DS-AOEC-07: won has ~19,251 NULLs (0.0073%); physical exclusion deferred to Phase 02.\n-- NOTE: Explicit column list (no SELECT * EXCLUDE) to avoid DuckDB multi-aggregate bug.\nSELECT\n    matchId,\n    profileId,\n    name,\n    started,\n    leaderboard,\n    internalLeaderboardId,\n    map,\n    civ,\n    rating,\n    color,\n    slot,\n    team,\n    startingAge,\n    gameMode,\n    speed,\n    won,\n    country,\n    -- DS-AOEC-03b: status DROPPED (n_distinct=1 constant; always 'player' after R00)\n    verified,\n    filename\nFROM (\n    SELECT\n        matchId, profileId, name, started, leaderboard, internalLeaderboardId,\n        map, civ, rating, color, slot, team, startingAge, gameMode, speed,\n        won, country, verified, filename,\n        ROW_NUMBER() OVER (\n            PARTITION BY matchId, profileId\n            ORDER BY started\n        ) AS rn\n    FROM matches_raw\n    WHERE profileId != -1\n) d\nWHERE rn = 1;\n",
+    "zero_null_clean": "-- Individual per-column WHERE-based NULL checks (see assertions below)",
+    "zero_null_hist": "-- Individual per-column WHERE-based NULL checks (see assertions below)",
+    "r03_consistency": "\nSELECT matchId, COUNT(*) AS n,\n       SUM(CASE WHEN won = TRUE THEN 1 ELSE 0 END) AS n_true,\n       SUM(CASE WHEN won = FALSE THEN 1 ELSE 0 END) AS n_false\nFROM matches_1v1_clean\nGROUP BY matchId\nHAVING COUNT(*) != 2\n    OR SUM(CASE WHEN won = TRUE THEN 1 ELSE 0 END) != 1\n    OR SUM(CASE WHEN won = FALSE THEN 1 ELSE 0 END) != 1\n",
+    "rating_flag_consistency": "-- Individual WHERE-based counts for flag consistency (DuckDB bug workaround)",
+    "boolean_type_check": "\nSELECT column_name, data_type\nFROM information_schema.columns\nWHERE table_name = 'matches_1v1_clean'\n  AND column_name = 'rating_was_null'\n"
+  },
+  "decisions_resolved": [
+    {
+      "id": "DS-AOEC-01",
+      "column": "server, scenario, modDataset, password",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "server=97.3919%, scenario=100.00%, modDataset=100.00%, password=77.5718%",
+      "recommendation": "DROP_COLUMN (server MNAR; scenario/modDataset/password MAR)",
+      "decision": "DROP all 4 from matches_1v1_clean per Rule S4 (van Buuren 2018).",
+      "ddl_effect": "matches_1v1_clean: server/scenario/modDataset/password removed from SELECT."
+    },
+    {
+      "id": "DS-AOEC-02",
+      "column": "antiquityMode (DROP), hideCivs (RETAIN+FLAG)",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "antiquityMode=60.0634%, hideCivs=37.1771%",
+      "recommendation": "antiquityMode DROP_COLUMN (60% in 40-80% non-primary); hideCivs FLAG_FOR_IMPUTATION",
+      "decision": "antiquityMode DROPPED (60.06%, 40-80% non-primary band). hideCivs RETAINED with FLAG_FOR_IMPUTATION (37.18%, 5-40% band) deferred to Phase 02.",
+      "ddl_effect": "matches_1v1_clean: antiquityMode removed from SELECT. hideCivs retained verbatim."
+    },
+    {
+      "id": "DS-AOEC-03",
+      "column": "All low-NULL game settings (<5%)",
+      "views": "matches_1v1_clean, player_history_all",
+      "ledger_rate": "Rates < 5% Schafer & Graham 2002 MCAR boundary",
+      "recommendation": "RETAIN_AS_IS",
+      "decision": "NO-OP (RETAIN_AS_IS). All low-NULL game settings retained verbatim.",
+      "ddl_effect": "None."
+    },
+    {
+      "id": "DS-AOEC-03b",
+      "column": "mod, status (matches_1v1_clean); status (player_history_all)",
+      "views": "both",
+      "ledger_rate": "mod=0.00% (n_distinct=1), status (clean)=0.00% (n_distinct=1), status (hist)=0.00% (n_distinct=1)",
+      "recommendation": "DROP_COLUMN (constants-detection override; n_distinct=1)",
+      "decision": "DROP mod and status from matches_1v1_clean; DROP status from player_history_all. Constants-detection override supersedes low-NULL RETAIN_AS_IS.",
+      "ddl_effect": "matches_1v1_clean: mod and status removed. player_history_all: status removed."
+    },
+    {
+      "id": "DS-AOEC-04",
+      "column": "rating (matches_1v1_clean) + rating_was_null flag (NEW)",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "rating=26.2015% NULL in scope",
+      "recommendation": "FLAG_FOR_IMPUTATION (primary feature; Rule S4 exception per van Buuren 2018)",
+      "decision": "rating RETAINED in matches_1v1_clean. ADD rating_was_null BOOLEAN flag (sklearn MissingIndicator pattern; DS-AOEC-04 / Rule S4 primary feature exception). No NULLIF needed -- upstream VIEW already filters rating >= 0.",
+      "ddl_effect": "matches_1v1_clean: +(rating IS NULL) AS rating_was_null BOOLEAN."
+    },
+    {
+      "id": "DS-AOEC-05",
+      "column": "country",
+      "views": "both",
+      "ledger_rate": "matches_1v1_clean=2.2486%, player_history_all=8.305%",
+      "recommendation": "matches_1v1_clean: RETAIN_AS_IS (<5%); player_history_all: FLAG_FOR_IMPUTATION (8.30%, 5-40% band)",
+      "decision": "country RETAINED in both VIEWs per cross-dataset convention. Phase 02 strategy TBD ('Unknown' encoding or country_was_null indicator).",
+      "ddl_effect": "None (deferred to Phase 02)."
+    },
+    {
+      "id": "DS-AOEC-06",
+      "column": "won (matches_1v1_clean)",
+      "views": "matches_1v1_clean",
+      "ledger_rate": "won=0.00% NULL (R03 complementarity guarantees zero NULLs)",
+      "recommendation": "RETAIN_AS_IS / mechanism=N/A (F1 zero-missingness override)",
+      "decision": "NO-OP (RETAIN_AS_IS). Zero NULLs by R03 complementarity.",
+      "ddl_effect": "None."
+    },
+    {
+      "id": "DS-AOEC-07",
+      "column": "won (player_history_all)",
+      "views": "player_history_all",
+      "ledger_rate": "won=0.0073% NULL (~19,251 rows)",
+      "recommendation": "EXCLUDE_TARGET_NULL_ROWS (Rule S2)",
+      "decision": "DOCUMENTED: won in player_history_all has ~19,251 NULLs (0.0073%). EXCLUDE_TARGET_NULL_ROWS rule documented in cleaning registry. Physical exclusion deferred to Phase 02 feature-computation per Rule S2.",
+      "ddl_effect": "None (registry-only resolution; Row S2 enforced at Phase 02 rolling-window level)."
+    },
+    {
+      "id": "DS-AOEC-08",
+      "column": "leaderboards_raw (singleton 2-row), profiles_raw (7 dead columns 100% NULL)",
+      "views": "N/A (not used by any VIEW)",
+      "ledger_rate": "N/A (out of analytical scope)",
+      "recommendation": "N/A",
+      "decision": "FORMALLY DECLARED OUT-OF-ANALYTICAL-SCOPE in cleaning registry. No DDL change, no DROP TABLE.",
+      "ddl_effect": "None (registry-only resolution)."
+    }
+  ],
+  "ledger_derived_expected_values": {
+    "expected_rating_null_clean": 15999234,
+    "expected_rating_null_hist": 104676152,
+    "expected_won_null_hist": 19251,
+    "expected_clean_rows": 61062392,
+    "expected_hist_rows": 264132745
+  },
+  "all_assertions_pass": true
+}

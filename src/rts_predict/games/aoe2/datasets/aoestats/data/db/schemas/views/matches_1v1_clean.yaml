@@ -187,6 +187,24 @@ invariants:
     derivation (team1_wins = p1.winner) within this VIEW; they are not direct feature
     inputs for game T. Temporal anchor: started_timestamp exposed for downstream I3-compliant
     feature queries against player_history_all.'
+  provenance_categories:
+  - TARGET: THE prediction label itself (Win/Loss/Undecided/Tie). Singleton sentinel
+      -- only the result column carries this tag. Never aggregate without temporal
+      exclusion (match_time < T); using it as a direct game-T feature IS target leakage.
+  - POST_GAME_HISTORICAL: The game-T outcome itself or any feature derived from it
+      (e.g., is_decisive_result, future Phase-02 win-rate aggregates). SAFE only when
+      used as a player-history aggregate FILTERED by match_time < T. UNSAFE as direct
+      game-T feature. The TARGET singleton is conceptually a sub-class of this category
+      but tagged separately for sentinel-clarity.
+  - IN_GAME_HISTORICAL: Available during/after game completion (e.g., APM, SQ, supplyCappedPercent,
+      header_elapsedGameLoops, is_apm_unparseable). SAFE only when used as a player-history
+      aggregate FILTERED by match_time < T. UNSAFE as direct game-T feature.
+  - PRE_GAME: Available before game T starts (e.g., MMR, leaderboard, race, map).
+      Safe to use as feature for game T without temporal filtering.
+  - IDENTITY: Stable identifiers (replay_id, toon_id, profileId). No temporal constraint;
+      not a feature input but a join key.
+  - CONTEXT: Game/match metadata (started_timestamp, mapName, gameLoops). PRE_GAME-equivalent
+      for temporal purposes; available before game T.
 - id: I5
   description: 1-row-per-match invariant (asserted in 01_04_02). NOT 2-rows-per-replay
     like sc2egset. p0/p1 columns are symmetric (NULLIF + is_unrated applied identically

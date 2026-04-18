@@ -12,195 +12,204 @@ columns:
   nullable: true
   description: Canonical join key extracted via regexp. NULLIF empty-string guard
     applied.
-  notes: IDENTITY
+  notes: "IDENTITY. Canonical join key extracted via regexp. NULLIF empty-string guard\
+    \ applied."
 - name: filename
   type: VARCHAR
   nullable: false
   description: Replay file path relative to raw_dir. Invariant I10.
-  notes: IDENTITY
+  notes: "IDENTITY. Replay file path relative to raw_dir. Invariant I10."
 - name: toon_id
   type: VARCHAR
   nullable: false
   description: Battle.net toon/account identifier. Player identity key.
-  notes: IDENTITY
+  notes: "IDENTITY. Battle.net toon/account identifier. Player identity key."
 - name: nickname
   type: VARCHAR
   nullable: true
   description: Player nickname.
-  notes: IDENTITY
+  notes: "IDENTITY. Player nickname."
 - name: playerID
   type: INTEGER
   nullable: true
   description: In-game player id.
-  notes: IDENTITY
+  notes: "IDENTITY. In-game player id."
 - name: userID
   type: BIGINT
   nullable: true
   description: User id.
-  notes: IDENTITY
+  notes: "IDENTITY. User id."
 - name: result
   type: VARCHAR
   nullable: true
   description: Game result (Win, Loss, Undecided, Tie). Unfiltered in history.
-  notes: TARGET
+  notes: "TARGET. Game result (Win, Loss, Undecided, Tie). Unfiltered in history."
 - name: is_decisive_result
   type: BOOLEAN
   nullable: true
   description: TRUE if result IN ('Win','Loss'). Added in 01_04_02 (DS-SC2-04). Enables
     Phase 02 win-rate denominator selection without VIEW changes.
-  notes: POST_GAME_HISTORICAL
+  notes: "POST_GAME_HISTORICAL. TRUE if result IN ('Win','Loss'). Added in 01_04_02\
+    \ (DS-SC2-04). Enables Phase 02 win-rate denominator selection without VIEW changes."
 - name: is_mmr_missing
   type: BOOLEAN
   nullable: true
   description: TRUE if MMR=0 (unrated professional). MNAR. MMR dropped in 01_04_02
     (DS-SC2-01); this flag preserves the rated/unrated signal.
-  notes: PRE_GAME
+  notes: "PRE_GAME. TRUE if MMR=0 (unrated professional). MNAR. MMR dropped in 01_04_02\
+    \ (DS-SC2-01); this flag preserves the rated/unrated signal."
 - name: race
   type: VARCHAR
   nullable: true
   description: Actual race played (Protoss, Zerg, Terran abbreviated).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Actual race played (Protoss, Zerg, Terran abbreviated)."
 - name: selectedRace
   type: VARCHAR
   nullable: true
   description: Selected race. Empty string normalised to 'Random'.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Selected race. Empty string normalised to 'Random'."
 - name: region
   type: VARCHAR
   nullable: true
   description: Battle.net region label.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Battle.net region label."
 - name: realm
   type: VARCHAR
   nullable: true
   description: Realm label.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Realm label."
 - name: isInClan
   type: BOOLEAN
   nullable: true
   description: Whether the player is in a clan.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Whether the player is in a clan."
 - name: APM
   type: INTEGER
   nullable: true
   description: Actions per minute. Sentinel APM=0 converted to NULL via NULLIF (01_04_02,
     DS-SC2-10). 1132 rows affected.
-  notes: IN_GAME_HISTORICAL
+  notes: "IN_GAME_HISTORICAL. Actions per minute. Sentinel APM=0 converted to NULL\
+    \ via NULLIF (01_04_02, DS-SC2-10). 1132 rows affected."
 - name: is_apm_unparseable
   type: BOOLEAN
   nullable: true
   description: TRUE if original APM=0 (parse failure / empty replay). Added in 01_04_02
     (DS-SC2-10).
-  notes: IN_GAME_HISTORICAL
+  notes: "IN_GAME_HISTORICAL. TRUE if original APM=0 (parse failure / empty replay).\
+    \ Added in 01_04_02 (DS-SC2-10)."
 - name: SQ
   type: INTEGER
   nullable: true
   description: Spending Quotient. Parse-failure sentinel INT32_MIN corrected to NULL.
     IN_GAME_HISTORICAL.
-  notes: IN_GAME_HISTORICAL
+  notes: "IN_GAME_HISTORICAL. Spending Quotient. Parse-failure sentinel INT32_MIN\
+    \ corrected to NULL."
 - name: supplyCappedPercent
   type: INTEGER
   nullable: true
   description: '% game time supply-capped. IN_GAME_HISTORICAL.'
-  notes: IN_GAME_HISTORICAL
+  notes: "IN_GAME_HISTORICAL. % game time supply-capped."
 - name: header_elapsedGameLoops
   type: BIGINT
   nullable: true
   description: Game duration in loops. IN_GAME_HISTORICAL (post-game observable).
-  notes: IN_GAME_HISTORICAL
+  notes: "IN_GAME_HISTORICAL. Game duration in loops. Post-game observable."
 - name: startDir
   type: INTEGER
   nullable: true
   description: Starting direction code (lobby assignment).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting direction code (lobby assignment)."
 - name: startLocX
   type: INTEGER
   nullable: true
   description: Starting x location on map.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting x location on map."
 - name: startLocY
   type: INTEGER
   nullable: true
   description: Starting y location on map.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting y location on map."
 - name: metadata_mapName
   type: VARCHAR
   nullable: true
   description: Human-readable map name.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Human-readable map name."
 - name: gd_mapSizeX
   type: BIGINT
   nullable: true
   description: Map width (0 corrected to NULL; parse artifact). Retained in player_history_all
     per DS-SC2-06.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Map width (0 corrected to NULL; parse artifact). Retained in\
+    \ player_history_all per DS-SC2-06."
 - name: gd_mapSizeY
   type: BIGINT
   nullable: true
   description: Map height (0 corrected to NULL; parse artifact). Retained in player_history_all
     per DS-SC2-06.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Map height (0 corrected to NULL; parse artifact). Retained in\
+    \ player_history_all per DS-SC2-06."
 - name: gd_maxPlayers
   type: BIGINT
   nullable: true
   description: Max players in game description.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Max players in game description."
 - name: details_isBlizzardMap
   type: BOOLEAN
   nullable: true
   description: Blizzard-authored map flag (from details struct). Preferred over gd_isBlizzardMap
     (confirmed identical, duplicate dropped).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Blizzard-authored map flag (from details struct). Preferred over\
+    \ gd_isBlizzardMap (confirmed identical, duplicate dropped)."
 - name: gd_mapAuthorName
   type: VARCHAR
   nullable: true
   description: Map author name. Retained in player_history_all per DS-SC2-07.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Map author name. Retained in player_history_all per DS-SC2-07."
 - name: gd_mapFileSyncChecksum
   type: BIGINT
   nullable: true
   description: Map file sync checksum.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Map file sync checksum."
 - name: details_timeUTC
   type: VARCHAR
   nullable: true
   description: UTC timestamp of game. Temporal anchor for I3 ordering.
-  notes: CONTEXT
+  notes: "CONTEXT. UTC timestamp of game. Temporal anchor for I3 ordering."
 - name: header_version
   type: VARCHAR
   nullable: true
   description: SC2 version string.
-  notes: CONTEXT
+  notes: "CONTEXT. SC2 version string."
 - name: metadata_baseBuild
   type: VARCHAR
   nullable: true
   description: Base build string.
-  notes: CONTEXT
+  notes: "CONTEXT. Base build string."
 - name: metadata_dataBuild
   type: VARCHAR
   nullable: true
   description: Data build string.
-  notes: CONTEXT
+  notes: "CONTEXT. Data build string."
 - name: metadata_gameVersion
   type: VARCHAR
   nullable: true
   description: Game version.
-  notes: CONTEXT
+  notes: "CONTEXT. Game version."
 - name: go_amm
   type: BOOLEAN
   nullable: true
   description: 'Game option: automated match making. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: automated match making. Variable cardinality (n_distinct=2)."
 - name: go_clientDebugFlags
   type: BIGINT
   nullable: true
   description: 'Game option: client debug flags. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: client debug flags. Variable cardinality (n_distinct=2)."
 - name: go_competitive
   type: BOOLEAN
   nullable: true
   description: 'Game option: competitive mode. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: competitive mode. Variable cardinality (n_distinct=2)."
 provenance:
   source_tables:
   - replay_players_raw

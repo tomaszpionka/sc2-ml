@@ -1,0 +1,366 @@
+table: matches_1v1_clean
+dataset: aoe2companion
+game: aoe2
+object_type: view
+step: '01_04_02'
+row_count: 61062392
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
+generated_date: '2026-04-17'
+columns:
+- name: matchId
+  type: INTEGER
+  nullable: true
+  description: Match identifier from matches_raw.
+  notes: IDENTITY. Primary key; R03 1v1 complementarity invariant (each match has
+    exactly one TRUE + one FALSE won row).
+- name: started
+  type: TIMESTAMP
+  nullable: true
+  description: Match start timestamp. Temporal anchor for I3 discipline.
+  notes: 'CONTEXT. I3: Downstream feature queries MUST filter player_history_all by
+    ph.started < this value.'
+- name: leaderboard
+  type: VARCHAR
+  nullable: true
+  description: Ladder name (e.g., rm_1v1).
+  notes: CONTEXT. Ladder name; 2 distinct values in 1v1 ranked scope (rm_1v1, rm_team
+    analog).
+- name: name
+  type: VARCHAR
+  nullable: true
+  description: Player in-game display name at time of match.
+  notes: IDENTITY. Player in-game display name. ~0.00% NULL (MCAR; RETAIN_AS_IS).
+- name: internalLeaderboardId
+  type: INTEGER
+  nullable: true
+  description: Numeric ladder ID. Maps to ratings_raw.leaderboard_id.
+  notes: CONTEXT. Numeric ladder ID; 2 distinct values in scope (6, 18). Zero NULLs
+    by upstream filter (internalLeaderboardId IN (6, 18)).
+- name: privacy
+  type: VARCHAR
+  nullable: true
+  description: Lobby privacy setting (3 distinct values).
+  notes: CONTEXT. Lobby privacy setting. Zero NULLs.
+- name: map
+  type: VARCHAR
+  nullable: true
+  description: Map name (e.g., arabia, arena, black_forest).
+  notes: PRE_GAME. Game setting; 94 distinct maps in 1v1 ranked scope. Zero NULLs.
+- name: difficulty
+  type: VARCHAR
+  nullable: true
+  description: Difficulty setting (3 distinct values in scope).
+  notes: PRE_GAME. Game setting; 3 distinct values per ledger. Zero NULLs. NOT a constant
+    (n_distinct=3; RETAIN_AS_IS per DS-AOEC-03).
+- name: startingAge
+  type: VARCHAR
+  nullable: true
+  description: Starting age setting (dark, feudal, castle, imperial).
+  notes: PRE_GAME. Game setting; near-constant in ranked play. Zero NULLs.
+- name: fullTechTree
+  type: BOOLEAN
+  nullable: true
+  description: Whether full tech tree is enabled.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary).
+- name: allowCheats
+  type: BOOLEAN
+  nullable: true
+  description: Whether cheats are allowed.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: empireWarsMode
+  type: BOOLEAN
+  nullable: true
+  description: Whether Empire Wars mode is active.
+  notes: PRE_GAME. Game mode; ~0.35% NULL per ledger (Schafer & Graham 2002 <5% MCAR
+    boundary).
+- name: endingAge
+  type: VARCHAR
+  nullable: true
+  description: Ending age setting.
+  notes: PRE_GAME. Game setting. Zero NULLs.
+- name: gameMode
+  type: VARCHAR
+  nullable: true
+  description: Game mode identifier (e.g., random_map, empire_wars).
+  notes: PRE_GAME. Game setting. Zero NULLs.
+- name: lockSpeed
+  type: BOOLEAN
+  nullable: true
+  description: Whether game speed is locked.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: lockTeams
+  type: BOOLEAN
+  nullable: true
+  description: Whether teams are locked.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: mapSize
+  type: VARCHAR
+  nullable: true
+  description: Map size category (tiny, small, medium, normal, large, giant).
+  notes: PRE_GAME. Game setting; 5 distinct map sizes. Zero NULLs.
+- name: population
+  type: INTEGER
+  nullable: true
+  description: Population cap setting.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: hideCivs
+  type: BOOLEAN
+  nullable: true
+  description: Whether civilizations are hidden from opponents before the match.
+  notes: PRE_GAME. Schema-evolution column (patch-dependent visibility setting). ~37.18%
+    NULL (DS-AOEC-02 FLAG_FOR_IMPUTATION per ledger). Phase 02 will materialise the
+    imputation method AND its companion indicator (if chosen). NOT pre-materialised
+    at cleaning time per cross-dataset convention (sc2egset isInClan, aoestats deferred
+    non-primary flags).
+- name: recordGame
+  type: BOOLEAN
+  nullable: true
+  description: Whether the game is recorded.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: regicideMode
+  type: BOOLEAN
+  nullable: true
+  description: Whether Regicide mode is active.
+  notes: PRE_GAME. Game mode; ~3.05% NULL per ledger (Schafer & Graham 2002 <5% MCAR
+    boundary).
+- name: gameVariant
+  type: VARCHAR
+  nullable: true
+  description: Game variant identifier.
+  notes: PRE_GAME. Game setting; 2 distinct values. Zero NULLs.
+- name: resources
+  type: VARCHAR
+  nullable: true
+  description: Starting resources setting.
+  notes: PRE_GAME. Game setting; 4 distinct values. Zero NULLs.
+- name: sharedExploration
+  type: BOOLEAN
+  nullable: true
+  description: Whether map exploration is shared between team members.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: speed
+  type: VARCHAR
+  nullable: true
+  description: Game speed setting name (e.g., normal, fast).
+  notes: PRE_GAME. Game setting; 3 distinct values. Zero NULLs.
+- name: speedFactor
+  type: FLOAT
+  nullable: true
+  description: Numeric speed multiplier.
+  notes: PRE_GAME. Game setting; 3 distinct values. Zero NULLs.
+- name: suddenDeathMode
+  type: BOOLEAN
+  nullable: true
+  description: Whether Sudden Death mode is active.
+  notes: PRE_GAME. Game mode; ~0.35% NULL per ledger (Schafer & Graham 2002 <5% MCAR
+    boundary).
+- name: civilizationSet
+  type: VARCHAR
+  nullable: true
+  description: Civilization set restriction (e.g., all, dlc_specific).
+  notes: PRE_GAME. Game setting; 3 distinct values. Zero NULLs.
+- name: teamPositions
+  type: BOOLEAN
+  nullable: true
+  description: Whether team start positions are fixed.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: teamTogether
+  type: BOOLEAN
+  nullable: true
+  description: Whether team start positions cluster allies together.
+  notes: PRE_GAME. Game setting; <0.02% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary). NULL-cluster member (R04 is_null_cluster).
+- name: treatyLength
+  type: INTEGER
+  nullable: true
+  description: Treaty duration in minutes (0 = no treaty).
+  notes: PRE_GAME. Game setting; ~0.01% NULL per ledger (Schafer & Graham 2002 <5%
+    MCAR boundary).
+- name: turboMode
+  type: BOOLEAN
+  nullable: true
+  description: Whether Turbo mode is active.
+  notes: PRE_GAME. Game mode; <0.02% NULL per ledger (Schafer & Graham 2002 <5% MCAR
+    boundary). NULL-cluster member (R04 is_null_cluster).
+- name: victory
+  type: VARCHAR
+  nullable: true
+  description: Victory condition (conquest, wonder, relic, time_limit).
+  notes: PRE_GAME. Game setting; 3 distinct values. Zero NULLs.
+- name: revealMap
+  type: VARCHAR
+  nullable: true
+  description: Map reveal setting (normal, explored, all_visible).
+  notes: PRE_GAME. Game setting; 4 distinct values. Zero NULLs.
+- name: profileId
+  type: INTEGER
+  nullable: true
+  description: Player profile identifier. Primary player identity key in aoe2companion.
+  notes: IDENTITY. All profileId=-1 rows excluded upstream (R02 / R00). Zero NULLs.
+- name: rating
+  type: INTEGER
+  nullable: true
+  description: Player ELO rating entering the match (PRE-GAME, confirmed 01_03_03).
+  notes: 'PRE_GAME. Player ELO rating before the match. ~26.20% NULL in scope (DS-AOEC-04
+    / Rule S4 primary feature exception per van Buuren 2018). The matches_1v1_clean
+    VIEW asserts rating >= 0 upstream so the -1 sentinel is filtered before this VIEW;
+    n_sentinel=0 in the audit reflects upstream filtering. Phase 02 imputation strategy:
+    median-within-leaderboard + see rating_was_null companion flag for missingness-as-signal
+    preservation.'
+- name: rating_was_null
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if this row had NULL rating before any Phase 02 imputation. BOOLEAN.
+  notes: PRE_GAME. Indicator flag for unrated/missing-rating players (rating IS NULL).
+    Derives from rating; safe as feature without temporal filter. New in 01_04_02
+    per DS-AOEC-04 (sklearn MissingIndicator pattern).
+- name: color
+  type: INTEGER
+  nullable: true
+  description: In-game player color code (1-8).
+  notes: CONTEXT. Lobby assignment; not predictive. ~0.003% NULL (MCAR; RETAIN_AS_IS).
+- name: colorHex
+  type: VARCHAR
+  nullable: true
+  description: In-game player color as hex string.
+  notes: CONTEXT. Hex string of color code. Zero NULLs.
+- name: slot
+  type: INTEGER
+  nullable: true
+  description: Player slot index in the lobby.
+  notes: CONTEXT. Lobby assignment. Zero NULLs.
+- name: team
+  type: INTEGER
+  nullable: true
+  description: Team number (1 or 2 for 1v1 matches). Sentinel 255 exists in matches_raw.
+  notes: CONTEXT. Team number; sentinel 255 per matches_raw schema YAML notes. ~2.00%
+    NULL per ledger (rate < 5% Schafer & Graham 2002 boundary; RETAIN_AS_IS).
+- name: won
+  type: BOOLEAN
+  nullable: true
+  description: Match outcome for this player. TRUE = won, FALSE = lost.
+  notes: TARGET. Primary prediction label. BOOLEAN strict TRUE/FALSE; zero NULLs by
+    R03 complementarity (F1 zero-missingness override).
+- name: country
+  type: VARCHAR
+  nullable: true
+  description: Player country code (ISO 3166-1 alpha-2).
+  notes: IDENTITY / CONTEXT. Player attribute; potential demographic feature. ~2.25%
+    NULL in matches_1v1_clean scope (rate < 5% Schafer & Graham 2002 boundary; ledger
+    recommendation RETAIN_AS_IS). Player_history_all rate (~8.30%) crosses the FLAG
+    band -- Phase 02 chooses per-VIEW strategy ('Unknown' category encoding or country_was_null
+    indicator). NOT pre-materialised at cleaning time per cross-dataset convention
+    (sc2egset / aoestats add flags only for primary features).
+- name: shared
+  type: BOOLEAN
+  nullable: true
+  description: Whether the match is shared/public.
+  notes: CONTEXT. Lobby share setting. Zero NULLs.
+- name: verified
+  type: BOOLEAN
+  nullable: true
+  description: Whether the player account is verified.
+  notes: IDENTITY. Account verification status. Zero NULLs.
+- name: civ
+  type: VARCHAR
+  nullable: true
+  description: Civilization name chosen by this player (e.g., Franks, Mongols, Britons).
+  notes: PRE_GAME. Player civilization choice. Zero NULLs. Feature candidate for civ
+    proficiency.
+- name: filename
+  type: VARCHAR
+  nullable: true
+  description: Source Parquet file path relative to raw_dir (I10).
+  notes: 'IDENTITY / PROVENANCE. Invariant I10: relative path only.'
+- name: is_null_cluster
+  type: BOOLEAN
+  nullable: true
+  description: TRUE if this match belongs to the NULL-cluster schema era (10 game
+    settings simultaneously NULL).
+  notes: CONTEXT. R04 schema-era boundary flag -- TRUE when 10 game-settings columns
+    are simultaneously NULL (allowCheats, lockSpeed, lockTeams, recordGame, sharedExploration,
+    teamPositions, teamTogether, turboMode, fullTechTree, population). Spans entire
+    date range, <0.02% of rows; informational only.
+provenance:
+  source_tables:
+  - matches_raw
+  filter: internalLeaderboardId IN (6, 18); profileId != -1; deduplicated by (matchId,
+    profileId) ORDER BY started; R03 complementarity filter (HAVING COUNT(*)=2 AND
+    n_true=1 AND n_false=1)
+  scope: Ranked 1v1 decisive matches only (internalLeaderboardId IN (6, 18) AND profileId
+    != -1, deduplicated, won-complementary).
+  row_multiplicity: '2 rows per match (player-row-oriented; one row per player). NOT
+    1-row-per-match like aoestats. Upstream CTE: see sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_01_data_cleaning.py
+    (HAVING COUNT(*)=2 + R03 complementarity filter).'
+  notes: 'Vocabulary style: prose-format per-column notes (aoestats standard). provenance_categories
+    invariant block added in CROSS PR I8-harmonization (feat/01-04-02-aoe2companion).'
+  created_by: sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py
+  excluded_columns:
+  - name: server
+    reason: DS-AOEC-01, MNAR 97.39% NULL
+  - name: scenario
+    reason: DS-AOEC-01, MAR 100% NULL
+  - name: modDataset
+    reason: DS-AOEC-01, MAR 100% NULL
+  - name: password
+    reason: DS-AOEC-01, MAR 77.57% NULL
+  - name: antiquityMode
+    reason: DS-AOEC-02, MAR 60.06% NULL (schema-evolution)
+  - name: mod
+    reason: DS-AOEC-03b, n_distinct=1 constant
+  - name: status
+    reason: DS-AOEC-03b, n_distinct=1 constant
+  - name: ratingDiff
+    reason: Prior I3 exclusion, POST-GAME
+  - name: finished
+    reason: Prior I3 exclusion, POST-GAME
+invariants:
+- id: I3
+  description: 'No new POST-GAME columns introduced. ratingDiff and finished remain
+    excluded (verified by Section 3.3b assertion). rating_was_null derives from the
+    PRE_GAME rating column only. Temporal anchor: started exposed for downstream I3-compliant
+    feature queries against player_history_all.'
+  provenance_categories:
+  - TARGET: THE prediction label itself (Win/Loss/Undecided/Tie). Singleton sentinel
+      -- only the result column carries this tag. Never aggregate without temporal
+      exclusion (match_time < T); using it as a direct game-T feature IS target leakage.
+  - POST_GAME_HISTORICAL: The game-T outcome itself or any feature derived from it
+      (e.g., is_decisive_result, future Phase-02 win-rate aggregates). SAFE only when
+      used as a player-history aggregate FILTERED by match_time < T. UNSAFE as direct
+      game-T feature. The TARGET singleton is conceptually a sub-class of this category
+      but tagged separately for sentinel-clarity.
+  - IN_GAME_HISTORICAL: Available during/after game completion (e.g., APM, SQ, supplyCappedPercent,
+      header_elapsedGameLoops, is_apm_unparseable). SAFE only when used as a player-history
+      aggregate FILTERED by match_time < T. UNSAFE as direct game-T feature.
+  - PRE_GAME: Available before game T starts (e.g., MMR, leaderboard, race, map).
+      Safe to use as feature for game T without temporal filtering.
+  - IDENTITY: Stable identifiers (replay_id, toon_id, profileId). No temporal constraint;
+      not a feature input but a join key.
+  - CONTEXT: Game/match metadata (started_timestamp, mapName, gameLoops). PRE_GAME-equivalent
+      for temporal purposes; available before game T.
+- id: I5
+  description: Player-row-oriented (2 rows per match). Not 1-row-per-match like aoestats.
+    matches_1v1_clean retains player-row orientation (2 rows per match). No slot-asymmetry
+    introduced; both player rows treated identically.
+- id: I6
+  description: All DDL + assertion SQL stored verbatim in 01_04_02_post_cleaning_validation.json
+    sql_queries.
+- id: I7
+  description: All expected counts loaded at runtime from 01_04_01_missingness_ledger.csv
+    via ledger_val() helper. No magic numbers in notebook code. Plan cites ledger
+    values as expected guidance; notebook derives them.
+- id: I9
+  description: Raw tables UNTOUCHED. Only VIEW DDL changes via CREATE OR REPLACE.
+    leaderboards_raw + profiles_raw declared out-of-scope but not dropped (no DROP
+    TABLE statements). No imputation, scaling, or encoding.
+- id: I10
+  description: No filename derivation changes. The aoec raw tables already satisfy
+    I10 from 01_02_02 ingestion.

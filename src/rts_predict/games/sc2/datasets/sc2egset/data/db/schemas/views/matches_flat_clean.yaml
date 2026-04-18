@@ -10,146 +10,148 @@ columns:
 - name: replay_id
   type: VARCHAR
   nullable: true
-  description: Canonical join key extracted via regexp. NULLIF empty-string guard
-    applied.
-  notes: IDENTITY
+  description: Canonical join key extracted via regexp. NULLIF empty-string guard applied.
+  notes: "IDENTITY. Canonical join key extracted via regexp. NULLIF empty-string guard\
+    \ applied."
 - name: filename
   type: VARCHAR
   nullable: true
   description: Replay file path relative to raw_dir. Invariant I10.
-  notes: IDENTITY
+  notes: "IDENTITY. Replay file path relative to raw_dir. Invariant I10."
 - name: toon_id
   type: VARCHAR
   nullable: true
   description: Battle.net toon/account identifier. Player identity key.
-  notes: IDENTITY
+  notes: "IDENTITY. Battle.net toon/account identifier. Player identity key."
 - name: nickname
   type: VARCHAR
   nullable: true
   description: Player nickname.
-  notes: IDENTITY
+  notes: "IDENTITY. Player nickname."
 - name: playerID
   type: INTEGER
   nullable: true
   description: In-game player id.
-  notes: IDENTITY
+  notes: "IDENTITY. In-game player id."
 - name: userID
   type: BIGINT
   nullable: true
   description: User id.
-  notes: IDENTITY
+  notes: "IDENTITY. User id."
 - name: result
   type: VARCHAR
   nullable: true
   description: Game result (Win or Loss only -- Undecided/Tie excluded by true_1v1_decisive
     CTE). Prediction target.
-  notes: TARGET
+  notes: "TARGET. Game result (Win or Loss only -- Undecided/Tie excluded by true_1v1_decisive\
+    \ CTE). Prediction target."
 - name: is_mmr_missing
   type: BOOLEAN
   nullable: true
   description: TRUE if MMR=0 (unrated professional). MNAR. MMR dropped in 01_04_02
     (DS-SC2-01); this flag preserves the rated/unrated signal.
-  notes: PRE_GAME
+  notes: "PRE_GAME. TRUE if MMR=0 (unrated professional). MNAR. MMR dropped in 01_04_02\
+    \ (DS-SC2-01); this flag preserves the rated/unrated signal."
 - name: race
   type: VARCHAR
   nullable: true
   description: Actual race played (Protoss, Zerg, Terran abbreviated).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Actual race played (Protoss, Zerg, Terran abbreviated)."
 - name: selectedRace
   type: VARCHAR
   nullable: true
   description: Selected race. Empty string normalised to 'Random'.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Selected race. Empty string normalised to 'Random'."
 - name: region
   type: VARCHAR
   nullable: true
   description: Battle.net region label.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Battle.net region label."
 - name: realm
   type: VARCHAR
   nullable: true
   description: Realm label.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Realm label."
 - name: isInClan
   type: BOOLEAN
   nullable: true
   description: Whether the player is in a clan.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Whether the player is in a clan."
 - name: startDir
   type: INTEGER
   nullable: true
   description: Starting direction code (lobby assignment).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting direction code (lobby assignment)."
 - name: startLocX
   type: INTEGER
   nullable: true
   description: Starting x location on map.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting x location on map."
 - name: startLocY
   type: INTEGER
   nullable: true
   description: Starting y location on map.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Starting y location on map."
 - name: metadata_mapName
   type: VARCHAR
   nullable: true
   description: Human-readable map name.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Human-readable map name."
 - name: gd_maxPlayers
   type: BIGINT
   nullable: true
   description: Max players in game description.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Max players in game description."
 - name: gd_mapFileSyncChecksum
   type: BIGINT
   nullable: true
   description: Map file sync checksum.
-  notes: PRE_GAME
+  notes: "PRE_GAME. Map file sync checksum."
 - name: details_isBlizzardMap
   type: BOOLEAN
   nullable: true
   description: Blizzard-authored map flag (from details struct).
-  notes: PRE_GAME
+  notes: "PRE_GAME. Blizzard-authored map flag (from details struct)."
 - name: details_timeUTC
   type: VARCHAR
   nullable: true
   description: UTC timestamp of game. Temporal anchor for I3 ordering.
-  notes: CONTEXT
+  notes: "CONTEXT. UTC timestamp of game. Temporal anchor for I3 ordering."
 - name: header_version
   type: VARCHAR
   nullable: true
   description: SC2 version string.
-  notes: CONTEXT
+  notes: "CONTEXT. SC2 version string."
 - name: metadata_baseBuild
   type: VARCHAR
   nullable: true
   description: Base build string.
-  notes: CONTEXT
+  notes: "CONTEXT. Base build string."
 - name: metadata_dataBuild
   type: VARCHAR
   nullable: true
   description: Data build string.
-  notes: CONTEXT
+  notes: "CONTEXT. Data build string."
 - name: metadata_gameVersion
   type: VARCHAR
   nullable: true
   description: Game version.
-  notes: CONTEXT
+  notes: "CONTEXT. Game version."
 - name: go_amm
   type: BOOLEAN
   nullable: true
   description: 'Game option: automated match making. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: automated match making. Variable cardinality (n_distinct=2)."
 - name: go_clientDebugFlags
   type: BIGINT
   nullable: true
   description: 'Game option: client debug flags. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: client debug flags. Variable cardinality (n_distinct=2)."
 - name: go_competitive
   type: BOOLEAN
   nullable: true
   description: 'Game option: competitive mode. Variable cardinality (n_distinct=2).'
-  notes: CONTEXT
+  notes: "CONTEXT. Game option: competitive mode. Variable cardinality (n_distinct=2)."
 provenance:
   source_tables:
   - replay_players_raw
