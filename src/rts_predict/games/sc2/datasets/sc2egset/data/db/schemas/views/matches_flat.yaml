@@ -1,0 +1,275 @@
+table: matches_flat
+dataset: sc2egset
+game: sc2
+object_type: view
+step: "01_04_01"
+row_count: 44817
+describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json
+generated_date: "2026-04-18"
+columns:
+- name: replay_id
+  type: VARCHAR
+  nullable: true
+  description: >
+    Canonical join key across replay_players_raw and replays_meta_raw.
+    Derived as NULLIF(replay_players_raw.replayID, '') to convert empty-string non-match to NULL.
+    32-char hex identifier when non-null.
+  notes: "IDENTITY. Join key; 2 rows per replay_id (1 per player)."
+- name: filename
+  type: VARCHAR
+  nullable: false
+  description: "Replay filename (relative to raw_dir per Invariant I10). From replay_players_raw."
+  notes: "IDENTITY. Passes through from replay_players_raw."
+- name: toon_id
+  type: VARCHAR
+  nullable: false
+  description: "Battle.net toon/account identifier string. From replay_players_raw."
+  notes: "IDENTITY. Player-side primary key. See also invariant #2 — cross-region nickname canonicalization deferred to 01_04_04 / Phase 01_05."
+- name: nickname
+  type: VARCHAR
+  nullable: true
+  description: "Player display name at replay time."
+  notes: "CONTEXT. Not globally unique across regions (see 01_04_04 identity resolution)."
+- name: playerID
+  type: INTEGER
+  nullable: true
+- name: userID
+  type: BIGINT
+  nullable: true
+- name: MMR
+  type: INTEGER
+  nullable: true
+  description: "Player MMR at replay time. Sentinel=0 for unrated (~83.95% of rows). Dropped from matches_flat_clean per DS-SC2-01."
+  notes: "PRE_GAME (ranked-ladder pre-match). Excluded from matches_flat_clean; retained here structurally."
+- name: race
+  type: VARCHAR
+  nullable: true
+  description: "Actual race played (Protoss/Zerg/Terran — 4-char abbreviated in data: 'Prot'/'Zerg'/'Terr')."
+  notes: "PRE_GAME. Canonical race column (contrast selectedRace which includes 'Random' pre-resolution)."
+- name: selectedRace
+  type: VARCHAR
+  nullable: true
+  description: "Race chosen pre-match; may be 'Random' before resolution to actual race."
+  notes: "PRE_GAME. Dropped from matches_flat_clean; prefer `race` for analyses."
+- name: handicap
+  type: INTEGER
+  nullable: true
+  description: "Near-constant (=100). Dropped from matches_flat_clean per DS-SC2-09."
+  notes: "PRE_GAME. Low utility after DS-SC2-09 review."
+- name: region
+  type: VARCHAR
+  nullable: true
+  description: "Battle.net region (US, EU, KR, CN, etc.)."
+  notes: "CONTEXT. Critical for toon_id cross-region uniqueness (01_04_04)."
+- name: realm
+  type: VARCHAR
+  nullable: true
+- name: highestLeague
+  type: VARCHAR
+  nullable: true
+  description: "Player's all-time highest league. ~72% NULL. Dropped from matches_flat_clean per DS-SC2-02."
+  notes: "PRE_GAME. Excluded from clean view."
+- name: isInClan
+  type: BOOLEAN
+  nullable: true
+- name: clanTag
+  type: VARCHAR
+  nullable: true
+  description: "~74% NULL. Dropped from matches_flat_clean per DS-SC2-03."
+  notes: "CONTEXT. Excluded from clean view."
+- name: result
+  type: VARCHAR
+  nullable: true
+  description: "'Win', 'Loss', 'Tie', 'Undecided'. Only 'Win'/'Loss' rows are 1v1 decisive; filtered to matches_flat_clean."
+  notes: "TARGET (POST_GAME). Primary label; survives filtering in matches_flat_clean."
+- name: APM
+  type: INTEGER
+  nullable: true
+  description: "Actions per minute (IN-GAME)."
+  notes: "IN_GAME_HISTORICAL. Excluded from matches_flat_clean per I3; retained as player-history feature in player_history_all."
+- name: SQ
+  type: INTEGER
+  nullable: true
+  description: "Spending quotient (IN-GAME)."
+  notes: "IN_GAME_HISTORICAL. Excluded from matches_flat_clean; in player_history_all."
+- name: supplyCappedPercent
+  type: INTEGER
+  nullable: true
+  notes: "IN_GAME_HISTORICAL. Excluded from matches_flat_clean; in player_history_all."
+- name: startDir
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME."
+- name: startLocX
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME."
+- name: startLocY
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME."
+- name: color_a
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME (cosmetic)."
+- name: color_b
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME (cosmetic)."
+- name: color_g
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME (cosmetic)."
+- name: color_r
+  type: INTEGER
+  nullable: true
+  notes: "PRE_GAME (cosmetic)."
+- name: details_gameSpeed
+  type: VARCHAR
+  nullable: true
+  description: "Game speed setting. Cardinality=1 ('Faster') in sc2egset (W02 census, research_log.md:333)."
+  notes: "CONTEXT. Dropped from matches_flat_clean as constant."
+- name: details_isBlizzardMap
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT."
+- name: details_timeUTC
+  type: VARCHAR
+  nullable: true
+  description: "Match start timestamp as ISO-8601 VARCHAR string. 7 distinct sub-second precision variants (22–28 chars). Type unification to TIMESTAMP deferred to Phase 02 (see matches_history_minimal cast precedent)."
+  notes: "CONTEXT. Temporal anchor. Preserved in matches_flat_clean; cast to TIMESTAMP only in 01_04_03 matches_history_minimal."
+- name: header_elapsedGameLoops
+  type: BIGINT
+  nullable: true
+  description: "Game duration in SC2 'Faster'-speed game loops (22.4 loops/sec). Convert to seconds via CAST(. / 22.4 AS BIGINT)."
+  notes: "IN_GAME_HISTORICAL. Excluded from matches_flat_clean per I3; retained in player_history_all. Source for duration_seconds in 01_04_02 augmentation + 01_04_03 minimal history."
+- name: header_version
+  type: VARCHAR
+  nullable: true
+  notes: "CONTEXT. Game version string."
+- name: gd_gameSpeed
+  type: VARCHAR
+  nullable: true
+  description: "Duplicate of details_gameSpeed. Cardinality=1."
+  notes: "CONTEXT. Dropped from matches_flat_clean as duplicate constant."
+- name: gd_isBlizzardMap
+  type: BOOLEAN
+  nullable: true
+- name: gd_mapAuthorName
+  type: VARCHAR
+  nullable: true
+  description: "Map author name. Dropped from matches_flat_clean per DS-SC2-07."
+  notes: "CONTEXT. Domain-specific metadata; excluded from clean view."
+- name: gd_mapFileSyncChecksum
+  type: BIGINT
+  nullable: true
+- name: gd_mapSizeX
+  type: BIGINT
+  nullable: true
+  description: "Map horizontal dimension. Dropped from matches_flat_clean per DS-SC2-06."
+  notes: "CONTEXT. Map geometry; excluded from clean view."
+- name: gd_mapSizeY
+  type: BIGINT
+  nullable: true
+  description: "Map vertical dimension. Dropped from matches_flat_clean per DS-SC2-06."
+  notes: "CONTEXT."
+- name: gd_maxPlayers
+  type: BIGINT
+  nullable: true
+  notes: "CONTEXT."
+- name: go_advancedSharedControl
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. go_* constant flags; dropped from matches_flat_clean per DS-SC2-08 (near-constant)."
+- name: go_amm
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant; dropped from matches_flat_clean."
+- name: go_battleNet
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_clientDebugFlags
+  type: BIGINT
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_competitive
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_cooperative
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_fog
+  type: BIGINT
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_heroDuplicatesAllowed
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_lockTeams
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_noVictoryOrDefeat
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_observers
+  type: BIGINT
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_practice
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_randomRaces
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_teamsTogether
+  type: BOOLEAN
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: go_userDifficulty
+  type: BIGINT
+  nullable: true
+  notes: "CONTEXT. Near-constant."
+- name: metadata_baseBuild
+  type: VARCHAR
+  nullable: true
+  notes: "CONTEXT. SC2 engine build identifier."
+- name: metadata_dataBuild
+  type: VARCHAR
+  nullable: true
+  notes: "CONTEXT. SC2 data pack build identifier."
+- name: metadata_gameVersion
+  type: VARCHAR
+  nullable: true
+  notes: "CONTEXT. Game version (surface form)."
+- name: metadata_mapName
+  type: VARCHAR
+  nullable: true
+  notes: "CONTEXT. Map display name."
+provenance:
+  source_tables:
+  - replay_players_raw
+  - replays_meta_raw
+  join_key: "replay_players_raw.replayID -> replays_meta_raw.replayID (NULLIF-normalized to replay_id)"
+  row_multiplicity: "1 row per player × replay. 2 player rows per 1v1 replay."
+  created_by: "sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py cell CREATE_MATCHES_FLAT_SQL"
+  scope: "All ingested sc2egset replays in wide format — structural JOIN of replay_players_raw (player attributes) + replays_meta_raw (replay metadata). Source of 01_04_00 canonical normalization to matches_long_raw and 01_04_02 matches_flat_clean."
+invariants:
+- id: I6
+  description: "CREATE OR REPLACE VIEW DDL stored verbatim in 01_04_01_data_cleaning.json sql_queries.CREATE_MATCHES_FLAT_SQL."
+- id: I9
+  description: "Pure structural JOIN VIEW — no column transformations beyond NULLIF(replayID, '') normalization. raw tables (replay_players_raw, replays_meta_raw) remain untouched."
+- id: I10
+  description: "filename column passes through relative-to-raw_dir convention from replay_players_raw.filename."
+provenance_categories_note: >
+  Per-column 'notes' field uses the single-token vocabulary (IDENTITY, CONTEXT,
+  PRE_GAME, TARGET, IN_GAME_HISTORICAL, POST_GAME_HISTORICAL) established in
+  01_04_02 + 01_04_03. Wide-format view is the source for downstream split
+  into clean (PRE_GAME+TARGET) and history (IN_GAME_HISTORICAL) views.

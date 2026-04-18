@@ -74,7 +74,7 @@
     ]
   },
   "assertion_results": {
-    "src_col_count_28": true,
+    "src_col_count_30": true,
     "required_src_cols_present": true,
     "col_count_9": true,
     "col_names_match": true,

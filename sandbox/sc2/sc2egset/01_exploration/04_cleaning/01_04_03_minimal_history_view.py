@@ -89,9 +89,10 @@ src_col_names = [row[0] for row in describe_src]
 print(f"matches_flat_clean column count: {len(src_col_names)}")
 print(f"Columns: {src_col_names}")
 
-# Assert 28 columns
-assert len(src_col_names) == 28, (
-    f"Expected 28 columns in matches_flat_clean, got {len(src_col_names)}"
+# Assert 30 columns (28 original + duration_seconds + is_duration_suspicious
+# added by 01_04_02 ADDENDUM 2026-04-18; this notebook always runs after that ADDENDUM)
+assert len(src_col_names) == 30, (
+    f"Expected 30 columns in matches_flat_clean, got {len(src_col_names)}"
 )
 
 # Assert required columns are present
@@ -101,7 +102,7 @@ for col in required_cols:
         f"Required column '{col}' missing from matches_flat_clean"
     )
 
-print("Source-view sanity check PASSED: 28 cols + all required columns present.")
+print("Source-view sanity check PASSED: 30 cols + all required columns present.")
 
 # %% [markdown]
 # ## Cell 4b -- player_history_all sanity check
@@ -566,7 +567,7 @@ describe_table_rows = [
 ]
 
 assertion_results = {
-    "src_col_count_28": len(describe_src) == 28,
+    "src_col_count_30": len(describe_src) == 30,  # ADDENDUM 2026-04-18: 28+2 (duration_seconds + is_duration_suspicious)
     "required_src_cols_present": all(c in src_col_names for c in required_cols),
     "col_count_9": len(view_col_names) == 9,
     "col_names_match": view_col_names == expected_col_names,
