@@ -1130,7 +1130,7 @@ new_cols:
     type: BIGINT
     token: POST_GAME_HISTORICAL
     derivation: "CAST(ANY_VALUE(header_elapsedGameLoops) / 22.4 AS BIGINT) per replay_id"
-    i7_provenance: "details.gameSpeed cardinality=1 in sc2egset (research_log.md:333); Blizzard SC2 Faster=22.4 loops/sec"
+    i7_provenance: "details.gameSpeed cardinality=1 in sc2egset (research_log.md:424); Blizzard SC2 Faster=22.4 loops/sec"
   - name: is_duration_suspicious
     type: BOOLEAN
     token: POST_GAME_HISTORICAL
@@ -1156,7 +1156,7 @@ gates_all_pass: true
 step_number: "01_04_03"
 name: "Minimal Cross-Dataset History View"
 description: >
-  Create matches_history_minimal VIEW: 8-column player-row-grain projection
+  Create matches_history_minimal VIEW: 9-column player-row-grain projection (post-ADDENDUM 2026-04-18)
   of matches_flat_clean (2 rows per 1v1 match). Cross-dataset-harmonized
   substrate for Phase 02+ rating-system backtesting. Canonical TIMESTAMP
   temporal dtype; per-dataset-polymorphic faction vocabulary. Pattern-
@@ -1248,14 +1248,14 @@ gate:
     8 columns (started_at TIMESTAMP) + invariants block + I8 per-dataset-
     polymorphic faction warning.
   continue_predicate: >
-    VIEW exists with 8 columns matching spec. 44,418 rows = 22,209 x 2.
+    VIEW exists with 9 columns matching spec (post-ADDENDUM 2026-04-18). 44,418 rows = 22,209 x 2.
     Zero NULL-safe symmetry violations. Zero prefix violations. dataset_tag
     constancy = 1. Zero NULLs in match_id / player_id / opponent_id / won /
     dataset_tag. STEP_STATUS 01_04_03 -> complete. PIPELINE_SECTION_STATUS
     01_04 -> complete.
   halt_predicate: >
     Symmetry violation > 0; row-count discrepancy; prefix violation; NULL in
-    non-nullable spec column; column count != 8; started_at dtype != TIMESTAMP;
+    non-nullable spec column; column count != 9; started_at dtype != TIMESTAMP;
     upstream YAML byte-diff detected. ON HALT: manually revert
     PIPELINE_SECTION_STATUS 01_04 -> complete before aborting.
 thesis_mapping:

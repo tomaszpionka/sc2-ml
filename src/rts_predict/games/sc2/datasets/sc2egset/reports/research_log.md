@@ -2,6 +2,69 @@
 
 ---
 
+## 2026-04-18 -- [Phase 01 / Step 01_04_04] Identity Resolution — COMPLETE
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Branch:** fix/01-04-null-audit
+**Scope:** Exploratory identity-resolution census. No new VIEWs (I9). Routes 5 DS-SC2-IDENTITY-* decisions to Phase 02.
+
+### Key findings
+
+| Finding | Value |
+|---|---|
+| K1: n_distinct(toon_id) | 2,495 |
+| K2: n_distinct((region,realm,toon_id)) | 2,495 (= K1, confirming region-scoping) |
+| K3: n_distinct(LOWER(nickname)) | 1,045 |
+| K4: n_distinct((LOWER(nick),region)) | 1,473 |
+| K5: n_distinct((LOWER(nick),region,realm)) | 1,487 |
+| K_cs: n_distinct(nickname) case-sensitive | 1,106 |
+| I7 ratio (case-sensitive, per 01_02_04) | 2495/1106 = 2.2559 -- PASS (target 2.257 +/- 0.05) |
+| LOWER(nickname) ratio | 2495/1045 = 2.3876 (outside gate; 61 case variants merged) |
+| Cross-region toon_ids | 0 (Battle.net scoping confirmed) |
+| Temporal Class A (overlap >=1d) | 294 pairs |
+| Temporal Class B (disjoint) | 15,474 pairs |
+| Temporal Class C (degenerate) | 317 pairs |
+| Within-region collisions | 451 / 1,473 (nick,region) pairs = 30.6% |
+| Christen 2012 Ch. 5 threshold | 5% (EXCEEDED by 6x) |
+| userID cardinality | 16 (confirmed slot index 0..15) |
+| Unknown region | 12.83% of rows |
+
+### DS-SC2-IDENTITY-01..05 Decision ledger
+
+- **DS-SC2-IDENTITY-01:** REJECT toon_id-alone. Over-splits multi-server players (Serral has 42 toon_ids). Routed to Phase 02 canonical identity VIEW design.
+- **DS-SC2-IDENTITY-02:** REJECT LOWER(nickname)-alone. Within-region collision rate 30.6% >> 5% threshold (Christen 2012). Routed to Phase 02 blocking strategy design.
+- **DS-SC2-IDENTITY-03:** Class A overlap pairs (294) are strong same-player candidates. Class B disjoint (15,474) are ambiguous -- conservative = separate Elo entities. Routed to Phase 02 entity resolution classifier.
+- **DS-SC2-IDENTITY-04:** Treat 'Unknown' as a valid region value. Do NOT merge Unknown-region toon_ids with known-region toon_ids without temporal evidence. Routed to Phase 02 Unknown region handling.
+- **DS-SC2-IDENTITY-05:** Recommended Phase 02 strategy: toon_id as granular entity + LOWER(nickname) merge only for Class A overlap pairs. Routed to Phase 02 canonical player_identity_canonical VIEW + Elo cold-start sensitivity analysis.
+
+### Thesis §4.2.2 [REVIEW] marker status
+
+Not closable at this step (Category F follow-up after Phase 02 design lands).
+Empirical basis is now established by this step's artifacts.
+
+### Artifacts produced
+
+- `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_04_identity_resolution.py` + `.ipynb`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json` (8 SQL queries -- I6)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.md`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04_cross_region_nicknames.csv` (246 rows)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04_within_region_handle_collisions.csv` (451 rows)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/plots/01_04_04_key_cardinality_bars.png`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/plots/01_04_04_toon_region_heatmap.png`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/plots/01_04_04_nickname_cross_region_stacked.png`
+
+### Gate summary -- ALL PASS
+
+- Gate 1 (artifacts non-empty): PASS (JSON 14.6KB, MD 7.3KB, 2 CSVs, 3 PNGs ~60KB each)
+- Gate 2 (8 SQL queries in JSON, I6): PASS
+- Gate 3 (5 DS-SC2-IDENTITY-* decisions): PASS
+- Gate 4 (I9 -- no schema YAML diff): PASS
+- Gate 5 (ratio 2.2559 within 2.257+/-0.05): PASS
+- Gate 6 (STEP_STATUS 01_04_04=complete, PIPELINE_SECTION 01_04=complete): PASS
+
+---
+
 ## 2026-04-18 -- [Phase 01 / Step 01_04_02] Data Cleaning Execution — ADDENDUM: duration_seconds + is_duration_suspicious (28 → 30 cols)
 
 **Category:** A (science)
@@ -17,7 +80,7 @@
 | `is_duration_suspicious` | BOOLEAN | POST_GAME_HISTORICAL | `duration_seconds > 86400` |
 
 ### I7 provenance (22.4 loops/sec)
-SC2 "Faster" game-speed constant — empirically justified by `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:333) + Blizzard SC2 documentation. Established in 01_04_03 ADDENDUM.
+SC2 "Faster" game-speed constant — empirically justified by `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:424) + Blizzard SC2 documentation. Established in 01_04_03 ADDENDUM.
 
 ### I8 provenance (86,400s threshold)
 Cross-dataset canonical sanity bound (~25x p99 for sc2egset). Identical across sc2egset, aoestats, aoe2companion.
@@ -64,7 +127,7 @@ Cross-dataset canonical sanity bound (~25x p99 for sc2egset). Identical across s
 | `duration_seconds` | BIGINT | `CAST(ANY_VALUE(header_elapsedGameLoops) / 22.4 AS BIGINT)` per replay_id, via JOIN to aggregated `player_history_all` (R1-BLOCKER-A2 fix — `header_elapsedGameLoops` is NOT in `matches_flat_clean` or `matches_long_raw`; only `player_history_all` retains it at line 112). |
 
 ### I7 provenance (sc2egset)
-22.4 loops/sec SC2 "Faster" game-speed constant — empirically justified by `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:333 in this dataset) + Blizzard SC2 documentation.
+22.4 loops/sec SC2 "Faster" game-speed constant — empirically justified by `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:424 in this dataset) + Blizzard SC2 documentation.
 
 ### Duration stats (sc2egset)
 - min: 1s

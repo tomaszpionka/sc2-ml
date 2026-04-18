@@ -70,7 +70,7 @@ columns:
     / 22.4 AS BIGINT). Aggregated per replay via ANY_VALUE before joining (player_history_all
     has 2 rows per replay; value is constant per replay). Both rows of a match have
     identical duration_seconds (symmetric). I7 provenance for 22.4 loops/sec: details.gameSpeed
-    cardinality=1 in sc2egset (W02 census, research_log.md:333) + Blizzard ''Faster''
+    cardinality=1 in sc2egset (W02 census, research_log.md:424) + Blizzard ''Faster''
     constant (Liquipedia SC2 Game Speed). Calibration caveat (A-D1): assumes Faster
     speed for all replays; non-Faster replays would underestimate duration (~30% error).
     Accepted for thesis-level precision.'
@@ -121,7 +121,7 @@ invariants:
   description: 'Magic literals: PREFIX_CHECK_SQL `32` hex chars / `42` total length
     cite upstream data/db/schemas/views/matches_long_raw.yaml join_key regex [0-9a-f]{32}.
     duration_seconds constant 22.4 loops/sec cites: details.gameSpeed cardinality=1
-    in sc2egset (W02 census, research_log.md:333) + Blizzard ''Faster'' game-speed
+    in sc2egset (W02 census, research_log.md:424) + Blizzard ''Faster'' game-speed
     constant (Liquipedia SC2 Game Speed).'
 - id: I8
   description: 'Cross-dataset comparability: 9-column names + dtypes are the cross-dataset

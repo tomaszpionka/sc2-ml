@@ -10,8 +10,33 @@ live in per-dataset logs — one per game/dataset combination.
 | Dataset | Log | Last entry |
 |---------|-----|------------|
 | sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-16 (01_04_00) |
-| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-16 (01_04_00) |
+| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-18 (01_04_04) |
 | aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-16 (01_04_00) |
+
+---
+
+## [CROSS] 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution — aoec/aoestats shared namespace confirmed
+
+**Source:** aoe2companion 01_04_04 (this step); aoestats cross-dataset feasibility preview
+**Invariant:** I8 (cross-game comparability via shared identity namespace)
+
+**Finding:** aoec `profileId` (INTEGER) and aoestats `profile_id` (DOUBLE/BIGINT) share the
+same namespace (both sourced from the aoe2insights.com API).
+
+Empirical evidence (2026-01-25..2026-01-31 window, rm_1v1 filter both sides):
+- Full-window: 100% of aoestats profiles (28,921) appear in aoec matches_raw.
+- Reservoir sample (1,000 aoec matches, seed=20260418): p_hat=0.8818, 95% CI=[0.8671, 0.8964].
+- VERDICT A: STRONG -- CI lower bound (0.867) > 0.50 threshold.
+
+**Implication for Phase 02:**
+1. aoestats (which has no name column) can obtain I2-compliant canonical nicknames via
+   a LEFT JOIN on `aoec.matches_raw.profileId = aoestats.players_raw.profile_id`.
+2. Both AoE2 datasets may use `profileId`/`profile_id` as the Phase 02 primary identity key.
+3. A formal cross-dataset identity mapping table is feasible (deferred until Phase 02 scope is set).
+
+**Pending:** aoestats 01_04_04 executor must confirm the same VERDICT (per plan cross-dataset
+gate 6: "aoestats T03 and aoec T06 feasibility verdicts agree"). If aoestats executor finds
+VERDICT B or C, dispatch adversarial review per plan gate instructions.
 
 ---
 

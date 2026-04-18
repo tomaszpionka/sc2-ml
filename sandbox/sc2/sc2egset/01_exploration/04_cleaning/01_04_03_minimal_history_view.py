@@ -42,7 +42,7 @@
 # (matches_long_raw and matches_flat_clean exclude it per I3). Aggregated per replay
 # before join to avoid row multiplication (player_history_all has 2 rows per replay).
 # 22.4 loops/sec: SC2 "Faster" game-speed constant (Liquipedia); details.gameSpeed
-# cardinality=1 in sc2egset (W02 census, research_log.md:333).
+# cardinality=1 in sc2egset (W02 census, research_log.md:424).
 # **Date:** 2026-04-18
 
 # %% [markdown]
@@ -133,7 +133,7 @@ print("player_history_all sanity check PASSED: header_elapsedGameLoops + replay_
 # joining to avoid row multiplication (player_history_all has 2 rows per replay;
 # value is constant per replay so ANY_VALUE is safe).
 # I7 provenance for 22.4 loops/sec: details.gameSpeed cardinality=1 in sc2egset
-# (W02 census, research_log.md:333) + Blizzard "Faster" constant (Liquipedia SC2 Game Speed).
+# (W02 census, research_log.md:424) + Blizzard "Faster" constant (Liquipedia SC2 Game Speed).
 # raw_match_id alias exists in base CTE (line 121 of original notebook).
 
 # %%
@@ -151,7 +151,7 @@ CREATE OR REPLACE VIEW matches_history_minimal AS
 --   symmetric between row pairs), I6 (DDL verbatim in JSON artifact),
 --   I7 (magic numbers 32/42 cite matches_long_raw.yaml join_key regex
 --   [0-9a-f]{32}; 22.4 loops/sec cites details.gameSpeed cardinality=1
---   from sc2egset W02 census, research_log.md:333 + Blizzard Faster constant),
+--   from sc2egset W02 census, research_log.md:424 + Blizzard Faster constant),
 --   I8 (UNION-compatible with sibling datasets via dataset_tag + prefixed
 --   match_id + canonical 9-col dtypes), I9 (pure projection; no upstream mod).
 WITH base AS (
@@ -168,7 +168,7 @@ duration_per_replay AS (
     -- Aggregate header_elapsedGameLoops to 1 value per replay before join.
     -- player_history_all has 2 rows per replay; value is constant per replay.
     -- I7 provenance for 22.4 loops/sec: details.gameSpeed cardinality=1 in
-    -- sc2egset (W02 census, research_log.md:333) + Blizzard Faster constant
+    -- sc2egset (W02 census, research_log.md:424) + Blizzard Faster constant
     -- (Liquipedia SC2 Game Speed). matches_long_raw and matches_flat_clean
     -- exclude header_elapsedGameLoops per I3; player_history_all retains it.
     -- A-D1 caveat: assumes Faster speed (22.4 loops/sec) for all replays;
@@ -628,7 +628,7 @@ validation = {
         "provenance": (
             "CAST(header_elapsedGameLoops / 22.4 AS BIGINT). "
             "22.4 loops/sec: SC2 Faster game-speed constant (Liquipedia). "
-            "details.gameSpeed cardinality=1 in sc2egset (research_log.md:333). "
+            "details.gameSpeed cardinality=1 in sc2egset (research_log.md:424). "
             "Source: player_history_all.header_elapsedGameLoops (aggregated per replay "
             "via ANY_VALUE to avoid row multiplication; player_history_all has 2 rows/replay)."
         ),
@@ -721,7 +721,7 @@ POST_GAME_HISTORICAL -- excluded from PRE_GAME features.
 | `faction` | VARCHAR | Raw race stems `Prot`/`Terr`/`Zerg` (4-char; NOT full names). PER-DATASET POLYMORPHIC |
 | `opponent_faction` | VARCHAR | Opposing race (same vocabulary as faction) |
 | `won` | BOOLEAN | Focal player's outcome (complementary between the 2 rows) |
-| `duration_seconds` | BIGINT | POST_GAME_HISTORICAL. Duration in seconds = header_elapsedGameLoops / 22.4. 22.4 loops/sec: SC2 Faster constant (Liquipedia); details.gameSpeed cardinality=1 (research_log.md:333). |
+| `duration_seconds` | BIGINT | POST_GAME_HISTORICAL. Duration in seconds = header_elapsedGameLoops / 22.4. 22.4 loops/sec: SC2 Faster constant (Liquipedia); details.gameSpeed cardinality=1 (research_log.md:424). |
 | `dataset_tag` | VARCHAR | Constant `'sc2egset'` |
 
 ## Row-count flow
@@ -932,7 +932,7 @@ schema = {
                 "2 rows per replay; value is constant per replay). "
                 "Both rows of a match have identical duration_seconds (symmetric). "
                 "I7 provenance for 22.4 loops/sec: details.gameSpeed cardinality=1 in "
-                "sc2egset (W02 census, research_log.md:333) + Blizzard 'Faster' constant "
+                "sc2egset (W02 census, research_log.md:424) + Blizzard 'Faster' constant "
                 "(Liquipedia SC2 Game Speed). "
                 "Calibration caveat (A-D1): assumes Faster speed for all replays; "
                 "non-Faster replays would underestimate duration (~30% error). "
@@ -1016,7 +1016,7 @@ schema = {
                 "Magic literals: PREFIX_CHECK_SQL `32` hex chars / `42` total length cite "
                 "upstream data/db/schemas/views/matches_long_raw.yaml join_key regex "
                 "[0-9a-f]{32}. duration_seconds constant 22.4 loops/sec cites: "
-                "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:333) "
+                "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:424) "
                 "+ Blizzard 'Faster' game-speed constant (Liquipedia SC2 Game Speed)."
             ),
         },

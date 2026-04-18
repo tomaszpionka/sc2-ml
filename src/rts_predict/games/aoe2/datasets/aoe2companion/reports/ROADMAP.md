@@ -451,7 +451,6 @@ inputs:
 outputs:
   plots:
     - "artifacts/01_exploration/02_eda/plots/01_02_07_spearman_heatmap_all.png"
-    - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_scree.png"
     - "artifacts/01_exploration/02_eda/plots/01_02_07_pca_biplot.png"
   report: "artifacts/01_exploration/02_eda/01_02_07_multivariate_analysis.md"
 gate:
@@ -471,6 +470,13 @@ thesis_mapping:
   - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data"
 research_log_entry: "Required on completion."
 ```
+
+> **Deviation note:** `01_02_07_pca_scree.png` was not generated — PCA degenerated on the
+> profile-aggregated feature set (insufficient pre-game numeric columns survived the I3 filter).
+> The degenerate biplot (`01_02_07_pca_biplot.png`) is the sole PCA artifact, consistent with the
+> `description` field's "degenerate fallback if <3 features survive" clause. The gate predicate
+> ("At least one PCA plot exists") is satisfied by the biplot. See research_log 01_02_07 entry
+> for details.
 
 ### Step 01_03_01 -- Systematic Data Profiling
 
@@ -887,6 +893,11 @@ research_log_entry: >
 
 ### Step 01_04_02 — Data Cleaning Execution (act on DS-AOEC-01..08)
 
+> **ADDENDUM 2026-04-18:** Extended to 51 cols via `duration_seconds`, `is_duration_suspicious` (>86400s),
+> and `is_duration_negative` (strict <0, aoe2companion-specific for 342 clock-skew rows). See
+> research_log 01_04_02 ADDENDUM entry and `01_04_02_duration_augmentation.{md,json}` artifacts for
+> gate details. STEP_STATUS 01_04_02 remains `complete`; the ADDENDUM retrofit does not re-open the step.
+
 ```yaml
 step_number: "01_04_02"
 name: "Data Cleaning Execution (act on DS-AOEC-01..08)"
@@ -1129,6 +1140,96 @@ gate:
 thesis_mapping:
   - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data > Cross-dataset harmonization substrate"
   - "Chapter 4 -- Data and Methodology > 4.3 Rating System Backtesting Design"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_04_04 — Identity Resolution
+
+```yaml
+step_number: "01_04_04"
+name: "Identity Resolution"
+description: >
+  Empirical characterisation of the aoe2companion identity signals (profileId,
+  name, country) across all three raw tables. Produces a census of rename
+  history (how many distinct names per profileId), alias collision rates
+  (how many profileIds per name), join-integrity set-difference audits
+  (matches_raw vs profiles_raw vs ratings_raw), and country temporal
+  stability. Includes a cross-dataset feasibility preview: does aoec
+  profileId share a namespace with aoestats profile_id? Findings route to
+  DS-AOEC-IDENTITY-01..05 decisions for Phase 02 identity-key design.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md §4 + §5"
+dataset: "aoe2companion"
+question: >
+  Which column or column combination should serve as the canonical player
+  identifier in Phase 02 rating-system backtesting? Does profileId share a
+  namespace with aoestats, enabling a name-bridge for Invariant I2?
+method: >
+  Cardinality baseline across three tables (matches_raw, ratings_raw,
+  profiles_raw): n_rows, n_distinct, min, max, null, sentinel=-1.
+  Name-history-per-profileId (player_history_all rm_1v1 scope): distribution
+  of COUNT(DISTINCT name) per profileId, rename-timing bins (rapid_30d,
+  within_180d). Name-to-profileId collision distribution and top-100
+  exemplars. Join-integrity set-difference audit (three bilateral pairs).
+  Country temporal stability distribution. Cross-dataset feasibility via
+  ATTACH aoestats READ_ONLY: 2026-01-25..2026-01-31 window, direct
+  ID-equality test, 95% bootstrap CI, verdict rubric A/B/C.
+predecessors:
+  - "01_04_03"
+methodology_citations:
+  - "Fellegi, I. P. & Sunter, A. B. (1969). A theory for record linkage. JASA 64(328)."
+  - "Christen, P. (2012). Data Matching: Concepts and Techniques for Record Linkage, Entity Resolution, and Duplicate Detection. Springer."
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_04_identity_resolution.py"
+inputs:
+  duckdb_tables:
+    - "matches_raw"
+    - "ratings_raw"
+    - "profiles_raw"
+    - "player_history_all"
+  duckdb_views:
+    - "matches_1v1_clean"
+  attached_dbs:
+    - "aoestats (READ_ONLY ATTACH for cross-dataset feasibility)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.md"
+scientific_invariants_applied:
+  - number: "2"
+    how_upheld: >
+      Characterises the profileId-vs-name trade-off for the canonical player
+      identifier. DS-AOEC-IDENTITY-01 records the Phase 02 recommendation.
+  - number: "6"
+    how_upheld: >
+      All SQL queries stored verbatim in the JSON sql_queries block and
+      reproduced in the markdown artifact.
+  - number: "7"
+    how_upheld: >
+      All thresholds (1% NULL fraction, sentinel=-1, 60s temporal window,
+      50-ELO proximity) carry inline provenance in the notebook.
+  - number: "8"
+    how_upheld: >
+      Cross-dataset feasibility preview addresses whether aoec profileId
+      can serve as identity bridge to aoestats (enabling I8 cross-game
+      comparability via a common player identifier).
+  - number: "9"
+    how_upheld: >
+      Exploration-only. No VIEWs, no raw-table modifications. aoestats
+      ATTACH is READ_ONLY.
+gate:
+  artifact_check: >
+    JSON + MD exist and parse. sql_queries block populated (I6 verbatim).
+    5+ DS-AOEC-IDENTITY-* decisions defined. Verdict A/B/C stated with
+    CI and sample size.
+  continue_predicate: >
+    All 6 JSON blocks populated. Cross-dataset verdict with CI. I9 empty
+    diff on aoec views/raw + aoestats.
+  halt_predicate: >
+    Any JSON block empty. aoestats READ_ONLY violated. Cross-dataset
+    verdict missing CI.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.2.2 Identity Resolution"
 research_log_entry: "Required on completion."
 ```
 

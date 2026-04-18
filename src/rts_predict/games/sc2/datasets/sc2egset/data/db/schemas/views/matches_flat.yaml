@@ -127,7 +127,7 @@ columns:
 - name: details_gameSpeed
   type: VARCHAR
   nullable: true
-  description: "Game speed setting. Cardinality=1 ('Faster') in sc2egset (W02 census, research_log.md:333)."
+  description: "Game speed setting. Cardinality=1 ('Faster') in sc2egset (W02 census, research_log.md:424)."
   notes: "CONTEXT. Dropped from matches_flat_clean as constant."
 - name: details_isBlizzardMap
   type: BOOLEAN

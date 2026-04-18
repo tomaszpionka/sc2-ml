@@ -8,6 +8,81 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution
+
+**Category:** A (science)
+**Dataset:** aoestats
+**Branch:** feat/01-04-04-identity-resolution
+**Scope:** Exploratory census of aoestats identity structure.
+Exploration only — no new VIEWs, no raw-table modifications (I9).
+
+### Key findings
+
+**Structural asymmetry:** No nickname column exists in any raw table (14 cols
+in `players_raw`, confirmed). Invariant I2 (canonical nickname) is natively
+unmeetable. `profile_id` is the sole identity signal.
+
+**Task A (sentinel/NULL audit):**
+- `players_raw.profile_id` (DOUBLE): 107,627,584 rows, 1,185 NULLs, 0 zero/negative/-1. min=18, max=24,853,897. cardinality=641,662.
+- `player_history_all.profile_id` (BIGINT): 107,626,399 rows, 0 NULLs, 0 sentinels. cardinality=641,662.
+- `matches_1v1_clean.p0_profile_id`: 17,814,947 rows, 0 NULLs, cardinality=310,670.
+- `matches_1v1_clean.p1_profile_id`: 17,814,947 rows, 0 NULLs, cardinality=309,727.
+No zero, negative, or -1 sentinels anywhere in the views.
+
+**Task B (activity distribution):**
+- 641,662 total profiles. match_count median=13 (q99=2,157; max=15,075).
+- active_days median=6 (q99=517; max=1,064). 160,163 single-day profiles.
+- 269,107 multi-ladder profiles (appear in > 1 leaderboard).
+
+**Task C (duplicate census):** 489 duplicate (game_id, profile_id) rows via
+census-aligned COALESCE key. Anchor match (489 from 01_03_01; drift=0). PASS.
+
+**Task D (rating trajectory):** 10,000-profile reservoir (seed=20260418).
+11.3M deltas: n_large_delta(|Δ|>500)=12,047 (0.107%), p99=227, max=1,444.
+500-ELO threshold is anecdotal first-cut sanity bound, not calibrated.
+
+**Task E (replay_summary_raw):** Format is Python dict (single-quote keys;
+ast.literal_eval required, not JSON). 146/1000 sample rows non-empty.
+Mean length 1,288.5 chars; top keys: age_stats, opening_name.
+Name extraction feasible but deferred (out of scope).
+
+**Task F (civ-fingerprint JSD):**
+- Qualifying profiles (>=20 matches, >=180 active days): 52,455.
+- Within-profile JSD (first-half vs second-half): p5=0.0270, p25=0.0725,
+  p50=0.1262, p75=0.1993, p95=0.3472, p99=0.4800.
+- Cross-profile control JSD (10,000 random pairs): p5=0.0998, p25=0.2288,
+  p50=0.3606, p75=0.4885, p95=0.6257, p99=0.6711.
+- Temporal stability confirmed: within-profile median (0.1262) <<
+  cross-profile median (0.3606).
+- I7 hedge: Hahn et al. 2020 (SC2 APM/build-order) is adjacent, not direct.
+  Civ JSD is a coarse proxy; rename detection remains unsolved.
+
+**Task G (cross-dataset feasibility preview):**
+- Window: 2026-01-25..2026-01-31. aoestats rm_1v1 (leaderboard='random_map')
+  vs aoec rm_1v1 (internalLeaderboardId IN (6, 18)).
+- n_sample=1,000. Block: 60s temporal + civ-set + 50-ELO.
+- filtered_hits=993, profile_id_agreement_rate=0.9960.
+- 95% bootstrap CI=[0.9919, 0.9990]. **Verdict: A (strong).**
+- aoestats `profile_id` and aoe2companion `profileId` share the same namespace.
+  Cross-dataset name bridge is empirically supported.
+
+### Decision ledger
+
+| ID | Category | Column | Recommendation |
+|---|---|---|---|
+| DS-AOESTATS-IDENTITY-01 | identity-key | profile_id (all objects) | Use profile_id (BIGINT) as Phase 02 entity key |
+| DS-AOESTATS-IDENTITY-02 | NULL/sentinel | players_raw 1,185 NULLs | No action; already excluded by player_history_all filter |
+| DS-AOESTATS-IDENTITY-03 | rename-detection-substitute | civ JSD + replay_summary_raw | JSD not sufficient standalone; CROSS PR for name bridge; replay name deferred |
+| DS-AOESTATS-IDENTITY-04 | collision | DOUBLE vs BIGINT type | Always CAST(profile_id AS BIGINT); scope rating to random_map |
+| DS-AOESTATS-IDENTITY-05 | cross-dataset-bridge | profile_id vs profileId | Proceed with CROSS PR; namespace sharing empirically confirmed (Verdict A) |
+
+### Artifacts
+
+- `artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json` (24,200 bytes; 14 SQL queries verbatim per I6)
+- `artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.md` (13,814 bytes)
+
+---
+
 ## 2026-04-18 — [Phase 01 / Step 01_04_02] ADDENDUM: duration_seconds + is_duration_suspicious (22-col extension)
 
 **Category:** A (science)
@@ -85,7 +160,7 @@ filtering via `is_duration_suspicious` flag (Phase 02 will exclude or weight acc
 
 ### Gate split (Gate +5)
 - **Gate +5a (HALTING)** — unit regression canary: `max(duration_seconds) <= 1_000_000_000`. PASS (max 5,574,815s ≈ 64.5 days, well below 1B).
-- **Gate +5b (REPORT-ONLY)** — outlier count: rows with `duration_seconds > 86400`. Reported: **56 rows** (= 28 corrupted matches × 2 player-rows, 0.00008% of dataset). These are raw-data corruption in `matches_raw.duration` — deferred to 01_04_02 augmentation PR (follow-up) for proper flagging/filtering.
+- **Gate +5b (REPORT-ONLY)** — outlier count: rows with `duration_seconds > 86400`. Reported: **56 rows** (= 28 corrupted matches × 2 player-rows, 0.00016% of dataset). These are raw-data corruption in `matches_raw.duration` — deferred to 01_04_02 augmentation PR (follow-up) for proper flagging/filtering.
 
 ### Duration stats (aoestats)
 - min: 3s
@@ -112,6 +187,10 @@ filtering via `is_duration_suspicious` flag (Phase 02 will exclude or weight acc
 ---
 
 ## 2026-04-18 — [Phase 01 / Step 01_04_03] Minimal Cross-Dataset History View
+
+> **Note (ADDENDUM 2026-04-18):** The VIEW described below was extended from 8 cols → 9 cols on 2026-04-18
+> by adding `duration_seconds` between `won` and `dataset_tag`. See the 01_04_03 ADDENDUM entry above for the
+> post-ADDENDUM schema and gate revisions. The 8-col narrative in this main entry reflects the original PR state.
 
 **Category:** A (science)
 **Dataset:** aoestats

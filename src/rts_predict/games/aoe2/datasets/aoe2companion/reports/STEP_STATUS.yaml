@@ -94,4 +94,9 @@ steps:
     pipeline_section: "01_04"
     status: complete
     completed_at: "2026-04-18"
+  "01_04_04":
+    name: "Identity Resolution"
+    pipeline_section: "01_04"
+    status: complete
+    completed_at: "2026-04-18"
   # Future steps will be added here as they are defined in the ROADMAP.

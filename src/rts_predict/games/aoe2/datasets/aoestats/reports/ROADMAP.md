@@ -1188,6 +1188,103 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_04_04 -- Identity Resolution
+
+```yaml
+step_number: "01_04_04"
+name: "Identity Resolution"
+description: >
+  Exploratory census of the aoestats identity structure. aoestats has no
+  nickname column in any raw table (structural asymmetry confirmed in 01_01_02).
+  profile_id (DOUBLE in players_raw; BIGINT in player_history_all) is the sole
+  identity signal. Invariant I2 (lowercased nickname as canonical) is natively
+  unmeetable; this step characterises the profile_id field, probes behavioural
+  surrogate stability (civ-fingerprint JSD), assesses replay_summary_raw for
+  hidden name extraction, and provides an empirical cross-dataset feasibility
+  preview (aoestats profile_id vs aoe2companion profileId namespace overlap).
+  Output routes DS-AOESTATS-IDENTITY-01..05 decisions to Phase 02.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Sections 4 and 5"
+dataset: "aoestats"
+question: >
+  Is profile_id reliable, sentinel-free, and globally unique? Can civ-frequency
+  distribution stability substitute for nickname-based identity resolution?
+  Do aoestats profile_id and aoe2companion profileId share a namespace?
+method: >
+  Task A -- Sentinel + NULL audit: 4 columns x 3 tables/views with n_rows,
+  n_null, n_zero, n_negative, n_minus_one, min, max, cardinality.
+  Task B -- Per-profile activity distribution: match-count and active-day
+  quantiles on player_history_all; single-day and multi-ladder profile counts.
+  Task C -- Duplicate (game_id, profile_id) census in players_raw; census-aligned
+  COALESCE key methodology (anchor: 489 from 01_03_01; HALT if drift > 10).
+  Task D -- Rating-trajectory monotonicity probe: 10,000-profile reservoir
+  (seed=20260418); LAG(old_rating) deltas; count |delta| > 500; p99/max.
+  Task E -- replay_summary_raw JSON parseability probe on 1,000-row sample;
+  report format (Python dict not JSON), mean/max length, top keys (feasibility
+  only -- no name extraction).
+  Task F -- Civ-fingerprint JSD: profiles with >= 20 matches AND >= 180 active
+  days; first-half vs second-half 50-dim civ distribution JSD (within-profile);
+  10,000-random-pair cross-profile control JSD; quantiles p5/p25/p50/p75/p95/p99.
+  Task G -- Cross-dataset feasibility: ATTACH aoec DB (READ_ONLY); 1,000-match
+  reservoir from 2026-01-25..2026-01-31; 60s temporal + civ-set + 50-ELO block;
+  agreement rate + 95% bootstrap CI + verdict rubric.
+predecessors:
+  - "01_04_03"
+methodology_citations:
+  - "Hahn, Siqueira Ruela, & Rebelo Moreira (2020). Identifying Players in StarCraft via Behavioural Fingerprinting. IEEE CoG."
+  - "Fellegi, I.P. & Sunter, A.B. (1969). A theory for record linkage. JASA 64(328)."
+  - "Christen, P. (2012). Data Matching. Springer -- blocking (Ch. 4)."
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_04_identity_resolution.py"
+inputs:
+  duckdb_tables:
+    - "players_raw (107,627,584 rows; profile_id DOUBLE)"
+  duckdb_views:
+    - "player_history_all (107,626,399 rows; profile_id BIGINT)"
+    - "matches_1v1_clean (17,814,947 rows; p0/p1_profile_id BIGINT)"
+  attached_db:
+    - "aoe2companion/data/db/db.duckdb AS aoec (READ_ONLY) -- Task G only"
+  prior_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_01_systematic_profile.json (489 duplicate anchor)"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.md"
+reproducibility: >
+  All SQL verbatim in JSON sql_queries (I6). Reservoir seeds documented (20260418).
+  Bootstrap CI for cross-dataset agreement rate: 10,000 resamples.
+scientific_invariants_applied:
+  - number: "2"
+    how_upheld: >
+      No nickname column exists -- confirms I2 is natively unmeetable for aoestats.
+      Behavioral fingerprint (civ JSD) is identified as the best available proxy,
+      with explicit hedging against use as a substitute for rename detection.
+  - number: "6"
+    how_upheld: "All SQL queries verbatim in JSON sql_queries block."
+  - number: "7"
+    how_upheld: >
+      500 ELO threshold (Task D) -- anecdotal RTS convention, hedged in MD.
+      50 ELO blocking band (Task G) -- derived from 01_03_03 0.5-ELO redundancy
+      finding (~100x conservative). 60s temporal block -- conventional API delay.
+      0.10/0.30/0.50 JSD thresholds -- symmetric KL interpretation, hedged in MD.
+  - number: "9"
+    how_upheld: >
+      Exploration only. No new VIEWs, no raw-table modifications, no schema YAML changes.
+gate:
+  artifact_check: >
+    JSON + MD exist under artifacts/01_exploration/04_cleaning/. All SQL verbatim
+    in sql_queries block. 5+ DS-AOESTATS-IDENTITY-* decisions with full fields.
+  continue_predicate: >
+    Task C duplicate count in 479-499 (489 +/- 10). Cross-dataset verdict stated
+    with CI + sample size + rubric citation. git diff --stat empty on raw/view YAMLs.
+  halt_predicate: >
+    Task C duplicate count outside 479-499. Cross-dataset CI disjoint from aoec T06
+    (disagree on verdict grade). Any raw/view YAML modified.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.1.2 AoE2 Match Data > Identity Key Selection"
+research_log_entry: "Required on completion."
+```
+
 ---
 
 ## Phase 02 — Feature Engineering (placeholder)

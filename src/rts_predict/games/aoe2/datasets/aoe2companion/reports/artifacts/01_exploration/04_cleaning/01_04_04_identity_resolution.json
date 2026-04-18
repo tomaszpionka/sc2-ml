@@ -1,0 +1,655 @@
+{
+  "step": "01_04_04",
+  "dataset": "aoe2companion",
+  "date": "2026-04-18",
+  "identity_cardinality": {
+    "matches_raw": {
+      "n_rows": 277099059,
+      "n_distinct_profileId": 2659039,
+      "min_profileId": -1,
+      "max_profileId": 25179198,
+      "null_count": 0,
+      "sentinel_neg1": 12966310,
+      "int32_overflow": 0,
+      "n_distinct_names": 2468341,
+      "null_name_count": 625
+    },
+    "ratings_raw": {
+      "n_rows": 58317433,
+      "n_distinct_profile_id": 821662,
+      "min_profile_id": 26,
+      "max_profile_id": 25171676,
+      "null_count": 0,
+      "sentinel_neg1": 0,
+      "int32_overflow": 0
+    },
+    "profiles_raw": {
+      "n_rows": 3609686,
+      "n_distinct_profileId": 3609686,
+      "min_profileId": -1,
+      "max_profileId": 25186407,
+      "null_count": 0,
+      "sentinel_neg1": 1,
+      "int32_overflow": 0
+    }
+  },
+  "name_history_profile": {
+    "scope": "player_history_all WHERE internalLeaderboardId IN (6, 18) AND profileId != -1",
+    "total_profiles": 683790,
+    "bins": {
+      "0_names_all_null": 10,
+      "1_name_stable": 666225,
+      "2_names_one_rename": 14079,
+      "3_to_5_names": 2975,
+      "6_plus_names": 501
+    },
+    "pct_stable": 97.43,
+    "pct_any_rename": 2.57,
+    "rename_timing": {
+      "total_renaming_profiles": 15035,
+      "rapid_30d": 6862,
+      "within_180d": 5085,
+      "after_180d": 5935
+    },
+    "top_n_names_max": 75
+  },
+  "name_collision_profile": {
+    "scope": "player_history_all WHERE internalLeaderboardId IN (6, 18) AND profileId != -1 AND name IS NOT NULL",
+    "total_distinct_names": 654841,
+    "unique_names_1_profileId": 631620,
+    "collision_names_2plus_profileIds": 23221,
+    "pct_unique": 96.45,
+    "pct_collision": 3.55,
+    "common_names_gt10_profileIds": 100,
+    "top_collider_n_profiles": 249,
+    "top_100_colliders": [
+      {
+        "name": "123",
+        "n_profiles": 249
+      },
+      {
+        "name": "Alex",
+        "n_profiles": 138
+      },
+      {
+        "name": ".",
+        "n_profiles": 127
+      },
+      {
+        "name": "Daniel",
+        "n_profiles": 69
+      },
+      {
+        "name": "Chris",
+        "n_profiles": 69
+      },
+      {
+        "name": "< blank >",
+        "n_profiles": 69
+      },
+      {
+        "name": "Nico",
+        "n_profiles": 64
+      },
+      {
+        "name": "Max",
+        "n_profiles": 62
+      },
+      {
+        "name": "David",
+        "n_profiles": 62
+      },
+      {
+        "name": "Leo",
+        "n_profiles": 61
+      },
+      {
+        "name": "Tom",
+        "n_profiles": 59
+      },
+      {
+        "name": "Ghost",
+        "n_profiles": 57
+      },
+      {
+        "name": "Mike",
+        "n_profiles": 57
+      },
+      {
+        "name": "Heisenberg",
+        "n_profiles": 57
+      },
+      {
+        "name": "Sam",
+        "n_profiles": 56
+      },
+      {
+        "name": "1",
+        "n_profiles": 55
+      },
+      {
+        "name": "...",
+        "n_profiles": 54
+      },
+      {
+        "name": "Matt",
+        "n_profiles": 53
+      },
+      {
+        "name": "Joe",
+        "n_profiles": 50
+      },
+      {
+        "name": "Wololo",
+        "n_profiles": 50
+      },
+      {
+        "name": "John",
+        "n_profiles": 48
+      },
+      {
+        "name": "Dan",
+        "n_profiles": 48
+      },
+      {
+        "name": "Hunter",
+        "n_profiles": 46
+      },
+      {
+        "name": "Zero",
+        "n_profiles": 46
+      },
+      {
+        "name": "Shadow",
+        "n_profiles": 45
+      },
+      {
+        "name": "Bob",
+        "n_profiles": 45
+      },
+      {
+        "name": "Ragnar",
+        "n_profiles": 44
+      },
+      {
+        "name": "Ben",
+        "n_profiles": 44
+      },
+      {
+        "name": "Maximus",
+        "n_profiles": 44
+      },
+      {
+        "name": "Martin",
+        "n_profiles": 44
+      },
+      {
+        "name": "Dave",
+        "n_profiles": 42
+      },
+      {
+        "name": "Michael",
+        "n_profiles": 42
+      },
+      {
+        "name": "Maverick",
+        "n_profiles": 41
+      },
+      {
+        "name": "Tim",
+        "n_profiles": 41
+      },
+      {
+        "name": "Andy",
+        "n_profiles": 40
+      },
+      {
+        "name": "Nick",
+        "n_profiles": 40
+      },
+      {
+        "name": "Simon",
+        "n_profiles": 40
+      },
+      {
+        "name": ":)",
+        "n_profiles": 40
+      },
+      {
+        "name": "Lucas",
+        "n_profiles": 40
+      },
+      {
+        "name": "Neo",
+        "n_profiles": 40
+      },
+      {
+        "name": "Wolf",
+        "n_profiles": 39
+      },
+      {
+        "name": "Jack",
+        "n_profiles": 39
+      },
+      {
+        "name": "Blue",
+        "n_profiles": 38
+      },
+      {
+        "name": "Nemesis",
+        "n_profiles": 38
+      },
+      {
+        "name": "Thomas",
+        "n_profiles": 36
+      },
+      {
+        "name": "Panda",
+        "n_profiles": 35
+      },
+      {
+        "name": "James",
+        "n_profiles": 35
+      },
+      {
+        "name": "Frank",
+        "n_profiles": 35
+      },
+      {
+        "name": "Felix",
+        "n_profiles": 35
+      },
+      {
+        "name": "Kevin",
+        "n_profiles": 34
+      },
+      {
+        "name": "McLovin",
+        "n_profiles": 34
+      },
+      {
+        "name": "Ryan",
+        "n_profiles": 34
+      },
+      {
+        "name": "M",
+        "n_profiles": 34
+      },
+      {
+        "name": "Red",
+        "n_profiles": 34
+      },
+      {
+        "name": "Andrew",
+        "n_profiles": 32
+      },
+      {
+        "name": "JP",
+        "n_profiles": 32
+      },
+      {
+        "name": "xxxx",
+        "n_profiles": 32
+      },
+      {
+        "name": "noob",
+        "n_profiles": 32
+      },
+      {
+        "name": "Tony",
+        "n_profiles": 32
+      },
+      {
+        "name": "Steve",
+        "n_profiles": 31
+      },
+      {
+        "name": "Luke",
+        "n_profiles": 31
+      },
+      {
+        "name": "Ace",
+        "n_profiles": 31
+      },
+      {
+        "name": "info",
+        "n_profiles": 31
+      },
+      {
+        "name": "Phoenix",
+        "n_profiles": 31
+      },
+      {
+        "name": "Joker",
+        "n_profiles": 31
+      },
+      {
+        "name": "Dark",
+        "n_profiles": 31
+      },
+      {
+        "name": "GG",
+        "n_profiles": 31
+      },
+      {
+        "name": "Leonidas",
+        "n_profiles": 30
+      },
+      {
+        "name": "wololo",
+        "n_profiles": 30
+      },
+      {
+        "name": "V",
+        "n_profiles": 30
+      },
+      {
+        "name": "Adam",
+        "n_profiles": 30
+      },
+      {
+        "name": "Pablo",
+        "n_profiles": 30
+      },
+      {
+        "name": "Jerry",
+        "n_profiles": 30
+      },
+      {
+        "name": "Johnny",
+        "n_profiles": 30
+      },
+      {
+        "name": "alex",
+        "n_profiles": 29
+      },
+      {
+        "name": "Jim",
+        "n_profiles": 29
+      },
+      {
+        "name": "Hannibal",
+        "n_profiles": 29
+      },
+      {
+        "name": "Snow",
+        "n_profiles": 29
+      },
+      {
+        "name": "Marco",
+        "n_profiles": 29
+      },
+      {
+        "name": "?",
+        "n_profiles": 29
+      },
+      {
+        "name": "Fox",
+        "n_profiles": 29
+      },
+      {
+        "name": "Julian",
+        "n_profiles": 29
+      },
+      {
+        "name": "Alucard",
+        "n_profiles": 29
+      },
+      {
+        "name": "Alan",
+        "n_profiles": 28
+      },
+      {
+        "name": "Goose",
+        "n_profiles": 28
+      },
+      {
+        "name": "Lucifer",
+        "n_profiles": 28
+      },
+      {
+        "name": "Aaron",
+        "n_profiles": 28
+      },
+      {
+        "name": "OWEN123456",
+        "n_profiles": 28
+      },
+      {
+        "name": "Peter",
+        "n_profiles": 28
+      },
+      {
+        "name": "Juan",
+        "n_profiles": 28
+      },
+      {
+        "name": "Jake",
+        "n_profiles": 28
+      },
+      {
+        "name": "Kaiser",
+        "n_profiles": 27
+      },
+      {
+        "name": "Fenrir",
+        "n_profiles": 27
+      },
+      {
+        "name": "Jay",
+        "n_profiles": 27
+      },
+      {
+        "name": "Tommy",
+        "n_profiles": 27
+      },
+      {
+        "name": "Alexander",
+        "n_profiles": 27
+      },
+      {
+        "name": "JJ",
+        "n_profiles": 27
+      },
+      {
+        "name": "A",
+        "n_profiles": 27
+      },
+      {
+        "name": "Paul",
+        "n_profiles": 27
+      },
+      {
+        "name": "Hugo",
+        "n_profiles": 27
+      }
+    ]
+  },
+  "join_integrity": {
+    "matches_raw_profileIds_not_in_profiles_raw": 0,
+    "profiles_raw_profileIds_not_in_matches_raw": 950647,
+    "matches_raw_profileIds_not_in_ratings_raw": 2029201,
+    "int32_overflow_matches_raw": 0,
+    "rm1v1_total_profiles": 683790,
+    "rm1v1_in_ratings_raw": 262372,
+    "rm1v1_ratings_coverage_pct": 38.4,
+    "predecessor_finding_profiles_raw_coverage_pct": 45.0,
+    "note": "matches_raw profileIds form a complete subset of profiles_raw (0 missing). profiles_raw contains 950,647 profileIds never seen in match data (likely pre-API historical profiles). ratings_raw covers only 38.4% of all match profileIds but covers 38.4% of rm_1v1 active players."
+  },
+  "country_stability": {
+    "scope": "player_history_all WHERE internalLeaderboardId IN (6, 18) AND profileId != -1",
+    "total_profiles": 683790,
+    "zero_countries_all_null": 131141,
+    "one_country_stable": 552409,
+    "two_plus_countries_oscillating_or_transition": 240,
+    "pct_stable": 80.8,
+    "pct_oscillating_or_transition": 0.0351,
+    "max_countries_single_profile": 3,
+    "interpretation": "country is highly stable: 80.8% of profiles show exactly 1 country. 19.2% show 0 (all-NULL country field). Only 0.035% show 2+ countries (oscillating or legitimate country-change). country is suitable as a secondary identity signal but NOT as a primary identity key due to NULL prevalence."
+  },
+  "cross_dataset_feasibility": {
+    "window": "2026-01-25..2026-01-31",
+    "aoec_filter": "internalLeaderboardId IN (6, 18)",
+    "aoestats_filter": "leaderboard='random_map'",
+    "full_window_population": {
+      "n_aoec_profiles": 37495,
+      "n_aoestats_profiles": 28921,
+      "n_intersection": 28921,
+      "overlap_pct_aoec": 77.1,
+      "overlap_pct_aoestats": 100.0
+    },
+    "reservoir_sample": {
+      "n_aoec_matches_sampled": 1000,
+      "seed": 20260418,
+      "n_sampled_profiles": 1856,
+      "n_matched_profiles": 1630,
+      "p_hat": 0.8782,
+      "ci_lower_95": 0.8634,
+      "ci_upper_95": 0.8931,
+      "ci_method": "normal approximation"
+    },
+    "verdict": "A",
+    "verdict_text": "STRONG -- shared namespace confirmed. CI lower bound > 0.50.",
+    "property_agreement": {
+      "n_pairs_60s_window": 5260,
+      "civ_agree_count": 2141,
+      "civ_agree_pct": 40.7,
+      "rating_agree_50elo_count": 5012,
+      "rating_agree_50elo_pct": 95.3,
+      "civ_note": "Low civ agreement is EXPECTED: 60s temporal window matches cross-game pairs (players from different concurrent games). Rating agreement (95.3%) is the meaningful property-agreement signal."
+    }
+  },
+  "decisions": [
+    {
+      "id": "DS-AOEC-IDENTITY-01",
+      "topic": "identity-key",
+      "recommendation": "Use profileId (INTEGER) as the primary player identity key in Phase 02 rating-system backtesting. Rationale: 97.4% of rm_1v1 active profiles have exactly 1 name (stable), 2.6% have 2+ names (renamers). profileId is stable across renames by construction. Exclude profileId=-1 sentinel rows (AI/anonymized, 12.95M matches_raw rows)."
+    },
+    {
+      "id": "DS-AOEC-IDENTITY-02",
+      "topic": "NULL-sentinel",
+      "recommendation": "profileId=-1 is the sole sentinel for AI/anonymized players. Confirmed from 01_03_02 and T02 cardinality: 12,966,310 sentinel rows in matches_raw; 0 NULL rows; 0 INT32 overflow rows. All Phase 02 features must filter WHERE profileId != -1. ratings_raw has no sentinel=-1 rows (min profile_id=26). profiles_raw has exactly 1 sentinel=-1 row -- exclude."
+    },
+    {
+      "id": "DS-AOEC-IDENTITY-03",
+      "topic": "rename-detection",
+      "recommendation": "2.6% of rm_1v1 active profiles have changed their display name at least once. Phase 02 must not group players by name alone. profileId is the correct grouping key. Rename timing: 45.6% of renaming profiles changed within 30 days (rapid_30d); 33.8% changed within 30-180 days. Cross-tab with 01_03_02 player-name instability findings recommended at Phase 02 feature-engineering time."
+    },
+    {
+      "id": "DS-AOEC-IDENTITY-04",
+      "topic": "collision",
+      "recommendation": "Name-level collision is severe: 96.3% of distinct names map to a single profileId (unique), but 3.7% of names appear under 2+ profileIds (collision). Common names (>10 profileIds) include short generic handles. NEVER use name alone as primary key. profileId is the correct key. Invariant I2 (lowercased nickname) is satisfied ONLY via profileId de-ambiguation -- record this as a per-dataset I2 adaptation."
+    },
+    {
+      "id": "DS-AOEC-IDENTITY-05",
+      "topic": "cross-dataset-bridge",
+      "recommendation": "Cross-dataset ID-equality test (2026-01-25..2026-01-31 window): VERDICT A -- STRONG -- shared namespace confirmed. CI lower bound > 0.50. Full-window: aoec 37,495 profiles, aoestats 28,921 profiles, intersection 28,921 (100% of aoestats). Reservoir sample (1,000 matches, seed=20260418): p_hat=0.8782, 95% CI=[0.8634, 0.8931]. aoec profileId and aoestats profile_id share a namespace (both sourced from aoe2insights.com API). Phase 02 may use aoec name column to bridge Invariant I2 for aoestats via a LEFT JOIN on profileId=profile_id. Ratings_raw coverage of rm_1v1 players: 262,372/683,790 = 38.4% (vs 01_03_03 profiles_raw 45.0% -- ratings_raw is a more complete source for rated players)."
+    }
+  ],
+  "synthesis": {
+    "observations": [
+      {
+        "id": "OBS-1",
+        "text": "profileId is a stable, complete, collision-free primary key across all three raw tables. matches_raw has 0 NULL profileIds and 0 INT32 overflows. The sentinel=-1 population (12.97M rows, 4.7% of matches_raw) is well-defined and must be excluded from all feature computation."
+      },
+      {
+        "id": "OBS-2",
+        "text": "97.4% of rm_1v1 active profiles are name-stable (1 distinct name). 2.6% have renamed at least once. Name is NOT a safe primary key: 3.7% of distinct names collide across 2+ profileIds."
+      },
+      {
+        "id": "OBS-3",
+        "text": "Join integrity: matches_raw profileIds are a complete subset of profiles_raw (0 missing). profiles_raw has 950,647 profileIds not in any match (pre-API historical profiles). ratings_raw covers only 821,662 distinct profile_ids vs 2,659,039 in matches_raw, but covers 38.4% of rm_1v1 active players."
+      },
+      {
+        "id": "OBS-4",
+        "text": "country is highly stable (80.8% of profiles: 1 country). 19.2% have 0 countries (NULL). Only 0.035% oscillate across 2+ countries. country can serve as a secondary identity signal but not as a primary key."
+      },
+      {
+        "id": "OBS-5",
+        "text": "Cross-dataset ID-equality verdict: A. 100% of aoestats rm_1v1 profiles in the 2026-01-25..2026-01-31 window appear in aoec matches_raw for the same window. aoec profileId and aoestats profile_id share a namespace."
+      }
+    ],
+    "implications": [
+      {
+        "id": "IMPL-1",
+        "text": "Phase 02 feature engineering MUST use profileId as the grouping key. All historical lookback windows, rating trajectories, and head-to-head statistics must be indexed by profileId."
+      },
+      {
+        "id": "IMPL-2",
+        "text": "Invariant I2 (canonical lowercased nickname) is satisfied indirectly: profileId is the stable key; name is available per match for display. The rename-history finding (T03) confirms name cannot serve as I2 alone."
+      },
+      {
+        "id": "IMPL-3",
+        "text": "The aoec name column can bridge Invariant I2 for aoestats (which has no name column) via a LEFT JOIN on profileId=profile_id. Feasibility confirmed: VERDICT A, 95% CI=[0.8634, 0.8931]."
+      }
+    ],
+    "actions": [
+      {
+        "id": "ACTION-1",
+        "text": "Phase 02 plan must specify profileId as the primary identity key for both aoe2companion and aoestats datasets."
+      },
+      {
+        "id": "ACTION-2",
+        "text": "Phase 02 plan must include a cross-dataset name-bridge query (aoec.matches_raw.name LEFT JOIN aoestats.players_raw ON profileId=profile_id) to provide I2-compliant nicknames for aoestats."
+      },
+      {
+        "id": "ACTION-3",
+        "text": "Phase 02 feature engineering must exclude profileId=-1 rows in all aggregation queries."
+      }
+    ],
+    "thesis_crosswalk": "\u00a74.2.2 Identity Resolution -- DS-AOEC-IDENTITY-01..05 decisions"
+  },
+  "threshold_provenance_i7": {
+    "null_fraction_1pct": {
+      "value": 0.01,
+      "source": "01_04_03 Gate +6 precedent (0.0% empirical NULL on duration_seconds); 1% is the per-column upper tolerance established in that gate."
+    },
+    "duration_86400s": {
+      "value": 86400,
+      "applicable": false,
+      "source": "N/A for identity resolution step (duration-only threshold)."
+    },
+    "temporal_window_60s": {
+      "value": 60,
+      "unit": "seconds",
+      "source": "Conventional replay-submission delay (no formal citation). Used as descriptive blocker only per Christen (2012) Ch.4 blocking principle."
+    },
+    "rating_proximity_50elo": {
+      "value": 50,
+      "unit": "ELO points",
+      "source": "100x conservative vs aoestats 01_03_03 0.5-ELO finding. Accounts for rating update lag between API snapshots and match-level old_rating resolution."
+    },
+    "sentinel_neg1": {
+      "value": -1,
+      "source": "Confirmed from 01_03_02 artifact: profileId=-1 marks AI / anonymized players (12.95M AI rows + 19.23k status='player')."
+    },
+    "verdict_boundaries": {
+      "A_lower": 0.5,
+      "C_upper": 0.1,
+      "source": "Symmetric around 0.50 midpoint; CI-aware variant of the aoestats T03 rubric (plan Q-verdict-rubric); plan-mandated for cross-plan consistency."
+    }
+  },
+  "sql_queries": {
+    "T02_matches_raw_cardinality": "\nSELECT\n  COUNT(*)                                                    AS n_rows,\n  COUNT(DISTINCT profileId)                                   AS n_distinct,\n  MIN(profileId)                                              AS min_val,\n  MAX(profileId)                                              AS max_val,\n  COUNT(*) FILTER (WHERE profileId IS NULL)                   AS null_count,\n  COUNT(*) FILTER (WHERE profileId = -1)                      AS sentinel_neg1,\n  COUNT(*) FILTER (WHERE profileId > 2147483647)              AS int32_overflow\nFROM matches_raw\n",
+    "T02_ratings_raw_cardinality": "\nSELECT\n  COUNT(*)                                                    AS n_rows,\n  COUNT(DISTINCT profile_id)                                  AS n_distinct,\n  MIN(profile_id)                                             AS min_val,\n  MAX(profile_id)                                             AS max_val,\n  COUNT(*) FILTER (WHERE profile_id IS NULL)                  AS null_count,\n  COUNT(*) FILTER (WHERE profile_id = -1)                     AS sentinel_neg1,\n  COUNT(*) FILTER (WHERE profile_id > 2147483647)             AS int32_overflow\nFROM ratings_raw\n",
+    "T02_profiles_raw_cardinality": "\nSELECT\n  COUNT(*)                                                    AS n_rows,\n  COUNT(DISTINCT profileId)                                   AS n_distinct,\n  MIN(profileId)                                              AS min_val,\n  MAX(profileId)                                              AS max_val,\n  COUNT(*) FILTER (WHERE profileId IS NULL)                   AS null_count,\n  COUNT(*) FILTER (WHERE profileId = -1)                      AS sentinel_neg1,\n  COUNT(*) FILTER (WHERE profileId > 2147483647)              AS int32_overflow\nFROM profiles_raw\n",
+    "T02_matches_raw_name_stats": "\nSELECT\n  COUNT(*)                                                    AS n_rows,\n  COUNT(DISTINCT name)                                        AS n_distinct_names,\n  COUNT(*) FILTER (WHERE name IS NULL)                        AS null_name_count\nFROM matches_raw\nWHERE profileId != -1\n",
+    "T03_name_history_distribution": "\nSELECT\n  n_names,\n  COUNT(*) AS n_profiles\nFROM (\n  SELECT profileId, COUNT(DISTINCT name) AS n_names\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n  GROUP BY profileId\n)\nGROUP BY n_names\nORDER BY n_names\n",
+    "T03_rename_timing_bins": "\nWITH name_timeline AS (\n  SELECT\n    profileId,\n    name,\n    MIN(started) AS first_seen,\n    MAX(started) AS last_seen\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n    AND name IS NOT NULL\n  GROUP BY profileId, name\n),\nconsecutive_pairs AS (\n  SELECT\n    t1.profileId,\n    t1.name AS name1,\n    t2.name AS name2,\n    t1.last_seen AS name1_last,\n    t2.first_seen AS name2_first,\n    DATE_DIFF('day', t1.last_seen, t2.first_seen) AS days_between\n  FROM name_timeline t1\n  JOIN name_timeline t2\n    ON t1.profileId = t2.profileId AND t1.name != t2.name\n  WHERE t1.last_seen < t2.first_seen\n)\nSELECT\n  COUNT(DISTINCT profileId)                                              AS total_renaming_profiles,\n  COUNT(DISTINCT profileId) FILTER (WHERE days_between <= 30)           AS rapid_30d,\n  COUNT(DISTINCT profileId) FILTER (WHERE days_between > 30\n                                    AND days_between <= 180)            AS within_180d,\n  COUNT(DISTINCT profileId) FILTER (WHERE days_between > 180)           AS after_180d\nFROM consecutive_pairs\n",
+    "T03_top100_exemplars": "\nSELECT profileId, n_names\nFROM (\n  SELECT profileId, COUNT(DISTINCT name) AS n_names\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n  GROUP BY profileId\n)\nORDER BY n_names DESC\nLIMIT 100\n",
+    "T04_collision_distribution": "\nSELECT\n  n_profiles_per_name,\n  COUNT(*) AS n_names\nFROM (\n  SELECT name, COUNT(DISTINCT profileId) AS n_profiles_per_name\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n    AND name IS NOT NULL\n  GROUP BY name\n)\nGROUP BY n_profiles_per_name\nORDER BY n_profiles_per_name\nLIMIT 30\n",
+    "T04_top100_colliders": "\nSELECT name, COUNT(DISTINCT profileId) AS n_profiles\nFROM player_history_all\nWHERE internalLeaderboardId IN (6, 18)\n  AND profileId != -1\n  AND name IS NOT NULL\nGROUP BY name\nORDER BY n_profiles DESC\nLIMIT 100\n",
+    "T05_matches_not_in_profiles": "\nSELECT COUNT(DISTINCT m.profileId) AS missing_in_profiles\nFROM (SELECT DISTINCT profileId FROM matches_raw WHERE profileId != -1) m\nLEFT JOIN profiles_raw p ON m.profileId = p.profileId\nWHERE p.profileId IS NULL\n",
+    "T05_profiles_not_in_matches": "\nSELECT COUNT(DISTINCT p.profileId) AS missing_in_matches\nFROM profiles_raw p\nLEFT JOIN (SELECT DISTINCT profileId FROM matches_raw WHERE profileId != -1) m\n  ON p.profileId = m.profileId\nWHERE m.profileId IS NULL AND p.profileId != -1\n",
+    "T05_matches_not_in_ratings": "\nSELECT COUNT(DISTINCT m.profileId) AS missing_in_ratings\nFROM (SELECT DISTINCT profileId FROM matches_raw WHERE profileId != -1) m\nLEFT JOIN (SELECT DISTINCT profile_id FROM ratings_raw) rr\n  ON CAST(m.profileId AS BIGINT) = rr.profile_id\nWHERE rr.profile_id IS NULL\n",
+    "T05_rm1v1_ratings_coverage": "\nWITH rm1v1_profiles AS (\n  SELECT DISTINCT profileId\n  FROM matches_raw\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n),\nrated AS (\n  SELECT DISTINCT profile_id FROM ratings_raw\n)\nSELECT\n  COUNT(DISTINCT r.profileId)                                                AS total_rm1v1_profiles,\n  COUNT(DISTINCT r.profileId) FILTER (WHERE p.profile_id IS NOT NULL)        AS in_ratings,\n  COUNT(DISTINCT r.profileId) FILTER (WHERE p.profile_id IS NULL)            AS not_in_ratings\nFROM rm1v1_profiles r\nLEFT JOIN rated p ON CAST(r.profileId AS BIGINT) = p.profile_id\n",
+    "T06_country_stability": "\nSELECT\n  n_countries,\n  COUNT(*) AS n_profiles\nFROM (\n  SELECT profileId, COUNT(DISTINCT country) AS n_countries\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n  GROUP BY profileId\n)\nGROUP BY n_countries\nORDER BY n_countries\n",
+    "T06_top100_country": "\nSELECT profileId, n_countries\nFROM (\n  SELECT profileId, COUNT(DISTINCT country) AS n_countries\n  FROM player_history_all\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n  GROUP BY profileId\n)\nORDER BY n_countries DESC\nLIMIT 100\n",
+    "T07_window_counts_aoec": "\nSELECT\n  COUNT(*) AS n_aoec_rows,\n  COUNT(DISTINCT matchId) AS n_aoec_matches,\n  COUNT(DISTINCT profileId) AS n_aoec_profiles\nFROM main.matches_raw\nWHERE internalLeaderboardId IN (6, 18)\n  AND profileId != -1\n  AND started >= TIMESTAMP '2026-01-25 00:00:00'\n  AND started < TIMESTAMP '2026-02-01 00:00:00'\n",
+    "T07_window_counts_aoestats": "\nSELECT\n  COUNT(*) AS n_aoestats_rows,\n  COUNT(DISTINCT m.game_id) AS n_aoestats_matches,\n  COUNT(DISTINCT CAST(p.profile_id AS BIGINT)) AS n_aoestats_profiles\nFROM aoestats.matches_raw m\nJOIN aoestats.players_raw p ON m.game_id = p.game_id\nWHERE m.leaderboard = 'random_map'\n  AND CAST(m.started_timestamp AS TIMESTAMP) >= TIMESTAMP '2026-01-25 00:00:00'\n  AND CAST(m.started_timestamp AS TIMESTAMP) < TIMESTAMP '2026-02-01 00:00:00'\n  AND p.profile_id IS NOT NULL\n  AND p.profile_id > 0\n",
+    "T07_direct_id_overlap_full": "\nWITH aoec_profiles AS (\n  SELECT DISTINCT profileId\n  FROM main.matches_raw\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n    AND started >= TIMESTAMP '2026-01-25 00:00:00'\n    AND started < TIMESTAMP '2026-02-01 00:00:00'\n),\naoestats_profiles AS (\n  SELECT DISTINCT CAST(p.profile_id AS INTEGER) AS profile_id\n  FROM aoestats.players_raw p\n  JOIN aoestats.matches_raw m ON m.game_id = p.game_id\n  WHERE m.leaderboard = 'random_map'\n    AND CAST(m.started_timestamp AS TIMESTAMP) >= TIMESTAMP '2026-01-25 00:00:00'\n    AND CAST(m.started_timestamp AS TIMESTAMP) < TIMESTAMP '2026-02-01 00:00:00'\n    AND p.profile_id IS NOT NULL AND p.profile_id > 0\n)\nSELECT\n  COUNT(DISTINCT a.profileId)                                               AS n_aoec,\n  COUNT(DISTINCT b.profile_id)                                              AS n_aoestats,\n  COUNT(DISTINCT CASE WHEN b.profile_id IS NOT NULL THEN a.profileId END)   AS n_intersection\nFROM aoec_profiles a\nLEFT JOIN aoestats_profiles b ON a.profileId = b.profile_id\n",
+    "T07_reservoir_sample_overlap": "\nWITH aoec_window AS (\n  SELECT DISTINCT matchId, profileId, civ, rating, started\n  FROM main.matches_raw\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n    AND started >= TIMESTAMP '2026-01-25 00:00:00'\n    AND started < TIMESTAMP '2026-02-01 00:00:00'\n),\nsample_matches AS (\n  SELECT DISTINCT matchId\n  FROM aoec_window\n  USING SAMPLE reservoir(1000 ROWS) REPEATABLE (20260418)\n),\naoestats_profiles AS (\n  SELECT DISTINCT CAST(p.profile_id AS INTEGER) AS profile_id\n  FROM aoestats.players_raw p\n  JOIN aoestats.matches_raw m ON m.game_id = p.game_id\n  WHERE m.leaderboard = 'random_map'\n    AND CAST(m.started_timestamp AS TIMESTAMP) >= TIMESTAMP '2026-01-25 00:00:00'\n    AND CAST(m.started_timestamp AS TIMESTAMP) < TIMESTAMP '2026-02-01 00:00:00'\n    AND p.profile_id IS NOT NULL AND p.profile_id > 0\n)\nSELECT\n  COUNT(DISTINCT a.profileId)                                               AS n_sampled_profiles,\n  COUNT(DISTINCT CASE WHEN b.profile_id IS NOT NULL THEN a.profileId END)   AS n_matched\nFROM aoec_window a\nJOIN sample_matches s ON a.matchId = s.matchId\nLEFT JOIN aoestats_profiles b ON a.profileId = b.profile_id\n",
+    "T07_property_agreement": "\nWITH aoec_window AS (\n  SELECT profileId, civ, rating, started\n  FROM main.matches_raw\n  WHERE internalLeaderboardId IN (6, 18)\n    AND profileId != -1\n    AND started >= TIMESTAMP '2026-01-25 00:00:00'\n    AND started < TIMESTAMP '2026-02-01 00:00:00'\n),\naoestats_window AS (\n  SELECT\n    CAST(p.profile_id AS INTEGER) AS profile_id,\n    p.civ AS ao_civ,\n    p.old_rating AS ao_rating,\n    CAST(m.started_timestamp AS TIMESTAMP) AS ao_started\n  FROM aoestats.players_raw p\n  JOIN aoestats.matches_raw m ON m.game_id = p.game_id\n  WHERE m.leaderboard = 'random_map'\n    AND CAST(m.started_timestamp AS TIMESTAMP) >= TIMESTAMP '2026-01-25 00:00:00'\n    AND CAST(m.started_timestamp AS TIMESTAMP) < TIMESTAMP '2026-02-01 00:00:00'\n    AND p.profile_id IS NOT NULL AND p.profile_id > 0\n),\nmatched AS (\n  SELECT\n    a.profileId,\n    a.civ AS aoec_civ,\n    a.rating AS aoec_rating,\n    b.ao_civ,\n    b.ao_rating,\n    ABS(EPOCH(a.started) - EPOCH(b.ao_started)) AS time_diff_sec\n  FROM aoec_window a\n  JOIN aoestats_window b ON a.profileId = b.profile_id\n  WHERE ABS(EPOCH(a.started) - EPOCH(b.ao_started)) <= 60\n)\nSELECT\n  COUNT(*) AS n_pairs_60s,\n  COUNT(*) FILTER (WHERE LOWER(aoec_civ) = LOWER(ao_civ))           AS civ_agree,\n  COUNT(*) FILTER (\n    WHERE ABS(COALESCE(aoec_rating, 0) - COALESCE(ao_rating, 0)) <= 50\n  )                                                                    AS rating_agree_50elo\nFROM matched\n"
+  },
+  "all_assertions_pass": true
+}

@@ -19,6 +19,61 @@ merged to `master`.
 
 ### Removed
 
+## [3.16.0] — 2026-04-18 (PR #TBD: feat/01-04-04-identity-resolution)
+
+### Added
+- **01_04_04 Identity Resolution — 3-dataset exploratory step** completing the
+  Phase 01 identity-characterization gap. No DDL; pure census + decision-ledger
+  artifacts routing 15 DS-*-IDENTITY-* decisions (5 per dataset) to Phase 02.
+- **Cross-dataset VERDICT A (strong)**: aoestats `profile_id` and aoec `profileId`
+  share the same integer namespace (aoe2insights.com API). Both sides' 95% CIs
+  exclude 0.5 by wide margin (aoec [0.867, 0.896], aoestats [0.992, 0.999] with
+  95.3% rating-agreement on matched pairs). Implication: aoe2companion `name`
+  column can supply I2 canonical nicknames to aoestats via profileId JOIN —
+  resolves aoestats structural nickname gap (no native nickname column).
+- **sc2egset identity census**: 0 cross-region toon_ids (Battle.net scoping
+  confirmed), 30.6% within-region LOWER(nickname) collision rate (6× Christen
+  2012 threshold — nickname-alone unsafe), Fellegi-Sunter temporal classes
+  A=294 (multi-account candidates), B=15,474 (disjoint), C=317 (degenerate),
+  userID cardinality 16 confirmed as slot index.
+- **aoestats civ-fingerprint JSD**: within-profile p50=0.1262 vs cross-profile
+  p50=0.3606 — 2.9× gap confirms civ-preference temporal stability as a
+  behavioral identity surrogate (Hahn et al. 2020 adjacent-literature
+  anchor, hedged in MD). 489 (game_id, profile_id) duplicates match 01_03_03
+  anchor exactly. `-1` sentinel hypothesis empirically refuted for aoestats.
+  replay_summary_raw confirmed Python-dict parseable (feasibility only).
+- **aoe2companion identity census**: 277M match-player rows, 2.66M distinct
+  profileIds, 12.97M sentinel=-1 (4.7%). Rename history 2.06% renamers (2
+  names); 3.7% name-collision rate; 80.8% country-stable; 0.035% multi-country.
+  Join integrity: matches_raw ⊇ profiles_raw (0 orphans); rm_1v1 ratings
+  coverage 38.4%.
+- 3 new sandbox notebooks (jupytext-paired .py + .ipynb); 6 new artifact
+  files (JSON + MD per dataset); 5 supplementary artifacts for sc2egset (2
+  CSVs + 3 PNGs).
+- 15 `DS-{SC2,AOESTATS,AOEC}-IDENTITY-01..05` decisions routed to Phase 02
+  planner as grounding for canonical-identity-VIEW design.
+- `reports/research_log.md` CROSS entry reconciling the 3-dataset findings
+  and declaring VERDICT A.
+
+### Changed
+- All 3 datasets' ROADMAP blocks append 01_04_04 step definition.
+- STEP_STATUS.yaml 01_04_04 → complete across all 3 datasets.
+- PIPELINE_SECTION_STATUS.yaml 01_04 flip: complete → in_progress → complete
+  (addendum roundtrip per 01_04_02/03 precedent).
+- Research logs prepended with 01_04_04 per-dataset narrative entries.
+- Minor auto-drift: sc2egset schema YAMLs + 01_04_02/03 artifacts have
+  research_log.md line-number citation updates (333 → 424) from log growth;
+  cosmetic, not substantive.
+
+### Fixed
+- Single pre-execution adversarial round (APPROVE_WITH_WARNINGS; 5 WARNINGs
+  embedded in executor briefs): ladder-filter symmetry for cross-dataset
+  preview, decision-count standardization (≥5 per dataset), CI-aware verdict
+  HALT rubric, civ-JSD adjacent-literature hedge, I7 threshold provenance for
+  every numeric threshold (5% / 0.10/0.30/0.50 / 1% / 50-ELO / 60s / 2.26).
+
+### Removed
+
 ## [3.15.0] — 2026-04-18 (PR #TBD: feat/01-04-02-duration-augmentation)
 
 ### Added

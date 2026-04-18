@@ -32,13 +32,13 @@ Source: `player_history_all.header_elapsedGameLoops` aggregated per `replay_id`,
 
 ## I7 Provenance (22.4 loops/sec)
 
-- `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:333)
+- `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:424)
 - Blizzard SC2 "Faster" game speed = 22.4 loops/sec (official documentation)
 - Established in 01_04_03 ADDENDUM (matches_history_minimal duration_seconds derivation)
 
 ## I8 Provenance (86,400s threshold)
 
-Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,884s, max=6,073s).
+Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,876s, max=6,073s).
 Identical across sc2egset, aoestats, aoe2companion per plan A1 + I8 cross-dataset comparability.
 
 ## Validation Results

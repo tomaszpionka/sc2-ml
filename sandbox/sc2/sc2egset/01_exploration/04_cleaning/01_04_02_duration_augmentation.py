@@ -29,7 +29,7 @@
 #   - I3 (POST_GAME_HISTORICAL tokens on both new cols -- excluded from PRE_GAME features)
 #   - I5 (symmetry: both rows per replay have identical duration_seconds + is_duration_suspicious)
 #   - I6 (all DDL + assertions SQL stored verbatim in artifact)
-#   - I7 (22.4 loops/sec derived from details.gameSpeed cardinality=1 census, research_log.md:333)
+#   - I7 (22.4 loops/sec derived from details.gameSpeed cardinality=1 census, research_log.md:424)
 #   - I8 (86_400s threshold identical across sc2egset, aoestats, aoe2companion)
 #   - I9 (non-destructive: raw tables untouched; only matches_flat_clean VIEW replaced)
 # **Predecessor:** 01_04_02 (complete), 01_04_03 ADDENDUM (established 22.4 and source pattern)
@@ -94,7 +94,7 @@ print("Pre-augmentation baseline assertions PASSED.")
 # then LEFT JOIN + append duration_seconds + is_duration_suspicious.
 #
 # I7 provenance for 22.4 loops/sec:
-#   - details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:333)
+#   - details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:424)
 #   - Blizzard SC2 "Faster" game speed = 22.4 loops/sec (official documentation)
 #   - Established in 01_04_03 ADDENDUM (matches_history_minimal duration_seconds derivation)
 #
@@ -208,7 +208,7 @@ duration_per_replay AS (
     -- matches_flat_clean and matches_long_raw both exclude it per I3.
     -- Both rows per replay share the same loops value (symmetry verified below).
     -- 22.4 loops/sec: SC2 "Faster" game-speed constant (I7 provenance:
-    --   details.gameSpeed cardinality=1 in sc2egset, research_log.md:333;
+    --   details.gameSpeed cardinality=1 in sc2egset, research_log.md:424;
     --   Blizzard SC2 documentation).
     SELECT
         replay_id,
@@ -224,7 +224,7 @@ SELECT
     -- direct game-T feature. Excluded from PRE_GAME feature sets by I3 token filter.
     dpr.duration_seconds,
     -- POST_GAME_HISTORICAL: TRUE where duration_seconds > 86400s (24h sanity bound).
-    -- Threshold: ~25x p99 of sc2egset distribution (p99=1,884s, max=6,073s);
+    -- Threshold: ~25x p99 of sc2egset distribution (p99=1,876s, max=6,073s);
     -- identical across sc2egset, aoestats, aoe2companion (I8 cross-dataset comparability).
     -- Expected 0 suspicious rows for sc2egset (01_04_03 ADDENDUM confirmed max=6,073s).
     (dpr.duration_seconds > 86400) AS is_duration_suspicious
@@ -452,7 +452,7 @@ artifact = {
         "divisor": 22.4,
         "unit": "SC2 Faster game-speed loops/sec",
         "source": (
-            "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:333); "
+            "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:424); "
             "Blizzard SC2 'Faster' game speed = 22.4 loops/sec (official documentation). "
             "Established in 01_04_03 ADDENDUM (matches_history_minimal duration_seconds derivation)."
         ),
@@ -460,7 +460,7 @@ artifact = {
     "i8_provenance": {
         "threshold_seconds": 86400,
         "justification": (
-            "Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,884s, max=6,073s). "
+            "Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,876s, max=6,073s). "
             "Identical across sc2egset, aoestats, aoe2companion per plan A1 + I8 cross-dataset comparability."
         ),
     },
@@ -532,13 +532,13 @@ Source: `player_history_all.header_elapsedGameLoops` aggregated per `replay_id`,
 
 ## I7 Provenance (22.4 loops/sec)
 
-- `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:333)
+- `details.gameSpeed` cardinality=1 in sc2egset (W02 census, research_log.md:424)
 - Blizzard SC2 "Faster" game speed = 22.4 loops/sec (official documentation)
 - Established in 01_04_03 ADDENDUM (matches_history_minimal duration_seconds derivation)
 
 ## I8 Provenance (86,400s threshold)
 
-Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,884s, max=6,073s).
+Cross-dataset canonical sanity bound (~25x p99 for sc2egset: p99=1,876s, max=6,073s).
 Identical across sc2egset, aoestats, aoe2companion per plan A1 + I8 cross-dataset comparability.
 
 ## Validation Results
@@ -716,7 +716,7 @@ mfc_columns_yaml = [
         "notes": (
             "POST_GAME_HISTORICAL. Game duration in seconds. Derived from "
             "player_history_all.header_elapsedGameLoops / 22.4 (I7: details.gameSpeed "
-            "cardinality=1 in sc2egset, research_log.md:333; Blizzard SC2 Faster=22.4 loops/sec). "
+            "cardinality=1 in sc2egset, research_log.md:424; Blizzard SC2 Faster=22.4 loops/sec). "
             "SAFE as player-history aggregate (match_time < T). UNSAFE as direct game-T feature. "
             "Added in 01_04_02 ADDENDUM 2026-04-18."
         ),
@@ -730,7 +730,7 @@ mfc_columns_yaml = [
         ),
         "notes": (
             "POST_GAME_HISTORICAL. TRUE where duration_seconds > 86400s. Threshold: ~25x p99 "
-            "for sc2egset (p99=1,884s, max=6,073s); identical across all 3 datasets (I8 "
+            "for sc2egset (p99=1,876s, max=6,073s); identical across all 3 datasets (I8 "
             "cross-dataset comparability). Expected 0 rows for sc2egset. Added in 01_04_02 ADDENDUM 2026-04-18."
         ),
     },
@@ -778,7 +778,7 @@ mfc_invariants = [
         "id": "I7",
         "description": (
             "22.4 loops/sec divisor: SC2 Faster game-speed constant. Provenance: "
-            "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:333); "
+            "details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:424); "
             "Blizzard SC2 documentation. Established in 01_04_03 ADDENDUM."
         ),
     },

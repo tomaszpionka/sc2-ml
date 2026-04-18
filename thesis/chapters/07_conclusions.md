@@ -25,5 +25,5 @@ Can accumulate ideas throughout the project:
 - AoE2 replay parsing for in-game features (mgz + AgeAlyser_2)
 - Extension to team games
 - Real-time prediction systems
-- Larger datasets (SC2LE 800K replays, aoestats 33M matches)
+- Larger datasets (SC2LE 800K replays [REVIEW: verify SC2LE 800K against Vinyals2017], aoestats 30,7M meczów surowych — źródło: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/02_eda/01_02_02_duckdb_ingestion.md i 01_04_01_data_cleaning.md:21)
 -->

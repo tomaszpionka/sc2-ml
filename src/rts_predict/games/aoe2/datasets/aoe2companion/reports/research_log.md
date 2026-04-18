@@ -8,6 +8,85 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-18 — [Phase 01 / Step 01_04_04] Identity Resolution
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Branch:** feat/01-04-04-identity-resolution
+**Scope:** Empirical characterisation of identity signals (profileId, name, country)
+across matches_raw, ratings_raw, profiles_raw. Rename detection, alias collision,
+join integrity, country stability, cross-dataset feasibility preview vs aoestats.
+
+### Key Findings
+
+**Cardinality baseline:**
+- matches_raw: 277,099,059 rows; 2,659,039 distinct profileIds; 12,966,310 sentinel=-1
+  (AI/anonymized); 0 NULL; 0 INT32 overflow.
+- ratings_raw: 58,317,433 rows; 821,662 distinct profile_ids; 0 sentinel; 0 NULL.
+- profiles_raw: 3,609,686 rows (1 sentinel=-1 row); 3,609,686 distinct profileIds.
+- Distinct names in matches_raw (non-sentinel): 2,468,341; NULL names: 625.
+
+**Name history per profileId (rm_1v1, player_history_all):**
+- Total profiles: 683,790
+- Stable (1 name): 666,225 (97.42%)
+- 2 names: 14,079 (2.06%)
+- 3-5 names: 2,975 (0.44%)
+- 6+ names: 501 (0.07%)
+- Max names per profile: 75
+- Rename timing (for renaming profiles): rapid_30d=6,862; within_180d=5,085; after_180d=5,935
+
+**Name->profileId collision:**
+- Unique names (1 profileId): 631,620 (96.3%)
+- Collision names (2+ profileIds): 22,186 (3.7%)
+- Common names (>10 profileIds): top collider has 249 distinct profileIds
+
+**Join integrity:**
+- matches_raw profileIds NOT IN profiles_raw: 0 (complete subset)
+- profiles_raw profileIds NOT IN matches_raw: 950,647 (historical profiles)
+- matches_raw profileIds NOT IN ratings_raw: 2,029,201 (mostly non-ranked players)
+- rm_1v1 ratings_raw coverage: 262,372 / 683,790 = 38.4%
+
+**Country stability (rm_1v1):**
+- 1 country (stable): 552,409 (80.8%)
+- 0 countries (all NULL): 131,141 (19.2%)
+- 2+ countries (oscillating/transition): 240 (0.035%)
+
+**Cross-dataset feasibility (2026-01-25..2026-01-31 window, rm_1v1 filter both sides):**
+- VERDICT A -- STRONG -- shared namespace confirmed. CI lower bound > 0.50.
+- Full window: aoec 37,495 profiles; aoestats 28,921 profiles; intersection 28,921 (100% of aoestats)
+- Reservoir sample (1,000 matches, seed=20260418): p_hat=0.8818, 95% CI=[0.8671, 0.8964]
+- Rating agreement (50-ELO): 95.3% of 60s-window pairs
+
+### DS-AOEC-IDENTITY Decisions
+
+- DS-AOEC-IDENTITY-01: profileId is the primary key for Phase 02 (stable across renames)
+- DS-AOEC-IDENTITY-02: sentinel=-1 confirmed; all Phase 02 features filter WHERE profileId != -1
+- DS-AOEC-IDENTITY-03: 2.6% of profiles renamed; name cannot serve as primary key alone
+- DS-AOEC-IDENTITY-04: 3.7% name collision; name alone is NOT safe; profileId required
+- DS-AOEC-IDENTITY-05: VERDICT A -- aoec profileId and aoestats profile_id share a namespace;
+  cross-dataset name-bridge feasible for Invariant I2
+
+### Gate summary -- ALL PASS (HALTING)
+
+- Gate 1 (JSON + MD exist): PASS
+- Gate 2 (all 6 JSON blocks populated + sql_queries verbatim I6): PASS (20 SQL queries)
+- Gate 3 (5+ DS-AOEC-IDENTITY-* decisions): PASS (5 decisions)
+- Gate 4 (I9 empty diff: aoestats ATTACH READ_ONLY only): PASS
+- Gate 5 (cross-dataset verdict with CI + sample size): PASS (VERDICT A, CI=[0.867, 0.896])
+- Gate 6 (status files correct): PASS
+
+### Artifacts
+
+- `artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.json`
+- `artifacts/01_exploration/04_cleaning/01_04_04_identity_resolution.md`
+- `sandbox/aoe2/aoe2companion/01_exploration/04_cleaning/01_04_04_identity_resolution.py` + `.ipynb`
+
+**[CROSS]** VERDICT A (shared namespace) has cross-dataset implications: aoestats profile_id
+and aoec profileId are the same namespace, enabling a name-bridge for Invariant I2 in aoestats.
+See `reports/research_log.md` for the CROSS entry.
+
+---
+
 ## 2026-04-18 — [Phase 01 / Step 01_04_02] Data Cleaning Execution — ADDENDUM: duration_seconds + outlier flags (48 -> 51 cols)
 
 **Category:** A (science)
@@ -79,23 +158,23 @@ stays `complete` (addendum pattern per 01_04_03 ADDENDUM precedent; no phase-gat
 - **Gate +5a (HALTING)** — unit regression canary: `max(duration_seconds) <= 1_000_000_000`. PASS (max 3,279,303s ≈ 38 days, bogus abandoned-match wall-clock).
 - **Gate +5b (REPORT-ONLY)** — outlier count: rows with `duration_seconds > 86400`. Reported: **142 rows** (0.0002% of dataset) — bogus wall-clock from abandoned/paused matches.
 - **Gate +6 (HALTING)** — NULL fraction on duration_seconds: `≤ 1%`. PASS (0.0% — `finished` is nullable per schema but empirically zero-NULL in 1v1 ranked scope after filtering).
-- **Gate +3 relaxed to REPORT-ONLY for aoec:** 358 rows have negative duration (`finished < started` — clock skew in raw data). Not a unit bug (aoec's EXTRACT EPOCH conversion is not lossy); flagged for 01_04_02 augmentation follow-up PR.
+- **Gate +3 relaxed to REPORT-ONLY for aoec:** 358 rows have non-positive duration — decomposed as 342 strict-negative (`finished < started`, clock-skew in raw data) + 16 zero-duration (0-length match records, a distinct failure mode). Not a unit bug (aoec's EXTRACT EPOCH conversion is not lossy); flagged for 01_04_02 augmentation follow-up PR. (Cross-reference: 01_04_02 ADDENDUM confirms `negative_count_strict_lt0 = 342`, `zero_duration_count = 16`.)
 
 ### Duration stats (aoec)
-- min: -3,041s (358 clock-skew corrupted rows; flagged for 01_04_02 PR)
+- min: -3,041s (342 clock-skew negative + 16 zero-duration = 358 non-positive rows; addressed in 01_04_02 PR via is_duration_negative strict <0 flag + is_duration_suspicious >86400s flag)
 - p50: 1,433s (~24 min)
 - p99: 3,458s (~58 min)
 - max: 3,279,303s (~38 days — 142 bogus-duration rows)
 - null_count: 0
 - null_fraction: 0.0% (Gate +6 PASS)
 - outlier_count_gt_86400: 142
-- non_positive_count: 358
+- non_positive_count: 358 (342 strict-negative + 16 zero-duration)
 
 ### Gate summary — ALL PASS (18 gates: 12 original + 6 duration-related)
 - All 12 original gates: PASS
 - Gate +1 (9 cols, TIMESTAMP + BIGINT + VARCHAR dtypes): PASS
 - Gate +2 (null count reported): 0 NULLs
-- Gate +3 (non-positive, REPORT-ONLY for aoec): 358 rows clock-skew (flagged, not halting)
+- Gate +3 (non-positive, REPORT-ONLY for aoec): 358 rows non-positive (342 clock-skew + 16 zero-duration) (flagged, not halting)
 - Gate +4 (duration symmetry via IS DISTINCT FROM): 0 violations
 - Gate +5a (unit regression HALTING): PASS (max 3.3M < 1B)
 - Gate +5b (outlier REPORT-ONLY): 142 rows reported
@@ -109,7 +188,7 @@ stays `complete` (addendum pattern per 01_04_03 ADDENDUM precedent; no phase-gat
 9-col TABLE (not VIEW) due to self-join-on-VIEW + QUALIFY+CTE bugs. 3-step materialization preserved. Schema YAML `object_type_note` updated for 9-col ADDENDUM.
 
 ### Deferred follow-ups (per user-approved sequencing)
-- **01_04_02 augmentation PR:** add `duration_seconds` + `is_duration_suspicious` (142 outliers) + `is_duration_negative` (358 clock-skew rows) to `matches_1v1_clean` clean view.
+- **01_04_02 augmentation PR:** add `duration_seconds` + `is_duration_suspicious` (142 outliers) + `is_duration_negative` (342 strict-negative clock-skew rows; the 16 zero-duration rows are unflagged — see 01_04_02 ADDENDUM Q2 resolution) to `matches_1v1_clean` clean view.
 - **01_04_04 Identity Resolution PR:** aoe2companion `profileId` stability + cross-dataset mapping to aoestats `profile_id`.
 
 ---
@@ -1071,6 +1150,18 @@ Primary prediction scope: rm_1v1 (26.8M matches) + qp_rm_1v1 (3.7M matches) = 30
 - Is `matches_raw.rating` pre-match or post-match Elo? Answering this gates the entire aoe2companion feature set.
 - Root cause of 4.4M internally inconsistent 2-row matches?
 - The 428K NULL co-occurrence cluster — early data before API fields existed?
+
+### Plots (not in ROADMAP)
+
+The following 5 PNGs were generated as exploratory visualization supplements during the univariate
+census run. They are not declared in ROADMAP Step 01_02_04 (which is not plot-gated) and are not
+gate-critical, but exist on disk under `reports/artifacts/01_exploration/02_eda/plots/`:
+
+- `01_02_04_categorical_topk.png`
+- `01_02_04_numeric_boxplots.png`
+- `01_02_04_numeric_histograms.png`
+- `01_02_04_temporal_match_counts.png`
+- `01_02_04_won_distribution.png`
 
 ---
 

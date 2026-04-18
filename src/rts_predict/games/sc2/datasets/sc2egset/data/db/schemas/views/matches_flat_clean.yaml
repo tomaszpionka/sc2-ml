@@ -162,7 +162,7 @@ columns:
     / 22.4 (SC2 Faster loops/sec constant, I7) aggregated per replay_id. ADDENDUM
     2026-04-18.
   notes: 'POST_GAME_HISTORICAL. Game duration in seconds. Derived from player_history_all.header_elapsedGameLoops
-    / 22.4 (I7: details.gameSpeed cardinality=1 in sc2egset, research_log.md:333;
+    / 22.4 (I7: details.gameSpeed cardinality=1 in sc2egset, research_log.md:424;
     Blizzard SC2 Faster=22.4 loops/sec). SAFE as player-history aggregate (match_time
     < T). UNSAFE as direct game-T feature. Added in 01_04_02 ADDENDUM 2026-04-18.'
 - name: is_duration_suspicious
@@ -228,7 +228,7 @@ invariants:
     sql_queries block.
 - id: I7
   description: '22.4 loops/sec divisor: SC2 Faster game-speed constant. Provenance:
-    details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:333);
+    details.gameSpeed cardinality=1 in sc2egset (W02 census, research_log.md:424);
     Blizzard SC2 documentation. Established in 01_04_03 ADDENDUM.'
 - id: I9
   description: 01_04_02 (including this ADDENDUM) modifies the column SET, never the

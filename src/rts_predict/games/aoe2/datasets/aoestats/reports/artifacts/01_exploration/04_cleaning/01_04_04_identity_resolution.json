@@ -1,0 +1,344 @@
+{
+  "step": "01_04_04",
+  "dataset": "aoestats",
+  "date": "2026-04-18",
+  "task_a_sentinel_null_audit": {
+    "players_raw.profile_id": {
+      "type": "DOUBLE",
+      "n_rows": 107627584,
+      "n_null": 1185,
+      "n_zero": 0,
+      "n_negative": 0,
+      "n_minus_one_sentinel": 0,
+      "min": 18.0,
+      "max": 24853897.0,
+      "cardinality": 641662
+    },
+    "player_history_all.profile_id": {
+      "type": "BIGINT",
+      "n_rows": 107626399,
+      "n_null": 0,
+      "n_zero": 0,
+      "n_negative": 0,
+      "n_minus_one_sentinel": 0,
+      "min": 18,
+      "max": 24853897,
+      "cardinality": 641662
+    },
+    "matches_1v1_clean.p0_profile_id": {
+      "type": "BIGINT",
+      "n_rows": 17814947,
+      "n_null": 0,
+      "n_zero": 0,
+      "n_negative": 0,
+      "n_minus_one_sentinel": 0,
+      "min": 18,
+      "max": 24853897,
+      "cardinality": 310670
+    },
+    "matches_1v1_clean.p1_profile_id": {
+      "type": "BIGINT",
+      "n_rows": 17814947,
+      "n_null": 0,
+      "n_zero": 0,
+      "n_negative": 0,
+      "n_minus_one_sentinel": 0,
+      "min": 18,
+      "max": 24853301,
+      "cardinality": 309727
+    }
+  },
+  "task_b_activity_distribution": {
+    "total_profiles": 641662,
+    "match_count_quantiles": {
+      "q25": 2,
+      "q50": 13,
+      "q75": 116,
+      "q90": 479,
+      "q99": 2152,
+      "max": 15075
+    },
+    "active_days_quantiles": {
+      "q25": 1,
+      "q50": 6,
+      "q75": 41,
+      "q90": 148,
+      "q99": 519,
+      "max": 1064
+    },
+    "single_day_profiles": 160163,
+    "single_ladder_profiles": 372555,
+    "multi_ladder_profiles": 269107,
+    "max_leaderboards": 4
+  },
+  "task_c_duplicate_census": {
+    "duplicate_rows": 489,
+    "anchor": 489,
+    "tolerance": 10,
+    "drift": 0,
+    "status": "PASS"
+  },
+  "task_d_rating_trajectory": {
+    "seed": 20260418,
+    "reservoir_size": 10000,
+    "n_deltas": 11311282,
+    "n_large_delta_gt_500": 12047,
+    "large_delta_rate_pct": 0.1065,
+    "median_abs_delta": 16,
+    "p75_abs_delta": 17,
+    "p99_abs_delta": 226,
+    "max_abs_delta": 1444,
+    "threshold_500_provenance": "Anecdotal RTS convention: ~15x expected Elo K-factor swing. First-cut sanity bound, not calibrated."
+  },
+  "task_e_replay_summary": {
+    "sample_size_non_empty": 146,
+    "parseable_ast": 146,
+    "unparseable": 0,
+    "format": "Python dict (single-quote keys; ast.literal_eval required)",
+    "mean_length_chars": 1288.5,
+    "max_length_chars": 2236,
+    "top_keys": [
+      [
+        "age_stats",
+        146
+      ],
+      [
+        "opening_name",
+        146
+      ]
+    ],
+    "feasibility_note": "opening_name key present in all parseable rows. Name extraction is technically feasible via ast.literal_eval. DEFERRED: this step does not extract names (scope: feasibility probe only)."
+  },
+  "task_f_civ_fingerprint_jsd": {
+    "n_civs": 50,
+    "qualifying_threshold": {
+      "min_matches": 20,
+      "min_active_days": 180
+    },
+    "n_qualifying_profiles": 52455,
+    "within_profile_jsd": {
+      "n_profiles": 52455,
+      "quantiles": {
+        "p5": 0.027,
+        "p25": 0.0725,
+        "p50": 0.1262,
+        "p75": 0.1993,
+        "p95": 0.3472,
+        "p99": 0.48
+      },
+      "below_010": 19976,
+      "range_010_030": 27984,
+      "range_030_050": 4113,
+      "above_050": 382
+    },
+    "cross_profile_jsd": {
+      "n_pairs": 10000,
+      "quantiles": {
+        "p5": 0.0998,
+        "p25": 0.2288,
+        "p50": 0.3606,
+        "p75": 0.4885,
+        "p95": 0.6257,
+        "p99": 0.6711
+      },
+      "sample_profiles_used": 300
+    },
+    "example_table": [
+      {
+        "profile_id": 3288518,
+        "match_count": 15075,
+        "active_days": 741,
+        "jsd": 0.2419,
+        "top_civ_first_half": "malay",
+        "pct_first_half": 0.367,
+        "top_civ_second_half": "malay",
+        "pct_second_half": 0.323
+      },
+      {
+        "profile_id": 4216671,
+        "match_count": 11230,
+        "active_days": 977,
+        "jsd": 0.132,
+        "top_civ_first_half": "franks",
+        "pct_first_half": 0.191,
+        "top_civ_second_half": "vikings",
+        "pct_second_half": 0.189
+      },
+      {
+        "profile_id": 14527552,
+        "match_count": 10949,
+        "active_days": 834,
+        "jsd": 0.1334,
+        "top_civ_first_half": "saracens",
+        "pct_first_half": 0.081,
+        "top_civ_second_half": "dravidians",
+        "pct_second_half": 0.195
+      },
+      {
+        "profile_id": 15369793,
+        "match_count": 10205,
+        "active_days": 693,
+        "jsd": 0.1131,
+        "top_civ_first_half": "mongols",
+        "pct_first_half": 0.477,
+        "top_civ_second_half": "spanish",
+        "pct_second_half": 0.276
+      },
+      {
+        "profile_id": 5600740,
+        "match_count": 10199,
+        "active_days": 881,
+        "jsd": 0.1856,
+        "top_civ_first_half": "goths",
+        "pct_first_half": 0.209,
+        "top_civ_second_half": "celts",
+        "pct_second_half": 0.101
+      },
+      {
+        "profile_id": 11962723,
+        "match_count": 10151,
+        "active_days": 729,
+        "jsd": 0.1448,
+        "top_civ_first_half": "khmer",
+        "pct_first_half": 0.147,
+        "top_civ_second_half": "ethiopians",
+        "pct_second_half": 0.146
+      },
+      {
+        "profile_id": 9958595,
+        "match_count": 9398,
+        "active_days": 871,
+        "jsd": 0.0425,
+        "top_civ_first_half": "spanish",
+        "pct_first_half": 0.486,
+        "top_civ_second_half": "spanish",
+        "pct_second_half": 0.341
+      },
+      {
+        "profile_id": 6297927,
+        "match_count": 9167,
+        "active_days": 919,
+        "jsd": 0.0789,
+        "top_civ_first_half": "franks",
+        "pct_first_half": 0.162,
+        "top_civ_second_half": "franks",
+        "pct_second_half": 0.102
+      },
+      {
+        "profile_id": 15802329,
+        "match_count": 8861,
+        "active_days": 543,
+        "jsd": 0.1137,
+        "top_civ_first_half": "gurjaras",
+        "pct_first_half": 0.204,
+        "top_civ_second_half": "gurjaras",
+        "pct_second_half": 0.271
+      },
+      {
+        "profile_id": 5864544,
+        "match_count": 8752,
+        "active_days": 1009,
+        "jsd": 0.1352,
+        "top_civ_first_half": "persians",
+        "pct_first_half": 0.162,
+        "top_civ_second_half": "koreans",
+        "pct_second_half": 0.159
+      }
+    ],
+    "i7_hedge": "Thresholds 0.10/0.30/0.50 derive from symmetric KL divergence interpretation. Hahn et al. 2020 (SC2 APM/build-order) is adjacent literature, not direct. Civ-marginal JSD over <= 50 civs with meta drift is a coarse proxy. Rename/multi-account resolution for aoestats remains unsolved pending cross-dataset bridge."
+  },
+  "task_g_cross_dataset_feasibility": {
+    "window": "2026-01-25T00:00:00Z .. 2026-02-01T00:00:00Z",
+    "epoch_start": 1769295600,
+    "epoch_end": 1769900400,
+    "aoestats_leaderboard_filter": "leaderboard='random_map' (matches_raw)",
+    "aoec_leaderboard_filter": "internalLeaderboardId IN (6, 18)",
+    "seed": 20260418,
+    "n_aoestats_sample": 1000,
+    "n_aoec_1v1_matches": 193009,
+    "blocking_secs": 60,
+    "elo_band": 50,
+    "block_hits": 41998,
+    "block_hit_rate": 41.998,
+    "filtered_hits": 993,
+    "filtered_match_rate": 0.993,
+    "n_with_profile_comparison": 993,
+    "profile_id_agreement_rate": 0.996,
+    "n_agreements": 989,
+    "bootstrap_ci_95": [
+      0.9919,
+      0.999
+    ],
+    "verdict": "A",
+    "verdict_reason": "CI lower bound 0.9919 > 0.85 AND filtered >= 30 (strong namespace overlap)",
+    "i7_provenance": {
+      "60s_temporal_window": "Conventional API submission delay (exploratory heuristic).",
+      "50_elo_band": "Derived from aoestats 01_03_03 finding: avg_elo within 0.5 ELO of player old_rating average (max_abs_deviation=0.0 for 1v1 scope). 50 is ~100x conservative.",
+      "materialized_cte": "DuckDB RESERVOIR(N) on TIMESTAMPTZ WHERE clause samples from full table; MATERIALIZED CTE forces filter evaluation before sampling."
+    }
+  },
+  "decisions": [
+    {
+      "id": "DS-AOESTATS-IDENTITY-01",
+      "category": "identity-key",
+      "column": "profile_id (players_raw DOUBLE; player_history_all BIGINT; matches_1v1_clean p0/p1_profile_id BIGINT)",
+      "finding": "profile_id is the sole identity signal. No nickname column exists in any raw table (14 cols in players_raw, 0 name/display/nick fields). I2 canonical-nickname invariant is natively unmeetable for aoestats. profile_id is free of NULL (in player_history_all), zero, negative, and -1 sentinel values. Cardinality: 641,662 distinct profiles. Type asymmetry: DOUBLE in players_raw (DuckDB promotion artifact); BIGINT in all views (safe for integer comparison after CAST).",
+      "recommendation": "USE profile_id (BIGINT) as the Phase 02 entity key for aoestats. Document absence of nickname. Do not attempt to merge profiles via handle similarity -- no handle data exists.",
+      "action": "Phase 02 design uses profile_id as identity key for aoestats."
+    },
+    {
+      "id": "DS-AOESTATS-IDENTITY-02",
+      "category": "NULL/sentinel",
+      "column": "players_raw.profile_id (1,185 NULLs)",
+      "finding": "players_raw has 1,185 NULL profile_id rows (0.001% of 107.6M rows). These are excluded by the player_history_all filter (profile_id IS NOT NULL). No zero, negative, or -1 sentinel detected in any profile_id column across all 3 objects audited. Task C confirms 489 duplicate (game_id, profile_id) rows via census-aligned COALESCE key -- matching 01_03_01 anchor (drift=0).",
+      "recommendation": "No additional sentinel handling required. The 01_04_00 filter (profile_id IS NOT NULL) already resolves the NULL population. 489 duplicates are negligible (< 0.001%) and carry no signal for identity resolution.",
+      "action": "No VIEW DDL changes needed. Document in Phase 02 as known clean."
+    },
+    {
+      "id": "DS-AOESTATS-IDENTITY-03",
+      "category": "rename-detection-substitute",
+      "column": "civ distribution (player_history_all); replay_summary_raw (players_raw)",
+      "finding": "Without nickname: civ-fingerprint JSD serves as the best available behavioural surrogate. Within-profile JSD (first-half vs second-half): median=0.1262, p95=0.3472. Cross-profile JSD control (random pairs): median=0.3606, p95=0.6257. The within-profile distribution is consistently lower than cross-profile, confirming temporal stability. However: Hahn et al. 2020 (SC2 APM/build-order) is adjacent, not direct. Civ-marginal JSD over <= 50 civs with meta drift is a coarse proxy. replay_summary_raw is 13.95% non-empty; content is Python dict format (not JSON); contains 'opening_name' key (name extraction feasible via ast.literal_eval but deferred -- out of scope for this step).",
+      "recommendation": "Rename/multi-account resolution for aoestats remains unsolved. Civ-fingerprint JSD is NOT sufficient as a standalone rename detector. Flag for CROSS PR if cross-dataset bridge (Task G verdict) is pursued. replay_summary_raw name extraction deferred to dedicated step.",
+      "action": "Phase 02 uses profile_id as-is. Record I2 limitation in thesis \u00a74.2.2."
+    },
+    {
+      "id": "DS-AOESTATS-IDENTITY-04",
+      "category": "collision",
+      "column": "profile_id (cross-table type collision: DOUBLE vs BIGINT)",
+      "finding": "players_raw stores profile_id as DOUBLE (DuckDB Arrow promotion from Parquet mixed-type weekly files). All analytical views cast to BIGINT. Range: min=18, max=24,853,897 -- well within BIGINT safe range (no precision loss in DOUBLE-to-BIGINT cast for integers <= 2^53). Multi-ladder profiles: 269,107 of 641,662 profiles appear in > 1 leaderboard (random_map, team_random_map, co_random_map, co_team_rm). Profile-level collision risk: negligible (global namespace, no region-scoped ID like sc2egset toon_id).",
+      "recommendation": "Always CAST(profile_id AS BIGINT) when joining players_raw to views. Multi-ladder profiles are expected -- the same player may have different rating trajectories per leaderboard. Phase 02 should scope rating computation to leaderboard='random_map' for 1v1 RM.",
+      "action": "Document type cast in Phase 02 feature pipeline docstring."
+    },
+    {
+      "id": "DS-AOESTATS-IDENTITY-05",
+      "category": "cross-dataset-bridge",
+      "column": "profile_id (aoestats) vs profileId (aoec)",
+      "finding": "Cross-dataset feasibility (Task G): 1,000-match reservoir from 2026-01-25..2026-01-31. Blocking: 60s temporal + civ-set + 50-ELO. filtered_hits=993, profile_id_agreement_rate=0.9960, 95% bootstrap CI=[0.9919, 0.9990]. Verdict: A -- CI lower bound 0.9919 > 0.85 AND filtered >= 30 (strong namespace overlap). aoestats profile_id and aoe2companion profileId appear to share the same integer namespace (both from aoe2insights.com API lineage). This enables a cross-dataset name bridge: aoe2companion.name can serve as I2 canonical nickname for aoestats via profile_id=profileId join.",
+      "recommendation": "Proceed with cross-dataset profile_id bridge for the name resolution path. Full mapping deferred to CROSS PR (not Phase 01 scope). Conditional on aoec T06 verdict agreement (symmetric rubric).",
+      "action": "Flag for CROSS PR. Thesis \u00a74.2.2 can note namespace-sharing as empirically supported by Task G agreement rate."
+    }
+  ],
+  "sql_queries": {
+    "players_raw_profile_id": "\nSELECT\n  COUNT(*)                                        AS n_rows,\n  COUNT(*) FILTER (WHERE profile_id IS NULL)      AS n_null,\n  COUNT(*) FILTER (WHERE profile_id = 0)          AS n_zero,\n  COUNT(*) FILTER (WHERE profile_id < 0)          AS n_negative,\n  COUNT(*) FILTER (WHERE profile_id = -1)         AS n_minus_one_sentinel,\n  MIN(profile_id)                                 AS min_val,\n  MAX(profile_id)                                 AS max_val,\n  COUNT(DISTINCT profile_id)                      AS cardinality\nFROM players_raw\n",
+    "player_history_all_profile_id": "\nSELECT\n  COUNT(*)                                        AS n_rows,\n  COUNT(*) FILTER (WHERE profile_id IS NULL)      AS n_null,\n  COUNT(*) FILTER (WHERE profile_id = 0)          AS n_zero,\n  COUNT(*) FILTER (WHERE profile_id < 0)          AS n_negative,\n  COUNT(*) FILTER (WHERE profile_id = -1)         AS n_minus_one_sentinel,\n  MIN(profile_id)                                 AS min_val,\n  MAX(profile_id)                                 AS max_val,\n  COUNT(DISTINCT profile_id)                      AS cardinality\nFROM player_history_all\n",
+    "matches_1v1_clean_p0_profile_id": "\nSELECT\n  COUNT(*)                                          AS n_rows,\n  COUNT(*) FILTER (WHERE p0_profile_id IS NULL)     AS n_null,\n  COUNT(*) FILTER (WHERE p0_profile_id = 0)         AS n_zero,\n  COUNT(*) FILTER (WHERE p0_profile_id < 0)         AS n_negative,\n  COUNT(*) FILTER (WHERE p0_profile_id = -1)        AS n_minus_one_sentinel,\n  MIN(p0_profile_id)                                AS min_val,\n  MAX(p0_profile_id)                                AS max_val,\n  COUNT(DISTINCT p0_profile_id)                     AS cardinality\nFROM matches_1v1_clean\n",
+    "matches_1v1_clean_p1_profile_id": "\nSELECT\n  COUNT(*)                                          AS n_rows,\n  COUNT(*) FILTER (WHERE p1_profile_id IS NULL)     AS n_null,\n  COUNT(*) FILTER (WHERE p1_profile_id = 0)         AS n_zero,\n  COUNT(*) FILTER (WHERE p1_profile_id < 0)         AS n_negative,\n  COUNT(*) FILTER (WHERE p1_profile_id = -1)        AS n_minus_one_sentinel,\n  MIN(p1_profile_id)                                AS min_val,\n  MAX(p1_profile_id)                                AS max_val,\n  COUNT(DISTINCT p1_profile_id)                     AS cardinality\nFROM matches_1v1_clean\n",
+    "profile_activity_distribution": "\nWITH profile_stats AS (\n  SELECT\n    profile_id,\n    COUNT(*)                                                AS match_count,\n    COUNT(DISTINCT CAST(started_timestamp AS DATE))         AS active_days\n  FROM player_history_all\n  GROUP BY profile_id\n)\nSELECT\n  COUNT(*)                                        AS total_profiles,\n  APPROX_QUANTILE(match_count, 0.25)             AS match_q25,\n  APPROX_QUANTILE(match_count, 0.50)             AS match_q50,\n  APPROX_QUANTILE(match_count, 0.75)             AS match_q75,\n  APPROX_QUANTILE(match_count, 0.90)             AS match_q90,\n  APPROX_QUANTILE(match_count, 0.99)             AS match_q99,\n  MAX(match_count)                                AS match_max,\n  APPROX_QUANTILE(active_days, 0.25)             AS days_q25,\n  APPROX_QUANTILE(active_days, 0.50)             AS days_q50,\n  APPROX_QUANTILE(active_days, 0.75)             AS days_q75,\n  APPROX_QUANTILE(active_days, 0.90)             AS days_q90,\n  APPROX_QUANTILE(active_days, 0.99)             AS days_q99,\n  MAX(active_days)                                AS days_max,\n  COUNT(*) FILTER (WHERE active_days = 1)        AS single_day_profiles\nFROM profile_stats\n",
+    "multi_ladder_profiles": "\nWITH profile_ladders AS (\n  SELECT\n    p.profile_id,\n    COUNT(DISTINCT m.leaderboard)   AS n_leaderboards\n  FROM players_raw p\n  JOIN matches_raw m ON p.game_id = m.game_id\n  WHERE p.profile_id IS NOT NULL\n  GROUP BY p.profile_id\n)\nSELECT\n  COUNT(*) FILTER (WHERE n_leaderboards = 1)  AS single_ladder_profiles,\n  COUNT(*) FILTER (WHERE n_leaderboards > 1)  AS multi_ladder_profiles,\n  MAX(n_leaderboards)                          AS max_leaderboards\nFROM profile_ladders\n",
+    "duplicate_game_id_profile_id": "\nWITH keyed AS (\n  SELECT\n    CAST(game_id AS VARCHAR)\n      || '_'\n      || COALESCE(CAST(profile_id AS VARCHAR), '__NULL__')  AS row_key\n  FROM players_raw\n)\nSELECT COUNT(*) - COUNT(DISTINCT row_key)  AS duplicate_rows\nFROM keyed\n",
+    "rating_trajectory_monotonicity": "\nWITH profile_sample AS (\n  SELECT DISTINCT profile_id\n  FROM player_history_all\n  USING SAMPLE RESERVOIR(10000 ROWS) REPEATABLE (20260418)\n),\ntrajectory AS (\n  SELECT\n    p.profile_id,\n    p.old_rating,\n    LAG(p.old_rating) OVER (\n      PARTITION BY p.profile_id\n      ORDER BY p.started_timestamp\n    ) AS prev_rating\n  FROM player_history_all p\n  INNER JOIN profile_sample ps ON p.profile_id = ps.profile_id\n),\ndeltas AS (\n  SELECT ABS(old_rating - prev_rating)  AS abs_delta\n  FROM trajectory\n  WHERE prev_rating IS NOT NULL\n)\nSELECT\n  COUNT(*)                                              AS n_deltas,\n  COUNT(*) FILTER (WHERE abs_delta > 500)               AS n_large_delta,\n  APPROX_QUANTILE(abs_delta, 0.50)                     AS median_abs_delta,\n  APPROX_QUANTILE(abs_delta, 0.75)                     AS p75_abs_delta,\n  APPROX_QUANTILE(abs_delta, 0.99)                     AS p99_abs_delta,\n  MAX(abs_delta)                                        AS max_abs_delta\nFROM deltas\n",
+    "replay_summary_raw_sample": "\nSELECT replay_summary_raw, LENGTH(replay_summary_raw) AS len_chars\nFROM players_raw\nWHERE replay_summary_raw IS NOT NULL\n  AND replay_summary_raw != '{}'\n  AND LENGTH(replay_summary_raw) > 2\nUSING SAMPLE RESERVOIR(1000 ROWS) REPEATABLE (20260418)\n",
+    "distinct_civs": "\nSELECT DISTINCT civ FROM players_raw WHERE civ IS NOT NULL ORDER BY civ\n",
+    "qualifying_profiles": "\nWITH profile_stats AS (\n  SELECT\n    profile_id,\n    COUNT(*)                                        AS match_count,\n    COUNT(DISTINCT CAST(started_timestamp AS DATE)) AS active_days\n  FROM player_history_all\n  GROUP BY profile_id\n)\nSELECT profile_id, match_count, active_days\nFROM profile_stats\nWHERE match_count >= 20 AND active_days >= 180\nORDER BY profile_id\n",
+    "cross_profile_sample_data": "\nSELECT profile_id, civ\nFROM player_history_all\nWHERE profile_id IN (2352782, 1902658, 1339133, 2730762, 14721569, 2285294, 2703038, 8375848, 4524460, 977212, 8520112, 1865614, 14543360, 2717801, 1927985, 150724, 19076073, 2669967, 6330881, 15574550, 18413293, 516281, 2075943, 282642, 289370, 9497610, 5184098, 6743206, 757703, 9549602, 14916741, 269262, 2974934, 9800520, 21582539, 3287443, 1617766, 14218240, 6172119, 11107320, 553512, 15676372, 15460134, 1414358, 1998890, 1078139, 9853349, 6933119, 10107616, 13127510, 15546113, 1485562, 3487439, 1740867, 389012, 310739, 17959211, 646796, 2835132, 6837579, 1379558, 274273, 8720946, 663129, 3582167, 2566300, 1519424, 2940380, 427808, 2373262, 2305392, 2180663, 3414156, 4818612, 19165500, 9391793, 6811845, 340055, 1050786, 5344843, 3996006, 214956, 16725441, 10418382, 9709346, 12372315, 18865854, 2196242, 3122862, 1573613, 391135, 1939192, 18557967, 8107625, 2062893, 5256484, 792427, 12466177, 216097, 5859589, 12104086, 348528, 6247351, 4974432, 5310392, 1983223, 2931864, 950350, 6330685, 234260, 5869824, 3397970, 1116624, 7157588, 16744914, 3078289, 10533508, 1149822, 10023895, 3138507, 18975194, 4946902, 20917603, 10195015, 11188096, 18777147, 4473091, 5640709, 6078403, 22007677, 11742981, 1520568, 3751045, 12110293, 17775264, 2373277, 9662594, 1135519, 1471578, 3566006, 2336868, 5676363, 4015859, 16599832, 19656253, 10249337, 16822950, 2447368, 4961670, 15089824, 1900688, 1952573, 2806400, 5580896, 12981532, 5879701, 12046699, 1480531, 4007441, 4524013, 15507280, 5298963, 12553425, 20465449, 11267006, 3505483, 17601982, 5701774, 3416430, 2540021, 4172478, 2046359, 1805289, 381295, 10173997, 1336451, 20270880, 489387, 14202500, 4807032, 11768258, 17894735, 136886, 11387865, 881305, 221880, 6323951, 401659, 13837017, 5350024, 15284432, 18952870, 20565426, 13379095, 20163365, 3399102, 6008539, 12601671, 15633726, 2559832, 11477517, 1111925, 9300414, 273755, 1705638, 12466652, 4013787, 3123018, 2523082, 9240071, 10015512, 1307192, 17807098, 8526904, 15167550, 19199851, 21211574, 6862241, 12365938, 3429069, 1024751, 6319006, 108657, 1359694, 5376064, 5597283, 11679317, 12620548, 19113594, 10747984, 14307646, 520381, 9433982, 4949337, 2242129, 3129236, 3734334, 11597958, 350548, 11629811, 2561173, 9667860, 4672968, 3063883, 401392, 20276796, 5853537, 9305712, 17805075, 966145, 3062220, 10264006, 5400130, 2538653, 837799, 2083898, 911970, 6185265, 10481532, 18660694, 1039991, 2453569, 11499140, 11611477, 19173363, 300039, 2536536, 765895, 272093, 11625311, 9657493, 12240862, 12053996, 1745329, 11839047, 1442762, 10894912, 2389397, 6164942, 9646208, 1740497, 9595115, 10592102, 10756257, 2323372, 3324987, 4287853, 17174163, 677251, 10469951, 4392291, 239238, 3133557, 1081260, 17038919, 575850, 9114379, 11248372, 2561448, 60235) AND civ IS NOT NULL\nORDER BY profile_id\n",
+    "aoestats_rm_1v1_sample": "\nWITH window_matches AS MATERIALIZED (\n  SELECT\n    game_id,\n    EPOCH(started_timestamp AT TIME ZONE 'UTC')    AS epoch_secs,\n    p0_profile_id,\n    p1_profile_id,\n    LOWER(COALESCE(p0_civ, ''))                    AS p0_civ,\n    LOWER(COALESCE(p1_civ, ''))                    AS p1_civ,\n    p0_old_rating,\n    p1_old_rating\n  FROM matches_1v1_clean\n  WHERE EPOCH(started_timestamp AT TIME ZONE 'UTC') >= 1769295600\n    AND EPOCH(started_timestamp AT TIME ZONE 'UTC') < 1769900400\n)\nSELECT * FROM window_matches\nUSING SAMPLE RESERVOIR(1000 ROWS) REPEATABLE (20260418)\n",
+    "aoec_rm_1v1_window": "\nSELECT\n  matchId,\n  EPOCH(started)                              AS epoch_secs,\n  profileId,\n  LOWER(COALESCE(civ, ''))                    AS civ,\n  rating\nFROM aoec.matches_raw\nWHERE internalLeaderboardId IN (6, 18)\n  AND status = 'player'\n  AND EPOCH(started) >= 1769295600\n  AND EPOCH(started) < 1769900400\n  AND profileId IS NOT NULL\n  AND profileId != -1\n"
+  },
+  "invariants": {
+    "I2": "profile_id is sole identity signal; no nickname column exists (14 cols in players_raw); I2 natively unmeetable for aoestats.",
+    "I6": "All SQL queries stored verbatim in sql_queries block above.",
+    "I7": "All thresholds documented: 500 ELO delta (anecdotal sanity bound), 50 ELO blocking band (100x conservative vs 01_03_03 0.5-ELO finding), 60s temporal window (conventional API delay), 0.10/0.30/0.50 JSD (symmetric KL interpretation, hedged).",
+    "I9": "No new VIEWs, no raw-table modifications, no schema YAML changes."
+  }
+}

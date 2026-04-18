@@ -30,7 +30,7 @@ POST_GAME_HISTORICAL -- excluded from PRE_GAME features.
 | `faction` | VARCHAR | Raw race stems `Prot`/`Terr`/`Zerg` (4-char; NOT full names). PER-DATASET POLYMORPHIC |
 | `opponent_faction` | VARCHAR | Opposing race (same vocabulary as faction) |
 | `won` | BOOLEAN | Focal player's outcome (complementary between the 2 rows) |
-| `duration_seconds` | BIGINT | POST_GAME_HISTORICAL. Duration in seconds = header_elapsedGameLoops / 22.4. 22.4 loops/sec: SC2 Faster constant (Liquipedia); details.gameSpeed cardinality=1 (research_log.md:333). |
+| `duration_seconds` | BIGINT | POST_GAME_HISTORICAL. Duration in seconds = header_elapsedGameLoops / 22.4. 22.4 loops/sec: SC2 Faster constant (Liquipedia); details.gameSpeed cardinality=1 (research_log.md:424). |
 | `dataset_tag` | VARCHAR | Constant `'sc2egset'` |
 
 ## Row-count flow
