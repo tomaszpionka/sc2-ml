@@ -1,0 +1,216 @@
+{
+  "step": "01_04_04b",
+  "title": "sc2egset worldwide player identity VIEW -- decomposition-based",
+  "dataset": "sc2egset",
+  "game": "sc2",
+  "generated_date": "2026-04-18",
+  "plan_version": "R4",
+  "summary": {
+    "approach": "toon_id IS the player_id_worldwide (full Battle.net R-S2-G-P qualifier). No hashing, no composite encoding. Thin decomposition VIEW parses 4 segments into human-readable columns.",
+    "view_row_count": 2494,
+    "distinct_player_id_worldwide": 2494,
+    "excluded_outliers": 2,
+    "outlier_reason": "Observer-profile ghost entries (empty toon_id, handicap=0, color_rgba=0,0,0,0).",
+    "nickname_multiplicity": {
+      "toon_ids_with_multiple_nicknames": 273,
+      "resolution": "Most-frequent nickname per toon_id (frequency-MAX, tie-break alphabetical)."
+    },
+    "userid_cardinality_explanation": "userID values 0-15 are local Battle.net profile SLOT INDICES stored in the replay header. SC2 client supports up to 16 locally registered profiles. Cardinality=16 = maximum number of slots. userID is NOT a player identifier."
+  },
+  "gate_results": {
+    "row_count": {
+      "expected": 2494,
+      "actual": 2494,
+      "pass": true
+    },
+    "distinct_player_id_worldwide": {
+      "expected": 2494,
+      "actual": 2494,
+      "pass": true
+    },
+    "describe_7_cols": {
+      "pass": true,
+      "dtypes": "VARCHAR,INTEGER,INTEGER,BIGINT,VARCHAR,VARCHAR,VARCHAR"
+    },
+    "serral_spot_check": {
+      "toon_id": "2-S2-1-315071",
+      "region_code": 2,
+      "realm_code": 1,
+      "profile_id": 315071,
+      "region_label": "Europe",
+      "nickname": "<ENCE>Serral",
+      "pass": true
+    },
+    "format_consistency_n_canonical": {
+      "expected": 44815,
+      "actual": 44815,
+      "pass": true
+    },
+    "format_consistency_n_empty": {
+      "expected": 2,
+      "actual": 2,
+      "pass": true
+    },
+    "format_consistency_n_region_consistent": {
+      "expected": 44815,
+      "actual": 44815,
+      "pass": true
+    }
+  },
+  "column_audit": [
+    {
+      "column": "toon_id",
+      "cardinality": 2495,
+      "sample": "2-S2-1-315071 (Serral EU), 1-S2-1-10010469, 98-S2-1-690",
+      "inferred_role": "PRIMARY KEY (region-scoped Battle.net R-S2-G-P qualifier)",
+      "notes": "2 rows have empty string; excluded from VIEW by LIKE filter"
+    },
+    {
+      "column": "nickname",
+      "cardinality": 1106,
+      "sample": "Serral, Lambo, Optimus, Lilbow",
+      "inferred_role": "DISPLAY NAME (not globally unique; changes with clan tag)",
+      "notes": "273 toon_ids have >1 nickname; VIEW picks most-frequent"
+    },
+    {
+      "column": "region",
+      "cardinality": 6,
+      "sample": "Europe, US, Korea, China, Unknown",
+      "inferred_role": "DERIVED LABEL (redundant with toon_id segment 1 via region-code map)",
+      "notes": "2 empty-string rows (= outlier rows with empty toon_id)"
+    },
+    {
+      "column": "realm",
+      "cardinality": 9,
+      "sample": "Europe, North America, Korea, China, Taiwan, Russia, Latin America",
+      "inferred_role": "DERIVED LABEL (redundant with toon_id segment 3)",
+      "notes": "2 empty-string rows (same outliers)"
+    },
+    {
+      "column": "userID",
+      "cardinality": 16,
+      "sample": "0, 1, 2, ... 15",
+      "inferred_role": "LOCAL PROFILE SLOT INDEX (0..15 = observer's Battle.net client profile slots)",
+      "notes": "NOT a player identifier. Cardinality=16 = max local SC2 profiles per client."
+    },
+    {
+      "column": "playerID",
+      "cardinality": 9,
+      "sample": "1, 2",
+      "inferred_role": "IN-GAME SLOT (1=player1, 2=player2 in 1v1; 3-9 for non-1v1 relics)",
+      "notes": "99.9% are playerID 1 or 2."
+    }
+  ],
+  "sql_queries": {
+    "CELL_B_CARDINALITY_SQL": "SELECT\n    COUNT(*)                AS total_rows,\n    COUNT(DISTINCT toon_id)   AS card_toon_id,\n    COUNT(DISTINCT nickname)  AS card_nickname,\n    COUNT(DISTINCT region)    AS card_region,\n    COUNT(DISTINCT realm)     AS card_realm,\n    COUNT(DISTINCT userID)    AS card_userID,\n    COUNT(DISTINCT playerID)  AS card_playerID\nFROM replay_players_raw",
+    "CELL_B_USERID_DIST_SQL": "SELECT userID, COUNT(*) AS cnt\nFROM replay_players_raw\nGROUP BY userID\nORDER BY userID",
+    "CELL_B_PLAYERID_DIST_SQL": "SELECT playerID, COUNT(*) AS cnt\nFROM replay_players_raw\nGROUP BY playerID\nORDER BY playerID",
+    "CELL_C_FORMAT_SQL": "SELECT\n  COUNT(*) AS total,\n  SUM(CASE WHEN toon_id IS NULL THEN 1 ELSE 0 END)         AS n_null,\n  SUM(CASE WHEN LENGTH(toon_id) = 0 THEN 1 ELSE 0 END)     AS n_empty,\n  SUM(CASE WHEN toon_id LIKE '%-S2-%-%' THEN 1 ELSE 0 END) AS n_canonical_format,\n  SUM(CASE WHEN toon_id LIKE '%-S2-%-%'\n           AND CAST(SPLIT_PART(toon_id, '-', 1) AS INT) =\n               CASE region\n                 WHEN 'US'      THEN 1\n                 WHEN 'Europe'  THEN 2\n                 WHEN 'Korea'   THEN 3\n                 WHEN 'China'   THEN 5\n                 WHEN 'SEA'     THEN 6\n                 WHEN 'Unknown' THEN 98\n                 ELSE -1\n               END\n           THEN 1 ELSE 0 END) AS n_region_consistent\nFROM replay_players_raw",
+    "CREATE_VIEW_SQL": "CREATE OR REPLACE VIEW player_identity_worldwide AS\nWITH nickname_ranked AS (\n    SELECT\n        toon_id,\n        nickname,\n        ROW_NUMBER() OVER (\n            PARTITION BY toon_id\n            ORDER BY COUNT(*) DESC, nickname\n        ) AS rn\n    FROM replay_players_raw\n    WHERE toon_id LIKE '%-S2-%-%'\n    GROUP BY toon_id, nickname\n)\nSELECT DISTINCT\n    rp.toon_id                                       AS player_id_worldwide,\n    CAST(SPLIT_PART(rp.toon_id, '-', 1) AS INT)      AS region_code,\n    CAST(SPLIT_PART(rp.toon_id, '-', 3) AS INT)      AS realm_code,\n    CAST(SPLIT_PART(rp.toon_id, '-', 4) AS BIGINT)   AS profile_id,\n    rp.region                                        AS region_label,\n    rp.realm                                         AS realm_label,\n    nr.nickname                                      AS nickname_case_sensitive\nFROM replay_players_raw rp\nJOIN nickname_ranked nr ON rp.toon_id = nr.toon_id AND nr.rn = 1\nWHERE rp.toon_id LIKE '%-S2-%-%'",
+    "SERRAL_CHECK_SQL": "SELECT * FROM player_identity_worldwide\nWHERE player_id_worldwide = '2-S2-1-315071'",
+    "CELL_F_OUTLIER_SQL": "SELECT\n    rp.filename,\n    rp.toon_id,\n    rp.nickname,\n    rp.playerID,\n    rp.userID,\n    rp.race,\n    rp.selectedRace,\n    rp.result,\n    rp.MMR,\n    rp.APM,\n    rp.SQ,\n    rp.handicap,\n    rp.color_r,\n    rp.color_g,\n    rp.color_b,\n    rp.color_a,\n    rp.region,\n    rp.realm,\n    rm.details.timeUTC        AS details_timeUTC,\n    rm.metadata.gameVersion   AS metadata_gameVersion,\n    rm.metadata.mapName       AS metadata_mapName,\n    rm.details.isBlizzardMap  AS details_isBlizzardMap\nFROM replay_players_raw rp\nLEFT JOIN replays_meta_raw rm ON rp.filename = rm.filename\nWHERE rp.toon_id IS NULL OR LENGTH(rp.toon_id) = 0\nORDER BY rp.filename",
+    "CELL_G_OPPONENT_SQL": "SELECT\n    rp2.filename,\n    rp2.toon_id                AS opponent_toon_id,\n    rp2.nickname               AS opponent_nickname,\n    rp2.region                 AS opponent_region,\n    rp2.result                 AS opponent_result,\n    rp2.race                   AS opponent_race,\n    rp2.MMR                    AS opponent_MMR\nFROM replay_players_raw rp1\nJOIN replay_players_raw rp2 ON rp1.filename = rp2.filename\nWHERE (rp1.toon_id IS NULL OR LENGTH(rp1.toon_id) = 0)\n  AND rp2.toon_id IS NOT NULL\n  AND LENGTH(rp2.toon_id) > 0\nORDER BY rp1.filename"
+  },
+  "outliers_empty_toon_id": {
+    "count": 2,
+    "filenames": [
+      "2017_IEM_XI_World_Championship_Katowice/2017_IEM_XI_World_Championship_Katowice_data/63a9f9bf14012cd277787af4ab9d9e96.SC2Replay.json",
+      "2019_HomeStory_Cup_XIX/2019_HomeStory_Cup_XIX_data/0eba71d4cdcf5a159a818a4c83bbb9d2.SC2Replay.json"
+    ],
+    "replay_ids": [
+      "63a9f9bf14012cd277787af4ab9d9e96",
+      "0eba71d4cdcf5a159a818a4c83bbb9d2"
+    ],
+    "tournaments_inferred": [
+      "2017_IEM_XI_World_Championship_Katowice",
+      "2019_HomeStory_Cup_XIX"
+    ],
+    "dates": [
+      "2017-02-27T11:10:20.1725727Z",
+      "2019-06-27T14:49:26.4398203Z"
+    ],
+    "maps": [
+      "Bel'Shir Vestige LE (Void)",
+      "Thunderbird LE"
+    ],
+    "game_versions": [
+      "3.10.1.49957",
+      "4.9.2.74741"
+    ],
+    "opponent_toon_ids": [
+      "2-S2-1-3074703",
+      "2-S2-1-3437681"
+    ],
+    "opponent_nicknames": [
+      "<dPix>Optimus",
+      "<QLASH>Lambo"
+    ],
+    "opponent_valid": [
+      true,
+      true
+    ],
+    "fingerprint": {
+      "toon_id": "'' (empty string, not NULL)",
+      "nickname": "'' (empty string)",
+      "region": "'' (empty string)",
+      "realm": "'' (empty string)",
+      "handicap": 0,
+      "color_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selectedRace": "Rand",
+      "playerID": 2,
+      "userID": 0,
+      "APM": [
+        20,
+        6
+      ],
+      "result": [
+        "Win",
+        "Win"
+      ]
+    },
+    "assessment": "Observer-profile ghost entries: the sc2egset replay parser captured the replay-viewer's own local Battle.net profile (stored in replay header, referenced via userID=0 slot) as a second player row. No server-resolved identity was available for the observer, yielding empty strings for all identity fields. The phantom 'Win' result is the structural inverse of the opponent's 'Loss' in the two-row-per-replay model. Fingerprint is unique: handicap=0 and color_rgba=0,0,0,0 are unambiguous markers found exclusively in these 2 rows. NOT a systematic tournament issue: events are IEM Katowice 2017 and HomeStory Cup XIX 2019, separated by ~850 days."
+  },
+  "web_research_summary": {
+    "approach": "R2 adversarial web-research (2026-04-18) -- 4 external sources examined",
+    "sources": [
+      {
+        "name": "Liquipedia SC2 player pages",
+        "url": "https://liquipedia.net/api-terms-of-use",
+        "finding": "ToS prohibits bulk scraping; player pages link to SC2 profile URLs but do not expose cross-region profile-id mappings programmatically."
+      },
+      {
+        "name": "Aligulac API",
+        "url": "https://aligulac.com/about/api/",
+        "finding": "Aligulac uses internal integer IDs (not Battle.net profile IDs). No cross-region toon_id linkage available via API."
+      },
+      {
+        "name": "Blizzard OAuth / SC2 Community API",
+        "url": "https://us.forums.blizzard.com/en/sc2/t/getting-profile-id-from-battletag/10851",
+        "finding": "No public BattleTag->profile-id API. Blizzard deprecated SC2 community endpoints; cross-region bridge is not achievable."
+      },
+      {
+        "name": "sc2pulse / sc2revealed / sc2unmasked",
+        "url": "https://github.com/sc2-pulse/sc2-pulse",
+        "finding": "Community projects covering only ladder data; do not resolve tournament replay toon_ids to cross-region identities at bulk scale."
+      }
+    ],
+    "conclusion": "No external bridge available. toon_id-as-player_id_worldwide (region-scoped) is the correct and only feasible design given replay data alone."
+  },
+  "identity_key_temporal_scope": {
+    "description": "player_identity_worldwide is a static offline artifact computed once from all replay data. It does NOT participate in temporal feature computation. Temporal discipline (I3: match_time < T) applies to rolling features that USE this identity key, not to the identity table itself.",
+    "created_at": "2026-04-18"
+  },
+  "literature_urls": [
+    "https://github.com/GraylinKim/sc2reader/blob/master/sc2reader/objects.py",
+    "https://github.com/Blizzard/s2protocol/blob/master/docs/flags/details.md",
+    "https://liquipedia.net/api-terms-of-use",
+    "https://us.forums.blizzard.com/en/sc2/t/getting-profile-id-from-battletag/10851",
+    "https://aligulac.com/about/api/",
+    "https://arxiv.org/abs/2207.03428"
+  ]
+}

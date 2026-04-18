@@ -1,0 +1,99 @@
+table: player_identity_worldwide
+dataset: sc2egset
+game: sc2
+object_type: view
+step: 01_04_04b
+row_count: 2494
+describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.json
+generated_date: '2026-04-18'
+columns:
+- name: player_id_worldwide
+  type: VARCHAR
+  nullable: false
+  description: 'Full Battle.net R-S2-G-P qualifier stored verbatim from replay_players_raw.toon_id (e.g.
+    ''2-S2-1-315071'' = Serral, EU region, realm 1, profile 315071). Region-scoped by Blizzard design.
+    A physical human active on multiple regions = multiple distinct player_id_worldwide values (structural
+    limitation inherited from replay format; no external bridge available per R2 web-research). Upgrade
+    path: future manual tournament-roster PR could add supplemental merge-mapping table.'
+  notes: PRIMARY KEY (unique within this VIEW by construction of CTE). IDENTITY column.
+- name: region_code
+  type: INTEGER
+  nullable: true
+  description: 'Integer region code parsed from toon_id segment 1 via CAST(SPLIT_PART(toon_id, ''-'',
+    1) AS INT). Mapping: 1=US, 2=Europe, 3=Korea, 5=China, 6=SEA, 98=Unknown/local.'
+  notes: DERIVED from toon_id. Redundant with region_label.
+- name: realm_code
+  type: INTEGER
+  nullable: true
+  description: Integer gateway/realm code parsed from toon_id segment 3 via CAST(SPLIT_PART(toon_id, '-',
+    3) AS INT). Typically 1 for primary gateway per region.
+  notes: DERIVED from toon_id. Redundant with realm_label.
+- name: profile_id
+  type: BIGINT
+  nullable: true
+  description: Blizzard-assigned region-scoped profile ID parsed from toon_id segment 4 via CAST(SPLIT_PART(toon_id,
+    '-', 4) AS BIGINT). Unique within a region; NOT globally unique across regions.
+  notes: DERIVED from toon_id. Region-scoped integer.
+- name: region_label
+  type: VARCHAR
+  nullable: true
+  description: 'Human-readable region label from replay_players_raw.region. Values: Europe, US, Korea,
+    China, Unknown. Derived upstream from toon_id segment 1.'
+  notes: CONTEXT. Passes through from replay_players_raw.
+- name: realm_label
+  type: VARCHAR
+  nullable: true
+  description: 'Human-readable realm/gateway label from replay_players_raw.realm. Values: Europe, North
+    America, Korea, China, Taiwan, Russia, Latin America, Unknown. Derived upstream from toon_id segment
+    3.'
+  notes: CONTEXT. Passes through from replay_players_raw.
+- name: nickname_case_sensitive
+  type: VARCHAR
+  nullable: true
+  description: Most-frequently-observed in-replay display name for this toon_id (includes clan tag when
+    present, e.g. '<ENCE>Serral'). Tie-broken alphabetically. 273 toon_ids have multiple nicknames (clan
+    changes, renames); this column reflects the modal form.
+  notes: CONTEXT. NOT canonical player name (I2). Use LOWER(nickname) for case-insensitive matching.
+provenance:
+  source_tables:
+  - replay_players_raw
+  filter: toon_id LIKE '%-S2-%-%'
+  row_multiplicity: Exactly 1 row per distinct toon_id (player_id_worldwide).
+  created_by: sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_04b_worldwide_identity.py Cell D
+  scope: All 2,494 Battle.net-qualified player identities in sc2egset. 2 empty-string toon_id rows (observer-profile
+    ghost entries) are excluded by the LIKE filter.
+  ddl: "CREATE OR REPLACE VIEW player_identity_worldwide AS\nWITH nickname_ranked AS (\n    SELECT\n \
+    \       toon_id,\n        nickname,\n        ROW_NUMBER() OVER (\n            PARTITION BY toon_id\n\
+    \            ORDER BY COUNT(*) DESC, nickname\n        ) AS rn\n    FROM replay_players_raw\n    WHERE\
+    \ toon_id LIKE '%-S2-%-%'\n    GROUP BY toon_id, nickname\n)\nSELECT DISTINCT\n    rp.toon_id    \
+    \                                   AS player_id_worldwide,\n    CAST(SPLIT_PART(rp.toon_id, '-',\
+    \ 1) AS INT)      AS region_code,\n    CAST(SPLIT_PART(rp.toon_id, '-', 3) AS INT)      AS realm_code,\n\
+    \    CAST(SPLIT_PART(rp.toon_id, '-', 4) AS BIGINT)   AS profile_id,\n    rp.region              \
+    \                          AS region_label,\n    rp.realm                                        \
+    \ AS realm_label,\n    nr.nickname                                      AS nickname_case_sensitive\n\
+    FROM replay_players_raw rp\nJOIN nickname_ranked nr ON rp.toon_id = nr.toon_id AND nr.rn = 1\nWHERE\
+    \ rp.toon_id LIKE '%-S2-%-%'"
+invariants:
+- id: I2
+  description: toon_id (= player_id_worldwide) is the canonical player identifier for sc2egset. It is
+    the full Battle.net R-S2-G-P qualifier -- NOT a bare integer. Region + realm columns are redundant
+    derivations of segments 1 and 3. I2 commits to toon_id as the tracking key; cross-region merge (if
+    ever needed) requires a supplemental mapping table not producible from replay data alone.
+- id: I6
+  description: All SQL queries producing reported results appear verbatim in 01_04_04b_worldwide_identity.json
+    sql_queries block.
+- id: I7
+  description: 'Nickname aggregation uses frequency-MAX (most-common nickname per toon_id) as the deterministic
+    tie-breaking rule. Empirically derived: 273 toon_ids have multiple nicknames due to clan-tag changes.
+    Frequency-MAX requires no external threshold.'
+- id: I9
+  description: Pure VIEW -- no mutation of replay_players_raw or any other raw table. git diff on existing
+    raw + view YAMLs is empty (new player_identity_worldwide.yaml is the only new file).
+- id: I10
+  description: filename column in source table replay_players_raw stores paths relative to raw_dir per
+    I10. The VIEW does not expose filename; provenance is maintained through the source table.
+notes: 'Region-scoping limitation: Blizzard assigns profile_id within each Battle.net region independently.
+  A player active on EU and KR servers will have two distinct player_id_worldwide values. This is a structural
+  property of the replay format, not a data-quality defect. No external bridge (Liquipedia, Aligulac,
+  sc2pulse, Blizzard OAuth) delivers cross-region profile-id linkage at bulk scale (R2 web-adversarial
+  finding, 2026-04-18).'

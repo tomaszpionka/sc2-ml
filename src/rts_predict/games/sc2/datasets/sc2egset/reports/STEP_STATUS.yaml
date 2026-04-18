@@ -105,4 +105,16 @@ steps:
     status: complete
     started_at: "2026-04-18"
     completed_at: "2026-04-18"
+  "01_04_04b":
+    name: "Worldwide Identity VIEW (decomposition-based)"
+    pipeline_section: "01_04"
+    status: complete
+    started_at: "2026-04-18"
+    completed_at: "2026-04-18"
+  "01_04_04b":
+    name: "Worldwide Identity VIEW (decomposition-based)"
+    pipeline_section: "01_04"
+    status: complete
+    started_at: "2026-04-18"
+    completed_at: "2026-04-18"
   # Future steps will be added here as they are defined in the ROADMAP.

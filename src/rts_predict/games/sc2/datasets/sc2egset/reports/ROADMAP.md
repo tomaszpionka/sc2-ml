@@ -1438,3 +1438,35 @@ Steps to be defined when Phase 05 gate is met.
 Per `docs/PHASES.md`, Phase 07 is a gate marker with no Pipeline Sections.
 This dataset's Phase 07 gate is met when all thesis sections fed by this
 dataset have reached FINAL status in `thesis/WRITING_STATUS.md`.
+
+### Step 01_04_04b -- Stub worldwide identity VIEW (decomposition-based)
+
+```yaml
+step_number: "01_04_04b"
+name: "Worldwide Identity VIEW (decomposition-based)"
+description: >
+  Create player_identity_worldwide VIEW that decomposes toon_id (full Battle.net R-S2-G-P qualifier)
+  into human-readable columns (region_code, realm_code, profile_id, region_label, realm_label,
+  nickname_case_sensitive). Investigate 2 empty-toon_id outlier rows. No hashing, no composite
+  encoding -- toon_id IS the worldwide identifier (region-scoped per Blizzard design).
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+parent_step: "01_04_04"
+plan_version: "R4"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_04b_worldwide_identity.py"
+completed_at: "2026-04-18"
+outputs:
+  view: "player_identity_worldwide (2,494 rows, 7 cols)"
+  schema_yaml: "src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_identity_worldwide.yaml"
+  artifacts:
+    - "reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.json"
+    - "reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.md"
+key_findings:
+  - "toon_id stores full Battle.net R-S2-G-P qualifier -- no hashing needed"
+  - "273 toon_ids have multiple nicknames; VIEW picks modal nickname per toon_id"
+  - "userID cardinality=16 = local Battle.net profile slot indices (0..15), NOT player IDs"
+  - "2 empty-toon_id rows are observer-profile ghost entries (handicap=0, color_rgba=0)"
+  - "Outliers from 2 different tournaments (IEM 2017, HSC 2019) -- not systematic"
+  - "No external bridge available for cross-region toon_id merge (R2 confirmed)"
+```
+

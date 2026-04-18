@@ -2,6 +2,67 @@
 
 ---
 
+## 2026-04-18 -- [Phase 01 / Step 01_04_04b] Worldwide Identity VIEW — COMPLETE
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Branch:** feat/01-04-04-sc2egset-worldwide-identity
+**Scope:** Create player_identity_worldwide VIEW (decomposition of toon_id = full Battle.net R-S2-G-P qualifier). Investigate 2 empty-toon_id outlier rows.
+
+### Key findings
+
+| Finding | Value |
+|---|---|
+| VIEW row count | 2,494 (1 per distinct toon_id; 2 empty-string rows excluded) |
+| Plan expected | 2,495 -- plan K1 counted empty-string as 1 distinct value; VIEW correctly excludes it |
+| Distinct player_id_worldwide | 2,494 |
+| DESCRIBE 7 cols + dtypes | VARCHAR, INTEGER, INTEGER, BIGINT, VARCHAR, VARCHAR, VARCHAR -- PASS |
+| Serral spot-check | 2-S2-1-315071 -> region=2, realm=1, profile=315071, region_label='Europe' -- PASS |
+| Format probe n_canonical | 44,815 -- PASS |
+| Format probe n_empty | 2 -- PASS |
+| Region consistency | 44,815/44,815 (0 inconsistencies) -- PASS |
+| toon_ids with multiple nicknames | 273 (clan-tag changes); VIEW picks modal nickname |
+| userID cardinality=16 | Local Battle.net profile slot indices (0..15); NOT player ID |
+| Outlier 1 tournament | 2017_IEM_XI_World_Championship_Katowice |
+| Outlier 1 date | 2017-02-27 |
+| Outlier 1 opponent | <dPix>Optimus (toon_id 2-S2-1-3074703, EU, Terr, MMR 6603) |
+| Outlier 2 tournament | 2019_HomeStory_Cup_XIX |
+| Outlier 2 date | 2019-06-27 |
+| Outlier 2 opponent | <QLASH>Lambo (toon_id 2-S2-1-3437681, EU, Zerg, MMR 6891) |
+| Outlier fingerprint | handicap=0, color_rgba=0,0,0,0 -- UNIQUE in 44,817-row dataset |
+| Outlier assessment | Observer-profile ghost entries (replay viewer's local profile captured by parser) |
+| Temporal gap between outliers | ~850 days -- NOT clustered; isolated incidents |
+
+### Outlier investigation verdict
+
+Both empty-toon_id rows are observer-profile ghost entries: the sc2egset replay parser
+captured the replay-viewer's local Battle.net profile (via ToonPlayerDescMap, userID=0 slot)
+as a second player when no server-resolved identity was available. Unique fingerprint:
+handicap=0 and color_rgba=(0,0,0,0) exclusive to these 2 rows. From different tournaments
+(IEM 2017 vs HSC 2019), different maps, different game versions -- not a systematic issue.
+Filtered from VIEW by LIKE filter; raw table untouched (I9).
+
+### Artifacts produced
+
+- `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_04b_worldwide_identity.py` + `.ipynb`
+- `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_identity_worldwide.yaml`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.json` (8 SQL queries -- I6, 6 literature URLs)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.md`
+
+### Gate summary -- ALL PASS
+
+- Gate 1 (VIEW row count = 2,494): PASS
+- Gate 2 (DESCRIBE 7 cols + dtypes): PASS
+- Gate 3 (Serral spot-check): PASS
+- Gate 4 (format consistency probe): PASS
+- Gate 5 (outlier JSON block with concrete values): PASS
+- Gate 6 (schema YAML 7 cols + invariants + limitation note): PASS
+- Gate 7 (JSON >= 6 SQL + >= 5 URLs): PASS (8 SQL, 6 URLs)
+- Gate 8 (I9: no mutation of existing raw/view YAMLs): PASS
+- Gate 9 (STEP_STATUS 01_04_04b = complete): PASS
+
+---
+
 ## 2026-04-18 -- [Phase 01 / Step 01_04_04] Identity Resolution — COMPLETE
 
 **Category:** A (science)
