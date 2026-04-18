@@ -19,7 +19,7 @@ merged to `master`.
 
 ### Removed
 
-## [3.13.0] — 2026-04-18 (PR #TBD: feat/01-04-03-sc2egset-minimal-history)
+## [3.13.0] — 2026-04-18 (PR #152: feat/01-04-03-sc2egset-minimal-history)
 
 ### Added
 - **New Phase 01 step 01_04_03** — `matches_history_minimal` VIEW for sc2egset
@@ -59,7 +59,7 @@ merged to `master`.
 
 ### Removed
 
-## [3.12.0] — 2026-04-17 (PR #TBD: docs/thesis-4.1-data-chapter)
+## [3.12.0] — 2026-04-17 (PR #148: docs/thesis-4.1-data-chapter)
 
 ### Added
 - **Thesis §4.1 Data chapter fully drafted** in Polish (46.7k chars across §4.1.1 SC2EGSet
