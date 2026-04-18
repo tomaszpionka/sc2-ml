@@ -19,6 +19,46 @@ merged to `master`.
 
 ### Removed
 
+## [3.13.0] — 2026-04-18 (PR #TBD: feat/01-04-03-sc2egset-minimal-history)
+
+### Added
+- **New Phase 01 step 01_04_03** — `matches_history_minimal` VIEW for sc2egset
+  (pattern-establisher). 8-column player-row-grain projection of
+  `matches_flat_clean` (2 rows × 22,209 matches = 44,418 rows). Canonical
+  TIMESTAMP temporal dtype via `TRY_CAST(details_timeUTC AS TIMESTAMP)`;
+  per-dataset-polymorphic faction vocabulary (`Prot`/`Terr`/`Zerg` 4-char
+  stems for sc2egset; aoestats + aoe2companion sibling PRs will ship civ
+  names). Cross-dataset-harmonized substrate for Phase 02+ rating-system
+  backtesting (Elo, Glicko, Glicko-2, TrueSkill, Aligulac, Bradley–Terry,
+  Neural BTL).
+- Schema YAML `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml`
+  with explicit I3/I5-analog/I6/I7/I8/I9 invariants block, per-dataset
+  polymorphic faction warning, concrete `nullable` booleans from DuckDB
+  DESCRIBE (R2-WARNING-3 fix).
+- Jupytext-paired notebook `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_03_minimal_history_view.{py,ipynb}`
+  (18 cells).
+- Validation JSON + MD artifacts in `reports/artifacts/01_exploration/04_cleaning/`
+  carrying all 8 SQL literals verbatim (I6) and DESCRIBE snapshot.
+- ROADMAP.md step block for 01_04_03.
+- research_log.md narrative entry for 01_04_03 (Category A) with full gate
+  table, cross-dataset contract documentation, and aoestats sibling-PR
+  column mapping.
+- Planning critique chain `planning/current_plan.critique.{md,v2.md,v3.md}`
+  documenting the 3-round pre-execution adversarial cycle (5 BLOCKERs / 7
+  WARNINGs → APPROVE_WITH_WARNINGS) plus post-execution R1 APPROVE.
+
+### Changed
+- STEP_STATUS.yaml: 01_04_03 added; 01_04_02 still complete.
+- PIPELINE_SECTION_STATUS.yaml: 01_04 transitioned in_progress → complete
+  (net zero; intermediate in_progress state preserves derivation-chain
+  consistency during execution per R1-WARNING-3 fix).
+
+### Fixed
+- (Plan-stage adversarial closed 5 pre-execution BLOCKERs; see commit
+  message for details.)
+
+### Removed
+
 ## [3.12.0] — 2026-04-17 (PR #TBD: docs/thesis-4.1-data-chapter)
 
 ### Added
