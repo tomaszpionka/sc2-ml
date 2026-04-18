@@ -61,6 +61,77 @@ Filtered from VIEW by LIKE filter; raw table untouched (I9).
 - Gate 8 (I9: no mutation of existing raw/view YAMLs): PASS
 - Gate 9 (STEP_STATUS 01_04_04b = complete): PASS
 
+### Observations & recommendations for Phase 02
+
+**What this step delivers operationally:** `player_identity_worldwide` VIEW provides the
+per-player-history key for Phase 02 rating-system backtesting (Elo, Glicko, Glicko-2,
+TrueSkill, Aligulac-style BTL) and per-player feature engineering (rolling win rate,
+head-to-head, streak, activity tempo).
+
+#### Recommended per-player-history key per dataset
+
+| dataset | key | source | namespace scope |
+|---|---|---|---|
+| sc2egset | `player_id_worldwide` (= full `R-S2-G-P` toon_id) | `player_identity_worldwide` VIEW | **region × realm × profile scoped (Blizzard design)** |
+| aoestats | `profile_id` | `matches_1v1_clean` | global (same namespace as aoec per 01_04_04 VERDICT A) |
+| aoe2companion | `profileId` | `matches_1v1_clean` | global (Microsoft-account-based) |
+| cross-dataset | `(dataset_tag, player_id)` composite | `matches_history_minimal` | already in place from 01_04_03 |
+
+#### KNOWN BIAS — cross-region player-split (sc2egset only)
+
+`player_id_worldwide` is region-scoped by Blizzard's replay-format design. A physical human
+active on multiple Battle.net regions is counted as **N distinct Elo entities** (one per
+region). Empirical upper bound from 01_04_04 findings:
+
+- **246 case-sensitive nicknames** observed across multiple regions
+- **294 Class A pairs** (temporal overlap >= 1 day across regions) — strongest multi-account candidates
+- **Upper bound: ~294 / 2,494 ≈ 12% of sc2egset entities are likely multi-region artifacts**
+
+This is **accepted as a documented thesis-level corpus limitation**, analogous to the missing-
+offline-games limitation (also structural, also inherited from upstream data). Thesis
+Chapter 4 §4.2.2 must disclose both limitations as scope caveats. Neither blocks Phase 02
+methodology.
+
+#### What NOT to use as player-history key (empirically rejected)
+
+| anti-pattern | rejection reason |
+|---|---|
+| `nickname` alone | 30.6% within-region collision rate (451 / 1,473 pairs) → merges distinct physical players |
+| `LOWER(nickname)` alone | 6x Christen 2012 Ch. 5 threshold (5%); user directive: case-sensitive only |
+| `(nickname, region)` | Still has within-region collisions (30.6% rate) |
+| sha256 composite of `(region, realm, toon_id)` | Redundant encoding (toon_id already contains these segments); destroys human-readable form |
+| Behavioral fingerprint (APM-JSD, race, clanTag, MMR, temporal) | Over-engineering; statistically weak null/control at available sample sizes; circularity (identity-null assumes same-toon_id = same human) |
+| External bridge (Liquipedia, Aligulac, sc2pulse, Blizzard OAuth) | Web-verified infeasible: no public source exposes (nickname → region-scoped profile-id) at bulk scale |
+
+#### External-bridge infeasibility summary (R2 web-verified adversarial)
+
+- **Liquipedia pages** do not expose region-scoped Battle.net profile-ids (only aliases + ratings). ToS: HTML scraping forbidden; LiquipediaDB API capped at 60 req/hr.
+- **Blizzard Community API / OAuth** cannot bulk-resolve third-party battletag → profile-id (requires each player's own consent via OAuth).
+- **Aligulac API** exposes internal IDs only, not Battle.net profile-ids.
+- **sc2pulse** is ladder-only + a Blizzard API consumer (inherits region-scoping).
+
+Cited sources in artifact JSON `literature` block.
+
+#### Upgrade path (documented, not blocking)
+
+Future manual tournament-roster curation PR could add a supplemental
+`player_identity_merge_map(player_id_worldwide, canonical_human_id)` table for the ~294
+Class A multi-region candidates. Manual work (~week of hand-curation via Liquipedia Serral-
+style player pages + ESL/HSC/WCS roster publications), high confidence. Current VIEW design
+is forward-compatible: adding a supplemental merge map does not break existing joins on
+`player_id_worldwide`. Deferred unless thesis defense feedback surfaces need.
+
+#### Phase 02 guidance
+
+- **Elo/Glicko/TrueSkill backtesting:** GROUP BY `player_id_worldwide`. Parallel independent trajectories for multi-region humans. Matches Aligulac / sc2pulse / Liquipedia industry standard.
+- **Activity features** (recent-games, win rate, head-to-head, streak): compute per `player_id_worldwide`. No cross-region leakage risk.
+- **Cross-dataset experiments:** `(dataset_tag, player_id)` composite via `matches_history_minimal` (already in place from 01_04_03).
+- **Sensitivity analysis candidate** (post-hoc, optional in thesis): how would Elo trajectories change if all 294 Class A pairs were manually merged? Quantifies the 12% bias's magnitude on downstream metrics.
+
+#### Connection to 01_04_04 decision ledger
+
+`DS-SC2-IDENTITY-05` recommended "toon_id as granular entity + LOWER(nickname) merge only for Class A overlap pairs." This step (01_04_04b) **inverts the LOWER(nickname) part** of that recommendation — behavioral fingerprinting proved over-engineered and external-bridge inaccessible, so the simpler honest answer is: **granular toon_id only, document the 12% bias**. The Class A merge is deferred to the future manual-curation upgrade path, not attempted programmatically here.
+
 ---
 
 ## 2026-04-18 -- [Phase 01 / Step 01_04_04] Identity Resolution — COMPLETE
