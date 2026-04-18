@@ -1,6 +1,6 @@
 # Thesis Writing Status
 
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ---
 
@@ -54,8 +54,8 @@ Source: `docs/thesis/PJAIT_THESIS_REQUIREMENTS.md`.
 | §3.1 Traditional sports prediction | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 11 distinct keys, 0 [REVIEW] flags. ~7.8k chars Polish. 5 new bibtex entries appended (Dixon1997, Maher1982, Constantinou2013, Bunker2024, Glickman1995). |
 | §3.2 StarCraft prediction literature | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 28 distinct keys / ~46 inline citations, 6 [REVIEW] flags. ~14.8k chars Polish. 15 new bibtex entries appended. Tarassoli2024 flagged as SC-Phi2 misattribution; deferred to user morning review. |
 | §3.3 MOBA and other esports | `DRAFTED` | — | Literature; Pass 1 calibration draft (2026-04-17). 13 distinct keys, 2 [REVIEW] flags. ~11.4k chars Polish. 5 new bibtex entries appended (Yang2017Dota, Bahrololloomi2023, Akhmedov2021, Silva2018LoL, Yangibaev2025). |
-| §3.4 AoE2 prediction | `BLOCKED` | AoE2 lit review | Future |
-| §3.5 Research gap | `BLOCKED` | §3.1-§3.4 | Skeleton draftable from §3.1-§3.3; full draft blocked on §3.4 (AoE2 lit review) |
+| §3.4 AoE2 prediction | `DRAFTED` | AoE2 lit review | Literature; Pass 1 calibration draft (2026-04-18). 5 distinct keys (CetinTas2023, Lin2024NCT, Elbert2025EC, Xie2020MediumAoE, Porcpine2020EloAoE) + cross-refs. 5 [REVIEW] flags. ~8.2k chars Polish. 4 new bibtex entries appended (Elbert2025EC new; Xie2020MediumAoE + Porcpine2020EloAoE Tier 3; CetinTas2023 author-list fixed). |
+| §3.5 Research gap | `DRAFTED` | §3.1-§3.4 | Literature synthesis; Pass 1 calibration draft (2026-04-18). 1 [REVIEW] flag. ~6.7k chars Polish. No new bib entries (pure synthesis). Luka 3 hedge strengthened per v2 plan (Q_adv_2). |
 
 ## Chapter 4 — Data and Methodology
 
