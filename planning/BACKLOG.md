@@ -21,6 +21,8 @@ Opened 2026-04-18.
 - **Invariants touched:** I3, I5, I7, I9
 - **Predecessors:** PR #160 W3 verdict `ARTEFACT_EDGE` (commit `ab23ab1d`;
   `reports/specs/01_05_preregistration.md` §14 amendment v1.0.1)
+- Thesis-side provenance: PR-3 of DEFEND-IN-THESIS sequence (§4.4.6 flag
+  definition + §4.1.2.1 footnote at 52,27% sentence; PR #TBD).
 - **Spec amendment trigger:** bumps spec to v1.1.0.
 
 **Scope.** Add a `canonical_slot VARCHAR` derived column to aoestats
