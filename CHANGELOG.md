@@ -19,6 +19,46 @@ merged to `master`.
 
 ### Removed
 
+## [3.19.0] — 2026-04-19 (PR #TBD: feat/01-05-aoe2companion)
+
+### Added
+
+- **aoe2companion 01_05 Temporal & Panel EDA** — completes the 8-notebook
+  pipeline section under spec `CROSS-01-05-v1` v1.0.1 (commit `7e259dd8`).
+  Recovers from an earlier hang in 01_05_05 (`statsmodels.mixedlm` called on
+  ~7.4 M rows × ~20 k groups over the full analysis window — intractable).
+  Recovery rewrite scopes the ICC fit to the spec §7 reference window
+  (2022-08-29..2022-12-31) and caps LMM at 10 k groups. ANOVA ICC via a new
+  pandas-groupby fast path (`compute_icc_anova_fast`) at all three sample
+  sizes {5 k, 10 k, 20 k}. All 8 notebooks execute end-to-end; artifacts in
+  `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/05_temporal_panel_eda/`.
+  Scientific outcome: `ICC_lpm=0.000487`, `ICC_anova=0.003013` — the
+  hypothesis range [0.05, 0.20] is **falsified**, consistent with calibrated
+  matchmaking equalizing `won` to ~0.5 across players. The per-player skill
+  signal lives in `rating_pre`, not `won`.
+- **aoe2companion variance_decomposition module** at
+  `src/rts_predict/games/aoe2/datasets/aoe2companion/analysis/variance_decomposition.py`
+  with LMM + ANOVA ICC helpers, `stratified_reservoir_sample`, and a
+  pandas-groupby fast path. 11 unit tests in
+  `tests/rts_predict/games/aoe2/datasets/aoe2companion/analysis/`.
+
+### Changed
+
+- **pyproject.toml**: added `statsmodels >=0.14,<1` as a project dependency
+  (required by 01_05_05 LMM ICC).
+
+### Fixed
+
+- **01_05_08 leakage audit**: replaced `Path(__file__).parent` (undefined
+  under a Jupyter kernel) with a `get_reports_dir`-rooted fallback so the
+  notebook executes both as a plain-python script and via
+  `jupytext --execute`.
+- **compute_icc_lmm attribute bug**: the aoestats version of this helper
+  references `result.ngroups`, which does not exist on statsmodels 0.14
+  `MixedLMResults`. The aoe2companion port uses `result.model.n_groups`.
+
+### Removed
+
 ## [3.18.0] — 2026-04-18 (PR #TBD: feat/pre-01-05-cleanup)
 
 ### Added
