@@ -1,283 +1,358 @@
 ---
-category: D
-branch: fix/aoestats-phase06-pop-tag-backfill
+category: F
+branch: docs/thesis-4.2.2-identity-meta-rule
 date: 2026-04-19
 planner_model: claude-opus-4-7
-dataset: aoestats
-phase: "01"
-pipeline_section: "Temporal & Panel EDA"
-invariants_touched: [I5]
+dataset: null
+phase: null
+pipeline_section: null
+invariants_touched: [I2]
 source_artifacts:
-  - planning/BACKLOG.md  # F6 entry
-  - sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py
-  - sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_02_psi_pre_game_features.py
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv
-  - reports/specs/01_05_preregistration.md  # §1 line 67–71
-  - thesis/chapters/04_data_and_methodology.md  # §4.1.4 + §4.4.6 downstream consumers
-critique_required: false
-research_log_ref: src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md
+  - planning/BACKLOG.md
+  - thesis/chapters/04_data_and_methodology.md
+  - thesis/chapters/REVIEW_QUEUE.md
+  - thesis/WRITING_STATUS.md
+  - .claude/scientific-invariants.md
+  - src/rts_predict/games/sc2/datasets/sc2egset/reports/INVARIANTS.md
+  - src/rts_predict/games/aoe2/datasets/aoestats/reports/INVARIANTS.md
+  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/INVARIANTS.md
+  - .claude/rules/thesis-writing.md
+  - docs/templates/plan_template.md
+  # sc2egset worldwide-identity artifact listed in T01 Read scope directly;
+  # rates are re-cited via sc2egset INVARIANTS.md §2 (authoritative citation surface)
+critique_required: true
+research_log_ref: null
 ---
 
-# Plan: aoestats Phase 06 CSV — `[POP:]` and `[PRE-canonical_slot]` tag backfill
+# Plan: thesis §4.2.2 revision + `Plan Phase 02 (I2)` row correction (F3)
 
 ## Scope
 
-Closes BACKLOG F6. Populate the `notes` column of
-`phase06_interface_aoestats.csv` (currently 136 data rows, zero `[POP:]`
-tags, zero `[PRE-canonical_slot]` tags) with:
-
-- `[POP:ranked_ladder]` on **all 136 rows** (parity with sc2egset
-  `[POP:tournament]` 35/35 and aoe2companion `[POP:ranked_ladder]`
-  74/74).
-- `[PRE-canonical_slot]` on rows where `feature_name` is literally
-  per-slot: **`p0_is_unrated`** and **`p1_is_unrated`** (the only two
-  feature names in the aoestats Phase 06 schema that directly index
-  `team=0` / `team=1`; all other features — `focal_old_rating`,
-  `avg_elo`, `faction`, `opponent_faction`, `mirror`, `map`, `won`,
-  `duration_seconds` — are either randomized/UNION-ALL-symmetric or
-  match-level aggregate per the 01_05_02 notebook's explicit
-  symmetry comments).
-
-After merge, thesis §4.1.4 + §4.4.6 prose ("implicit scope via spec
-§0 + R02 cleaning filter") becomes revisable to direct citation of
-the tagged artifact. That prose update is OUT OF SCOPE for this PR
-(deferred to Pass-2 or a separate Category F follow-up).
+Closes BACKLOG F3. Revises `thesis/chapters/04_data_and_methodology.md`
+§4.2.2 "Rozpoznanie tożsamości gracza" to reflect the **5-branch
+decision procedure** from `.claude/scientific-invariants.md` I2
+extended procedure (lines 31–127). Corrects the `Plan Phase 02 (I2)`
+row of Tabela 4.5 to name each dataset's declared branch (sc2egset
+(iii) / aoestats (v) / aoe2companion (i)). Updates REVIEW_QUEUE and
+WRITING_STATUS (§4.2.2 DRAFTED → REVISED).
 
 ## Problem Statement
 
-Spec §1 line 67–71 defines `[PRE-canonical_slot]` as the scope tag
-for aoestats features conditioned on `team` (pending Phase 02
-`canonical_slot` derivation per BACKLOG F1). Spec §12 Phase 06
-interface schema assumes the `notes` column carries per-row scoping
-tags. Sibling datasets comply: sc2egset (35/35 `[POP:tournament]`)
-and aoe2companion (74/74 `[POP:ranked_ladder]`). aoestats does
-**not** — `grep` returns zero hits for both `[POP:]` and
-`[PRE-canonical_slot]` on 136 data rows. Root cause: the
-`01_05_08_phase06_interface.py` notebook loads
-`pre_canonical_slot_flag_active` from the leakage audit (line 52–58)
-but never stamps it onto rows, and never emits a `[POP:]` tag at
-all. This PR fixes both gaps in one notebook edit.
+§4.2.2 drafted in PR #150 before I2 meta-rule extension in PR #160.
+Each dataset's INVARIANTS.md §2 now declares a specific branch with
+measured rates:
+
+- **sc2egset** — Branch **(iii)** `player_id_worldwide`;
+  `migration_rate ≈ 12%`, `collision_rate = 30.6%`
+  (`INVARIANTS.md:50–51`).
+- **aoestats** — Branch **(v)** structurally-forced `profile_id`;
+  no visible-handle column, Steps 2–3 unevaluable
+  (`INVARIANTS.md:24, 31, 41–42`).
+- **aoe2companion** — Branch **(i)** `profileId`;
+  `migration_rate = 2.57%`, `collision_rate = 3.55%`
+  (`INVARIANTS.md:50–51`).
+
+Current §4.2.2 prose treats `LOWER(nickname)` as default Phase 02
+canonicalization; the `Plan Phase 02 (I2)` row of Tabela 4.5 reflects
+the same pre-meta-rule framing. A committee examiner comparing §4.2.2 to any INVARIANTS.md
+§2 will find contradiction.
+
+Prose additions per F3 scope: **three worked examples** (one per
+dataset) + **one framework-completeness note** stating that Branch (ii)
+is available in the framework for replication work on handle-only ladder
+exports but is not instantiated by any corpus in this thesis.
 
 ## Assumptions & unknowns
 
-- **Assumption:** `[POP:ranked_ladder]` is the correct aoestats
-  population tag — spec §0 scope `leaderboard = 'random_map'` +
-  spec §2 "aoestats: 2022-Q3 → 2024-Q4" population table confirm
-  this is the ranked-ladder 1v1 random-map cohort.
-- **Assumption:** `p0_is_unrated` and `p1_is_unrated` are the only
-  per-slot (team-conditioned) features in the Phase 06 schema. All
-  other features either (a) use `focal_old_rating` randomization
-  (half-split), (b) aggregate via UNION-ALL (`faction`,
-  `opponent_faction`), (c) are symmetric binary (`mirror`), or (d)
-  are match-level (`map`, `won`, `duration_seconds`, `avg_elo`).
-  Verified against `01_05_02_psi_pre_game_features.py` derivations
-  2026-04-19.
-- **Unknown:** Whether `focal_old_rating` should carry the flag
-  given the `CASE WHEN half=0 THEN p0_old_rating ELSE p1_old_rating
-  END` derivation. The notebook's existing intent is NO flag (half
-  is random → aggregate). Writer accepts the notebook author's
-  pre-existing classification rather than reopening the
-  methodology question in a Category-D PR.
-- **Unknown:** Whether ICC rows (feature_name = `won`) carry the
-  flag. Notebook treats the ICC as per-player UNION-ALL aggregate →
-  NO flag. Accept.
+- **Assumption:** I2 extended procedure at
+  `.claude/scientific-invariants.md:31–127` is authoritative. Each
+  dataset's INVARIANTS.md §2 authoritative for its branch.
+- **Assumption:** The §4.2.2 revision documents the 5-branch framework in
+  terms of *the thesis's three real corpora* (sc2egset (iii), aoestats (v),
+  aoe2companion (i)). Branch (ii) is included for framework-completeness
+  only — it is not instantiated by any dataset in this thesis. The
+  completeness note will state that Branch (ii) applies to replication
+  work on handle-only ladder exports (e.g. chess.com-style platforms if
+  their API-namespace ID were absent) and names chess.com as an indicative
+  example, not as a worked case.
+- **Assumption:** All rate figures verbatim-citable from INVARIANTS.md §2.
+  The pre-execution reviewer-adversarial pass (2026-04-19) surfaced a
+  three-way artifact disagreement on the aoe2companion collision_rate
+  (INVARIANTS.md 3.7% vs 01_04_04 primary artifact 3.55% vs research_log
+  2026-04-18 snapshot 3.7%); root cause was a missing rm_1v1 scope filter
+  in the INVARIANTS.md SQL. Reconciled in this PR under Category D work
+  (see aoe2companion research_log.md 2026-04-19 entry); INVARIANTS.md §2
+  now reports 2.57% / 3.55% matching the 01_04_04 primary-artifact
+  snapshot. No T01-time spot-check required.
+- **Assumption:** `references.bib` retains [FellegiSunter1969] +
+  [Christen2012DataMatching]; **no new bibkeys**.
+- **Unknown:** Prune or retain existing REVIEW flag at line 235
+  (`interpretacja toon_id > nickname`)? Resolved: **prune**.
+  Justification: the Branch (iii) selection does not depend on
+  resolving the rebranding-vs-generic-reuse sub-hypothesis — the
+  aggregate bias documentation (12% `migration_rate`) is sufficient
+  for I2 Step 4. The flag's underlying question is therefore not a
+  blocker; pruning avoids an unresolvable open question in the final
+  text.
+- **Unknown:** `[Christen2012DataMatching]` "5% blocking threshold"
+  framing? Resolved: **drop** that specific framing per
+  `.claude/scientific-invariants.md:109–112` explicit disclaimer;
+  textbook citation retained.
+
+## Literature context
+
+- **[FellegiSunter1969]** — retain.
+- **[Christen2012DataMatching]** — retain, drop "5% threshold"
+  framing.
+- **`.claude/scientific-invariants.md` I2** — authoritative
+  methodology source (file-path citation).
+- **Per-dataset `INVARIANTS.md §2`** — authoritative per-corpus
+  branch declarations.
+
+**No new bibtex entries.**
+
+### Polish-idiom dictionary (one-pass, pre-T01)
+
+The following load-bearing English terms appear in every branch example
+and in the framework definition. Resolved here to avoid global re-edit
+during Pass 2:
+
+| English | Polish |
+|---|---|
+| tolerance gate | próg tolerancji |
+| API namespace ID | identyfikator przestrzeni nazw API |
+| visible handle | pseudonim widoczny |
+| rename-stable | odporny na zmianę pseudonimu |
+| framework-completeness note | uwaga o kompletności ram decyzyjnych |
+
+Executor uses these renderings verbatim in paragraphs 2–4 of §4.2.2. Any
+deviation must be flagged as a Pass-2 REVIEW item.
+
+### Citation-surface convention
+
+"Read primary derivation artifact; cite `INVARIANTS.md §2` summary." This
+convention holds *only when INVARIANTS.md §2 numerically matches the
+primary derivation artifact*. As of this PR, all three datasets satisfy
+that condition (sc2egset and aoestats inherently, aoe2companion after the
+2026-04-19 reconciliation recorded in aoe2companion research_log.md).
 
 ## Execution Steps
 
-### T01 — Modify `01_05_08_phase06_interface.py` to stamp both tags
+> **Pre-execution (parent responsibility):** Parent dispatches
+> `reviewer-adversarial` to produce `planning/current_plan.critique.md`
+> before any executor begins T01. This file is not created by any of
+> T01–T04; it is a prerequisite artifact owned by the parent/reviewer-
+> adversarial agent. If `planning/current_plan.critique.md` is absent
+> when T01 dispatch begins, executor halts and reports to parent before
+> proceeding.
 
-**Objective:** Add tag-emission logic to the Phase 06 interface
-notebook so every CSV row carries `[POP:ranked_ladder]` and
-per-slot rows additionally carry `[PRE-canonical_slot]`.
+### T01 — §4.2.2 prose rewrite
+
+**Objective:** Rewrite §4.2.2 paragraphs 2–4 (lines ~235, 237, 239 on
+master `28800a2e`) with 5-branch procedure + 3 branch examples +
+Branch (ii) framework-completeness note. Preserve paragraph 1
+(FellegiSunter/Christen).
+Retain paragraph 5 — minimalism (line 241) content; add one cross-ref
+sentence. Preserve Forward reference structural role (line 261);
+wording revised per step 8.
 
 **Instructions:**
-1. Read the current `01_05_08_phase06_interface.py` end-to-end.
-2. Add a module-level constant near `M5_NOTE` (line 62):
-   ```python
-   POP_TAG = "[POP:ranked_ladder]"
-   PRE_CANONICAL_SLOT_TAG = "[PRE-canonical_slot]"
-   PER_SLOT_FEATURES = frozenset({"p0_is_unrated", "p1_is_unrated"})
-   ```
-3. Replace the existing `notes` enrichment block (currently lines
-   235–237, which appends `M5_NOTE` to every row) with:
-   ```python
-   # F6: emit [POP:ranked_ladder] on every row + [PRE-canonical_slot]
-   # on per-slot feature rows.
-   def _tag_prefix(feature_name: str) -> str:
-       parts = [POP_TAG]
-       if feature_name in PER_SLOT_FEATURES:
-           parts.append(PRE_CANONICAL_SLOT_TAG)
-       return " ".join(parts)
+1. Read §4.2.2 lines 231–261 on master. Read I2 extended procedure
+   `.claude/scientific-invariants.md:31–127`. Read each dataset's
+   INVARIANTS.md §2. Also read sc2egset worldwide-identity artifact
+   (`src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.md`)
+   as the primary source; rates are re-cited via sc2egset INVARIANTS.md
+   §2 as the authoritative citation surface.
+2. Keep paragraph 1 (line 233) unchanged.
+3. **§4.2.2 currently contains exactly 3 REVIEW flags (lines 235, 239,
+   261 on master `28800a2e`). Plan: prune 1 (line 235), retain 2
+   (lines 239, 261), plant 2 new → total 4.**
+4. Replace paragraphs 2–4 (lines 235, 237, 239) with a rewritten block
+   (~2 200–3 400 Polish chars; estimated range includes a 50% buffer
+   based on observed paragraph-expansion empirics in prior Cat F PRs):
 
-   df_p06["notes"] = (
-       df_p06["feature_name"].map(_tag_prefix) + " "
-       + df_p06["notes"].fillna("").astype(str) + " "
-       + M5_NOTE
-   )
-   df_p06["notes"] = df_p06["notes"].str.strip()
-   ```
-4. Update the existing "Verify [PRE-canonical_slot] is ABSENT from
-   symmetric-aggregate rows" check (lines 240–248). Replace the
-   faction/opponent_faction audit with a stronger assertion:
-   ```python
-   # F6 verification: exactly PER_SLOT_FEATURES carry the flag
-   per_slot_rows = df_p06[df_p06["notes"].str.contains(
-       r"\[PRE-canonical_slot\]", na=False, regex=True
-   )]
-   per_slot_features_observed = set(per_slot_rows["feature_name"].unique())
-   assert per_slot_features_observed == PER_SLOT_FEATURES, (
-       f"F6: expected [PRE-canonical_slot] exclusively on "
-       f"{PER_SLOT_FEATURES}, got {per_slot_features_observed}"
-   )
+   - **(a) Formal operationalisation.** I2 default `LOWER(nickname)`
+     is deferred to Phase 02 as a *canonicalization step*, but
+     **choice of canonical key** is dataset-specific and declared
+     upstream via the 5-branch procedure. Cite
+     `.claude/scientific-invariants.md` §I2 Step 1–4. Sketch the 5
+     branches in 1–2 sentences each. **Bridge sentence** tying the
+     new I2 framing to paragraph 1's classical record-linkage
+     citations: frame the 5-branch procedure as an *a priori*
+     identity-schema selection that, in the presence of structurally
+     high-quality identifiers, reduces the classical Fellegi–Sunter
+     match/non-match/possible-match decision to a choice among five
+     pre-defined schemas — so paragraph 1's [FellegiSunter1969] +
+     [Christen2012DataMatching] citations remain the formal backbone
+     and I2 is the operationalisation for corpora with existing
+     provider-level identifiers.
+     `[REVIEW: Pass-2 — 5-branch procedure prose; Polish terms
+     applied verbatim from plan dictionary (próg tolerancji,
+     identyfikator przestrzeni nazw API, pseudonim widoczny, odporny
+     na zmianę pseudonimu) — verify idiomatic fit in full paragraph
+     context and flag any alternatives surfacing during supervisor
+     review]`
 
-   # F6 verification: every row carries [POP:ranked_ladder]
-   assert df_p06["notes"].str.contains(
-       r"\[POP:ranked_ladder\]", na=False, regex=True
-   ).all(), "F6: [POP:ranked_ladder] missing from some rows"
+   - **(b) sc2egset worked example — Branch (iii).** Name
+     `player_id_worldwide` (full `R-S2-G-P` Battle.net toon_id).
+     Cite `migration_rate ≈ 12%` + `collision_rate = 30.6%` with
+     anchor (sc2egset `INVARIANTS.md:50–51`). Reject the
+     `(LOWER(nickname), server-hash)` composite by citing
+     INVARIANTS.md lines 61–62 (no measurable improvement over
+     `player_id_worldwide`); note maintenance burden as secondary
+     context only, not as the decision criterion. State that 12%
+     cross-region fragmentation is accepted bias because (1) manual
+     record-linkage recovery of the 294 Class A cross-region
+     candidate pairs is deferred to future work (per sc2egset
+     INVARIANTS.md §2 line 55 — "deferred to a future manual-curation
+     upgrade path"), and (2) downstream Phase 02 does not join
+     sc2egset rows to cross-region signals, so the fragmentation does
+     not propagate leakage. Do not present this as a bare assertion.
 
-   print(
-       f"F6 tagging verified: "
-       f"[POP:ranked_ladder] on {len(df_p06)} / {len(df_p06)} rows; "
-       f"[PRE-canonical_slot] on {len(per_slot_rows)} rows "
-       f"(features: {sorted(per_slot_features_observed)})"
-   )
-   ```
-5. Remove the unused `pre_canonical_flag` variable and the
-   `audit_path` / `audit` loading block (lines 50–58) — superseded
-   by the explicit `PER_SLOT_FEATURES` constant. The audit JSON
-   still emits the flag but the notebook no longer needs to read
-   it (this decoupling is a bonus robustness: flag activation is
-   now controlled by the notebook constant, not a side-channel
-   JSON read).
+   - **(c) aoe2companion worked example — Branch (i).** Name
+     `profileId` (INTEGER) from aoe2insights.com API. Cite
+     `migration_rate = 2.57%` + `collision_rate = 3.55%` (aoec
+     `INVARIANTS.md:50–51`, reconciled 2026-04-19 to match 01_04_04
+     primary artifact). Mirror I2 Step 3 Branch (i) definition
+     verbatim: API-namespace ID preferred when
+     `migration_rate < collision_rate` on the visible handle (here
+     2.57% < 3.55%); the API-issued identifier is rename-stable and
+     globally scoped within the aoe2insights.com namespace. Do not
+     restructure I2's branch definition into a two-step test.
+
+   - **(d) aoestats declared-branch example — Branch (v) (no
+     in-dataset rate validation; cross-dataset namespace
+     corroboration).** Name `profile_id` (BIGINT), honestly flagged
+     Branch (v) structurally-forced. aoestats schema has no visible-
+     handle column; Steps 2–3 unevaluable within aoestats alone. Cite
+     aoestats `INVARIANTS.md:24, 31, 41–42` for the structural forced
+     assignment. Then add one sentence citing the *cross-dataset
+     namespace-coincidence check* (aoestats `INVARIANTS.md:46–61`,
+     VERDICT A, 0.9960 agreement on a reservoir sample of 1,000
+     matches): aoestats `profile_id` and aoe2companion `profileId`
+     share the same namespace. This *corroborates* the namespace
+     choice but does not transitively validate rate-based decidability
+     within aoestats (rates remain structurally unevaluable); it
+     reframes (d) from "forced by missing data" to "forced by missing
+     data, namespace alignment corroborated across corpora."
+
+   - **(e) Framework-completeness note — Branch (ii).** State
+     explicitly that Branch (ii) — `LOWER(name)` canonicalisation —
+     is not instantiated by any corpus in this thesis; it is
+     preserved in the framework to accommodate *replication work on
+     handle-only ladder exports* where no stable API-namespace ID
+     exists and collision rate falls below a project-set tolerance
+     (per I2 Step 3). Name chess.com-style handle-only platforms as
+     an indicative class (not a worked example), and explicitly flag
+     that the thesis does not empirically evaluate Branch (ii). This
+     completeness note defends the framework's five-branch shape
+     without over-claiming; examiners cannot challenge a worked
+     example that the chapter declines to make.
+     `[REVIEW: Pass-2 — Branch (ii) completeness-note prose; verify
+     Polish idiom and confirm PJAIT acceptance of framework-
+     completeness framing without empirical instantiation]`
+
+5. Retain paragraph 5 — minimalism (line 241) content unchanged;
+   append one sentence cross-referencing I2 extended procedure
+   (lines 31–127). Preserve the Forward-reference paragraph's
+   structural role; flag wording at line 261 revised per step 8.
+6. **Prune** existing REVIEW flag at line 235 (pruned because (a)
+   Branch (iii) selection does not depend on resolving the
+   rebranding-vs-generic-reuse sub-hypothesis, AND (b) this
+   interpretive question is unresolvable within §4.2.2's scope
+   without additional empirical work beyond the PR's declared scope.
+   Aggregate bias documentation (12% migration_rate) is sufficient
+   for I2 Step 4; the sub-hypothesis decomposition is explicitly
+   deferred to future work).
+7. **Retain** existing REVIEW flag at line 239 (cardinality
+   discrepancy 2 308 187 vs 2 468 478).
+8. **Retain** existing REVIEW flag at line 261 (nickname
+   wieloakcountowość) — revise wording to reference 5-branch
+   framework; keep Pass-2 flag.
 
 **Verification:**
-- ruff + mypy pass on the notebook (pre-commit hook enforces).
-- Notebook is still syntactically valid Python-percent / jupytext-
-  pairable.
-- All three edits (constant, tag logic, assertion) are in place.
-- `pre_canonical_flag` variable is fully removed (grep returns 0
-  matches in the notebook).
+- Paragraph 1 preserved; paragraph 5 retains minimalism content +
+  gains one cross-ref sentence; Forward reference structural role
+  preserved with revised flag wording; paragraphs 2–4 replaced.
+- 3 branch examples with labels + file anchors (aoestats example
+  records Steps 2–3 unevaluable per Branch (v), cross-validated by
+  the aoec namespace bridge).
+- 1 framework-completeness note stating Branch (ii) is not
+  instantiated by any thesis corpus; chess.com-style handle-only
+  platforms named as indicative class only, not a worked example.
+- `scientific-invariants.md §I2` cited.
+- 4 REVIEW flags total (2 new + 2 retained; pruned 1).
+- Total §4.2.2 rewrite: 2 200–3 400 Polish chars.
+- No '5% record-linkage blocking' or '5% threshold' phrase appears in
+  the rewritten §4.2.2.
 
 **File scope:**
-- `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py`
+- `thesis/chapters/04_data_and_methodology.md` (§4.2.2 paragraphs
+  2–4)
 
 **Read scope:**
-- `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_02_psi_pre_game_features.py` (per-slot vs aggregate derivation context)
+- `.claude/scientific-invariants.md` §I2
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/INVARIANTS.md` §2
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/INVARIANTS.md` §2
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/INVARIANTS.md` §2
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_04b_worldwide_identity.md`
+  (primary source for sc2egset worldwide-identity rates; citation surface = INVARIANTS.md §2)
 
 ---
 
-### T02 — Execute the modified notebook to regenerate the Phase 06 CSV
+### T02 — Tabela 4.5 `Plan Phase 02 (I2)` row correction
 
-**Objective:** Re-run `01_05_08_phase06_interface.py` so
-`phase06_interface_aoestats.csv` is re-emitted with the new tag
-logic. Notebook is idempotent: no other artifacts change.
+**Objective:** Correct the `Plan Phase 02 (I2)` row to name declared
+branches; rename label to `Klucz kanoniczny (I2 §2)`.
 
 **Instructions:**
-1. Activate venv: `source .venv/bin/activate`.
-2. Re-sync .ipynb from .py via jupytext (pre-existing pattern):
-   `poetry run jupytext --sync sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py`
-3. Execute the notebook:
-   `poetry run jupyter nbconvert --to notebook --execute --inplace sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.ipynb`
-4. Sync back to .py after execution:
-   `poetry run jupytext --sync sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.ipynb`
-5. If execution fails, diagnose (most likely cause: import path or
-   the upstream PSI CSVs being absent — both already present on
-   master, so this should be a no-op regeneration).
+1. Locate the "Plan Phase 02 (I2)" row in Tabela 4.5.
+2. Replace values:
+   - sc2egset: `player_id_worldwide (branch (iii)); ~12% cross-region accepted bias`
+   - aoestats: `profile_id (branch (v), structurally-forced — no visible handle)`
+   - aoe2companion: `profileId (branch (i)); rename-stable`
+3. Rename row label `Plan Phase 02 (I2)` → `Klucz kanoniczny (I2 §2)`.
 
 **Verification:**
-- `phase06_interface_aoestats.csv` last-modified within the current
-  session.
-- Row count still 136 (schema v1.0.5 11-column count preserved).
-- Notebook's own F6 assertions print success.
-- JSON validation artifact `01_05_08_phase06_interface_schema_validation.json`
-  re-emitted.
+- Row label renamed.
+- Three cells name branches + keys matching INVARIANTS.md §2
+  verbatim.
 
 **File scope:**
-- `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.ipynb` (synced)
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv` (regenerated)
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface_schema_validation.json` (re-emitted)
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface_schema_validation.md` (re-emitted)
-
-**Read scope:** (none — notebook is self-contained once T01 is in place)
+- `thesis/chapters/04_data_and_methodology.md` (Tabela 4.5)
 
 ---
 
-### T03 — Verify tag counts + regression test ICC/PSI values unchanged
-
-**Objective:** Confirm the backfill landed correctly and no metric
-values regressed. Spec §12 schema contract still passes.
+### T03 — REVIEW_QUEUE + WRITING_STATUS updates
 
 **Instructions:**
-1. Run verification greps:
-   ```bash
-   grep -c '\[POP:ranked_ladder\]' src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv
-   # Expected: 136 (all data rows, header excluded by grep -c on match content)
-   grep -c '\[PRE-canonical_slot\]' src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv
-   # Expected: 16 (p0_is_unrated 8 quarters + p1_is_unrated 8 quarters)
-   ```
-2. Spot-check ICC headline values unchanged: verify
-   `icc_anova_observed_scale` row for `cohort_threshold=10` still
-   shows `metric_value=0.0268`, `metric_ci_low=0.0148`,
-   `metric_ci_high=0.0387` (post-v1.0.5 canonical numbers cited by
-   thesis §4.4.5 Tabela 4.7).
-3. Spot-check PSI headline values unchanged: verify 2023-Q1
-   `focal_old_rating` PSI still reads `0.037`.
-4. Verify header row count: `wc -l` on the CSV should show 137
-   lines total (1 header + 136 data rows — unchanged).
-5. Update aoestats `research_log.md` with a short "F6 tag backfill"
-   entry dated 2026-04-19 (following research_log conventions;
-   cite the commit SHA after commit is made).
-
-**Verification:**
-- `grep -c '\[POP:ranked_ladder\]'` returns 136.
-- `grep -c '\[PRE-canonical_slot\]'` returns 16.
-- Spot-checked ICC and PSI values match pre-F6 values.
-- `wc -l` on CSV returns 137.
-- `research_log.md` has new F6 entry.
+1. Extend `thesis/chapters/REVIEW_QUEUE.md` §4.2.2 Notes cell with
+   F3 revision summary. Record post-rewrite line anchors for the two
+   *new* REVIEW flags planted in T01 step 4 — one in the Formal
+   operationalisation paragraph (step 4(a)), one in the
+   framework-completeness note (step 4(e)) — so Pass 2 can locate
+   them without re-grepping. Also record post-rewrite anchors for the
+   two retained flags (originally lines 239 and 261 on master
+   `28800a2e`; the line numbers will shift after paragraphs 2–4 are
+   replaced).
+2. Flip `thesis/WRITING_STATUS.md` §4.2.2 status DRAFTED → REVISED;
+   extend Notes; bump "Last updated: 2026-04-19".
 
 **File scope:**
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md`
-
-**Read scope:**
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv`
+- `thesis/chapters/REVIEW_QUEUE.md`
+- `thesis/WRITING_STATUS.md`
 
 ---
 
-### T04 — Wrap-up: remove F6 from BACKLOG, version bump, CHANGELOG, TBD backfill
-
-**Objective:** Close F6 in BACKLOG, bump patch version, CHANGELOG
-entry, and opportunistically backfill CHANGELOG `[3.26.2]` TBD →
-`#179` (inherited from the prior cleanup PR).
+### T04 — Wrap-up
 
 **Instructions:**
-1. Delete the F6 entry from `planning/BACKLOG.md` (per
-   planning/README.md "Claiming an item" protocol).
-2. Backfill CHANGELOG `[3.26.2]` header: `PR #TBD` → `PR #179`.
-3. Bump `pyproject.toml` 3.26.2 → 3.26.3.
-4. Insert new CHANGELOG `[3.26.3]` entry:
-   ```
-   ## [3.26.3] — 2026-04-19 (PR #TBD: fix/aoestats-phase06-pop-tag-backfill)
-
-   ### Changed
-   - aoestats Phase 06 CSV `notes` column now carries
-     `[POP:ranked_ladder]` on all 136 rows and `[PRE-canonical_slot]`
-     on 16 per-slot rows (`p0_is_unrated` + `p1_is_unrated` × 8
-     quarters). Closes BACKLOG F6. Parity achieved with sc2egset
-     (`[POP:tournament]` 35/35) and aoe2companion (`[POP:ranked_ladder]`
-     74/74). No metric-value regression.
-
-   ### Removed
-   - `pre_canonical_slot_flag_active` side-channel read in
-     `01_05_08_phase06_interface.py` — superseded by explicit
-     `PER_SLOT_FEATURES = {"p0_is_unrated", "p1_is_unrated"}`
-     notebook constant.
-   ```
-5. Stage + commit.
-
-**Verification:**
-- `planning/BACKLOG.md` no longer contains an F6 entry.
-- `pyproject.toml` shows `version = "3.26.3"`.
-- CHANGELOG has `[3.26.3]` entry + `[3.26.2]` PR backfill to #179.
+1. Remove F3 entry from `planning/BACKLOG.md`.
+2. Verify `[3.26.3]` CHANGELOG header already reads `PR #180`
+   (pre-applied in working tree; no edit needed).
+3. Bump `pyproject.toml` 3.26.3 → 3.27.0 (minor per Category
+   F/docs convention in git-workflow.md).
+4. Insert CHANGELOG `[3.27.0]` entry summarising F3 work.
 
 **File scope:**
 - `planning/BACKLOG.md`
@@ -288,60 +363,44 @@ entry, and opportunistically backfill CHANGELOG `[3.26.2]` TBD →
 
 | File | Action |
 |------|--------|
-| `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py` | Update (tag logic + constants + assertions) |
-| `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.ipynb` | Update (jupytext sync) |
-| `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv` | Regenerate (same row count, notes column tagged) |
-| `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface_schema_validation.json` | Regenerate |
-| `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface_schema_validation.md` | Regenerate |
-| `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md` | Append F6 entry |
-| `planning/BACKLOG.md` | Remove F6 entry |
-| `planning/current_plan.md` | Update (this file — commit as provenance) |
-| `pyproject.toml` | Update (version 3.26.2 → 3.26.3) |
-| `CHANGELOG.md` | Update (new `[3.26.3]` + `[3.26.2]` TBD backfill) |
+| `thesis/chapters/04_data_and_methodology.md` | Update (§4.2.2 + Tabela 4.5 row) |
+| `thesis/chapters/REVIEW_QUEUE.md` | Update |
+| `thesis/WRITING_STATUS.md` | Update (DRAFTED → REVISED) |
+| `planning/BACKLOG.md` | Update (remove F3) |
+| `pyproject.toml` | Update (3.26.3 → 3.27.0) |
+| `CHANGELOG.md` | Update (`[3.27.0]`; `[3.26.3]` already reads #180) |
+| `planning/current_plan.md` | Update (provenance) |
 
 ## Gate Condition
 
-- `grep -c '\[POP:ranked_ladder\]'` on the aoestats Phase 06 CSV
-  returns **136** (all data rows).
-- `grep -c '\[PRE-canonical_slot\]'` on the aoestats Phase 06 CSV
-  returns **16** (`p0_is_unrated` + `p1_is_unrated` × 8 primary
-  quarters).
-- ICC headline values at `cohort_threshold=10` unchanged
-  (0.0268 / 0.0148 / 0.0387).
-- PSI headline values unchanged (spot-check on 2023-Q1
-  `focal_old_rating` = 0.037).
-- Row count of CSV unchanged at 136 data rows (137 lines with
-  header).
-- Pre-commit hooks pass (ruff + mypy on the .py notebook).
-- BACKLOG F6 entry removed.
-- `pyproject.toml` version 3.26.3; CHANGELOG `[3.26.3]` entry.
-- PR opened on branch `fix/aoestats-phase06-pop-tag-backfill`.
+- §4.2.2: 3 branch examples + Branch (ii) framework-completeness note.
+- Tabela 4.5 `Plan Phase 02 (I2)` row renamed `Klucz kanoniczny
+  (I2 §2)` with branch values.
+- 4 REVIEW flags in §4.2.2 (2 new + 2 retained).
+- REVIEW_QUEUE + WRITING_STATUS updated; §4.2.2 REVISED.
+- BACKLOG F3 removed.
+- Version 3.27.0; CHANGELOG `[3.27.0]`.
+- Pre-commit hooks pass.
+- Adversarial review completed; `planning/current_plan.critique.md`
+  present on disk (parent responsibility, pre-T01).
+- PR opened.
 
 ## Out of scope
 
-- **Thesis §4.1.4 + §4.4.6 prose update** to drop "implicit scope"
-  language (now that the tag is explicit). Deferred to Pass-2 or a
-  separate Category F PR.
-- **BACKLOG F1** (`canonical_slot` column Phase 02 unblocker) —
-  the substantive downstream fix. F6 only closes the artifact-vs-spec
-  divergence on the flag presence, not the underlying W3 bias.
-- **Other aoestats notebook modifications** beyond the minimal
-  tag-emission change. The `pre_canonical_flag` variable removal is
-  bonus cleanup; anything else is scope creep.
-- **Phase 06 schema version bump.** Spec §12 is unchanged; the
-  notes column tagging is artifact-level, not schema-level.
-- **Reviewer-adversarial** plan-side critique. `critique_required:
-  false` for this Category-D fix per plan_template.md. Final review
-  uses reviewer-deep on the diff per CLAUDE.md routing.
+- Other §4.2 subsections; other Chapter 4 tables.
+- Phase 02 identity-resolution implementation.
+- Revising per-dataset INVARIANTS.md §2.
+- New bibtex entries.
+- Pass-2 prose polish.
 
 ## Open questions
 
-- **Q1:** Should `focal_old_rating` carry `[PRE-canonical_slot]`?
-  Resolved NO per notebook author's intent (half-split
-  randomization → aggregate). If Pass-2 challenges this, the
-  `PER_SLOT_FEATURES` constant is the single point of change.
-- **Q2:** Should the `[POP:]` tag use `[POP:ranked_ladder]` or
-  `[POP:ranked_ladder_1v1_random_map]` (more specific)? Resolved
-  short form for parity with aoe2companion (also `[POP:ranked_ladder]`);
-  the specificity (1v1 random_map) is already captured in the M5
-  note. Short form wins for cross-dataset tag comparability.
+- **Q1:** chess.com stress-test hypothetical vs real? Resolved:
+  neither — replaced with framework-completeness note (Branch (ii)
+  not instantiated by any thesis corpus; chess.com named as
+  indicative class only).
+- **Q2:** Rename Tabela 4.5 row label? Resolved YES →
+  `Klucz kanoniczny (I2 §2)`.
+- **Q3:** Drop [Christen2012DataMatching]? Resolved NO; drop only
+  "5% threshold" framing.
+- **Q4:** Worked-example citations style? Resolved: line numbers.

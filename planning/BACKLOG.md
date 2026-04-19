@@ -46,37 +46,6 @@ views.
 
 ---
 
-### F3 — Thesis §4.2.2 prose revision + Tabela 4.5 row 247 correction
-
-- **Category:** F (thesis writing)
-- **Branch:** `docs/thesis-4.2.2-identity-meta-rule`
-- **Predecessors:** PR #160 W5 meta-rule. **Previously blocked on F2**
-  (per W5 critique A5: §4.2.2 must reflect 01_05 within-profile stability
-  findings). **F2 unblocked 2026-04-19** — 01_05 artifacts complete for
-  all three datasets via PRs #162–#177 series.
-
-**Scope.**
-1. Revise `thesis/chapters/04_data_and_methodology.md` §4.2.2 to describe the
-   5-branch decision procedure (I2 extended form) with three worked examples
-   + one stress-test rejection (chess.com hypothetical).
-2. Correct Tabela 4.5 row 247:
-   - sc2egset: `LOWER(nickname)` → `player_id_worldwide` (branch (iii); 12%
-     documented bias)
-   - aoec: `LOWER(name)` → `profileId` (branch (i))
-   - aoestats: keep `profile_id`, annotate as branch (v) structurally-forced
-3. `thesis/WRITING_STATUS.md` §4.2.2 DRAFTED → REVISED.
-4. `thesis/chapters/REVIEW_QUEUE.md` updated.
-
-**Acceptance.** Prose follows argumentative Polish style; Tabela 4.5 row 247
-matches each dataset's `INVARIANTS.md` §2; `thesis/references.bib` unchanged
-(Christen 2012 not used as identity threshold in the revised meta-rule).
-
-**Why priority 3.** High information value but cannot be authored before
-01_05 provides the within-profile stability findings that justify the "trust
-the ID" stance.
-
----
-
 ### F4 — Narrative-drift checker (chore)
 
 - **Category:** C (chore)
