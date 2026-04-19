@@ -19,7 +19,19 @@ merged to `master`.
 
 ### Removed
 
-## [3.28.0] — 2026-04-19 (PR #TBD: feat/phase01-decision-gates-01-06)
+## [3.28.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-183)
+
+### Removed
+
+- `planning/current_plan.md` reset to `<!-- No active plan -->` and
+  `planning/current_plan.critique.md` deleted. Post-merge purge for
+  the Phase 01 Decision Gates (01_06) workstream completed in PR #183.
+
+### Changed
+
+- CHANGELOG `[3.28.0]` header: `PR #TBD` → `PR #183` backfill.
+
+## [3.28.0] — 2026-04-19 (PR #183: feat/phase01-decision-gates-01-06)
 
 ### Added
 
