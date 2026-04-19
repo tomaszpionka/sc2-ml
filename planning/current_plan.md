@@ -121,7 +121,7 @@ the following matrix from T05/T06/T07 empirical artifacts:
 | D2 Skill-signal (observed-scale ICC, F1+F2 passed) | **PRIMARY** | SUPPLEMENTARY | SUPPLEMENTARY |
 | D3 Temporal coverage (months continuous, density floor) | SUPPLEMENTARY | SUPPLEMENTARY | **PRIMARY** |
 | D4a Identity rename-stability (Branch (i)) | SUPPLEMENTARY (Branch iii) | SUPPLEMENTARY (Branch v) | **PRIMARY** (Branch i) |
-| D4b Identity within-scope rigor (rates < 15%) | **PRIMARY** (12%/30.6% — within-region) | SUPPLEMENTARY (Branch v, unmeasurable) | **PRIMARY** (2.57%/3.55%) |
+| D4b Identity within-scope rigor (rates < 15%) | **co-PRIMARY** (12%/30.6% — within-region) | SUPPLEMENTARY (Branch v, unmeasurable) | **co-PRIMARY** (2.57%/3.55%) |
 | D5 Patch resolution (patch metadata) | SUPPLEMENTARY | **PRIMARY** | SUPPLEMENTARY |
 | D6 (asymmetry flag, NOT a role dimension) | flag present | N/A | N/A |
 
@@ -903,7 +903,7 @@ artifacts, plus Phase 02 go/no-go per dataset.
    | D2 Skill-signal (ICC point estimate + verdict) | [from sc2egset icc.json: 0.046 INCONCLUSIVE — passes F1+F2] | [from aoestats 01_05_05_icc_results.json: 0.027 — check F2] | [from aoe2companion 01_05_05_icc.json: 0.003 FALSIFIED — fails F1 AND F2] | yes (all 3 measured on pre-game reference windows) |
    | D3 Temporal coverage (months with ≥100 cleaned rows) | [from T05 data_dictionary, density-filtered SQL] | [from T06 data_dictionary] | [from T07 data_dictionary, ~60+ months] | yes once density floor applied uniformly |
    | D4a Identity rename-stability (Branch per I2) | Branch (iii) — SUPPLEMENTARY | Branch (v) — SUPPLEMENTARY | Branch (i) — **PRIMARY** | yes (all 3 follow I2 extended procedure) |
-   | D4b Identity within-scope rigor (rates < 15%) | 12%/30.6% within-region — **PRIMARY** | Branch (v) unmeasurable — SUPPLEMENTARY | 2.57%/3.55% — **PRIMARY** | yes (rate thresholds applied uniformly) |
+   | D4b Identity within-scope rigor (rates < 15%) | 12%/30.6% within-region — **co-PRIMARY** | Branch (v) unmeasurable — SUPPLEMENTARY | 2.57%/3.55% — **co-PRIMARY** | yes (rate thresholds applied uniformly; orthogonal to D4a) |
    | D5 Patch resolution | N/A (tournament) | patch_id binding — **PRIMARY** | N/A (no patch metadata) | no (aoestats is the only PRIMARY candidate) |
    | D6 Controlled-asymmetry flag (I8 variable, **NOT** role-bearing) | in-game events parseable | N/A | N/A | no (flag only; not counted toward PRIMARY-role tally) |
 

@@ -8,6 +8,45 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
+
+**Branch:** `feat/phase01-decision-gates-01-06`
+**Category:** A (Phase work)
+**Scope:** Pipeline Section 01_06 — Decision Gates (four deliverables: data dictionary, data quality report, risk register, modeling readiness decision).
+
+### Key findings
+
+- **Verdict:** READY_CONDITIONAL (1 BLOCKER, 3 HIGH/MEDIUM residuals)
+- **Phase 02:** GO-NARROW — aggregate / UNION-ALL-symmetric features only; per-slot features deferred until BACKLOG F1+W4
+- **Risk register severity:** 1 BLOCKER (AO-R01 canonical_slot) / 1 HIGH / 2 MEDIUM / 1 RESOLVED
+- **Flip-predicate:** BACKLOG F1 (`canonical_slot` resolved) AND W4 (INVARIANTS §5 I5 PARTIAL→HOLDS). If F1 lands without W4, verdict remains READY_CONDITIONAL.
+- **ICC FALSIFIED:** 0.0268 [0.0148, 0.0387] — fails F2 (FALSIFIED). aoestats SUPPLEMENTARY on D2.
+- **CONSORT:** 17,814,947 clean matches (matches_1v1_clean)
+- **D5 PRIMARY:** patch_id column (`patch` BIGINT) — sole dataset with patch-epoch binding
+- **Phase 01 status:** COMPLETE
+
+### Invariants touched
+
+- I2: PARTIAL remains (Branch v structurally-forced). No transition.
+- I5: PARTIAL remains (canonical_slot pending F1+W4). No transition from 01_06.
+- I8: PARTIAL remains (ICC FALSIFIED). No transition.
+
+### Artifact paths
+
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoestats.csv` (45 columns)
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoestats.md`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/risk_register_aoestats.csv`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md`
+
+### Thesis mapping
+
+- §4.2.2 (identity resolution — Branch v, AO-R02)
+- §4.4.5 (ICC FALSIFIED — AO-R03)
+- §4.4.6 (slot-asymmetry BLOCKER — AO-R01)
+- §4.1.2 (crawler expansion confound — AO-R05)
+
+---
+
 ## 2026-04-19 — [BACKLOG F6 / Phase 01 / 01_05_08] Phase 06 CSV `notes` tag backfill — `[POP:ranked_ladder]` + `[PRE-canonical_slot]`
 
 **Category:** D (bug fix / artifact gap)

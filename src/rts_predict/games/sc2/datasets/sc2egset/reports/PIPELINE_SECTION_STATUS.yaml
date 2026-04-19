@@ -47,6 +47,6 @@ pipeline_sections:
   "01_06":
     name: "Decision Gates"
     phase: "01"
-    status: not_started
+    status: complete
   # Pipeline sections for Phases 02-06 added when those Phases become active.
   # Phase 07 has no pipeline sections.

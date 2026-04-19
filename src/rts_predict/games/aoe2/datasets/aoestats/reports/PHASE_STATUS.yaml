@@ -18,7 +18,7 @@ dataset_roadmap: src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md
 phases:
   "01":
     name: "Data Exploration"
-    status: in_progress
+    status: complete
   "02":
     name: "Feature Engineering"
     status: not_started

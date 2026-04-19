@@ -139,4 +139,29 @@ steps:
     pipeline_section: "01_05"
     status: complete
     completed_at: "2026-04-19"
-  # Future steps will be added here as they are defined in the ROADMAP.
+  "01_05_09":
+    name: "01_05 exit memo"
+    pipeline_section: "01_05"
+    status: complete
+    completed_at: "2026-04-19"
+    # retroactive; memo authored in T07 checkpoint 1 of feat/phase01-decision-gates-01-06
+  "01_06_01":
+    name: "Data Dictionary"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_02":
+    name: "Data Quality Report"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_03":
+    name: "Risk Register"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_04":
+    name: "Modeling Readiness Decision"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"

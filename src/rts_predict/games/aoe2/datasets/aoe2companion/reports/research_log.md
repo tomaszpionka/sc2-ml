@@ -8,6 +8,46 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
+
+**Branch:** `feat/phase01-decision-gates-01-06`
+**Category:** A (Phase work)
+**Scope:** Pipeline Section 01_06 — Decision Gates (four deliverables: data dictionary, data quality report, risk register, modeling readiness decision) + retroactive 01_05_09 exit memo.
+
+### Key findings
+
+- **Verdict:** READY_WITH_DECLARED_RESIDUALS (0 BLOCKERs, 2 HIGH/MEDIUM residuals)
+- **Phase 02:** GO — full scope (rating, faction, map_id with unknown-category handling, profileId-based history)
+- **Risk register severity:** 0 BLOCKER / 1 HIGH / 1 MEDIUM / 2 LOW/RESOLVED
+- **ICC FALSIFIED:** 0.003013 [0.001724, 0.004202] — fails F1 and F2. aoe2companion SUPPLEMENTARY on D2. Stable across N=5k/10k/20k.
+- **Feature drift:** map_id PSI > 1.1 in ALL 8 quarters (DLC map pool rotations); faction drift from 2023-Q3; rating drift from 2023-Q3. `won` target proxy fully stable.
+- **Identity:** Branch (i) API-namespace; 2.57% rename-rate; 3.55% collision-rate; both below 15% threshold; VERDICT A 0.9960 cross-dataset bridge.
+- **CONSORT:** 30,531,196 clean matches (matches_1v1_clean) — largest of 3 datasets
+- **D1 PRIMARY:** sample-scale (30.5M matches); D3 PRIMARY: temporal coverage (24 quarters)
+- **Phase 01 status:** COMPLETE (incl. retroactive 01_05_09 exit memo)
+
+### Invariants touched
+
+- I2: PARTIAL remains (Branch i, structural deviation from LOWER(nickname) canonical). Rates below 15% threshold; documented in thesis §4.2.2. No transition to HOLDS.
+- I8 (implied): PARTIAL — ICC FALSIFIED. No existing exception row; documented in risk register AC-R02.
+
+### Artifact paths
+
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md` (retroactive)
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.csv` (79 columns)
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoe2companion.md`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/risk_register_aoe2companion.csv`
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md`
+
+### Thesis mapping
+
+- §4.2.2 (identity resolution — Branch i, AC-R01)
+- §4.4.5 (ICC FALSIFIED — AC-R02)
+- §4.1.2 (feature drift — AC-R04 map_id/faction/rating)
+- §4.2.3 (duration clock-skew — AC-R05)
+
+---
+
 ## 2026-04-19 — [Phase 01 / 01_05 Adversarial Follow-Up] Post-PR #162 Remediation
 
 **Category:** A (science)

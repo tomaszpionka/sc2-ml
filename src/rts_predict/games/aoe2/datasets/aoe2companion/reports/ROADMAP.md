@@ -9,10 +9,14 @@
 
 ---
 
-> **Role: TO BE DETERMINED.** Role assignment (PRIMARY vs SUPPLEMENTARY
-> VALIDATION) will be formalized at the Phase 01 Decision Gate (01_06) based
-> on comparative data quality findings. Until then, this dataset runs all
-> Phases at full scope per `docs/PHASES.md`.
+> **Role: PRIMARY for sample-scale (D1) and temporal-coverage (D3)
+> dimensions; co-PRIMARY for identity-rigor (D4); SUPPLEMENTARY on
+> skill-signal (D2, ICC FALSIFIED 0.003), patch-resolution (D5), and
+> N/A on in-game events (D6). Assigned at 01_06 per
+> `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md`.
+> Rationale: 30.5M matches, rename-stable profileId at 2.57% / 3.55%
+> (reconciled 2026-04-19). Skill-signal SUPPLEMENTARY status deferred
+> to sc2egset primary.**
 
 ## How to use this document
 
@@ -1230,6 +1234,175 @@ gate:
     verdict missing CI.
 thesis_mapping:
   - "Chapter 4 -- Data and Methodology > 4.2.2 Identity Resolution"
+research_log_entry: "Required on completion."
+```
+
+---
+
+### Step 01_05_01 — Quarterly Grain Row Counts
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_02 — PSI Shift (Pre-Game Features)
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_03 — Stratification (Per-Leaderboard)
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_04 — Survivorship Triple Analysis
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_05 — Variance Decomposition (ICC)
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_06 — DGP Diagnostics (Duration)
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_07 — Phase 06 Interface Emission
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_08 — Temporal Leakage Audit v1
+
+Inherited from 01_05 execution (see STEP_STATUS.yaml; completed 2026-04-19).
+
+### Step 01_05_09 — 01_05 exit memo
+
+```yaml
+step_number: "01_05_09"
+name: "01_05 exit memo"
+description: "Consolidate 01_05 findings into a single exit memo for Phase 01 gate
+  consumption. Authored in T07 as part of the 01_06 bundled PR (retroactive Step
+  addition). Covers ICC verdict, PSI audit, leakage audit, temporal drift,
+  survivorship, 01_05_05 sensitivity."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_05 -- Temporal & Panel EDA"
+dataset: "aoe2companion"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.py"
+outputs:
+  report: "artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md"
+gate: "memo exists; cites all 01_05 artifacts by path"
+```
+
+---
+
+### Step 01_06_01 — Data Dictionary
+
+```yaml
+step_number: "01_06_01"
+name: "Data Dictionary"
+description: "Enumerate every column consumed downstream in Phase 02 from matches_1v1_clean,
+  player_history_all, and matches_history_minimal. Flag identity-rate reconciliation
+  (2026-04-19: 2.57%/3.55% rm_1v1 scope) in invariant_notes for profileId. Note Branch (i)
+  API-namespace identifier. Produce data_dictionary_aoe2companion.csv and .md per spec §1.1."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoe2companion"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.md"
+gate:
+  artifact_check: "CSV and MD exist."
+  continue_predicate: "profileId row has identity-rate reconciliation note in invariant_notes."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.2 AoE2 datasets"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_02 — Data Quality Report
+
+```yaml
+step_number: "01_06_02"
+name: "Data Quality Report"
+description: "Consolidate aoe2companion 01_04 cleaning artifacts into CONSORT flow.
+  Include 2.25% country NULL retention (MissingIndicator route, MAR primary / MNAR
+  sensitivity per §4.2.3). Note rating=0 / ratings_raw empty for lb=6 as scope-boundary.
+  Produce data_quality_report_aoe2companion.md per spec §1.2."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoe2companion"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoe2companion.md"
+gate:
+  artifact_check: "MD exists with CONSORT flow and rule registry."
+  continue_predicate: "CONSORT flow balanced."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.2.3 Cleaning rules"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_03 — Risk Register
+
+```yaml
+step_number: "01_06_03"
+name: "Risk Register"
+description: "Enumerate INVARIANTS.md §5 rows: I2 PARTIAL (identity-rate 2.57%/3.55%).
+  LOW RESOLVED for identity-rate reconciliation. HIGH for ICC FALSIFIED 0.003 (§4.4.5
+  defence). No BLOCKERs expected. Produce risk_register_aoe2companion.csv and .md per spec §1.3."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoe2companion"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_03_risk_register.py"
+inputs:
+  - "reports/INVARIANTS.md"
+  - "planning/BACKLOG.md"
+  - "reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoe2companion.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoe2companion.md"
+gate:
+  artifact_check: "CSV and MD exist."
+  continue_predicate: "I2 PARTIAL row has corresponding risk_id; no BLOCKER rows."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.4.5 ICC estimator"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_04 — Modeling Readiness Decision
+
+```yaml
+step_number: "01_06_04"
+name: "Modeling Readiness Decision"
+description: "Consume 01_06_01..03 artifacts; produce READY_WITH_DECLARED_RESIDUALS verdict.
+  ICC FALSIFIED 0.003 is a HIGH skill-signal residual with §4.4.5 defence anchor. I2 PARTIAL
+  at 2.57% rename rate is defence item with §4.2.2 anchor. 342 duration clock-skew rows
+  retained is MEDIUM residual. No BLOCKER; Phase 02 proceeds unconditionally.
+  Produce modeling_readiness_aoe2companion.md per spec §1.4."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoe2companion"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_04_modeling_readiness.py"
+inputs:
+  - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.csv"
+  - "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoe2companion.md"
+  - "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoe2companion.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md"
+gate:
+  artifact_check: "MD exists with READY_WITH_DECLARED_RESIDUALS verdict."
+  continue_predicate: "Verdict stated verbatim; HIGH ICC residual has §4.4.5 anchor."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.2 AoE2 datasets"
 research_log_entry: "Required on completion."
 ```
 

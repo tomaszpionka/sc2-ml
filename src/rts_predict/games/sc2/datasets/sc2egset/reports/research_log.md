@@ -2,6 +2,42 @@
 
 ---
 
+## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
+
+**Branch:** `feat/phase01-decision-gates-01-06`
+**Category:** A (Phase work)
+**Scope:** Pipeline Section 01_06 — Decision Gates (four deliverables: data dictionary, data quality report, risk register, modeling readiness decision).
+
+### Key findings
+
+- **Verdict:** READY_WITH_DECLARED_RESIDUALS (0 BLOCKERs, 6 HIGH/MEDIUM residuals)
+- **Phase 02:** GO — full scope (pre-game skill, faction, map, region, historical activity, in-game D6 sc2egset-exclusive)
+- **Risk register severity:** 0 BLOCKER / 2 HIGH / 4 MEDIUM / 1 RESOLVED
+- **ICC INCONCLUSIVE:** 0.046 [0.028, 0.064] — passes F1 (≥0.01) AND F2 (NOT FALSIFIED) → sc2egset PRIMARY on D2 Skill-signal
+- **Temporal leakage audit:** PASS (v2 post-adversarial review)
+- **CONSORT:** 22,209 clean matches (matches_flat_clean) after R01 (85 rows) + R03 (314 rows)
+- **Phase 01 status:** COMPLETE
+
+### Invariants touched
+
+- I2: PARTIAL remains (Branch iii; within-region collision 30.6%). No transition.
+- I8: PARTIAL remains (ICC INCONCLUSIVE). No transition.
+
+### Artifact paths
+
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/data_dictionary_sc2egset.csv` (76 columns)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/data_quality_report_sc2egset.md`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/risk_register_sc2egset.csv`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md`
+
+### Thesis mapping
+
+- §4.2.2 (identity resolution — Branch iii, SC-R01)
+- §4.4.5 (ICC INCONCLUSIVE — SC-R03, SC-R04 tournament-only population)
+- §4.1.4 (population scope — [POP:tournament] Heckman selection bias)
+
+---
+
 ## 2026-04-19 — [Phase 01 / 01_05 v1.0.4 spec amendment] ANOVA-primary headline convention (pointer)
 
 **Category:** A (science; documentary)

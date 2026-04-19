@@ -44,9 +44,11 @@ pipeline_sections:
     name: "Temporal & Panel EDA"
     phase: "01"
     status: complete
+    # Re-derived 2026-04-19 T07 checkpoint 1: 01_05_09 memo authored and flipped to complete;
+    # all 9 steps (01_05_01..01_05_09) now complete.
   "01_06":
     name: "Decision Gates"
     phase: "01"
-    status: not_started
+    status: complete
   # Pipeline sections for Phases 02-06 added when those Phases become active.
   # Phase 07 has no pipeline sections.

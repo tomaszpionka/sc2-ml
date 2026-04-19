@@ -9,6 +9,12 @@
 
 ---
 
+> **Role: TO BE DETERMINED.** Role assignment (PRIMARY vs
+> SUPPLEMENTARY VALIDATION, per dimension D1–D6 in
+> `reports/specs/01_06_readiness_criteria.md` §3) will be
+> formalized at the Phase 01 Decision Gate (01_06) based on
+> comparative data quality findings.
+
 ## How to use this document
 
 This file decomposes Phases into Pipeline Sections and Steps for the sc2egset
@@ -1571,6 +1577,140 @@ outputs:
 gate:
   continue_predicate: "leakage_audit_sc2egset.json: future_leak_count=0; post_game_token_violations=[]; reference_window_assertion=PASS; halt_triggered=false."
   halt_predicate: "halt_triggered=true."
+```
+
+### Step 01_05_09 — 01_05 exit memo (retroactive)
+
+```yaml
+step_number: "01_05_09"
+name: "01_05 exit memo (retroactive)"
+description: "Consolidate 01_05 findings into a single exit memo for Phase 01 gate consumption.
+  Artifact authored 2026-04-18 (pre-01_06) and retroactively bound to this Step in
+  01_06 ROADMAP refresh. Covers Q1..Q9 parameter groups, spec deviations, and
+  gate verdict for 01_05."
+pipeline_section: "01_05 -- Temporal & Panel EDA"
+notebook_path: null
+outputs:
+  artifacts:
+    - "reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md"
+completed_at: "2026-04-18"
+gate: "memo exists on disk; covers 01_05_01..01_05_08 findings"
+```
+
+---
+
+### Step 01_06_01 — Data Dictionary
+
+```yaml
+step_number: "01_06_01"
+name: "Data Dictionary"
+description: "Enumerate every column consumed downstream in Phase 02 from matches_1v1_clean,
+  player_history_all, and matches_history_minimal. Assign temporal_classification
+  (PRE_GAME / POST_GAME_HISTORICAL / TARGET / METADATA / IDENTIFIER) per Invariant I3.
+  Produce the data_dictionary_sc2egset.csv and .md companion per spec 01_06_readiness_criteria.md §1.1."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "sc2egset"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/06_decision_gates/01_06_01_data_dictionary.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+  - "src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_sc2egset.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_sc2egset.md"
+gate:
+  artifact_check: "CSV and MD exist; every Phase-02 feature-candidate column has a row."
+  continue_predicate: "No POST_GAME column assigned PRE_GAME classification (I3 check)."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.1 SC2EGSet"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_02 — Data Quality Report
+
+```yaml
+step_number: "01_06_02"
+name: "Data Quality Report"
+description: "Consolidate 01_02_04 null/sentinel reports, 01_03 profiling artifacts,
+  01_04_01 missingness ledger, 01_04_02 cleaning registry into a CONSORT flow.
+  Trace each cleaning rule back to its registry entry. Produce per spec §1.2."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "sc2egset"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/06_decision_gates/01_06_02_data_quality_report.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_sc2egset.md"
+gate:
+  artifact_check: "MD exists with CONSORT flow, rule registry, route-decision table."
+  continue_predicate: "CONSORT flow balanced (sum of drops = raw - clean)."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.2.3 Cleaning rules"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_03 — Risk Register
+
+```yaml
+step_number: "01_06_03"
+name: "Risk Register"
+description: "Enumerate every INVARIANTS.md §5 PARTIAL/VIOLATED row, every BACKLOG
+  item affecting sc2egset, and every 01_05 adversarial-audit residual. Produce
+  risk_register_sc2egset.csv and .md companion per spec §1.3."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "sc2egset"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/06_decision_gates/01_06_03_risk_register.py"
+inputs:
+  - "reports/INVARIANTS.md"
+  - "planning/BACKLOG.md"
+  - "reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md"
+  - "reports/artifacts/01_exploration/05_temporal_panel_eda/icc.json"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/risk_register_sc2egset.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/risk_register_sc2egset.md"
+gate:
+  artifact_check: "CSV and MD exist."
+  continue_predicate: "Every INVARIANTS.md §5 non-HOLDS row has a corresponding risk_id."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.4.5 ICC estimator"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_04 — Modeling Readiness Decision
+
+```yaml
+step_number: "01_06_04"
+name: "Modeling Readiness Decision"
+description: "Consume 01_06_01..03 artifacts; produce the verdict memo per spec §2
+  four-tier taxonomy. Assign READY_WITH_DECLARED_RESIDUALS with documented HIGH/MEDIUM
+  residuals and Chapter 4 anchors. Produce modeling_readiness_sc2egset.md per spec §1.4."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "sc2egset"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/06_decision_gates/01_06_04_modeling_readiness.py"
+inputs:
+  - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_sc2egset.csv"
+  - "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_sc2egset.md"
+  - "reports/artifacts/01_exploration/06_decision_gates/risk_register_sc2egset.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md"
+gate:
+  artifact_check: "MD exists with verdict, flip-predicate, BLOCKER list, HIGH/MEDIUM residuals."
+  continue_predicate: "Verdict stated verbatim from spec §2 taxonomy; each HIGH/MEDIUM residual has Chapter 4 anchor."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.1 SC2EGSet"
+research_log_entry: "Required on completion."
 ```
 
 ---

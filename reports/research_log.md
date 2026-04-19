@@ -11,7 +11,61 @@ live in per-dataset logs — one per game/dataset combination.
 |---------|-----|------------|
 | sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-18 (01_05) |
 | aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-18 (01_04_04) |
-| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-16 (01_04_00) |
+| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-19 (01_06) |
+| aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-19 (01_06) |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-19 (01_06) |
+
+---
+
+## [CROSS] 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Three-dataset Phase 01 closure — Decision Gates complete
+
+**Branch:** `feat/phase01-decision-gates-01-06`
+**Category:** A (Cross-dataset phase closure)
+
+### Cross-dataset rollup
+
+Phase 01 (Data Exploration) is now COMPLETE for all three datasets. The Phase 01 Decision
+Gate (Pipeline Section 01_06) produced four deliverables per dataset (data dictionary, data
+quality report, risk register, modeling readiness decision) and one cross-dataset rollup memo.
+
+**Rollup artifact:** `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md`
+
+### Verdict summary
+
+| Dataset | Verdict | Phase 02 |
+|---------|---------|----------|
+| sc2egset | READY_WITH_DECLARED_RESIDUALS | GO — full scope |
+| aoestats | READY_CONDITIONAL | GO-NARROW (aggregate features only; per-slot deferred until F1+W4) |
+| aoe2companion | READY_WITH_DECLARED_RESIDUALS | GO — full scope |
+
+### Role assignment (D1–D5; D6 flag-only)
+
+| Dimension | Primary | Secondary |
+|-----------|---------|-----------|
+| D1 Sample-scale | aoe2companion (30.5M) | aoestats (17.8M), sc2egset (22k) |
+| D2 Skill-signal (ICC) | sc2egset (0.046 INCONCLUSIVE; passes F1+F2) | aoestats SUPPLEMENTARY (FALSIFIED), aoe2companion SUPPLEMENTARY (FALSIFIED) |
+| D3 Temporal coverage | aoe2companion (24 quarters; 2020-Q3 to 2026-Q2) | aoestats (9 quarters), sc2egset (5/10 quarters) |
+| D4a Identity rename-stability | aoe2companion (Branch i; 2.57% rename) | sc2egset SUPPLEMENTARY (Branch iii), aoestats SUPPLEMENTARY (Branch v) |
+| D4b Identity within-scope rigor | sc2egset + aoe2companion co-PRIMARY | aoestats SUPPLEMENTARY (Branch v; unmeasurable) |
+| D5 Patch resolution | aoestats (patch_id binding; sole candidate) | sc2egset SUPPLEMENTARY, aoe2companion SUPPLEMENTARY |
+
+### Phase 02 readiness declaration
+
+Phase 02 (Feature Engineering & Modeling) planning may commence immediately:
+- sc2egset: full scope
+- aoestats: GO-NARROW (aggregate/symmetric features; BACKLOG F1+W4 required for full scope)
+- aoe2companion: full scope
+
+All three datasets have completed the Phase 01 derivation chain:
+STEP_STATUS (all 01_06 steps complete) → PIPELINE_SECTION_STATUS (01_06 complete) → PHASE_STATUS (Phase 01 complete).
+
+### Thesis mapping
+
+- §4.1.1 (dataset descriptions — all 3 CONSORT flows)
+- §4.1.2 (temporal drift — aoestats crawler confound, aoe2companion map_id/faction)
+- §4.2.2 (identity resolution — per-dataset branch assignments + VERDICT A bridge)
+- §4.4.5 (ICC findings — sc2egset INCONCLUSIVE, aoestats/aoe2companion FALSIFIED)
+- §4.4.6 (slot-asymmetry — aoestats READY_CONDITIONAL flip-predicate)
 
 ---
 

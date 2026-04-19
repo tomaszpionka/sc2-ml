@@ -9,10 +9,14 @@
 
 ---
 
-> **Role: TO BE DETERMINED.** Role assignment (PRIMARY vs SUPPLEMENTARY
-> VALIDATION) will be formalized at the Phase 01 Decision Gate (01_06) based
-> on comparative data quality findings. Until then, this dataset runs all
-> Phases at full scope per `docs/PHASES.md`.
+> **Role: PRIMARY on patch-resolution (D5, patch_id binding);
+> SUPPLEMENTARY on sample-scale (D1), temporal-coverage (D3), and
+> identity-rigor (D4, Branch (v) structurally-forced); SUPPLEMENTARY
+> on skill-signal (D2, ICC 0.027 pending BACKLOG F1 canonical_slot
+> resolution); N/A on in-game events (D6). Assigned at 01_06 per
+> `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md`.
+> Rationale: patch-anchored, BACKLOG F1 canonical_slot pending, Branch (v)
+> structurally-forced.**
 
 ## How to use this document
 
@@ -1557,6 +1561,122 @@ outputs:
 gate:
   artifact_check: "gate_memo.md exists and is non-empty."
 research_log_entry: "Added 2026-04-18."
+```
+
+---
+
+### Step 01_06_01 -- Data Dictionary
+
+```yaml
+step_number: "01_06_01"
+name: "Data Dictionary"
+description: "Enumerate every column consumed downstream in Phase 02 from matches_1v1_clean,
+  player_history_all, and matches_history_minimal. Flag team=0/team=1 columns as
+  '[PRE-canonical_slot]' in invariant_notes. Assign temporal_classification per I3.
+  Produce data_dictionary_aoestats.csv and .md companion per spec 01_06_readiness_criteria.md §1.1."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoestats"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/06_decision_gates/01_06_01_data_dictionary.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoestats.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoestats.md"
+gate:
+  artifact_check: "CSV and MD exist."
+  continue_predicate: "team=0/team=1 columns flagged [PRE-canonical_slot] in invariant_notes."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.2 AoE2 datasets"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_02 -- Data Quality Report
+
+```yaml
+step_number: "01_06_02"
+name: "Data Quality Report"
+description: "Consolidate aoestats 01_04 cleaning artifacts into CONSORT flow including
+  the 28 corrupt-duration matches dropped in rm_1v1. Cleaning rule registry must reference
+  cleaning.yaml R01..RNN with leaderboard='random_map' scope anchor.
+  Produce data_quality_report_aoestats.md per spec §1.2."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoestats"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/06_decision_gates/01_06_02_data_quality_report.py"
+inputs:
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_data_cleaning.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json"
+  - "reports/artifacts/01_exploration/04_cleaning/01_04_01_missingness_ledger.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoestats.md"
+gate:
+  artifact_check: "MD exists with CONSORT flow and rule registry."
+  continue_predicate: "CONSORT flow balanced."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.2.3 Cleaning rules"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_03 -- Risk Register
+
+```yaml
+step_number: "01_06_03"
+name: "Risk Register"
+description: "Enumerate INVARIANTS.md §5 PARTIAL rows (I2 branch-v, I5 slot-asymmetry,
+  I8 ICC-FALSIFIED) as risks. Add BLOCKER row for canonical_slot-pending team=1 skill
+  bias (W3 ARTEFACT_EDGE; BACKLOG F1). Produce risk_register_aoestats.csv and .md per spec §1.3."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoestats"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/06_decision_gates/01_06_03_risk_register.py"
+inputs:
+  - "reports/INVARIANTS.md"
+  - "planning/BACKLOG.md"
+  - "reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md"
+outputs:
+  data_artifacts:
+    - "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoestats.csv"
+  report: "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoestats.md"
+gate:
+  artifact_check: "CSV and MD exist."
+  continue_predicate: "BLOCKER row for BACKLOG F1 canonical_slot present."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.4.6 canonical_slot flag"
+research_log_entry: "Required on completion."
+```
+
+### Step 01_06_04 -- Modeling Readiness Decision
+
+```yaml
+step_number: "01_06_04"
+name: "Modeling Readiness Decision"
+description: "Consume 01_06_01..03 artifacts; produce READY_CONDITIONAL verdict with
+  flip-predicate: BACKLOG F1 + W4 both resolved. State Phase 02 narrower scope:
+  aggregate / UNION-ALL-symmetric features only; per-slot features deferred until
+  F1+W4. Produce modeling_readiness_aoestats.md per spec §1.4."
+phase: "01 -- Data Exploration"
+pipeline_section: "01_06 -- Decision Gates"
+dataset: "aoestats"
+spec: "reports/specs/01_06_readiness_criteria.md v1.0"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/06_decision_gates/01_06_04_modeling_readiness.py"
+inputs:
+  - "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoestats.csv"
+  - "reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoestats.md"
+  - "reports/artifacts/01_exploration/06_decision_gates/risk_register_aoestats.csv"
+outputs:
+  report: "reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md"
+gate:
+  artifact_check: "MD exists with READY_CONDITIONAL verdict and F1+W4 flip-predicate."
+  continue_predicate: "Flip-predicate explicitly states F1+W4 coupling."
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > §4.1.2 AoE2 datasets"
+research_log_entry: "Required on completion."
 ```
 
 ---

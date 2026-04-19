@@ -96,3 +96,4 @@ See the universal invariants file linked above for the full I1–I10+ list. Exce
 | Invariant | Status | Notes |
 |---|---|---|
 | I2 | PARTIAL | Deviates to branch (i): `profileId` (API-namespace INTEGER) used instead of `LOWER(nickname)`. Rename rate 2.57%; name collision rate 3.55%. `profileId` is rename-stable — lower `max(rate)` than any name-based key. See §2. |
+| I8 | FALSIFIED — ICC FALSIFIED on reference window | ANOVA ICC (reference window) = 0.003013 [0.001724, 0.004202], below both the 0.05 threshold AND the 0.01 ignorable-variance floor. Ranked-ladder population heterogeneity; finding consistent across N=5k/10k/20k sample sizes. D2 skill-signal disqualified for PRIMARY role assignment per `reports/specs/01_06_readiness_criteria.md` §3 D2 F1+F2. See `artifacts/01_exploration/05_temporal_panel_eda/01_05_05_icc.json`. |

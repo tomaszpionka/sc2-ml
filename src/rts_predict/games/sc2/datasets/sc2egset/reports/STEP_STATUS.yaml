@@ -160,4 +160,31 @@ steps:
     started_at: "2026-04-18"
     completed_at: "2026-04-18"
     artifact_file: "01_05_sc2_leakage_audit.py"
-  # Future steps will be added here as they are defined in the ROADMAP.
+  "01_05_09":
+    name: "01_05 exit memo (retroactive)"
+    pipeline_section: "01_05"
+    status: complete
+    # retroactive: artifact decision_gate_sc2egset.md authored 2026-04-18 (pre-01_06);
+    # renamed to 01_05_09_gate_memo.md and retroactively bound to this Step in the
+    # 01_06 bundled PR (feat/phase01-decision-gates-01-06, 2026-04-19).
+    completed_at: "2026-04-18"
+  "01_06_01":
+    name: "Data Dictionary"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_02":
+    name: "Data Quality Report"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_03":
+    name: "Risk Register"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_04":
+    name: "Modeling Readiness Decision"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"

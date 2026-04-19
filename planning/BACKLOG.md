@@ -44,6 +44,19 @@ views.
 **Why priority 1.** Unblocks aoestats 01_05 from emitting
 `[PRE-canonical_slot]`-tagged outputs and unblocks aoestats Phase 02 entirely.
 
+**01_06 cross-reference (2026-04-19).** Phase 01 Decision Gate (01_06) registered F1 as the
+BLOCKER flip-predicate for aoestats READY_CONDITIONAL verdict. Evidence artifact:
+`src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md`.
+
+**F1+W4 coupling (surfaced by reviewer-adversarial 2026-04-19).** F1 alone does NOT flip
+aoestats verdict from READY_CONDITIONAL to READY_WITH_DECLARED_RESIDUALS. F1 resolves the
+schema gap (adds `canonical_slot`), but INVARIANTS.md §5 I5 row remains PARTIAL until W4
+(schema amendment to transition I5 PARTIAL → HOLDS) is also completed. The flip-predicate
+is: "BACKLOG F1 (`canonical_slot` resolved in schema) AND W4 (INVARIANTS.md §5 I5 PARTIAL →
+HOLDS via schema amendment)." If F1 lands without W4, aoestats Phase 02 expands to include
+per-slot features technically, but the invariant state remains undocumented. Both F1 and W4
+must land in the same PR or consecutive PRs before the verdict upgrade is valid.
+
 ---
 
 ### F4 — Narrative-drift checker (chore)

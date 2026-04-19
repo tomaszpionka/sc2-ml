@@ -150,3 +150,23 @@ steps:
     pipeline_section: "01_05"
     status: complete
     completed_at: "2026-04-18"
+  "01_06_01":
+    name: "Data Dictionary"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_02":
+    name: "Data Quality Report"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_03":
+    name: "Risk Register"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
+  "01_06_04":
+    name: "Modeling Readiness Decision"
+    pipeline_section: "01_06"
+    status: complete
+    completed_at: "2026-04-19"
