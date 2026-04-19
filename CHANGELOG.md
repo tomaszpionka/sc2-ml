@@ -19,7 +19,36 @@ merged to `master`.
 
 ### Removed
 
-## [3.24.0] — 2026-04-19 (PR #TBD: docs/thesis-ch4-corpus-framing-residuals)
+## [3.25.0] — 2026-04-19 (PR #TBD: docs/thesis-ch4-stat-methodology-residuals)
+
+### Changed
+
+- **Chapter 4 §4.4 DEFEND-IN-THESIS residuals #3 + #6** addressed as
+  Polish prose. Closes the stat-methodology cluster from
+  `planning/CHAPTER_4_DEFEND_IN_THESIS.md`:
+  1. §4.4.4 Evaluation metrics DRAFTABLE → DRAFTED. Four subsections
+     (Metryki podstawowe, dyskryminacyjne, stratyfikowane, within-game
+     / cross-game). Residual #6 (N=2 cross-game statistical-test
+     inapplicability) absorbed at the cross-game paragraph, citing
+     [Demsar2006] §3.2 with N ≥ 10 corollary framing. [#6]
+  2. NEW §4.4.5 Wybór estymatora ICC (Residual #3). Defends
+     observed-scale ANOVA ICC as cross-dataset-comparable headline;
+     latent-scale argument via [Nakagawa2017] §2.2 + Browne 2005 as
+     directional lower-bound, no plug-in formula. Closes PR-1's
+     §4.1.2.1 + §4.1.4 forward-refs. [#3]
+- **Tabela 4.7** — headline ICC reconciliation, three datasets,
+  six columns (Korpus / ICC / 95% CI / N (graczy) / N (obs.) /
+  Metoda CI). Cites spec v1.0.4 §14(b) (ANOVA-primary declaration).
+- **5 new bibtex entries** (Nakagawa2017, Chung2013, Ukoumunne2003,
+  WuCrespiWong2012, Gelman2007) — all verified via WebSearch.
+- **7 [REVIEW] / [UNVERIFIED] flags** planted for Pass-2 resolution.
+- **Two adversarial review rounds** consumed (plan-side verdict
+  REVISE — 1 BLOCKER formula error, 4 MAJORs, 7 MINORs all
+  addressed inline; execution-side verdict PASS — 0 BLOCKERs, 1
+  MAJOR fixed inline, 5 MINORs 2 fixed inline + 3 deferred to
+  Pass-2).
+
+## [3.24.0] — 2026-04-19 (PR #175: docs/thesis-ch4-corpus-framing-residuals)
 
 ### Changed
 
