@@ -1,6 +1,6 @@
 ---
 spec_id: CROSS-01-05-v1
-spec_version: "1.0.2"
+spec_version: "1.0.3"
 created: 2026-04-18
 invariants_touched: [I3, I6, I7, I8, I9]
 datasets_bound: [sc2egset, aoe2companion, aoestats]
@@ -225,10 +225,10 @@ Reference period definitions are non-overlapping with the tested quarters
 |---------|-----------------|-----------|
 | sc2egset | 2022-08-29 to 2022-12-31 | 4 months, 1 quarter (2022-Q3/Q4 pre-tested), zero overlap with 2023-Q1 |
 | aoe2companion | 2022-08-29 to 2022-12-31 | Same anchor; aoec coverage begins ~2020 so this period has adequate volume |
-| aoestats | 2022-08-29 to 2022-10-27 | Single patch window (patch 125283, path-c); ~9 weekly files, ~800k matches |
+| aoestats | 2022-08-29 to 2022-10-27 | Single patch window (patch 66692, path-c); ~9 weekly files, ~800k matches. Patch ID corrected v1.0.3 — see §14. |
 
 **aoestats rationale.** The aoestats reference is shortened to a single-patch
-window (patch 125283, ~9 weekly ingestion files) to avoid patch-heterogeneity
+window (patch 66692, ~9 weekly ingestion files) to avoid patch-heterogeneity
 within the reference distribution. This makes the aoestats reference window
 asymmetric with sc2egset/aoec (9 weeks vs. 4 months). Cross-dataset
 comparability is therefore asymmetric but justified: the priority is a
@@ -386,8 +386,8 @@ produced verdict **ARTEFACT_EDGE** for the aoestats team-slot asymmetry:
 **Patch-anchored reference justification.**
 
 The aoestats reference period (§7) is restricted to a single game patch
-(patch 125283, 2022-08-29 to 2022-10-27) to ensure a homogeneous reference
-distribution. Cross-dataset comparability with sc2egset and aoec is asymmetric
+(patch 66692, 2022-08-29 to 2022-10-27) to ensure a homogeneous reference
+distribution. (Patch ID corrected from 125283 → 66692 in v1.0.3, see §14.) Cross-dataset comparability with sc2egset and aoec is asymmetric
 on reference period length but justified by the priority of within-reference
 homogeneity.
 
@@ -424,7 +424,7 @@ to the following flat schema. One row per (dataset × quarter × feature × metr
 | `feature_name` | VARCHAR | Column name in `matches_history_minimal` |
 | `metric_name` | VARCHAR | `psi`, `cohen_h`, `cohen_d`, `ks_stat`, `icc`, etc. |
 | `metric_value` | DOUBLE | 4 decimal places; NaN encoded as `NULL` |
-| `reference_window_id` | VARCHAR | `2022-Q3Q4` or `2022-Q3-patch125283` for aoestats |
+| `reference_window_id` | VARCHAR | `2022-Q3Q4` or `2022-Q3-patch66692` for aoestats (corrected v1.0.3) |
 | `cohort_threshold` | INTEGER | Minimum-match threshold (default 10; sensitivity: 5, 20) |
 | `sample_size` | INTEGER | Number of (player × match) observations in this cell |
 | `notes` | VARCHAR | Free-text; e.g. `[PRE-canonical_slot]`, `__unseen__: 3 rows` |
@@ -556,6 +556,55 @@ v1.0.2 — 2026-04-19 — aoe2companion-specific §8 adaptations following post-
                        Source: adversarial review of PR #162, reviewer-
                        adversarial transcript 2026-04-19; executor B-01
                        critique at planning/current_plan.critique.md:15-17.
+
+v1.0.3 — 2026-04-19 — aoestats reference-patch ID correction: 125283 → 66692.
+
+                       Reason: empirical verification against aoestats
+                       matches_raw showed that patch 125283 covers
+                       2024-10-15 .. 2025-04-11 (over two years AFTER the
+                       declared reference window), while patch 66692 is
+                       the only patch present during the spec §7 reference
+                       window [2022-08-29, 2022-10-27] (123,367 matches
+                       within window, 241,981 total matches across patch
+                       lifetime 2022-08-29 .. 2022-12-08). The original
+                       v1.0 spec cited 125283 as the reference-window
+                       patch; this was a pre-empirical-validation error
+                       caught post-hoc during the pre-01_06 adversarial
+                       review (2026-04-19).
+
+                       Scope of correction — three textual edits, zero
+                       parameter changes:
+                       - §7 table row: "patch 125283" → "patch 66692".
+                       - §7 aoestats-rationale paragraph: "patch 125283"
+                         → "patch 66692".
+                       - §11 patch-anchored reference justification:
+                         "patch 125283" → "patch 66692".
+                       - §12 Phase 06 interface reference_window_id
+                         example: "2022-Q3-patch125283" → "2022-Q3-patch66692".
+
+                       No changes to the reference-window date bounds
+                       [2022-08-29, 2022-10-27] or to any other §3-§11
+                       parameter. Scientific conclusions of the
+                       aoestats 01_05 analyses are unchanged (they were
+                       computed against patch 66692 data from the start;
+                       only the spec text was drifted).
+
+                       Flagged by: 2026-04-19 pre-01_06 reviewer-
+                       adversarial transcript as I9 VIOLATION (spec
+                       drift without §14 amendment). The
+                       `01_05_02_psi_pre_game_features.py:67` inline
+                       comment already documented the drift; this
+                       amendment is the formal §13 remediation.
+
+                       Empirical evidence (matches_raw, 2026-04-19):
+                       - patch=66692: n=241,981 across
+                         2022-08-29 02:00:34+02 .. 2022-12-08 00:54:29+01,
+                         with 123,367 matches in window
+                         [2022-08-29, 2022-10-27].
+                       - patch=125283: n=5,472,044 across
+                         2024-10-15 02:00:00+02 .. 2025-04-11 07:35:26+02,
+                         with 0 matches in window
+                         [2022-08-29, 2022-10-27].
 ```
 
 ---

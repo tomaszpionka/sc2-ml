@@ -37,7 +37,7 @@
 # p1_old_rating END — symmetric. p0/p1 ratings NOT used as primary PSI features.
 # Per-slot p0/p1 sensitivity emitted with [PRE-canonical_slot] tag.
 #
-# **Critique B3 fix:** Primary reference 2022-08-29..2022-10-27 (patch 125283).
+# **Critique B3 fix:** Primary reference 2022-08-29..2022-10-27 (patch 66692; spec §7 corrected v1.0.3).
 # Counterfactual reference 2023-01-01..2023-03-31. Both emitted with reference_window_id.
 #
 # **Critique M8 fix:** Primary PSI on full data; sensitivity with is_duration_suspicious=FALSE.
@@ -64,10 +64,12 @@ db = get_notebook_db("aoe2", "aoestats")
 # Spec §9 Q3 reference window assertion
 REF_START = date(2022, 8, 29)
 REF_END = date(2022, 10, 27)
-REF_PATCH = 66692  # overviews_raw: patch 66692 released 2022-08-29 (spec note: plan used 125283, actual data ID is 66692)
+REF_PATCH = 66692  # matches_raw: patch 66692 covers [2022-08-29, 2022-12-08]; spec §7 corrected v1.0.3 (was 125283).
 assert REF_START == date(2022, 8, 29) and REF_END == date(2022, 10, 27), "Bad aoestats ref window"
-# Spec plan stated 125283, but actual overviews_raw patch ID is 66692 (released 2022-08-29)
-# The temporal window 2022-08-29..2022-10-27 is spec-correct; patch ID updated from actual data
+# Spec §7 originally cited 125283 as the reference-window patch; empirical
+# verification against matches_raw (2026-04-19) established that patch 125283
+# covers 2024-10-15..2025-04-11 and the 2022-08-29 window is exclusively on
+# patch 66692. Spec v1.0.3 §14 amendment documents the correction.
 assert REF_PATCH == 66692, f"Bad aoestats ref_patch: {REF_PATCH}"
 
 # Counterfactual reference per critique B3
@@ -385,7 +387,7 @@ md_summary = f"""# PSI Pre-Game Features Summary — aoestats
 **Step:** 01_05_02
 {caption}
 
-## Primary Reference: 2022-08-29..2022-10-27 (patch 125283)
+## Primary Reference: 2022-08-29..2022-10-27 (patch 66692; spec §7 corrected v1.0.3)
 
 Features analyzed: {', '.join(PRE_GAME_FEATURES)}
 

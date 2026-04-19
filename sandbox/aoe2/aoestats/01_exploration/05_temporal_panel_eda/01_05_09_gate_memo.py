@@ -97,7 +97,7 @@ MEMO_CONTENT = f"""# 01_05 Decision Gate Memo — aoestats
 ## Q7 Leakage Audit: {overall_verdict}
 
 Audit found no temporal leakage in aoestats 01_05. Reference PSI computed exclusively
-from data in 2022-08-29..2022-10-27 (patch 125283). No per-player feature windows
+from data in 2022-08-29..2022-10-27 (patch 66692). No per-player feature windows
 were materialised in 01_05.
 
 ## B3 Coincidence: Reference Start = Dataset Earliest Date
@@ -154,7 +154,7 @@ post-hoc (higher technical debt).
 
 ## Patch-Anchored Reference Asymmetry (spec §7 / §14 locked)
 
-Primary reference window: 9 weeks (2022-08-29..2022-10-27, patch 125283).
+Primary reference window: 9 weeks (2022-08-29..2022-10-27, patch 66692).
 sc2egset/aoec reference: ~4 months.
 Asymmetry is spec-locked per §7 rationale (within-reference homogeneity prioritisation).
 No amendment needed. Documented here per §14 amendment log.
