@@ -92,6 +92,30 @@ merged to `master`.
   direction of the conclusion is unchanged; the evidentiary chain is now
   sound — LMM and ANOVA agree to within 0.001 on the point estimate, and
   both CIs contain their respective points.
+## [3.21.3] — 2026-04-19 (PR #TBD: fix/01-05-aoestats-leakage-substantive)
+
+### Fixed
+
+- **aoestats leakage-audit Q7.1 gate redesign (v3).** Pre-this-PR (v2, from
+  PR #165) the gate compared a PSI-JSON `reference_window.start/.end` against
+  Python constants `REF_START/REF_END`. Both sides were written by the
+  SAME file (`01_05_02_psi_pre_game_features.py`) using the SAME hard-coded
+  constants: a silent widening of the PSI SQL filter would not be caught.
+  v3 replaces with two substantive sub-checks:
+  - **Q7.1a (DB ref-range integrity):** `MIN/MAX(started_at)` of rows within
+    the declared spec §7 reference window lies strictly within those bounds;
+    row count > 0. Catches DB timezone bugs and filter-predicate regressions.
+  - **Q7.1b (PSI source substring):** `01_05_02_psi_pre_game_features.py`
+    source literally contains the spec §7 date substrings `2022-08-29` and
+    `2022-10-27`. Catches silent SQL-filter drift between the PSI notebook
+    and this audit.
+
+  Each sub-check has its own PASS/FAIL flag and independent `assert`. The
+  composite `future_leak_count` int is retained for JSON back-compat.
+  Post-fix run: `Q7.1a min=2022-08-29 00:04:05, max=2022-10-26 23:52:02,
+  count=70,934 → PASS`; `Q7.1b missing=none → PASS`. Closes I3 PARTIAL
+  status on aoestats per the 2026-04-19 pre-01_06 adversarial review.
+  Does not change the `Q7 PASS` verdict.
 
 ## [3.20.0] — 2026-04-19 (PR #TBD: feat/01-05-sc2egset)
 

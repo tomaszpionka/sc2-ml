@@ -23,7 +23,7 @@ REF_START = 2022-08-29, REF_END = 2022-10-27, REF_PATCH = 66692: PASSED
 
 canonical_slot present: False
 [PRE-canonical_slot] flag active: True
-Phase 06 per-slot tagging check: phase06_interface_not_yet_emitted
+Phase 06 per-slot tagging check: FAILED: 133 per-slot rows missing [PRE-canonical_slot] tag
 
 ## Overall verdict
 

@@ -18,12 +18,31 @@
   ],
   "query3_assertion_passed": true,
   "query4_canonical_slot_ready": false,
-  "query4_m6_phase06_slot_tag_check": "phase06_interface_not_yet_emitted",
+  "query4_m6_phase06_slot_tag_check": "FAILED: 133 per-slot rows missing [PRE-canonical_slot] tag",
   "pre_canonical_slot_flag_active": true,
   "verdict": "PASS",
   "sql_queries": {
     "q71_b1_probe": "WITH ref_cohort AS (\n  SELECT CAST(player_id AS BIGINT) AS player_id\n  FROM matches_history_minimal\n  WHERE started_at BETWEEN TIMESTAMP '2022-08-29' AND TIMESTAMP '2022-10-27'\n  GROUP BY player_id HAVING COUNT(*) >= 10\n)\nSELECT COUNT(*) AS post_ref_rows_in_cohort\nFROM matches_history_minimal\nWHERE CAST(player_id AS BIGINT) IN (SELECT player_id FROM ref_cohort)\n  AND started_at > TIMESTAMP '2022-10-27'",
+    "q71a_ref_range": "SELECT\n    MIN(started_at) AS ref_min,\n    MAX(started_at) AS ref_max,\n    COUNT(*) AS ref_count\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2022-08-29'\n  AND started_at <= TIMESTAMP '2022-10-27'",
+    "q71b_psi_source_substring_check": "Path('01_05_02_psi_pre_game_features.py').read_text() MUST contain the date substrings '2022-08-29' and '2022-10-27' (spec \u00a77)",
     "q74_canonical_slot": "SELECT column_name\nFROM information_schema.columns\nWHERE table_name = 'matches_history_minimal'\n  AND column_name = 'canonical_slot'"
   },
-  "q71_gate_note": "Vacuous self-join gate with `WHERE 1=0` removed post-PR #163 adversarial-review cleanup. The gate is now a PSI-summary reference-window check (see _psi_data lookup above)."
+  "q71_gate_v3_sub_checks": {
+    "q71a_ref_range": {
+      "ref_min": "2022-08-29 00:04:05",
+      "ref_max": "2022-10-26 23:52:02",
+      "ref_count": 70934,
+      "pass": true
+    },
+    "q71b_psi_source_bounds": {
+      "psi_source_file": "/Users/tomaszpionka/Projects/rts-outcome-prediction/sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_02_psi_pre_game_features.py",
+      "required_tokens": [
+        "2022-08-29",
+        "2022-10-27"
+      ],
+      "missing_tokens": [],
+      "pass": true
+    }
+  },
+  "q71_gate_history": "v1 (PR #162): WHERE 1=0 vacuous self-join. v2 (PR #165): PSI JSON reference_window compared to Python constants set by the same file \u2014 would not catch silent SQL drift. v3 (this PR): DB range integrity + PSI source substring check \u2014 both sub-checks can fail on real pathologies."
 }
