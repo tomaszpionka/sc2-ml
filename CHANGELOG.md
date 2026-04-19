@@ -116,6 +116,40 @@ merged to `master`.
   count=70,934 → PASS`; `Q7.1b missing=none → PASS`. Closes I3 PARTIAL
   status on aoestats per the 2026-04-19 pre-01_06 adversarial review.
   Does not change the `Q7 PASS` verdict.
+## [3.21.4] — 2026-04-19 (PR #TBD: fix/01-05-aoestats-spec-patch-amendment)
+
+### Changed
+
+- **Spec `CROSS-01-05-v1` bumped to v1.0.3.** `reports/specs/01_05_preregistration.md`
+  gains a §14 v1.0.3 amendment correcting the aoestats reference-window patch
+  ID from `125283` to `66692`. Empirical verification against `matches_raw`
+  (2026-04-19) established that patch `125283` covers `2024-10-15 .. 2025-04-11`
+  (over 2 years AFTER the declared reference window `[2022-08-29, 2022-10-27]`)
+  while patch `66692` is the only patch present during the reference window
+  (241,981 matches total, 123,367 in the window). The original v1.0 spec cited
+  `125283` as a pre-empirical-validation error; the aoestats notebook's
+  `REF_PATCH = 66692` constant was always scientifically correct.
+
+  Spec edits (3 textual, zero parameter changes):
+  - §7 table row: `patch 125283` → `patch 66692`.
+  - §7 aoestats-rationale paragraph: `patch 125283` → `patch 66692`.
+  - §11 patch-anchored reference justification: `patch 125283` → `patch 66692`.
+  - §12 Phase 06 interface `reference_window_id` example: `2022-Q3-patch125283`
+    → `2022-Q3-patch66692` (the CSV artifact already emitted the correct value).
+
+  Closes the last BLOCKER from the 2026-04-19 pre-01_06 adversarial review
+  (I9 VIOLATION: spec drift without §14 amendment).
+
+### Fixed
+
+- **Stale `patch 125283` references cleaned up** in:
+  - `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_02_psi_pre_game_features.py` (line 40 critique-fix comment + line 67 `REF_PATCH` constant comment + line 390 MD emission)
+  - `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py` (docstring hypothesis line 27)
+  - `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.py` (two occurrences)
+  - `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_02_psi_summary.md` (header)
+  - `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.md` (two occurrences)
+
+  Data-file references to `125283` (e.g., `patch_map.csv`, `patch_civ_win_rates.csv`, `01_05_03_patch_regime_summary.md`) retained — `125283` is a valid later-period patch appearing in the `matches_raw` corpus; those files correctly document its empirical existence.
 
 ## [3.20.0] — 2026-04-19 (PR #TBD: feat/01-05-sc2egset)
 

@@ -24,7 +24,7 @@
 # **spec:** reports/specs/01_05_preregistration.md@7e259dd8
 #
 # # Hypothesis: Emitted CSV validates against §12 schema: 9 columns, metric_value
-# # to 4 decimal places, reference_window_id = '2022-Q3-patch125283' for primary rows,
+# # to 4 decimal places, reference_window_id = '2022-Q3-patch66692' for primary rows,
 # # at least 64 rows (8 quarters x 8 features x >= 1 metric).
 # # Falsifier: Any missing column, NULL-as-string 'NaN', wrong reference_window_id.
 #

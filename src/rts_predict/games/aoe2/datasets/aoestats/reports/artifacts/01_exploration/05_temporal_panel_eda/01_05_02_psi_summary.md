@@ -4,7 +4,7 @@
 **Step:** 01_05_02
 *(conditional on ≥10 matches in reference period; see §6 for sensitivity)*
 
-## Primary Reference: 2022-08-29..2022-10-27 (patch 125283)
+## Primary Reference: 2022-08-29..2022-10-27 (patch 66692; spec §7 corrected v1.0.3)
 
 Features analyzed: focal_old_rating, avg_elo, faction, opponent_faction, mirror, p0_is_unrated, p1_is_unrated, map
 
