@@ -19,6 +19,34 @@ merged to `master`.
 
 ### Removed
 
+## [3.24.0] — 2026-04-19 (PR #TBD: docs/thesis-ch4-corpus-framing-residuals)
+
+### Changed
+
+- **Chapter 4 §4.1 DEFEND-IN-THESIS residuals #1, #2, #4** addressed as
+  Polish prose. Closes the corpus-framing cluster from
+  `planning/CHAPTER_4_DEFEND_IN_THESIS.md`:
+  1. §4.1.3 tail paragraph defending the reference-window asymmetry
+     (sc2egset + aoe2companion 4-month per spec §7; aoestats 9-week
+     patch-anchored per spec §7 + §11 W3 ARTEFACT_EDGE). [#1]
+  2. §4.1.2.1 paragraph on the aoestats 744-player cohort ceiling at
+     N=10 default (sensitivity table 4 325 / 744 / 3 across N=5 / N=10 /
+     N=20 verified against `01_05_05_icc_results.json`), attributed to
+     spec §11 single-patch constraint, with M1 defensive sentence
+     guarding the §4.1.2.1-read-in-isolation vulnerability. [#4]
+  3. NEW §4.1.4 subsection scoping every cross-corpus claim as
+     dataset-conditional per invariant #8. Honest-matched to artifact
+     state (sc2egset + aoe2companion carry jawny `[POP:]` tag; aoestats
+     scope implicit via spec §0 + cleaning rule R02). [#2]
+- `planning/BACKLOG.md` F6 — new Category-D entry for aoestats CSV
+  `[POP:]` + `[PRE-canonical_slot]` tag backfill (pre-empts PR-3
+  BLOCKER for `[PRE-canonical_slot]`).
+- Five [REVIEW] flags planted for Pass-2 resolution; no new bibtex
+  entries (Demsar2006 reused from §2.6).
+- Two adversarial review rounds consumed (plan-side verdict REVISE
+  → execution-side verdict PASS with 1 MAJOR char overage accepted
+  + 2 MINORs fixed inline + 1 MINOR deferred to Pass-2).
+
 ## [3.23.1] — 2026-04-19 (PR #174: chore/purge-planning-pr-173)
 
 ### Removed
