@@ -2,6 +2,27 @@
 
 ---
 
+## 2026-04-19 — [Phase 01 / 01_05 v1.0.4 spec amendment] ANOVA-primary headline convention (pointer)
+
+**Category:** A (science; documentary)
+**Dataset:** sc2egset
+**Branch:** fix/01-05-spec-v1-0-4-icc-anova-primary
+**Spec:** reports/specs/01_05_preregistration.md v1.0.4
+
+**Source:** [CROSS] 2026-04-19 entry at `reports/research_log.md`.
+
+**Change.** Spec v1.0.4 §14 extends the v1.0.2 §14(b) ANOVA-primary headline convention from aoe2companion to all three datasets, including sc2egset. The sc2egset Phase 06 interface CSV headline ICC row is now `metric_name = icc_anova_observed_scale` (point estimate `0.0463`). The LMM estimate `icc_lpm_observed_scale` (`0.0456`) is retained in `variance_icc_sc2egset.csv` and in the Phase 06 interface CSV as a diagnostic row.
+
+**Impact on sc2egset 01_05 artifacts.** Zero code changes. sc2egset's notebook already emits both estimators and both appear in the existing CSVs. The amendment changes the *interpretation convention* for Chapter 4 cross-game comparison, not the data.
+
+**Chapter 4 implication.** When comparing ICC across sc2egset / aoe2companion / aoestats, the headline number for sc2egset is now 0.0463 (ANOVA), not 0.0456 (LMM). The two agree to 1.5% — no directional change.
+
+**Rationale (summary; full detail in CROSS log + spec §14).** REML LMM on Bernoulli outcomes near the τ²-boundary shrinks toward zero (Chung et al. 2013 Psychometrika 78(4):685-709). ANOVA is the consistent moment estimator for the one-way random-effects model and is not affected by this pathology. The v1.0.2 argument for aoec applies symmetrically to sc2egset and aoestats.
+
+**Artifacts updated:** `reports/specs/01_05_preregistration.md` (v1.0.3 → v1.0.4; §14 entry) + CROSS log + this pointer entry. No notebook / CSV / JSON code changes.
+
+---
+
 ## 2026-04-18 — [Phase 01 / Pipeline Section 01_05] Temporal & Panel EDA (sc2egset)
 
 **Category:** A (science)

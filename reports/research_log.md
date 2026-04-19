@@ -15,6 +15,32 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-04-19 — [Phase 01 / 01_05 spec v1.0.4] ANOVA-primary ICC headline convention extended to all 3 datasets
+
+**Source:** planner-science consolidated methodology plan 2026-04-19 (fix pack A); responds to 2026-04-19 pre-01_06 reviewer-adversarial DEFEND-IN-THESIS #1.
+
+**Background.** Spec v1.0.2 §14(b) promoted the Wu/Crespi/Wong 2012 ANOVA ICC estimator to primary for `aoe2companion` on the grounds that REML LMM on Bernoulli outcomes near the τ²-boundary shrinks toward zero (Chung et al. 2013, Psychometrika 78(4):685-709). sc2egset and aoestats retained LMM as primary headline per v1.0.1 literal reading of §8.
+
+**Finding.** The Chung 2013 boundary-shrinkage argument is dataset-agnostic: it applies equally to any Bernoulli outcome on any player cohort. All three datasets' notebooks already compute both LMM and ANOVA; only the *headline reporting convention* differed across datasets. The 2026-04-19 pre-01_06 adversarial review flagged this as DEFEND-IN-THESIS #1 (cross-dataset I8 comparability risk).
+
+**Decision.** Spec v1.0.4 extends the v1.0.2 §14(b) ANOVA-primary convention to sc2egset and aoestats. The binding change is scoped to the Phase 06 interface CSV headline convention; per-dataset CSVs continue to carry LMM and GLMM values as diagnostics. Zero code changes required — all three datasets already emit `icc_anova_observed_scale` in their Phase 06 interface CSVs.
+
+**Resulting cross-game ICC comparison (post-v1.0.4):**
+
+| Dataset | ICC_anova | Bootstrap CI | N (cohort size) |
+|---|---|---|---|
+| sc2egset | 0.0463 | (from variance_icc_sc2egset.csv) | 4,034 obs @ tournament cohort |
+| aoe2companion | 0.003013 | [0.001724, 0.004202] | 360,567 obs @ 5k stratified sample of 54,113 eligible |
+| aoestats | 0.0268 | [0.0145, 0.0407] | 7,909 obs @ 744 eligible (patch-anchored single-window ref) |
+
+All three are observed-scale ANOVA ICCs on the same outcome (`won`) under the same estimator.
+
+**Thesis defense framing (Chapter 4).** Observed-scale ANOVA is reported as the headline because (a) it is the consistent moment estimator for the one-way random-effects ANOVA model, (b) it does not suffer REML boundary-shrinkage on Bernoulli outcomes with small τ², (c) all three datasets compute it natively. Latent-scale conversion (Nakagawa et al. 2017) is noted as a caveat; the cross-game *directional* claim survives the transformation.
+
+**Artifacts touched (doc-only):** `reports/specs/01_05_preregistration.md` (v1.0.3 → v1.0.4; §14 entry), `reports/research_log.md` (this entry), per-dataset research logs (pointer entries). No notebook / CSV / JSON code changes.
+
+---
+
 ## [CROSS] 2026-04-18 — [Phase 01 / 01_05 sc2egset execution] B2 PRIMARY PSI decision
 
 **Source:** sc2egset research_log.md 2026-04-18 B2 CROSS entry

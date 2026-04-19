@@ -19,6 +19,38 @@ merged to `master`.
 
 ### Removed
 
+## [3.21.5] — 2026-04-19 (PR #TBD: fix/01-05-spec-v1-0-4-icc-anova-primary)
+
+### Changed
+
+- **Spec `CROSS-01-05-v1` bumped to v1.0.4.** Extends the v1.0.2 §14(b)
+  ANOVA-primary ICC headline convention from `aoe2companion` to `sc2egset`
+  and `aoestats`. All three datasets' Phase 06 interface CSV headline ICC
+  rows now use `metric_name = icc_anova_observed_scale`. Per-dataset CSVs
+  continue to carry LMM and GLMM estimates as diagnostics.
+
+  Cross-game ICC headlines under v1.0.4:
+  - sc2egset: `0.0463` (ANOVA)
+  - aoe2companion: `0.003013` (ANOVA, bootstrap CI `[0.001724, 0.004202]`)
+  - aoestats: `0.0268` (ANOVA, bootstrap CI `[0.0145, 0.0407]`)
+
+  All three directly comparable: observed-scale ANOVA ICCs on the same
+  outcome (`won`) under the same estimator (Wu/Crespi/Wong 2012 CCT
+  33(5):869-880). Closes DEFEND-IN-THESIS #1 from the 2026-04-19
+  pre-01_06 adversarial review.
+
+  Zero code / artifact changes. All three datasets' notebooks already
+  emit both LMM and ANOVA ICC values; only the headline reporting
+  convention changes. sc2egset LMM (`0.0456`) and ANOVA (`0.0463`)
+  agree within 1.5% — no directional change to any finding.
+
+  Rationale (full detail in spec §14 and `reports/research_log.md`
+  2026-04-19 CROSS entry): REML LMM on Bernoulli outcomes near the
+  τ²-boundary shrinks toward zero (Chung et al. 2013 Psychometrika
+  78(4):685-709). This applies symmetrically to any Bernoulli outcome
+  on any cohort, making the v1.0.2 aoec-local choice the correct
+  cross-dataset convention.
+
 ## [3.21.1] — 2026-04-19 (PR #TBD: fix/01-05-sc2egset-leakage-substantive)
 
 ### Fixed

@@ -8,6 +8,32 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-19 — [Phase 01 / 01_05 v1.0.4 spec amendment] ANOVA-primary headline convention (pointer)
+
+**Category:** A (science; documentary)
+**Dataset:** aoestats
+**Branch:** fix/01-05-spec-v1-0-4-icc-anova-primary
+**Spec:** reports/specs/01_05_preregistration.md v1.0.4
+
+**Source:** [CROSS] 2026-04-19 entry at `reports/research_log.md`.
+
+**Change.** Spec v1.0.4 §14 extends the v1.0.2 §14(b) ANOVA-primary headline convention from aoe2companion to all three datasets, including aoestats. The aoestats Phase 06 interface CSV headline ICC row is now `metric_name = icc_anova_observed_scale` (point estimate `0.0268`, bootstrap CI `[0.0145, 0.0407]`). The LMM estimate (post-PR #167 fix: `0.0259`, delta-method CI `[0.0232, 0.0286]`) is retained in `01_05_05_icc_results.json` as a diagnostic.
+
+**Impact on aoestats 01_05 artifacts.** Zero code changes. aoestats's notebook already emits both estimators. Post-PR #167 both have valid CIs that contain their point estimates; post-v1.0.4 the ANOVA is the headline and the LMM is the diagnostic.
+
+**Chapter 4 implication.** Cross-game ICC headlines under v1.0.4:
+- sc2egset: 0.0463 (ANOVA)
+- aoe2companion: 0.003013 (ANOVA bootstrap CI [0.001724, 0.004202])
+- aoestats: 0.0268 (ANOVA bootstrap CI [0.0145, 0.0407])
+
+All three are observed-scale ANOVA ICCs on the same outcome (`won`) under the same estimator. Directly comparable.
+
+**Rationale (summary; full detail in CROSS log + spec §14).** REML LMM on Bernoulli outcomes near the τ²-boundary shrinks toward zero (Chung et al. 2013 Psychometrika 78(4):685-709). ANOVA is the consistent moment estimator and does not suffer this pathology. The v1.0.2 argument for aoec applies symmetrically to aoestats.
+
+**Artifacts updated:** spec file, CROSS log, this pointer entry. No notebook / CSV / JSON code changes.
+
+---
+
 ## 2026-04-18 — [Phase 01 / Pipeline Section 01_05] Temporal & Panel EDA
 
 **Source:** `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_01..01_05_09`

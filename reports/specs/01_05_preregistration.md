@@ -1,6 +1,6 @@
 ---
 spec_id: CROSS-01-05-v1
-spec_version: "1.0.3"
+spec_version: "1.0.4"
 created: 2026-04-18
 invariants_touched: [I3, I6, I7, I8, I9]
 datasets_bound: [sc2egset, aoe2companion, aoestats]
@@ -605,6 +605,80 @@ v1.0.3 — 2026-04-19 — aoestats reference-patch ID correction: 125283 → 666
                          2024-10-15 02:00:00+02 .. 2025-04-11 07:35:26+02,
                          with 0 matches in window
                          [2022-08-29, 2022-10-27].
+
+v1.0.4 — 2026-04-19 — Cross-dataset ANOVA-primary ICC headline convention
+                       (extends v1.0.2 §14(b) from aoe2companion-only to
+                       sc2egset and aoestats).
+
+                       Reason: v1.0.2 §14(b) promoted the Wu/Crespi/Wong
+                       2012 ANOVA ICC estimator to primary for
+                       aoe2companion on the grounds that REML LMM on
+                       Bernoulli outcomes near the τ²-boundary shrinks
+                       toward zero (Chung et al. 2013, Psychometrika
+                       78(4):685-709). That argument is dataset-agnostic:
+                       it applies equally to any Bernoulli outcome
+                       (`won`) on any player cohort. Leaving sc2egset
+                       and aoestats with different headline estimators
+                       creates a cross-game comparability problem
+                       (per I8) that the data does not justify — all
+                       three datasets' notebooks already compute both
+                       LMM and ANOVA; only the *headline convention*
+                       differed. The 2026-04-19 pre-01_06 adversarial
+                       review (DEFEND-IN-THESIS #1) flagged this as a
+                       soft risk for Chapter 4.
+
+                       Binding change: the Phase 06 interface CSV
+                       headline ICC row per dataset uses
+                       `metric_name = icc_anova_observed_scale`.
+                       Per-dataset CSVs continue to carry
+                       `icc_lpm_observed_scale` and
+                       `icc_glmm_latent_scale` as diagnostics.
+
+                       Scope — zero code change required:
+                       - sc2egset: already emits `icc_anova_observed_scale`
+                         in `variance_icc_sc2egset.csv` (0.0463) and in
+                         `phase06_interface_sc2egset.csv`.
+                       - aoe2companion: headline already ANOVA since
+                         v1.0.2 §14(b); no change.
+                       - aoestats: already emits
+                         `icc_anova_observed_scale` in
+                         `phase06_interface_aoestats.csv` (0.0268 post-
+                         PR #167 cluster-bootstrap fix).
+
+                       The three datasets' headline ICC numbers under
+                       v1.0.4 are:
+                       - sc2egset: 0.0463 (ANOVA)
+                       - aoe2companion: 0.003013 (ANOVA, bootstrap CI
+                         [0.001724, 0.004202])
+                       - aoestats: 0.0268 (ANOVA, bootstrap CI
+                         [0.0145, 0.0407])
+
+                       These are directly comparable as observed-scale
+                       ICCs on the same outcome (`won`) under the same
+                       estimator (Wu/Crespi/Wong 2012 ANOVA). LMM
+                       estimates remain recorded in per-dataset
+                       artifacts as diagnostics, with disclosure of
+                       the boundary-shrinkage caveat (Chung 2013).
+
+                       Chapter 4 framing: the observed-scale ANOVA
+                       ICC is reported as the cross-game headline
+                       because (a) it is the consistent moment
+                       estimator for the one-way random-effects ANOVA
+                       model, (b) it does not suffer REML
+                       boundary-shrinkage on Bernoulli outcomes with
+                       small τ², and (c) all three datasets compute
+                       it natively. The latent-scale conversion
+                       (Nakagawa et al. 2017) is noted as a caveat in
+                       the methods paragraph; a thesis examiner asking
+                       for latent-scale ICC is answered with "observed-
+                       scale is a lower bound on the latent-scale
+                       quantity under a logit link with small τ²; the
+                       cross-game *directional* claim survives the
+                       transformation."
+
+                       Source: 2026-04-19 pre-01_06 adversarial review
+                       (DEFEND-IN-THESIS #1) + planner-science
+                       consolidated methodology plan 2026-04-19.
 ```
 
 ---
