@@ -9,8 +9,8 @@
     "Q2_token_scan": "YAML scan of matches_history_minimal.yaml; see notebook",
     "Q3_window_assertion": "ref_start == datetime(2022, 8, 29); ref_end == datetime(2022, 12, 31)"
   },
-  "schema_note": "Schema YAML loaded from /Users/tomaszpionka/Projects/rts-outcome-prediction/.claude/worktrees/agent-a9918efb/src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml",
-  "m6_fix_note": "Q1 reframed (M6 critique fix): assert reference rows within [2022-08-29, 2023-01-01) and tested rows within [2023-01-01, 2025-01-01). NOT the vacuous self-join.",
+  "schema_note": "Schema YAML loaded from /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml",
+  "q1_cleanup_note": "Q1 has two substantive checks: Q1b (reference cohort rows within [2022-08-29, 2023-01-01), FILTER-counted) and Q1c (tested rows within [2023-01-01, 2025-01-01), FILTER-counted, asserted). A prior vacuous QUERY1_REF_SQL (WHERE predicate \u2227 own negation) was dead code \u2014 never executed; removed post-PR #163 adversarial-review cleanup.",
   "dataset_tag": "sc2egset",
   "date": "2026-04-18"
 }

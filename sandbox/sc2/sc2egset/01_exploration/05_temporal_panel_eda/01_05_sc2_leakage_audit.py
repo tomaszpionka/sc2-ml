@@ -27,10 +27,12 @@
 # - Query 2: POST_GAME token scan on T03 feature list
 # - Query 3: reference window edges assertion
 #
-# **Critique M6 fix:** Query 1 reframed as meaningful check:
-# assert all rows contributing to reference-frequency edges have started_at < 2023-01-01
-# and all tested frequencies have started_at in their quarter.
-# NOT the vacuous self-join.
+# **Q1 structure (post-PR #163 adversarial-review cleanup):**
+# Q1b asserts all rows in the declared reference window have started_at in
+# [REF_START, REF_END) via COUNT(*) FILTER with both boundary predicates.
+# Q1c asserts the symmetric check on the tested period. A prior
+# QUERY1_REF_SQL that paired a WHERE predicate with its own negation was
+# dead code (never executed; result always used QUERY1_MEANING_SQL) — removed.
 #
 # **Halt condition:** future_leak_count > 0 OR post_game_token_violations != [] OR
 # reference_window_assertion fails -> block T08/T09/T10.
@@ -67,25 +69,16 @@ artifact_dir.mkdir(parents=True, exist_ok=True)
 # ## Query 1: Future-data check (M6 reframe)
 
 # %%
-# M6 fix: Reframed as meaningful check.
-# Assert: all rows contributing to reference-frequency edges have
-#   started_at < TIMESTAMP '2023-01-01' (i.e., within reference period)
-# Assert: all tested frequencies have started_at in their designated quarter.
-#
-# This replaces the vacuous self-join: "observation_time >= match_time" on the same row
-# is always True (same timestamp) and is not a meaningful leakage check.
+# Q1: two substantive checks on temporal-window integrity.
+# Q1b: reference-cohort rows strictly within [REF_START, REF_END). Uses
+#      COUNT(*) FILTER with both boundary predicates — a DB timezone bug or
+#      stale filter predicate would produce nonzero counts.
+# Q1c: tested-period rows strictly within [TEST_START, TEST_END). Same
+#      structure, symmetric on the tested window.
 
-QUERY1_REF_SQL = """
--- Q1a: All reference-period rows have started_at < 2023-01-01
-SELECT COUNT(*) AS future_rows_in_ref
-FROM matches_history_minimal
-WHERE started_at >= TIMESTAMP '2022-08-29'
-  AND started_at <  TIMESTAMP '2023-01-01'
-  AND started_at >= TIMESTAMP '2023-01-01'  -- contradiction -> 0 rows always
-"""
-
-# More meaningful: assert no row labeled as 'reference' in PSI computation
-# has started_at outside the reference window
+# Post-PR #163 adversarial-review cleanup: a prior QUERY1_REF_SQL paired a
+# WHERE predicate with its own negation — dead code, never executed here (the
+# actual gate uses QUERY1_MEANING_SQL below). Removed.
 QUERY1_MEANING_SQL = """
 -- Q1b: Reference rows strictly within [2022-08-29, 2023-01-01)
 SELECT COUNT(*) AS n_ref_rows_check,
@@ -119,10 +112,12 @@ WHERE started_at >= TIMESTAMP '2023-01-01'
 """
 
 result_q1b = db.con.execute(QUERY1_TESTED_SQL).fetchdf()
+tested_outside = int(result_q1b['before_test_start'].iloc[0]) + int(result_q1b['after_test_end'].iloc[0])
 print(f"\nQ1c: Tested rows: {result_q1b['n_tested_rows'].iloc[0]}")
-print(f"Q1c: Outside window: {result_q1b['before_test_start'].iloc[0] + result_q1b['after_test_end'].iloc[0]}")
+print(f"Q1c: Outside window: {tested_outside}")
 
 assert future_leak_count == 0, f"HALT: Q1 future_leak_count={future_leak_count} > 0"
+assert tested_outside == 0, f"HALT: Q1c tested_outside={tested_outside} > 0"
 print("\nQ1 PASS: future_leak_count=0")
 
 # %% [markdown]
@@ -224,9 +219,12 @@ audit_result = {
         ),
     },
     "schema_note": schema_note,
-    "m6_fix_note": (
-        "Q1 reframed (M6 critique fix): assert reference rows within [2022-08-29, 2023-01-01) "
-        "and tested rows within [2023-01-01, 2025-01-01). NOT the vacuous self-join."
+    "q1_cleanup_note": (
+        "Q1 has two substantive checks: Q1b (reference cohort rows within "
+        "[2022-08-29, 2023-01-01), FILTER-counted) and Q1c (tested rows within "
+        "[2023-01-01, 2025-01-01), FILTER-counted, asserted). A prior vacuous "
+        "QUERY1_REF_SQL (WHERE predicate ∧ own negation) was dead code — "
+        "never executed; removed post-PR #163 adversarial-review cleanup."
     ),
     "dataset_tag": "sc2egset",
     "date": "2026-04-18",
@@ -285,9 +283,13 @@ assert ref_start == datetime(2022, 8, 29)
 assert ref_end   == datetime(2022, 12, 31)
 ```
 
-## M6 fix note
+## Q1 cleanup note (post-PR #163 adversarial-review)
 
-Q1 reframed from vacuous self-join to meaningful window-containment checks.
+A prior QUERY1_REF_SQL combined a WHERE predicate with its own negation,
+making it a logical contradiction that returned 0 rows on any data. It was
+dead code — `result_q1` always executed QUERY1_MEANING_SQL (the real check).
+The dead constant is removed; Q1c gained an assertion on tested-period
+leakage (previously only printed).
 All reference rows confirmed within [2022-08-29, 2023-01-01).
 All tested rows confirmed within [2023-01-01, 2025-01-01).
 

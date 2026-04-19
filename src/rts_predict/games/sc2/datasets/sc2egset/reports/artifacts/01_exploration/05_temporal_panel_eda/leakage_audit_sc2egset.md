@@ -40,9 +40,13 @@ assert ref_start == datetime(2022, 8, 29)
 assert ref_end   == datetime(2022, 12, 31)
 ```
 
-## M6 fix note
+## Q1 cleanup note (post-PR #163 adversarial-review)
 
-Q1 reframed from vacuous self-join to meaningful window-containment checks.
+A prior QUERY1_REF_SQL combined a WHERE predicate with its own negation,
+making it a logical contradiction that returned 0 rows on any data. It was
+dead code — `result_q1` always executed QUERY1_MEANING_SQL (the real check).
+The dead constant is removed; Q1c gained an assertion on tested-period
+leakage (previously only printed).
 All reference rows confirmed within [2022-08-29, 2023-01-01).
 All tested rows confirmed within [2023-01-01, 2025-01-01).
 
