@@ -19,7 +19,38 @@ merged to `master`.
 
 ### Removed
 
-## [3.26.2] — 2026-04-19 (PR #TBD: chore/cleanup-stale-artifacts-defend-sequence-followup)
+## [3.26.3] — 2026-04-19 (PR #TBD: fix/aoestats-phase06-pop-tag-backfill)
+
+### Changed
+
+- **aoestats Phase 06 CSV `notes` column now carries scoping tags.**
+  Closes BACKLOG F6. `[POP:ranked_ladder]` on all 136 data rows
+  (parity with sc2egset `[POP:tournament]` 35/35 and aoe2companion
+  `[POP:ranked_ladder]` 74/74); `[PRE-canonical_slot]` on 30 rows
+  (`p0_is_unrated` + `p1_is_unrated` × 15 quarters each: 8 primary
+  + 7 counterfactual-reference). Classification rationale: only
+  features literally indexing `team=0` / `team=1` carry the per-slot
+  flag; aggregate / UNION-ALL-symmetric / match-level features do
+  not. Zero metric-value regression; ICC ANOVA
+  cohort_threshold=10 (0.0268 / 0.0148 / 0.0387) and PSI 2023-Q1
+  focal_old_rating (0.037) unchanged. Spec §12 v1.0.5 11-column
+  schema preserved.
+- Notebook `01_05_08_phase06_interface.py` refactored with
+  `PER_SLOT_FEATURES` constant + `_tag_prefix()` helper + idempotency
+  assertion block.
+- Thesis §4.1.4 + §4.4.6 — two `[REVIEW: post-F6 stale]` flags
+  planted at grep-verifiable claims ("nie niesie jawnego tagu",
+  "zwraca 0 dopasowań") that become false post-merge. Full prose
+  rewrite deferred to Pass-2.
+
+### Removed
+
+- `pre_canonical_slot_flag_active` side-channel read of
+  `01_05_06_temporal_leakage_audit_v1.json` in the Phase 06 notebook
+  — superseded by explicit `PER_SLOT_FEATURES` constant.
+- BACKLOG F6 entry (executed in this PR).
+
+## [3.26.2] — 2026-04-19 (PR #179: chore/cleanup-stale-artifacts-defend-sequence-followup)
 
 ### Removed
 

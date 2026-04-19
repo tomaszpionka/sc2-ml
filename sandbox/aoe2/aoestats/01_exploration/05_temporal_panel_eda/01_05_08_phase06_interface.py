@@ -48,14 +48,12 @@ db = get_notebook_db("aoe2", "aoestats")
 print("Connected.")
 
 # %%
-# Load pre_canonical_slot_flag_active from leakage audit
-audit_path = ARTIFACTS_DIR / "01_05_06_temporal_leakage_audit_v1.json"
-pre_canonical_flag = True  # default; overridden if audit exists
-if audit_path.exists():
-    with open(audit_path) as f:
-        audit = json.load(f)
-    pre_canonical_flag = bool(audit.get("pre_canonical_slot_flag_active", True))
-print(f"pre_canonical_slot_flag_active: {pre_canonical_flag}")
+# F6: Tag constants — [POP:ranked_ladder] on every row;
+# [PRE-canonical_slot] on per-slot (team-conditioned) feature rows only.
+# All other features are symmetric (UNION-ALL, half-split random, or match-level).
+POP_TAG = "[POP:ranked_ladder]"
+PRE_CANONICAL_SLOT_TAG = "[PRE-canonical_slot]"
+PER_SLOT_FEATURES = frozenset({"p0_is_unrated", "p1_is_unrated"})
 
 # %%
 # M5 note: aoestats analyzes 15 columns (spec §1 has 9 core)
@@ -232,21 +230,43 @@ df_p06["metric_value"] = df_p06["metric_value"].apply(
 print(f"Phase 06 interface: {len(df_p06)} rows, {df_p06.columns.tolist()}")
 
 # %%
-# M5: add notes column info for aoestats-specific features
-df_p06["notes"] = df_p06["notes"].fillna("") + " " + M5_NOTE
+# F6: emit [POP:ranked_ladder] on every row + [PRE-canonical_slot]
+# on per-slot feature rows.
+def _tag_prefix(feature_name: str) -> str:
+    parts = [POP_TAG]
+    if feature_name in PER_SLOT_FEATURES:
+        parts.append(PRE_CANONICAL_SLOT_TAG)
+    return " ".join(parts)
+
+df_p06["notes"] = (
+    df_p06["feature_name"].map(_tag_prefix) + " "
+    + df_p06["notes"].fillna("").astype(str) + " "
+    + M5_NOTE
+)
 df_p06["notes"] = df_p06["notes"].str.strip()
 
 # %%
-# Verify [PRE-canonical_slot] is ABSENT from symmetric-aggregate rows
-# and PRESENT on any per-slot rows
-# (In this notebook, faction/opponent_faction are UNION-ALL-symmetric -> no tag)
-# Confirm no faction/opponent_faction rows carry the PRE tag incorrectly
-faction_with_tag = df_p06[
-    df_p06["feature_name"].isin(["faction", "opponent_faction"]) &
-    df_p06["notes"].str.contains(r"\[PRE-canonical_slot\]", na=False)
-]
-print(f"faction/opponent_faction rows with [PRE-canonical_slot] (should be 0): {len(faction_with_tag)}")
-# Note: per critique M4, faction is UNION-ALL symmetric -- NO [PRE-canonical_slot] on aggregate
+# F6 verification: exactly PER_SLOT_FEATURES carry the flag
+per_slot_rows = df_p06[df_p06["notes"].str.contains(
+    r"\[PRE-canonical_slot\]", na=False, regex=True
+)]
+per_slot_features_observed = set(per_slot_rows["feature_name"].unique())
+assert per_slot_features_observed == PER_SLOT_FEATURES, (
+    f"F6: expected [PRE-canonical_slot] exclusively on "
+    f"{PER_SLOT_FEATURES}, got {per_slot_features_observed}"
+)
+
+# F6 verification: every row carries [POP:ranked_ladder]
+assert df_p06["notes"].str.contains(
+    r"\[POP:ranked_ladder\]", na=False, regex=True
+).all(), "F6: [POP:ranked_ladder] missing from some rows"
+
+print(
+    f"F6 tagging verified: "
+    f"[POP:ranked_ladder] on {len(df_p06)} / {len(df_p06)} rows; "
+    f"[PRE-canonical_slot] on {len(per_slot_rows)} rows "
+    f"(features: {sorted(per_slot_features_observed)})"
+)
 
 # %%
 # Emit Phase 06 CSV

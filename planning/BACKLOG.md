@@ -106,48 +106,6 @@ chore.
 
 ---
 
-### F6 — aoestats Phase 06 CSV — `[POP:]` and `[PRE-canonical_slot]` tag backfill
-
-- **Category:** D (bug fix / artifact alignment)
-- **Branch:** `fix/aoestats-phase06-pop-tag-backfill`
-- **Predecessors:** PR-1 of DEFEND-IN-THESIS sequence (documents the
-  artifact-vs-spec divergence in §4.1.4); reviewer-adversarial round 1
-  critique B1 (primary finding for PR-1; secondary finding scheduled to
-  block PR-3 if left unresolved).
-
-**Scope.** Populate the `notes` column of
-`src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv`
-with:
-
-1. `[POP:ranked_ladder]` on all 137 rows (currently 0 / 137 — honest-match
-   audit performed 2026-04-19 during PR-1 drafting: `grep '[POP:'` returns
-   zero hits). This aligns the aoestats artifact with the explicit tagging
-   already present in sc2egset (35 / 35 rows `[POP:tournament]`) and
-   aoe2companion (74 / 74 rows `[POP:ranked_ladder]`) Phase 06 CSVs.
-2. `[PRE-canonical_slot]` on rows conditioned on `team` per
-   `reports/specs/01_05_preregistration.md` §1 line 71 definition — any
-   feature or statistic conditioned on `team` in aoestats is marked with
-   the flag until the Phase 02 `canonical_slot` amendment (BACKLOG F1)
-   neutralises the upstream API skill-correlated slot assignment (W3
-   ARTEFACT_EDGE verdict).
-
-**Acceptance.** `grep '[POP:ranked_ladder]'` returns 137 / 137 rows;
-`grep '[PRE-canonical_slot]'` returns the expected subset of rows
-conditioned on `team`; no regression in metric values or row counts; Phase
-06 consumer assertion `set(csv.columns) == 11-column-set-above` per spec
-§12 still passes; `spec_version` bump not required (tagging is
-artifact-level, not spec-level).
-
-**Why priority.** Unblocks future spec-level closure of the artifact-vs-spec
-divergence that §4.1.4 and §4.4.6 (PR-3) currently describe as "implicit
-scope via spec §0 + R02 cleaning filter". Pre-empts PR-3 hitting the same
-BLOCKER for `[PRE-canonical_slot]` per reviewer-adversarial round 1
-critique B1 secondary finding. Once F6 lands, §4.1.4 prose will be
-trivially revisable to drop the "implicit" language — the thesis audit
-trail from artifact to claim becomes uniform across all three corpora.
-
----
-
 ## Claiming an item
 
 1. Delete the item's entry from this backlog in the same PR that authors

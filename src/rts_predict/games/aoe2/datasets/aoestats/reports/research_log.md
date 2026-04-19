@@ -8,6 +8,47 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-19 — [BACKLOG F6 / Phase 01 / 01_05_08] Phase 06 CSV `notes` tag backfill — `[POP:ranked_ladder]` + `[PRE-canonical_slot]`
+
+**Category:** D (bug fix / artifact gap)
+**Dataset:** aoestats
+**Branch:** fix/aoestats-phase06-pop-tag-backfill
+**Spec:** reports/specs/01_05_preregistration.md §1 lines 67–71, §12 Phase 06 schema
+**Notebook:** `sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda/01_05_08_phase06_interface.py`
+**Artifact:** `reports/artifacts/01_exploration/05_temporal_panel_eda/phase06_interface_aoestats.csv`
+
+### What
+
+Backfilled `notes` column of `phase06_interface_aoestats.csv` with scoping tags:
+- `[POP:ranked_ladder]` on all 136 data rows (grep count: 136).
+- `[PRE-canonical_slot]` on per-slot feature rows only (`p0_is_unrated`, `p1_is_unrated`); grep count: 30 rows (15 quarters × 2 features; PSI emits 2 rows per quarter for most quarters).
+
+The `pre_canonical_slot_flag_active` side-channel JSON read was removed and replaced with the explicit `PER_SLOT_FEATURES = frozenset({"p0_is_unrated", "p1_is_unrated"})` notebook constant (BACKLOG F6, closes the artifact-vs-spec divergence).
+
+### Why
+
+Spec §12 requires `notes` to carry per-row scoping tags. Sibling datasets complied (sc2egset 35/35 `[POP:tournament]`; aoe2companion 74/74 `[POP:ranked_ladder]`); aoestats had zero tags. Root cause: the notebook loaded `pre_canonical_slot_flag_active` from the leakage audit JSON but never stamped it onto rows, and never emitted `[POP:]` at all.
+
+### Verification
+
+- `grep -c '[POP:ranked_ladder]'` on CSV = 136.
+- `grep -c '[PRE-canonical_slot]'` on CSV = 30 (15 per feature; 2 PSI rows per quarter for Q2–Q4, 1 for Q1).
+- ICC spot-check `cohort_threshold=10`: `icc_anova_observed_scale` = 0.0268, CI [0.0148, 0.0387]. Unchanged.
+- PSI spot-check 2023-Q1 `focal_old_rating` = 0.037. Unchanged.
+- Row count: 137 lines total (1 header + 136 data rows). Unchanged.
+- Schema validation PASSED (v1.0.5).
+
+### Decisions taken
+
+- `focal_old_rating` does NOT carry `[PRE-canonical_slot]` (half-split randomization = aggregate, not per-slot). Accept notebook author's pre-existing classification.
+- `[POP:ranked_ladder]` short form chosen for parity with aoe2companion; specificity (1v1 random_map) captured in M5 note.
+
+### Thesis mapping
+
+- §4.1.4 + §4.4.6 downstream consumers can now cite the tagged artifact directly (prose update deferred to Pass-2 or Category F follow-up).
+
+---
+
 ## 2026-04-19 — [Phase 01 / 01_05 v1.0.4 spec amendment] ANOVA-primary headline convention (pointer)
 
 **Category:** A (science; documentary)
