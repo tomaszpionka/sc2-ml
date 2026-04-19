@@ -19,7 +19,7 @@ merged to `master`.
 
 ### Removed
 
-## [3.23.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-173)
+## [3.23.1] — 2026-04-19 (PR #174: chore/purge-planning-pr-173)
 
 ### Removed
 
@@ -29,7 +29,7 @@ merged to `master`.
   across PRs #172 and #173). Per `planning/README.md` post-merge purge
   protocol; `planning/INDEX.md` was already at template state.
 
-## [3.23.0] — 2026-04-19 (PR #TBD: fix/01-05-phase06-schema-harmonization)
+## [3.23.0] — 2026-04-19 (PR #172: fix/01-05-phase06-schema-harmonization)
 
 ### Changed
 
