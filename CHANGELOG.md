@@ -19,6 +19,38 @@ merged to `master`.
 
 ### Removed
 
+## [3.21.1] — 2026-04-19 (PR #TBD: fix/01-05-sc2egset-leakage-substantive)
+
+### Fixed
+
+- **sc2egset leakage-audit Q1 redesign (v2, post-PR #164 adversarial review).**
+  The PR #164 cleanup removed a dead-code `QUERY1_REF_SQL` tautology but the
+  surviving "real" check `QUERY1_MEANING_SQL` was itself structurally
+  tautological: the outer `WHERE started_at BETWEEN REF_START AND REF_END`
+  made the inner `COUNT(*) FILTER (WHERE started_at < REF_START OR
+  started_at >= REF_END)` always 0 by construction. Same defect affected
+  the Q1c tested-period check. The `assert future_leak_count == 0` gate
+  was therefore decorative.
+
+  Replaced with three substantive sub-checks ported from the aoec pattern
+  (`sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.py`):
+  - **Q1a (ref-range integrity):** DB `MIN/MAX(started_at)` in the spec §7
+    reference window lies within declared bounds, `count > 0`. Catches DB
+    timezone bugs and filter-predicate regressions.
+  - **Q1b (quarter-label consistency):** for each tested quarter, the
+    `MIN/MAX(started_at)` of rows labeled that quarter lies within the
+    ISO-calendar bounds of that quarter. Catches off-by-one in the
+    `CONCAT(EXTRACT..., CEIL(EXTRACT.../3.0))` quarter-label SQL.
+  - **Q1c (PSI source-string substring check):** the PSI notebook source
+    (`01_05_02_psi_quarterly.py`) literally contains the spec §7 date
+    substrings `2022-08-29` and `2023-01-01`. Catches silent
+    reference-window drift between `01_05_02` and this audit.
+
+  Each sub-check has its own `PASS/FAIL` flag and its own `assert`. The
+  composite `future_leak_count` int is retained for JSON back-compat.
+  Closes I3 VIOLATED on sc2egset per the 2026-04-19 pre-01_06 adversarial
+  review. Does not change the `Q7 PASS` verdict.
+
 ## [3.20.0] — 2026-04-19 (PR #TBD: feat/01-05-sc2egset)
 
 ### Added
