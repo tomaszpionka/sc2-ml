@@ -74,22 +74,37 @@ print(f"DGP rows: {len(df_dgp)}")
 # ## Build Phase 06 interface (spec §12 schema)
 
 # %%
-# Spec §12 schema:
+# Spec §12 schema (v1.0.5, 11 columns):
 # dataset_tag, quarter, feature_name, metric_name, metric_value,
-# reference_window_id, cohort_threshold, sample_size, notes
+# metric_ci_low, metric_ci_high, reference_window_id, cohort_threshold,
+# sample_size, notes
 
 REQUIRED_COLS = [
     "dataset_tag", "quarter", "feature_name", "metric_name", "metric_value",
+    "metric_ci_low", "metric_ci_high",
     "reference_window_id", "cohort_threshold", "sample_size", "notes",
 ]
 
-VALID_METRIC_NAMES = {"psi", "cohen_h", "cohen_d", "ks_stat", "icc",
-                      "icc_lpm_observed_scale", "icc_anova_observed_scale",
-                      "icc_glmm_latent_scale"}
+# v1.0.5 closed enumeration — `metric_name IN VALID_METRIC_NAMES` is a
+# hard gate for Phase 06 ingestion. CI bounds live in `metric_ci_low` /
+# `metric_ci_high` columns, not as separate rows.
+VALID_METRIC_NAMES = {
+    "psi", "cohen_h", "cohen_d", "ks_stat",
+    "icc_lpm_observed_scale", "icc_anova_observed_scale", "icc_glmm_latent_scale",
+}
+
+# v1.0.5: uncohort-filtered PRIMARY analyses use cohort_threshold=0 (sentinel).
+# Previously sc2egset emitted NULL here, which was ambiguous between
+# "B2-uncohort" and "missing metadata". NULL is now reserved for metadata
+# gaps and triggers a Phase 06 ingest block.
+COHORT_UNCOHORT_SENTINEL = 0
 
 rows_ph06 = []
 
 # --- PSI rows (T03) ---
+# PSI is uncohort-filtered per B2 critique fix. Emit cohort_threshold=0
+# (v1.0.5 sentinel). PSI has no CI in this schema (KS/Cohen's h/d/PSI all
+# leave metric_ci_low/metric_ci_high NULL).
 for _, r in df_psi.iterrows():
     notes = str(r.get("notes", "")) if pd.notna(r.get("notes")) else ""
     if "[POP:tournament]" not in notes:
@@ -100,36 +115,47 @@ for _, r in df_psi.iterrows():
         "feature_name": r["feature_name"],
         "metric_name": "psi",
         "metric_value": round(float(r["psi_value"]), 4) if pd.notna(r["psi_value"]) else None,
+        "metric_ci_low": None,
+        "metric_ci_high": None,
         "reference_window_id": "2022-Q3Q4",
-        "cohort_threshold": None,  # PRIMARY = uncohort-filtered (B2 fix)
+        "cohort_threshold": COHORT_UNCOHORT_SENTINEL,  # v1.0.5 sentinel (was NULL pre-v1.0.5)
         "sample_size": int(r["n_tested"]),
         "notes": notes,
     })
 
 # --- ICC rows (T06) ---
-# ICC rows use 'quarter' = None (applies to entire overlap window, not per-quarter)
-# Map to a special quarter value per spec: use 'overlap_window'
+# v1.0.5: CI bounds populated in dedicated columns (previously sc2egset emitted
+# ICC without CI here; the CI lived in variance_icc_sc2egset.csv).
 for _, r in df_icc.iterrows():
     metric = str(r["metric_name"])
+    if metric not in VALID_METRIC_NAMES:
+        # v1.0.5 closed enumeration: skip metric_name values outside the
+        # spec-enumerated set (e.g. pre-v1.0.5 `icc_lpm_ci_low`/`ci_high`
+        # rows, which this notebook never emitted but the validator
+        # enforces uniformly).
+        continue
     icc_val = r["icc"]
+    ci_lo = r.get("icc_ci_low")
+    ci_hi = r.get("icc_ci_high")
     notes = str(r.get("notes", "")) if pd.notna(r.get("notes")) else ""
     if "[POP:tournament]" not in notes:
         notes = notes + ";[POP:tournament]" if notes else "[POP:tournament]"
     rows_ph06.append({
         "dataset_tag": "sc2egset",
-        "quarter": "overlap_window",  # ICC is computed across full overlap window
+        "quarter": "overlap_window",
         "feature_name": "won",
-        "metric_name": metric,  # M3: use actual metric_name from T06
+        "metric_name": metric,
         "metric_value": round(float(icc_val), 4) if pd.notna(icc_val) else None,
+        "metric_ci_low": round(float(ci_lo), 4) if pd.notna(ci_lo) else None,
+        "metric_ci_high": round(float(ci_hi), 4) if pd.notna(ci_hi) else None,
         "reference_window_id": "2022-Q3Q4",
-        "cohort_threshold": int(r["cohort_threshold"]) if pd.notna(r.get("cohort_threshold")) else None,
+        "cohort_threshold": int(r["cohort_threshold"]) if pd.notna(r.get("cohort_threshold")) else COHORT_UNCOHORT_SENTINEL,
         "sample_size": int(r["n_obs"]),
         "notes": notes,
     })
 
 # --- DGP Cohen's d rows (T08, only cohen_d metric in Phase 06) ---
-df_dgp_d = df_dgp[df_dgp["metric_name"] == "cohen_d"]
-for _, r in df_dgp_d.iterrows():
+for _, r in df_dgp[df_dgp["metric_name"] == "cohen_d"].iterrows():
     notes = str(r.get("notes", "")) if pd.notna(r.get("notes")) else ""
     if "[POP:tournament]" not in notes:
         notes = notes + ";[POP:tournament]" if notes else "[POP:tournament]"
@@ -139,8 +165,10 @@ for _, r in df_dgp_d.iterrows():
         "feature_name": "duration_seconds",
         "metric_name": "cohen_d",
         "metric_value": round(float(r["metric_value"]), 4) if pd.notna(r["metric_value"]) else None,
+        "metric_ci_low": None,
+        "metric_ci_high": None,
         "reference_window_id": "2022-Q3Q4",
-        "cohort_threshold": None,
+        "cohort_threshold": COHORT_UNCOHORT_SENTINEL,  # v1.0.5 sentinel
         "sample_size": int(r["n"]),
         "notes": notes + ";[SC2EGSET-POST-GAME]" if "[SC2EGSET-POST-GAME]" not in notes else notes,
     })
@@ -190,10 +218,10 @@ out_ph06 = artifact_dir / "phase06_interface_sc2egset.csv"
 df_ph06.to_csv(out_ph06, index=False, na_rep="")
 print(f"Saved: {out_ph06}")
 
-# Schema JSON
+# Schema JSON (v1.0.5: 11 columns, cohort_threshold=0 sentinel, closed metric_name enum)
 schema_doc = {
-    "schema_version": "1.0",
-    "spec_ref": "reports/specs/01_05_preregistration.md@7e259dd8 §12",
+    "schema_version": "1.0.5",
+    "spec_ref": "reports/specs/01_05_preregistration.md §12 (v1.0.5)",
     "dataset": "sc2egset",
     "columns": [
         {"name": "dataset_tag", "type": "VARCHAR", "nullable": False,
@@ -203,13 +231,17 @@ schema_doc = {
         {"name": "feature_name", "type": "VARCHAR", "nullable": False,
          "description": "Feature or target column name"},
         {"name": "metric_name", "type": "VARCHAR", "nullable": False,
-         "description": "Metric: psi, cohen_d, icc_lpm_observed_scale, icc_anova_observed_scale, icc_glmm_latent_scale"},
+         "description": "Closed enum: psi, cohen_h, cohen_d, ks_stat, icc_lpm_observed_scale, icc_anova_observed_scale, icc_glmm_latent_scale"},
         {"name": "metric_value", "type": "DOUBLE", "nullable": True,
          "description": "Metric value (NULL if not applicable)"},
+        {"name": "metric_ci_low", "type": "DOUBLE", "nullable": True,
+         "description": "Lower bound of 95% CI; NULL for PSI/cohen/KS (no CI in schema)"},
+        {"name": "metric_ci_high", "type": "DOUBLE", "nullable": True,
+         "description": "Upper bound of 95% CI; NULL for PSI/cohen/KS"},
         {"name": "reference_window_id", "type": "VARCHAR", "nullable": True,
          "description": "Reference period label: '2022-Q3Q4'"},
         {"name": "cohort_threshold", "type": "INTEGER", "nullable": True,
-         "description": "Min matches in reference for cohort inclusion (NULL = uncohort-filtered)"},
+         "description": "Min matches in reference for cohort inclusion. 0 = uncohort-filtered primary (v1.0.5 sentinel). NULL = missing metadata (block Phase 06 ingest)."},
         {"name": "sample_size", "type": "INTEGER", "nullable": True,
          "description": "N rows in tested period for this row"},
         {"name": "notes", "type": "VARCHAR", "nullable": True,
@@ -220,10 +252,22 @@ schema_doc = {
         "Per INVARIANTS §5 I8 partial: feature_name values match actual VIEW schema "
         "(faction/opponent_faction/duration_seconds). Phase 06 UNION joins on metric_name only."
     ),
-    "b2_note": "PRIMARY PSI = uncohort-filtered (cohort_threshold=NULL for PSI rows). B2 critique fix.",
+    "v105_notes": {
+        "cohort_threshold_sentinel": (
+            "cohort_threshold=0 = uncohort-filtered primary analysis (B2 critique fix). "
+            "Pre-v1.0.5 sc2egset emitted NULL here, which was ambiguous between B2-uncohort "
+            "and missing-metadata. NULL is now reserved for metadata gaps (ingest block)."
+        ),
+        "metric_ci_columns": (
+            "CI bounds for a metric live in metric_ci_low/metric_ci_high on the same row "
+            "as the metric (previously aoe2companion emitted CI bounds as separate rows "
+            "with metric_name=icc_lpm_ci_low/ci_high — now banned by the closed enumeration)."
+        ),
+        "metric_name_enum": "Closed set; consumers MUST reject rows with unlisted metric_name values.",
+    },
     "b3_note": (
-        "ICC has 3 metric_name values: icc_lpm_observed_scale (primary), "
-        "icc_anova_observed_scale (secondary), icc_glmm_latent_scale (tertiary, may be NULL)."
+        "ICC has 3 metric_name values: icc_lpm_observed_scale (diagnostic; §8 v1.0.2 demoted), "
+        "icc_anova_observed_scale (PRIMARY v1.0.4 §14(b)), icc_glmm_latent_scale (tertiary, may be NULL)."
     ),
 }
 
@@ -252,7 +296,7 @@ md_content = f"""# Phase 06 Interface CSV — sc2egset
 - Total rows: {len(df_ph06)}
 - PSI rows: {len(df_psi)} (T03; uncohort-filtered per B2 fix)
 - ICC rows: {len(df_icc)} (T06; 3 metric_names per B3 fix)
-- Cohen's d DGP rows: {len(df_dgp_d)} (T08; POST_GAME)
+- Cohen's d DGP rows: {len(df_dgp[df_dgp['metric_name'] == 'cohen_d'])} (T08; POST_GAME)
 
 ## M3 note
 

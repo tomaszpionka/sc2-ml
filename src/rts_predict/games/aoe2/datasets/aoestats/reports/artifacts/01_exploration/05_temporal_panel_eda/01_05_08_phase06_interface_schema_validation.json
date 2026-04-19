@@ -1,9 +1,12 @@
 {
+  "schema_version": "1.0.5",
   "column_count_ok": true,
-  "column_count": 9,
+  "column_count": 11,
+  "columns_match_spec": true,
   "dataset_tag_all_aoestats": "True",
   "reference_window_primary_ok": "True",
   "no_string_nan": true,
+  "metric_name_in_closed_enum": true,
   "n_rows": 136,
   "n_rows_above_64": true,
   "columns": [
@@ -12,17 +15,8 @@
     "feature_name",
     "metric_name",
     "metric_value",
-    "reference_window_id",
-    "cohort_threshold",
-    "sample_size",
-    "notes"
-  ],
-  "head_row": [
-    "dataset_tag",
-    "quarter",
-    "feature_name",
-    "metric_name",
-    "metric_value",
+    "metric_ci_low",
+    "metric_ci_high",
     "reference_window_id",
     "cohort_threshold",
     "sample_size",

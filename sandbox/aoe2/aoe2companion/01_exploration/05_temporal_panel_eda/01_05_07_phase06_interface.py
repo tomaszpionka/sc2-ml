@@ -93,7 +93,8 @@ for _, r in df_psi.iterrows():
             "feature_name": "won",
             "metric_name": "cohen_h",
             "metric_value": round(float(r["cohen_h"]), 4),
-            "reference_window_id": REFERENCE_WINDOW_ID,
+            "metric_ci_low": None,
+            "metric_ci_high": None,            "reference_window_id": REFERENCE_WINDOW_ID,
             "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
             "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
             "notes": f"{base_note}; M-03: h vs reference p_ref",
@@ -106,7 +107,8 @@ for _, r in df_psi.iterrows():
                 "feature_name": "rating",
                 "metric_name": "psi",
                 "metric_value": round(float(r["psi"]), 4),
-                "reference_window_id": REFERENCE_WINDOW_ID,
+                "metric_ci_low": None,
+                "metric_ci_high": None,                "reference_window_id": REFERENCE_WINDOW_ID,
                 "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
                 "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
                 "notes": f"{base_note}; M-04: Yurdakul 2018 WMU #3208 thresholds not calibrated at N>10^6",
@@ -118,7 +120,8 @@ for _, r in df_psi.iterrows():
                 "feature_name": "rating",
                 "metric_name": "cohen_d",
                 "metric_value": round(float(r["cohen_d"]), 4),
-                "reference_window_id": REFERENCE_WINDOW_ID,
+                "metric_ci_low": None,
+                "metric_ci_high": None,                "reference_window_id": REFERENCE_WINDOW_ID,
                 "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
                 "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
                 "notes": base_note,
@@ -130,7 +133,8 @@ for _, r in df_psi.iterrows():
                 "feature_name": "rating",
                 "metric_name": "ks_stat",
                 "metric_value": round(float(r["ks_stat"]), 4),
-                "reference_window_id": REFERENCE_WINDOW_ID,
+                "metric_ci_low": None,
+                "metric_ci_high": None,                "reference_window_id": REFERENCE_WINDOW_ID,
                 "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
                 "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
                 "notes": f"{base_note}; M-08: KS on 100k subsample per quarter",
@@ -143,7 +147,8 @@ for _, r in df_psi.iterrows():
             "feature_name": r["feature"],
             "metric_name": "psi",
             "metric_value": round(float(r["psi"]), 4),
-            "reference_window_id": REFERENCE_WINDOW_ID,
+            "metric_ci_low": None,
+            "metric_ci_high": None,            "reference_window_id": REFERENCE_WINDOW_ID,
             "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
             "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
             "notes": f"{base_note}; {unseen_note}; M-04: Yurdakul 2018 thresholds not calibrated at N>10^6",
@@ -158,31 +163,51 @@ for _, r in df_strat.iterrows():
             "feature_name": "faction",
             "metric_name": "psi",
             "metric_value": round(float(r["psi"]), 4),
-            "reference_window_id": REFERENCE_WINDOW_ID,
+            "metric_ci_low": None,
+            "metric_ci_high": None,            "reference_window_id": REFERENCE_WINDOW_ID,
             "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
             "sample_size": int(r["n_test"]) if pd.notna(r.get("n_test")) else None,
             "notes": f"{base_note}; {r['scope_note']}; lb={r['leaderboard_id']}",
         })
 
 # T06: ICC rows (LPM + ANOVA + GLMM)
+# v1.0.5: CI bounds live on the SAME row as the metric, in `metric_ci_low` /
+# `metric_ci_high` columns. Pre-v1.0.5 this notebook emitted
+# `metric_name=icc_lpm_ci_low` and `metric_name=icc_lpm_ci_high` as separate
+# rows — those names are no longer in the spec §12 closed enumeration and
+# would be dropped by a schema-validating consumer.
 icc_quarter = "2022Q3-2024Q4"
-for metric_name, metric_value in [
-    ("icc_lpm_observed_scale", icc_data["icc_lpm_observed_scale"]),
-    ("icc_lpm_ci_low", icc_data["icc_lpm_ci_low"]),
-    ("icc_lpm_ci_high", icc_data["icc_lpm_ci_high"]),
-    ("icc_anova_observed_scale", icc_data["icc_anova_observed_scale"]),
-]:
-    rows.append({
-        "dataset_tag": DATASET_TAG,
-        "quarter": "all",
-        "feature_name": "won",
-        "metric_name": metric_name,
-        "metric_value": round(float(metric_value), 4) if metric_value is not None else None,
-        "reference_window_id": REFERENCE_WINDOW_ID,
-        "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
-        "sample_size": icc_data["n_players_primary"],
-        "notes": f"{POP_NOTE}; B-01: LPM observed-scale; player random-intercept model",
-    })
+# ANOVA-observed-scale is the v1.0.4 §14(b) cross-dataset headline.
+# Pre-v1.0.5 notebook shape: looked up `icc_anova_ci_low`/`icc_anova_ci_high` —
+# those are populated post-PR #163 follow-up. Fall back to None if absent.
+rows.append({
+    "dataset_tag": DATASET_TAG,
+    "quarter": "all",
+    "feature_name": "won",
+    "metric_name": "icc_anova_observed_scale",
+    "metric_value": round(float(icc_data["icc_anova_observed_scale"]), 4) if icc_data.get("icc_anova_observed_scale") is not None else None,
+    "metric_ci_low": round(float(icc_data["icc_anova_ci_low"]), 4) if icc_data.get("icc_anova_ci_low") is not None else None,
+    "metric_ci_high": round(float(icc_data["icc_anova_ci_high"]), 4) if icc_data.get("icc_anova_ci_high") is not None else None,
+    "reference_window_id": REFERENCE_WINDOW_ID,
+    "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
+    "sample_size": icc_data["n_players_primary"],
+    "notes": f"{POP_NOTE}; v1.0.4 §14(b) PRIMARY cross-dataset headline; Wu/Crespi/Wong 2012 ANOVA observed-scale",
+})
+
+# LPM observed-scale (diagnostic per v1.0.2 §14(b)): CI bounds on same row.
+rows.append({
+    "dataset_tag": DATASET_TAG,
+    "quarter": "all",
+    "feature_name": "won",
+    "metric_name": "icc_lpm_observed_scale",
+    "metric_value": round(float(icc_data["icc_lpm_observed_scale"]), 4) if icc_data.get("icc_lpm_observed_scale") is not None else None,
+    "metric_ci_low": round(float(icc_data["icc_lpm_ci_low"]), 4) if icc_data.get("icc_lpm_ci_low") is not None else None,
+    "metric_ci_high": round(float(icc_data["icc_lpm_ci_high"]), 4) if icc_data.get("icc_lpm_ci_high") is not None else None,
+    "reference_window_id": REFERENCE_WINDOW_ID,
+    "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
+    "sample_size": icc_data["n_players_primary"],
+    "notes": f"{POP_NOTE}; B-01 diagnostic; LPM observed-scale (REML lbfgs random-intercept; Chung 2013 boundary-shrinkage caveat)",
+})
 
 if icc_data.get("icc_glmm_latent_scale") is not None:
     rows.append({
@@ -191,10 +216,12 @@ if icc_data.get("icc_glmm_latent_scale") is not None:
         "feature_name": "won",
         "metric_name": "icc_glmm_latent_scale",
         "metric_value": round(float(icc_data["icc_glmm_latent_scale"]), 4),
+        "metric_ci_low": None,  # GLMM CI not computed (optional tertiary)
+        "metric_ci_high": None,
         "reference_window_id": REFERENCE_WINDOW_ID,
         "cohort_threshold": DEFAULT_COHORT_THRESHOLD,
         "sample_size": icc_data["n_players_primary"],
-        "notes": f"{POP_NOTE}; B-01: GLMM latent-scale ICC (Nakagawa & Schielzeth 2010)",
+        "notes": f"{POP_NOTE}; B-01 tertiary: GLMM latent-scale ICC (Nakagawa & Schielzeth 2010)",
     })
 
 # T05: Sensitivity rows
@@ -206,7 +233,8 @@ for _, r in df_sens.iterrows():
             "feature_name": r["feature"],
             "metric_name": "psi",
             "metric_value": round(float(r["psi"]), 4) if pd.notna(r.get("psi")) else None,
-            "reference_window_id": REFERENCE_WINDOW_ID,
+            "metric_ci_low": None,
+            "metric_ci_high": None,            "reference_window_id": REFERENCE_WINDOW_ID,
             "cohort_threshold": int(r["n_threshold"]),
             "sample_size": int(r["n_matches"]) if pd.notna(r.get("n_matches")) else None,
             "notes": f"{POP_NOTE}; survivorship sensitivity N={r['n_threshold']}",
@@ -220,8 +248,20 @@ print(f"Total Phase 06 rows: {len(rows)}")
 # %%
 df_out = pd.DataFrame(rows, columns=[
     "dataset_tag", "quarter", "feature_name", "metric_name", "metric_value",
+    "metric_ci_low", "metric_ci_high",
     "reference_window_id", "cohort_threshold", "sample_size", "notes",
 ])
+
+# v1.0.5 closed-enum validator: reject out-of-enumeration metric_name values.
+# CI bounds live in metric_ci_low/metric_ci_high columns, NOT as separate rows.
+VALID_METRIC_NAMES = {
+    "psi", "cohen_h", "cohen_d", "ks_stat",
+    "icc_lpm_observed_scale", "icc_anova_observed_scale", "icc_glmm_latent_scale",
+}
+_invalid_metrics = set(df_out["metric_name"].unique()) - VALID_METRIC_NAMES
+assert not _invalid_metrics, (
+    f"v1.0.5 enum violation: metric_name values not in closed set: {_invalid_metrics}"
+)
 
 # Verify no POST_GAME tokens in feature_name (I3)
 post_game_tokens = {"duration_seconds", "is_duration_suspicious", "is_duration_negative", "ratingDiff", "finished"}

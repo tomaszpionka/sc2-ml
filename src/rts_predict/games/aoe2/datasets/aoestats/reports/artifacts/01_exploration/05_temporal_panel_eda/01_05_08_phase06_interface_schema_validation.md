@@ -5,7 +5,9 @@
 
 ## Schema checks
 
-- Column count: 9 (expected 9): OK
+- Column count: 11 (expected 11, v1.0.5): OK
+- Columns match spec order: True
+- metric_name ⊆ closed enum: True
 - All dataset_tag == 'aoestats': True
 - No string 'NaN': True
 - Total rows: 136 (>= 64: True)

@@ -19,6 +19,47 @@ merged to `master`.
 
 ### Removed
 
+## [3.23.0] — 2026-04-19 (PR #TBD: fix/01-05-phase06-schema-harmonization)
+
+### Changed
+
+- **Spec `CROSS-01-05-v1` bumped to v1.0.5: Phase 06 interface schema
+  harmonization.** Closes DEFEND-IN-THESIS #3a + #3b from the 2026-04-19
+  pre-01_06 adversarial review. Three changes to §12:
+
+  1. **Two new columns**: `metric_ci_low DOUBLE NULL` and `metric_ci_high
+     DOUBLE NULL`. CI bounds for a metric now live on the same row in these
+     columns. Previously `aoe2companion` emitted CI bounds as separate rows
+     with `metric_name=icc_lpm_ci_low`/`icc_lpm_ci_high` — those names are no
+     longer in the closed enumeration and would be dropped by a
+     schema-validating consumer.
+  2. **Closed `metric_name` enumeration**: `{psi, cohen_h, cohen_d, ks_stat,
+     icc_lpm_observed_scale, icc_anova_observed_scale, icc_glmm_latent_scale}`.
+     Consumers MUST reject out-of-enumeration values (assertion in all three
+     dataset notebooks).
+  3. **`cohort_threshold=0` sentinel** for uncohort-filtered primary
+     analyses. Previously sc2egset emitted NULL here (ambiguous between
+     B2-uncohort and missing metadata). NULL is now reserved for metadata
+     gaps and blocks Phase 06 ingest.
+
+  All three datasets' Phase 06 interface CSVs now have **11 columns** and
+  join cleanly on `(dataset_tag, quarter, feature_name, metric_name)` with
+  uniform CI semantics.
+
+- **sc2egset `01_05_07_phase06_interface.py`**: `cohort_threshold=0` on PSI
+  and DGP rows (was NULL); ICC rows populate `metric_ci_low`/`metric_ci_high`
+  from `variance_icc_sc2egset.csv`; closed-enum validator added; schema
+  JSON bumped to `schema_version: "1.0.5"` with new column descriptions.
+- **aoe2companion `01_05_07_phase06_interface.py`**: stopped emitting
+  `icc_lpm_ci_low`/`icc_lpm_ci_high` as separate rows; inlined CI bounds
+  into `metric_ci_low`/`metric_ci_high` columns on the primary row. Total
+  ICC rows reduced from 4 to 3 (one per estimator); grand-total row count
+  76 → 74. Closed-enum validator added.
+- **aoestats `01_05_08_phase06_interface.py`**: populated CI columns for
+  each of the 6 per-cohort-threshold ICC rows (post-v1.0.4) from the
+  cluster-bootstrap CI (ANOVA) / delta-method CI (LMM); schema validator
+  bumped to 11 columns; closed-enum assertion added.
+
 ## [3.22.0] — 2026-04-19 (PR #TBD: fix/01-05-aoestats-icc-cohort-axis)
 
 ### Changed

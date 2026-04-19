@@ -26,20 +26,18 @@ participation, not the overall AoE2 player population. See T10 Decision Gate mem
 | rating         | psi                      |       8 |
 | won            | cohen_h                  |       8 |
 | won            | icc_anova_observed_scale |       1 |
-| won            | icc_lpm_ci_high          |       1 |
-| won            | icc_lpm_ci_low           |       1 |
 | won            | icc_lpm_observed_scale   |       1 |
 
-**Total rows:** 76
+**Total rows:** 74
 **Expected minimum:** 4 features x 8 quarters x ~3 metrics = ~96 (plus ICC rows, sensitivity, lb-split)
 
 ## Sanity checks
 
 - All `dataset_tag` = 'aoe2companion': True
 - No POST_GAME tokens in `feature_name`: True
-- ICC LPM value: 0.000489
+- ICC LPM value: 0.000491
 - ICC ANOVA value: 0.003013
 
 ## Verdict
 
-76 rows emitted. Schema conforms to spec §12. B-02 and M-07 deviations documented.
+74 rows emitted. Schema conforms to spec §12. B-02 and M-07 deviations documented.

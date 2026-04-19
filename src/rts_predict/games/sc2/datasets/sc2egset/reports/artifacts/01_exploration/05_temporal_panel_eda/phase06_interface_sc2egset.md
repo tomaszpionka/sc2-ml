@@ -36,15 +36,15 @@ All rows tagged [POP:tournament]: sc2egset is tournament-scraped.
 
 ## Sample rows
 
-| dataset_tag   | quarter   | feature_name     | metric_name   |   metric_value | reference_window_id   |   cohort_threshold |   sample_size | notes                                                       |
-|:--------------|:----------|:-----------------|:--------------|---------------:|:----------------------|-------------------:|--------------:|:------------------------------------------------------------|
-| sc2egset      | 2023-Q1   | faction          | psi           |         0.1769 | 2022-Q3Q4             |                nan |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q1   | opponent_faction | psi           |         0.1769 | 2022-Q3Q4             |                nan |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q1   | matchup          | psi           |         0.3631 | 2022-Q3Q4             |                nan |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q2   | faction          | psi           |         0.0012 | 2022-Q3Q4             |                nan |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q2   | opponent_faction | psi           |         0.0012 | 2022-Q3Q4             |                nan |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q2   | matchup          | psi           |         0.0246 | 2022-Q3Q4             |                nan |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q3   | faction          | psi           |         0.2786 | 2022-Q3Q4             |                nan |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q3   | opponent_faction | psi           |         0.2786 | 2022-Q3Q4             |                nan |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q3   | matchup          | psi           |         0.6959 | 2022-Q3Q4             |                nan |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
-| sc2egset      | 2023-Q4   | faction          | psi           |         0.0328 | 2022-Q3Q4             |                nan |          1344 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| dataset_tag   | quarter   | feature_name     | metric_name   |   metric_value |   metric_ci_low |   metric_ci_high | reference_window_id   |   cohort_threshold |   sample_size | notes                                                       |
+|:--------------|:----------|:-----------------|:--------------|---------------:|----------------:|-----------------:|:----------------------|-------------------:|--------------:|:------------------------------------------------------------|
+| sc2egset      | 2023-Q1   | faction          | psi           |         0.1769 |             nan |              nan | 2022-Q3Q4             |                  0 |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q1   | opponent_faction | psi           |         0.1769 |             nan |              nan | 2022-Q3Q4             |                  0 |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q1   | matchup          | psi           |         0.3631 |             nan |              nan | 2022-Q3Q4             |                  0 |           520 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q2   | faction          | psi           |         0.0012 |             nan |              nan | 2022-Q3Q4             |                  0 |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q2   | opponent_faction | psi           |         0.0012 |             nan |              nan | 2022-Q3Q4             |                  0 |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q2   | matchup          | psi           |         0.0246 |             nan |              nan | 2022-Q3Q4             |                  0 |          1396 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q3   | faction          | psi           |         0.2786 |             nan |              nan | 2022-Q3Q4             |                  0 |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q3   | opponent_faction | psi           |         0.2786 |             nan |              nan | 2022-Q3Q4             |                  0 |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q3   | matchup          | psi           |         0.6959 |             nan |              nan | 2022-Q3Q4             |                  0 |           244 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |
+| sc2egset      | 2023-Q4   | faction          | psi           |         0.0328 |             nan |              nan | 2022-Q3Q4             |                  0 |          1344 | PRIMARY:uncohort-filtered;epsilon=0.000306;[POP:tournament] |

@@ -1,6 +1,6 @@
 ---
 spec_id: CROSS-01-05-v1
-spec_version: "1.0.4"
+spec_version: "1.0.5"
 created: 2026-04-18
 invariants_touched: [I3, I6, I7, I8, I9]
 datasets_bound: [sc2egset, aoe2companion, aoestats]
@@ -422,15 +422,22 @@ to the following flat schema. One row per (dataset × quarter × feature × metr
 | `dataset_tag` | VARCHAR | `sc2egset`, `aoe2companion`, `aoestats` |
 | `quarter` | VARCHAR | ISO quarter string, e.g. `2023-Q1` |
 | `feature_name` | VARCHAR | Column name in `matches_history_minimal` |
-| `metric_name` | VARCHAR | `psi`, `cohen_h`, `cohen_d`, `ks_stat`, `icc`, etc. |
+| `metric_name` | VARCHAR | Closed enumeration — `psi`, `cohen_h`, `cohen_d`, `ks_stat`, `icc_anova_observed_scale`, `icc_lpm_observed_scale`, `icc_glmm_latent_scale`. CI bounds are NOT valid `metric_name` values; they live in the `metric_ci_low`/`metric_ci_high` columns on the same row. |
 | `metric_value` | DOUBLE | 4 decimal places; NaN encoded as `NULL` |
+| `metric_ci_low` | DOUBLE NULL | Lower bound of the 95% CI for `metric_value`. NULL when no CI is computed (e.g. PSI, Cohen's h/d, KS). Populated for ICC rows with cluster-bootstrap CI (ANOVA) or delta-method CI (LMM). Spec v1.0.4. |
+| `metric_ci_high` | DOUBLE NULL | Upper bound of the 95% CI for `metric_value`. Same population rule as `metric_ci_low`. Spec v1.0.4. |
 | `reference_window_id` | VARCHAR | `2022-Q3Q4` or `2022-Q3-patch66692` for aoestats (corrected v1.0.3) |
-| `cohort_threshold` | INTEGER | Minimum-match threshold (default 10; sensitivity: 5, 20) |
+| `cohort_threshold` | INTEGER NULL | Minimum-match threshold (default 10; sensitivity: 5, 20). **`0` = uncohort-filtered primary analysis** (e.g. sc2egset B2 PSI). NULL is reserved for missing metadata and MUST be fixed before Phase 06 consumption. Clarified v1.0.4. |
 | `sample_size` | INTEGER | Number of (player × match) observations in this cell |
 | `notes` | VARCHAR | Free-text; e.g. `[PRE-canonical_slot]`, `__unseen__: 3 rows` |
 
-**Numeric formatting.** All `metric_value` entries use 4 decimal places.
-NaN / undefined values are stored as SQL NULL (not strings).
+**Schema version.** 11 columns (was 9 pre-v1.0.4). A Phase 06 consumer
+should assert `set(csv.columns) == 11-column-set-above` at ingest time
+and reject rows with `metric_name` outside the enumerated set.
+
+**Numeric formatting.** All `metric_value`, `metric_ci_low`, and
+`metric_ci_high` entries use 4 decimal places. NaN / undefined values
+are stored as SQL NULL (not strings).
 
 **Sign conventions.** PSI ≥ 0 (always). Cohen's h and Cohen's d are signed
 (positive = tested > reference on the focal statistic). KS statistic is
@@ -678,6 +685,74 @@ v1.0.4 — 2026-04-19 — Cross-dataset ANOVA-primary ICC headline convention
 
                        Source: 2026-04-19 pre-01_06 adversarial review
                        (DEFEND-IN-THESIS #1) + planner-science
+                       consolidated methodology plan 2026-04-19.
+
+v1.0.5 — 2026-04-19 — Phase 06 interface schema harmonization: 9 → 11
+                       columns; `cohort_threshold=0` sentinel for
+                       uncohort-filtered primary analyses.
+
+                       Reason: 2026-04-19 pre-01_06 adversarial review
+                       flagged Phase 06 CSV semantic drift across datasets
+                       (DEFEND-IN-THESIS #3a, #3b):
+
+                       (a) sc2egset emitted `cohort_threshold=""` (empty /
+                           NULL) on 24 PSI rows, ambiguous between
+                           "uncohort-filtered B2-primary" and "missing
+                           metadata". NULL-is-a-semantic-value is an
+                           antipattern.
+
+                       (b) aoe2companion encoded CI bounds as separate
+                           rows with `metric_name=icc_lpm_ci_low` and
+                           `metric_name=icc_lpm_ci_high`. These names
+                           were not in the spec §12 enumerated set. A
+                           schema-validating consumer that filtered
+                           `metric_name IN (spec_enum)` silently dropped
+                           the CI rows. Schema-valid but semantically
+                           broken.
+
+                       Binding schema changes (scoped to §12):
+
+                       1. Add two columns: `metric_ci_low DOUBLE NULL`
+                          and `metric_ci_high DOUBLE NULL`. CI bounds
+                          for a metric now live in these columns on the
+                          same row as the metric, not as separate rows.
+
+                       2. `metric_name` enumeration is now CLOSED:
+                          `{psi, cohen_h, cohen_d, ks_stat,
+                          icc_anova_observed_scale, icc_lpm_observed_scale,
+                          icc_glmm_latent_scale}`. Consumers MUST reject
+                          rows with out-of-enumeration values.
+
+                       3. `cohort_threshold=0` = uncohort-filtered
+                          primary analysis (e.g. sc2egset B2 PSI).
+                          Positive values (5/10/20) = §6.2 thresholds.
+                          NULL = missing metadata (block at ingest).
+
+                       Notebook changes (three emitters + one consumer-
+                       side validator):
+
+                       - sc2egset Phase 06 notebook emits
+                         `cohort_threshold=0` on all B2-uncohort rows;
+                         populates `metric_ci_low`/`metric_ci_high`
+                         from `variance_icc_sc2egset.csv` on ICC rows.
+                       - aoe2companion Phase 06 notebook stops emitting
+                         `icc_lpm_ci_low`/`icc_lpm_ci_high` as separate
+                         rows; inlines CI bounds into the primary ICC
+                         row's CI columns.
+                       - aoestats Phase 06 notebook populates
+                         `metric_ci_low`/`metric_ci_high` for each of
+                         the 6 per-threshold ICC rows (post-v1.0.4
+                         structure) from the cluster-bootstrap CI
+                         (ANOVA) or delta-method CI (LMM).
+
+                       Impact on downstream Phase 06 consumption:
+                       the three emitted CSVs now join cleanly on
+                       `(dataset_tag, quarter, feature_name, metric_name)`
+                       with CI semantics uniform; `cohort_threshold`
+                       values distinguishable.
+
+                       Source: 2026-04-19 pre-01_06 adversarial review
+                       (DEFEND-IN-THESIS #3a, #3b) + planner-science
                        consolidated methodology plan 2026-04-19.
 ```
 
