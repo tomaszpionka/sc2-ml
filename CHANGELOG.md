@@ -13,6 +13,16 @@ merged to `master`.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [3.20.0] — 2026-04-19 (PR #TBD: feat/01-05-sc2egset)
+
+### Added
+
 - **01_05 Temporal & Panel EDA — sc2egset:** 8 content notebooks + 1 scaffold under
   `sandbox/sc2/sc2egset/01_exploration/05_temporal_panel_eda/`. Notebooks implement Q1
   quarterly grain, Q2 PSI (uncohort-filtered per B2 critique fix), Q3 tournament_era
