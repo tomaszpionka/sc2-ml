@@ -19,6 +19,32 @@ merged to `master`.
 
 ### Removed
 
+## [3.26.2] — 2026-04-19 (PR #TBD: chore/cleanup-stale-artifacts-defend-sequence-followup)
+
+### Removed
+
+- `NIGHT_SUMMARY_2026-04-17.md` — 2-day-old autonomous-session report;
+  all referenced work has since merged via PRs #150-#177.
+- `temp/` directory (5 files, 2 219 lines): `critique_3_4_3_5_r1.md`,
+  `plan_01_05_sc2egset.md`, `plan_3_4_3_5_v1.md`, `plan_3_4_3_5_v2.md`,
+  `session_report_2026-04-18.md`. All superseded by merged work in the
+  `03_related_work.md` §3.4/§3.5 drafts, the Phase 01 §01_05 artifacts,
+  and the DEFEND-IN-THESIS 3-PR sequence. Git history preserves content.
+- `planning/dags/` (DAG.yaml + README.md) and `planning/specs/`
+  (README.md only) — closes BACKLOG F5. DAG/spec pattern was
+  decommissioned per memory `feedback_decommission_dag.md`; executors
+  read `planning/current_plan.md` directly.
+
+### Changed
+
+- `planning/BACKLOG.md`: removed F2 (01_05 Temporal & Panel EDA —
+  complete across all three datasets via PRs #162–#177 series);
+  removed F5 (executed in this PR); F3 unblocking note added
+  (previously blocked on F2, now actionable).
+- `ARCHITECTURE.md` tier 9b: updated to reflect current planning-artifact
+  structure (`current_plan.md` + `current_plan.critique.md` only; no
+  DAG/spec derivations).
+
 ## [3.26.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-177-defend-sequence-complete)
 
 ### Removed

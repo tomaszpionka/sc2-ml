@@ -133,16 +133,16 @@ the lower-precedence file is edited to match, never the reverse.
    pointers into tiers (3), (4), (5), and (6). They never inline-encode a numbered
    Phase list and never redefine terminology.
 
-   **9b. Planning artifacts** — `planning/current_plan.md` (the active Spec),
-   `planning/dags/DAG.yaml` (the active execution schedule),
-   `planning/specs/spec_*.md` (task-level instructions). Within this sub-tier,
-   precedence is: plan (authoritative) > DAG (derived execution order) >
-   specs (derived task-level extracts). If any derived artifact diverges from
-   the plan, the plan wins and the DAG is regenerated. Planning artifacts are
-   ephemeral: committed on the feature branch for PR auditability, then purged
-   after merge (see `planning/README.md`). Permanent documentation files
-   (`planning/INDEX.md`, `planning/README.md`, `planning/*/README.md`) are
-   tier 9 operational files, not ephemeral planning artifacts.
+   **9b. Planning artifacts** — `planning/current_plan.md` (the active plan,
+   authoritative) and `planning/current_plan.critique.md` (ephemeral
+   adversarial critique for Category A/F). Executors read the plan
+   directly — no DAG.yaml or spec_*.md derivations (pattern decommissioned
+   per memory `feedback_decommission_dag.md`; see CHANGELOG). Planning
+   artifacts are ephemeral: committed on the feature branch for PR
+   auditability, then purged after merge (see `planning/README.md`).
+   Permanent documentation files (`planning/INDEX.md`, `planning/README.md`,
+   `planning/BACKLOG.md`) are tier 9 operational files, not ephemeral
+   planning artifacts.
 
 **The rule.** Higher-precedence tiers are sources; lower-precedence tiers
 are derivations. A change in a high-precedence file propagates downward
