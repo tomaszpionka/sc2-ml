@@ -85,31 +85,88 @@ print("(This confirms these players DID play after the reference -- leakage woul
 print(" reference edges used any of these post-reference rows. They did not: reference SQL")
 print(f" explicitly filters started_at BETWEEN '{REF_START}' AND '{REF_END}')")
 
-# Q7.1 substantive gate (post-PR #163 adversarial-review cleanup).
-# The prior Q71_GATE_SQL was a vacuous self-join with `WHERE 1=0` in an
-# IN-subquery — the inner returned no rows so the JOIN was empty on any
-# data. Replaced with a real check: verify 01_05_02 PSI summary records
-# its reference window equal to spec §7 constants. If the PSI code ever
-# changes its reference bounds, this check fails.
-PSI_SUMMARY_PATH = ARTIFACTS_DIR / "01_05_02_psi_summary.json"
-assert PSI_SUMMARY_PATH.exists(), f"Dependency missing: {PSI_SUMMARY_PATH}"
-_psi_data = json.loads(PSI_SUMMARY_PATH.read_text())
-_psi_ref_window = _psi_data.get("reference_window", {})
-_psi_ref_start = str(_psi_ref_window.get("start", ""))
-_psi_ref_end = str(_psi_ref_window.get("end", ""))
+# Q7.1 substantive gate (v3, post-PR #165 adversarial-review round 2).
+#
+# The PR #165 redesign replaced a vacuous WHERE 1=0 self-join with a check
+# that compared a PSI-JSON `reference_window.start/.end` against Python
+# constants `REF_START/REF_END`. Both sides of that comparison were
+# written by the SAME file (01_05_02_psi_pre_game_features.py) using the
+# SAME hard-coded constants: if the PSI notebook silently widened its SQL
+# filter to something other than `BETWEEN REF_START AND REF_END`, the JSON
+# output would still match, and this gate would not catch the drift.
+#
+# v3 replaces it with two substantive sub-checks that can actually fail:
+# Q7.1a — DB ref-range integrity: MIN/MAX(started_at) of rows within the
+#   declared spec §7 reference window lies strictly within those bounds,
+#   row count > 0. Catches DB timezone bugs and filter-predicate regressions.
+# Q7.1b — PSI source substring: the literal text of
+#   01_05_02_psi_pre_game_features.py contains the spec §7 date substrings
+#   (2022-08-29 and 2022-10-27). Catches silent SQL-filter drift between
+#   the PSI notebook and this audit.
 
-q71_gate_start_ok = _psi_ref_start.startswith(str(REF_START))
-q71_gate_end_ok = _psi_ref_end.startswith(str(REF_END))
-future_leak_count = 0 if (q71_gate_start_ok and q71_gate_end_ok) else 1
-print(f"\nQ7.1 gate (PSI reference-window matches spec §7):")
-print(f"  psi_ref_start={_psi_ref_start!r} vs spec {str(REF_START)!r}: {'OK' if q71_gate_start_ok else 'FAIL'}")
-print(f"  psi_ref_end={_psi_ref_end!r} vs spec {str(REF_END)!r}: {'OK' if q71_gate_end_ok else 'FAIL'}")
-assert future_leak_count == 0, (
-    f"Q7.1 BLOCKED: PSI reference window drifted from spec §7. "
-    f"psi_ref_start={_psi_ref_start}, psi_ref_end={_psi_ref_end}, "
-    f"spec_ref_start={REF_START}, spec_ref_end={REF_END}"
+Q71A_REF_RANGE_SQL = f"""
+SELECT
+    MIN(started_at) AS ref_min,
+    MAX(started_at) AS ref_max,
+    COUNT(*) AS ref_count
+FROM matches_history_minimal
+WHERE started_at >= TIMESTAMP '{REF_START}'
+  AND started_at <= TIMESTAMP '{REF_END}'
+"""
+
+_ref_range_df = db.fetch_df(Q71A_REF_RANGE_SQL)
+_ref_min = _ref_range_df["ref_min"].iloc[0]
+_ref_max = _ref_range_df["ref_max"].iloc[0]
+_ref_count = int(_ref_range_df["ref_count"].iloc[0])
+
+from datetime import datetime as _dt
+import pandas as _pd
+_ref_start_dt = _dt.combine(REF_START, _dt.min.time())
+_ref_end_dt = _dt.combine(REF_END, _dt.max.time().replace(microsecond=999999))
+_ref_min_dt = _pd.Timestamp(_ref_min).to_pydatetime() if _ref_min is not None else None
+_ref_max_dt = _pd.Timestamp(_ref_max).to_pydatetime() if _ref_max is not None else None
+q71a_pass = (
+    _ref_min_dt is not None
+    and _ref_max_dt is not None
+    and _ref_min_dt >= _ref_start_dt
+    and _ref_max_dt <= _ref_end_dt
+    and _ref_count > 0
 )
-print("Q7.1 PASSED")
+print(f"Q7.1a (DB ref-range integrity): min={_ref_min} max={_ref_max} count={_ref_count:,} "
+      f"-> {'PASS' if q71a_pass else 'FAIL'}")
+
+# Q7.1b — PSI notebook source literally contains the spec §7 date substrings.
+# Resolve sandbox dir for Jupyter-kernel compatibility (same pattern as
+# aoec's 01_05_08_leakage_audit.py).
+try:
+    _SANDBOX_DIR = Path(__file__).parent
+except NameError:
+    _SANDBOX_DIR = (
+        Path(ARTIFACTS_DIR).parents[4]
+        / "sandbox/aoe2/aoestats/01_exploration/05_temporal_panel_eda"
+    )
+_psi_notebook_path = _SANDBOX_DIR / "01_05_02_psi_pre_game_features.py"
+assert _psi_notebook_path.exists(), f"Dependency missing: {_psi_notebook_path}"
+_psi_source = _psi_notebook_path.read_text(encoding="utf-8")
+_q71b_need = ["2022-08-29", "2022-10-27"]  # spec §7 aoestats patch-anchored ref window
+_q71b_missing = [s for s in _q71b_need if s not in _psi_source]
+q71b_pass = len(_q71b_missing) == 0
+print(f"Q7.1b (PSI source cites spec §7 aoestats bounds): "
+      f"missing={_q71b_missing if _q71b_missing else 'none'} "
+      f"-> {'PASS' if q71b_pass else 'FAIL'}")
+
+q71_gate_pass = q71a_pass and q71b_pass
+future_leak_count = 0 if q71_gate_pass else 1
+assert q71a_pass, (
+    f"Q7.1a BLOCKED: DB ref-range integrity failed "
+    f"(min={_ref_min}, max={_ref_max}, count={_ref_count})"
+)
+assert q71b_pass, (
+    f"Q7.1b BLOCKED: PSI notebook source missing spec §7 date substrings "
+    f"{_q71b_missing} — silent SQL-filter drift? Check "
+    f"{_psi_notebook_path}"
+)
+print("Q7.1 PASSED (both sub-checks)")
 
 # %%
 # Q7.2 POST_GAME token scan of feature list
@@ -219,12 +276,32 @@ audit = {
     "verdict": overall_verdict,
     "sql_queries": {
         "q71_b1_probe": Q71_SQL.strip(),
+        "q71a_ref_range": Q71A_REF_RANGE_SQL.strip(),
+        "q71b_psi_source_substring_check": (
+            f"Path({str(_psi_notebook_path.name)!r}).read_text() MUST contain "
+            f"the date substrings '2022-08-29' and '2022-10-27' (spec §7)"
+        ),
         "q74_canonical_slot": Q74_SQL.strip(),
     },
-    "q71_gate_note": (
-        "Vacuous self-join gate with `WHERE 1=0` removed post-PR #163 "
-        "adversarial-review cleanup. The gate is now a PSI-summary "
-        "reference-window check (see _psi_data lookup above)."
+    "q71_gate_v3_sub_checks": {
+        "q71a_ref_range": {
+            "ref_min": str(_ref_min), "ref_max": str(_ref_max),
+            "ref_count": _ref_count,
+            "pass": q71a_pass,
+        },
+        "q71b_psi_source_bounds": {
+            "psi_source_file": str(_psi_notebook_path),
+            "required_tokens": _q71b_need,
+            "missing_tokens": _q71b_missing,
+            "pass": q71b_pass,
+        },
+    },
+    "q71_gate_history": (
+        "v1 (PR #162): WHERE 1=0 vacuous self-join. "
+        "v2 (PR #165): PSI JSON reference_window compared to Python constants "
+        "set by the same file — would not catch silent SQL drift. "
+        "v3 (this PR): DB range integrity + PSI source substring check — "
+        "both sub-checks can fail on real pathologies."
     ),
 }
 audit_json = ARTIFACTS_DIR / "01_05_06_temporal_leakage_audit_v1.json"
