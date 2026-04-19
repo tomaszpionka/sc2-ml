@@ -19,6 +19,34 @@ merged to `master`.
 
 ### Removed
 
+## [3.28.0] — 2026-04-19 (PR #TBD: feat/phase01-decision-gates-01-06)
+
+### Added
+
+- Pipeline Section 01_06 (Decision Gates) across all three datasets: sc2egset, aoestats, aoe2companion.
+  Four deliverables per dataset (data dictionary, data quality report, risk register, modeling readiness
+  decision) plus cross-dataset rollup at `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md`.
+- 12 sandbox `06_decision_gates/` notebooks (4 per dataset × 3) + 1 retroactive `01_05_09_gate_memo.py` for aoe2companion; 18 per-dataset artifact files under `06_decision_gates/` (6 per dataset × 3: `data_dictionary.{csv,md}`, `data_quality_report.md`, `risk_register.{csv,md}`, `modeling_readiness.md`) + 1 cross-dataset rollup + 1 retroactive aoe2companion `01_05_09_gate_memo.md` + 1 sc2egset git-mv rename (`decision_gate_sc2egset.md` → `01_05_09_gate_memo.md` for naming parity with aoestats).
+- Retroactive `01_05_09_gate_memo.md` for aoe2companion (fills symmetry gap with sc2egset and aoestats).
+- Spec v1.0 locked at `reports/specs/01_06_readiness_criteria.md` (four-tier verdict taxonomy,
+  six role-assignment dimensions D1–D6).
+
+### Changed
+
+- Phase 01 status → COMPLETE for sc2egset, aoestats, aoe2companion (PHASE_STATUS.yaml × 3).
+- PIPELINE_SECTION_STATUS 01_06 → complete; 01_05 aoe2companion → complete (T07 checkpoint 1 restore).
+- STEP_STATUS.yaml: 01_06_01..04 + 01_05_09 flipped to complete across all three datasets.
+- ROADMAP.md Role blocks updated from TBD to dimension-specific assignments (D1–D6) for sc2egset,
+  aoestats, and aoe2companion.
+- `planning/BACKLOG.md` F1 entry updated with F1+W4 coupling note (01_06 flip-predicate registration).
+- `thesis/WRITING_STATUS.md` §4.1 / §4.1.3 / §4.1.4 rows enriched with 01_06 gate-closure notes;
+  header updated.
+- Three per-dataset research logs + project-level CROSS entry added.
+
+### Removed
+
+- `.github/tmp/01_05/` directory and its 6 orphan plan files (T13 cleanup).
+
 ## [3.27.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-181)
 
 ### Removed
