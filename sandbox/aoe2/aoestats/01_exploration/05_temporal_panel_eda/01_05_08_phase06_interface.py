@@ -107,26 +107,36 @@ icc_rows = []
 if icc_path.exists():
     with open(icc_path) as f:
         icc_data = json.load(f)
-    # Use 50k as primary ICC
-    for key, val in icc_data.get("icc_by_sample_size", {}).items():
-        for metric_key in ["icc_lpm_observed_scale", "icc_anova_observed_scale"]:
+    # v1.0.4 structure: sensitivity axis is spec §6.2 cohort match-count
+    # thresholds, keyed `n_min{N}`. Each threshold produces a distinct cohort
+    # with its own ANOVA ICC + LMM ICC. Primary headline is ANOVA @ N=10
+    # (spec v1.0.4 §14(b)). Legacy `icc_by_sample_size` key is tolerated for
+    # backwards compatibility while any pre-v1.0.4 JSON remains in the tree.
+    primary_block = icc_data.get("icc_by_cohort_threshold") or icc_data.get("icc_by_sample_size", {})
+    for key, val in primary_block.items():
+        # Determine cohort_threshold for this row: new schema uses
+        # min_matches_in_ref_threshold; legacy used fixed 10.
+        row_cohort_threshold = int(val.get("min_matches_in_ref_threshold", 10))
+        for metric_key in ["icc_anova_observed_scale", "icc_lpm_observed_scale"]:
             mv = val.get(metric_key, {})
             icc_point = mv.get("icc_point")
-            if icc_point is not None:
-                icc_rows.append({
-                    "dataset_tag": "aoestats",
-                    "quarter": "2022-Q3Q4ref",
-                    "feature_name": "won",
-                    "metric_name": "icc",
-                    "metric_value": round(float(icc_point), 4),
-                    "reference_window_id": "2022-Q3-patch66692",
-                    "cohort_threshold": 10,
-                    "sample_size": val.get("n_obs", 0),
-                    "notes": (
-                        f"{metric_key}; sample={key}; "
-                        f"M7: {icc_data.get('m7_branch_v_limitation', '')[:80]}..."
-                    ),
-                })
+            if icc_point is None:
+                continue
+            icc_rows.append({
+                "dataset_tag": "aoestats",
+                "quarter": "2022-Q3Q4ref",
+                "feature_name": "won",
+                "metric_name": metric_key,
+                "metric_value": round(float(icc_point), 4),
+                "reference_window_id": "2022-Q3-patch66692",
+                "cohort_threshold": row_cohort_threshold,
+                "sample_size": val.get("n_obs", 0),
+                "notes": (
+                    f"spec v1.0.4 §6.2 cohort-threshold axis; key={key}; "
+                    f"{'primary' if metric_key == 'icc_anova_observed_scale' and row_cohort_threshold == 10 else 'diagnostic'}; "
+                    f"M7: {icc_data.get('m7_branch_v_limitation', '')[:80]}..."
+                ),
+            })
 
 df_icc = pd.DataFrame(icc_rows)
 print(f"ICC rows: {len(df_icc)}")

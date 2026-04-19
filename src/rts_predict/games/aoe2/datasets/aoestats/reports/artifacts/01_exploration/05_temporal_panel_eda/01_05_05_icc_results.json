@@ -1,71 +1,75 @@
 {
   "step": "01_05_05",
-  "spec": "reports/specs/01_05_preregistration.md@7e259dd8",
+  "spec": "reports/specs/01_05_preregistration.md@7e259dd8 (v1.0.4)",
   "reference_window": {
     "start": "2022-08-29",
     "end": "2022-10-27",
     "patch": 66692
   },
+  "primary_threshold": 10,
+  "primary_estimator": "icc_anova_observed_scale",
+  "primary_icc_point": 0.0268,
   "falsifier_verdict": "FALSIFIED",
-  "icc_by_sample_size": {
-    "n20k": {
-      "n_players_requested": 20000,
-      "n_players_actual": 744,
-      "n_obs": 7909,
-      "icc_lpm_observed_scale": {
-        "icc_point": 0.0259,
-        "ci_lo": 0.0232,
-        "ci_hi": 0.0286,
-        "method": "statsmodels MixedLM REML lbfgs",
-        "convergence_warning": null
-      },
+  "icc_by_cohort_threshold": {
+    "n_min5": {
+      "min_matches_in_ref_threshold": 5,
+      "n_players": 4325,
+      "n_obs": 30975,
       "icc_anova_observed_scale": {
-        "icc_point": 0.0268,
-        "ci_lo": 0.0145,
-        "ci_hi": 0.0407,
+        "icc_point": 0.0251,
+        "ci_lo": 0.0183,
+        "ci_hi": 0.0324,
         "method": "ANOVA Wu/Crespi/Wong 2012 CCT 33(5):869-880 + bootstrap CI Ukoumunne 2012 PMC3426610"
+      },
+      "icc_lpm_observed_scale": {
+        "icc_point": 0.0248,
+        "ci_lo": 0.0237,
+        "ci_hi": 0.0259,
+        "method": "statsmodels MixedLM REML lbfgs (diagnostic; spec v1.0.4 \u00a714(b) demotes LMM to diagnostic)",
+        "convergence_warning": null
       },
       "icc_glmm_latent_scale": null
     },
-    "n50k": {
-      "n_players_requested": 50000,
-      "n_players_actual": 744,
+    "n_min10": {
+      "min_matches_in_ref_threshold": 10,
+      "n_players": 744,
       "n_obs": 7909,
+      "icc_anova_observed_scale": {
+        "icc_point": 0.0268,
+        "ci_lo": 0.0148,
+        "ci_hi": 0.0387,
+        "method": "ANOVA Wu/Crespi/Wong 2012 CCT 33(5):869-880 + bootstrap CI Ukoumunne 2012 PMC3426610"
+      },
       "icc_lpm_observed_scale": {
         "icc_point": 0.0259,
         "ci_lo": 0.0232,
         "ci_hi": 0.0286,
-        "method": "statsmodels MixedLM REML lbfgs",
+        "method": "statsmodels MixedLM REML lbfgs (diagnostic; spec v1.0.4 \u00a714(b) demotes LMM to diagnostic)",
         "convergence_warning": null
-      },
-      "icc_anova_observed_scale": {
-        "icc_point": 0.0268,
-        "ci_lo": 0.0145,
-        "ci_hi": 0.0407,
-        "method": "ANOVA Wu/Crespi/Wong 2012 CCT 33(5):869-880 + bootstrap CI Ukoumunne 2012 PMC3426610"
       },
       "icc_glmm_latent_scale": null
     },
-    "n100k": {
-      "n_players_requested": 100000,
-      "n_players_actual": 744,
-      "n_obs": 7909,
-      "icc_lpm_observed_scale": {
-        "icc_point": 0.0259,
-        "ci_lo": 0.0232,
-        "ci_hi": 0.0286,
-        "method": "statsmodels MixedLM REML lbfgs",
-        "convergence_warning": null
-      },
+    "n_min20": {
+      "min_matches_in_ref_threshold": 20,
+      "n_players": 3,
+      "n_obs": 77,
       "icc_anova_observed_scale": {
-        "icc_point": 0.0268,
-        "ci_lo": 0.0145,
-        "ci_hi": 0.0407,
+        "icc_point": 0.0176,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0226,
         "method": "ANOVA Wu/Crespi/Wong 2012 CCT 33(5):869-880 + bootstrap CI Ukoumunne 2012 PMC3426610"
+      },
+      "icc_lpm_observed_scale": {
+        "icc_point": 0.0172,
+        "ci_lo": 0.0,
+        "ci_hi": 0.0449,
+        "method": "statsmodels MixedLM REML lbfgs (diagnostic; spec v1.0.4 \u00a714(b) demotes LMM to diagnostic)",
+        "convergence_warning": null
       },
       "icc_glmm_latent_scale": null
     }
   },
   "m7_branch_v_limitation": "ICC computed on `profile_id`; per INVARIANTS \u00a72, within-aoestats migration/collision unevaluable (branch v). aoec namespace bridge (VERDICT A 0.9960) supports stability but doesn't audit fragmentation. ICC = upper bound on per-player variance share.",
-  "random_seed": 42
+  "random_seed": 42,
+  "post_v1_0_4_restructure_note": "v1.0.4 (PR fix/01-05-aoestats-icc-cohort-axis): sensitivity axis changed from requested-sample-size {20k,50k,100k} (which degenerated to the 744-player population) to spec \u00a76.2 cohort match-count thresholds N \u2208 {5,10,20}. Primary headline is ANOVA @ N=10 per spec v1.0.4 \u00a714(b)."
 }

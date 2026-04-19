@@ -8,7 +8,7 @@
 - Column count: 9 (expected 9): OK
 - All dataset_tag == 'aoestats': True
 - No string 'NaN': True
-- Total rows: 133 (>= 64: True)
+- Total rows: 136 (>= 64: True)
 
 ## M5 note
 

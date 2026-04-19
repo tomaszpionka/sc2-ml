@@ -53,8 +53,11 @@ from rts_predict.games.aoe2.datasets.aoestats.analysis.variance_decomposition im
     compute_icc_anova,
     fit_random_intercept_lmm,
     compute_icc_lmm,
-    stratified_reservoir_sample,
 )
+# stratified_reservoir_sample is no longer used in this notebook post-v1.0.4
+# (sensitivity axis is now spec §6.2 cohort-threshold, not sample-group size;
+# each cohort is used whole, not sub-sampled). The helper is retained in the
+# analysis module for potential future use.
 
 ARTIFACTS_DIR = get_reports_dir("aoe2", "aoestats") / "artifacts" / "01_exploration" / "05_temporal_panel_eda"
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -65,14 +68,30 @@ print("Connected.")
 # %%
 REF_START = "2022-08-29"
 REF_END = "2022-10-27"
-REF_PATCH = 66692  # overviews_raw: actual patch ID for 2022-08-29 reference window
+REF_PATCH = 66692  # matches_raw: patch 66692 covers [2022-08-29, 2022-12-08]; spec §7 v1.0.3
 
-COHORT_SQL = f"""
+# Post-PR-6 (fix/01-05-aoestats-icc-cohort-axis) restructure:
+# Previous notebook requested player-count samples `{20k, 50k, 100k}`. aoestats's
+# single-patch reference window only has ~744 eligible players at the spec §6.3
+# default threshold N=10, so all three "sample sizes" degenerated to the full
+# 744-player population — producing three identical ICC rows labeled as a
+# sensitivity table. The 2026-04-19 pre-01_06 adversarial review flagged this
+# as DEFEND-IN-THESIS #2 (axis confusion between §6.2 cohort-threshold and
+# variance-decomposition sample-group size).
+#
+# v1.0.4 fix: the sensitivity axis is now spec §6.2 cohort match-count
+# thresholds `N ∈ {5, 10, 20}` (how many prior matches a player must have in
+# the reference window to be included). Each threshold produces a genuinely
+# different cohort. The primary ICC headline is N=10 (spec §6.3 default).
+MIN_MATCH_THRESHOLDS = [5, 10, 20]
+PRIMARY_THRESHOLD = 10  # spec §6.3 default
+
+COHORT_SQL_TEMPLATE = """
 WITH cohort AS (
   SELECT CAST(player_id AS BIGINT) AS player_id, COUNT(*) AS n_matches
   FROM matches_history_minimal
-  WHERE started_at BETWEEN TIMESTAMP '{REF_START}' AND TIMESTAMP '{REF_END}'
-  GROUP BY player_id HAVING COUNT(*) >= 10
+  WHERE started_at BETWEEN TIMESTAMP '{ref_start}' AND TIMESTAMP '{ref_end}'
+  GROUP BY player_id HAVING COUNT(*) >= {min_matches}
 )
 SELECT
   CAST(mhm.player_id AS BIGINT) AS player_id,
@@ -84,29 +103,32 @@ SELECT
 FROM matches_history_minimal mhm
 JOIN matches_1v1_clean m1v1 ON mhm.match_id = 'aoestats::' || m1v1.game_id
 JOIN cohort c ON CAST(mhm.player_id AS BIGINT) = c.player_id
-WHERE mhm.started_at BETWEEN TIMESTAMP '{REF_START}' AND TIMESTAMP '{REF_END}'
-LIMIT 2000000
+WHERE mhm.started_at BETWEEN TIMESTAMP '{ref_start}' AND TIMESTAMP '{ref_end}'
 """
-print("Loading reference cohort for ICC...")
-df_full = db.fetch_df(COHORT_SQL)
-print(f"Loaded {len(df_full):,} rows, {df_full['player_id'].nunique():,} unique players")
 
 # %%
-# Stratified reservoir samples per M3 (stratify by n_matches deciles)
+# Per-cohort-threshold ICC fit.
 icc_results = {}
-sample_sizes = [20_000, 50_000, 100_000]
 
-for n_players in sample_sizes:
-    print(f"\nSampling {n_players:,} players (stratified by n_matches_in_ref deciles)...")
-    df_samp = stratified_reservoir_sample(df_full, "player_id", n_players, stratify_by="n_matches_in_ref")
-    actual_n = df_samp["player_id"].nunique()
-    print(f"  Actual unique players: {actual_n:,}, rows: {len(df_samp):,}")
+for min_matches in MIN_MATCH_THRESHOLDS:
+    print(f"\n=== Cohort threshold N={min_matches} (spec §6.2) ===")
+    cohort_sql = COHORT_SQL_TEMPLATE.format(
+        ref_start=REF_START, ref_end=REF_END, min_matches=min_matches
+    )
+    df_cohort = db.fetch_df(cohort_sql)
+    n_players = df_cohort["player_id"].nunique()
+    n_rows = len(df_cohort)
+    print(f"  Cohort: {n_players:,} players, {n_rows:,} observations")
 
-    # Persist sample profile IDs (M3)
-    ids_df = pd.DataFrame({"player_id": df_samp["player_id"].unique()})
-    ids_path = ARTIFACTS_DIR / f"icc_sample_profile_ids_{n_players // 1000}k.csv"
+    # Persist cohort profile IDs for reproducibility (replaces the M3 reservoir-
+    # sample IDs used in v1.0.1 of this notebook).
+    ids_df = pd.DataFrame({"player_id": df_cohort["player_id"].unique()})
+    ids_path = ARTIFACTS_DIR / f"icc_cohort_profile_ids_n{min_matches}.csv"
     ids_df.to_csv(ids_path, index=False)
-    print(f"  Saved sample IDs: {ids_path}")
+    print(f"  Saved cohort IDs: {ids_path.name}")
+
+    df_samp = df_cohort  # whole cohort; no sub-sampling
+    actual_n = n_players
 
     # Primary: LMM (icc_lpm_observed_scale)
     icc_lmm_val, ci_lo_lmm, ci_hi_lmm = float("nan"), float("nan"), float("nan")
@@ -153,52 +175,56 @@ for n_players in sample_sizes:
             f"(inverted CI — check cluster-bootstrap resampling)"
         )
 
-    icc_results[f"n{n_players // 1000}k"] = {
-        "n_players_requested": n_players,
-        "n_players_actual": int(actual_n),
+    icc_results[f"n_min{min_matches}"] = {
+        "min_matches_in_ref_threshold": min_matches,
+        "n_players": int(actual_n),
         "n_obs": len(df_samp),
-        "icc_lpm_observed_scale": {
-            "icc_point": round(icc_lmm_val, 4) if not np.isnan(icc_lmm_val) else None,
-            "ci_lo": round(ci_lo_lmm, 4) if not np.isnan(ci_lo_lmm) else None,
-            "ci_hi": round(ci_hi_lmm, 4) if not np.isnan(ci_hi_lmm) else None,
-            "method": "statsmodels MixedLM REML lbfgs",
-            "convergence_warning": convergence_warning,
-        },
         "icc_anova_observed_scale": {
             "icc_point": round(icc_anova_val, 4) if not np.isnan(icc_anova_val) else None,
             "ci_lo": round(ci_lo_anova, 4) if not np.isnan(ci_lo_anova) else None,
             "ci_hi": round(ci_hi_anova, 4) if not np.isnan(ci_hi_anova) else None,
             "method": "ANOVA Wu/Crespi/Wong 2012 CCT 33(5):869-880 + bootstrap CI Ukoumunne 2012 PMC3426610",
         },
-        "icc_glmm_latent_scale": None,  # Optional -- skipped (convergence risk on Bernoulli)
+        "icc_lpm_observed_scale": {
+            "icc_point": round(icc_lmm_val, 4) if not np.isnan(icc_lmm_val) else None,
+            "ci_lo": round(ci_lo_lmm, 4) if not np.isnan(ci_lo_lmm) else None,
+            "ci_hi": round(ci_hi_lmm, 4) if not np.isnan(ci_hi_lmm) else None,
+            "method": "statsmodels MixedLM REML lbfgs (diagnostic; spec v1.0.4 §14(b) demotes LMM to diagnostic)",
+            "convergence_warning": convergence_warning,
+        },
+        "icc_glmm_latent_scale": None,  # Optional — skipped (compute-prohibitive on Bernoulli)
     }
 
 # %%
-# Falsifier check (use 50k primary)
-primary = icc_results.get("n50k", {})
-icc_anova_50k = primary.get("icc_anova_observed_scale", {}).get("icc_point", float("nan"))
-icc_lmm_50k = primary.get("icc_lpm_observed_scale", {}).get("icc_point", float("nan"))
+# Falsifier check — primary headline is ANOVA @ N=10 (spec v1.0.4 §14(b)).
+primary = icc_results.get(f"n_min{PRIMARY_THRESHOLD}", {})
+primary_anova = primary.get("icc_anova_observed_scale", {})
+primary_lmm = primary.get("icc_lpm_observed_scale", {})
+icc_anova_primary = primary_anova.get("icc_point") or float("nan")
+icc_lmm_primary = primary_lmm.get("icc_point") or float("nan")
 
-if icc_anova_50k is None:
-    icc_anova_50k = float("nan")
-if icc_lmm_50k is None:
-    icc_lmm_50k = float("nan")
+# Spec v1.0.4 §14(b): ANOVA is the cross-dataset headline. LMM is a diagnostic.
+primary_icc = icc_anova_primary if not np.isnan(icc_anova_primary) else icc_lmm_primary
 
-# Post-fix/01-05-aoestats-ngroups-ci-assert: fix dead ternary.
-# Previous `primary_icc = icc_anova_50k if ... else icc_anova_50k` was a
-# tautology — both branches returned ANOVA. Intent was: prefer LMM when
-# available, fall back to ANOVA. With the `.ngroups` bug fixed, LMM is now
-# actually available; use it as primary (spec §8 literal binding for aoestats
-# under v1.0.1 — this dataset is NOT on v1.0.2 yet).
-primary_icc = icc_lmm_50k if not np.isnan(icc_lmm_50k) else icc_anova_50k
-
-if primary_icc >= 0.05:
+if np.isnan(primary_icc):
+    verdict = "INCONCLUSIVE"
+elif primary_icc >= 0.05:
     verdict = "PASSED"
 else:
     verdict = "FALSIFIED"
-print(f"Primary ICC (50k, ANOVA): {icc_anova_50k}")
-print(f"Primary ICC (50k, LMM): {icc_lmm_50k}")
-print(f"Q6 skill-signal hypothesis: {verdict}")
+
+print(f"\n=== PRIMARY (N={PRIMARY_THRESHOLD}, ANOVA) ===")
+print(f"  icc_anova_observed_scale: {icc_anova_primary}")
+print(f"  icc_lpm_observed_scale (diagnostic): {icc_lmm_primary}")
+print(f"  Q6 skill-signal hypothesis: {verdict}")
+print("\n=== Cohort-threshold sensitivity ===")
+for k, v in icc_results.items():
+    print(
+        f"  N={v['min_matches_in_ref_threshold']:>2}: "
+        f"n_players={v['n_players']:,} "
+        f"ANOVA={v['icc_anova_observed_scale']['icc_point']} "
+        f"LMM={v['icc_lpm_observed_scale']['icc_point']}"
+    )
 
 # %%
 # M7 limitation paragraph (verbatim per critique)
@@ -211,45 +237,86 @@ M7_PARAGRAPH = (
 # Full ICC results JSON
 icc_json = {
     "step": "01_05_05",
-    "spec": "reports/specs/01_05_preregistration.md@7e259dd8",
+    "spec": "reports/specs/01_05_preregistration.md@7e259dd8 (v1.0.4)",
     "reference_window": {"start": REF_START, "end": REF_END, "patch": REF_PATCH},
+    "primary_threshold": PRIMARY_THRESHOLD,
+    "primary_estimator": "icc_anova_observed_scale",
+    "primary_icc_point": round(float(icc_anova_primary), 4) if not np.isnan(icc_anova_primary) else None,
     "falsifier_verdict": verdict,
-    "icc_by_sample_size": icc_results,
+    "icc_by_cohort_threshold": icc_results,
     "m7_branch_v_limitation": M7_PARAGRAPH,
     "random_seed": RANDOM_SEED,
+    "post_v1_0_4_restructure_note": (
+        "v1.0.4 (PR fix/01-05-aoestats-icc-cohort-axis): sensitivity axis "
+        "changed from requested-sample-size {20k,50k,100k} (which degenerated to "
+        "the 744-player population) to spec §6.2 cohort match-count thresholds "
+        "N ∈ {5,10,20}. Primary headline is ANOVA @ N=10 per spec v1.0.4 §14(b)."
+    ),
 }
 icc_path = ARTIFACTS_DIR / "01_05_05_icc_results.json"
 with open(icc_path, "w") as f:
     json.dump(icc_json, f, indent=2, default=str)
-print(f"Wrote {icc_path}")
+print(f"\nWrote {icc_path}")
 
 # Validation
-assert "icc_point" in primary.get("icc_anova_observed_scale", {}), "ICC missing icc_point"
+assert "icc_point" in primary.get("icc_anova_observed_scale", {}), "primary ICC missing icc_point"
+assert not np.isnan(icc_anova_primary), "ANOVA primary is NaN — check cohort-threshold pipeline"
 
 # %%
 # Summary MD
-md_text = f"""# Variance Decomposition ICC -- aoestats
+_sens_rows = "\n".join(
+    f"| N={v['min_matches_in_ref_threshold']:>2} | {v['n_players']:,} | "
+    f"{v['icc_anova_observed_scale']['icc_point']} | "
+    f"[{v['icc_anova_observed_scale']['ci_lo']}, {v['icc_anova_observed_scale']['ci_hi']}] | "
+    f"{v['icc_lpm_observed_scale']['icc_point']} |"
+    for v in icc_results.values()
+)
 
-**spec:** reports/specs/01_05_preregistration.md@7e259dd8
+md_text = f"""# Variance Decomposition ICC — aoestats
+
+**spec:** reports/specs/01_05_preregistration.md v1.0.4 §14(b) (ANOVA-primary headline)
 **Step:** 01_05_05
 
-## M7 Branch-v Limitation
+## Primary Result (ANOVA @ N={PRIMARY_THRESHOLD}, spec v1.0.4 §14(b))
 
-{M7_PARAGRAPH}
-
-## ICC Results (Primary: 50k stratified sample)
-
-| Method | ICC | CI lo | CI hi |
-|--------|-----|-------|-------|
-| LMM observed-scale | {icc_lmm_50k} | - | - |
-| ANOVA observed-scale (Wu/Crespi/Wong 2012) | {icc_anova_50k} | - | - |
-
-*Bootstrap CI per Ukoumunne et al. 2012 PMC3426610.*
-*Stratified reservoir by n_matches_in_reference_period deciles (critique M3).*
+| Metric | Value |
+|---|---|
+| `icc_anova_observed_scale` | **{icc_anova_primary}** |
+| `icc_anova_ci_low` | {primary_anova.get('ci_lo')} |
+| `icc_anova_ci_high` | {primary_anova.get('ci_hi')} |
+| `icc_lpm_observed_scale` (diagnostic) | {icc_lmm_primary} |
 
 ## Falsifier verdict
 
 **Q6 skill-signal hypothesis:** {verdict}
+(Hypothesis range per spec §8: ICC ∈ [0.05, 0.20]; ANOVA primary estimate
+{icc_anova_primary} is below the lower bound 0.05.)
+
+## Cohort-threshold sensitivity (§6.2)
+
+| Threshold | n_players | ANOVA ICC | ANOVA CI | LMM ICC (diagnostic) |
+|---|---|---|---|---|
+{_sens_rows}
+
+**Bootstrap CI** per Ukoumunne et al. 2012 PMC3426610 (n=200).
+**Cohort-threshold axis** (§6.2): each N produces a distinct cohort of
+players with ≥N prior matches in the reference window [2022-08-29,
+2022-10-27] (patch 66692). Larger N = smaller but more-active cohort.
+
+## Restructure note (v1.0.4)
+
+Prior to v1.0.4 this notebook requested player-count samples `{{20k, 50k,
+100k}}` via stratified reservoir sampling. aoestats's single-patch reference
+window has only ~744 eligible players at N=10, so all three "sample sizes"
+degenerated to the full population — producing three identical ICC rows
+labeled as sensitivity. The 2026-04-19 pre-01_06 adversarial review flagged
+this as DEFEND-IN-THESIS #2 (axis confusion between §6.2 cohort-threshold
+and variance-decomposition sample-group size). v1.0.4 realigns the
+sensitivity axis to spec §6.2 cohort match-count thresholds.
+
+## M7 Branch-v Limitation
+
+{M7_PARAGRAPH}
 """
 (ARTIFACTS_DIR / "01_05_05_icc_results.md").write_text(md_text)
 

@@ -19,6 +19,59 @@ merged to `master`.
 
 ### Removed
 
+## [3.22.0] — 2026-04-19 (PR #TBD: fix/01-05-aoestats-icc-cohort-axis)
+
+### Changed
+
+- **aoestats 01_05_05 ICC — sensitivity axis realigned to spec §6.2 cohort
+  thresholds.** Prior notebook used `sample_sizes = [20_000, 50_000, 100_000]`
+  via stratified reservoir sampling. aoestats's single-patch reference window
+  has only ~744 eligible players at N=10, so all three "sample sizes"
+  degenerated to the full population — producing three identical ICC rows
+  labeled as sensitivity. 2026-04-19 pre-01_06 adversarial review flagged
+  this as DEFEND-IN-THESIS #2 (axis confusion between §6.2 cohort-threshold
+  and variance-decomposition sample-group size).
+
+  v1.0.4 (this PR): the sensitivity axis is spec §6.2 cohort match-count
+  thresholds `N ∈ {5, 10, 20}` (the same `N` spec §6 uses for survivorship).
+  Each threshold produces a distinct cohort of players with ≥N prior
+  matches in the reference window. Primary headline is ANOVA @ N=10 (spec
+  §6.3 default + v1.0.4 §14(b) cross-dataset ANOVA convention).
+
+  Post-fix sensitivity table (genuinely informative):
+  - N=5: 4,325 players, ANOVA `0.0251 [0.0183, 0.0324]`, LMM `0.0248 [0.0237, 0.0259]`
+  - **N=10 (primary): 744 players, ANOVA `0.0268 [0.0148, 0.0387]`, LMM `0.0259 [0.0232, 0.0286]`**
+  - N=20: 3 players, ANOVA `0.0176 [0, 0.0226]`, LMM `0.0172 [0, 0.0449]`
+
+  Verdict unchanged: **FALSIFIED** (primary ANOVA 0.0268 below the
+  pre-registered [0.05, 0.20] hypothesis range). LMM and ANOVA now agree
+  to within 0.001 at each threshold; both CIs contain their point estimates
+  (sanity asserts pass from PR #167).
+
+  **N=20 scope note for Chapter 4:** only 3 players have ≥20 matches in
+  the patch-66692 reference window (9 weeks). This is a reference-window
+  artifact, not a dataset limitation — the single-patch §11 W3 binding
+  imposes the 9-week window, which limits how restrictive a cohort
+  threshold can be. Chapter 4 notes this as a scope-limitation footnote.
+
+  JSON schema change: `icc_by_sample_size` (old) renamed to
+  `icc_by_cohort_threshold`. Per-block key renamed from `n{K}k` to
+  `n_min{N}`. Legacy key name tolerated by the Phase 06 interface notebook
+  for transitional backwards compatibility.
+
+- **aoestats Phase 06 interface CSV** now emits 6 ICC rows (3 cohort
+  thresholds × 2 estimators) instead of 3 (one per sample size, mixing
+  estimators). Each row carries the correct `cohort_threshold` value
+  (5, 10, or 20) instead of a blanket 10. `metric_name` values are now
+  the specific estimator names (`icc_anova_observed_scale`,
+  `icc_lpm_observed_scale`) instead of the generic `icc`.
+
+### Removed
+
+- Stale cohort artifact files `icc_sample_profile_ids_{20k,50k,100k}.csv`
+  (superseded by `icc_cohort_profile_ids_n{5,10,20}.csv` — one ID list
+  per cohort threshold).
+
 ## [3.21.5] — 2026-04-19 (PR #TBD: fix/01-05-spec-v1-0-4-icc-anova-primary)
 
 ### Changed
