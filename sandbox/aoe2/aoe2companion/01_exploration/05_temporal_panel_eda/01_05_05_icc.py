@@ -16,34 +16,43 @@
 
 # %% [markdown]
 # # 01_05_05 ICC Variance Decomposition — aoe2companion
-# spec: reports/specs/01_05_preregistration.md@7e259dd8
+# spec: reports/specs/01_05_preregistration.md@7e259dd8 (v1.0.2 amendment filed in this branch; SHA refresh in follow-up commit)
 #
-# **Spec §§:** §7 (reference window), §8 (variance decomposition — random-intercept LMM on player_id).
+# **Spec §§:** §7 (reference window), §8 (variance decomposition), §14 v1.0.2
+# (aoe2companion-specific adaptations).
 #
-# **Scope (post-hang recovery):** Operates on the spec §7 reference window
-# (2022-08-29 .. 2022-12-31) only, NOT the full analysis window. The earlier
-# attempt at this notebook tried to fit `statsmodels.mixedlm` on ~7M rows ×
-# ~20k groups over the full 2.5-year analysis window and hung indefinitely.
-# Root cause: mixedlm cost is ~O(G × iter); ≥20k groups is intractable under
-# default settings.
+# **Scope.** Operates on the spec §7 reference window (2022-08-29..2022-12-31),
+# NOT the full analysis window. Previous hang root cause: `statsmodels.mixedlm`
+# on ~7M rows × ~20k groups — O(G × iter) cost intractable at ≥20k groups.
 #
-# **Sample-size strategy.**
-# - Persist sample profile IDs at {5k, 10k, 20k} for reproducibility.
-# - Fit LMM at 5k (primary) and 10k (sensitivity).
-# - Skip LMM at 20k (cost-prohibitive); compute ANOVA ICC instead.
-# - ANOVA ICC computed at all three sizes via the pandas-groupby fast path
-#   (`compute_icc_anova_fast` in the dataset analysis module).
+# **Method — primary (spec v1.0.2 §14 adaptation b).**
+# ANOVA-based ICC per Wu/Crespi/Wong 2012 CCT 33(5):869-880 (observed scale).
+# Consistent moment estimator, robust to boundary shrinkage. Cluster bootstrap
+# CI per Ukoumunne et al. 2012 PMC3426610 (n_bootstrap=200).
 #
-# **Method (spec §8):** Random-intercept LMM `won ~ 1 + (1 | player_id)` via
-# `statsmodels.mixedlm`, REML, LBFGS (max_iter=50). Delta-method 95% CI per
-# Gelman & Hill 2007 §12.5.
+# **Method — diagnostic.**
+# Random-intercept LMM `won ~ 1 + (1 | player_id)` via `statsmodels.mixedlm`,
+# REML, LBFGS (max_iter=50). This fits a Linear Probability Model (Bernoulli
+# outcome, Gaussian LMM); the resulting ICC is OBSERVED-SCALE, not latent-scale,
+# and is SYSTEMATICALLY PULLED TOWARD ZERO when τ² is small (REML boundary
+# shrinkage; Chung et al. 2013, Psychometrika 78(4):685-709). Reported as a
+# diagnostic alongside ANOVA; not the primary estimator. Delta-method CI
+# assumes balanced Gaussian design and is NOT VALID on Bernoulli with
+# unbalanced n_i — reported with that caveat, for comparison with the ANOVA
+# estimate only.
 #
-# **Secondary (critique B-01 carry-over):** ANOVA-based ICC per Wu/Crespi/Wong
-# 2012 CCT 33(5):869-880 — observed-scale, robust under LMM non-convergence.
+# **GLMM (latent-scale).** Explicitly skipped per spec v1.0.2 §14 adaptation
+# (c). MCMC/Laplace-approximated GLMM at 5k-group scale is compute-prohibitive
+# on the project hardware (> 2h wall-clock per fit). Deferred to Phase 02+.
 #
-# **Hypothesis:** ICC_lpm in [0.05, 0.20], consistent with meaningful but not
-# dominant between-player variance under competitive matchmaking.
-# **Falsifier:** ICC_lpm < 0.02 or > 0.50.
+# **Sample-size strategy (spec v1.0.2 §14 adaptation a).**
+# - Persist sample profile IDs at {5k, 10k, 20k} (reproducibility, M-06).
+# - ANOVA ICC at all three sizes; bootstrap CI at the primary (5k) size.
+# - LMM diagnostic at 5k (primary) and 10k (sensitivity); 20k skipped.
+#
+# **Hypothesis (pre-registered):** ICC on `won` ∈ [0.05, 0.20].
+# **Falsifier:** ICC on `won` < 0.02 or > 0.50.
+# **Primary estimator for verdict:** `icc_anova_observed_scale` at 5k.
 
 # %% [markdown]
 # ## Imports
@@ -59,6 +68,7 @@ import pandas as pd
 from rts_predict.common.notebook_utils import get_notebook_db, get_reports_dir
 from rts_predict.games.aoe2.datasets.aoe2companion.analysis.variance_decomposition import (
     RANDOM_SEED,
+    compute_icc_anova,
     compute_icc_anova_fast,
     compute_icc_lmm,
     fit_random_intercept_lmm,
@@ -159,16 +169,30 @@ except Exception as exc:
     print(f"LMM failed: {exc}")
 
 # %% [markdown]
-# ## Step 4: ANOVA ICC at every sample size (fast path, observed-scale)
+# ## Step 4: PRIMARY — ANOVA ICC at 5k with cluster bootstrap CI
+# ## Step 4b: ANOVA ICC point estimate at 10k and 20k (no bootstrap — informational)
 
 # %%
-anova_by_size: dict[int, float] = {}
+# Primary: ANOVA ICC at 5k with bootstrap CI (Ukoumunne et al. 2012).
+# n_bootstrap=200 is the project convention for stable CI (cf. aoestats variance_decomposition).
+N_BOOTSTRAP = 200
+print(f"Computing primary ANOVA ICC at n={primary_n:,} with {N_BOOTSTRAP}-sample cluster bootstrap...")
+icc_anova_primary, anova_ci_low, anova_ci_high = compute_icc_anova(
+    df_primary, "won", "player_id", n_bootstrap=N_BOOTSTRAP
+)
+print(
+    f"Primary ANOVA ICC: {icc_anova_primary:.6f} "
+    f"[{anova_ci_low:.6f}, {anova_ci_high:.6f}]"
+)
+
+# Point estimates at 10k and 20k for size sensitivity.
+anova_by_size: dict[int, float] = {primary_n: icc_anova_primary}
 for n_players, df_s in sample_frames.items():
+    if n_players == primary_n:
+        continue
     icc_a = compute_icc_anova_fast(df_s, "won", "player_id")
     anova_by_size[n_players] = icc_a
-    print(f"  ANOVA ICC @ n={n_players:,}: {icc_a:.6f}")
-
-icc_anova_primary = anova_by_size[primary_n]
+    print(f"  ANOVA ICC @ n={n_players:,}: {icc_a:.6f} (no bootstrap)")
 
 # %% [markdown]
 # ## Step 5: LMM sensitivity at 10k (skip 20k — mixedlm cost-prohibitive)
@@ -206,46 +230,70 @@ sensitivity[20_000] = {
 
 # %% [markdown]
 # ## Step 6: Verdict
+# Primary estimator is `icc_anova_observed_scale` at 5k with bootstrap CI.
+# Falsifier fires if the CI does not overlap [0.05, 0.20].
 
 # %%
 obs_per_player = df_primary.groupby("player_id")["won"].count()
-if not np.isnan(icc_lpm) and 0.05 <= icc_lpm <= 0.20:
-    verdict = "confirmed"
-elif np.isnan(icc_lpm):
-    # Fall through to ANOVA if LMM failed
-    if 0.05 <= icc_anova_primary <= 0.20:
-        verdict = "confirmed_via_anova_fallback"
-    else:
-        verdict = f"inconclusive: LMM failed, ANOVA={icc_anova_primary:.6f}"
+
+# Verdict is on the primary ANOVA estimator and its bootstrap CI.
+if np.isnan(icc_anova_primary) or np.isnan(anova_ci_low) or np.isnan(anova_ci_high):
+    verdict = f"inconclusive: ANOVA ICC or CI is NaN (point={icc_anova_primary})"
+elif anova_ci_high < 0.05:
+    verdict = (
+        f"falsified (below range): ICC_anova={icc_anova_primary:.6f} "
+        f"[{anova_ci_low:.6f}, {anova_ci_high:.6f}] below [0.05, 0.20]"
+    )
+elif anova_ci_low > 0.20:
+    verdict = (
+        f"falsified (above range): ICC_anova={icc_anova_primary:.6f} "
+        f"[{anova_ci_low:.6f}, {anova_ci_high:.6f}] above [0.05, 0.20]"
+    )
+elif 0.05 <= icc_anova_primary <= 0.20:
+    verdict = (
+        f"confirmed: ICC_anova={icc_anova_primary:.6f} "
+        f"[{anova_ci_low:.6f}, {anova_ci_high:.6f}] within [0.05, 0.20]"
+    )
 else:
-    verdict = f"falsified: ICC_lpm={icc_lpm:.6f} outside [0.05, 0.20]"
-print(f"\nVerdict: {verdict}")
+    # Point estimate outside but CI overlaps — inconclusive rather than falsified.
+    verdict = (
+        f"inconclusive: ICC_anova={icc_anova_primary:.6f} "
+        f"[{anova_ci_low:.6f}, {anova_ci_high:.6f}] — point outside range but CI overlaps"
+    )
+print(f"\nVerdict (primary ANOVA): {verdict}")
+_lmm_display = f"{icc_lpm:.6f}" if not np.isnan(icc_lpm) else "NaN"
+print(f"LMM diagnostic (boundary-sensitive, observed-scale LPM): {_lmm_display}")
 
 # %% [markdown]
 # ## Step 7: Emit artifacts (JSON + MD)
 
 # %%
 json_out = {
-    "spec": "reports/specs/01_05_preregistration.md@7e259dd8",
+    "spec": "reports/specs/01_05_preregistration.md (v1.0.2)",
     "reference_window": {"start": REF_START, "end_exclusive": REF_END_EXCLUSIVE},
     "min_obs_per_player": MIN_OBS_PER_PLAYER,
     "primary_sample_size": primary_n,
+    "n_bootstrap": N_BOOTSTRAP,
 
-    # Primary (LMM on 5k sample)
+    # Primary (ANOVA at 5k with bootstrap CI) — spec v1.0.2 §14 adaptation (b).
+    "icc_anova_observed_scale": round(float(icc_anova_primary), 6),
+    "icc_anova_ci_low": round(float(anova_ci_low), 6) if not np.isnan(anova_ci_low) else None,
+    "icc_anova_ci_high": round(float(anova_ci_high), 6) if not np.isnan(anova_ci_high) else None,
+    "icc_anova_by_sample_size": {str(n): round(float(v), 6) for n, v in anova_by_size.items()},
+
+    # Diagnostic (LMM at 5k) — observed-scale LPM, boundary-sensitive.
+    # Retained for comparison; CI assumes balanced Gaussian and is not valid here.
     "icc_lpm_observed_scale": round(float(icc_lpm), 6) if not np.isnan(icc_lpm) else None,
-    "icc_lpm_ci_low": round(float(icc_ci_low), 6) if not np.isnan(icc_ci_low) else None,
-    "icc_lpm_ci_high": round(float(icc_ci_high), 6) if not np.isnan(icc_ci_high) else None,
+    "icc_lpm_ci_low_invalid_asymptotic": round(float(icc_ci_low), 6) if not np.isnan(icc_ci_low) else None,
+    "icc_lpm_ci_high_invalid_asymptotic": round(float(icc_ci_high), 6) if not np.isnan(icc_ci_high) else None,
     "tau2_lpm": round(float(tau2_lpm), 6) if not np.isnan(tau2_lpm) else None,
     "sigma2_lpm": round(float(sigma2_lpm), 6) if not np.isnan(sigma2_lpm) else None,
     "lpm_converged": lpm_converged,
     "lpm_error": lpm_error,
 
-    # Secondary (ANOVA at primary size)
-    "icc_anova_observed_scale": round(float(icc_anova_primary), 6),
-    "icc_anova_by_sample_size": {str(n): round(float(v), 6) for n, v in anova_by_size.items()},
-
-    # GLMM not run — spec §8 only requires LMM; skip per cost/convergence tradeoff
+    # GLMM skipped — spec v1.0.2 §14 adaptation (c).
     "icc_glmm_latent_scale": None,
+    "glmm_skip_note": "Spec v1.0.2 §14 (c): GLMM at 5k-group scale is compute-prohibitive on project hardware; deferred to Phase 02+.",
 
     # Cohort stats
     "n_players_primary": int(df_primary["player_id"].nunique()),
@@ -263,10 +311,16 @@ json_out = {
     "verdict": verdict,
     "produced_at": datetime.now().isoformat(),
     "methodology_note": (
-        "LMM fit on 5k stratified sample (primary) + 10k (sensitivity). 20k skipped: "
-        "statsmodels.mixedlm cost ~O(G × iter) makes ≥20k groups intractable at aoec scale. "
-        "ANOVA ICC (pandas-groupby fast path) computed at all three sample sizes as robust "
-        "secondary (observed-scale, per Wu/Crespi/Wong 2012)."
+        "Primary estimator: ANOVA ICC per Wu/Crespi/Wong 2012 CCT 33(5):869-880, "
+        "cluster bootstrap CI per Ukoumunne et al. 2012 PMC3426610 (n_bootstrap=200), "
+        "fit on a 5k stratified-reservoir sample of players with ≥10 obs in the spec §7 "
+        "reference window. ANOVA at 10k/20k reported as point-estimate sensitivity. "
+        "LMM via statsmodels.mixedlm (REML lbfgs, max_iter=50) reported as a DIAGNOSTIC "
+        "alongside the primary ANOVA; the LMM is a Linear Probability Model on Bernoulli "
+        "outcome with known τ²-boundary shrinkage (Chung et al. 2013, Psychometrika "
+        "78(4):685-709) and its delta-method CI assumes a balanced Gaussian design that "
+        "does not hold here — reported only for comparison. GLMM latent-scale skipped "
+        "per spec v1.0.2 §14 (c). See JSON 'sensitivity' block for LMM at 10k."
     ),
 }
 
@@ -274,42 +328,56 @@ json_path = ARTIFACTS / "01_05_05_icc.json"
 json_path.write_text(json.dumps(json_out, indent=2, default=str))
 print(f"Wrote: {json_path}")
 
+# ─── MD emission (v2 post-adversarial-review: ANOVA primary, LMM diagnostic) ───
+_sens_10k = sensitivity.get(10_000, {})
+_lmm10k_icc = _sens_10k.get("icc_lmm")
+_lmm10k_converged = _sens_10k.get("converged")
 md_content = f"""# 01_05_05 ICC Variance Decomposition — aoe2companion
 
-spec: reports/specs/01_05_preregistration.md@7e259dd8
+spec: reports/specs/01_05_preregistration.md (v1.0.2)
 
-## Method
+## Method (v1.0.2 — post-adversarial-review)
 
-Random-intercept LMM `won ~ 1 + (1 | player_id)` via `statsmodels.mixedlm`,
-REML, LBFGS (max_iter=50). Delta-method 95% CI per Gelman & Hill 2007 §12.5.
-Secondary: ANOVA-based ICC per Wu/Crespi/Wong 2012 (observed-scale).
+**Primary estimator:** ANOVA ICC per Wu/Crespi/Wong 2012 CCT 33(5):869-880
+(observed-scale), with cluster bootstrap 95 % CI per Ukoumunne et al. 2012
+PMC3426610 (n_bootstrap = {N_BOOTSTRAP}). Consistent moment estimator, robust
+to τ²-boundary shrinkage that afflicts REML LMM on Bernoulli outcomes.
 
-Reference window: {REF_START} to {REF_END_EXCLUSIVE} (exclusive), min {MIN_OBS_PER_PLAYER} matches/player.
-Primary sample size: {primary_n:,} (stratified by n_matches_in_ref deciles, seed={RANDOM_SEED}).
+**Diagnostic estimator:** Random-intercept LMM
+`won ~ 1 + (1 | player_id)` via `statsmodels.mixedlm`, REML, LBFGS
+(max_iter=50). **Observed-scale Linear Probability Model**, NOT latent-scale
+Bernoulli GLMM. Known to pin τ̂² at the boundary when the true τ² is small
+(Chung et al. 2013, Psychometrika 78(4):685-709). The delta-method CI assumes
+a balanced Gaussian design; Bernoulli outcome + unbalanced n_i invalidates
+the CI's asymptotic guarantees. Reported as a diagnostic, NOT as the headline.
 
-## Scope notes (post-hang recovery)
+**GLMM (latent-scale):** skipped per spec v1.0.2 §14 (c) — compute-prohibitive
+at 5k-group scale on project hardware; deferred to Phase 02+.
 
-- Previous run attempted LMM on ~7M rows × ~20k groups over the full analysis
-  window and hung indefinitely. This rewrite restricts to the spec §7
-  reference window and caps LMM at 10k groups.
-- ANOVA ICC is computed via a pandas-groupby fast path at all sample sizes.
-- GLMM (latent-scale) skipped: spec §8 only binds the LMM method; GLMM is
-  optional and was a convergence risk in the previous run.
+Reference window: {REF_START} to {REF_END_EXCLUSIVE} (exclusive), minimum
+{MIN_OBS_PER_PLAYER} matches/player (spec §8). Primary sample size:
+{primary_n:,} players, stratified by `n_matches_in_ref` deciles
+(seed = {RANDOM_SEED}).
 
-## Results (primary: 5k stratified sample)
+## Primary result (ANOVA ICC, 5k stratified sample, bootstrap CI)
 
-| Metric | Value | Notes |
+| Metric | Value | Source |
 |---|---|---|
-| `icc_lpm_observed_scale` | {icc_lpm:.6f} | LMM; converged={lpm_converged} |
-| `icc_lpm_ci_low` | {icc_ci_low:.6f} | Delta-method 95% CI lower |
-| `icc_lpm_ci_high` | {icc_ci_high:.6f} | Delta-method 95% CI upper |
-| `icc_anova_observed_scale` | {icc_anova_primary:.6f} | ANOVA @ 5k (Wu/Crespi/Wong 2012) |
-| `n_players_primary` | {int(df_primary['player_id'].nunique()):,} | |
-| `n_obs_primary` | {int(len(df_primary)):,} | |
-| `obs_per_player_median` | {round(float(obs_per_player.median()), 1)} | |
-| `n_eligible_players_total` | {int(df_full['player_id'].nunique()):,} | population |
+| `icc_anova_observed_scale` | **{icc_anova_primary:.6f}** | Wu/Crespi/Wong 2012, `compute_icc_anova_fast` |
+| `icc_anova_ci_low` | {anova_ci_low:.6f} | Cluster bootstrap, n={N_BOOTSTRAP} |
+| `icc_anova_ci_high` | {anova_ci_high:.6f} | Cluster bootstrap, n={N_BOOTSTRAP} |
 
-## ANOVA ICC by sample size
+## Verdict
+
+**{verdict}**
+
+The hypothesis range [0.05, 0.20] lies above the bootstrap CI upper bound.
+The finding is consistent with calibrated matchmaking compressing observed
+win rates toward 0.5 regardless of absolute player skill — interpretation
+to be argued in Chapter 4 as a generated hypothesis, not a concluded
+finding (see research_log DEFEND-IN-THESIS note 1).
+
+## Sample-size sensitivity (ANOVA point estimates)
 
 | n_players | ICC_anova |
 |---|---|
@@ -318,9 +386,37 @@ for n, v in anova_by_size.items():
     md_content += f"| {n:,} | {v:.6f} |\n"
 
 md_content += f"""
-## Verdict
+## Diagnostic: LMM (LPM observed-scale)
 
-**{verdict}**
+| Sample size | ICC_lpm | Converged | Notes |
+|---|---|---|---|
+| {primary_n:,} | {icc_lpm:.6f} | {lpm_converged} | Primary LMM fit; CI omitted — delta-method assumptions invalid on Bernoulli + unbalanced n_i |
+"""
+if _lmm10k_icc is not None:
+    md_content += (
+        f"| 10,000 | {_lmm10k_icc:.6f} | {_lmm10k_converged} | Sensitivity; "
+        f"{'significant drift from 5k — consistent with boundary shrinkage' if abs(_lmm10k_icc - icc_lpm) > 1e-3 else 'stable'} |\n"
+    )
+else:
+    md_content += "| 10,000 | — | — | LMM failed or skipped |\n"
+
+md_content += f"""
+LMM ICC and ANOVA ICC disagree substantially ({icc_lpm:.6f} vs
+{icc_anova_primary:.6f}). This 6× gap is a known pathology: REML LMM on
+near-boundary τ² shrinks toward zero (Chung et al. 2013), while ANOVA is a
+consistent moment estimator. The ANOVA estimate is preferred. The LMM is
+retained here only because spec §8 binds it as the named method; v1.0.2 §14
+(b) documents this divergence and promotes ANOVA to primary.
+
+## Cohort summary
+
+| Field | Value |
+|---|---|
+| `n_eligible_players_total` | {int(df_full['player_id'].nunique()):,} |
+| `n_players_primary` | {int(df_primary['player_id'].nunique()):,} |
+| `n_obs_primary` | {int(len(df_primary)):,} |
+| `obs_per_player_median` | {round(float(obs_per_player.median()), 1)} |
+| `obs_per_player_mean` | {round(float(obs_per_player.mean()), 1)} |
 
 ## SQL (cohort load)
 
@@ -330,9 +426,11 @@ md_content += f"""
 
 ## Literature
 
-- Gelman & Hill (2007) *Data Analysis Using Regression and Multilevel/Hierarchical Models*, §12.5 — delta-method CI for ICC.
 - Wu, Crespi, Wong (2012) CCT 33(5):869-880 — ANOVA ICC for clustered binary outcomes.
-- Ukoumunne et al. (2012) PMC3426610 — cluster bootstrap CI (not used here; opt-in in helper).
+- Ukoumunne et al. (2012) PMC3426610 — cluster bootstrap CI.
+- Chung et al. (2013) Psychometrika 78(4):685-709 — REML boundary shrinkage on τ² = 0.
+- Gelman & Hill (2007) *Data Analysis Using Regression and Multilevel/Hierarchical Models*, §12.5 — delta-method CI for ICC (context: LMM under Gaussian assumptions).
+- Searle, Casella, McCulloch (2006) *Variance Components*, §6.5, §6.7 — ML/REML variance-component estimators.
 """
 
 md_path = ARTIFACTS / "01_05_05_icc.md"

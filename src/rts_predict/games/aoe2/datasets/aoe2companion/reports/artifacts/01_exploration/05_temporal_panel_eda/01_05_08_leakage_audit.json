@@ -2,12 +2,29 @@
   "checks": [
     {
       "id": "check_1_temporal_bin_edges",
-      "description": "M-01 fix: Assert all ref-period rows have started_at in [2022-08-29, 2023-01-01) and all tested frequencies are in their declared quarter. NOT vacuous match-id disjointness check.",
+      "description": "v2 post-PR #162 adversarial-review fix: the v1 Check 1a/1b had a mutually-exclusive WHERE clause (A \u2227 B) \u2227 (\u00acA \u2228 \u00acB) that returned 0 regardless of data. v2 replaces with three substantive checks: (1a) ref-cohort MIN/MAX in bounds; (1b) quarter-label consistency; (1c) PSI reference SQL cites spec \u00a77 timestamp bounds verbatim.",
       "status": "PASS",
-      "future_leak_count": 0,
-      "test_quarter_violations": 0,
-      "sql_ref_bound": "\nSELECT COUNT(*) AS rows_in_ref_outside_bound\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2022-08-29'\n  AND started_at <  TIMESTAMP '2023-01-01'\n  AND (started_at < TIMESTAMP '2022-08-29' OR started_at >= TIMESTAMP '2023-01-01')\n",
-      "sql_test_bound": "\nSELECT quarter, n, n_outside_bound\nFROM (\n    SELECT\n        CONCAT(CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR), '-Q',\n               CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR) AS quarter,\n        COUNT(*) AS n,\n        COUNT(*) FILTER (\n            WHERE started_at < TIMESTAMP '2023-01-01'\n               OR started_at >= TIMESTAMP '2025-01-01'\n        ) AS n_outside_bound\n    FROM matches_history_minimal\n    WHERE started_at >= TIMESTAMP '2023-01-01'\n      AND started_at <  TIMESTAMP '2025-01-01'\n    GROUP BY 1\n) sub\nWHERE n_outside_bound > 0\n"
+      "check_1a_ref_range": {
+        "ref_min": "2022-08-29 00:00:31",
+        "ref_max": "2022-12-31 23:59:58",
+        "ref_count": 4013826,
+        "pass": true
+      },
+      "check_1b_quarter_consistency": {
+        "n_quarters_checked": 8,
+        "violations": [],
+        "pass": true
+      },
+      "check_1c_psi_ref_sql_cites_bounds": {
+        "required_tokens": [
+          "TIMESTAMP '2022-08-29'",
+          "TIMESTAMP '2023-01-01'"
+        ],
+        "missing_tokens": [],
+        "pass": true
+      },
+      "sql_check_1a": "\nSELECT\n    MIN(started_at) AS ref_min,\n    MAX(started_at) AS ref_max,\n    COUNT(*) AS ref_count\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2022-08-29'\n  AND started_at <  TIMESTAMP '2023-01-01'\n",
+      "sql_check_1b": "\nSELECT\n    derived_quarter,\n    MIN(started_at) AS qmin,\n    MAX(started_at) AS qmax,\n    COUNT(*) AS n\nFROM (\n    SELECT\n        started_at,\n        CONCAT(\n            CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR),\n            '-Q',\n            CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR\n        ) AS derived_quarter\n    FROM matches_history_minimal\n    WHERE started_at >= TIMESTAMP '2023-01-01'\n      AND started_at <  TIMESTAMP '2025-01-01'\n)\nGROUP BY derived_quarter\nORDER BY derived_quarter\n"
     },
     {
       "id": "check_2_post_game_token_scan",
@@ -40,5 +57,5 @@
   "reference_period_row_hash": "f9aa56bb5f22e247615fb9e33f30e688",
   "all_checks_pass": true,
   "verdict": "PASS",
-  "produced_at": "2026-04-19T10:08:45.762340"
+  "produced_at": "2026-04-19T10:54:41.598725"
 }

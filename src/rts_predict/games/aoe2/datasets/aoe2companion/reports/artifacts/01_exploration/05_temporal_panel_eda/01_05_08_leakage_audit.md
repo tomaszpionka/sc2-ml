@@ -6,20 +6,25 @@ spec: reports/specs/01_05_preregistration.md@7e259dd8
 
 | Check | Status | Description |
 |---|---|---|
-| check_1_temporal_bin_edges | PASS | M-01 fix: Assert all ref-period rows have started_at in [2022-08-29, 2023-01-01)... |
+| check_1_temporal_bin_edges | PASS | v2 post-PR #162 adversarial-review fix: the v1 Check 1a/1b had a mutually-exclus... |
 | check_2_post_game_token_scan | PASS | AST/regex scan of T03/T04 notebooks for POST_GAME tokens in pre-game feature sel... |
 | check_3_normalization_window | PASS | Assert T03 JSON frozen_reference_edges.ref_start == '2022-08-29' and ref_end == ... |
 
 **Overall verdict: PASS**
 
-## M-01 Deviation Note
+## Check 1 Redesign Note (v2, post-PR #162 adversarial review)
 
-Original spec §9 Query 1: vacuous match-id disjointness check (tautology — match_id is PK).
-M-01 fix: reframed as meaningful bin-edge temporal check.
-- Check 1a: All reference-period rows (used for frozen PSI bin edges) have started_at in [2022-08-29, 2023-01-01)
-- Check 1b: All tested-period rows are within their declared quarter windows
+The v1 implementation of Check 1a/1b (pre-fix/01-05-aoec-adversarial-followup)
+had a mutually-exclusive WHERE clause `(A ∧ B) ∧ (¬A ∨ ¬B)` that returned 0
+regardless of data — a tautology posing as a gate. The adversarial reviewer
+of PR #162 flagged this as BLOCKER 2. The v2 replacement below provides three
+substantive sub-checks.
 
-**Result:** ref_outside_bound=0, test_outside_quarters=0
+- **Check 1a (ref-cohort range integrity):** `min(started_at) = 2022-08-29 00:00:31`,
+  `max(started_at) = 2022-12-31 23:59:58`, `count = 4,013,826` → PASS
+- **Check 1b (quarter-label consistency):** 8 quarters checked,
+  0 violations → PASS
+- **Check 1c (PSI ref SQL cites §7 bounds):** missing tokens = `[]` → PASS
 
 ## Check 2: POST_GAME token scan
 
@@ -41,35 +46,40 @@ Use for reproducibility verification across DB rebuilds (reservoir-sample caveat
 
 ## SQL
 
-### Check 1a
+### Check 1a (ref-range integrity)
 ```sql
 
-SELECT COUNT(*) AS rows_in_ref_outside_bound
+SELECT
+    MIN(started_at) AS ref_min,
+    MAX(started_at) AS ref_max,
+    COUNT(*) AS ref_count
 FROM matches_history_minimal
 WHERE started_at >= TIMESTAMP '2022-08-29'
   AND started_at <  TIMESTAMP '2023-01-01'
-  AND (started_at < TIMESTAMP '2022-08-29' OR started_at >= TIMESTAMP '2023-01-01')
 
 ```
 
-### Check 1b
+### Check 1b (quarter-label consistency)
 ```sql
 
-SELECT quarter, n, n_outside_bound
+SELECT
+    derived_quarter,
+    MIN(started_at) AS qmin,
+    MAX(started_at) AS qmax,
+    COUNT(*) AS n
 FROM (
     SELECT
-        CONCAT(CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR), '-Q',
-               CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR) AS quarter,
-        COUNT(*) AS n,
-        COUNT(*) FILTER (
-            WHERE started_at < TIMESTAMP '2023-01-01'
-               OR started_at >= TIMESTAMP '2025-01-01'
-        ) AS n_outside_bound
+        started_at,
+        CONCAT(
+            CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR),
+            '-Q',
+            CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR
+        ) AS derived_quarter
     FROM matches_history_minimal
     WHERE started_at >= TIMESTAMP '2023-01-01'
       AND started_at <  TIMESTAMP '2025-01-01'
-    GROUP BY 1
-) sub
-WHERE n_outside_bound > 0
+)
+GROUP BY derived_quarter
+ORDER BY derived_quarter
 
 ```

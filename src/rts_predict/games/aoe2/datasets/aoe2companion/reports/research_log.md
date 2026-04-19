@@ -8,6 +8,160 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-19 — [Phase 01 / 01_05 Adversarial Follow-Up] Post-PR #162 Remediation
+
+**Category:** A (science)
+**Dataset:** aoe2companion
+**Branch:** fix/01-05-aoec-adversarial-followup
+**Spec:** reports/specs/01_05_preregistration.md (bumped v1.0.1 → v1.0.2 in this branch)
+**Scope:** Three BLOCKERS raised by `reviewer-adversarial` post-merge of PR #162.
+Fixes applied here, not postponed. No change to the scientific conclusion
+(ICC hypothesis remains falsified); the evidentiary chain is repaired.
+
+### Adversarial-review findings (reviewer-adversarial transcript, 2026-04-19)
+
+**BLOCKER 1 — Spec §13 deviation procedure bypassed (PR #162).**
+The PR deviated from §8 by capping LMM sample size, skipping GLMM, and
+renaming `icc_mixedlm` → `icc_lpm` — but did not (a) file a CROSS
+research-log deviation note, (b) add a §14 amendment, or (c) bump
+`spec_version`. All three steps are mandatory per spec §13.
+
+**BLOCKER 2 — Leakage audit Check 1a was a tautological contradiction.**
+`01_05_08_leakage_audit.py:62-64` had a WHERE clause of the form
+`(A ∧ B) ∧ (¬A ∨ ¬B)` — logically unsatisfiable, returns 0 on any data.
+Marketed as "meaningful bin-edge temporal check" (M-01 fix) but was
+actually a cosmetic replacement of one tautology with another. The
+claimed I3 pass was unsubstantiated for this step.
+
+**BLOCKER 3 — Internal inconsistency in headline ICC numbers.**
+- JSON: `icc_lpm_observed_scale = 0.000489`, 10k sensitivity `converged = True`.
+- research_log: `0.000487`, "converged=False with boundary-of-parameter-space warnings".
+- MD: `0.000489`, 10k sensitivity omitted entirely.
+- Commit message: `0.000487`.
+- User prompt: `0.000487`.
+Thesis cannot cite a number that three artifacts contradict.
+
+### Remediations applied in this branch
+
+**Fix B-1: Spec v1.0.2 amendment.**
+`reports/specs/01_05_preregistration.md` — `spec_version: "1.0.1"` → `"1.0.2"`.
+§14 gains a v1.0.2 entry documenting three aoe2companion-specific adaptations
+(others datasets unaffected): (a) LMM sample-size cap for aoec at 54k-player
+scale, (b) ANOVA promoted from secondary to robust primary estimator,
+(c) GLMM explicitly skipped with Phase 02+ deferral. Rationale: Bernoulli
+LPM near τ²-boundary shrinks toward zero (Chung et al. 2013 Psychometrika
+78(4):685-709), so the consistent moment estimator (Wu/Crespi/Wong 2012
+ANOVA ICC) is more reliable.
+
+**Fix B-2: Leakage audit Check 1 redesign.**
+`01_05_08_leakage_audit.py` Check 1 replaced with three substantive
+sub-checks:
+- Check 1a: `MIN(started_at)` / `MAX(started_at)` in the reference cohort
+  lie within the declared spec §7 bounds, and row count > 0.
+- Check 1b: For each tested quarter, the min/max `started_at` of rows
+  labeled that quarter (by the CONCAT/CEIL derivation in
+  `01_05_02_psi_shift.py`) lie within that quarter's canonical date range.
+  Catches off-by-one errors in the quarter-label SQL.
+- Check 1c: `01_05_02_psi_shift.json` `sql_queries` literally contains the
+  strings `TIMESTAMP '2022-08-29'` and `TIMESTAMP '2023-01-01'`. Catches
+  silent reference-window drift between 01_05_02 and later steps.
+All three checks now operate on real data / real artifacts; any can fail
+if the referenced invariants are violated.
+
+**Fix B-3: ANOVA promoted to primary; LMM demoted to diagnostic with
+disclosed boundary-shrinkage caveat; bootstrap CI added on ANOVA; all
+numbers reconciled from a single atomic run.**
+
+Canonical fresh values (this branch, seed = 42, n_bootstrap = 200):
+
+- **Primary (ANOVA):** `icc_anova_observed_scale = 0.003013`, cluster
+  bootstrap 95 % CI [0.001724, 0.004202] (n = 5,000 stratified reservoir
+  sample; spec §7 reference window 2022-08-29..2022-12-31; min 10
+  matches/player; 360,567 observations).
+- **Verdict:** *falsified (below range): ICC_anova = 0.003013
+  [0.001724, 0.004202] below [0.05, 0.20]*. CI upper bound is more than
+  10× below the lower limit of the pre-registered hypothesis range.
+- **Diagnostic (LMM LPM observed-scale):** `icc_lpm_observed_scale = 0.000485`
+  at 5k (converged=True); 0.002501 at 10k (converged=True). LMM reported
+  delta-method CI [0.000466, 0.000504] at 5k is **not a valid frequentist
+  CI** under Bernoulli + unbalanced-n_i design — flagged as
+  `icc_lpm_ci_*_invalid_asymptotic` in the JSON and explicitly demoted in
+  the MD. The 6× LMM/ANOVA divergence is the expected pathology of REML
+  boundary shrinkage on near-zero τ² (disclosed in the MD method section).
+- **10k LMM sensitivity:** `converged = True` (JSON-and-prose agreement).
+  The original PR #162 research_log prose "converged=False with
+  boundary-of-parameter-space warnings" was incorrect — boundary warnings
+  do fire during the fit but do not set `converged = False`. Corrected here.
+
+### Verdict (unchanged in direction)
+
+Hypothesis [0.05, 0.20] **falsified** for ICC on `won`. Evidentiary chain
+now defensible: a consistent moment estimator with cluster bootstrap CI
+rejects the range by more than 10× margin. The LMM's disagreement is
+accounted for in the method section, not ignored.
+
+### I-compliance refresh (relative to 01_05 PR #162 audit)
+
+| Invariant | PR #162 | This branch |
+|---|---|---|
+| I3 (temporal `< T`) | PARTIAL (tautological audit) | **RESPECTED** (real Check 1a/1b/1c) |
+| I6 (SQL verbatim) | PARTIAL | PARTIAL — cohort SQL in MD; bootstrap helper is Python-only but is in the committed source |
+| I7 (no magic numbers) | VIOLATED (5k/10k/20k, max_iter=50) | PARTIAL — constants now justified in spec v1.0.2 §14 (a), (c); still computational choices but cited |
+| I8 (cross-game) | AT RISK | AT RISK — aoestats / sc2egset still run at v1.0.1. Spec v1.0.2 is aoec-specific; cross-dataset asymmetry on LMM sample-size cap + GLMM omission is documented but not yet reconciled. Sibling 01_05 PRs (step 2 of current plan) must decide whether to adopt v1.0.2 or remain at v1.0.1. |
+| I9 (research pipeline discipline) | VIOLATED (no §14 amendment) | **RESPECTED** (v1.0.2 filed) |
+
+### Decisions taken
+
+- ANOVA ICC is the headline estimator for aoe2companion 01_05. LMM is
+  diagnostic only. Thesis Chapter 4 must own this.
+- Spec v1.0.2 is aoec-specific; sc2egset / aoestats retain v1.0.1 unless
+  they encounter the same scale-driven intractability and adopt the same
+  adaptations in their own PRs.
+- No change to the scientific interpretation: matchmaking-equalization
+  remains a **generated hypothesis** (defensive framing retained), not a
+  concluded finding. The DEFEND-IN-THESIS items from the adversarial
+  review carry forward.
+
+### Decisions deferred
+
+- GLMM latent-scale ICC (`icc_glmm_latent_scale`) — remains open for
+  Phase 02+ on a rating-informed model.
+- `rating_pre`-based ICC as a direct test of the matchmaking-equalization
+  hypothesis — requires joining `ratings_clean`; deferred to Phase 02
+  feature engineering.
+- Cross-dataset reconciliation of primary-estimator choice — to be
+  addressed when aoestats / sc2egset PRs merge.
+
+### Artifacts refreshed
+
+- `01_05_05_icc.json` — new schema: `icc_anova_*` now primary (with
+  bootstrap CI), `icc_lpm_*` now diagnostic (CI keys renamed
+  `*_invalid_asymptotic` to disclose the asymptotic-validity failure).
+- `01_05_05_icc.md` — method section leads with ANOVA, LMM in diagnostic
+  appendix, 10k LMM sensitivity reported explicitly, verdict uses primary
+  ANOVA with bootstrap CI.
+- `01_05_08_leakage_audit.json` / `.md` — Check 1 block now contains
+  `check_1a_ref_range`, `check_1b_quarter_consistency`,
+  `check_1c_psi_ref_sql_cites_bounds` sub-blocks with their own
+  pass/fail flags.
+- `reports/specs/01_05_preregistration.md` — `spec_version: "1.0.2"`;
+  §14 v1.0.2 entry added.
+
+### Open questions / follow-ups
+
+- Whether the leakage-audit tautology exists in the aoestats and sc2egset
+  01_05_0X_leakage_audit notebooks (untested from this branch — file paths
+  differ between datasets; high prior of copy-paste descendance from
+  spec §9). This should be checked before merging those sibling PRs
+  (step 2 of the project plan). If present, each sibling PR needs its own
+  Check 1 redesign.
+- Sample-size-invariant ICC comparison: is the ANOVA drift from
+  0.003013 (5k) → 0.003574 (10k) → 0.003240 (20k) explained by
+  sampling-induced cluster-size heterogeneity, or is the stratified
+  reservoir sampler biasing? Worth a 1-sentence audit before thesis.
+
+---
+
 ## 2026-04-19 — [Phase 01 / Pipeline Section 01_05] Temporal & Panel EDA
 
 **Category:** A (science)

@@ -1,6 +1,6 @@
 ---
 spec_id: CROSS-01-05-v1
-spec_version: "1.0.1"
+spec_version: "1.0.2"
 created: 2026-04-18
 invariants_touched: [I3, I6, I7, I8, I9]
 datasets_bound: [sc2egset, aoe2companion, aoestats]
@@ -506,6 +506,56 @@ v1.0.1 — 2026-04-18 — Records W3 ARTEFACT_EDGE verdict as binding input to
                          artifact path, ELO audit result −0.72pp CMH,
                          80.3% team=1 higher-ELO).
                        Source: W3 executor report, branch feat/pre-01-05-cleanup.
+
+v1.0.2 — 2026-04-19 — aoe2companion-specific §8 adaptations following post-hang
+                       adversarial review of PR #162 (feat/01-05-aoe2companion).
+                       Reason: aoec reference window contains 54,113 eligible
+                       players vs. ~750 in aoestats; `statsmodels.mixedlm`
+                       cost is O(G × iter), intractable at ≥20k groups.
+                       Three binding adaptations, applicable ONLY to
+                       aoe2companion (sc2egset + aoestats unaffected):
+
+                       (a) Sample-size cap for LMM fit.
+                           aoec fits LMM on a stratified-reservoir sample of
+                           5,000 players (primary) and 10,000 (sensitivity).
+                           LMM at 20,000+ is skipped as cost-prohibitive.
+                           Sample profile IDs persisted at {5k, 10k, 20k} for
+                           reproducibility. Stratification: n_matches_in_ref
+                           deciles (aoestats M3 pattern).
+
+                       (b) ANOVA ICC promoted from secondary to
+                           robust primary estimator at scale.
+                           Rationale: REML LMM on Bernoulli outcomes near
+                           τ²-boundary is known to pin at zero (Chung et al.
+                           2013, Psychometrika 78(4):685-709); observed-scale
+                           ANOVA ICC per Wu/Crespi/Wong 2012 CCT 33(5):869-880
+                           is consistent under moment-based variance
+                           decomposition and robust to boundary shrinkage.
+                           aoec reports both; the ANOVA estimate is the
+                           headline for cross-dataset comparison; the LMM
+                           estimate is reported as a diagnostic with explicit
+                           boundary-shrinkage disclosure.
+
+                       (c) GLMM (BinomialBayesMixedGLM, latent-scale ICC) is
+                           explicitly skipped for aoe2companion.
+                           Rationale: MCMC/Laplace-approximated GLMM at
+                           5k-group scale is compute-prohibitive (> 2h
+                           wall-clock per fit on the project's hardware);
+                           the ANOVA estimator (observed scale) combined
+                           with explicit interpretation of `icc_lpm` as
+                           Linear Probability Model ICC covers the
+                           methodological gap that GLMM was to address.
+                           A GLMM latent-scale cross-check remains a
+                           Phase 02+ follow-up when a rating-informed model
+                           is fit on a smaller cohort.
+
+                       aoestats / sc2egset parameters unchanged:
+                       aoestats runs unsampled LMM + ANOVA on ~750 players;
+                       sc2egset per its existing §8 binding.
+
+                       Source: adversarial review of PR #162, reviewer-
+                       adversarial transcript 2026-04-19; executor B-01
+                       critique at planning/current_plan.critique.md:15-17.
 ```
 
 ---

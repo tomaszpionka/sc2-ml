@@ -51,53 +51,127 @@ POST_GAME_TOKENS = {"duration_seconds", "is_duration_suspicious", "is_duration_n
 print("Artifacts dir:", ARTIFACTS)
 
 # %% [markdown]
-# ## Check 1: Meaningful temporal bin-edge check (M-01 fix)
-# Assert all rows used to compute reference-period frozen edges have started_at < 2023-01-01
-# and all tested frequencies are in their declared quarter window.
+# ## Check 1: Temporal-window integrity checks (v2, post-PR #162 adversarial review)
+#
+# The v1 Check 1a/1b were tautological — their WHERE clauses AND-ed a predicate
+# with its own negation, so the result was always 0 regardless of data. This
+# v2 replaces them with three substantive tests:
+#
+# - **Check 1a (bounds-are-honored)**: MIN/MAX started_at in the reference
+#   cohort are strictly within the declared [REF_START, REF_END) bounds.
+#   Catches DB timezone bugs and filter regressions.
+# - **Check 1b (quarter-labels-match-bounds)**: For each tested quarter, row
+#   bounds match the ISO-calendar quarter the label claims. Catches off-by-one
+#   errors in the CONCAT/CEIL quarter derivation.
+# - **Check 1c (PSI-reference-SQL-contains-spec-bounds)**: 01_05_02 PSI
+#   reference SQL literally contains the spec §7 timestamp bounds. Catches
+#   silent reference-window drift between steps.
 
 # %%
-QUERY_CHECK1_REF_BOUND = """
-SELECT COUNT(*) AS rows_in_ref_outside_bound
+QUERY_CHECK1A_REF_RANGE = """
+SELECT
+    MIN(started_at) AS ref_min,
+    MAX(started_at) AS ref_max,
+    COUNT(*) AS ref_count
 FROM matches_history_minimal
 WHERE started_at >= TIMESTAMP '2022-08-29'
   AND started_at <  TIMESTAMP '2023-01-01'
-  AND (started_at < TIMESTAMP '2022-08-29' OR started_at >= TIMESTAMP '2023-01-01')
 """
 
-QUERY_CHECK1_TEST_BOUND = """
-SELECT quarter, n, n_outside_bound
+QUERY_CHECK1B_QUARTER_RANGES = """
+SELECT
+    derived_quarter,
+    MIN(started_at) AS qmin,
+    MAX(started_at) AS qmax,
+    COUNT(*) AS n
 FROM (
     SELECT
-        CONCAT(CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR), '-Q',
-               CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR) AS quarter,
-        COUNT(*) AS n,
-        COUNT(*) FILTER (
-            WHERE started_at < TIMESTAMP '2023-01-01'
-               OR started_at >= TIMESTAMP '2025-01-01'
-        ) AS n_outside_bound
+        started_at,
+        CONCAT(
+            CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR),
+            '-Q',
+            CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR
+        ) AS derived_quarter
     FROM matches_history_minimal
     WHERE started_at >= TIMESTAMP '2023-01-01'
       AND started_at <  TIMESTAMP '2025-01-01'
-    GROUP BY 1
-) sub
-WHERE n_outside_bound > 0
+)
+GROUP BY derived_quarter
+ORDER BY derived_quarter
 """
+
+QUARTER_BOUNDS = {
+    "2023-Q1": (datetime(2023, 1, 1),  datetime(2023, 4, 1)),
+    "2023-Q2": (datetime(2023, 4, 1),  datetime(2023, 7, 1)),
+    "2023-Q3": (datetime(2023, 7, 1),  datetime(2023, 10, 1)),
+    "2023-Q4": (datetime(2023, 10, 1), datetime(2024, 1, 1)),
+    "2024-Q1": (datetime(2024, 1, 1),  datetime(2024, 4, 1)),
+    "2024-Q2": (datetime(2024, 4, 1),  datetime(2024, 7, 1)),
+    "2024-Q3": (datetime(2024, 7, 1),  datetime(2024, 10, 1)),
+    "2024-Q4": (datetime(2024, 10, 1), datetime(2025, 1, 1)),
+}
 
 db = get_notebook_db("aoe2", "aoe2companion", read_only=True)
 
-# Check 1a: Reference period rows are strictly within bounds
-res1a = db.con.execute(QUERY_CHECK1_REF_BOUND).fetchone()[0]
-check1a_pass = (res1a == 0)
-print(f"Check 1a (ref period bound): {res1a} rows outside declared window -> {'PASS' if check1a_pass else 'FAIL'}")
+# Check 1a: reference-window bounds are honored by the DB (not just the filter SQL).
+ref_min, ref_max, ref_count = db.con.execute(QUERY_CHECK1A_REF_RANGE).fetchone()
+check1a_pass = (
+    ref_min is not None
+    and ref_max is not None
+    and ref_min >= datetime(2022, 8, 29)
+    and ref_max <  datetime(2023, 1, 1)
+    and ref_count > 0
+)
+print(
+    f"Check 1a (ref-range integrity): min={ref_min} max={ref_max} count={ref_count:,} "
+    f"-> {'PASS' if check1a_pass else 'FAIL'}"
+)
 
-# Check 1b: Tested-period rows are within the declared tested window
-res1b = db.con.execute(QUERY_CHECK1_TEST_BOUND).fetchall()
-check1b_pass = (len(res1b) == 0)
-print(f"Check 1b (tested period bounds): {len(res1b)} quarters with out-of-bound rows -> {'PASS' if check1b_pass else 'FAIL'}")
+# Check 1b: each tested-period quarter's row range lies strictly inside its declared bounds.
+rows_1b = db.con.execute(QUERY_CHECK1B_QUARTER_RANGES).fetchall()
+quarter_violations: list[dict] = []
+for derived_quarter, qmin, qmax, n in rows_1b:
+    expected = QUARTER_BOUNDS.get(derived_quarter)
+    if expected is None:
+        quarter_violations.append(
+            {"quarter": derived_quarter, "reason": "unrecognized label", "qmin": str(qmin), "qmax": str(qmax)}
+        )
+        continue
+    qstart, qend = expected
+    if qmin < qstart or qmax >= qend:
+        quarter_violations.append(
+            {"quarter": derived_quarter, "reason": "range escapes label bounds",
+             "qmin": str(qmin), "qmax": str(qmax),
+             "expected": f"[{qstart}, {qend})"}
+        )
+check1b_pass = len(quarter_violations) == 0
+print(
+    f"Check 1b (quarter-label consistency): {len(rows_1b)} quarters checked, "
+    f"{len(quarter_violations)} violations -> {'PASS' if check1b_pass else 'FAIL'}"
+)
+for v in quarter_violations:
+    print(f"  VIOLATION: {v}")
 
-check1_pass = check1a_pass and check1b_pass
+# Check 1c: 01_05_02 PSI reference SQL must cite the spec §7 bounds verbatim.
+psi_json_path = ARTIFACTS / "01_05_02_psi_shift.json"
+assert psi_json_path.exists(), f"Dependency missing: {psi_json_path}"
+_psi_data = json.loads(psi_json_path.read_text())
+_sql_blob = json.dumps(_psi_data.get("sql_queries", {}))
+_need = ["TIMESTAMP '2022-08-29'", "TIMESTAMP '2023-01-01'"]
+_missing = [s for s in _need if s not in _sql_blob]
+check1c_pass = len(_missing) == 0
+print(
+    f"Check 1c (PSI reference SQL cites spec §7 bounds): "
+    f"missing={_missing if _missing else 'none'} -> {'PASS' if check1c_pass else 'FAIL'}"
+)
+
+check1_pass = check1a_pass and check1b_pass and check1c_pass
 print(f"Check 1 OVERALL: {'PASS' if check1_pass else 'FAIL'}")
-assert check1_pass, f"LEAKAGE DETECTED: Check 1 failed. ref_outside={res1a}, test_outside_quarters={res1b}"
+assert check1_pass, (
+    f"LEAKAGE DETECTED: Check 1 failed. "
+    f"1a={check1a_pass}, 1b={check1b_pass} (violations={quarter_violations}), "
+    f"1c={check1c_pass} (missing={_missing})"
+)
 
 # %% [markdown]
 # ## Check 2: POST_GAME token scan of T03/T04 notebooks
@@ -215,12 +289,33 @@ audit_json = {
     "checks": [
         {
             "id": "check_1_temporal_bin_edges",
-            "description": "M-01 fix: Assert all ref-period rows have started_at in [2022-08-29, 2023-01-01) and all tested frequencies are in their declared quarter. NOT vacuous match-id disjointness check.",
+            "description": (
+                "v2 post-PR #162 adversarial-review fix: the v1 Check 1a/1b "
+                "had a mutually-exclusive WHERE clause (A ∧ B) ∧ (¬A ∨ ¬B) "
+                "that returned 0 regardless of data. v2 replaces with three "
+                "substantive checks: (1a) ref-cohort MIN/MAX in bounds; "
+                "(1b) quarter-label consistency; (1c) PSI reference SQL "
+                "cites spec §7 timestamp bounds verbatim."
+            ),
             "status": "PASS" if check1_pass else "FAIL",
-            "future_leak_count": int(res1a),
-            "test_quarter_violations": len(res1b),
-            "sql_ref_bound": QUERY_CHECK1_REF_BOUND,
-            "sql_test_bound": QUERY_CHECK1_TEST_BOUND,
+            "check_1a_ref_range": {
+                "ref_min": str(ref_min),
+                "ref_max": str(ref_max),
+                "ref_count": int(ref_count) if ref_count is not None else 0,
+                "pass": check1a_pass,
+            },
+            "check_1b_quarter_consistency": {
+                "n_quarters_checked": len(rows_1b),
+                "violations": quarter_violations,
+                "pass": check1b_pass,
+            },
+            "check_1c_psi_ref_sql_cites_bounds": {
+                "required_tokens": _need,
+                "missing_tokens": _missing,
+                "pass": check1c_pass,
+            },
+            "sql_check_1a": QUERY_CHECK1A_REF_RANGE,
+            "sql_check_1b": QUERY_CHECK1B_QUARTER_RANGES,
         },
         {
             "id": "check_2_post_game_token_scan",
@@ -269,14 +364,19 @@ spec: reports/specs/01_05_preregistration.md@7e259dd8
 
 **Overall verdict: {audit_json['verdict']}**
 
-## M-01 Deviation Note
+## Check 1 Redesign Note (v2, post-PR #162 adversarial review)
 
-Original spec §9 Query 1: vacuous match-id disjointness check (tautology — match_id is PK).
-M-01 fix: reframed as meaningful bin-edge temporal check.
-- Check 1a: All reference-period rows (used for frozen PSI bin edges) have started_at in [2022-08-29, 2023-01-01)
-- Check 1b: All tested-period rows are within their declared quarter windows
+The v1 implementation of Check 1a/1b (pre-fix/01-05-aoec-adversarial-followup)
+had a mutually-exclusive WHERE clause `(A ∧ B) ∧ (¬A ∨ ¬B)` that returned 0
+regardless of data — a tautology posing as a gate. The adversarial reviewer
+of PR #162 flagged this as BLOCKER 2. The v2 replacement below provides three
+substantive sub-checks.
 
-**Result:** ref_outside_bound={res1a}, test_outside_quarters={len(res1b)}
+- **Check 1a (ref-cohort range integrity):** `min(started_at) = {ref_min}`,
+  `max(started_at) = {ref_max}`, `count = {ref_count:,}` → {'PASS' if check1a_pass else 'FAIL'}
+- **Check 1b (quarter-label consistency):** {len(rows_1b)} quarters checked,
+  {len(quarter_violations)} violations → {'PASS' if check1b_pass else 'FAIL'}
+- **Check 1c (PSI ref SQL cites §7 bounds):** missing tokens = `{_missing}` → {'PASS' if check1c_pass else 'FAIL'}
 
 ## Check 2: POST_GAME token scan
 
@@ -298,14 +398,14 @@ Use for reproducibility verification across DB rebuilds (reservoir-sample caveat
 
 ## SQL
 
-### Check 1a
+### Check 1a (ref-range integrity)
 ```sql
-{QUERY_CHECK1_REF_BOUND}
+{QUERY_CHECK1A_REF_RANGE}
 ```
 
-### Check 1b
+### Check 1b (quarter-label consistency)
 ```sql
-{QUERY_CHECK1_TEST_BOUND}
+{QUERY_CHECK1B_QUARTER_RANGES}
 ```
 """
 

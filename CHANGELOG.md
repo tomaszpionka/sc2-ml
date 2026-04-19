@@ -19,6 +19,45 @@ merged to `master`.
 
 ### Removed
 
+## [3.19.1] — 2026-04-19 (PR #TBD: fix/01-05-aoec-adversarial-followup)
+
+### Changed
+
+- **Spec `CROSS-01-05-v1` bumped to v1.0.2.** `reports/specs/01_05_preregistration.md`
+  gains a §14 v1.0.2 amendment documenting three aoe2companion-specific
+  §8 adaptations (others datasets unaffected): (a) LMM sample-size cap for
+  aoec 54k-player scale, (b) ANOVA promoted from secondary to robust primary
+  estimator, (c) GLMM explicitly skipped with Phase 02+ deferral. Per spec
+  §13 deviation procedure — closes adversarial-review BLOCKER 1 on PR #162.
+- **`01_05_05_icc.py` — ANOVA promoted to primary.** `compute_icc_anova` with
+  200-sample cluster bootstrap CI is now the headline estimator. LMM remains
+  as a labeled diagnostic with explicit disclosure of the observed-scale LPM
+  caveat and invalid delta-method CI on Bernoulli + unbalanced-`n_i` design
+  (Chung et al. 2013, Psychometrika 78(4):685-709). JSON schema: `icc_anova_*`
+  primary, `icc_lpm_ci_*_invalid_asymptotic` rename for the diagnostic CI.
+- **Verdict restated.** Hypothesis [0.05, 0.20] remains **falsified**, now on
+  the ANOVA point estimate 0.003013 with bootstrap CI [0.001724, 0.004202]
+  — more than 10× below the lower hypothesis bound. Direction unchanged;
+  evidentiary chain now defensible.
+
+### Fixed
+
+- **Leakage audit Check 1 redesigned.** `01_05_08_leakage_audit.py` Check 1a/1b
+  had WHERE clauses of the form `(A ∧ B) ∧ (¬A ∨ ¬B)` — logically
+  unsatisfiable, returned 0 regardless of data. Replaced with three
+  substantive sub-checks: (1a) reference-cohort `MIN`/`MAX(started_at)`
+  lie within declared spec §7 bounds with non-empty cohort; (1b) each
+  tested quarter's row range lies within its ISO-calendar quarter; (1c)
+  `01_05_02_psi_shift.json` `sql_queries` literally contains the spec §7
+  timestamp bounds. Closes adversarial-review BLOCKER 2 on PR #162.
+- **Headline ICC number reconciled.** Single atomic notebook run produced
+  canonical values in JSON and `01_05_05_icc.md`; research_log entry
+  rewritten to match JSON byte-for-byte. 10k LMM sensitivity
+  `converged=True` now consistent across all artifacts (previous PR #162
+  research_log prose "converged=False with boundary warnings" was
+  incorrect — boundary warnings fire but do not set `converged=False`).
+  Closes adversarial-review BLOCKER 3 on PR #162.
+
 ## [3.19.0] — 2026-04-19 (PR #TBD: feat/01-05-aoe2companion)
 
 ### Added
