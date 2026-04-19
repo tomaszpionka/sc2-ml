@@ -19,7 +19,20 @@ merged to `master`.
 
 ### Removed
 
-## [3.27.0] — 2026-04-19 (PR #TBD: docs/thesis-4.2.2-identity-meta-rule)
+## [3.27.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-181)
+
+### Removed
+
+- `planning/current_plan.md` reset to `<!-- No active plan -->` and
+  `planning/current_plan.critique.md` deleted. Post-merge purge for
+  the F3 thesis-§4.2.2 / aoe2companion-rate-reconcile workstream
+  completed in PR #181.
+
+### Changed
+
+- CHANGELOG `[3.27.0]` header: `PR #TBD` → `PR #181` backfill.
+
+## [3.27.0] — 2026-04-19 (PR #181: docs/thesis-4.2.2-identity-meta-rule)
 
 ### Changed
 
