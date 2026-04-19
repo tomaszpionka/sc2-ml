@@ -237,7 +237,7 @@ estimator inconsistency.
 - [x] Residual #2 — population-scope differences (PR #175, NEW §4.1.4)
 - [x] Residual #3 — observed- vs latent-scale ICC (PR #176, §4.4.5)
 - [x] Residual #4 — aoestats 744-player ceiling (PR #175, §4.1.2.1)
-- [ ] Residual #5 — `canonical_slot` deferral (also tracked in `BACKLOG.md` F1)
+- [x] Residual #5 — `canonical_slot` deferral (PR #TBD, §4.4.6 + §4.1.2.1 footnote; BACKLOG F1 Predecessors updated)
 - [x] Residual #6 — N=2 cross-game statistical-test limit (PR #176, §4.4.4)
 
 Mark each as `[x]` once the corresponding Chapter 4 paragraph is drafted

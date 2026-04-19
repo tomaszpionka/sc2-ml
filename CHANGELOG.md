@@ -19,6 +19,34 @@ merged to `master`.
 
 ### Removed
 
+## [3.26.0] — 2026-04-19 (PR #TBD: docs/thesis-ch4-canonical-slot-flag)
+
+### Changed
+
+- **Chapter 4 §4.4.6 + §4.1.2.1 footnote — DEFEND-IN-THESIS residual
+  #5 `[PRE-canonical_slot]` flag.** Final PR in the DEFEND-IN-THESIS
+  sequence; closes the 6-of-6 residual cycle.
+  1. NEW §4.4.6 Flaga `[PRE-canonical_slot]` dla aoestats per-slot
+     analyz. Three paragraphs: Geneza (W3 ARTEFACT_EDGE commit
+     `ab23ab1d`; 80,3% higher-ELO → team=1; spec §1 line 71 + §11);
+     Zakres per-slot vs aggregate (M1 fix — raw `matches_1v1_clean`
+     per-slot `p0_civ` + `p1_civ`; aggregates arise post-Phase-02
+     UNION-ALL; niezmiennik I5 cited correctly as symmetric player
+     treatment); Zastosowania i plan zamknięcia (BACKLOG F1 Phase
+     02 unblocker; F6 artifact-vs-spec divergence tracker; flag
+     honest-matched as methodological convention not CSV metadata).
+  2. §4.1.2.1 inline footnote at "team=1 wygrywa 52,27%" sentence.
+- `planning/BACKLOG.md` F1 Predecessors bullet extended with PR-3
+  thesis-side provenance reference.
+- 3 [REVIEW] flags planted for Pass-2 resolution.
+- **All 6 DEFEND-IN-THESIS residuals now addressed** across PR-1
+  (#175, §4.1.3 + §4.1.2.1 + §4.1.4) + PR-2 (#176, §4.4.4 + §4.4.5)
+  + PR-3 (§4.4.6 + §4.1.2.1 footnote).
+- Two adversarial review rounds consumed (plan-side R1 verdict
+  REVISE non-blocking — 2 MAJORs + 3 MINORs inline; execution-side
+  R2 verdict PASS — 0 BLOCKERs + 0 MAJORs + 3 MINORs Pass-2/F6
+  deferred).
+
 ## [3.25.0] — 2026-04-19 (PR #176: docs/thesis-ch4-stat-methodology-residuals)
 
 ### Changed
