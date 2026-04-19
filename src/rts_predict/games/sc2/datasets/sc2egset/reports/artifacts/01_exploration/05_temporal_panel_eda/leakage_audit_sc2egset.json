@@ -4,10 +4,33 @@
   "reference_window_assertion": "PASS",
   "halt_triggered": false,
   "queries_sql_verbatim": {
-    "Q1_ref_check": "-- Q1b: Reference rows strictly within [2022-08-29, 2023-01-01)\nSELECT COUNT(*) AS n_ref_rows_check,\n       COUNT(*) FILTER (WHERE started_at < TIMESTAMP '2022-08-29') AS before_ref_start,\n       COUNT(*) FILTER (WHERE started_at >= TIMESTAMP '2023-01-01') AS after_ref_end\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2022-08-29'\n  AND started_at <  TIMESTAMP '2023-01-01'",
-    "Q1_tested_check": "-- Q1c: Tested rows are strictly within [2023-01-01, 2025-01-01)\nSELECT COUNT(*) AS n_tested_rows,\n       COUNT(*) FILTER (WHERE started_at < TIMESTAMP '2023-01-01') AS before_test_start,\n       COUNT(*) FILTER (WHERE started_at >= TIMESTAMP '2025-01-01') AS after_test_end\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2023-01-01'\n  AND started_at <  TIMESTAMP '2025-01-01'",
+    "Q1a_ref_range": "SELECT\n    MIN(started_at) AS ref_min,\n    MAX(started_at) AS ref_max,\n    COUNT(*) AS ref_count\nFROM matches_history_minimal\nWHERE started_at >= TIMESTAMP '2022-08-29'\n  AND started_at <  TIMESTAMP '2023-01-01'",
+    "Q1b_quarter_ranges": "SELECT\n    derived_quarter,\n    MIN(started_at) AS qmin,\n    MAX(started_at) AS qmax,\n    COUNT(*) AS n\nFROM (\n    SELECT\n        started_at,\n        CONCAT(\n            CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR),\n            '-Q',\n            CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR\n        ) AS derived_quarter\n    FROM matches_history_minimal\n    WHERE started_at >= TIMESTAMP '2023-01-01'\n      AND started_at <  TIMESTAMP '2025-01-01'\n)\nGROUP BY derived_quarter\nORDER BY derived_quarter",
+    "Q1c_psi_source_substring_check": "Path(\"01_05_02_psi_quarterly.py\").read_text() MUST contain the date substrings \"2022-08-29\" and \"2023-01-01\" (spec \u00a77)",
     "Q2_token_scan": "YAML scan of matches_history_minimal.yaml; see notebook",
     "Q3_window_assertion": "ref_start == datetime(2022, 8, 29); ref_end == datetime(2022, 12, 31)"
+  },
+  "q1_v2_sub_checks": {
+    "q1a_ref_range": {
+      "ref_min": "2022-09-02 09:23:10.780676",
+      "ref_max": "2022-12-18 21:55:53.214104",
+      "ref_count": 3268,
+      "pass": true
+    },
+    "q1b_quarter_consistency": {
+      "n_quarters_checked": 8,
+      "violations": [],
+      "pass": true
+    },
+    "q1c_psi_source_bounds": {
+      "psi_source_file": "/Users/tomaszpionka/Projects/rts-outcome-prediction/sandbox/sc2/sc2egset/01_exploration/05_temporal_panel_eda/01_05_02_psi_quarterly.py",
+      "required_tokens": [
+        "2022-08-29",
+        "2023-01-01"
+      ],
+      "missing_tokens": [],
+      "pass": true
+    }
   },
   "schema_note": "Schema YAML loaded from /Users/tomaszpionka/Projects/rts-outcome-prediction/src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml",
   "q1_cleanup_note": "Q1 has two substantive checks: Q1b (reference cohort rows within [2022-08-29, 2023-01-01), FILTER-counted) and Q1c (tested rows within [2023-01-01, 2025-01-01), FILTER-counted, asserted). A prior vacuous QUERY1_REF_SQL (WHERE predicate \u2227 own negation) was dead code \u2014 never executed; removed post-PR #163 adversarial-review cleanup.",

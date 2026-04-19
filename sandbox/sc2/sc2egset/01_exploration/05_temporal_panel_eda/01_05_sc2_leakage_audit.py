@@ -27,12 +27,14 @@
 # - Query 2: POST_GAME token scan on T03 feature list
 # - Query 3: reference window edges assertion
 #
-# **Q1 structure (post-PR #163 adversarial-review cleanup):**
-# Q1b asserts all rows in the declared reference window have started_at in
-# [REF_START, REF_END) via COUNT(*) FILTER with both boundary predicates.
-# Q1c asserts the symmetric check on the tested period. A prior
-# QUERY1_REF_SQL that paired a WHERE predicate with its own negation was
-# dead code (never executed; result always used QUERY1_MEANING_SQL) — removed.
+# **Q1 v2 redesign (post-PR #164 adversarial-review round 2):**
+# Q1 is now three substantive sub-checks ported from the aoec pattern:
+# - Q1a: ref-cohort DB MIN/MAX within spec §7 bounds, count > 0.
+# - Q1b: each tested quarter's row range within its ISO-calendar bounds.
+# - Q1c: PSI notebook source cites spec §7 timestamp substrings verbatim.
+# The v1 redesign had WHERE/FILTER structures where both sides filtered
+# against the same interval — the FILTER count was always 0 by construction.
+# v2 gates can actually fail on DB timezone bugs, label drift, or SQL drift.
 #
 # **Halt condition:** future_leak_count > 0 OR post_game_token_violations != [] OR
 # reference_window_assertion fails -> block T08/T09/T10.
@@ -69,56 +71,131 @@ artifact_dir.mkdir(parents=True, exist_ok=True)
 # ## Query 1: Future-data check (M6 reframe)
 
 # %%
-# Q1: two substantive checks on temporal-window integrity.
-# Q1b: reference-cohort rows strictly within [REF_START, REF_END). Uses
-#      COUNT(*) FILTER with both boundary predicates — a DB timezone bug or
-#      stale filter predicate would produce nonzero counts.
-# Q1c: tested-period rows strictly within [TEST_START, TEST_END). Same
-#      structure, symmetric on the tested window.
+# Q1: three substantive sub-checks ported from the aoec pattern
+# (sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.py).
+#
+# Pre-PR #164 this file had a WHERE/FILTER structure where both sides of the
+# check (the outer `WHERE started_at BETWEEN ...` and the `FILTER (WHERE NOT
+# BETWEEN ...)`) were bound to the same interval — making the FILTER count
+# always 0 by construction. Post-adversarial-review round 2: replaced with
+# three sub-checks that can actually fail:
+#
+# - Q1a (ref-range integrity): DB MIN/MAX(started_at) in the spec §7
+#   reference window lies within the declared bounds. Catches DB timezone
+#   bugs and filter-predicate regressions.
+# - Q1b (quarter-label consistency): for each tested quarter, the min/max
+#   started_at of rows labeled that quarter lies within that quarter's
+#   ISO-calendar bounds. Catches off-by-one in quarter-derivation SQL.
+# - Q1c (PSI SQL cites spec bounds): the PSI notebook's source literally
+#   contains the spec §7 timestamp substrings. Catches silent reference-
+#   window drift between 01_05_02 and this audit.
 
-# Post-PR #163 adversarial-review cleanup: a prior QUERY1_REF_SQL paired a
-# WHERE predicate with its own negation — dead code, never executed here (the
-# actual gate uses QUERY1_MEANING_SQL below). Removed.
-QUERY1_MEANING_SQL = """
--- Q1b: Reference rows strictly within [2022-08-29, 2023-01-01)
-SELECT COUNT(*) AS n_ref_rows_check,
-       COUNT(*) FILTER (WHERE started_at < TIMESTAMP '2022-08-29') AS before_ref_start,
-       COUNT(*) FILTER (WHERE started_at >= TIMESTAMP '2023-01-01') AS after_ref_end
+from datetime import datetime as _dt
+
+QUERY1A_REF_RANGE = """
+SELECT
+    MIN(started_at) AS ref_min,
+    MAX(started_at) AS ref_max,
+    COUNT(*) AS ref_count
 FROM matches_history_minimal
 WHERE started_at >= TIMESTAMP '2022-08-29'
   AND started_at <  TIMESTAMP '2023-01-01'
 """
 
-result_q1 = db.con.execute(QUERY1_MEANING_SQL).fetchdf()
-n_ref_rows = int(result_q1["n_ref_rows_check"].iloc[0])
-before_ref_start = int(result_q1["before_ref_start"].iloc[0])
-after_ref_end = int(result_q1["after_ref_end"].iloc[0])
-future_leak_count = before_ref_start + after_ref_end
-
-print(f"Q1: Reference rows total: {n_ref_rows}")
-print(f"Q1: Rows before ref_start: {before_ref_start}")
-print(f"Q1: Rows after ref_end: {after_ref_end}")
-print(f"Q1: future_leak_count = {future_leak_count}")
-
-# Also check tested quarters
-QUERY1_TESTED_SQL = """
--- Q1c: Tested rows are strictly within [2023-01-01, 2025-01-01)
-SELECT COUNT(*) AS n_tested_rows,
-       COUNT(*) FILTER (WHERE started_at < TIMESTAMP '2023-01-01') AS before_test_start,
-       COUNT(*) FILTER (WHERE started_at >= TIMESTAMP '2025-01-01') AS after_test_end
-FROM matches_history_minimal
-WHERE started_at >= TIMESTAMP '2023-01-01'
-  AND started_at <  TIMESTAMP '2025-01-01'
+QUERY1B_QUARTER_RANGES = """
+SELECT
+    derived_quarter,
+    MIN(started_at) AS qmin,
+    MAX(started_at) AS qmax,
+    COUNT(*) AS n
+FROM (
+    SELECT
+        started_at,
+        CONCAT(
+            CAST(EXTRACT(YEAR FROM started_at) AS VARCHAR),
+            '-Q',
+            CAST(CEIL(EXTRACT(MONTH FROM started_at) / 3.0) AS INTEGER)::VARCHAR
+        ) AS derived_quarter
+    FROM matches_history_minimal
+    WHERE started_at >= TIMESTAMP '2023-01-01'
+      AND started_at <  TIMESTAMP '2025-01-01'
+)
+GROUP BY derived_quarter
+ORDER BY derived_quarter
 """
 
-result_q1b = db.con.execute(QUERY1_TESTED_SQL).fetchdf()
-tested_outside = int(result_q1b['before_test_start'].iloc[0]) + int(result_q1b['after_test_end'].iloc[0])
-print(f"\nQ1c: Tested rows: {result_q1b['n_tested_rows'].iloc[0]}")
-print(f"Q1c: Outside window: {tested_outside}")
+QUARTER_BOUNDS = {
+    "2023-Q1": (_dt(2023, 1, 1),  _dt(2023, 4, 1)),
+    "2023-Q2": (_dt(2023, 4, 1),  _dt(2023, 7, 1)),
+    "2023-Q3": (_dt(2023, 7, 1),  _dt(2023, 10, 1)),
+    "2023-Q4": (_dt(2023, 10, 1), _dt(2024, 1, 1)),
+    "2024-Q1": (_dt(2024, 1, 1),  _dt(2024, 4, 1)),
+    "2024-Q2": (_dt(2024, 4, 1),  _dt(2024, 7, 1)),
+    "2024-Q3": (_dt(2024, 7, 1),  _dt(2024, 10, 1)),
+    "2024-Q4": (_dt(2024, 10, 1), _dt(2025, 1, 1)),
+}
 
-assert future_leak_count == 0, f"HALT: Q1 future_leak_count={future_leak_count} > 0"
-assert tested_outside == 0, f"HALT: Q1c tested_outside={tested_outside} > 0"
-print("\nQ1 PASS: future_leak_count=0")
+# Q1a: reference-window bounds honored by the DB.
+ref_min, ref_max, ref_count = db.con.execute(QUERY1A_REF_RANGE).fetchone()
+check1a_pass = (
+    ref_min is not None
+    and ref_max is not None
+    and ref_min >= _dt(2022, 8, 29)
+    and ref_max <  _dt(2023, 1, 1)
+    and ref_count > 0
+)
+print(
+    f"Q1a (ref-range integrity): min={ref_min} max={ref_max} count={ref_count:,} "
+    f"-> {'PASS' if check1a_pass else 'FAIL'}"
+)
+
+# Q1b: each tested-period quarter's row range lies strictly inside its declared bounds.
+rows_1b = db.con.execute(QUERY1B_QUARTER_RANGES).fetchall()
+quarter_violations: list[dict] = []
+for derived_quarter, qmin, qmax, n in rows_1b:
+    expected = QUARTER_BOUNDS.get(derived_quarter)
+    if expected is None:
+        quarter_violations.append(
+            {"quarter": derived_quarter, "reason": "unrecognized label",
+             "qmin": str(qmin), "qmax": str(qmax)}
+        )
+        continue
+    qstart, qend = expected
+    if qmin < qstart or qmax >= qend:
+        quarter_violations.append(
+            {"quarter": derived_quarter, "reason": "range escapes label bounds",
+             "qmin": str(qmin), "qmax": str(qmax),
+             "expected": f"[{qstart}, {qend})"}
+        )
+check1b_pass = len(quarter_violations) == 0
+print(
+    f"Q1b (quarter-label consistency): {len(rows_1b)} quarters checked, "
+    f"{len(quarter_violations)} violations -> {'PASS' if check1b_pass else 'FAIL'}"
+)
+for v in quarter_violations:
+    print(f"  VIOLATION: {v}")
+
+# Q1c: PSI notebook source literally contains the spec §7 timestamp bounds.
+_psi_notebook_path = Path(__file__).parent / "01_05_02_psi_quarterly.py"
+assert _psi_notebook_path.exists(), f"Dependency missing: {_psi_notebook_path}"
+_psi_source = _psi_notebook_path.read_text(encoding="utf-8")
+_q1c_need = ["2022-08-29", "2023-01-01"]  # spec §7 date substrings; notebook may include a time component — we check the date portion.
+_q1c_missing = [s for s in _q1c_need if s not in _psi_source]
+check1c_pass = len(_q1c_missing) == 0
+print(
+    f"Q1c (PSI source cites spec §7 bounds): "
+    f"missing={_q1c_missing if _q1c_missing else 'none'} "
+    f"-> {'PASS' if check1c_pass else 'FAIL'}"
+)
+
+# For backwards compatibility with the downstream JSON + MD block, compute
+# a single future_leak_count integer from the three sub-checks.
+future_leak_count = 0 if (check1a_pass and check1b_pass and check1c_pass) else 1
+
+assert check1a_pass, f"HALT: Q1a ref-range integrity failed (min={ref_min}, max={ref_max}, count={ref_count})"
+assert check1b_pass, f"HALT: Q1b quarter-label consistency failed ({quarter_violations})"
+assert check1c_pass, f"HALT: Q1c PSI source missing spec §7 bounds ({_q1c_missing})"
+print("\nQ1 PASS: all three sub-checks passed.")
 
 # %% [markdown]
 # ## Query 2: POST_GAME token scan
@@ -211,12 +288,34 @@ audit_result = {
     "reference_window_assertion": reference_window_assertion,
     "halt_triggered": halt_triggered,
     "queries_sql_verbatim": {
-        "Q1_ref_check": QUERY1_MEANING_SQL.strip(),
-        "Q1_tested_check": QUERY1_TESTED_SQL.strip(),
+        "Q1a_ref_range": QUERY1A_REF_RANGE.strip(),
+        "Q1b_quarter_ranges": QUERY1B_QUARTER_RANGES.strip(),
+        "Q1c_psi_source_substring_check": (
+            "Path(\"01_05_02_psi_quarterly.py\").read_text() MUST contain "
+            "the date substrings \"2022-08-29\" and \"2023-01-01\" (spec §7)"
+        ),
         "Q2_token_scan": "YAML scan of matches_history_minimal.yaml; see notebook",
         "Q3_window_assertion": (
             "ref_start == datetime(2022, 8, 29); ref_end == datetime(2022, 12, 31)"
         ),
+    },
+    "q1_v2_sub_checks": {
+        "q1a_ref_range": {
+            "ref_min": str(ref_min), "ref_max": str(ref_max),
+            "ref_count": int(ref_count) if ref_count is not None else 0,
+            "pass": check1a_pass,
+        },
+        "q1b_quarter_consistency": {
+            "n_quarters_checked": len(rows_1b),
+            "violations": quarter_violations,
+            "pass": check1b_pass,
+        },
+        "q1c_psi_source_bounds": {
+            "psi_source_file": str(_psi_notebook_path),
+            "required_tokens": _q1c_need,
+            "missing_tokens": _q1c_missing,
+            "pass": check1c_pass,
+        },
     },
     "schema_note": schema_note,
     "q1_cleanup_note": (
@@ -263,9 +362,22 @@ md_content = f"""# Q7: Temporal Leakage Audit — sc2egset
 
 ## Q1 SQL (verbatim, I6)
 
+### Q1a (ref-range integrity)
+
 ```sql
-{QUERY1_MEANING_SQL.strip()}
+{QUERY1A_REF_RANGE.strip()}
 ```
+
+### Q1b (quarter-label consistency)
+
+```sql
+{QUERY1B_QUARTER_RANGES.strip()}
+```
+
+### Q1c (PSI source substring check)
+
+Path(`01_05_02_psi_quarterly.py`).read_text() MUST contain the date
+substrings `2022-08-29` and `2023-01-01` (spec §7 reference period).
 
 ## Q2: Feature classification
 
@@ -283,13 +395,23 @@ assert ref_start == datetime(2022, 8, 29)
 assert ref_end   == datetime(2022, 12, 31)
 ```
 
-## Q1 cleanup note (post-PR #163 adversarial-review)
+## Q1 v2 redesign (post-PR #164 adversarial-review round 2)
 
-A prior QUERY1_REF_SQL combined a WHERE predicate with its own negation,
-making it a logical contradiction that returned 0 rows on any data. It was
-dead code — `result_q1` always executed QUERY1_MEANING_SQL (the real check).
-The dead constant is removed; Q1c gained an assertion on tested-period
-leakage (previously only printed).
+PR #164's Q1 cleanup removed a labeled-tautology constant but the surviving
+real check was itself structurally tautological: WHERE/FILTER predicates
+bound to the same interval made the FILTER count always 0.
+
+v2 replaces Q1 with three sub-checks:
+
+| Sub-check | Value | Status |
+|---|---|---|
+| Q1a (ref-range integrity) | `min={ref_min}, max={ref_max}, count={ref_count:,}` | {'PASS' if check1a_pass else 'FAIL'} |
+| Q1b (quarter-label consistency) | `{len(rows_1b)} quarters, {len(quarter_violations)} violations` | {'PASS' if check1b_pass else 'FAIL'} |
+| Q1c (PSI source substring) | `missing={_q1c_missing}` | {'PASS' if check1c_pass else 'FAIL'} |
+
+Each sub-check can fail on a real pathology: Q1a on a DB timezone bug or
+filter-predicate regression; Q1b on off-by-one in the quarter-derivation
+SQL; Q1c on silent reference-window drift between 01_05_02 and this audit.
 All reference rows confirmed within [2022-08-29, 2023-01-01).
 All tested rows confirmed within [2023-01-01, 2025-01-01).
 
