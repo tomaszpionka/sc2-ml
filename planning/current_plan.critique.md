@@ -1,51 +1,59 @@
-# Adversarial Review — Plan (Mode A) — TG5-PR-5b
+# Adversarial Review — Plan (Mode A) — TG6-PR-6a
 
-**Plan:** `planning/current_plan.md` (TG5-PR-5b — §4.1.3 reference-window defence + §2.2.3 Thorrez proxy insertion)
-**Branch:** `docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy` (base: master @ `d640711a`)
+**Plan:** `planning/current_plan.md` (TG6-PR-6a — §3.5 Luka 1/2/4 prophylactic strengthening)
+**Branch:** `docs/thesis-pass2-tg6a-luka-prophylactic-strengthening`
+**Base:** `master` @ `a5dae995` (post-PR #193)
 **Date:** 2026-04-20
-**Reviewer:** reviewer-adversarial agent, Mode A (pre-execution)
+**Reviewer:** reviewer-adversarial, Mode A (pre-execution)
 
 ## Lens summary
 
 | Lens | Verdict |
 |---|---|
-| Temporal discipline | N/A — no feature/model computation |
-| Statistical methodology | AT RISK — 3 of 4 F5.4 anchors support defence argument analogically, not directly; precision-axis claim qualitatively defensible but not quantitatively supported by Tabela 4.7 numbers |
+| Temporal discipline | N/A |
+| Statistical methodology | AT RISK — single-witness Luka 1 logically weaker than current universal |
 | Feature engineering | N/A |
-| Thesis defensibility | ADEQUATE — T01 orthogonal-axes reframe is structurally stronger than audit ask but opens new angle of attack (bias-variance coupling at ICC ≈ 0.003) plan does not anticipate; T02 proxy sentence preserves calibration/accuracy distinction but overreaches on "strukturalnie zbliżony" and miscategorizes ~80% vs 80.13% as "rounding" difference |
-| Cross-game comparability | AT RISK — three-corpus ICC comparison is window-length-confounded; defence claims axis-orthogonality without quantitative support |
+| Thesis defensibility | WEAK — F6.1 internal contradiction; F6.2 asymmetric hedge + untracked cross-PR dep; F6.3 near-tautological |
+| Cross-game comparability | AT RISK — FVG+EEG witness injects modality drift into RTS+pre-game argument |
 
-## Examiner's questions the plan does not pre-empt
+## Examiner's questions not pre-empted
 
-1. **T02:** Why cite Thorrez 2024's Glicko-2 entry rather than any Aligulac-variant entry from the same Table 2? EsportsBench evaluates 11 rating systems.
-2. **T01:** Orthogonal-axes defence — in small-ICC regimes (aoe2companion ICC ≈ 0.003), bias and variance effects couple near boundary. How defend clean axis-separation?
-3. **T01:** Four-anchor defence reuses §4.4.5 citations for a claim (patch-regime non-stationarity biases ICC) that none of them make directly. Analogical stretch.
-4. **T01:** Tabela 4.7 shows aoestats CI width is relatively *narrower* than aoe2companion's (89% vs 82% relative to point). Where is the precision penalty actually visible?
-5. **T01:** Could all three corpora have been matched to a 9-week window for ICC comparability? Counterfactual not addressed.
-6. **T02:** "Strukturalnie zbliżony" (Glicko-2 vs Aligulac matchup-conditioned): overreaches — Glicko-2 is 3-parameter (rating+RD+volatility); Aligulac is per-matchup Elo variant.
+1. F6.1 single-witness "1 of 6 retrievable" — strengthening or honest-but-visible scope admission?
+2. F6.1 modality drift — Minami2024 is FVG+EEG; how does it witness RTS+pre-game gap?
+3. F6.1 contradiction — current Luka 1 universal "żadna praca esportowa … nie przeprowadza systematycznego porównania wielu rodzin klasyfikatorów" directly contradicts Minami2024 being cited as a multi-family benchmark.
+4. F6.2 asymmetric hedge — method claim conditional, importance claim unconditional; if Pass-2 retracts method, importance orphans.
+5. F6.2 §4.4 forward-reference — untracked cross-PR dependency for Lundberg2017 citation in §4.4.
+6. F6.3 post-R13 tautology — adds citation for terminology-disambiguation claim nobody disputes; near-padding.
 
 ## Methodology risks
 
-1. **[WARNING] T01 [REVIEW] flag understates literature gap.** Three of four anchors (Nakagawa2017, Gelman2007, WuCrespiWong2012) support defence argument analogically, not directly. Plan acknowledges the gap but the flag language is too soft.
-2. **[WARNING] T02 proxy "strukturalnie zbliżony" overreaches.** Aligulac is matchup-conditioned Elo variant; Glicko-2 is 3-parameter (rating+RD+volatility). If Thorrez Table 2 reports Aligulac-variant, that would be the tighter proxy.
-3. **[WARNING] T02 [REVIEW] flag says "rozbieżność między '~80%' a '80,13%' jest w granicach rounding" — category error.** ~80% (calibration bin label) and 80.13% (classification accuracy) are different measurements; numerical proximity coincidental.
-4. **[WARNING] Cross-corpus ICC comparison with window-length asymmetry not quantitatively defended.** Tabela 4.7 numbers do not visibly support a precision penalty of the shorter window.
-5. **[NOTE] R22 residual (patch 66692 uniqueness as outer-level circular)** partially addressed; chapter prose should state explicitly that patch 66692 exists independently of the spec.
-6. **[NOTE] Hybrid-of-audit-options not declared in [REVIEW] tag.**
-7. **[NOTE] Invariant #9 compliance respected.**
-8. **[NOTE] Orthogonal-axes framing exceeds audit option (i) "dominance" scope; structurally stronger but logically different.**
+1. **[BLOCKER] F6.1 internal contradiction.** Current line 185 asserts universal "żadna praca esportowa nie przeprowadza systematycznego porównania wielu rodzin klasyfikatorów." Planned Minami2024 insertion describes a 9-algorithm multi-family benchmark. Post-insertion paragraph self-contradicts unless the universal is silently reinterpreted. Plan's "insertion-only" discipline incompatible with logical consistency.
+   **Fix:** (a) allow one-sentence rewrite of "żadna" clause to condition on "bez pełnej oceny probabilistycznej"; OR (b) reframe Minami2024 as near-miss / adjacent-reference-class witness rather than direct witness.
+
+2. **[BLOCKER] F6.1 modality-gap undermines cross-game framing.** FVG+EEG witness for RTS+pre-game gap. Reference class widening without public acknowledgement.
+   **Fix:** Adopt (b) from BLOCKER 1 — explicitly locate Minami2024 as ADJACENT-reference-class evidence.
+
+3. **[WARNING] F6.1 [NEEDS CITATION] hygiene — 4 unverified names inline in thesis prose.** Reputational surface.
+   **Fix:** Move names to REVIEW_QUEUE §3.5 row; chapter flag becomes pointer.
+
+4. **[WARNING] F6.2 importance-claim orphan risk.** Method claim conditional, importance claim unconditional.
+   **Fix:** conditionalize "jest to rozróżnienie istotne" to match hedge scope.
+
+5. **[WARNING] F6.2 cross-PR dependency untracked.** §4.4 forward-reference not tracked in REVIEW_QUEUE.
+   **Fix:** T05 adds REVIEW_QUEUE entry under §4.4 row noting §3.5 Luka 2 dependency on §4.4 SHAP/Lundberg2017 citation.
+
+6. **[NOTE] F6.3 post-R13 near-tautological.** Mode A observation: could drop T03 entirely without loss of Luka 4 defensibility; keeping T03 delivers audit item F6.3 at near-zero argumentative marginal value.
 
 ## Verdict: REVISE BEFORE EXECUTION
 
-Four prose-level plan edits required before writer-thesis dispatch:
+Required revisions (within 1-revision cap per `feedback_adversarial_cap_execution.md`):
 
-1. **T02 proxy sentence:** Replace "strukturalnie zbliżony do rozszerzenia warunkowanego na zestawienie ras zaimplementowanego w Aligulac" with weaker phrasing (e.g., "z rodziny paired-comparison rating systems, z której wywodzi się także Aligulac").
-2. **T02 [REVIEW] flag:** Replace "rozbieżność między '~80%' a '80,13%' jest w granicach rounding" with explicit disclaimer that the two numbers measure different quantities; numerical proximity is coincidental.
-3. **T01 [REVIEW] flag:** Strengthen literature-gap acknowledgement — explicitly state "brak bezpośredniego źródła dla twierdzenia o biasie non-stationarity-patchowej; cztery kotwice są użyte analogicznie z §4.4.5."
-4. **T01 paragraph:** Add sentence disclaiming CI widths in Tabela 4.7 are not cross-corpus comparable due to kohorta-size confounding (152/744/5000), so "precision penalty" is a qualitative design commitment, not a quantitatively-demonstrated trade-off.
+1. **F6.1 reframe Minami2024 as near-miss / adjacent-reference-class evidence** (option b of BLOCKER 1 fix) — preserves insertion-only discipline and addresses both BLOCKERs simultaneously. New prose framing: Minami2024 is adjacent evidence of the accuracy-only-reporting trend, NOT a direct Luka 1 witness (because its modality and game-type place it outside Luka 1's reference class).
+2. **Move 4 unverified author names** from T01 [NEEDS CITATION] flag text to REVIEW_QUEUE §3.5 row; chapter flag becomes brief pointer.
+3. **Conditionalize F6.2 "rozróżnienie istotne"** to match R14 hedge scope.
+4. **Add T05 REVIEW_QUEUE §4.4 dependency entry** for Lundberg2017.
+5. **Keep F6.3 as-is** — observation noted; dropping T03 would also be defensible but keeping closes the audit item at acceptable cost.
 
-If these 4 edits are made, plan graduates to SOUND/STRONG on Statistical methodology and Thesis defensibility lenses.
+Post-revision verdict: SOUND/STRONG on Statistical methodology and Thesis defensibility lenses.
 
-## Symmetric 1-revision cap (per `feedback_adversarial_cap_execution.md`)
-
-This revision cycle consumes the 1-round allowance for Mode A. Post-revision, proceed to writer-thesis without re-running Mode A. Mode C (post-draft review) remains available for a post-execution stress test.
+**Symmetric 1-revision cap:** this cycle consumes Mode A's allowance. Post-revision proceed to writer-thesis; Mode C remains available post-draft.

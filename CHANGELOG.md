@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.36.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg6a-luka-prophylactic-strengthening)
+
+### Changed
+
+- docs(thesis): Pass-2 PR-6a — F6.1 §3.5 Luka 1 strengthened with verified Minami2024 citation (single witness per reference-class filter) + [NEEDS CITATION] flag for 4 unverified seed authors (Brookhouse & Buckley; Caldeira; Alhumaid & Tur; Ferraz); F6.2 §3.5 Luka 2 Elbert2025EC/SHAP conditional disambiguation with §4.4 forward-reference; F6.3 §3.5 Luka 4 short restatement (GarciaMendez2025 referenced as terminology example only); one new bib entry (Minami2024).
+
 ## [3.35.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy)
 
 ### Changed
