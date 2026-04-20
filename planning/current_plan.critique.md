@@ -1,72 +1,84 @@
-# Plan Critique — reviewer-adversarial Mode A
+# Plan Critique — reviewer-adversarial Mode A (TG2)
 
-**Target:** `planning/current_plan.md`
+**Target:** `planning/current_plan.md` (333 lines)
 **Date:** 2026-04-20
-**Reviewer:** reviewer-adversarial Mode A (pre-execution methodology audit)
 
-## Verdict: REQUIRE_MINOR_REVISION
+## Verdict: BLOCKER
 
-Plan correctly identifies the three-way drift and proposes a defensible target end-state. Three MAJOR methodology-grade issues and three MINOR issues to resolve before dispatch. None is a BLOCKER.
+T01 and T02 are individually defensible. T03's §2.3.2 "53 total, 3 Chronicles excluded" parenthetical is factually WRONG and must be revised before execution.
 
 ## Findings
 
-### MAJOR A1: §4.1.4 line 213 bare "Friedman oraz Wilcoxon-Holm" mention breaks within-game/cross-game partition
-`04_data_and_methodology.md:213` reads *"dla N = 2 gier Friedman oraz Wilcoxon-Holm są inaplikowalne per [Demsar2006]"* — correct for cross-game scope, but the reader has no within-game/cross-game qualifier cue. After T03's softened candidate framing in §4.4.4, §4.1.4 reads as firmer methodology than §4.4.4 does — inversion.
+### BLOCKER A1 — "53 total, 3 Chronicles excluded" parenthetical is factually incorrect
+Chronicles shipped in TWO parts:
+- **Chronicles: Battle for Greece** (2024-11, 3 civs: Achaemenids, Athenians, Spartans)
+- **Chronicles: Alexander the Great** (2025-10-14, 3 civs: Macedonians, Thracians, Puru)
 
-**Fix:** Extend T03 step 5.5 (or add a new T02 step) requiring either (i) a within-game qualifier on line 213 ("w ramach cross-game przy N = 2…"), or (ii) explicit scoping declaration that §4.1.4 line 213 is cross-game-only.
+**Chronicles-excluded = 6 civs, not 3.**
 
-### MAJOR A2: Candidate #3 is not methodologically distinct from Candidate #1's post-hoc block
-T03 step 6's three candidates reduce to two framework families:
-- Candidate #1 = Friedman omnibus + post-hoc Wilcoxon-Holm + Bayesian signed-rank
-- Candidate #3 = Sequential pairwise Wilcoxon with Holm (i.e., #1's post-hoc phase minus omnibus minus Bayesian component)
-- Candidate #2 = pure Bayesian
+Additionally unaccounted in the DLC chronology:
+- Three Kingdoms (2025-05-06, +5 civs) — within aoestats window
+- Last Chieftains (2026-02-17, +3 civs) — after window
 
-This is two families (frequentist + Bayesian) plus one gating variant of the frequentist track — not three inference frameworks. Exposes the plan to the "single-protocol verb-swap" charge line 192 warns against.
+"53 total" is a constructed value (50 ranked + 3 Chronicles Greece) not matching any authoritative source. Liquipedia portal gives ~49-55 depending on accounting convention.
 
-**Fix:** Either replace Candidate #3 with genuinely distinct framework (e.g., Iman-Davenport F-statistic — distinct omnibus test endorsed by Demsar), or re-label the enumeration as "two candidate families with gating variants".
+**Consequence:** post-T03 the thesis would assert "pięćdziesiąt cywilizacji... 53 total, 3 Chronicles excluded" while an examiner cross-checking ageofempires.com would find:
+(i) Three Kingdoms unaccounted
+(ii) Chronicles-exclusion understated as 3 when it is 6
+(iii) "53 total" unanchored to any citation
 
-### MAJOR A3: ROPE-removal doesn't address the implicit α = 0,05 Holm schedule in §2.6.3 line 215
-§2.6.3 line 215 contains "*progami α/(k−i+1) dla i-tego najmniejszego*" — the Holm sequential α-schedule presupposes a fixed α (implicitly 0,05) never cited in §2.6 prose. Plan removes the visible ROPE magic number but leaves an invisible load-bearing α threshold unaddressed — invariant #7 half-compliance.
+**Fix (recommended option a):** DROP the parenthetical entirely. Revert to pure 45→50 + window substitution. The R18 addition was meant to close a "reader-visible DLC arithmetic gap" but introduces a larger gap. §2.3.2:67 is already flagged for Pass-2 review — full-roster accounting can wait.
 
-**Fix:** T02 step 5 should explicitly instruct either (a) α is kept with an in-prose citation, or (b) α is deferred alongside ROPE to methodology finalization.
+Alternatively (option b): hedge non-numerically — "(pełny roster gry przekracza liczbę cywilizacji rankingowych; część zawartości DLC Chronicles pozostaje wyłączona z rywalizacji rankingowej)".
 
-### MINOR A4: Open Q 5 (§4.2 grep sweep) is actually resolved by this Mode A review
-Independent grep of `Dimitriadis|tryptyk|Nemenyi|Wilcoxon|Friedman|signed-rank|Bayesian|ROPE` on `04_data_and_methodology.md` returns exactly 2 hits: line 213 (§4.1.4) and line 371 (§4.4.4). §4.2 confirmed untouched. Plan's Open Q 5 can be marked RESOLVED.
+### MAJOR A2 — DLC chronology missing Three Kingdoms + Last Chieftains
+§2.3.2:67 DLC chronology parenthetical (preserved from the removed `[REVIEW:]` flag) omits Three Kingdoms (2025-05-06) and Last Chieftains (2026-02-17). Under A1 remedy (a), the flag-removal silently promotes an incomplete DLC enumeration from DRAFT to THESIS CONTENT.
 
-### MINOR A5: Malformed REVIEW_QUEUE row at line 43-44 may break executor grep scripting
-`REVIEW_QUEUE.md:43-44` has table-pipe anomaly. T03 step 10's "flag count 3" arithmetic is correct but executor should be warned about the malformed row.
+**Fix:** retain a reduced-scope `[REVIEW:]` flag: *"[REVIEW: DLC chronology completeness — zweryfikować w Pass 2, czy lista DLC obejmuje Three Kingdoms (2025-05-06) i Last Chieftains (2026-02-17)]"*.
 
-### MINOR A6: "Sanity-check, not blocking" character budgets are permissive enough to allow net-additive substance
-±1500 char budget on §2.6 = ~10% drift; non-blocking means overshoots can substantively expand the section beyond "prose swap" intent.
+### MAJOR A3 — Window forward-reference inconsistency
+T01 step 5 instructs inserting "(Tabela 4.4a w §4.1.3)" at §2.2.2:33. T03 does NOT add analogous forward-reference at §1.4:45 and §2.3.2:67 where the aoestats window is substituted. Inconsistent convention across sites.
 
-**Fix:** Either make character budgets blocking, or add explicit "no net-additive content" gate bullet.
+**Fix:** require T03 to append "(Tabela 4.4a)" forward-reference at §1.4 and §2.3.2 window-substitution sites.
+
+### MINOR A4 — Dash character convention inconsistency
+Tabela 4.4a uses em-dash "—" (2022-08-28 — 2026-02-07). Plan substitution uses arrow "→" (2022-08-28 → 2026-02-07). Different characters in different contexts.
+
+**Fix:** pick one character and apply consistently. Recommend em-dash to match Tabela 4.4a source.
+
+### MINOR A5 — Acquisition vs observation window precision
+Plan uses filename-derived acquisition window (2022-08-28 → 2026-02-07 per Tabela 4.4a). aoestats INVARIANTS.md:74 gives first-observation window as (2022-08-29, 2026-02-06) — 1 day tighter at each boundary. Defensible per thesis convention but worth explicit framing.
 
 ## Probes answered
 
-- **Probe 1 (un-commitment vs lower-abstraction commitment):** Option B shifts commitment from triptych to ECE-stack — net commitment is not reduced, it is relocated. User's resolution is defensible but aware.
-- **Probe 2 (cross-ref graph):** Acyclic. §1.2 → §4.4.4, §2.6.x → §4.4.4, §4.4.4 → §2.6 + §4.4.2. No cycles.
-- **Probe 3 (invariant #8 timing):** Advisory framing is load-bearing, not window-dressing. Sound.
-- **Probe 4 (ROPE invariant #7):** Partially addressed — ROPE removed but α=0,05 uncovered. See A3.
-- **Probe 5 (Demsar §3.1.3):** WebFetch could not read the PDF binary. Plan's T02 deferral with [REVIEW:] fallback is correct. Cannot close here.
-- **Probe 6 (voice consistency):** Adequate register shift from §2.6.1 decisive to §2.6.2-5 hedged; writer-thesis can handle.
-- **Probe 7 (scope creep):** File Manifest clean; 5 files only. See A6 for char-budget permissiveness.
-- **Probe 8 (Ambiguity B):** Resolved. See A4.
-- **Probe 9 (Option b re-verification):** Option (a) more un-commitment-pure; Option (b) more examiner-defensible. User's choice stands.
-- **Probe 10 (Pass-2 flag count):** Arithmetic correct. See A5 for row format anomaly.
-
-### Additional methodology probes
-
-- **Candidate-space enumeration soundness:** Three candidates reduce to two framework choices — see A2.
-- **Deferral language credibility:** "Deferred to §4.4.2 (BLOCKED)" is honest but weak; risk surfacing only when §4.4.2 is drafted.
-- **Within-game/cross-game partition:** Methodologically sound for N=2, but §4.1.4 line 213 implicitly breaks it — see A1.
+1. Hardest-to-catch risk: **CONFIRMED BLOCKER.** See A1.
+2. Arithmetic: $\binom{50}{2}=1225$, $+50=1275$ ✓
+3. Bibkey integrity: T02 single-token edit verified operational ✓
+4. Cross-section consistency: 9-site enumeration complete ✓
+5. Window consistency: See A4 (dash character) and A5 (acquisition vs observation)
+6. DLC chronology preservation: See A2 (incomplete chronology promoted to thesis content)
+7. REVIEW_QUEUE row split: consistent with existing conventions ✓
+8. Scope creep: File Manifest holds at 8 files ✓
+9. Mountain Royals year: 2023-10-31 confirmed via Steam, Neowin, ageofempires.com, Wikipedia, Fandom ✓
+10. Flag lifecycle: See A2 — reduced-scope flag should be retained
+11. §4.1.1.x no-regression: T01 edits only §2.2.2 + §3.x:55 ✓
+12. Dispatch shorthand: consistent with sec_4_1_crosswalk.md:14 ✓
 
 ## Recommendation
 
-**REQUIRE_MINOR_REVISION before dispatch.** Apply A1, A2, A3 (MAJORs) before writer-thesis execution. A5, A6 (MINORs) are optional polish. A4 resolves Open Q 5 in-place.
+**REQUIRE_MINOR_REVISION of T03 before execution.** Four revisions needed:
 
-After these revisions, plan is PROCEED material.
+1. **A1 (BLOCKER):** drop the "53 total, 3 Chronicles excluded" parenthetical entirely. Revert to pure 45→50 + window substitution.
+2. **A2 (MAJOR):** retain reduced-scope `[REVIEW:]` flag at §2.3.2:67 covering DLC chronology completeness.
+3. **A3 (MAJOR):** add "(Tabela 4.4a)" forward-references at §1.4:45 and §2.3.2:67 window-substitution sites.
+4. **A4 (MINOR):** pick em-dash consistently for window dash-character.
+
+T01 and T02 are independently defensible. T03 requires revision.
 
 ## Sources
 
-- Demšar 2006, JMLR: https://jmlr.org/papers/v7/demsar06a.html — §3.1.3 / §3.2 section anchor not verifiable via web tools, correctly deferred to T02.
-- García & Herrera 2008, JMLR extension: https://www.jmlr.org/papers/volume9/garcia08a/garcia08a.pdf
+- Fandom wiki: Mountain Royals, Last Chieftains, Three Kingdoms pages
+- Neowin: Mountain Royals 2023-10-31 release
+- ageofempires.com: official news
+- Liquipedia: Civilizations portal
+- Steam: DLC listings
