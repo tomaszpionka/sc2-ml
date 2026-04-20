@@ -1,285 +1,226 @@
 ---
 category: F
-branch: docs/thesis-pass2-tg5a-internal-consistency-chore
+branch: docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy
 date: 2026-04-20
 planner_model: claude-opus-4-7
 ---
 
-# Plan: TG5-PR-5a — Pass-2 internal-consistency chore (F5.1, F5.2, F5.3, F5.5, F5.6)
+# Plan: TG5-PR-5b — §4.1.3 reference-window defence + §2.2.3 Thorrez proxy insertion (F5.4 + F4.5)
 
-**Category:** F (Thesis)
-**Branch:** `docs/thesis-pass2-tg5a-internal-consistency-chore`
-**Base:** `master` (at `fee3d324`)
-**Audit source:** `thesis/reviews_and_others/pass2_dispatch.md` §Task Group 5 (lines 153–175); Appendix A H1–H3 (lines 307–309); Appendix B A15 (lines 410–414) for F5.3 / F4.5 reframing; F4.5 audit text (line 124) providing the calibration-vs-accuracy distinction. Audit saved 2026-04-20 from transcript `36812a12` line 6 for durable recovery.
+**Category:** F (Thesis — science-lite; two prose insertions with literature anchors, no new empirical claims)
+**Branch:** `docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy`
+**Base:** `master` (at `d640711a`, post-PR #192 handoff-status doc merge)
+**Audit source:** `thesis/reviews_and_others/pass2_dispatch.md` §Task Group 5 F5.4 (line 163) + §Task Group 4 F4.5 (line 124) + Appendix B A15 (lines 410–414); scope inheritance documented in `thesis/reviews_and_others/pass2_status.md` §PR-5b (lines 25–34). The prior PR-5a plan at this same path has been overwritten by this file; see §Scope / §Binding discipline for the full PR-5b scope declaration.
 
 ## Problem Statement
 
-Pass-2 audit Task Group 5 identified 6 internal-consistency drifts across WRITING_STATUS, REVIEW_QUEUE, THESIS_STRUCTURE, and chapters 1–4. This PR (PR-5a chore subset) fixes 5 of them; F5.4 and F4.5 are deferred to PR-5b (science-lite). F5.6 is executed as flag-planting only (no §3.2 → §3.1.3 swap) pending readable Demšar 2006 PDF verification per Mode A BLOCKER resolution.
+Pass-2 audit flagged two defects that require literature-anchored prose insertions:
+
+1. **F5.4 — §4.1.3 "Ramy okna referencyjnego" circular spec-reference.** The reference-window-asymmetry defence paragraph (at `thesis/chapters/04_data_and_methodology.md:207`) defends aoestats 9-week single-patch window vs. sc2egset / aoe2companion 4-month window by citing internal pre-registration `reports/specs/01_05_preregistration.md` §7 + §11 W3 ARTEFACT_EDGE. The spec was authored by the same team that authored the thesis, so the citation is circular — the spec cannot serve as external authority for the methodology defence. An examiner would ask "why is patch-regime homogeneity prioritized over window-length comparability?" and receive an answer that reduces to "because we wrote a rule that says so." The defence survives only if re-anchored to independent literature.
+2. **F4.5 — §2.2.3 Aligulac calibration proxy insertion.** PR-5a (F5.3) reframed the §2.2.3 Aligulac-80% claim as calibration-not-accuracy and planted a [REVIEW] flag noting that the academic-proxy comparator (Thorrez 2024 Glicko-2 80.13% on SC2 data) would be inserted in PR-5b. The flag currently carries the explicit deferral text at `thesis/chapters/02_theoretical_background.md:39`. This PR realizes the insertion: the comparator sentence cites `Thorrez2024` (bib entry already present at `thesis/references.bib:144`) to provide the independent academic calibration-proxy anchor that the Aligulac FAQ claim lacks.
+
+Both defects are literature-anchor insertions against sources already present in `thesis/references.bib`. No new bib entries, no new empirical claims, no methodology changes beyond reframing how existing claims are justified.
 
 ## Literature Context
 
-The only new literature reference planted is a meta-reference to Demšar 2006 via the F5.6 `[REVIEW]` flags — no new bib entries, no new claims in prose. F5.3 calibration-vs-accuracy framing rests on the audit's primary-source reading of the Aligulac FAQ (audit Appendix B A15 line 411). The Thorrez2024 comparator is already in the bib (not added here) and referenced only inside existing/reworded [REVIEW] flags.
+### F5.4 defence anchors (all already in `thesis/references.bib`)
+
+- **[Nakagawa2017]** (bib line 923, DOI 10.1098/rsif.2017.0213) — ICC estimation under GLMM; §2.2 establishes that ICC estimators depend on the variance-decomposition structure within the reference distribution. Cluster-level within-window non-stationarity biases variance-component estimates; the paper is already cited in §4.4.5 (chapter line 383) as the authority for latent-scale ICC under logit link.
+- **[Gelman2007]** (bib line 973, ISBN 9780521686891) — Chapters 11–12 establish ICC identifiability conditions for one-way random-effects ANOVA with clustered data; the text treats within-cluster stationarity of the outcome distribution as the primary prerequisite for consistent variance-component estimation. Already cited in §4.4.5 line 387 as the authority for 744-cluster identifiability.
+- **[Ukoumunne2003]** (bib line 948, DOI 10.1002/sim.1643) — Cluster-bootstrap CI for ICC; Section 2 establishes that the non-parametric bootstrap CI is consistent only under the assumption of exchangeable clusters within the reference distribution. Patch-regime change inside the reference window violates exchangeability because balance-patch shifts the game-state distribution, which changes the within-player win/loss variance structure. Already cited in §4.4.5 line 385 as the CI method for aoestats + aoe2companion.
+- **[WuCrespiWong2012]** — ICC estimator for binary outcomes under one-way random-effects ANOVA; supplies the specific estimator form applicable to the per-player win/loss target used in §4.4.5 and grounds the precision-axis argument (CI width) that complements the point-estimate-bias argument from the preceding three anchors. Already cited in §4.4.5 line 385 as the authority for the ANOVA-type ICC on binary outcomes.
+
+Collectively these four sources supply the methodological argument: *patch-regime homogeneity is a prerequisite for consistent ICC point-estimation and CI construction under the one-way random-effects framework used in §4.4.5. Window-length comparability is orthogonal — it governs precision (CI width) rather than point-estimate consistency.* The spec §7 rule operationalizes this methodological constraint; the rule is not itself the authority.
+
+### F4.5 proxy anchor (already in `thesis/references.bib`)
+
+- **[Thorrez2024]** (bib line 144, HuggingFace URL `https://huggingface.co/datasets/EsportsBench/EsportsBench`) — EsportsBench benchmark of paired-comparison rating systems across 20 esports titles including SC2 with Aligulac-sourced data. Table 2 of the preprint reports Glicko-2 accuracy of 0.8013 on SC2 data (411,030 train matches, ~22,343 test matches). This is the closest academic calibration-independence proxy to the Aligulac FAQ's self-reported calibration claim. Already framed as such in §2.5.5 (line 183 existing [REVIEW] flag; audit cites §2.5.4 — on current chapter structure the relevant locus is §2.5.5 per PR-TG5a closure), §3.2.4 (line 77 existing [REVIEW] flag), and §3.5 Luka 3 (line 189). PR-5b propagates the same framing from flag-level to prose-level at §2.2.3, completing the F5.3 / F4.5 consistency pair.
+
+No literature search is required — all anchors are already in the bib and already cited in neighbouring chapter sections. The exact 80.13% figure is flagged for Pass-2 PDF verification in all four locations with consistent hedging.
 
 ## Assumptions & Unknowns
 
-- **Assumed:** The Demšar 2006 §3.1.3 location claim from audit H3 is the best available guidance until a readable PDF confirms it. Until verification, F5.6 flags rather than swaps.
-- **Unknown:** Exact section location of the N ≥ 10 cross-dataset threshold in Demšar 2006 (JMLR PDF unreachable via WebFetch in this environment). Pass-2 resolves via manual PDF read.
-- **Assumed:** The audit's counting of §1.1 "3 flags" (H1) refers to audit-named concerns, not physical [REVIEW:] tags. Plan records both counts explicitly to resolve the convention ambiguity.
+- **Assumed:** The three F5.4 literature anchors (Nakagawa 2017, Gelman 2007, Ukoumunne 2003) support the claim that patch-regime homogeneity dominates window-length comparability for ICC estimation under the estimator used in §4.4.5. This is consistent with how they are already cited in §4.4.5 (chapter lines 383–387). If Pass-2 manual verification of the three papers uncovers a contrary claim, the defence is revised; for this PR the anchoring is taken as sound.
+- **Assumed:** The Thorrez2024 Glicko-2 80.13% figure is accurate per Table 2 of the preprint. This figure is currently flagged for Pass-2 verification in three other chapter locations (§2.5.5 line 183, §3.2.4 line 77, §3.5 line 189); PR-5b inserts with the same hedge convention, so PR-5b does not introduce new verification burden — it distributes the existing burden consistently.
+- **Unknown:** Whether a peer-reviewed secondary source exists that would strengthen the F5.4 defence with a specific statement about "patch-regime non-stationarity biases ICC" in a game-data context. Pass-2 manual literature review may surface such a source; if so, it can be added in a post-Pass-2 refinement without revising the PR-5b text.
+- **Unknown:** Exact bib-to-chapter-line anchoring for the 80.13% figure. The value is not in the bib `note` field of `Thorrez2024` (bib line 148 notes "Evaluated 11 rating systems across 20 esports titles…" without the figure); the figure lives only in the preprint Table 2. PR-5b inserts with the same [REVIEW: verify Table 2] hedge used in the neighbouring locations.
 
 ## Gate Condition
 
-Per-task gates are documented inline at each T0x step (see §2 Execution Steps). Aggregate: all 6 tasks pass their gates; `git diff --stat` touches exactly the 6 thesis/ files plus `pyproject.toml` + `CHANGELOG.md`; no src/ / reports/ / sandbox/ / references.bib changes.
+Per-task gates documented inline at T01–T06 below. Aggregate:
+
+- `git diff --stat` touches exactly 5 files: `thesis/chapters/02_theoretical_background.md` (F4.5 insertion), `thesis/chapters/04_data_and_methodology.md` (F5.4 rewrite), `thesis/WRITING_STATUS.md`, `thesis/chapters/REVIEW_QUEUE.md`, plus `pyproject.toml` + `CHANGELOG.md` for the version bump (7 files total including release files).
+- No changes to `thesis/references.bib` (all anchors exist).
+- No changes to `src/`, `reports/`, `sandbox/`, or `.claude/`.
+- The existing [REVIEW: F5.3 Pass-2 audit — …] flag at chapter line 39 is reworded to document completion of the F4.5 proxy insertion and to mark the 80.13% figure for Pass-2 Table-2 verification (consistent with the other three locations).
+- The existing [REVIEW: Pass-2 — patch-anchored vs. comparable-length framing …] flag at chapter line 207 is reworded to record the F5.4 literature anchoring and to acknowledge the sensitivity-axis caveat.
+- Post-edit: planning-drift pre-commit hook passes (all 8 Cat F sections present in this plan); ruff/mypy N/A (no .py changes).
 
 ## Open Questions
 
-None load-bearing for PR-5a. Pass-2 targets:
-1. Demšar 2006 §3.1.3 vs §3.2 location confirmation (F5.6 flag closure).
-2. Whether the audit's H1 "3 flags" counting convention or physical-tag counting convention becomes the repo-wide norm for REVIEW_QUEUE.
-
-## 0. Pre-flight
-
-- Confirm branch is `docs/thesis-pass2-tg5a-internal-consistency-chore` not `master` (check: `git branch --show-current`).
-- Confirm audit source file is present at `thesis/reviews_and_others/pass2_dispatch.md` (prior commit `195a33c8` on this branch).
-- Confirm no staged or unstaged modifications in working tree apart from this plan file before starting T01.
-- No purge step: the prior plan artifacts (`planning/current_plan.md` + `planning/current_plan.critique.md` from TG4) already purged in the master merge via the standard purge-chore cycle (the merge of PR #190 included the post-TG4 purge). This file overwrites any residual stub.
+1. **Pass-2:** Manual verification of Thorrez 2024 Table 2 exact value (0.8013 vs. rounded ~80%). Closes the [REVIEW] flag simultaneously in all four affected sections once resolved.
+2. **Pass-2:** Whether a higher-signal literature anchor exists for the "patch-regime homogeneity dominates window-length comparability" claim than the three sources used here. Nakagawa 2017 / Gelman 2007 / Ukoumunne 2003 are used in §4.4.5 for different (but related) methodological questions; a source more directly about sampling-window non-stationarity in ICC estimation would be ideal.
+3. **Post-Pass-2:** §3.2 → §3.1.3 swap (F5.6 follow-up) remains deferred per prior plan; PR-5b does not interact with those flags.
 
 ## Scope
 
-(Canonical scope declaration for hook compliance — see §1.1/§1.2/§1.3 below for full detail.)
+### What this PR covers
 
-## 1. Scope, constraints, and discipline
+1. **F5.4 — §4.1.3 "Ramy okna referencyjnego" literature anchoring.** Rewrite the defence paragraph at `thesis/chapters/04_data_and_methodology.md:207` to lead with the methodological argument, reframed on two orthogonal axes: (a) point-estimate consistency — patch-regime homogeneity is a primary prerequisite for unbiased ICC point estimation, and (b) precision (CI width) — co-first-order but *bounded, not optimized* by the single-patch constraint (the precision penalty of a shorter window is consciously accepted in exchange for bias-consistency). The external, non-tuning anchor for patch 66692 specifically is data availability: patch 66692 is the sole patch fully covering the pre-registration reference window [2022-08-29, 2022-10-27] (123,367 matches within window / 241,981 across the full patch cycle 2022-08-29 → 2022-12-08 per `reports/specs/01_05_preregistration.md:580–582`); the 9-week window width corresponds to the number of weekly crawler files ingested within the spec §7 window, not to the patch calendar cycle. Window-length asymmetry is thus not a "second-order" concern on a unified hierarchy; it is orthogonal to point-estimate bias while remaining co-first-order for precision, and is addressed by a distinct design mechanism (single-patch window sizing with the precision trade-off acknowledged explicitly and CI widths reported per-corpus in §4.4.5). Cite [Nakagawa2017, Gelman2007, Ukoumunne2003, WuCrespiWong2012]. Retain the spec §7 + §11 reference as the operationalization anchor, not as the authority.
+2. **F4.5 — §2.2.3 Thorrez academic-proxy insertion.** Insert a comparator sentence immediately after the existing Aligulac calibration sentence at `thesis/chapters/02_theoretical_background.md:39` citing [Thorrez2024] Glicko-2 80.13% on SC2 Aligulac data as the closest academic calibration-proxy benchmark. Preserve the calibration-vs-accuracy distinction from PR-5a (F5.3). Reword the existing [REVIEW] flag from "insertion deferred to PR-5b" to "F4.5 proxy inserted; Pass-2 verifies 80.13% exact value per Thorrez 2024 Table 2".
+3. **REVIEW_QUEUE + WRITING_STATUS updates** documenting both edits per `.claude/rules/thesis-writing.md` end-of-draft checklist.
 
-### 1.1 What this PR covers
+### What this PR does NOT cover
 
-Five chore-tier findings from the Pass-2 audit Task Group 5:
+- **No new bib entries.** All literature anchors (Nakagawa2017, Gelman2007, Ukoumunne2003, Thorrez2024) exist.
+- **No §4.4.5 rewrite.** §4.4.5 already cites all three F5.4 anchors; PR-5b does not touch §4.4.5 prose.
+- **No §2.5.5 / §3.2.4 / §3.5 rewording.** The Thorrez-proxy framing in those three locations was established in PR-TG3 + PR-TG5a and is not re-litigated here.
+- **No F5.6 Demšar §3.2 → §3.1.3 swap.** Remains deferred to post-Pass-2 once readable PDF confirms location.
+- **No TG6 items** (PR-6a for F6.1–F6.3 science-lite, PR-6b for F6.4–F6.12 chore) — separate PRs.
+- **No data/feature/model work.** Category F science-lite; `.claude/scientific-invariants.md` §Invariants #1, #3, #4, #5 are N/A; #6, #7, #8, #9, #10 are N/A; #2 applies only to the sense that all cited sources already have DOI/URL anchors.
 
-1. **F5.1 — WRITING_STATUS + REVIEW_QUEUE §1.1 flag-count drift**
-2. **F5.2 — THESIS_STRUCTURE.md Chapter 1 feed-attribution drift**
-3. **F5.3 — §2.2.3 / §2.5.5 Aligulac 80% flag-presence inconsistency** (subsumes F4.5 reframing which was deferred from TG4)
-4. **F5.5 — §3.3 / §3.4 Elbert 2025 placement decision, documented inline**
-5. **F5.6 — §4.4.4 + §2.6.3 + §4.1.4 Demsar §3.2 / §3.1.3 location uncertainty flagged (swap deferred to Pass 2 after PDF verification)**
+### Binding discipline
 
-### 1.2 What this PR does NOT cover
-
-- **F5.4** (§4.1.3 circular spec-reference) — moved to PR-5b (science-lite). **PR-5b scope also expanded to include F4.5 Aligulac Thorrez-proxy-insertion at §2.2.3** (the Thorrez comparator sentence originally attempted under F5.3 in this chore PR but removed per R6 iter-1 revision to stay within chore discipline). Both F5.4 and F4.5 require literature-level prose insertions; PR-5b is the natural vehicle.
-- **TG6 items** — separate PRs (PR-6a, PR-6b).
-- **F6.11** — already landed in TG4 (bib has `Stein, Nikolai` and `von Schenk, Alicia`; verified via grep on `thesis/references.bib`). Drop from future PR-6b.
-- Any new literature search, bib additions, or methodology defence.
-- Any Chapter 4 §4.4.4 *within-game* protocol rewrite — TG1 already reframed that as candidate-list framing; F5.6 is a pure citation-location fix, not a methodology edit.
-
-### 1.3 Binding discipline
-
-- Chore PR: all edits are citation-location fixes, flag-presence reconciliations, documentation-of-decision sentences, and metadata refreshes in status files. No new claims, no methodology changes, no bib additions.
-- F5.3 reframing (Aligulac 80%) is **not** a new claim — it applies the F4.5 finding (misreading confirmed in audit Appendix B A15 line 411) by rewording existing sentences to distinguish "calibration ~80%" (Aligulac FAQ) from "classification accuracy" (Thorrez 2024 Glicko-2 at 80.13% as academic proxy). Both locations must land with consistent framing and consistent flag presence. Note: The audit summary uses "§2.5.4" for this finding, but the actual flag at chapter line 183 sits inside the `### 2.5.5` heading (confirmed via structural check); the correct section label is §2.5.5 throughout this plan. F5.3 reframing applies a prose-softening of the existing §2.2.3 claim (calibration-not-accuracy hedge) consistent with the existing §2.5.5 [REVIEW] flag; the full F4.5 Thorrez-comparator insertion at §2.2.3 is explicitly deferred to PR-5b per §1.2.
-- F5.5 documentation decision is a single-sentence inline addition to §3.4 (or §3.3) explaining the placement logic; does not move Elbert between sections.
-- F5.6 is executed as flag-planting only; the §3.2 → §3.1.3 swap is deferred to a post-Pass-2 PR once a readable Demšar 2006 PDF confirms the corrected location. All four citation loci (§4.4.4 lines 375+377, §4.1.4 line 213, §2.6.3 line 211) receive `[REVIEW:]` flags acknowledging the uncertainty; the existing `§3.2` text is left in place.
-- Invariant discipline: no changes touching `.claude/scientific-invariants.md`, no changes to `reports/` or `sandbox/`, no changes to `src/`.
+- **Science-lite PR** with tight discipline: two prose insertions (one rewrite, one addition), both anchored to literature already in the bib. No new claims; all reframings apply existing audit findings to the chapter prose.
+- **Polish academic register** throughout. Use the existing §4.4.5 vocabulary ("observed-scale ICC", "one-way random-effects ANOVA", "cluster-bootstrap CI") where applicable to keep terminology consistent across chapter 4 sections. Use the existing §2.5.5 vocabulary ("Glicko-2", "paired-comparison rating systems", "referencyjny zbiór benchmarków") for consistency across chapter 2 sections.
+- **ISO dates** (yyyy-mm-dd) in any new prose. No localized Polish-idiomatic date forms (per `feedback_iso_date_format.md`).
+- **No [UNVERIFIED] flags added** — the 80.13% hedge uses [REVIEW] consistent with existing pattern. [UNVERIFIED:] is reserved for numbers that cannot be traced; 80.13% traces to Thorrez 2024 Table 2.
+- **3-round adversarial cap symmetric** (per `feedback_adversarial_cap_execution.md`): `/critic` max 3 iterations + `reviewer-adversarial` Mode A once + Mode C once. If Mode A or Mode C returns REVISE, max 1 revision cycle per mode before landing (symmetric to the /critic 3-iter cap).
+- **Post-merge planning purge**: this plan overwrites the prior PR-5a plan; after PR-5b merges, the next TG (PR-6a) plan will overwrite this one in turn.
 
 ## Execution Steps
 
-(Step list anchored at §2 Task breakdown below — T01 through T06 with per-task gates.)
+### T01 — F5.4 §4.1.3 literature-anchored rewrite
 
-## 2. Task breakdown
+**File:** `thesis/chapters/04_data_and_methodology.md` (paragraph at line 207, inside §4.1.3 "Asymetria korpusów — ramy porównawcze").
 
-### T01 — F5.1: WRITING_STATUS.md + REVIEW_QUEUE.md §1.1 row refresh
+**Action:** Rewrite the "Ramy okna referencyjnego" paragraph as follows. Preserve the opening factual statement about the two window lengths. Restructure so that the methodological argument (patch-regime homogeneity → within-cluster stationarity → consistent ICC estimation) precedes the operationalization citation (spec §7 + §11). Add citations to [Nakagawa2017, Gelman2007, Ukoumunne2003] explaining why patch homogeneity dominates window-length symmetry for this estimator. Explicitly acknowledge the sensitivity axis (different windows would produce different CI widths, not biased point estimates). Replace the existing [REVIEW] flag with a reworded version noting that F5.4 is now anchored in literature and that Pass-2 may add a more direct non-stationarity-in-ICC source if surfaced.
 
-**Files:**
-- `thesis/WRITING_STATUS.md` (Chapter 1 table, §1.1 row)
-- `thesis/chapters/REVIEW_QUEUE.md` (Pending table, §1.1 row — already exists at line 19 with `Flag count` cell = `0`)
+**Proposed new paragraph structure (writer-thesis may refine within this scope):**
 
-**Empirical anchor:**
-- §1.1 current in-prose `[REVIEW:]` flags (verified 2026-04-20 via grep on `thesis/chapters/01_introduction.md`):
-  - Line 11: `[REVIEW: GarciaMendez2025 — zweryfikować pełną listę autorów, grę docelową i dokładną trafność]`
-  - Line 13: `[REVIEW: Shin1993 i Forrest2005 dotyczą rynków sportów tradycyjnych ... Mangat i in. [Mangat2024] omawiają zakłady esportowe ...]`
-- §1.1-adjacent bibliography-footer `[REVIEW:]` annotations (lines 81, 83) are part of the draft's chapter-local `## References` block, not in-prose flags; count them separately.
-- REVIEW_QUEUE.md Pending table columns are: `Section | Chapter file | Drafted date | Flag count | Key artifacts | Pass 2 status`.
-- WRITING_STATUS.md Chapter 1 table columns are: `Section | Status | Feeds from | Notes` — there is NO `Flag count` column in WRITING_STATUS.md.
+> **Ramy okna referencyjnego.** Trzy korpusy używają dwóch długości okien referencyjnych: sc2egset oraz aoe2companion — czteromiesięcznego okna 2022-08-29 → 2022-12-31, aoestats — dziewięciotygodniowego okna single-patch 2022-08-29 → 2022-10-27 obejmującego wyłącznie okres patcha 66692. Wartość dziewięciu tygodni odpowiada liczbie cotygodniowych plików dostarczonych przez crawler aoestats w obrębie okna pre-rejestracyjnego i jest pochodną liczby plików ingerowanych, nie kalendarzowego cyklu życia patcha — pełny cykl patcha 66692 obejmuje 2022-08-29 → 2022-12-08 (~14 tygodni); specyficzna szerokość okna jest zatem sądem eksperckim popartym kryterium single-patch, nie niezależnym faktem empirycznym. Zewnętrznym ograniczeniem niezależnym od decyzji projektowej jest natomiast sam wybór kotwicy patchowej: patch 66692 jest jedynym patchem w pełni pokrywającym pre-rejestracyjne okno obserwacji [2022-08-29, 2022-10-27] (123 367 meczów wewnątrz okna na 241 981 meczów w całym cyklu życia patcha; `reports/specs/01_05_preregistration.md:580–582`), co czyni dobór kotwicy ograniczeniem dostępności danych, nie parametrem strojenia modelu. Asymetria wynika z metodologicznego priorytetu jednorodności rozkładu odniesienia, lecz formułowanego na dwóch ortogonalnych osiach — nie jako pojedyncza hierarchia. Po pierwsze, oś spójności punktowej estymaty: estymatory ICC typu ANOVA dla binarnych outcome'ów [WuCrespiWong2012] oraz ich przedziały ufności obliczane cluster-bootstrapem [Ukoumunne2003] są spójne wyłącznie przy stacjonarności wewnątrzklastrowej w obrębie okna referencyjnego; zmiana reżimu patchowego w środku okna narusza tę stacjonarność, ponieważ patch balansujący modyfikuje rozkład stanów gry, a w konsekwencji strukturę wariancji międzymeczowej per-gracz [Nakagawa2017, §2.2]. Identyfikowalność punktowej estymaty ICC wymaga stabilnej struktury klastrowej w obrębie zbioru odniesienia [Gelman2007, §11–12], a nie zadanej minimalnej długości okna — w tym sensie długość okna jest dla biasu punktowego co najwyżej drugorzędna. Po drugie, oś precyzji: szerokość CI dla ICC zależy od efektywnej liczby klastrów oraz rozkładu wariancji wewnątrzklastrowej, i zmienia się między oknami różnej długości przy zachowanej patch-homogeniczności; precyzja jest współrzędnie pierwszorzędną osią interpretacji ICC i jest *ograniczona, nie optymalizowana* przez konstrukcję single-patch — kara precyzji krótszego okna jest świadomie akceptowana w zamian za spójność biasu punktowego (jednorodność patchową), a szerokości CI są raportowane per-korpus w §4.4.5. Rozciągnięcie okna aoestats przez granicę patcha do pełnych czterech miesięcy wprowadziłoby non-stationarity patchową, której estymator nie kompensuje; konstrukcja single-patch jest zatem pierwszorzędową decyzją metodologiczną dla biasu punktowego i akceptowanym trade-offem dla precyzji, nie post-hoc korekcją. Pre-rejestracja §7 oraz §11 W3 ARTEFACT_EDGE (`reports/specs/01_05_preregistration.md`) operacjonalizuje tę decyzję jako zablokowany projektowo wybór; metodologiczny argument pozostaje aktualny niezależnie od spec-local operacjonalizacji. Szerokości CI w Tabeli 4.7 (§4.4.5) nie są ściśle porównywalne międzykorpusowo, ponieważ zależą zarówno od długości okna, jak i od liczby klastrów (152 / 744 / 5 000 dla sc2egset / aoestats / aoe2companion) — „kara precyzji" krótszego okna aoestats jest w tym sensie jakościowym zobowiązaniem projektowym, a nie ilościowo zademonstrowanym trade-offem na poziomie obecnych danych, ponieważ efekt długości okna jest w Tabeli 4.7 splątany z efektem liczby klastrów. [REVIEW: Pass-2 — F5.4 audit anchoring; brak bezpośredniego peer-reviewed źródła dla twierdzenia o biasie non-stationarity-patchowej na estymator ICC dla binarnych outcome'ów; cztery kotwice [Nakagawa2017, Gelman2007, Ukoumunne2003, WuCrespiWong2012] są użyte **analogicznie** z §4.4.5 (linie 383–387), gdzie te same prace ugruntowują wybór estymatora (WuCrespiWong2012), metodę CI (Ukoumunne2003), identyfikowalność punktową (Gelman2007) oraz skalę linka (Nakagawa2017) — każde w innym, ale pokrewnym kontekście metodologicznym. Pass-2 weryfikuje istnienie bezpośredniego źródła.]
 
-**Edit 1 — WRITING_STATUS.md §1.1 row:**
-- There is no `Flag count` column in WRITING_STATUS.md. Do NOT modify or reference a non-existent flag-count cell.
-- Target: the **Notes** cell of the existing §1.1 row.
-- Append to the current Notes value: `**2026-04-20 (PR-TG5a):** §1.1 has 2 physical [REVIEW:] tags covering 3 audit-named concerns (GarciaMendez2025 at line 11; Shin1993/Forrest2005/Mangat2024 bundled at line 13) plus 2 bibliography-footer flags (lines 81, 83 of the chapter file). Prior REVIEW_QUEUE Flag count "0" was drift from an earlier revision; updated per F5.1 of Pass-2 audit.`
+**Gate:**
+- Four new citations added inline: `[Nakagawa2017, §2.2]`, `[Gelman2007, §11–12]`, `[Ukoumunne2003]`, `[WuCrespiWong2012]`. The fourth citation is authorized by inclusion in §Literature Context as a fourth anchor; it grounds the precision-axis (CI width) portion of the orthogonal-axes reframe.
+- Spec reference (`reports/specs/01_05_preregistration.md` §7 + §11 W3 ARTEFACT_EDGE) retained but reframed as operationalization, not authority; the 9-week window width is explicitly attributed to the crawler-file count (expert judgment anchored by single-patch criterion), the 14-week patch-66692 calendar cycle is cited as a distinct fact, and the external non-tuning anchor is patch-uniqueness (patch 66692 is the sole patch covering the reference window).
+- The existing [REVIEW] flag on chapter line 207 is replaced with the new [REVIEW: F5.4 audit anchoring …] flag (single flag; flag count on §4.1.3 stays at 1, same as pre-PR — verified by Grep of `\[REVIEW` within §4.1.3 span lines 163–208 returning exactly one hit at line 207).
+- Word-count delta: current paragraph ~834 characters → proposed paragraph ~3,600 characters (net delta ~+2,770 characters). The expansion is intentional and within editorial scope: it accommodates (a) the orthogonal-axes reframe with four literature anchors [Nakagawa2017, Gelman2007, Ukoumunne2003, WuCrespiWong2012], (b) the honest attribution of the 9-week value to the crawler-file count (not the patch calendar cycle) plus the 14-week patch-66692 cycle fact cited to `reports/specs/01_05_preregistration.md:580–582`, (c) the external patch-uniqueness justification (patch 66692 is the only patch fully covering the reference window; 123,367 matches within window, 241,981 across the full patch cycle), and (d) the explicit precision-is-bounded-not-optimized trade-off clause resolving R21. Writer-thesis may trim within ±200 chars while preserving all four lettered load-bearing claims.
 
-**Edit 2 — REVIEW_QUEUE.md Pending table §1.1 row (UPDATE, not insert):**
-- §1.1 row **already exists** at line 19 of `thesis/chapters/REVIEW_QUEUE.md` with `Flag count` = `0` and `Pass 2 status` = `Pending — Pass 2 blocking items resolved`. Do NOT insert a duplicate row.
-- Update the existing §1.1 row:
-  - Change `Flag count` cell from `0` to `2 physical [REVIEW] tags covering 3 audit-named concerns`. [R4 choice: option (b) — record `2 physical [REVIEW] tags covering 3 audit-named concerns` because line 13 bundles three audit-named concerns (GarciaMendez2025 / Shin1993+Forrest2005 / Mangat2024) in a single tag; the bibliography-footer annotations at lines 81, 83 are not in-prose flags and are not counted here. The plan comment below explains the bundle for future auditors.]
-  - Append to `Pass 2 status` cell: `**2026-04-20 (PR-TG5a):** flag count corrected per F5.1 of Pass-2 audit — §1.1 has 2 physical in-prose [REVIEW:] lines (line 11: GarciaMendez2025; line 13: bundles three concerns — Shin1993+Forrest2005 generalisation scope + Mangat2024 psychological-gambling framing; audit F5.1 counts 3 named concerns across these 2 physical flags). Key verification items: (1) GarciaMendez2025 full author list + target game + accuracy from ScienceDirect full text; (2) Shin1993 + Forrest2005 generalisation scope; Mangat2024 psychological-gambling framing; (3) bibliography-footer entries at lines 81, 83 noted separately.`
+### T02 — F4.5 §2.2.3 Thorrez proxy insertion
 
-**Gate:** after T01, `grep "§1.1" thesis/chapters/REVIEW_QUEUE.md` still returns ≥ 1 (row was already present); the §1.1 row's `Flag count` cell now reads `2 physical [REVIEW] tags covering 3 audit-named concerns` (no longer `0`). WRITING_STATUS.md §1.1 Notes cell carries a `(PR-TG5a)` annotation.
+**File:** `thesis/chapters/02_theoretical_background.md` (paragraph at line 39, inside §2.2.3 "Scena zawodowa").
 
-### T02 — F5.2: THESIS_STRUCTURE.md Chapter 1 feed attribution
+**Action:** Insert one comparator sentence immediately after the existing Aligulac calibration sentence (the one ending with "…której obecnie brak."). Reword the trailing [REVIEW] flag to document F4.5 completion and retain the Pass-2 verification hedge for the 80.13% figure.
 
-**File:** `thesis/THESIS_STRUCTURE.md` (line 67, the Chapter 1 closing footer)
+**Proposed insertion (single sentence; writer-thesis may refine within this scope):**
 
-**Empirical anchor:**
-- Line 67 current: `**Fed by:** Background reading, literature review. No roadmap phase directly.`
-- §1.2's data-asymmetry framing (chapter file `01_introduction.md` line 21) references the AoE2 vs SC2 data asymmetry that is anchored on Phase 01 Tabela 4.4b (§4.1.3).
-- §1.1 line 15 cites `Bialecki2023` (SC2EGSet corpus descriptor) which is a Phase 01 motivational reference.
+> W akademickim benchmarku EsportsBench [Thorrez2024] system Glicko-2 — z rodziny paired-comparison rating systems, z której wywodzi się także bespoke algorytm Aligulac (szerzej omówiony w §2.5.4) — osiąga trafność 80,13% na 411 030 meczach SC2 pochodzących z Aligulac (ang. *train subset*), co stanowi niezależną akademicką miarę rzędu wielkości dla rankingowej predykcji w tej populacji; miara ta nie potwierdza ani nie falsyfikuje twierdzenia Aligulac FAQ o ~80% kalibracji probabilistycznej (rozróżnienie kalibracja vs. trafność klasyfikacyjna pozostaje zachowane zgodnie z framingiem ustanowionym w PR-5a, F5.3).
 
-**Edit:**
-- Replace line 67 with:
-  > `**Fed by:** Literature review (primary). Chapter 1 framing occasionally alludes to empirical findings presented in Chapter 4 (§4.1.3–§4.1.4 on cross-corpus data asymmetry) without pre-committing them; those findings are not anticipated here and remain the responsibility of Chapter 4.`
+**Proposed replacement [REVIEW] flag (replaces the existing F5.3/deferral flag at line 39):**
 
-**Gate:** after T02, grep `"roadmap phase directly"` on `thesis/THESIS_STRUCTURE.md` returns 0 lines; grep `"cross-corpus data asymmetry"` on the same file returns ≥ 1 match.
+> [REVIEW: F4.5 Pass-2 audit — insercja akademickiego proxy Thorrez2024 Glicko-2 80,13% na danych SC2 z Aligulac zgodnie z framingiem §2.5.5 oraz §3.2.4 (gdzie ta sama wartość jest już cytowana z analogicznym hedge'em); Pass 2 weryfikuje dokładną wartość z Tabeli 2 preprintu Thorrez 2024 oraz — istotniejsze — sprawdza, czy tabela zawiera wiersz dla algorytmu Aligulac (EsportsBench ocenia 11 systemów rankingowych); jeśli tak, preferowanym akademickim proxy jest Aligulac-on-Aligulac, a nie Glicko-2-on-Aligulac. Zamknięcie flagi w czterech loci (§2.2.3, §2.5.5, §3.2.4, §3.5) jednocześnie wymaga potwierdzenia zarówno dokładnej wartości, jak i odpowiedniego wyboru wiersza benchmarku. Wartości "~80%" (miara kalibracji Aligulac FAQ — etykieta binu kalibracyjnego) oraz "80,13%" (trafność klasyfikacyjna Glicko-2 w Thorrez 2024) mierzą dwie różne wielkości; sąsiedztwo liczbowe jest zbiegiem okoliczności, nie walidacją — rozróżnienie kalibracja vs. trafność klasyfikacyjna per FAQ Aligulac pozostaje zachowane.]
 
-### T03 — F5.3: §2.2.3 + §2.5.5 Aligulac 80% reframe (applies F4.5) + flag consistency
+**Gate:**
+- One new inline citation: `[Thorrez2024]`.
+- The proxy sentence is ≤ 2 sentences (insertion is bounded). Does not exceed the chore-violation complaint raised in PR-5a iter 1.
+- The [REVIEW] flag is reworded but not removed. Flag count on §2.2.3 stays at 1 (one reworded flag), same as post-PR-5a.
+- The calibration-vs-accuracy distinction established in PR-5a is preserved verbatim in the new proxy sentence.
 
-**Files:**
-- `thesis/chapters/02_theoretical_background.md` line 39 (§2.2.3)
-- `thesis/chapters/02_theoretical_background.md` line 183 (§2.5.5 [REVIEW] flag referencing §2.5.5 Aligulac methodology)
+### T03 — REVIEW_QUEUE.md update
 
-**Audit resolution for F4.5 (Appendix B A15, lines 410–414):**
-- The Aligulac FAQ's 80% refers to **calibration** ("actual winrate close to predicted winrate up to about 80%"), not classification accuracy.
-- No direct academic validation of Aligulac's bespoke algorithm exists.
-- Thorrez 2024 (EsportsBench) Glicko-2 at 80.13% on Aligulac SC2 data is the closest academic proxy — but it evaluates Glicko-2, not Aligulac's specific algorithm.
+**File:** `thesis/chapters/REVIEW_QUEUE.md`.
 
-**Edit 1 — §2.2.3 line 39 (chapter prose rewrite):**
-- Current (ground truth from master, confirmed via grep): `Aligulac generuje predykcje wyników nadchodzących meczów wraz z miarami rzetelności, raportowanymi przez społeczność na poziomie około 80% prognozowanego prawdopodobieństwa [Aligulac]; ta wartość ma jednak charakter samodzielnej walidacji społecznościowej i — zgodnie z dyskusją w §2.5.4 — wymaga niezależnej walidacji akademickiej, której obecnie brak.`
-- Note: the "Current:" excerpt reads `§2.5.4` (the section that discusses the Aligulac methodology) — this is correct; the flag added by this PR sits inside the `### 2.5.5` heading. The prose at line 39 legitimately points to §2.5.4 (methodology section); this plan updates it to reference `§2.5.5` as part of the rewrite below.
-- Rewrite to distinguish calibration from accuracy, keeping the edit within chore scope (no new Thorrez2024 citation at §2.2.3 — that insertion is deferred to PR-5b):
-  > Rewording target: change "80% prognozowanego prawdopodobieństwa" to "80% kalibracji" with a brief hedge distinguishing calibration from classification accuracy; update the forward-reference from `§2.5.4` to `§2.5.5`; plant a `[REVIEW:]` flag referencing the F5.3 inconsistency and explicitly noting that the Thorrez-proxy-insertion is deferred to PR-5b alongside F5.4. Do NOT add a new Thorrez2024 comparative sentence at §2.2.3 — that constitutes a new claim and violates §1.3 "no new claims" for this chore PR.
+**Action:** Append a 2026-04-20 note to both the §2.2 and §4.1.3 rows documenting PR-5b edits, consistent with the PR-TG5a/PR-TG4/PR-TG3 convention (each row carries bolded dated entries for each pass of revision). No structural changes; only the notes columns are touched.
 
-**Edit 2 — §2.5.5 line 183 [REVIEW] flag rewrite:**
-- Current (second `[REVIEW:]` on line 183): `[REVIEW: kalibracja Aligulac do ~80% prognozowanego prawdopodobieństwa, raportowana w dokumentacji systemu [Aligulac], opiera się na samodzielnej analizie społeczności — warto zweryfikować, czy literatura akademicka (np. EsportsBench [Thorrez2024]) zawiera niezależną walidację porównawczą z innymi systemami, którą można by przytoczyć dla wzmocnienia argumentacji.]`
-- Rewrite to align with §2.2.3 framing and close the "warto zweryfikować" question now resolved via F4.5:
-  > `[REVIEW: kalibracja Aligulac do ~80% z FAQ [Aligulac] — miara skali probabilistycznej, nie trafności klasyfikacyjnej; referencyjnym akademickim proxy jest 80,13% Glicko-2 na danych SC2 z Thorrez2024 (ocena Glicko-2, nie specyficznego algorytmu Aligulac). Pass 2 weryfikuje aktualne brzmienie FAQ na aligulac.com/about oraz dokładną wartość Thorrez2024 z Tabeli 2 preprintu. Framing zsynchronizowany z §2.2.3 per F5.3 Pass-2 audit.]`
+**Gate:**
+- Both rows (§2.2 and §4.1.3) carry a new `**2026-04-20 (PR-TG5b):**` bolded note.
+- Flag counts updated if writer-thesis net-changes any flag; net change is zero if the [REVIEW] flags are reworded in place as planned.
+- No other rows touched.
 
-**Edit 3 — §2.5.4 body (lines 163–171) sanity check:**
-- §2.5.4 prose does NOT currently contain a numeric 80% claim (verified 2026-04-20 via `grep "80" thesis/chapters/02_theoretical_background.md` which matches only line 39 in §2.2.3 and line 183 in §2.5.5). No §2.5.4 edit required. If executor discovers a previously-unseen 80% mention in §2.5.4 during T03 execution, apply the same reframing as Edit 1 and ensure flag consistency.
+### T04 — WRITING_STATUS.md update
 
-**Gate:** after T03:
-- **Pre-edit baseline (verified via grep):** `grep -c "kalibracja" thesis/chapters/02_theoretical_background.md` = 3 (nominative-only); `grep -c "kalibrac" …` = 10 (stem, all declensions). Post-edit target: ≥ baseline + 1 for `kalibracja` count.
-- `grep -c "kalibracja" thesis/chapters/02_theoretical_background.md` increases by ≥ 1 vs. pre-edit baseline (new §2.2.3 usage).
-- `grep -c "Thorrez2024" thesis/chapters/02_theoretical_background.md` remains ≥ 1 (currently 3 occurrences in §2.5.5 pre-edit; gate checks presence, not exclusivity — no new §2.2.3 citation added in this chore PR).
-- `grep "80%" thesis/chapters/02_theoretical_background.md | grep -vE "kalibrac|trafnośc[ią]"` returns 0 lines asserting 80% as a bare accuracy claim (stem `kalibrac` matches all Polish declensions including nominative `kalibracja`, genitive `kalibracji`, accusative `kalibrację`; and `trafności`/`trafnością`).
-- `[REVIEW:]` flag framing: §2.2.3 flag references F5.3 inconsistency and defers Thorrez-proxy insertion to PR-5b; §2.5.5 flag cites Thorrez2024 as proxy. Asymmetric framing is intentional and documented (R6 deferral in §1.2) — the gate does NOT require both flags to cite Thorrez2024 directly.
+**File:** `thesis/WRITING_STATUS.md`.
 
-### T04 — F5.5: Elbert 2025 §3.3 vs §3.4 placement decision documentation
+**Action:** Append a 2026-04-20 note to both the §2.2 and §4.1.3 rows (same bolded-dated-entry convention as REVIEW_QUEUE).
 
-**File:** `thesis/chapters/03_related_work.md` (single-sentence insertion at §3.4.3)
+**Gate:**
+- Both rows carry a new `**2026-04-20 (PR-TG5b):**` entry.
+- No status transitions (both rows were already DRAFTED and remain DRAFTED).
 
-**Empirical anchor:**
-- §3.3 heading (line 85): `## 3.3 Predykcja wyników w grach MOBA i pozostałych gatunkach esportowych`
-- §3.3 subsections span MOBA (§3.3.1 Dota 2, §3.3.2 LoL), FPS (§3.3.3 Counter-Strike), tactical FPS (§3.3.4 Valorant). Scope is explicitly **non-RTS esports genres**.
-- §3.4.3 (line 147): `### 3.4.3 Recenzowana praca z pogranicza ekonomii obliczeniowej: Elbert i in. (2025)`. Elbert2025EC is AoE2-team-games prediction. AoE2 is RTS.
+### T05 — CHAPTER_4_DEFEND_IN_THESIS.md cross-reference (optional, within scope)
 
-**Decision:** Leave Elbert2025EC in §3.4 (correct by genre; §3.3 is non-RTS-only by scope). Document the decision in prose so a reviewer asking "why isn't Elbert also in §3.3?" has the answer inline.
+**File:** `planning/CHAPTER_4_DEFEND_IN_THESIS.md`.
 
-**Edit:**
-- Insert the following sentence adjacent to the first Elbert introduction in §3.4.3 (the executor may choose line 148 or line 149 as insertion point and may refine wording while preserving intent and argument):
-  > `§3.4 obejmuje literaturę predykcji w Age of Empires II; Elbert i in. [Elbert2025EC] dotyczą AoE2 w formacie drużynowym i mieszczą się w tym podrozdziale na podstawie tytułu gry, nie zaś liczby graczy. §3.3 obejmuje literaturę predykcji spoza AoE2 (MOBA: Dota 2, League of Legends; FPS: Counter-Strike, Valorant).`
-- Note: the placement rationale is now grounded in game identity (AoE2), not RTS genre, avoiding the misreference to §3.4.1 (which covers CetinTas2023 on AoE2, not SC2).
+**Action:** If the file tracks Residual #1 (§4.1.3 reference-window defence) as OPEN, update to reflect PR-5b closure: Residual #1 now anchored to [Nakagawa2017, Gelman2007, Ukoumunne2003]; close if applicable. If the residual tracker does not have this format or the file is not touched by recent PRs, skip without updating.
 
-**Gate:** after T04:
-- `grep -c "lokow" thesis/chapters/03_related_work.md` increases by ≥ 1 (stem matches both `lokowani w §3.4` from the R5 sentence and `lokowana w §3.4` — covers the inserted placement-decision phrasing regardless of grammatical gender).
-- `grep -c "§3.3" thesis/chapters/03_related_work.md` increases by ≥ 1.
+**Gate:**
+- If updated: one bolded dated entry matching T03/T04 convention.
+- If skipped: writer-thesis notes the skip in the Chat Handoff Summary.
 
-### T05 — F5.6: Demsar §3.2 / §3.1.3 location uncertainty — flag-planting (swap deferred to Pass 2)
+### T06 — Version bump + CHANGELOG
 
-**Files:**
-- `thesis/chapters/04_data_and_methodology.md` lines 375 and 377 (§4.4.4 — PRIMARY locus per audit H3; line 375 contains inline `§3.2 Demšara`, line 377 contains bibkey `[Demsar2006, §3.2]` for N ≥ 10)
-- `thesis/chapters/04_data_and_methodology.md` line 213 (§4.1.4 — co-locus; contains `[Demsar2006, §3.2]` for N ≥ 10)
-- `thesis/chapters/02_theoretical_background.md` line 211 (§2.6.3 — contains "§3.2, adresującego inne zastosowanie")
+**Files:** `pyproject.toml`, `CHANGELOG.md`.
 
-**Empirical anchor (to verify during T05 execution):**
-- `grep -En "Demsar2006.*§3\.2|Demsar2006, §3\.2" thesis/chapters/04_data_and_methodology.md` — expected matches at §4.4.4 line 377 (bibkey, PRIMARY) and §4.1.4 line 213 (co-locus). Line 373 already reads `[Demsar2006, §3.1.3]` (fixed in TG1) — DO NOT touch line 373.
-- `grep -n "§3\.2 Demšara" thesis/chapters/04_data_and_methodology.md` — expected match at §4.4.4 line 375 (inline form, PRIMARY co-locus).
-- `grep -n "§3\.2" thesis/chapters/02_theoretical_background.md` — expected ≥ 1 match at §2.6.3 line 211.
-- Audit F5.6 and H3 (line 309 of `thesis/reviews_and_others/pass2_dispatch.md`): "§4.4.4 cites Demsar §3.2 corollary; actual reference for N ≥ 10 is §3.1.3." — §4.4.4 is the **primary** locus; §4.1.4 is a co-locus. The swap itself is unverified against a readable PDF; this task plants flags only — the §3.2 text is left in place at all four loci.
+**Action:**
+- Bump `version = "3.34.0"` to `version = "3.35.0"` in `pyproject.toml`.
+- Move existing `[Unreleased]` entries (if any non-empty) to a new `[3.35.0] — 2026-04-20 (PR #<TBD>: docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy)` heading.
+- Add new `[Unreleased]` block with empty `### Added / Changed / Fixed / Removed` headers.
+- Populate `[3.35.0]` with a Changed-section entry: "docs(thesis): Pass-2 PR-5b — F5.4 §4.1.3 reference-window defence anchored to [Nakagawa2017, Gelman2007, Ukoumunne2003]; F4.5 §2.2.3 Thorrez2024 Glicko-2 80.13% academic-proxy insertion; REVIEW_QUEUE + WRITING_STATUS entries; no bib changes."
 
-**Flag text (to append after each existing citation at all four loci):**
-> `[REVIEW: F5.6 Pass-2 audit H3 claims $N \geq 10$ threshold is in Demšar 2006 §3.1.3, not §3.2; manual verification against readable PDF required — Pass 2 closes this flag.]`
-
-**Edit 1 — flag-planting at `04_data_and_methodology.md` §4.4.4 lines 375 + 377 (PRIMARY locus):**
-- Line 377: DO NOT replace bibkey `[Demsar2006, §3.2]`. Append the flag text immediately after the citation on the same line or as a sentence-end insertion.
-- Line 375: DO NOT replace inline `§3.2 Demšara`. Append the flag text adjacent to the inline reference.
-- Line 373 already reads `[Demsar2006, §3.1.3]` (fixed in TG1) — explicitly do NOT modify line 373.
-
-**Edit 1b — flag-planting at `04_data_and_methodology.md` line 213 (§4.1.4, co-locus):**
-- Current: `są inaplikowalne per [Demsar2006, §3.2] (wymóg $N \geq 10$ zbiorów danych dla aproksymacji asymptotycznej)`
-- DO NOT replace `§3.2`. Append the flag text after the parenthetical on the same line.
-
-**Edit 2a — flag-planting at `02_theoretical_background.md` line 211 (§2.6.3):**
-- Current excerpt contains: `z §3.2, adresującego inne zastosowanie testu Friedmana`
-- DO NOT modify the existing sentence or swap `§3.2` to `§3.1.3`. Append the flag text after the sentence (same line or immediately following).
-- Preserve the "adresującego inne zastosowanie" and the N ≥ 5 vs N ≥ 10 structural contrast intact — the contrastive clause is load-bearing for the §2.6.4 cross-game N=2 defence.
-
-**Gate:** after T05:
-- `grep -c "Demsar2006, §3\.2" thesis/chapters/04_data_and_methodology.md` remains ≥ 3 (swap NOT performed; existing `§3.2` citations retained at lines 377 and 213, plus any other occurrences).
-- `grep -c "audit H3" thesis/chapters/02_theoretical_background.md thesis/chapters/04_data_and_methodology.md` returns ≥ 4 (one flag per each of the four loci: §4.4.4 line 375, §4.4.4 line 377, §4.1.4 line 213, §2.6.3 line 211).
-- `grep "adresującego inne zastosowanie" thesis/chapters/02_theoretical_background.md` returns ≥ 1 (contrastive clause preserved, not swapped away).
-- `grep "§3\.1\.3" thesis/chapters/04_data_and_methodology.md | grep -v "^373:"` does NOT introduce new `§3.1.3` occurrences beyond line 373 (confirms the swap was not performed).
-
-### T06 — WRITING_STATUS.md + REVIEW_QUEUE.md section-row annotations
-
-**Files:**
-- `thesis/WRITING_STATUS.md` (Chapter 2 §2.2 row, §2.5 row, §2.6 row; Chapter 3 §3.4 row; Chapter 4 §4.4.4 row and §4.1.4 row if that row also exists and was touched)
-- `thesis/chapters/REVIEW_QUEUE.md` (matching section rows; §4.1.4 row already exists)
-
-**Pre-flight (before editing):**
-- Run `grep "§4.1.4" thesis/WRITING_STATUS.md` to verify the §4.1.4 row exists before modifying it.
-- Run `grep "§4.4.4" thesis/WRITING_STATUS.md` to confirm the §4.4.4 row location (audit-named primary locus for F5.6).
-
-**Edit pattern — append a short `**2026-04-20 (PR-TG5a):**` annotation on the Notes/Pass-2-status column for each affected row:**
-- §2.2 row: F5.3 Edit 1 (§2.2.3 line 39 Aligulac 80% reframed to calibration-not-accuracy; new [REVIEW] flag planted; F4.5 reframing consolidated here per TG5-PR-5a).
-- §2.5 row: F5.3 Edit 2 (§2.5.5 line 183 Aligulac [REVIEW] flag reworded to align with §2.2.3; F4.5 framing cross-referenced).
-- §2.6 row: F5.6 Edit 2a (§2.6.3 line 211 — [REVIEW: audit H3] flag planted adjacent to existing §3.2 citation; swap deferred to post-Pass-2 PR).
-- §3.4 row: F5.5 Edit (§3.4.3 cross-reference sentence added documenting Elbert2025EC placement logic by game identity, not RTS genre).
-- §4.4.4 row (PRIMARY for F5.6): F5.6 Edit 1 (§4.4.4 lines 375 + 377 — [REVIEW: audit H3] flags planted; §3.2 text retained pending PDF verification of §3.1.3 location).
-- §4.1.4 row (co-locus for F5.6): if the §4.1.4 row exists in WRITING_STATUS (verify via pre-flight grep above), append `**2026-04-20 (PR-TG5a):** F5.6 co-locus — line 213 [REVIEW: audit H3] flag planted; §3.2 citation retained pending PDF verification.`
-- §1.1 row: F5.1 (flag count refresh) — **already handled in T01**; do not duplicate.
-
-**Gate:** after T06, every WRITING_STATUS row for an edited section carries a `(PR-TG5a)` annotation; REVIEW_QUEUE Pending table mirrors the annotations where applicable.
-
-## 3. Execution order and gates
-
-1. **T01** — F5.1 WRITING_STATUS + REVIEW_QUEUE §1.1 (metadata only; no chapter edits).
-2. **T02** — F5.2 THESIS_STRUCTURE.md line 67 (metadata only).
-3. **T03** — F5.3 §2.2.3 + §2.5.5 Aligulac reframing (chapter prose — the largest delta of this PR).
-4. **T04** — F5.5 §3.4.3 Elbert placement sentence (chapter prose).
-5. **T05** — F5.6 §4.4.4 (primary) + §4.1.4 (co-locus) + §2.6.3 Demsar flag-planting (chapter prose; swap deferred to Pass 2).
-6. **T06** — WRITING_STATUS + REVIEW_QUEUE section-row annotations for every chapter touched by T03–T05.
-7. **Final gate**: all T0x gates pass; `git diff --stat` touches exactly the files listed in §5.
-
-## 4. Rollback plan
-
-- Each task is a pure prose edit; revert by `git checkout HEAD~1 -- <file>` at the file granularity. The entire PR can be reverted post-merge via `git revert <merge-sha>`.
-- No database writes, no artifact regeneration, no phase-status changes, no `src/` or `tests/` touches, no dependency updates.
+**Gate:**
+- `pyproject.toml` version line is exactly `version = "3.35.0"`.
+- CHANGELOG `[Unreleased]` block is empty (has the four headers but no bullets).
+- CHANGELOG `[3.35.0]` block has at least one entry under `### Changed`.
 
 ## File Manifest
 
-(See §5 File manifest below for full table.)
+Exactly these files are modified:
 
-## 5. File manifest
+| File | Nature of change | Lines affected |
+|---|---|---|
+| `thesis/chapters/04_data_and_methodology.md` | F5.4 §4.1.3 paragraph rewrite | line 207 (one paragraph) |
+| `thesis/chapters/02_theoretical_background.md` | F4.5 §2.2.3 proxy sentence insertion + flag rewording | line 39 (one paragraph) |
+| `thesis/chapters/REVIEW_QUEUE.md` | Two bolded dated notes | §2.2 row + §4.1.3 row |
+| `thesis/WRITING_STATUS.md` | Two bolded dated notes | §2.2 row + §4.1.3 row |
+| `planning/CHAPTER_4_DEFEND_IN_THESIS.md` | Residual #1 closure cross-reference (optional) | one bolded dated note |
+| `pyproject.toml` | Version bump 3.34.0 → 3.35.0 | single line |
+| `CHANGELOG.md` | [Unreleased] → [3.35.0] release entry | two block swaps |
+| `planning/current_plan.md` | This file (overwrites prior PR-5a plan) | whole file |
 
-| File | Change type | Source finding |
-|------|-------------|----------------|
-| `thesis/WRITING_STATUS.md` | notes-column appends (§1.1, §2.2, §2.5, §2.6, §3.4, §4.4.4, §4.1.4 if exists) | F5.1, F5.3, F5.5, F5.6 |
-| `thesis/chapters/REVIEW_QUEUE.md` | §1.1 row update (Flag count 0→2+2) + notes appends to §2.2 / §2.5 / §2.6 / §3.4 / §4.4.4 / §4.1.4 rows | F5.1, F5.3, F5.5, F5.6 |
-| `thesis/THESIS_STRUCTURE.md` | line 67 rewrite | F5.2 |
-| `thesis/chapters/02_theoretical_background.md` | prose edits + flag rewrites at lines 39, 183, 211 | F5.3, F5.6 |
-| `thesis/chapters/03_related_work.md` | single-sentence insertion at §3.4.3 | F5.5 |
-| `thesis/chapters/04_data_and_methodology.md` | [REVIEW] flag-planting at §4.4.4 lines 375+377 (primary) and §4.1.4 line 213 (co-locus); §3.2 text retained | F5.6 |
+No other files are modified. The `.github/tmp/commit.txt` and `.github/tmp/pr.txt` artifacts are created during commit/PR stages and deleted at cleanup per `feedback_pr_body_cleanup.md`.
 
-Total: 6 files. No changes to `thesis/chapters/01_introduction.md` prose; no changes to `thesis/references.bib`.
+## Dispatch sequence
 
-## 6. Open questions for planner / reviewer
+1. **This plan written** (you are reading it). Planning-drift hook validates all 8 Cat F sections present.
+2. **`/critic planning/current_plan.md`** — max 3 iterations. Parent orchestrates 4 critics → merger → user-subset (for autonomous flow, parent applies RECOMMENDED subset each iteration) → writer-thesis for plan revision if needed. Stop when merger returns CLEAN or iteration 3 exhausted.
+3. **Iteration-3 residual-BLOCKER branch.** If iteration 3 completes with residual BLOCKERs, halt and return choice to user (land-as-is with BLOCKERs flagged in PR body vs open a follow-up PR per `/critic.md` cleanup step 3) **before** proceeding to Mode A. Do not proceed to Mode A with unresolved BLOCKERs without explicit user authorization; this resolves the §Binding discipline / §Dispatch sequence incompatibility flagged by logical-L08.
+4. **`reviewer-adversarial` Mode A** — one run; writes `planning/current_plan.critique.md`. If verdict is REVISE: apply minor revisions and re-run Mode A once (symmetric 1-revision cap); if REDESIGN: halt and return to planner (escalate to user per `feedback_adversarial_cap_execution.md`). If PROCEED: continue.
+5. **`writer-thesis`** — dispatched against `planning/current_plan.md` with instruction to execute T01–T06. Writer emits Chat Handoff Summary per `.claude/rules/thesis-writing.md`. No commit yet.
+6. **`reviewer-adversarial` Mode C** — one run; post-draft stress test; emits verdict in chat. If REVISE: apply once; if REDESIGN: halt. If PROCEED: continue.
+7. **Pre-commit validation** — planning-drift, ruff (N/A no .py), mypy (N/A no .py). Only planning-drift will fire; it must pass.
+8. **Commit** — `git commit -F .github/tmp/commit.txt` (heredocs break in zsh per `feedback_git_commit_format.md`).
+9. **PR** — `gh pr create --body-file .github/tmp/pr.txt` (PR body to file per `feedback_pr_body_file.md`).
+10. **Merge** — `gh pr merge --merge --delete-branch` (confirm with user before destructive operations if unclear — but this is the standard per-PR closing per repo convention).
+11. **Cleanup** — `rm .github/tmp/pr.txt .github/tmp/commit.txt` per `feedback_pr_body_cleanup.md`.
+12. **Halt** after merge — report to user; do NOT continue autonomously to PR-6a without explicit authorization.
 
-None load-bearing for chore-scope. One contingent item for the executor to handle inline:
-1. If T03 Edit 3 grep surfaces a 80% mention in §2.5.4 prose (not expected — pre-check returned none), apply the same Edit 1 framing.
-Note: §4.4.4 is the **mandatory** primary locus for T05 Edit 1 (not contingent). The executor must plant the flag at §4.4.4 lines 375+377 regardless of what the grep returns; the §3.2 text must NOT be swapped.
+## Risk mitigation
 
-## 7. Semver + changelog
+- **Risk: writer-thesis softens the F5.4 methodological argument into yet another "spec says so" restatement.** Mitigation: T01 gate specifies that the new paragraph must lead with the methodological argument (stacjonarność wewnątrzklastrowa → estymator spójność), cite the three literature anchors inline with chapter/§ specificity, and demote the spec reference to "operacjonalizacja" framing. Mode A and Mode C both catch this defect if it slips through /critic.
+- **Risk: the 80.13% figure is off (e.g., 0.7983 or 0.8124) and the PR ships a wrong number.** Mitigation: the [REVIEW: Pass-2 verify Table 2] flag is preserved. Pass-2 PDF verification closes the flag simultaneously in all four locations (§2.2.3, §2.5.5, §3.2.4, §3.5). The rounding claim in the [REVIEW] flag is conservative — "~80%" is consistent with any value in [79.5%, 80.5%], which captures any plausible correction.
+- **Risk: the F4.5 insertion at §2.2.3 inadvertently duplicates §2.5.5 / §3.2.4 prose.** Mitigation: the T02 proposed sentence is scoped narrowly to "closest academic proxy for Aligulac calibration" — it references Thorrez by bib key, states the 80.13% figure with 411k context, and explicitly distinguishes calibration (Aligulac FAQ) from classification accuracy (Thorrez Glicko-2). §2.5.5 line 177 already frames Thorrez as the reference-zbiór benchmark; §3.2.4 line 77 frames it as the rating-baseline context. §2.2.3's framing is narrower (local calibration-proxy anchor inside the Aligulac-discussion paragraph) and does not duplicate either neighbour.
+- **Risk: planning-drift hook fails because the plan is missing a Cat F section.** Mitigation: this plan file explicitly has all 8 required sections (Problem Statement, Literature Context, Assumptions & Unknowns, Gate Condition, Open Questions, Scope, Execution Steps, File Manifest) as ## headings at the top level. Verified pre-commit by the author.
+- **Risk: the 3-iteration /critic cap is exhausted with remaining BLOCKERs.** Mitigation: land as-is with residual BLOCKERs flagged in PR body, OR open a follow-up PR for the remaining items (per /critic.md cleanup step 3). User decides between the two.
 
-- Version bump: `3.33.0 → 3.34.0` (minor, per docs-branch convention established in PR #187–#190).
-- CHANGELOG.md entry under `[3.34.0] — 2026-04-20 (PR #N: docs/thesis-pass2-tg5a-internal-consistency-chore)` enumerating F5.1 / F5.2 / F5.3 / F5.5 / F5.6 and noting F5.4 deferred to PR-5b.
+## Non-negotiable invariants during execution
 
-## 8. PR wrap-up checklist
+- **I2 (reproducibility):** All four literature anchors (Nakagawa2017, Gelman2007, Ukoumunne2003, Thorrez2024) have DOI, ISBN, or URL in the bib. No "personal communication."
+- **I7 (no magic numbers):** The 80.13% figure traces to Thorrez 2024 Table 2 (flagged for Pass-2 verification, consistent with three other loci). The `2022-08-29 → 2022-10-27` and `2022-08-29 → 2022-12-31` dates trace to `reports/specs/01_05_preregistration.md` §7 (already cited). The patch identifier `66692` traces to the same spec.
+- **I8 (raw-data immutability):** No changes to `reports/`, `src/`, `data/`.
+- **Honesty clause:** If Mode A or Mode C returns REDESIGN, halt and escalate. Do not silently paper over methodological defects to ship the PR.
+- **No thesis prose without a source:** Every new claim in T01 and T02 has an inline literature citation. No [NEEDS CITATION] flags planted; no un-cited claims.
 
-- [ ] All T01–T06 gates pass.
-- [ ] `pyproject.toml` version bumped to `3.34.0`.
-- [ ] `CHANGELOG.md` entry added and `[Unreleased]` reset with empty headers.
-- [ ] PR body drafted at `.github/tmp/pr.txt` via `Write` tool (not heredoc).
-- [ ] Commit message via `.github/tmp/commit.txt`, then `git commit -F .github/tmp/commit.txt`.
-- [ ] After PR creation: delete `.github/tmp/pr.txt` + `.github/tmp/commit.txt`.
+## Post-merge
+
+- Update `thesis/reviews_and_others/pass2_status.md` to reflect PR-5b merge (version 3.35.0; F5.4 + F4.5 closed; PR-6a next).
+- Halt and ask user before starting PR-6a.
