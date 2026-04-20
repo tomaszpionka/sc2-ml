@@ -19,6 +19,15 @@ merged to `master`.
 
 ### Removed
 
+## [3.29.1] — 2026-04-20 (PR #TBD: chore/purge-planning-pr-185)
+
+### Removed
+
+- `planning/current_plan.md` reset to `<!-- No active plan -->` and
+  `planning/current_plan.critique.md` deleted. Post-merge purge for
+  the aoestats `canonical_slot` (BACKLOG F1 + W4) workstream
+  completed in PR #185.
+
 ## [3.29.0] — 2026-04-20 (PR #185: feat/aoestats-canonical-slot)
 
 ### Added
