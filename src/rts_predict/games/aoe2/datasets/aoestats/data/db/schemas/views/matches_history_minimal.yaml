@@ -2,11 +2,11 @@ table: matches_history_minimal
 dataset: aoestats
 game: aoe2
 object_type: view
-step: '01_04_03'
-schema_version: '9-col (ADDENDUM: duration_seconds added 2026-04-18)'
+step: '01_04_03b'
+schema_version: '10-col (AMENDMENT: canonical_slot added 2026-04-20)'
 row_count: 35629894
-describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json
-generated_date: '2026-04-18'
+describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.json
+generated_date: '2026-04-20'
 columns:
 - name: match_id
   type: VARCHAR
@@ -60,6 +60,26 @@ columns:
     == 0.5 exactly (slot-bias gate verified in 01_04_03).'
   notes: TARGET. Direct projection of p{0,1}_winner from matches_1v1_clean. Prediction
     label for downstream experiments.
+- name: canonical_slot
+  type: VARCHAR
+  nullable: false
+  description: |
+    Skill-orthogonal slot identity derived from hash of match_id. Resolves the W3
+    ARTEFACT_EDGE upstream API ordering artefact (01_04_05): the team column in
+    matches_1v1_clean assigns team=1 to the higher-ELO player in 80.3% of games
+    (mean +11.9 ELO). canonical_slot replaces team as the I5-compliant slot label
+    for per-slot feature engineering in Phase 02.
+    Derivation: CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A'
+    ELSE 'slot_B' END. Skill-orthogonal by structural construction: both rows of
+    any match receive the same hash(match_id) value (UNION-ALL of a
+    1-row-per-match source); the binary splitter (hash + focal_team) % 2 with
+    focal_team in {0,1} distributes them into complementary slots. Independent of
+    match_id's semantic content -- no empirical claim about its origin required.
+    See 01_04_03b artifact for DDL + assertions.
+  notes: |
+    PRE_GAME. Derived slot identity for Phase 02 per-slot features. NOT the
+    upstream API team label. Every match has exactly one 'slot_A' row and one
+    'slot_B' row. Cardinality: exactly 2 values. NULL count: 0.
 - name: duration_seconds
   type: BIGINT
   nullable: true
@@ -101,18 +121,28 @@ invariants:
   description: 'TIMESTAMP-typed temporal anchor. duration_seconds is POST_GAME_HISTORICAL
     (machine-grep-able token in notes): DO NOT use as PRE_GAME feature.'
 - id: I5
-  description: 'Player-row symmetry (I5-analog). Every match_id has exactly 2 rows.
-    duration_seconds is identical for both rows (symmetric -- same source row). aoestats-specific
-    SLOT-BIAS gate: AVG(won::INT) == 0.5 exactly.'
+  description: |
+    Player-row symmetry (I5-analog) + deterministic skill-orthogonal slot labelling.
+    Every match_id has exactly 2 rows with distinct canonical_slot values.
+    duration_seconds identical in both rows. aoestats-specific SLOT-BIAS gate:
+    AVG(won::INT) == 0.5 exactly. canonical_slot skill-orthogonality is established
+    by construction (hash depends only on match_id, independent of any player
+    property); per-slot win rate balance near 0.5 is reported as confirmatory
+    evidence in 01_04_03b, not as a magic-number gate.
 - id: I6
   description: CREATE OR REPLACE VIEW DDL + every assertion SQL stored verbatim in
-    01_04_03_minimal_history_view.json sql_queries block.
+    01_04_03b_canonical_slot_amendment.json sql_queries block (post-amendment
+    source-of-truth; predecessor was 01_04_03_minimal_history_view.json pre-F1).
 - id: I7
   description: 1_000_000_000 nanoseconds-to-seconds divisor cites Arrow duration[ns]
     -> BIGINT behavior documented at pre_ingestion.py:271 + research_log.md:684.
 - id: I8
-  description: 'Cross-dataset comparability: 9-column names + dtypes (ADDENDUM: extended
-    from 8). duration_seconds unit is seconds across all datasets.'
+  description: |
+    Cross-dataset comparability: 9-column shared contract (ADDENDUM: extended from 8).
+    aoestats extends locally with 10th column canonical_slot VARCHAR (hash-on-match_id).
+    Sibling datasets sc2egset and aoe2companion retain the 9-column contract.
+    Cross-dataset UNION ALL must project the 9 shared columns only.
+    duration_seconds unit is seconds across all datasets.
 - id: I9
   description: Pure non-destructive projection. No raw table modified. matches_raw
     is read-only (SELECT only for duration column).

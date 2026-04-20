@@ -8,6 +8,35 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-20 — [BACKLOG F1 + W4 / Phase 02 unblocker] canonical_slot column amendment
+
+**Branch:** `feat/aoestats-canonical-slot`
+**Category:** A (Phase work, aoestats)
+**Scope:** Add `canonical_slot VARCHAR` to `matches_history_minimal` (hash-on-match_id; skill-orthogonal by construction); flip INVARIANTS.md §5 I5 PARTIAL → HOLDS; bump spec v1.0.5 → v1.1.0; resolve AO-R01 BLOCKER.
+
+### Key findings
+- Derivation: hash-on-match_id `CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END`.
+- Skill-orthogonal by construction: the hash depends only on `match_id`, a stable per-match identifier independent of player properties. No empirical threshold test needed — orthogonality follows from the derivation's structure.
+- Profile_id-ordered and old_rating-ordered alternatives were both explicitly rejected (01_04_05 Q4 showed profile_id-ordering IS skill-correlated via account-age proxy; old_rating is skill-coupled by construction).
+- Row count preserved: 35,629,894 rows (10 columns; was 9).
+- Assertions all pass (row_count_preserved, binary_cardinality, per_match_distinct, balance_wr reported as evidence).
+
+### Invariants touched
+- I3: no change.
+- I5: PARTIAL → HOLDS (post-amendment; W4 discharged).
+- I7: canonical_slot derivation formula cited inline + in 01_04_03b artifact.
+- I9: pure projection; BEFORE/AFTER existing-column stats unchanged.
+
+### Artifact paths
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.json`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.md`
+- `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_history_minimal.yaml` (10-col schema)
+
+### Thesis mapping
+- §4.4.6 flag closure (pending Pass-2 revision; see REVIEW_QUEUE).
+
+---
+
 ## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
 
 **Branch:** `feat/phase01-decision-gates-01-06`

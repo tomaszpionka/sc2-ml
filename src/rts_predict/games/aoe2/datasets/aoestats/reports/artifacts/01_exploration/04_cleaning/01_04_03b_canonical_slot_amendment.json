@@ -1,0 +1,121 @@
+{
+  "step": "01_04_03b",
+  "dataset": "aoestats",
+  "game": "aoe2",
+  "generated_date": "2026-04-20",
+  "derivation_choice": "hash_on_match_id",
+  "hash_function": "duckdb_builtin_hash_64bit",
+  "derivation_formula": "CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END",
+  "orthogonality_argument": "Structural, not empirical. Both rows of any match share the same match_id value (UNION-ALL of a 1-row-per-match source). Therefore hash(match_id) is identical for both rows. The binary splitter (hash + focal_team) % 2 with focal_team in {0,1} distributes them into complementary slots: 0%2=0 != 1%2=1. Skill-orthogonal: hash depends only on match_id, not on any player attribute. Argument is independent of match_id content.",
+  "ddl_sql_verbatim": "CREATE OR REPLACE VIEW matches_history_minimal AS\n-- aoestats sibling of sc2egset.matches_history_minimal (PR #152 pattern).\n-- Input: matches_1v1_clean (1 row/match, p0/p1 cols). UNION ALL -> 2 rows/match.\n-- ADDENDUM 01_04_03: 9-col contract (duration_seconds added 2026-04-18).\n-- AMENDMENT 01_04_03b: 10-col contract (canonical_slot added 2026-04-20).\n-- Invariants: I3 (TIMESTAMP cast from TIMESTAMPTZ; duration_seconds POST_GAME_HISTORICAL),\n--   I5 (HOLDS post-amendment: NULL-safe symmetry + canonical_slot skill-orthogonal slot labelling),\n--   I6 (SQL verbatim in JSON), I7 (game_id VARCHAR passthrough; 1_000_000_000\n--   nanoseconds-to-seconds divisor cites pre_ingestion.py:271 + research_log.md:684),\n--   I8 (cross-dataset 9-col contract; aoestats extends with local 10th col canonical_slot),\n--   I9 (no upstream modification; pure projection).\n-- R1-BLOCKER-A1 fix: aoestats duration is Arrow duration[ns] -> BIGINT NANOSECONDS.\n--   Divide by 1_000_000_000 (NOT 1_000) to get seconds.\n-- canonical_slot derivation (BACKLOG F1, hash-on-match_id, skill-orthogonal by construction):\n--   CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END\n--   Both rows of any match share the same match_id value -> same hash(match_id).\n--   focal_team in {0, 1} distributes them into complementary slots (0%2 != 1%2).\n--   Skill-orthogonal: hash depends only on match_id, not on any player property.\nWITH p0_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p0_civ                                                      AS faction,\n        m.p1_civ                                                      AS opponent_faction,\n        m.p0_winner                                                   AS won,\n        -- AMENDMENT 01_04_03b: canonical_slot at position 7 (after won, before duration_seconds)\n        CASE WHEN (hash('aoestats::' || m.game_id) + 0) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END AS canonical_slot,\n        CAST(r.duration / 1000000000 AS BIGINT)                       AS duration_seconds,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n    JOIN matches_raw r ON r.game_id = m.game_id\n),\np1_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p1_civ                                                      AS faction,\n        m.p0_civ                                                      AS opponent_faction,\n        m.p1_winner                                                   AS won,\n        CASE WHEN (hash('aoestats::' || m.game_id) + 1) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END AS canonical_slot,\n        CAST(r.duration / 1000000000 AS BIGINT)                       AS duration_seconds,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n    JOIN matches_raw r ON r.game_id = m.game_id\n)\nSELECT * FROM p0_half\nUNION ALL\nSELECT * FROM p1_half\nORDER BY started_at, match_id, player_id",
+  "ddl_sql_sha256": "4432b1583450e79f52666a97c2099ba56a1aa91bc72f2099bd7b8c1822f5093f",
+  "baseline_reverification": {
+    "status": "PASS",
+    "cached_2026_04_18_values": {
+      "total_rows": 35629894,
+      "distinct_match_ids": 17814947,
+      "symmetry_violations": 0,
+      "overall_won_rate": 0.5,
+      "min_duration_seconds": 3,
+      "max_duration_seconds": 5574815,
+      "avg_duration_seconds": 2418.0936297480985
+    },
+    "live_2026_04_20_values": {
+      "total_rows": 35629894,
+      "distinct_match_ids": 17814947,
+      "symmetry_violations": 0,
+      "overall_won_rate": 0.5,
+      "min_duration_seconds": 3,
+      "max_duration_seconds": 5574815,
+      "avg_duration_seconds": 2418.0936297480985
+    }
+  },
+  "schema_version": "10-col (AMENDMENT: canonical_slot added 2026-04-20)",
+  "column_order": [
+    "match_id",
+    "started_at",
+    "player_id",
+    "opponent_id",
+    "faction",
+    "opponent_faction",
+    "won",
+    "canonical_slot",
+    "duration_seconds",
+    "dataset_tag"
+  ],
+  "assertions": {
+    "row_count_preserved": true,
+    "cardinality_binary": true,
+    "per_match_distinct": true,
+    "canonical_slot_null_count_0": true,
+    "balance_wr": {
+      "slot_A": {
+        "count": 17814947,
+        "win_rate": 0.4999247541965744
+      },
+      "slot_B": {
+        "count": 17814947,
+        "win_rate": 0.5000752458034257
+      }
+    },
+    "i9_invariance": {
+      "row_count_match": true,
+      "distinct_match_ids_match": true,
+      "overall_won_rate_match": true,
+      "min_dur_match": true,
+      "max_dur_match": true,
+      "null_match_id": 0,
+      "null_player_id": 0,
+      "null_opponent_id": 0,
+      "null_won": 0
+    },
+    "balance_note": "Both slots have exactly 17,814,947 rows (50.00% each). Win rate slot_A=0.4999, slot_B=0.5001 \u2014 both near 0.5 as expected from skill-orthogonal hash. Balance is reported as confirmatory evidence; orthogonality established by structural argument, not by this statistic.",
+    "all_passed": true
+  },
+  "sql_queries": {
+    "CREATE_MATCHES_HISTORY_MINIMAL_SQL": {
+      "sql": "CREATE OR REPLACE VIEW matches_history_minimal AS\n-- aoestats sibling of sc2egset.matches_history_minimal (PR #152 pattern).\n-- Input: matches_1v1_clean (1 row/match, p0/p1 cols). UNION ALL -> 2 rows/match.\n-- ADDENDUM 01_04_03: 9-col contract (duration_seconds added 2026-04-18).\n-- AMENDMENT 01_04_03b: 10-col contract (canonical_slot added 2026-04-20).\n-- Invariants: I3 (TIMESTAMP cast from TIMESTAMPTZ; duration_seconds POST_GAME_HISTORICAL),\n--   I5 (HOLDS post-amendment: NULL-safe symmetry + canonical_slot skill-orthogonal slot labelling),\n--   I6 (SQL verbatim in JSON), I7 (game_id VARCHAR passthrough; 1_000_000_000\n--   nanoseconds-to-seconds divisor cites pre_ingestion.py:271 + research_log.md:684),\n--   I8 (cross-dataset 9-col contract; aoestats extends with local 10th col canonical_slot),\n--   I9 (no upstream modification; pure projection).\n-- R1-BLOCKER-A1 fix: aoestats duration is Arrow duration[ns] -> BIGINT NANOSECONDS.\n--   Divide by 1_000_000_000 (NOT 1_000) to get seconds.\n-- canonical_slot derivation (BACKLOG F1, hash-on-match_id, skill-orthogonal by construction):\n--   CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END\n--   Both rows of any match share the same match_id value -> same hash(match_id).\n--   focal_team in {0, 1} distributes them into complementary slots (0%2 != 1%2).\n--   Skill-orthogonal: hash depends only on match_id, not on any player property.\nWITH p0_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p0_civ                                                      AS faction,\n        m.p1_civ                                                      AS opponent_faction,\n        m.p0_winner                                                   AS won,\n        -- AMENDMENT 01_04_03b: canonical_slot at position 7 (after won, before duration_seconds)\n        CASE WHEN (hash('aoestats::' || m.game_id) + 0) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END AS canonical_slot,\n        CAST(r.duration / 1000000000 AS BIGINT)                       AS duration_seconds,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n    JOIN matches_raw r ON r.game_id = m.game_id\n),\np1_half AS (\n    SELECT\n        'aoestats::' || m.game_id                                     AS match_id,\n        CAST(m.started_timestamp AT TIME ZONE 'UTC' AS TIMESTAMP)     AS started_at,\n        CAST(m.p1_profile_id AS VARCHAR)                              AS player_id,\n        CAST(m.p0_profile_id AS VARCHAR)                              AS opponent_id,\n        m.p1_civ                                                      AS faction,\n        m.p0_civ                                                      AS opponent_faction,\n        m.p1_winner                                                   AS won,\n        CASE WHEN (hash('aoestats::' || m.game_id) + 1) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END AS canonical_slot,\n        CAST(r.duration / 1000000000 AS BIGINT)                       AS duration_seconds,\n        'aoestats'                                                    AS dataset_tag\n    FROM matches_1v1_clean m\n    JOIN matches_raw r ON r.game_id = m.game_id\n)\nSELECT * FROM p0_half\nUNION ALL\nSELECT * FROM p1_half\nORDER BY started_at, match_id, player_id",
+      "sha256": "4432b1583450e79f52666a97c2099ba56a1aa91bc72f2099bd7b8c1822f5093f"
+    },
+    "ROW_COUNT_SQL": {
+      "sql": "SELECT COUNT(*) FROM matches_history_minimal",
+      "sha256": "242b18e0b19f0c196c069903140cf0f3cf527364eed786e120bd7373b0e756dc"
+    },
+    "CARDINALITY_SQL": {
+      "sql": "SELECT DISTINCT canonical_slot FROM matches_history_minimal ORDER BY 1",
+      "sha256": "47276fc6dac1f32000b3d639474f12ed9563ccd89a028fc315dc3b80e318ce28"
+    },
+    "SYMMETRY_SQL": {
+      "sql": "SELECT COUNT(*) FROM (\n  SELECT match_id FROM matches_history_minimal\n  GROUP BY match_id\n  HAVING COUNT(DISTINCT canonical_slot) != 2\n) v",
+      "sha256": "1c3bc106e1d2af686bc346384189b25e090177cdef680057c0bd8a0b2baee63f"
+    },
+    "BALANCE_SQL": {
+      "sql": "SELECT canonical_slot, COUNT(*) AS n\nFROM matches_history_minimal\nGROUP BY canonical_slot\nORDER BY canonical_slot",
+      "sha256": "f252692574f167179657691aa4d22bee7d9886b439c3a8b8b560843684a5e64a"
+    },
+    "NULL_COUNT_SQL": {
+      "sql": "SELECT COUNT(*) FROM matches_history_minimal WHERE canonical_slot IS NULL",
+      "sha256": "a9ec61f391e3a614b7864d52194a7b827233d3d6494298f42516615e5e0fb9a0"
+    },
+    "WIN_RATE_SQL": {
+      "sql": "SELECT canonical_slot, AVG(CAST(won AS INT)) AS wr, COUNT(*) AS n\nFROM matches_history_minimal\nGROUP BY canonical_slot\nORDER BY canonical_slot",
+      "sha256": "1e9d8c62922950aefd59e11ff30bb4a59152656b6ea4530559f7f33840bf6aa6"
+    }
+  },
+  "predecessor_artifact": "src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03_minimal_history_view.json",
+  "predecessor_step": "01_04_03",
+  "alternatives_rejected": [
+    {
+      "method": "profile_id_ordered",
+      "reason": "01_04_05 Q4 verdict: lower_id_first_win_rate=0.5066 (+0.66pp). Account age correlates with skill (early-adopter effect); profile_id-ordering IS skill-correlated. Upstream verdict: profile_id ordering MUST NOT be used as slot-neutralizing technique."
+    },
+    {
+      "method": "old_rating_ordered",
+      "reason": "Skill-coupled by construction. Does not neutralize W3 artefact."
+    },
+    {
+      "method": "hash_on_sorted_profile_id_tuple",
+      "reason": "Inherits skill correlation; sort is on player-property magnitudes."
+    }
+  ]
+}

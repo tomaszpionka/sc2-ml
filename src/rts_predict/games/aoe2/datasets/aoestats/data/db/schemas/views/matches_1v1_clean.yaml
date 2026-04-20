@@ -206,9 +206,17 @@ invariants:
     filtering (history aggregation with match_time < T). Temporal anchor: started_timestamp
     for downstream I3-compliant feature queries.'
 - id: I5
-  description: 1-row-per-match invariant (asserted in 01_04_02). NOT 2-rows-per-replay
+  description: |
+    1-row-per-match invariant (asserted in 01_04_02). NOT 2-rows-per-replay
     like sc2egset. p0/p1 columns are symmetric. Phase 02 MUST randomise focal/opponent
     assignment (team=1 wins ~52.27% per 01_04_01 audit).
+    W3 ARTEFACT_EDGE (01_04_05): `team` column reflects upstream API ordering
+    (invite-first / matchmaking-API assignment), NOT game-mechanical slot identity.
+    Team=1 has higher ELO in 80.3% of matches. Phase 02 feature engineering MUST NOT
+    use `team` as input; the downstream `matches_history_minimal.canonical_slot`
+    column (hash-on-match_id; skill-orthogonal by construction) is the
+    I5-compliant slot label. See `.../01_04_03b_canonical_slot_amendment.json`
+    and INVARIANTS.md §5 I5 row.
 - id: I6
   description: v2 DDL stored verbatim in 01_04_02_post_cleaning_validation.json sql_queries.
     v3 DDL (ADDENDUM) stored verbatim in 01_04_02_duration_augmentation_validation.json

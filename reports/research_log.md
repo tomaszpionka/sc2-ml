@@ -17,6 +17,16 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-04-20 — [BACKLOG F1 + W4 / aoestats] canonical_slot amendment: schema surface +1 column, spec v1.0.5 → v1.1.0
+
+**Source:** aoestats research_log.md 2026-04-20 F1+W4 entry.
+
+Single-dataset amendment (aoestats only); sibling datasets (sc2egset, aoe2companion) unchanged. Adds `canonical_slot VARCHAR` to `matches_history_minimal` via hash-on-match_id derivation (skill-orthogonal by structural construction — both rows of any match share the same match_id hence the same hash; the binary splitter with focal_team pivot distributes them into complementary slots; argument independent of match_id's semantic content). Flips INVARIANTS.md §5 I5 PARTIAL → HOLDS and the 01_06 decision gate from READY_CONDITIONAL to READY_WITH_DECLARED_RESIDUALS. Spec §14 bumps to v1.1.0. Cross-dataset UNION ALL (if ever needed) must project the 9 shared columns only — aoestats extends locally. [PRE-canonical_slot] flag protocol in spec §9 transitions from ACTIVE to HISTORICAL.
+
+**Phase 02 implication:** GO-NARROW → GO-FULL for aoestats. Per-slot features (canonical_slot-conditioned old_rating, civ, faction stratifiers) now invariant-safe.
+
+---
+
 ## [CROSS] 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Three-dataset Phase 01 closure — Decision Gates complete
 
 **Branch:** `feat/phase01-decision-gates-01-06`

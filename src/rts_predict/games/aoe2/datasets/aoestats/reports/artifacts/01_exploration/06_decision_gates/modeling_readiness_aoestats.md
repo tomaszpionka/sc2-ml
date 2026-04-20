@@ -8,16 +8,18 @@
 
 ## 1. Verdict
 
-**READY_CONDITIONAL**
+**READY_WITH_DECLARED_RESIDUALS**
 
-Per spec §2: 1 BLOCKER risk (AO-R01 `canonical_slot`). Phase 02 proceeds in **GO-NARROW** mode:
-aggregate / UNION-ALL-symmetric features permitted; per-slot features deferred.
+Per spec §2: 0 BLOCKER risks (AO-R01 resolved 2026-04-20). Phase 02 proceeds in **GO-FULL** mode:
+per-slot features permitted via `canonical_slot`; see `matches_history_minimal.yaml` 10-col schema.
 
 ---
 
 ## 2. Flip-Predicate
 
-**BACKLOG F1 (`canonical_slot` resolved in schema) AND W4 (INVARIANTS.md §5 I5 row transitions PARTIAL → HOLDS via schema amendment). If F1 lands without W4, verdict remains READY_CONDITIONAL with narrower aggregate-features scope.**
+**SATISFIED (2026-04-20): BACKLOG F1 landed; W4 operational content (INVARIANTS §5 I5 PARTIAL → HOLDS) bundled in same PR.**
+
+~~BACKLOG F1 (`canonical_slot` resolved in schema) AND W4 (INVARIANTS.md §5 I5 row transitions PARTIAL → HOLDS via schema amendment). If F1 lands without W4, verdict remains READY_CONDITIONAL with narrower aggregate-features scope.~~
 
 Coupling explanation: W3 ARTEFACT_EDGE (01_04_05) establishes that `team=1` is assigned to the
 higher-ELO player in 80.3% of matches, creating a `team1_wins` base-rate artefact (~52.27%).
@@ -30,16 +32,17 @@ technically present but invariant-unverified — verdict remains READY_CONDITION
 
 ## 3. BLOCKER List
 
-**1 BLOCKER: AO-R01 [SLOT_ASYMMETRY]**
+**0 BLOCKERS (AO-R01 resolved 2026-04-20)**
 
-`canonical_slot` column absent from `matches_history_minimal`. Upstream API assigns `team=1`
+~~**1 BLOCKER: AO-R01 [SLOT_ASYMMETRY]**~~ — RESOLVED 2026-04-20 (BACKLOG F1 + W4).
+
+Historical record: `canonical_slot` column was absent from `matches_history_minimal`. Upstream API assigns `team=1`
 to higher-ELO player in 80.3% of matches (W3 ARTEFACT_EDGE, artifact:
 `01_exploration/04_cleaning/01_04_05_i5_diagnosis.json`).
 
-- **Mitigation:** BACKLOG F1 (add `canonical_slot` to `matches_history_minimal`) + W4
-  (update INVARIANTS.md §5 I5 row from PARTIAL to HOLDS after F1 + schema amendment)
+- **Mitigation:** RESOLVED — canonical_slot VARCHAR column added via hash-on-match_id derivation (01_04_03b); INVARIANTS.md §5 I5 PARTIAL → HOLDS (W4).
 - **Thesis defence:** §4.4.6
-- **Phase 02 implication:** Phase 02 may proceed on aggregate / UNION-ALL-symmetric features (faction, opponent_faction, old_rating via player_history_all). Per-slot features (p0_civ, p1_civ, p0_old_rating, p1_old_rating) deferred until F1 + W4 both land.
+- **Phase 02 implication:** GO-FULL. Per-slot features (canonical_slot-conditioned old_rating, civ, faction stratifiers) now invariant-safe.
 
 ---
 
@@ -72,11 +75,14 @@ to higher-ELO player in 80.3% of matches (W3 ARTEFACT_EDGE, artifact:
 
 ## 5. Phase 02 Go/No-Go
 
-**GO-NARROW** (READY_CONDITIONAL).
+**GO-FULL** (READY_WITH_DECLARED_RESIDUALS; per-slot features permitted via canonical_slot; see matches_history_minimal.yaml 10-col schema).
 
-Phase 02 may proceed on aggregate / UNION-ALL-symmetric features (faction, opponent_faction, old_rating via player_history_all). Per-slot features (p0_civ, p1_civ, p0_old_rating, p1_old_rating) deferred until F1 + W4 both land.
+~~**GO-NARROW** (READY_CONDITIONAL).~~
 
-Rationale for GO-NARROW (not STOP):
+Phase 02 may proceed on all feature types including per-slot features (canonical_slot-conditioned
+old_rating, civ, faction stratifiers). The slot-asymmetry blocker (AO-R01) is resolved.
+
+Historical rationale for previous GO-NARROW (retained for audit provenance):
 - The slot-asymmetry artefact affects `team=1` label interpretation for per-slot features only.
 - Aggregate / symmetric features (faction win-rate, average ELO from `player_history_all`,
   match counts) are NOT affected by team=0/1 slot assignment.

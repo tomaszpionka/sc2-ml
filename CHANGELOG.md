@@ -19,7 +19,28 @@ merged to `master`.
 
 ### Removed
 
-## [3.28.1] — 2026-04-19 (PR #TBD: chore/purge-planning-pr-183)
+## [3.29.0] — 2026-04-20 (PR #185: feat/aoestats-canonical-slot)
+
+### Added
+
+- aoestats `canonical_slot VARCHAR` column in `matches_history_minimal` (hash-on-match_id; skill-orthogonal by construction). Resolves BACKLOG F1. Artifact: `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.{json,md}`.
+
+### Changed
+
+- INVARIANTS.md §5 I5 row: PARTIAL → HOLDS (W4 operational content).
+- `reports/specs/01_05_preregistration.md` bumped v1.0.5 → v1.1.0 (§14 amendment log; aoestats `matches_history_minimal` 9 → 10 columns; cross-dataset UNION ALL contract projects 9 shared columns only).
+- `modeling_readiness_aoestats.md` verdict: READY_CONDITIONAL → READY_WITH_DECLARED_RESIDUALS. Phase 02 scope: GO-NARROW → GO-FULL.
+- `risk_register_aoestats.csv` AO-R01 mitigation_status: OPEN → RESOLVED.
+
+### Fixed
+
+- `[PRE-canonical_slot]` flag protocol transitioned ACTIVE → HISTORICAL (operational closure of §4.4.6 flag; substantive thesis rewrite deferred to Pass-2 per REVIEW_QUEUE).
+
+### Removed
+
+- `planning/BACKLOG.md` F1 entry (resolved).
+
+## [3.28.1] — 2026-04-19 (PR #184: chore/purge-planning-pr-183)
 
 ### Removed
 

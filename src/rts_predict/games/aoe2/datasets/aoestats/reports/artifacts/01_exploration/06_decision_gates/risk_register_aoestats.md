@@ -5,21 +5,21 @@
 
 ## Severity Distribution
 
-- BLOCKER: 1
+- BLOCKER: 0 (AO-R01 resolved 2026-04-20)
 - HIGH: 1
 - MEDIUM: 2
-- RESOLVED: 1
+- RESOLVED: 2
 
-**1 BLOCKER (AO-R01 canonical_slot).** Verdict: READY_CONDITIONAL. Phase 02 GO-NARROW (aggregate features only).
+**0 BLOCKERS (AO-R01 resolved 2026-04-20).** Verdict: READY_WITH_DECLARED_RESIDUALS. Phase 02 GO-FULL.
 
-### AO-R01 [BLOCKER] — SLOT_ASYMMETRY
+### AO-R01 [RESOLVED] — SLOT_ASYMMETRY
 
 canonical_slot column ABSENT from matches_history_minimal. W3 ARTEFACT_EDGE (01_04_05): upstream API assigns team=1 to higher-ELO player in 80.3% of matches, creating team1_wins ~52.27% base-rate artefact. Per-slot features forbidden until BACKLOG F1 resolved.
 
 - **Evidence:** `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_05_i5_diagnosis.json`
-- **Phase 02:** Per-slot features (p0_civ, p1_civ, p0_old_rating, p1_old_rating) forbidden. Aggregate / UNION-ALL-symmetric features permitted (faction, opponent_faction, old_rating via player_history_all). Scope: GO-NARROW.
+- **Phase 02:** RESOLVED 2026-04-20. canonical_slot VARCHAR column added to matches_history_minimal via hash-on-match_id derivation (01_04_03b). INVARIANTS.md §5 I5 PARTIAL → HOLDS (W4). Phase 02 scope: GO-FULL. Per-slot features (canonical_slot-conditioned old_rating, civ, faction stratifiers) now invariant-safe.
 - **Thesis:** §4.4.6
-- **Mitigation:** OPEN (BACKLOG F1)
+- **Mitigation:** RESOLVED (2026-04-20, BACKLOG F1+W4; see 01_04_03b artifact)
 
 ### AO-R02 [MEDIUM] — IDENTITY
 

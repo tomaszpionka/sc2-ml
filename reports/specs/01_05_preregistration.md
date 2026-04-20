@@ -1,6 +1,6 @@
 ---
 spec_id: CROSS-01-05-v1
-spec_version: "1.0.5"
+spec_version: "1.1.0"
 created: 2026-04-18
 invariants_touched: [I3, I6, I7, I8, I9]
 datasets_bound: [sc2egset, aoe2companion, aoestats]
@@ -69,6 +69,12 @@ the W3 verdict (ARTEFACT_EDGE, commit `ab23ab1d`), `team=1` is assigned to the
 higher-ELO player by the upstream API. A `canonical_slot` column will be added
 in a Phase 02 amendment (§14). Until then, any feature or statistic conditioned
 on `team` in aoestats is marked `[PRE-canonical_slot]`.
+
+**Post-v1.1.0 note (aoestats-local).** aoestats `matches_history_minimal` extends
+the 9-column contract with a local 10th column `canonical_slot VARCHAR`
+(hash-on-match_id; skill-orthogonal slot label). Sibling datasets (sc2egset,
+aoe2companion) retain the 9-column contract. Cross-dataset UNION ALL must
+project the 9 shared columns only. See §14 v1.1.0.
 
 ---
 
@@ -754,6 +760,66 @@ v1.0.5 — 2026-04-19 — Phase 06 interface schema harmonization: 9 → 11
                        Source: 2026-04-19 pre-01_06 adversarial review
                        (DEFEND-IN-THESIS #3a, #3b) + planner-science
                        consolidated methodology plan 2026-04-19.
+
+v1.1.0 — 2026-04-20 — aoestats matches_history_minimal schema surface amendment:
+                       +1 column (canonical_slot VARCHAR). Discharges W3 follow-up
+                       (spec v1.0.1 §14) and BACKLOG F1 + W4 coupling flagged in
+                       01_06 decision gate.
+
+                       Reason: W3 ARTEFACT_EDGE verdict (01_04_05, commit ab23ab1d)
+                       established that upstream `team` is an API-ordering artefact,
+                       not a game-mechanical slot identity. Until this amendment,
+                       aoestats emitted [PRE-canonical_slot] flags on per-slot
+                       01_05 outputs and Phase 02 was GO-NARROW (aggregate features
+                       only). This amendment adds the canonical slot label needed
+                       to expand Phase 02 scope to full (per-slot) features.
+
+                       Derivation (hash-on-match_id; skill-orthogonal by
+                       construction):
+                         canonical_slot = CASE
+                           WHEN (hash(match_id) + focal_team) % 2 = 0
+                           THEN 'slot_A' ELSE 'slot_B' END
+
+                       Orthogonality (structural, not empirical): `hash(match_id)`
+                       depends only on the value match_id. Both rows of any
+                       match share the same match_id (UNION-ALL of a
+                       1-row-per-match source), hence the same hash. The binary
+                       splitter `(hash + focal_team) % 2` with focal_team in {0,1}
+                       distributes them into complementary slots -- independently
+                       of match_id's semantic content. The argument requires no
+                       empirical claim about match_id's origin or structure; even
+                       if match_id encoded player identity, within-match
+                       distinct slots would still hold by the focal_team pivot
+                       alone. Profile_id-ordered and old_rating-ordered
+                       alternatives were both explicitly rejected (01_04_05 Q4
+                       showed profile_id-ordering IS skill-correlated via
+                       account-age proxy; old_rating is skill-coupled by
+                       construction).
+
+                       Scope -- one schema-level change + three documentation deltas:
+                       - src/rts_predict/games/aoe2/datasets/aoestats/data/db/
+                         schemas/views/matches_history_minimal.yaml: 9 -> 10
+                         columns (canonical_slot inserted at position 7).
+                       - INVARIANTS.md §5 I5 row: PARTIAL -> HOLDS.
+                       - matches_1v1_clean.yaml invariants[I5]: W3 note appended
+                         (no new column; p0/p1 already-disjoint at 1-row-per-match
+                         grain).
+                       - Spec §9/§11 [PRE-canonical_slot] flag: remains defined
+                         as a historical marker for pre-amendment 01_05 artifacts;
+                         post-amendment outputs will no longer need the flag.
+
+                       Spec parameter groups (Q1-Q9) unchanged.
+
+                       Source: BACKLOG F1 plan (planning/current_plan.md
+                       2026-04-19), artifact src/rts_predict/games/aoe2/datasets/
+                       aoestats/reports/artifacts/01_exploration/04_cleaning/
+                       01_04_03b_canonical_slot_amendment.json.
+
+                       Note: §9 Query 4 (aoestats-only canonical_slot readiness
+                       query) now returns a non-empty result; [PRE-canonical_slot]
+                       flag protocol transitions from ACTIVE to HISTORICAL. Any
+                       future 01_05 re-run on aoestats data will emit per-slot
+                       outputs WITHOUT the flag.
 ```
 
 ---

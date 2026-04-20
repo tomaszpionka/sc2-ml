@@ -92,6 +92,19 @@ upstream API ordering, NOT a game-mechanical slot identity; it must NOT be used 
 Phase 02 feature. The UNION-ALL pivot in `matches_history_minimal` (produces `won_rate = 0.5`
 exactly) is confirmed correct and I5-compliant. Source: `01_04_05_i5_diagnosis.{json,md}`.
 
+**Amendment (2026-04-20 — BACKLOG F1 + W4).** The `canonical_slot VARCHAR`
+column is added to `matches_history_minimal` via hash-on-match_id derivation
+(`CASE WHEN (hash(match_id) + focal_team) % 2 = 0 THEN 'slot_A' ELSE 'slot_B' END`).
+Skill-orthogonal by structural construction: both rows of any match share the
+same match_id (UNION-ALL of a 1-row-per-match source), hence the same
+hash(match_id); the binary splitter with focal_team ∈ {0,1} pivot distributes
+them into complementary slots. The argument is independent of match_id's
+semantic content — no empirical claim about its origin is required.
+Profile_id-ordered and old_rating-ordered alternatives were both explicitly
+rejected (profile_id correlates with account age per Q4 of this same artifact;
+old_rating is skill-coupled by construction). I5 transitions PARTIAL → HOLDS
+in §5. Artifact: `01_04_03b_canonical_slot_amendment.{json,md}`.
+
 ### 01_05 findings (Pipeline Section 01_05 -- Temporal & Panel EDA)
 
 **Reference window:** 2022-Q3, 2022-08-29..2022-10-27, patch 66692 (corrected from spec plan's 125283; empirically verified from `overviews_raw`). 744 cohort players (>=10 matches in reference period), 37,632 reference rows.
@@ -126,5 +139,5 @@ See the universal invariants file linked above for the full I1–I10+ list. Exce
 | Invariant | Status | Notes |
 |---|---|---|
 | I2 | PARTIAL | Structurally forced to branch (v): `profile_id` is the sole identity signal — no visible handle column exists. Migration/collision rates are unevaluable within aoestats alone. Cross-dataset namespace bridge to aoec `profileId` confirmed at VERDICT A (agreement 0.9960, CI-lower 0.867; 01_04_04). See §2. |
-| I5 | PARTIAL — asymmetry characterised, see §4 finding from 01_04_05 | Upstream `matches_raw` slot asymmetry `team1_wins ≈ 52.27%` diagnosed as ARTEFACT_EDGE (01_04_05): API assigns team=1 to higher-ELO player in 80.3% of games. UNION-ALL pivot in `matches_history_minimal` confirmed I5-compliant (`won_rate = 0.5` exactly). `team` field MUST NOT be used as a Phase 02 feature. Schema amendment required (W4 coupling). 01_05_02 uses focal_old_rating with correct UNION-ALL-symmetric slot-agnostic derivation (M4 critique fix). |
+| I5 | HOLDS (post-2026-04-20 canonical_slot amendment) | Upstream `matches_raw` slot asymmetry `team1_wins ≈ 52.27%` diagnosed as ARTEFACT_EDGE (01_04_05): API assigns team=1 to higher-ELO player in 80.3% of games. UNION-ALL pivot in `matches_history_minimal` produces `won_rate = 0.5` exactly; canonical_slot column (hash-on-match_id, 01_04_03b) provides skill-orthogonal slot labelling by construction — the hash depends only on `match_id` (a stable per-match identifier independent of player properties). `team` field MUST NOT be used as a Phase 02 feature; canonical_slot is the I5-compliant slot label. Spec §14 v1.1.0 registers this amendment. |
 | I8 | PARTIAL — ICC FALSIFIED in 2022-Q3 reference | ANOVA ICC (50k) = 0.0268, below 0.05 threshold (01_05_05). Early crawler period (744 active players in 2022-Q3). ICC should be re-evaluated in a later, denser quarter before concluding lack of skill signal. Phase 02 may proceed with per-player features, but thesis must document this limitation. |
