@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.35.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg5b-circular-spec-thorrez-proxy)
+
+### Changed
+
+- docs(thesis): Pass-2 PR-5b — F5.4 §4.1.3 reference-window defence anchored to [Nakagawa2017, Gelman2007, Ukoumunne2003, WuCrespiWong2012] with orthogonal-axes reframe (bias vs precision) and patch-66692-uniqueness external anchor; F4.5 §2.2.3 Thorrez2024 Glicko-2 80.13% academic-proxy insertion with preserved calibration-vs-accuracy distinction; REVIEW_QUEUE + WRITING_STATUS entries; no bib changes.
+
 ## [3.34.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg5a-internal-consistency-chore)
 
 ### Added

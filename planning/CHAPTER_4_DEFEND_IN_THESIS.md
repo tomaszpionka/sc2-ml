@@ -48,6 +48,27 @@ the homogeneity constraint protects.
 **Where in Chapter 4.** Methodology section on reference selection;
 should appear before the cross-game results table.
 
+**2026-04-20 (PR-TG5b):** Pass-2 F5.4 audit flagged the original
+PR #175 defence as circular — it cited `reports/specs/01_05_preregistration.md`
+§7 + §11 W3 ARTEFACT_EDGE as defence authority, but the spec was
+authored by the thesis team, so the citation cannot serve as external
+authority. PR-TG5b rewrites the §4.1.3 paragraph to re-anchor the
+defence on four peer-reviewed literature sources: [Nakagawa2017, §2.2]
+(within-cluster stationarity under logit link), [Gelman2007, §11–12]
+(ICC identifiability under stable cluster structure), [Ukoumunne2003]
+(cluster-bootstrap CI consistency under exchangeability),
+[WuCrespiWong2012] (ANOVA-type ICC estimator for binary outcomes). The
+reframe is orthogonal-axes — bias (point-estimate consistency via
+patch-regime homogeneity) vs precision (CI width, *bounded not
+optimized* by single-patch constraint) — rather than a single
+"homogeneity > length" hierarchy. Patch 66692 uniqueness is cited as
+the external, non-tuning anchor (sole patch fully covering the
+pre-registration window; 123 367 matches within / 241 981 across the
+full patch cycle). Spec §7 + §11 retained but demoted from authority
+to *operacjonalizacja*. Residual remains `[x]` closed; PR-TG5b is a
+literature-anchoring refinement of the PR #175 closure, not a
+re-opening.
+
 ---
 
 ## Residual #2 — Population-scope differences
