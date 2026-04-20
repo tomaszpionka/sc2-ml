@@ -1,84 +1,50 @@
-# Plan Critique — reviewer-adversarial Mode A (TG2)
+# Plan Critique — reviewer-adversarial Mode A (TG3)
 
-**Target:** `planning/current_plan.md` (333 lines)
+**Target:** `planning/current_plan.md` (272 lines)
 **Date:** 2026-04-20
 
-## Verdict: BLOCKER
+## Verdict: REQUIRE_MINOR_REVISION
 
-T01 and T02 are individually defensible. T03's §2.3.2 "53 total, 3 Chronicles excluded" parenthetical is factually WRONG and must be revised before execution.
+1 BLOCKER (B-1) + 2 WARNINGs (W-1, W-2). Three narrow edits before execution.
 
 ## Findings
 
-### BLOCKER A1 — "53 total, 3 Chronicles excluded" parenthetical is factually incorrect
-Chronicles shipped in TWO parts:
-- **Chronicles: Battle for Greece** (2024-11, 3 civs: Achaemenids, Athenians, Spartans)
-- **Chronicles: Alexander the Great** (2025-10-14, 3 civs: Macedonians, Thracians, Puru)
+### BLOCKER B-1 — Constraint (c) anchor prose overclaims EsportsBench advertised metrics
+T01 step 3(c) instructs: *"EsportsBench w ogłoszonym opisie obejmuje trafność rankingową i log-loss, lecz nie diagramy rzetelności ani dekompozycję Murphy'ego"*.
 
-**Chronicles-excluded = 6 civs, not 3.**
+WebFetch of HuggingFace + GitHub README: neither advertises Brier, log-loss, accuracy, reliability, calibration, or Murphy. The "obejmuje trafność i log-loss" positive claim is an OVERCLAIM — replicates L-1 BLOCKER in a new shape.
 
-Additionally unaccounted in the DLC chronology:
-- Three Kingdoms (2025-05-06, +5 civs) — within aoestats window
-- Last Chieftains (2026-02-17, +3 civs) — after window
+**Fix:** rewrite to absence-from-README claim only: *"publicznie dostępna dokumentacja EsportsBench (HuggingFace dataset README v8.0 2025-12-31 oraz README repozytorium GitHub) nie wymienia diagramów rzetelności ani dekompozycji Murphy'ego wśród opisanych metryk benchmarku; integralność tych miar w protokole ewaluacyjnym EsportsBench pozostaje niezweryfikowana w ramach niniejszej pracy pending manualnej analizy preprintu"*.
 
-"53 total" is a constructed value (50 ranked + 3 Chronicles Greece) not matching any authoritative source. Liquipedia portal gives ~49-55 depending on accounting convention.
+Also extend Rollback degradation-mode with a third scenario (c): if preprint PDF Table 2 contains calibration metrics, constraint (c) must be rewritten to cross-game-benchmarking-as-standalone-operative.
 
-**Consequence:** post-T03 the thesis would assert "pięćdziesiąt cywilizacji... 53 total, 3 Chronicles excluded" while an examiner cross-checking ageofempires.com would find:
-(i) Three Kingdoms unaccounted
-(ii) Chronicles-exclusion understated as 3 when it is 6
-(iii) "53 total" unanchored to any citation
+### WARNING W-1 — §1.3 RQ1 surgical deletion narrows inductive base, mitigation silent
+Post-deletion, RQ1 hypothesis cites Hodge2021 (Dota 2 only) + Tang2025 margin caveat. Plan Open Q 3 acknowledges narrowing but doesn't mitigate in execution. An examiner asking "why Dota-2-only base for SC2+AoE2 hypothesis?" has an opening.
 
-**Fix (recommended option a):** DROP the parenthetical entirely. Revert to pure 45→50 + window substitution. The R18 addition was meant to close a "reader-visible DLC arithmetic gap" but introduces a larger gap. §2.3.2:67 is already flagged for Pass-2 review — full-roster accounting can wait.
+**Fix:** plant `[REVIEW: RQ1 hipoteza inductive base narrowed to Dota 2 — Pass 2 ocenić, czy dodać cytat na cross-esport GBDT-dominance]` flag at `01_introduction.md:31` post-T02. OR add explicit narrowed-induction note to T03 WRITING_STATUS §1.3 entry.
 
-Alternatively (option b): hedge non-numerically — "(pełny roster gry przekracza liczbę cywilizacji rankingowych; część zawartości DLC Chronicles pozostaje wyłączona z rywalizacji rankingowej)".
+### WARNING W-2 — Asymmetric rating-family enumeration: §3.2.4 vs §2.5.5:177
+§3.2.4 T01 step 2: lists 5 families (Elo, Glicko, Glicko-2, TrueSkill, warianty BT).
+§2.5.5:177 T02 step 4: lists 4 families (Elo, Glicko, Glicko-2, TrueSkill).
 
-### MAJOR A2 — DLC chronology missing Three Kingdoms + Last Chieftains
-§2.3.2:67 DLC chronology parenthetical (preserved from the removed `[REVIEW:]` flag) omits Three Kingdoms (2025-05-06) and Last Chieftains (2026-02-17). Under A1 remedy (a), the flag-removal silently promotes an incomplete DLC enumeration from DRAFT to THESIS CONTENT.
+Both are true subsets of EsportsBench's 11 systems. Reviewer will notice asymmetry.
 
-**Fix:** retain a reduced-scope `[REVIEW:]` flag: *"[REVIEW: DLC chronology completeness — zweryfikować w Pass 2, czy lista DLC obejmuje Three Kingdoms (2025-05-06) i Last Chieftains (2026-02-17)]"*.
-
-### MAJOR A3 — Window forward-reference inconsistency
-T01 step 5 instructs inserting "(Tabela 4.4a w §4.1.3)" at §2.2.2:33. T03 does NOT add analogous forward-reference at §1.4:45 and §2.3.2:67 where the aoestats window is substituted. Inconsistent convention across sites.
-
-**Fix:** require T03 to append "(Tabela 4.4a)" forward-reference at §1.4 and §2.3.2 window-substitution sites.
-
-### MINOR A4 — Dash character convention inconsistency
-Tabela 4.4a uses em-dash "—" (2022-08-28 — 2026-02-07). Plan substitution uses arrow "→" (2022-08-28 → 2026-02-07). Different characters in different contexts.
-
-**Fix:** pick one character and apply consistently. Recommend em-dash to match Tabela 4.4a source.
-
-### MINOR A5 — Acquisition vs observation window precision
-Plan uses filename-derived acquisition window (2022-08-28 → 2026-02-07 per Tabela 4.4a). aoestats INVARIANTS.md:74 gives first-observation window as (2022-08-29, 2026-02-06) — 1 day tighter at each boundary. Defensible per thesis convention but worth explicit framing.
+**Fix:** unify phrasing: *"rodziny paired-comparison rating systems, m.in. Elo, Glicko, Glicko-2, TrueSkill"* at both sites.
 
 ## Probes answered
 
-1. Hardest-to-catch risk: **CONFIRMED BLOCKER.** See A1.
-2. Arithmetic: $\binom{50}{2}=1225$, $+50=1275$ ✓
-3. Bibkey integrity: T02 single-token edit verified operational ✓
-4. Cross-section consistency: 9-site enumeration complete ✓
-5. Window consistency: See A4 (dash character) and A5 (acquisition vs observation)
-6. DLC chronology preservation: See A2 (incomplete chronology promoted to thesis content)
-7. REVIEW_QUEUE row split: consistent with existing conventions ✓
-8. Scope creep: File Manifest holds at 8 files ✓
-9. Mountain Royals year: 2023-10-31 confirmed via Steam, Neowin, ageofempires.com, Wikipedia, Fandom ✓
-10. Flag lifecycle: See A2 — reduced-scope flag should be retained
-11. §4.1.1.x no-regression: T01 edits only §2.2.2 + §3.x:55 ✓
-12. Dispatch shorthand: consistent with sec_4_1_crosswalk.md:14 ✓
+- Four-constraint conjunction: holds at (a), (b), (d); fragility at (c) → B-1 fix required
+- AoE2 absence: confirmed absent from v8.0
+- §1.3 surgical deletion parses cleanly → but see W-1
+- Degradation-mode fallback: covers v9.0+ scenarios; needs third scenario for preprint-PDF divergence (B-1 extension)
+- File Manifest 7 files: confirmed
+- No new bibkeys: confirmed
+- Thorrez author typo deferral: consistent (no TG3 site references author name)
 
 ## Recommendation
 
-**REQUIRE_MINOR_REVISION of T03 before execution.** Four revisions needed:
-
-1. **A1 (BLOCKER):** drop the "53 total, 3 Chronicles excluded" parenthetical entirely. Revert to pure 45→50 + window substitution.
-2. **A2 (MAJOR):** retain reduced-scope `[REVIEW:]` flag at §2.3.2:67 covering DLC chronology completeness.
-3. **A3 (MAJOR):** add "(Tabela 4.4a)" forward-references at §1.4:45 and §2.3.2:67 window-substitution sites.
-4. **A4 (MINOR):** pick em-dash consistently for window dash-character.
-
-T01 and T02 are independently defensible. T03 requires revision.
+REQUIRE_MINOR_REVISION — three edits (B-1 + W-1 + W-2), no redesign needed.
 
 ## Sources
-
-- Fandom wiki: Mountain Royals, Last Chieftains, Three Kingdoms pages
-- Neowin: Mountain Royals 2023-10-31 release
-- ageofempires.com: official news
-- Liquipedia: Civilizations portal
-- Steam: DLC listings
+- EsportsBench HuggingFace v8.0
+- EsportsBench GitHub README

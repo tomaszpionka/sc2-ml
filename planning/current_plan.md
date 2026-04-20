@@ -1,333 +1,272 @@
 ---
 category: F
-branch: docs/thesis-pass2-tg2-factual-contradictions
+branch: docs/thesis-pass2-tg3-luka3-narrowing
 date: 2026-04-20
 planner_model: claude-opus-4-7
 dataset: null
 phase: null
 pipeline_section: "Phase 01 — Data Exploration (thesis-writing adaptation)"
-invariants_touched: [I9]
+invariants_touched: []
 source_artifacts:
   - thesis/chapters/01_introduction.md
   - thesis/chapters/02_theoretical_background.md
   - thesis/chapters/03_related_work.md
-  - thesis/chapters/04_data_and_methodology.md
   - thesis/references.bib
   - thesis/WRITING_STATUS.md
   - thesis/chapters/REVIEW_QUEUE.md
-  - thesis/pass2_evidence/sec_4_1_crosswalk.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/INVARIANTS.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_1v1_clean.yaml
+  - thesis/reviews_and_others/related_work_rating_systems.md
   - .claude/author-style-brief-pl.md
   - .claude/scientific-invariants.md
   - .claude/rules/thesis-writing.md
 critique_required: true
-research_log_ref: "thesis/WRITING_STATUS.md (PR-TG2 notes)"
+research_log_ref: "thesis/WRITING_STATUS.md (PR-TG3 notes)"
 ---
 
-# Plan: Pass-2 TG2 — Factual contradictions (SC2 date range §2.2.2, Mountain Royals year in references.bib, AoE2 civ count §1.1/§1.2/§1.4/§2.3.2)
+# Plan: Pass-2 TG3 — Luka 3 narrowing against Thorrez 2024 EsportsBench (§3.5 + §3.2.4 + §1.3/§2.5.5 coordination)
 
 ## Scope
 
-This is a **revision** of previously-DRAFTED sections (§1.1, §1.2, §1.3, §1.4, §2.2, §2.3, §2.5, §3.x). No figures or tables are created; `Tabela 4.4a` in §4.1.3 is referenced as a read-only authoritative source for the aoestats data window and is not modified.
+This is a **revision** of previously-DRAFTED sections (§1.3, §2.5.5, §3.2.4, §3.5). No figures, tables, or bibkeys are created; `thesis/references.bib` is not touched (the `Thorrez2024` bibkey stays; only the surrounding prose is re-scoped).
 
-This plan executes Task Group 2 of the Pass-2 dispatch. It corrects three factual contradictions surfaced during TG1 review but deferred to a separate PR: (i) SC2EGSet date range mis-stated as 2016–2022 in §2.2.2 and §3.x:55 versus the correct 2016–2024 consistently stated in §4.1.1.1, Tabela 4.4a, and the 01_02_04 univariate census artifact; (ii) The Mountain Royals DLC assigned to year 2024 in `references.bib:791` (inside the `AoE2DE` entry's `note` field) versus the actual 2023-10-31 release; (iii) AoE2 civilization count stated as 45 at nine sites across §1.1, §1.2, §1.3, §1.4, §2.3.2, and §3.x versus the empirically observed 50 distinct civilizations in the aoestats data window (2022-08-28 — 2026-02-07). The plan produces one PR (PR-2) and defers TG3–TG6 to sequential follow-up plans per the dispatch's halt-and-review protocol. No empirical artifacts are touched; work is prose-only across three chapter files, one references.bib entry's `note` field, and the two tracker files (WRITING_STATUS.md, REVIEW_QUEUE.md).
+This plan executes Task Group 3 of the Pass-2 dispatch. It narrows the Luka 3 novelty claim (§3.5) so it argues — rather than hedges — against the adversarial reading that Thorrez 2024 EsportsBench already covers the same contribution. The narrowing operates via a three-site edit: (Part 1) rewrite §3.5 Luka 3 to explicitly acknowledge EsportsBench, enumerate four operative disqualifying constraints (ML-classifier family / SC2+AoE2 / proper probabilistic evaluation with calibration diagnostics / 1v1), and anchor the narrowing against a verified fact (EsportsBench covers SC1/SC2/WC3 for the RTS genre but does **not** include AoE2); (Part 2) re-scope the §3.2.4 EsportsBench mention to match what the benchmark actually is (rating-systems benchmark, per-game fit); (Part 3) correct two Thorrez2024 miscitations in §1.3 RQ1 hypothesis and §2.5.5 hybrid-strategy claim that currently attribute ML-classifier findings to a pure-rating-system benchmark. The plan produces one PR (PR-3) and defers TG4–TG6 to sequential follow-up plans per the dispatch's halt-and-review protocol. No empirical artifacts are touched; work is prose-only across three chapter files and the two tracker files (WRITING_STATUS.md, REVIEW_QUEUE.md).
 
 ## Problem Statement
 
-The three findings operate at different epistemic levels and must be resolved independently.
+The three findings operate at the same adversarial surface — correct citation of what Thorrez 2024 EsportsBench does and does not benchmark — and must be resolved together to avoid introducing a new contradiction between a narrowed §3.5 and an unedited §1.3 / §2.5.5.
 
-**Finding 1 — SC2EGSet date range contradiction (§2.2.2 and §3.x vs §4.1.1.1).** §2.2.2 (`02_theoretical_background.md:33`) closes its third paragraph with: *"korpusy obejmujące długi okres czasowy (SC2EGSet rozciąga się na lata 2016–2022 zgodnie z findingiem Phase 01)"*. §3.x (`03_related_work.md:55`) contains "55 paczek turniejowych z lat 2016–2022". §4.1.1.1 (`04_data_and_methodology.md:17`) states *"z lat 2016–2024"* and §4.1.1.1 line 19 gives the exact endpoints *"2016-01-07 do 2024-12-01"*. The canonical Tabela 4.4a (`04_data_and_methodology.md:175`) gives the identical range. The authoritative source is `sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` Section F: *"earliest 2016-01-07T02:21:46.002Z / latest 2024-12-01T23:48:45.2511615Z"*. This contradiction is already documented in `thesis/pass2_evidence/sec_4_1_crosswalk.md:14` as a MIGRATION CANDIDATE flagged for a follow-up chore commit. The dispatch's phrasing *"§4.1.1.1 vs §4.1.1.2 date range"* is shorthand — the actual contradiction is §2.2.2 and §3.x (incorrect sites) vs §4.1.1.1 (authoritative site). §4.1.1.2 is about event-stream structure and carries no date-range claim.
+**Finding 1 — §3.5 Luka 3 over-hedge rather than argument.** `03_related_work.md:187` currently asserts: *"przedmiot niniejszej pracy stanowi, zgodnie z najlepszą dostępną wiedzą autorów, pierwszą znaną nam pracę porównującą rodzinę klasyfikatorów uczenia maszynowego w zadaniu benchmarkowania metod predykcji wyniku meczu między dwiema grami RTS z jawną oceną probabilistyczną w grach 1v1"*. The sentence hedges ("pierwsza znana nam") but does not argue against the nearest-adjacent published benchmark. An examiner familiar with Thorrez 2024 EsportsBench — which benchmarks 11 paired-comparison rating systems across 20 esports titles including SC1, SC2 and WC3 (three RTS titles) — could dispute the claim without the thesis providing an argued response. The author-style brief (`§Przejście z opisowego na argumentacyjne`) requires that each methodological decision carry at least one sentence answering *"dlaczego to, a nie oczywista alternatywa?"*; Luka 3 currently fails this bar because it does not say why EsportsBench does not fill the same space.
 
-**Finding 2 — The Mountain Royals DLC year in references.bib.** The `AoE2DE` entry at `references.bib:791` assigns The Mountain Royals to year 2024 in its `note` field. The DLC was announced 2023-10-16 and released 2023-10-31 per Steam, Wikipedia, Neowin, and ageofempires.com. The thesis chapter prose (§2.3.2 line 67) enumerates Mountain Royals in a DLC list but without an explicit date, so the only site requiring correction is the `references.bib` `note` field. Note: this is the only factual edit to the bibliography file in this plan; the bibkey itself, author list, URL, and all other fields remain untouched. The edit is a single-word change inside the `note` field.
+**Finding 2 — §3.2.4 EsportsBench characterization.** `03_related_work.md:77` introduces EsportsBench as *"jednym z nielicznych źródeł raportujących trafność czysto rankingową na korpusie SC2 (411 030 meczów z Aligulac), na poziomie około 80% dla najlepszych systemów rodziny Glicko"*. This description is accurate for the pre-match vs in-match dimension (Luka 1's direction). It must be supplemented — not replaced — with a sentence identifying three facts that Part 1 depends on: (a) EsportsBench benchmarks pure rating systems (Elo / Glicko / Glicko-2 / TrueSkill / Bradley-Terry variants), not ML-classifier families; (b) the evaluation protocol is per-game fit with chronological train/test split (most recent year as test), not cross-game transfer; (c) AoE2 is absent from EsportsBench's title list (20 titles, none of which is AoE2, verified against the HuggingFace dataset README version 8.0). The `[REVIEW: 80,13%]` flag is either resolved by substituting an explicit verification date or demoted to qualitative hedging; the plan carries the conservative option (qualitative hedge) and leaves the exact-number verification as Pass 2 work.
 
-**Finding 3 — AoE2 civ count at nine sites across three chapters.** The claim "45 cywilizacji" (or equivalent) appears at:
-- `01_introduction.md:13` (§1.1 lead sentence): *"pomimo milionów aktywnych graczy, 45 asymetrycznych cywilizacji dostępnych w rankingowym trybie gry w okresie objętym analizowanymi zbiorami danych"*
-- `01_introduction.md:15` (§1.1): *"990 unikalnych par cywilizacji ($\binom{45}{2}$) … 45 cywilizacji"*
-- `01_introduction.md:23` (§1.2): *"45 cywilizacji wobec 3 ras w SC2"*
-- `01_introduction.md:35` (§1.3 RQ3): *"990 unikalnych par cywilizacji wobec 9 par rasowych"*
-- `01_introduction.md:45` (§1.4): *"dla AoE2 — 45 cywilizacji dostępnych w okresie analizy, generujących 990 unikalnych par"*
-- `02_theoretical_background.md:67` (§2.3.2 para 1): *"W okresie objętym analizowanymi danymi (2024–2026) Age of Empires II: Definitive Edition oferuje czterdzieści pięć cywilizacji"* — already carrying a `[REVIEW:]` flag
-- `02_theoretical_background.md:69` (§2.3.2 para 2): cascade $\binom{45}{2}+45=1035$ uporządkowanych par (lub 990 non-mirror)
-- `02_theoretical_background.md:171` (§2.5.4): *"przestrzeń 990 par cywilizacji (dla 45 cywilizacji...)"*
-- `03_related_work.md:17` (§3.x): *"45 cywilizacji w Age of Empires II, generujących 990 unikalnych zestawień"*
+**Finding 3 — two §1.3 / §2.5.5 miscitations that would become externally visible once §3.5 is narrowed.** `01_introduction.md:31` (RQ1 hypothesis) currently couples `[Thorrez2024]` with the claim that gradient-boosted trees dominate other classical classifiers in esports prediction: *"hipoteza: … można oczekiwać, że gradientowo wzmacniane drzewa decyzyjne osiągną przewagę nad pozostałymi klasyfikatorami klasycznymi, zgodnie z wynikami Hodge i in. [Hodge2021] dla Dota 2 oraz powtarzalnym wzorcem obserwowanym w predykcji esportowej [Thorrez2024]"*. EsportsBench does not benchmark gradient-boosted trees vs classical classifiers; it benchmarks pure rating systems only. The load-bearing citation for "powtarzalny wzorzec" should be either Hodge2021 alone (where GBDT dominance is directly evidenced on Dota 2), Tang2025 (already cited at the same sentence, argues for 2–5 pp ML uplift over tuned rating baselines), or both. `[Thorrez2024]` does not support the claim. `02_theoretical_background.md:181` (§2.5.5) has the analogous miscitation: *"Hybrydowa strategia łącząca rankingi z gradientowo wzmacnianymi drzewami pozostaje obecnie najlepiej udokumentowaną kombinacją w literaturze predykcji esportowej, zarówno pod względem skuteczności, jak i interpretowalności [Hodge2021, Thorrez2024]"* — Thorrez2024 does not benchmark hybrid rating+GBDT pipelines. The correct citation is Hodge2021 alone. Both miscitations would become externally visible once Part 1 narrowed §3.5 makes it clear that EsportsBench benchmarks rating systems, not ML classifiers; TG3 resolves them pre-emptively in the same PR to avoid shipping a new contradiction.
 
-The empirically observed count in aoestats data is **50 distinct civilizations** across the window 2022-08-28 — 2026-02-07 (per `aoestats/INVARIANTS.md:10`, `research_log.md:456, 1184`, and `matches_1v1_clean.yaml:70, 99`). The §2.3.2 sub-claim *"W okresie objętym analizowanymi danymi (2024–2026)"* is also temporally wrong — the aoestats window starts 2022-08-28. Both the count and the window framing are incorrect. The target end-state replaces "45" with "50" and anchors the count empirically to the aoestats data window at all nine sites. The cascading arithmetic — "990 unikalnych par" and "1035 uporządkowanych" — must be recomputed: $\binom{50}{2}=1\,225$ unordered non-mirror; $\binom{50}{2}+50=1\,275$ ordered; at all applicable sites.
-
-**Target end-state.** After execution: (i) §2.2.2 and §3.x:55 state "2016–2024" consistently with §4.1.1.1 and Tabela 4.4a; (ii) `references.bib:791` `note` field assigns Mountain Royals to 2023; (iii) all nine sites cite "50 cywilizacji" anchored to the aoestats data window, with cascading arithmetic corrected (990 → 1 225 and 1035 → 1 275 at applicable sites). The `[REVIEW:]` flag at §2.3.2 line 67 has its civ-count question removed (resolved) and is replaced by a reduced-scope flag covering DLC-chronology completeness (Three Kingdoms 2025-05-06, Chronicles: Alexander the Great 2025-10-14, Last Chieftains 2026-02-17). The `REVIEW_QUEUE.md` entry for §1.4 at line 23 is updated to record the resolution. No empirical artifacts are touched. No new bibkeys are introduced. §4.1.1.x (which already carries correct dates) is NOT re-written; the TG2 edits go to the inconsistent sites, not the authoritative sites.
+**Target end-state.** After execution: (i) §3.5 Luka 3 argues against EsportsBench via four operative constraints (ML-classifier family / SC2+AoE2 specifically / proper probabilistic evaluation with calibration / 1v1) and anchors the narrowing on the verified EsportsBench title list (AoE2 absent, SC1+SC2+WC3 present as RTS titles); (ii) §3.2.4 EsportsBench mention is supplemented with a sentence identifying its scope (pure rating systems, per-game fit, AoE2 absence); (iii) §1.3 RQ1 hypothesis citation drops `Thorrez2024` from the GBDT-dominance claim (Hodge2021 + Tang2025 retained); (iv) §2.5.5 hybrid-strategy claim drops `Thorrez2024` (Hodge2021 retained; empirical support is on Dota 2 GBDT, not EsportsBench). The `REVIEW_QUEUE.md:22` Pass 2 question 2 on §1.3 (verify Thorrez2024 cross-system comparability) is resolved (answer: per-system fit only). The `REVIEW_QUEUE.md:40` §3.5 `[REVIEW: RQ3 novelty hedge]` question 1 is resolved (answer: adversarial reading against EsportsBench is neutralized by the four-constraint narrowing). No empirical artifacts are touched. No new bibkeys are introduced. No bibliography entries are modified (TG4 scope). The exact 80.13% SC2 Glicko figure remains qualitative ("~80% kalibracji do progu") pending Pass 2 manual PDF read (unchanged from current state).
 
 ## Assumptions & unknowns
 
-### Pre-flight facts (verified 2026-04-20 via Read/Grep/WebSearch)
+### Pre-flight facts (verified 2026-04-20 via Read/Grep/WebSearch/WebFetch)
 
-- §2.2.2 still contains the *"2016–2022"* date range at line 33. Verified via Read of `02_theoretical_background.md:33`.
-- `references.bib:791` (inside `AoE2DE` note field) still contains "The Mountain Royals (2024)". Verified via Read.
-- Nine sites carry the "45 cywilizacji" or equivalent "990"/"czterdzieści pięć"/"45 asymetrycznych cywilizacji" claims — §1.1 line 13 ("45 asymetrycznych cywilizacji"), §1.1 line 15, §1.2 line 23, §1.3 line 35, §1.4 line 45, §2.3.2 line 67, §2.3.2 line 69, §2.5.4 line 171, §3.x line 17. Verified via grep of `01_introduction.md`, `02_theoretical_background.md`, and `03_related_work.md`.
-- aoestats observed civ count is 50 in the full window. Verified via `aoestats/INVARIANTS.md:10`, `research_log.md:456`, `matches_1v1_clean.yaml:70, 99`.
-- Mountain Royals release date 2023-10-31. Verified via WebSearch returning Wikipedia, Steam, Neowin, ageofempires.com. All four sources concur.
-- `03_related_work.md:55` contains "55 paczek turniejowych z lat 2016–2022". Verified via Read.
-- The §4.1.1.1 date range 2016–2024 is the correct version and should be preserved. Verified by the `sec_4_1_crosswalk.md` audit which cites the artifact `01_02_04_univariate_census.md` Section F as the source of truth.
-- §4.1.3 is the subsection heading housing Tabela 4.4a. Verified via `grep -n "Tabela 4.4a\|### 4.1.3" thesis/chapters/04_data_and_methodology.md`: result shows `### 4.1.3` heading at line 163 and Tabela 4.4a at line 167. T01's parenthetical "(Tabela 4.4a w §4.1.3)" is confirmed correct.
-- Gate grep pattern verified (pre-execution): `grep -rnE "\b45 +[a-ząśłżźćńóę]* *cywili|\b990\b\s*(par|unikalnych|jeśli|non)|czterdzieści pięć|1035" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md` returns 9+ matches (all nine civ-count sites) and does NOT match `02_theoretical_background.md:43` (the SC2 engine constant `$1{,}3999023438$`), because `\b990\b` requires word boundaries which the embedded constant does not satisfy.
+- §3.5 Luka 3 is at `03_related_work.md:187` (paragraph 4 of §3.5). Verified via Read of lines 179–189.
+- §3.2.4 "Po pierwsze" paragraph with the EsportsBench mention is at `03_related_work.md:77`. Verified via Read.
+- §1.3 RQ1 hypothesis with the `Thorrez2024` citation is at `01_introduction.md:31`. Verified via Read.
+- §2.5.5 hybrid-strategy claim with `[Hodge2021, Thorrez2024]` is at `02_theoretical_background.md:181`. Verified via Read.
+- Thorrez2024 bibkey exists at `references.bib:147–152` as `@misc{Thorrez2024, author = {Thorrez, Lucas}, ...}`. Note: author name is "Lucas Thorrez" in the bibkey; HuggingFace and cthorrez.github.io both identify the author as "Clayton Thorrez". This is a TG4 concern (bibliography fix) — NOT fixed in TG3 to preserve one-PR-per-task-group discipline; TG3 prose retains the existing `[Thorrez2024]` citation key without touching the bib entry.
+- EsportsBench title list (20 titles) verified via HuggingFace dataset README (v8.0, 2025-12-31) and GitHub repo README: League of Legends, Counter-Strike, Rocket League, StarCraft I, StarCraft II, Smash Melee/Ultimate, Dota 2, Overwatch, Valorant, Warcraft III, Rainbow Six, Halo, Call of Duty, Tetris, Street Fighter, Tekken, King of Fighters, Guilty Gear, EA Sports FC.
+- Age of Empires II is **absent** from EsportsBench (verified by grep of visible title list; no `aoe2.csv` or `age_of_empires*.csv` file exists in the HuggingFace repo).
+- EsportsBench benchmark type: pure rating systems (Elo baseline; additional Glicko/Glicko-2/TrueSkill/BT variants), not ML classifiers. Verified via HuggingFace README *"The goal of the datasets is to provide a resource for comparison and development of rating systems used to predict the results of esports matches"* and via GitHub README *"The baseline is the Elo rating system"*.
+- EsportsBench evaluation protocol: chronological train/test split with most-recent-year holdout; per-game fit; match-level prediction on a date-batched loop. Verified via HuggingFace README.
+- SC2 row count in EsportsBench: 463,000 rows as of v8.0 (HuggingFace dataset viewer). Note: the existing thesis text cites "411 030 meczów z Aligulac" which is the v1.0 (2024-03-31) figure. The discrepancy (v1.0 → v8.0 growth) does not invalidate the thesis claim because the `[Thorrez2024]` citation refers to the 2024 preprint, which used the v1.0 data. Keep "411 030" as the version-consistent number.
+- AoE2 absence from EsportsBench verified by absolute comparison: the thesis's AoE2 corpus size is 1,261,288 rows (Lin2024NCT) or ~620,000–2,400,000 rows (aoestats). If AoE2 had been in EsportsBench, the TMLR paper (Lin2024NCT) would almost certainly have cited it. The absence is structural.
+- REVIEW_QUEUE.md:22 carries Pass 2 question 2 on §1.3 — *"RQ1 hypothesis on GBDT dominance in two-game cross comparison — verify Thorrez2024 EsportsBench reports cross-system comparability beyond per-system fit"*. Verified via Read. Answer is now known: EsportsBench reports per-system fit only; no cross-system transfer comparison.
+- REVIEW_QUEUE.md:40 carries the §3.5 `[REVIEW:]` flag on the Luka 3 novelty hedge. Verified via Read.
+- The author-style brief requires argumentation-in-place for methodological decisions (`§Przejście z opisowego na argumentacyjne`, `§Instrukcje operacyjne dla Claude Code` bullet "Argumentacja decyzyjna w miejscu decyzji"). TG3's narrowing substitutes argued disqualification for hedged silence.
+- The "ISO YYYY-MM-DD dates; em-dash "—" for ranges" lesson from TG1/TG2 applies: any date-range reference (e.g., "EsportsBench v1.0 data up to 2024-03-31" or "v8.0 2025-12-31") uses the ISO format and the em-dash for ranges if used. Polish month names are forbidden in dates.
 
 ### Assumptions
 
-- Assumption (principle, unstated in dispatch): the plan edits the prose-downstream-of-artifact site (§2.2.2, §3.x) and preserves the artifact-nearest site (§4.1.1.1 with its direct citation of `01_02_04_univariate_census.md`). This principle guides R1's direction; if the user wants the opposite, a plan revision is needed.
-- **Unknown — deferred:** Whether the AoE2 civ count should be anchored to aoestats only (50) or also document the aoe2companion cardinality (wider vocabulary ~68 per `aoe2companion/01_02_04_univariate_census.md:359`, including campaign-only civs not ranked-available). **Resolution:** the thesis framing is "ranked 1v1", so aoestats observed-in-ranked count (50) is the right anchor; aoe2companion broader cardinality is a separate scoping question handled in §4.1.2. The TG2 edit uses 50 and flags the broader aoe2companion cardinality as out-of-scope.
-- **Unknown — resolved by reviewer-adversarial Mode A:** Whether the 990 → 1 225 arithmetic substitution at §1.1 and §1.4 introduces a new methodological claim (e.g., that the matchup space is exactly 1 225 including mirrors vs. 1 225 excluding mirrors). Decision: preserve "unikalne pary" framing (unordered non-mirror, matching $\binom{n}{2}$), update arithmetic only.
+- **Assumption (principle, unstated in dispatch):** the 3-part edit covers `§3.5 + §3.2.4 + (§1.3 RQ1 hypothesis coupled with §2.5.5 hybrid claim)`. Rationale: both §1.3 and §2.5.5 carry the same Thorrez2024 miscitation pattern (attributing ML-classifier dominance to a rating-systems benchmark), so fixing them in one pass preserves the "no new contradictions" principle from TG2. If the user's dispatch master intended §3.5-internal-only or a different Part 3 target, the plan narrows (see Open Q 1). Decision in Part 3 is to handle both §1.3 and §2.5.5 inside a single Task T02 to preserve atomic-edit commit discipline.
+- **Assumption (EsportsBench v8.0 validity):** AoE2 remains absent in the most recent HuggingFace release (v8.0, 2025-12-31). Verified as of 2026-04-20. If the user's Pass-2 dispatch master references a different version or has an updated understanding, the plan should be re-run.
+- **Unknown — deferred:** whether the `Thorrez2024` bibkey's author name ("Lucas") is a thesis-internal typo vs a published-by-pen-name. The author's web profile self-identifies as Clayton Thorrez. This is explicitly out-of-scope for TG3 (TG4 territory) and the plan does not modify the bib entry. Flagged for TG4 as a new finding.
+- **Unknown — resolved by reviewer-adversarial Mode A:** whether the four-constraint narrowing (ML-classifier family / SC2+AoE2 / proper probabilistic evaluation / 1v1) is genuinely operative, or whether it re-commits the novelty claim at a lower abstraction that still overstates. Decision in plan: present the constraints as *jointly* required (logical conjunction); if any single constraint is relaxed, existing literature fills the gap. reviewer-adversarial Mode A validates the conjunction is tight.
+- **Unknown — resolved by reviewer-adversarial Mode A:** whether the `[REVIEW: RQ3 novelty hedge]` flag should be removed (resolved) or replaced with a reduced-scope flag. Decision in plan: **replace** with a reduced-scope flag covering one residual uncertainty (whether EsportsBench has added AoE2 in any future release post-v8.0 that the thesis cannot anticipate). This matches TG2's pattern of resolving the load-bearing question while keeping a narrower flag for future-release monitoring.
 
 ## Literature context
 
-This plan's rewrites do not introduce new bibkeys. All factual claims are anchored to existing Phase 01 artifacts and existing `references.bib` entries:
-
-- `sc2egset/reports/artifacts/01_exploration/02_eda/01_02_04_univariate_census.md` — authoritative source for SC2EGSet temporal range (Section F: earliest/latest timeUTC).
-- `[Bialecki2023]` — the SC2EGSet dataset paper; no edits here, but its corpus describes the 2016-2024 data used in this thesis.
-- `[AoE2DE]` bibkey in `references.bib:786–792` — edited at line 791 only (inside `note` field: "The Mountain Royals (2024)" → "The Mountain Royals (2023)"). Citing conventions, URL, and author list preserved.
-- `aoestats/reports/INVARIANTS.md:10` — authoritative source for aoestats observed civ count (50 in window 2022-08-28 — 2026-02-07).
-- `[AoEStats]` bibkey in `references.bib:802–808` — no edits; the corpus this cite references is the source of the 50-civ figure.
-
-Secondary external verification (WebSearch, 2026-04-20): Mountain Royals 2023-10-31 release confirmed via Steam store listing, Wikipedia "Age of Empires II: Definitive Edition", Neowin 2023 news article, and ageofempires.com official news post. AoE2 DE full-roster cardinality is NOT cited anywhere in this plan's thesis-prose edits — the 50-civ figure is an aoestats-window empirical observation, and full-roster audit (including Three Kingdoms 2025-05-06, Chronicles: Alexander the Great 2025-10-14, and Last Chieftains 2026-02-17) is deferred to a dedicated Pass-2 cardinality-accounting edit.
-
-This plan does NOT modify `.claude/scientific-invariants.md` or any per-dataset `INVARIANTS.md`. The empirical findings already live in those files; the thesis prose adapts to them, not the reverse (invariant #9 compliance).
-
-Note on plan provenance: this plan body is authored in a planning session (Claude Code opusplan) and applied to the working tree by the human before Commit B fires. Commits A and B encode that tree state onto the new branch; they are not self-generated by the plan.
+- [Thorrez2024] — EsportsBench, preprint 2024. 20 esports datasets, paired-comparison rating system benchmark. Chronological train/test split. Per-game fit. No ML classifier benchmarking. SC2 present (463k rows as of v8.0; 411,030 rows as of v1.0 cited in the preprint); **AoE2 absent**. The HuggingFace README describes EsportsBench as benchmarking rating systems via accuracy and log-loss; full preprint metric set not verified in this plan round (binary PDF). Aligulac SC2 result ~80% predicted-win-probability calibration.
+- [Hodge2021] — IEEE Transactions on Games. LightGBM on Dota 2 pre-match + in-match features, ~85% accuracy at 5-minute mark. Direct ML-classifier benchmark with peer-reviewed venue. This is the correct citation for the GBDT-dominance claim previously co-attributed to Thorrez2024.
+- [Tang2025] — Typical ML uplift 2–5 pp over well-tuned rating baselines across chess/tennis/football/esports. Already co-cited with Thorrez2024 at §1.3 RQ1 hypothesis; stays.
+- [Lin2024NCT] — Uses AoE2 (1,261,288 matches from aoestats.io) as one of four titles for intransitivity analysis, but not as a prediction benchmark. Already cited in §3.4.2 and §3.5; relevant here because it is the load-bearing "AoE2 has 1.2M matches" observation that anchors the "AoE2 corpus size would have been visible to EsportsBench authors" implicit argument (not cited in Part 1's prose; referenced only in the plan's rationale for the AoE2-absence-is-structural claim).
+- [Bialecki2023], [Bialecki2022] — SC2EGSet + SC2 determinants. Pre-existing citations, not touched by TG3.
+- [OPINION] — The combined argumentative approach (narrowing against EsportsBench via operative disqualifying constraints) is consistent with the scoping rigor that TG1 introduced for triptych framing and TG2 introduced for civilization count. No external citation is claimed for this methodological pattern itself.
 
 ## Pre-flight (branch-creation operation, not a numbered task)
 
-Before any content edits, the branch-creation commit purges the merged TG1 artifacts:
-- Overwrite `planning/current_plan.md` with this TG2 plan body.
-- Delete `planning/current_plan.critique.md` (the TG1 Mode A critique).
+Note on plan provenance: this plan body is authored in a planning session (Claude Code opusplan) and applied to the working tree by the human before the seed commit fires. The pre-flight commits encode that tree state onto the new branch; they are not self-generated by the plan.
 
-Per git-workflow atomicity, this is split into TWO commits on the new branch before any content work begins:
-- Commit A: `chore(planning): purge merged TG1 critique` — deletes `current_plan.critique.md` only.
-- Commit B: `chore(planning): seed TG2 plan` — overwrites `current_plan.md` only.
+Per git-workflow atomicity, the branch-creation purge is split into two commits before any content work begins:
 
-These two commits are not part of the Execution Steps DAG; they establish the planning state before T01 begins.
+- **Commit A** — `chore(planning): purge artifacts from merged PR #188 (TG2)` — deletes the TG2 `planning/current_plan.md` + `planning/current_plan.critique.md` that are inherited from master after the TG2 merge.
+- **Commit B** — `chore(planning): seed TG3 plan (Luka 3 narrowing against Thorrez 2024 EsportsBench)` — writes this TG3 plan to `planning/current_plan.md`.
+- **Commit C** — `chore(planning): seed TG3 plan critique (reviewer-adversarial Mode A)` — writes `planning/current_plan.critique.md` after Mode A runs.
+
+These commits are not part of the Execution Steps DAG; they establish the planning state before T01 begins.
 
 ## Execution Steps
 
-Each task uses the `writer-thesis` agent as executor (per `thesis/plans/writing_protocol.md` section 6.4). Tasks T01, T02, T03 are parallel-safe in principle (they touch disjoint files), but are executed in the stated order for simplicity and to let T03 reference T02's completed state when updating trackers.
-
 For shared tracker files (`WRITING_STATUS.md`, `REVIEW_QUEUE.md`), each task appends row notes only to rows it owns (per File Manifest attribution). Task sequencing T01 → T02 → T03 guarantees no concurrent tracker write. Writer-thesis must re-read the tracker file immediately before each edit.
 
----
+### T01 — Rewrite §3.5 Luka 3 paragraph + update §3.2.4 EsportsBench characterization (Parts 1+2)
 
-### T01 — SC2 date range correction (§2.2.2 + §3.x:55)
-
-**Objective:** Correct the SC2EGSet date range from "2016–2022" to "2016–2024" at two sites — §2.2.2 line 33 in `02_theoretical_background.md` and line 55 in `03_related_work.md` — so that both chapters are consistent with §4.1.1.1 and Tabela 4.4a. Each is a single-sentence clarification-only edit; surrounding paragraphs require no rewriting.
+**Objective:** substitute the current §3.5 Luka 3 hedge-only novelty claim with a four-constraint argued narrowing against Thorrez 2024 EsportsBench, anchored on the verified fact that EsportsBench covers SC1/SC2/WC3 for the RTS genre but does not include AoE2. Simultaneously, supplement §3.2.4 "Po pierwsze" paragraph so its EsportsBench characterization supports the narrowing in §3.5 (rating-systems benchmark, per-game fit, AoE2 absence).
 
 **Instructions:**
-1. Read `thesis/chapters/02_theoretical_background.md` §2.2.2 line 33 in full (the "Trzeci wymiar dryfu" paragraph beginning at the start of the §2.2.2 numbered subsection).
-2. Read `thesis/chapters/03_related_work.md` line 55 in full to confirm the "2016–2022" wording.
-3. Read `thesis/chapters/04_data_and_methodology.md:17, 19, 175` to confirm the 2016–2024 range is authoritative.
-4. Read `.claude/author-style-brief-pl.md` for voice constraints (no bullets, hedging idiomatycznie polski, no first-person plural).
-5. Apply a minimal-substitution edit at `02_theoretical_background.md:33`: replace *"SC2EGSet rozciąga się na lata 2016–2022 zgodnie z findingiem Phase 01"* with *"SC2EGSet rozciąga się na lata 2016–2024 zgodnie z findingiem Phase 01 (Tabela 4.4a w §4.1.3)"*. The parenthetical forward-reference to Tabela 4.4a anchors the figure to the corpus-description locus.
-6. Apply a minimal-substitution edit at `03_related_work.md:55`: change "2022" → "2024" in the SC2EGSet date span, using the same parenthetical cross-reference pattern as the §2.2.2 fix.
-7. Do NOT rewrite any other prose in §2.2.2 or §3.x. The patch-drift argument and surrounding context remain compatible with the extended window.
-8. Do NOT introduce new bibkeys. Do NOT modify `thesis/references.bib`.
-9. Update §2.2 row in `thesis/WRITING_STATUS.md` with a dated Notes entry: *"2026-04-20 (PR-TG2): §2.2.2 line 33 date range 2016–2022 → 2016–2024 corrected per Pass-2 TG2 dispatch; contradiction with §4.1.1.1 and Tabela 4.4a closed."*
-10. Update §3 row in `thesis/WRITING_STATUS.md` with a dated Notes entry: *"2026-04-20 (PR-TG2): §3.x line 55 SC2EGSet date range 2016–2022 → 2016–2024 corrected for consistency with §2.2.2 and §4.1.1.1."*
-11. Update the existing §2.2 Pending row in `thesis/chapters/REVIEW_QUEUE.md` (line 30): append a 2026-04-20 PR-TG2 revision note to the Pass 2 status column. Existing flag count remains at 1 [REVIEW] (the grey-literature Liquipedia/BlizzardS2Protocol flag, which TG2 does not address).
-12. Produce writer-thesis Chat Handoff Summary per `.claude/rules/thesis-writing.md`.
+1. Read `thesis/chapters/03_related_work.md` lines 73–84 (§3.2.4 full subsection) and lines 179–192 (§3.5 full subsection) to confirm the exact current prose before rewriting.
+2. **Part 2 first (§3.2.4 supplementation, `03_related_work.md:77`).** In the "Po pierwsze" paragraph, after the existing sentence *"EsportsBench [Thorrez2024], cytowany już w §2.5, jest jednym z nielicznych źródeł raportujących trafność czysto rankingową na korpusie SC2 (411 030 meczów z Aligulac), na poziomie około 80% dla najlepszych systemów rodziny Glicko."*, insert one supplementary sentence: *"Należy jednak doprecyzować zakres tego benchmarku: EsportsBench jest benchmarkiem rodziny paired-comparison rating systems (m.in. Elo, Glicko, Glicko-2, TrueSkill) oceniającym je w protokole per-gra z temporalnym podziałem ostatniego roku jako zbioru testowego, a nie benchmarkiem porównującym rodziny klasyfikatorów uczenia maszynowego; spośród 20 tytułów EsportsBench obejmuje StarCrafta I, StarCrafta II i Warcrafta III jako reprezentację RTS, ale nie obejmuje Age of Empires II."* Preserve the existing `[REVIEW: dokładna wartość 80,13%]` flag unchanged — it remains a valid Pass 2 verification item pending manual PDF read. The rest of the paragraph is untouched.
+3. **Part 1 next (§3.5 Luka 3 rewrite, `03_related_work.md:187`).** Replace the current Luka 3 paragraph (from *"**Luka 3 — brak porównawczego benchmarku…"* through the trailing `[REVIEW:]` flag) with a rewritten paragraph containing five argumentative moves in this order: (a) restate Luka 3 title identically (*"Luka 3 — brak porównawczego benchmarku predykcji wyniku między dwoma grami RTS z jawną oceną probabilistyczną (RQ3)"*); (b) name EsportsBench explicitly as the nearest-adjacent published benchmark that could be read as filling the same space, citing `[Thorrez2024]` and cross-referencing §3.2.4; (c) enumerate in one flowing sentence the four operative constraints that must hold jointly for Luka 3 to remain an open gap — a rodzina klasyfikatorów ML (logistic regression / random forest / GBDT / MLP), nie rodzina pure-rating-systems (Elo/Glicko/TrueSkill); struktura porównawcza między dwoma tytułami RTS w ramach jednego projektu badawczego (cross-game benchmarking), a nie niezależne dopasowanie per-grę — EsportsBench wykonuje per-gra fit osobno dla każdego z 20 tytułów (w tym SC1, SC2 i WC3 dla gatunku RTS), lecz nie raportuje cross-game benchmarkingu; dodatkowo AoE2 nie występuje w zbiorze EsportsBench w żadnej wersji wydanej do 2025-12-31; diagnostyka kalibracyjna probabilistyczna (diagramy rzetelności i dekompozycja Murphy'ego) jako integralna część protokołu ewaluacji — publicznie dostępna dokumentacja EsportsBench (HuggingFace dataset README v8.0 2025-12-31 oraz README repozytorium GitHub) nie wymienia diagramów rzetelności ani dekompozycji Murphy'ego wśród opisanych metryk benchmarku; integralność tych miar w protokole ewaluacyjnym EsportsBench pozostaje niezweryfikowana w ramach niniejszej pracy pending manualnej analizy preprintu (Table 2); zakres 1v1 z identyczną strukturą zadania między grami; (d) re-retain the existing Lin2024NCT / Elbert2025EC / CetinTas2023 disqualifications from the current paragraph (each with its current argumentative function preserved); (e) close with a reduced-scope hedge that replaces the current "pierwsza znana nam" hedge: *"W przestrzeni wyznaczonej koniunkcją tych czterech ograniczeń przedmiot niniejszej pracy stanowi — zgodnie z najlepszą dostępną wiedzą autorów i po bezpośredniej weryfikacji składu tytułów EsportsBench w wersji v8.0 (2025-12-31) — konfigurację badawczą, w której literatura recenzowana nie jest obecna."* Plant one reduced-scope `[REVIEW:]` flag covering residual uncertainty: *"[REVIEW: narrowing przeciwko EsportsBench — zweryfikować w Pass 2, czy żadna wersja EsportsBench nowsza niż v8.0 2025-12-31 nie dodała Age of Empires II lub nie rozszerzyła protokołu o benchmark rodzin klasyfikatorów ML; obecne twierdzenie o lukcie jest argumentowane przez koniunkcję czterech ograniczeń, nie przez hedging pozbawiony argumentacji; dodatkowo: weryfikować Table 2 preprintu Thorrez 2024 pod kątem raportowania diagramów rzetelności, dekompozycji Murphy'ego lub Brier score — jeśli obecne, constraint (c) wymaga przepisania."* Remove the original `[REVIEW: RQ3 novelty hedge — weryfikacja po opublikowaniu Chapter 3 w Claude Chat Pass 2; sformułowanie "pierwsza znana nam"…]` flag as resolved.
+4. Verify that the closing paragraph of §3.5 ("Zestawiając cztery luki…" at `03_related_work.md:191`) still parses correctly with the narrowed Luka 3: the paragraph references *"porównanie międzygrowe jako celowo utrzymana asymetria"* and does not directly cite EsportsBench or Thorrez2024, so no edit is required in §3.5 closing prose.
+5. Run the writer-thesis Critical Review Checklist (Literature variant, `.claude/rules/thesis-writing.md` §Critical Review Checklist → Literature variant):
+   - Citation accuracy: every claim about EsportsBench reflects its documented behaviour.
+   - Claim-citation alignment: each Luka 3 disqualification (EsportsBench / Lin2024NCT / Elbert2025EC / CetinTas2023) is backed by the existing citation for that paper.
+   - Coverage completeness: Luka 3 now references EsportsBench, which the pre-TG3 version did not.
+   - Critical evaluation: argumentative (four-constraint conjunction), not descriptive.
+   - Scope honesty: the residual hedge is reduced to future-release monitoring; no absolute-novelty claim.
+   - Missing context flags: one reduced-scope `[REVIEW:]` flag planted per (c).
+6. Verify all ISO YYYY-MM-DD date formatting and em-dash use in the rewritten prose. The dates "v8.0 (2025-12-31)" and "v1.0 (2024-03-31)" must use this exact format; no Polish month names; em-dash where range is implied.
 
 **Verification:**
-- `grep -rnE "2016.{1,5}2022" thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0.
-- `grep -rn "SC2EGSet rozciąga się na lata 2016[–-]2024" thesis/chapters/02_theoretical_background.md | wc -l` returns 1 (match in §2.2.2 line range).
-- `grep -rn "2016[–-]2024" thesis/chapters/03_related_work.md | wc -l` returns at least 1 (match at §3.x:55).
-- [sanity-check, not blocking] §2.2.2 total character count unchanged ± 200 characters.
-- `thesis/WRITING_STATUS.md` §2.2 and §3 rows contain 2026-04-20 PR-TG2 notes.
-- `thesis/chapters/REVIEW_QUEUE.md` §2.2 row has PR-TG2 revision note appended.
+- `grep -nF "pierwszą znaną nam" thesis/chapters/03_related_work.md` returns zero hits (the hedge-only phrasing is removed from §3.5).
+- `grep -nF "EsportsBench" thesis/chapters/03_related_work.md` returns hits at `:77` (existing mention), `:77+1` (new supplementary sentence inside the same paragraph, verify as one logical hit), and at the rewritten §3.5 Luka 3 paragraph (new).
+- `grep -nF "Age of Empires II" thesis/chapters/03_related_work.md` returns at least one new hit inside §3.2.4 (the "nie obejmuje Age of Empires II" disqualification) and inside §3.5 Luka 3 (the "AoE2 nie występuje w zbiorze 20 tytułów EsportsBench" operative constraint).
+- `grep -nE "StarCraft.{0,3}[Ii]\\b|Warcraft.{0,3}III" thesis/chapters/03_related_work.md` returns at least one new hit at §3.2.4 (the RTS-titles enumeration in the supplementary sentence).
+- `grep -nF "2025-12-31" thesis/chapters/03_related_work.md` returns exactly one new hit (the EsportsBench v8.0 anchor date).
+- Word-boundary search `grep -nE "\\bREVIEW: RQ3 novelty hedge\\b" thesis/chapters/03_related_work.md` returns zero hits (the old flag is gone).
+- Word-boundary search `grep -nE "\\bREVIEW: narrowing przeciwko EsportsBench\\b" thesis/chapters/03_related_work.md` returns exactly one new hit.
 
 **File scope:**
-- `thesis/chapters/02_theoretical_background.md` (Update §2.2.2 line 33 only)
-- `thesis/chapters/03_related_work.md` (Update line 55 only — SC2 date range)
-- `thesis/WRITING_STATUS.md` (Update §2.2 and §3 row notes)
-- `thesis/chapters/REVIEW_QUEUE.md` (Append to existing §2.2 row)
+- `thesis/chapters/03_related_work.md`
 
 **Read scope:**
-- `thesis/chapters/04_data_and_methodology.md` §4.1.1.1 + Tabela 4.4a (authoritative dates)
-- `thesis/pass2_evidence/sec_4_1_crosswalk.md` (pre-existing audit flag §2.2.2)
-- `.claude/author-style-brief-pl.md`
-- `.claude/rules/thesis-writing.md`
+- (none — Parts 1 and 2 edit a single file)
 
 ---
 
-### T02 — Mountain Royals DLC year correction in references.bib
+### T02 — Remove Thorrez2024 miscitations from §1.3 RQ1 hypothesis and §2.5.5 hybrid-strategy claim (Part 3)
 
-**Objective:** Correct the `AoE2DE` bibliography entry's `note` field to assign The Mountain Royals DLC to 2023 rather than 2024. This is a single-token change inside a `note` field; no bibkey, author list, URL, or other field is modified.
+**Objective:** correct two miscitations that couple `[Thorrez2024]` with ML-classifier claims. EsportsBench does not benchmark ML classifiers; the citation is load-bearing elsewhere but not at these two sites. The correction is surgical: remove `Thorrez2024` from the citation list at each site; retain the other citations (Hodge2021 at both; Tang2025 at §1.3; both these sources directly support the ML-classifier claims). This edit must ship in the same PR as T01 to avoid shipping a new contradiction between the (narrowed) §3.5 and the (unedited) §1.3 + §2.5.5.
 
 **Instructions:**
-1. Read `thesis/references.bib:786–792` (the `AoE2DE` entry in full) to confirm the current `note` field wording.
-2. Apply the minimal-substitution edit at line 791 only: change *"The Mountain Royals (2024)"* to *"The Mountain Royals (2023)"*. All other tokens in the `note` field — *"Initial release: 14 November 2019"*, *"Lords of the West (2021)"*, *"Dawn of the Dukes (2021)"*, *"Dynasties of India (2022)"*, *"Return of Rome (2023)"*, *"Chronicles: Battle for Greece (November 2024)"* — remain verbatim.
-3. Do NOT modify any other entry in `references.bib`.
-4. Do NOT modify any chapter prose under this task. §2.3.2 line 67 enumerates Mountain Royals in a DLC list; all §2.3.2 prose edits (including DLC-chronology positional verification and any year-stamp addition) are T03's responsibility, because T03 owns all §2.3.2 edits.
-5. No `WRITING_STATUS.md` update under T02 (no chapter touched). No `REVIEW_QUEUE.md` row under T02 (bibliography edit is not a review-queue item per existing convention).
-6. Produce writer-thesis Chat Handoff Summary.
+1. Read `thesis/chapters/01_introduction.md` lines 29–33 (§1.3 RQ1 hypothesis) and `thesis/chapters/02_theoretical_background.md` lines 179–184 (§2.5.5 closing paragraph) to confirm the exact current prose.
+2. **§1.3 RQ1 hypothesis (`01_introduction.md:31`).** Surgical deletion to avoid Tang2025 doubling (Open Q 3 resolution: the existing later-sentence Tang2025 caveat is load-bearing and reads well — preserve it; remove only the miscited Thorrez2024 phrase). Locate the exact phrase *"oraz powtarzalnym wzorcem obserwowanym w predykcji esportowej [Thorrez2024]"* and delete it together with its connective *" oraz "* (the leading " oraz " conjunction that previously linked Hodge2021 and Thorrez2024 — after deletion, the Hodge2021 clause stands alone). The preceding Hodge2021 citation remains. The subsequent text *"; należy jednak zaznaczyć, że — jak wykazali Tang, Wang i Jin [Tang2025] — typowy przyrost trafności klasyfikatora ML nad dobrze nastrojoną linią bazową rankingową wynosi jedynie 2–5 punktów procentowych, co czyni rzetelne dobranie linii bazowej rangą metodologicznie krytyczną."* is preserved verbatim. Result: the sentence reads *"zgodnie z wynikami Hodge i in. [Hodge2021] dla Dota 2; należy jednak zaznaczyć, że — jak wykazali Tang, Wang i Jin [Tang2025] — typowy przyrost…"* — one Hodge2021 citation, one Tang2025 citation, zero Thorrez2024 citations. This is the minimal-substance edit: the Thorrez2024 miscitation is excised; no new content is introduced; Tang2025's argumentative function (margin caveat) is unchanged.
+3. **§2.5.5 hybrid-strategy claim (`02_theoretical_background.md:181`).** Locate the exact phrase *"Hybrydowa strategia łącząca rankingi z gradientowo wzmacnianymi drzewami pozostaje obecnie najlepiej udokumentowaną kombinacją w literaturze predykcji esportowej, zarówno pod względem skuteczności, jak i interpretowalności [Hodge2021, Thorrez2024]"*. Replace the citation bracket `[Hodge2021, Thorrez2024]` with `[Hodge2021]` only. The claim stands on the Hodge2021 Dota 2 evidence; EsportsBench does not benchmark hybrid rating+GBDT pipelines.
+4. **Tighten §2.5.5 line 177 EsportsBench mention** (per iter-1 logical critique L-5). The current prose at `02_theoretical_background.md:177` reads *"EsportsBench [Thorrez2024] — referencyjny zbiór benchmarków obejmujący ponad 20 tytułów esportowych, w tym StarCraft II z 411 030 meczami pochodzącymi z Aligulac — potwierdza, że rankingi rodziny Elo, Glicko i TrueSkill są standardowo używane jako linie bazowe lub jako cechy wejściowe w bardziej zaawansowanych pipeline'ach uczenia maszynowego"*. The "cechy wejściowe w ML pipelines" sub-claim is not what EsportsBench demonstrates (EsportsBench benchmarks pure rating systems, not hybrid pipelines). Surgical tightening: replace the sub-clause "potwierdza, że rankingi rodziny Elo, Glicko i TrueSkill są standardowo używane jako linie bazowe lub jako cechy wejściowe w bardziej zaawansowanych pipeline'ach uczenia maszynowego" with "benchmarkuje rankingi paired-comparison rating systems (m.in. Elo, Glicko, Glicko-2, TrueSkill) na danych esportowych". This keeps the Thorrez2024 citation load-bearing correctly (EsportsBench-as-rating-systems-benchmark is verified) and removes the overclaim about downstream ML-pipeline use. The "linie bazowe lub cechy wejściowe w ML pipelines" framing can be reintroduced in a separate future edit with a correctly-supporting citation (e.g., Hodge2021 for GBDT+rating-features).
+5. **Avoid collateral damage at §1.3 RQ4 and §3.5 paragraphs.** Verify that §1.3 RQ2/RQ3/RQ4 hypotheses and the §3.5 Luka 1/Luka 2/Luka 4 blocks do not cite Thorrez2024. Grep: `grep -nF "Thorrez2024" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md` should return the pre-edit baseline hits minus exactly two (the §1.3 RQ1 and §2.5.5 hybrid-strategy sites).
+6. Run the writer-thesis Critical Review Checklist (Literature variant) on the two rewritten sites:
+   - Citation accuracy: Hodge2021 directly evidences GBDT dominance on Dota 2 (peer-reviewed, IEEE Transactions on Games). Tang2025 directly evidences the 2–5 pp margin.
+   - Claim-citation alignment: every claim now cites a source that literally supports it.
+   - Scope honesty: margin-hedging preserved.
 
 **Verification:**
-- `grep -n "The Mountain Royals" thesis/references.bib` returns exactly 1 match, and the adjacent year is 2023 (not 2024).
-- `grep -rn "The Mountain Royals.*2024\|The Mountain Royals (2024)" thesis/references.bib | wc -l` returns 0.
-- No other lines in `references.bib` are changed. Verified via `git diff --stat thesis/references.bib` showing a single-file-single-line change.
+- `grep -cF "Thorrez2024" thesis/chapters/01_introduction.md` decreases by exactly 1 (the §1.3 RQ1 hypothesis hit removed).
+- `grep -cF "Thorrez2024" thesis/chapters/02_theoretical_background.md` decreases by exactly 1 (the §2.5.5 hybrid-strategy hit removed at line 181).
+- `grep -nF "Hodge2021" thesis/chapters/02_theoretical_background.md:181` still returns a hit.
+- `grep -nF "Thorrez2024" thesis/chapters/02_theoretical_background.md:177` still returns a hit (citation retained with tightened claim per T02 step 4).
+- `grep -nF "Tang2025" thesis/chapters/01_introduction.md` returns at least two hits (one in the rewritten RQ1 sentence; one in the existing later-sentence citation).
+- No doubled Tang2025 citation within the same sentence: `grep -nE "\\[Tang2025\\][^\\[]{0,200}\\[Tang2025\\]" thesis/chapters/01_introduction.md` returns zero multiline hits. (If multiline is needed: re-verify visually — macOS BSD grep does not support `-P`.)
 
 **File scope:**
-- `thesis/references.bib` (Update line 791 only, `AoE2DE` entry `note` field)
+- `thesis/chapters/01_introduction.md`
+- `thesis/chapters/02_theoretical_background.md`
 
 **Read scope:**
-- `thesis/chapters/02_theoretical_background.md` §2.3.2 (confirm no prose assertion of Mountain Royals year)
-- `.claude/author-style-brief-pl.md`
-- `.claude/rules/thesis-writing.md`
+- `thesis/chapters/03_related_work.md` (for T01 consistency check at line 77 and 187 — reviewer validates §3.5 narrowing references EsportsBench scope correctly, which requires reading T01's output)
 
 ---
 
-### T03 — AoE2 civ count correction across §1.1, §1.2, §1.3, §1.4, §2.3.2, §2.5.4, §3.x (nine sites)
+### T03 — Update WRITING_STATUS.md and REVIEW_QUEUE.md tracker entries
 
-**Objective:** Replace the "45 cywilizacji" claim at nine sites with the empirically observed 50 civilizations, anchored to the aoestats data window. Recompute the cascading $\binom{n}{2}$ arithmetic at all applicable sites (990 → 1 225 unordered non-mirror; 1035 → 1 275 ordered). Correct the incorrectly-cited window "2024–2026" at §2.3.2:67 to the ISO form (2022-08-28 — 2026-02-07). Remove the now-resolved `[REVIEW:]` flag at §2.3.2 line 67 (civ-count question); full-roster / Chronicles-exclusion narrative remains deferred to a future scope-expansion edit (no one-clause parenthetical added — see Open Q 1). Update the §1.4 Pending row in REVIEW_QUEUE.md to record the resolution.
+**Objective:** record the TG3 revisions in the two trackers so the Pass 2 workflow state reflects the resolved flags.
 
 **Instructions:**
-1. Read `thesis/chapters/01_introduction.md` §1.1 line 13, §1.1 line 15, §1.2 line 23, §1.3 line 35, §1.4 line 45.
-2. Read `thesis/chapters/02_theoretical_background.md` §2.3.2 lines 67–69, §2.5.4 line 171.
-3. Read `thesis/chapters/03_related_work.md` line 17.
-4. Read `src/rts_predict/games/aoe2/datasets/aoestats/reports/INVARIANTS.md:10` to confirm the 50-civ figure.
-5. Read `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_1v1_clean.yaml:66–70, 95–99` to confirm "50 distinct civilizations in scope" on both p0_civ and p1_civ.
-6. Read `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md:456` to confirm "Faction vocabulary (top 10 of 50 distinct)".
-7. Read `.claude/author-style-brief-pl.md`, `.claude/rules/thesis-writing.md`.
-8. Apply edits at the nine sites. Each edit is a substitution anchored to the aoestats data window, plus the cascading arithmetic updates:
-   - **§1.1 line 13 (`01_introduction.md:13`):** substitute "45 asymetrycznych cywilizacji" → "50 asymetrycznych cywilizacji". Preserve the "asymetrycznych" qualifier (it is semantically load-bearing — it distinguishes AoE2's civilization-asymmetric design from race-symmetric designs). Anchor the claim to the aoestats data window as for the other §1.x sites. Do NOT change surrounding prose.
-   - **§1.1 line 15 (`01_introduction.md:15`):** substitute "45" → "50" and "$\binom{45}{2}$" → "$\binom{50}{2}$"; update "990" → "1 225" where the formula appears in this line.
-   - **§1.2 line 23 (`01_introduction.md:23`):** *"45 cywilizacji wobec 3 ras w SC2"* → *"50 cywilizacji wobec 3 ras w SC2"*.
-   - **§1.3 line 35 (`01_introduction.md:35`):** *"990 unikalnych par cywilizacji wobec 9 par rasowych"* → *"1 225 unikalnych par cywilizacji wobec 9 par rasowych"*.
-   - **§1.4 line 45 (`01_introduction.md:45`):** *"45 cywilizacji dostępnych w okresie analizy, generujących 990 unikalnych par"* → *"50 cywilizacji dostępnych w oknie aoestats (2022-08-28 — 2026-02-07, Tabela 4.4a), generujących 1 225 unikalnych par"*.
-   - **§2.3.2 line 67 (`02_theoretical_background.md:67`):** Substitute "czterdzieści pięć cywilizacji" → "pięćdziesiąt cywilizacji" and correct the window "(2024–2026)" → "(2022-08-28 — 2026-02-07, Tabela 4.4a)". No full-roster or Chronicles-exclusion parenthetical is added (Mode A reviewer-adversarial BLOCKER A1 flagged prior "53 total, 3 Chronicles excluded" wording as factually wrong: Chronicles shipped in two parts for 6 civs total, not 3; Three Kingdoms and Last Chieftains also omitted). The `[REVIEW:]` flag's civ-count question is removed (now resolved); the DLC chronology parenthetical in the flag is preserved verbatim as a brief parenthetical. A reduced-scope `[REVIEW:]` flag is planted in its place: *"[REVIEW: DLC chronology completeness — zweryfikować w Pass 2, czy lista obejmuje Three Kingdoms (2025-05-06, +5 civ), Chronicles: Alexander the Great (2025-10-14, +3 civ) i Last Chieftains (2026-02-17, +3 civ)]"* — full-roster cardinality audit deferred to Pass 2.
-   - **Mountain Royals positional verification (§2.3.2):** After the §2.3.2:67 substitution is applied, confirm the DLC chronology parenthetical places Mountain Royals adjacent to Return of Rome (2023) and before Chronicles: Battle for Greece (November 2024). Operational trigger: if any DLC entry between Return of Rome (2023) and Chronicles (November 2024) lacks an explicit date parenthetical, add "(2023)" inline with Mountain Royals; otherwise, preserve positional transmission verbatim. This verification is T03's responsibility because T03 owns all §2.3.2 edits.
-   - **§2.3.2 line 69 (`02_theoretical_background.md:69`):** Recompute arithmetic only: 45→50, $\binom{45}{2}+45=1035$ → $\binom{50}{2}+50=1\,275$, 990→1 225. Preserve the ordered/unordered explicit treatment.
-   - **§2.5.4 line 171 (`02_theoretical_background.md:171`):** *"przestrzeń 990 par cywilizacji (dla 45 cywilizacji...)"* → *"przestrzeń 1 225 par cywilizacji (dla 50 cywilizacji...)"*.
-   - **§3.x line 17 (`03_related_work.md:17`):** *"45 cywilizacji w Age of Empires II, generujących 990 unikalnych zestawień"* → *"50 cywilizacji w Age of Empires II, generujących 1 225 unikalnych zestawień"*.
-9. Preserve cross-references and framing: §1.1 continues to introduce the research gap; §1.2 continues to motivate matchup-conditioned ranking; §1.3 continues to frame research questions; §1.4 continues to enumerate scope limitations; §2.3.2 continues to characterise AoE2's matchup combinatorics. No section-level rewrites beyond the targeted numerical substitutions and the §2.3.2 window correction.
-10. Do NOT introduce new bibkeys. Do NOT modify `thesis/references.bib` (T02 owns that file).
-11. Update four rows in `thesis/WRITING_STATUS.md`:
-    - §1.1: add dated Notes entry *"2026-04-20 (PR-TG2): §1.1 line 15 AoE2 civ count 45 → 50 corrected, anchored to aoestats data window per Pass-2 TG2 dispatch."*
-    - §1.2: append to existing TG1 note: *"2026-04-20 (PR-TG2, sequential): §1.2 line 23 AoE2 civ count 45 → 50 corrected."*
-    - §1.4: preserve the existing mgz-parser flag; append dated 2026-04-20 PR-TG2 note: *"2026-04-20 (PR-TG2): §1.4 line 45 AoE2 civ count 45 → 50 + arithmetic 990 → 1 225 corrected; REVIEW_QUEUE civ-count question resolved."*
-    - §2.3: append dated Notes entry *"2026-04-20 (PR-TG2): §2.3.2 lines 67, 69 AoE2 civ count corrected to 50 (anchored to aoestats INVARIANTS.md:10 window 2022-08-28 — 2026-02-07); cascade arithmetic 1035→1275, 990→1225; original civ-count [REVIEW:] flag resolved; reduced-scope [REVIEW:] flag for DLC-chronology completeness (Three Kingdoms, Chronicles: Alexander the Great, Last Chieftains) planted per Mode A A2."* Keep existing remaining `[REVIEW]` flags (Liquipedia/GitHub URLs grey-literature) unchanged.
-12. Update two rows in `thesis/chapters/REVIEW_QUEUE.md`:
-    - §1.4 row (line 23): append dated 2026-04-20 closure notation to question (2) (civ count resolved); leave row Pending with question (1) (mgz parser) unresolved.
-    - §2.3 row (line 31): append dated PR-TG2 revision note *"2026-04-20 (PR-TG2): §2.3.2 line 67 civ count resolved to 50 observed in aoestats window; original [REVIEW:] flag's civ-count question resolved; new reduced-scope [REVIEW:] flag planted for DLC-chronology completeness (Three Kingdoms 2025-05-06, Chronicles: Alexander the Great 2025-10-14, Last Chieftains 2026-02-17). Remaining Pass 2 flags on Liquipedia/GitHub grey-literature unchanged."*
-13. Produce writer-thesis Chat Handoff Summary.
+1. **WRITING_STATUS.md.** Append PR-TG3 notes to the four affected sections in the same format as the TG1/TG2 entries:
+   - §1.3 Research questions: append *"**2026-04-20 (PR-TG3): §1.3 RQ1 hypothesis citation corrected — `[Thorrez2024]` removed from the GBDT-dominance claim per Pass-2 TG3 dispatch (EsportsBench benchmarks rating systems, not ML classifiers); `[Hodge2021, Tang2025]` retained as the directly-supporting citations. REVIEW_QUEUE.md:22 Pass 2 question 2 resolved. Uwaga o zakresie hipotezy: usunięcie `[Thorrez2024]` zawęża bazę indukcyjną hipotezy RQ1 do pojedynczego wyniku Dota 2 (Hodge2021) wraz z caveatem marginesu (Tang2025); szersze twierdzenie o 'powtarzalnym wzorcu w predykcji esportowej' zostało usunięte jako nieposieżone przez właściwe źródło. Rozszerzenie bazy indukcyjnej o poprawnie cytowane cross-esport GBDT-dominance (np. Yang2017Dota dla Dota 2 fazy przedmeczowej lub analogicznych źródeł z MOBA/FPS) pozostaje otwartą kwestią Pass 2 — bez wpływu na poprawność korekty miscytatu w TG3."*
+   - §2.5 Player skill rating systems: append *"**2026-04-20 (PR-TG3): §2.5.5 hybrid-strategy claim citation corrected — `Thorrez2024` removed from `[Hodge2021, Thorrez2024]` at line 181 per Pass-2 TG3 dispatch (EsportsBench does not benchmark hybrid rating+GBDT pipelines); `[Hodge2021]` retained. EsportsBench mention at line 177 left unchanged (citation carries correct load there)."*
+   - §3.2 StarCraft prediction literature: append *"**2026-04-20 (PR-TG3): §3.2.4 "Po pierwsze" paragraph supplemented with one sentence specifying EsportsBench as a rating-systems benchmark (not ML-classifier benchmark) with per-game fit protocol and the AoE2-absence finding (v8.0 2025-12-31 verified). Existing `[REVIEW: dokładna wartość 80,13%]` flag retained as a Pass 2 verification item."*
+   - §3.5 Research gap: append *"**2026-04-20 (PR-TG3): §3.5 Luka 3 rewritten to narrow the novelty claim via a four-constraint argued disqualification against Thorrez 2024 EsportsBench per Pass-2 TG3 dispatch (ML-classifier family / SC2+AoE2 / proper probabilistic evaluation with calibration / 1v1). The "pierwsza znana nam" hedge is replaced by an argued "w przestrzeni wyznaczonej koniunkcją tych czterech ograniczeń…" framing anchored on the verified EsportsBench v8.0 title list (AoE2 absent). Original `[REVIEW: RQ3 novelty hedge]` flag resolved; reduced-scope `[REVIEW: narrowing przeciwko EsportsBench — weryfikować przyszłe wersje]` flag planted."*
+2. **REVIEW_QUEUE.md.** Two entries updated:
+   - Row for §1.3 at line 22: append *"**RESOLVED 2026-04-20 (PR-TG3): question (2) closed — EsportsBench reports per-system fit only, not cross-system comparability; `Thorrez2024` citation removed from RQ1 hypothesis and replaced with Hodge2021 + Tang2025 (directly-supporting peer-reviewed sources). Question (1) — RQ4 cold-start strata — remains Pending pending Phase 03 empirical match-count distribution.**"*
+   - Row for §3.5 at line 40: append *"**RESOLVED 2026-04-20 (PR-TG3): novelty hedge reformulated as an argued four-constraint narrowing against Thorrez 2024 EsportsBench. ML-classifier vs rating-systems family distinction, SC2+AoE2 specificity (AoE2 absence from EsportsBench v8.0 2025-12-31 verified), proper probabilistic evaluation with calibration diagnostics, and 1v1 scope — conjunction required. `[REVIEW: RQ3 novelty hedge]` flag resolved; reduced-scope `[REVIEW: narrowing przeciwko EsportsBench — weryfikować czy przyszłe wersje dodają AoE2 lub rozszerzają protokół o ML-classifier benchmarking]` flag planted. Key artifacts column unchanged. Remaining Pass 2 questions: (2) confirm Luka 4 cold-start gap is not addressed by any 2025-2026 esports paper not captured by planning sweep; (3) verify forward-ref to §4.4 is stable with current experimental protocol design.**"*
+3. Verify ISO date format and em-dash usage in the new notes.
 
 **Verification:**
-- `grep -rnE "\b45 +[a-ząśłżźćńóę]* *cywili|\b990\b\s*(par|unikalnych|jeśli|non)|czterdzieści pięć|1035" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0. (Pattern anchored with word-boundaries to avoid false-positive on the SC2 engine constant `$1{,}3999023438$` at `02_theoretical_background.md:43`; the "\b45 +[a-ząśłżźćńóę]* *cywili" branch catches both "45 cywilizacji" and "45 asymetrycznych cywilizacji".) `grep -rnF '\binom{45}{2}' thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0.
-- `grep -rn -e "50 cywilizacji" -e "pięćdziesiąt" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns at least 4 (§1.1, §1.4, §2.3.2, §3.x). `grep -rn -F '\binom{50}{2}' thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns at least 1 (§1.1 or §2.3.2).
-- `grep -rn "990 unikalnych par" thesis/chapters/01_introduction.md | wc -l` returns 0 (990 arithmetic fully replaced by 1 225).
-- `grep -rn "1 225" thesis/chapters/01_introduction.md | wc -l` returns at least 2 (§1.1 and §1.4). `grep -rn -F '\binom{50}{2}' thesis/chapters/01_introduction.md | wc -l` returns at least 1.
-- `grep -rnE "2024.{1,10}2026" thesis/chapters/02_theoretical_background.md | wc -l` returns 0 at §2.3.2 line 67 (incorrect window removed).
-- `grep -rn "2022-08-28\|aoestats/INVARIANTS.md:10" thesis/chapters/02_theoretical_background.md | wc -l` returns at least 1 (match at §2.3.2 line 67).
-- [sanity-check, not blocking] §1.1 + §1.2 + §1.3 + §1.4 + §2.3.2 + §2.5.4 + §3.x combined character count increase ≤ 1 500 characters (arithmetic and window substitutions; no substantive expansions).
-- `thesis/WRITING_STATUS.md` four rows updated (§1.1, §1.2, §1.4, §2.3).
-- `thesis/chapters/REVIEW_QUEUE.md` §1.4 row has 2026-04-20 closure notation for question (2) appended; row remains Pending; §2.3 row has PR-TG2 revision note appended.
-- No net-additive substance: the T03 rewrites at all nine sites are empirical-count corrections anchored to existing aoestats Phase 01 artifacts. No new methodological claim, new bibkey, or new window definition is introduced beyond what aoestats Phase 01 already established.
+- `grep -cF "PR-TG3" thesis/WRITING_STATUS.md` returns exactly 4 (one per affected section).
+- `grep -cF "2026-04-20 (PR-TG3)" thesis/chapters/REVIEW_QUEUE.md` returns exactly 2 (the §1.3 row update and the §3.5 row update).
 
 **File scope:**
-- `thesis/chapters/01_introduction.md` (Update §1.1 line 13, §1.1 line 15, §1.2 line 23, §1.3 line 35, §1.4 line 45 — five substitutions)
-- `thesis/chapters/02_theoretical_background.md` (Update §2.3.2 lines 67, 69 and §2.5.4 line 171 — three substitutions)
-- `thesis/chapters/03_related_work.md` (Update §3.x line 17 — civ count + arithmetic; note: line 55 is owned by T01)
-- `thesis/WRITING_STATUS.md` (Update §1.1, §1.2, §1.4, §2.3 rows)
-- `thesis/chapters/REVIEW_QUEUE.md` (Append to §1.4 row; append to §2.3 row)
+- `thesis/WRITING_STATUS.md`
+- `thesis/chapters/REVIEW_QUEUE.md`
 
 **Read scope:**
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/INVARIANTS.md:10` (authoritative: 50 civs)
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md:456, 1184` (top-10 of 50 distinct)
-- `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_1v1_clean.yaml:66–99` (50 distinct in scope)
-- `thesis/chapters/04_data_and_methodology.md:175` (Tabela 4.4a — aoestats window 2022-08-28 — 2026-02-07)
-- `.claude/author-style-brief-pl.md`
-- `.claude/rules/thesis-writing.md`
-- `.claude/scientific-invariants.md` (#9 — no empirical-artifact modification)
-
----
+- `thesis/chapters/01_introduction.md`
+- `thesis/chapters/02_theoretical_background.md`
+- `thesis/chapters/03_related_work.md`
 
 ## File Manifest
 
 | File | Action |
 |------|--------|
-| `planning/current_plan.md` | Overwrite (Pre-flight — with this TG2 plan) |
-| `planning/current_plan.critique.md` | Delete (Pre-flight — purge merged TG1 critique) |
-| `thesis/chapters/01_introduction.md` | Update (§1.1 line 13 "asymetrycznych" site, §1.1 line 15, §1.2 line 23, §1.3 line 35, §1.4 line 45 — civ count + arithmetic) |
-| `thesis/chapters/02_theoretical_background.md` | Update (§2.2.2 line 33 SC2 date range — T01; §2.3.2 lines 67, 69 AoE2 civ count + window — T03; §2.5.4 line 171 — T03) |
-| `thesis/chapters/03_related_work.md` | Update (line 55 SC2 date range — T01; line 17 civ-count + arithmetic — T03) |
-| `thesis/references.bib` | Update (`AoE2DE` entry line 791 only, `note` field: 2024 → 2023 for Mountain Royals — T02) |
-| `thesis/WRITING_STATUS.md` | Update (§1.1, §1.2, §1.4, §2.2, §2.3, §3 rows) |
-| `thesis/chapters/REVIEW_QUEUE.md` | Update (append closure notation to §1.4 row question (2); append PR-TG2 notes to §2.2 and §2.3 rows) |
+| `planning/current_plan.md` | Rewrite (TG3 plan) |
+| `planning/current_plan.critique.md` | Rewrite (reviewer-adversarial Mode A critique) |
+| `thesis/chapters/03_related_work.md` | Update (§3.2.4 supplementation + §3.5 Luka 3 rewrite) |
+| `thesis/chapters/01_introduction.md` | Update (§1.3 RQ1 citation correction) |
+| `thesis/chapters/02_theoretical_background.md` | Update (§2.5.5 hybrid-strategy citation correction) |
+| `thesis/WRITING_STATUS.md` | Update (four PR-TG3 notes) |
+| `thesis/chapters/REVIEW_QUEUE.md` | Update (§1.3 and §3.5 row resolutions) |
 
 ## Gate Condition
 
-All conditions must hold after execution for PR-2 to merge.
-
-- `planning/current_plan.md` contains the TG2 plan (not the TG1 plan). `planning/current_plan.critique.md` does not exist.
-- §2.2.2 at `02_theoretical_background.md:33` states "2016–2024" not "2016–2022". `grep` confirms zero "2016–2022" matches in theoretical background chapter.
-- §3.x at `03_related_work.md:55` states "2016–2024" not "2016–2022". `grep` confirms zero "2016–2022" matches in related work chapter.
-- §2.2.2 carries a parenthetical forward-reference to Tabela 4.4a (§4.1.3) anchoring the 2016–2024 figure.
-- `references.bib:791` assigns Mountain Royals to 2023 inside the `AoE2DE` `note` field. No other bibkey field is modified. `grep` confirms zero "Mountain Royals (2024)" matches in references.bib.
-- §1.1 line 13, §1.1 line 15, §1.2 line 23, §1.3 line 35, §1.4 line 45, §2.3.2 lines 67, 69, §2.5.4 line 171, §3.x line 17 — all nine sites state "50 cywilizacji" or equivalent (pięćdziesiąt/1 225/$\binom{50}{2}$) anchored to the aoestats data window. `grep` sweep confirms zero residual matches: `grep -rnE "\b45 +[a-ząśłżźćńóę]* *cywili|\b990\b\s*(par|unikalnych|jeśli|non)|czterdzieści pięć|1035" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0. `grep -rnF '\binom{45}{2}' thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0. (Word-boundary anchors prevent false-positive on SC2 engine constant `$1{,}3999023438$` at `02_theoretical_background.md:43`.)
-- §1.1 and §1.4 arithmetic updated: "990 unikalnych par" → "1 225 unikalnych par" ($\binom{50}{2}$ substitution). `grep -rn "990 unikalnych par" thesis/chapters/01_introduction.md | wc -l` returns 0.
-- §2.3.2 line 69 arithmetic updated: 1035 → 1 275 ordered, 990 → 1 225 non-mirror.
-- §2.3.2 line 67 — the incorrect window phrase *"W okresie objętym analizowanymi danymi (2024–2026)"* is replaced with the ISO aoestats window reference (2022-08-28 — 2026-02-07). The rewrite is 45→50 + window correction only; no full-roster or Chronicles-exclusion parenthetical is added. No net-additive claims are introduced.
-- §2.3.2 line 67 — the original `[REVIEW:]` flag's civ-count question is removed (resolved); the DLC chronology parenthetical is retained; a reduced-scope `[REVIEW:]` flag covering DLC-chronology completeness (Three Kingdoms, Chronicles: Alexander the Great, Last Chieftains) is planted per Mode A A2.
-- `thesis/WRITING_STATUS.md` updated with six row notes (§1.1, §1.2, §1.4, §2.2, §2.3, §3).
-- `thesis/chapters/REVIEW_QUEUE.md` — §1.4 row carries 2026-04-20 closure notation for question (2) (civ count) appended in-place; row remains Pending for question (1) (mgz parser); §2.2 and §2.3 rows carry PR-TG2 revision notes.
-- No new bibkeys introduced (`git diff thesis/references.bib` shows only the single-line `note` edit).
-- No edits outside the File Manifest. `git diff --stat` shows exactly 8 files changed (with `planning/current_plan.critique.md` deleted).
-- No net-additive substance: TG2 is a factual-correction plan. No new methodological claim, protocol, diagnostic, or threshold is introduced. All substitutions are anchored to existing Phase 01 artifacts or to external sources (Wikipedia, Steam) whose citations via existing `[AoE2DE]` bibkey remain sufficient.
-- Post-rewrite cross-section consistency sweep: `grep -rnE "2016[–-]2022|Mountain Royals.*2024" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md thesis/references.bib | wc -l` returns 0. `grep -rnE "\b45 +[a-ząśłżźćńóę]* *cywili|45 cywilizacji" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md | wc -l` returns 0.
-- reviewer-adversarial Mode C draft review returns PASS or REQUIRE_MINOR_REVISION.
-- Post-merge halt: TG3 planning does not begin until the user reviews the merged PR-2 diff and explicitly requests re-planning.
+- `grep -nF "pierwszą znaną nam" thesis/chapters/03_related_work.md` returns zero hits.
+- `grep -nF "AoE2 nie występuje" thesis/chapters/03_related_work.md` or equivalent narrowed-claim anchor returns at least one hit inside §3.5.
+- `grep -nF "EsportsBench" thesis/chapters/03_related_work.md` returns two or more hits (one in §3.2.4 existing+supplemented; one in §3.5 rewritten Luka 3).
+- `grep -cF "Thorrez2024" thesis/chapters/01_introduction.md` = 0 (pre-edit count was 1; T02 removes the §1.3 RQ1 citation).
+- `grep -cF "Thorrez2024" thesis/chapters/02_theoretical_background.md` = 3 (pre-edit count was 4; T02 removes §2.5.5:181 citation; §2.5.5:177 citation RETAINED with tightened claim per L-5).
+- `grep -cF "Thorrez2024" thesis/chapters/03_related_work.md` = 3 (pre-edit count was 2; T01 adds §3.5 Luka 3 citation; §3.2.4:77 and §3.0:9 preserved).
+- `grep -nF "Hodge2021" thesis/chapters/02_theoretical_background.md:181` still returns a hit.
+- `grep -cF "PR-TG3" thesis/WRITING_STATUS.md` equals 4.
+- `grep -cF "2026-04-20 (PR-TG3)" thesis/chapters/REVIEW_QUEUE.md` equals 2.
+- `grep -nF "REVIEW: RQ3 novelty hedge" thesis/chapters/03_related_work.md` returns zero hits.
+- `grep -nF "REVIEW: narrowing przeciwko EsportsBench" thesis/chapters/03_related_work.md` returns exactly one hit.
+- ISO YYYY-MM-DD format preserved in all new prose (spot-check via `grep -nE "2026-04-[0-9]{2}|2025-12-31|2024-03-31" thesis/chapters/01_introduction.md thesis/chapters/02_theoretical_background.md thesis/chapters/03_related_work.md thesis/WRITING_STATUS.md thesis/chapters/REVIEW_QUEUE.md`); no Polish month names (`grep -nE "stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia" <same-files>` returns zero hits in newly-written lines).
+- Pre-commit hooks pass (ruff, mypy, markdown linting if enabled). No test coverage impact (prose-only).
+- PR body generated from `.github/pull_request_template.md` skeleton; Summary bullets list the four sections touched and one-sentence per-site rationale; Test plan bullets list the grep-based verifications above.
 
 ## Rollback plan
 
-If PR-2 is rejected at review, all edits can be individually reverted via `git revert` of the PR merge commit. The three-finding decomposition (T01, T02, T03) allows cherry-picking a partial revert — e.g., preserving T01's SC2 date fix while reverting T03's civ-count cascade — if a specific finding is disputed. The `WRITING_STATUS.md` and `REVIEW_QUEUE.md` updates are single-row edits. No empirical artifacts or new bibkeys are introduced, so rollback carries no data-layer risk.
+If reviewer-adversarial Mode A flags a BLOCKER at T01 or T02 (e.g., the four-constraint conjunction is judged insufficiently tight, or a missing EsportsBench title invalidates the AoE2-absence argument), roll back the branch to `master` via `git reset --hard origin/master` (user-authorized destructive op; planner note: explicit user approval required). If only a WARNING or MINOR is raised, apply the surgical fix on the same branch and re-run the Gate Condition checks; do not ship PR-TG3 until the critique converges. If TG3 lands but TG4–TG6 later discover a new Thorrez2024 citation that should have been corrected here, TG4's scope expands to a catch-all "Thorrez2024 citation audit" step (one extra task). Rollback of a merged PR is performed by the user; planner does not propose destructive ops without explicit direction.
+
+**Degradation-mode fallback for EsportsBench v9.0+ scenarios.** If Pass 2 verification (per the reduced-scope [REVIEW:] flag planted in T01) discovers that a post-v8.0 EsportsBench release adds Age of Empires II or introduces ML-classifier benchmarking: the Luka 3 narrowing degrades gracefully rather than collapses. Specific mode: (a) if AoE2 added but still per-game rating-systems fit — constraint (b) "cross-game benchmarking (SC2+AoE2)" survives because cross-game benchmarking remains unperformed; T01 prose update is minimal (swap "żadnej wersji wydanej do 2025-12-31" for "przez referencyjny benchmark paired-comparison rating systems"); (b) if ML-classifier benchmarking added AND AoE2 added AND cross-game protocol added — three of four constraints collapse; Luka 3 narrows to SC2-only scope and the AoE2-specific claim moves from §3.5 to §1.3 RQ3 operationalization only, treated as a Phase 03 empirical finding rather than a literature gap; (c) if Pass 2 manual preprint-PDF analysis reveals Table 2 of Thorrez 2024 contains calibration diagrams, Brier score, or Murphy decomposition — constraint (c) must be rewritten to promote cross-game-benchmarking as a standalone operative constraint (distinguished from per-game fit) and drop the calibration-diagnostics anchor; §3.5 narrowing then rests on three active constraints ((a) ML-classifier family / (b) paired-game cross-comparison / (d) 1v1 scope). This degradation-mode is not a TG3 action; it is a documented contingency for a future PR.
 
 ## Out of scope
 
-- **TG3** — Luka 3 narrowing (§3.5 amendment against Thorrez 2024 EsportsBench; 3-part edit). Separate PR.
-- **TG4** — 11 bibliography findings (García-Méndez, Hodge, Bunker, SC-Phi2, Aligulac, Elbert, EsportsBench, Baek, Glickman, Lin, Çetin Taş). Separate PR.
-- **TG5** — 6 internal-consistency fixes (other than the three TG2 findings, which are factual contradictions, not internal-consistency pedantry). Separate PR.
+- **TG4** — 11 bibliography findings including Thorrez2024 bibkey author-name correction (Lucas → Clayton) and the 11 other bibliography fixes. Separate PR.
+- **TG5** — 6 internal-consistency fixes. Separate PR.
 - **TG6** — 12 prophylactic/hygiene fixes. Separate PR.
-- **§4.1.1.x rewrites** — §4.1.1.1 already carries the correct date range. TG2 edits only the chapters that are inconsistent with §4.1.1.1, not §4.1.1.1 itself (no-regression principle).
-- **aoe2companion civ cardinality (~68)** — broader vocabulary including campaign-only civs not ranked-available. Out of TG2 scope; the 50 figure anchors the ranked-1v1 scope.
-- **Full 53-total-roster narrative at §2.3.2** — deferred entirely to a future scope-expansion edit. Mode A reviewer-adversarial BLOCKER A1 showed that the prior "53 total, 3 Chronicles excluded" parenthetical was factually wrong (Chronicles shipped in two parts = 6 civs excluded, not 3; Three Kingdoms 2025-05-06 and Last Chieftains 2026-02-17 also omitted from the DLC chronology). A defensible full-roster audit requires a dedicated Pass-2 cardinality-accounting edit with fresh WebSearch verification against Fandom, Liquipedia, and ageofempires.com; out of TG2 scope.
-- **Chronicles: Battle for Greece date in references.bib** — currently cited as "November 2024" in `references.bib:791` `note` field. This is factually correct (released 2024-11-14) and is NOT modified.
-- **AoE2 DE 2025–2026 DLCs not yet cited in references.bib** — Three Kingdoms (2025-05-06), Chronicles: Alexander the Great (2025-10-14), Last Chieftains (2026-02-17). Out of TG2 scope.
-- **`.claude/scientific-invariants.md`** — not modified; the "45-civs" is not a repository invariant.
-- **Chapter 5 / 6 / 7 forward-refs** — BLOCKED in WRITING_STATUS.md; no prose touches them.
-- **New empirical claims** — none. Prose-only rewriting and single-token bibliography edit.
-- **Phase 01 artifact modification** — invariant #9 forbids; nothing in TG2 requires it.
+- **Exact 80.13% SC2 Glicko figure verification.** The existing `[REVIEW: 80,13%]` flag at `03_related_work.md:77` remains. TG3 does not decode the EsportsBench PDF to resolve it (WebFetch failed on 2026-04-20 due to binary-encoded PDF; manual verification is Pass 2 work).
+- **§4.4.4 and §4.4.5 and §4.4.6** — Untouched by TG3. The within-game protocol (§4.4.4) and ICC estimator (§4.4.5) and `[PRE-canonical_slot]` flag (§4.4.6) are all invariant to the Luka 3 narrowing; no forward-refs need adjustment.
+- **`.claude/scientific-invariants.md`** — Not modified. Invariant #8 (cross-game comparability) remains advisory; TG3 prose does not reference invariant #8 directly.
+- **Phase 01 artifact modification** — Invariant #9 forbids; nothing in TG3 requires it.
+- **Bibkey additions** — None. All citations exist in `thesis/references.bib` (Thorrez2024, Hodge2021, Tang2025, Lin2024NCT, Elbert2025EC, CetinTas2023).
+- **EsportsBench v9.0+ monitoring** — Left as a Pass 2 monitoring question via the reduced-scope `[REVIEW:]` flag planted in T01. TG3 freezes the narrowing against v8.0 (2025-12-31).
+- **Any prose edit to §3.5 Luka 1, Luka 2, Luka 4, or closing paragraph** — Out of TG3 scope. Luka 1 and Luka 2 already cite EsportsBench correctly (the sibling claim about rating-systems reporting AUC/accuracy only is unaffected). Luka 4 and the closing paragraph do not cite Thorrez2024.
+- **TrueSkill 2 AlphaStar / Halo 5 wording** — Untouched by TG3. The existing `[REVIEW:]` flag at §2.5.3 stays.
 
 ## Open questions
 
-- **Open Q 1 (civ count anchor choice — resolved).** Single-anchor at 50 observed (aoestats-sourced), no full-roster parenthetical at §2.3.2:67. Mode A reviewer-adversarial A1 showed the previously-proposed "53 total, 3 Chronicles excluded" parenthetical was factually wrong: Chronicles shipped in two parts (Battle for Greece 2024-11 + Alexander the Great 2025-10-14) for 6 civs total; Three Kingdoms 2025-05-06 (+5) and Last Chieftains 2026-02-17 (+3) are also omitted from the DLC chronology prose. Full-roster audit deferred to a dedicated Pass-2 edit with fresh source verification.
-- **Open Q 2 (aoe2companion cardinality — out of scope but recorded).** aoe2companion's `civ` field has cardinality ~68 per `aoe2companion/01_02_04_univariate_census.md:359`. TG2 deliberately anchors to aoestats (ranked-1v1 scope). If a reviewer asks why aoe2companion's 68 is not cited, the answer is: aoe2companion's vocabulary includes non-ranked-1v1 civs.
-- **Open Q 3 (Mountain Royals prose mention at §2.3.2).** §2.3.2 line 67 enumerates Mountain Royals in a DLC chronology without a year. The positional ordering (Return of Rome (2023) → Mountain Royals → Chronicles (Nov 2024)) transmits an implicit 2023 cue. T03's Mountain Royals positional verification sub-step handles this: if ambiguity remains after the §2.3.2 rewrite, an explicit year-stamp "(2023)" is added inline.
-- **Open Q 4 (990 → 1 225 arithmetic framing).** Preserve "unikalne pary" framing (unordered-non-mirror, which matches $\binom{n}{2}$), update the number only. The existing ordered/unordered explicit treatment at §2.3.2:69 is preserved and recomputed.
-- **Open Q 5 (REVIEW_QUEUE.md §1.4 row update).** Resolved as in-place update: append 2026-04-20 closure notation to question (2) only; leave row Pending with question (1) unresolved.
-- **Open Q 6 (Dispatch-shorthand interpretation).** The planner reinterpreted "§4.1.1.1 vs §4.1.1.2" as shorthand for "§2.2.2 vs §4.1.1.1". Reviewer-adversarial Mode A should confirm the reinterpretation.
+- **Open Q 1 (3-part edit interpretation).** The user's Pass-2 dispatch master describes TG3 as a "3-part edit" against §3.5. This plan interprets the three parts as §3.5 + §3.2.4 + (coupled §1.3 + §2.5.5, treated as "Part 3" because both carry the same miscitation pattern). Alternative interpretation: §3.5-internal only (three paragraphs within §3.5 rewritten in series). If the user prefers the §3.5-internal reading, Part 2 (§3.2.4 supplementation) moves to TG4 as a new finding and Part 3 (§1.3 + §2.5.5 miscitations) moves to TG5 as internal-consistency. Planner recommendation: proceed with the broader reading because leaving §1.3 and §2.5.5 unedited allows a new contradiction to ship between the narrowed §3.5 and the Thorrez2024-miscited upstream sites — violating the "no new contradictions" principle established by TG2. **Resolves by:** user confirmation before T01 begins.
+- **Open Q 2 (Thorrez2024 author-name typo in `references.bib`).** The bibkey at `references.bib:147` credits "Lucas Thorrez"; the author's web profile and HuggingFace dataset ownership identify "Clayton Thorrez". This is a bibliographic error but TG3 does not touch the bib file per one-PR-per-task-group discipline. Planner recommendation: flag this as a new TG4 finding (added to the 11 bibliography findings list). **Resolves by:** TG4 plan (separate PR).
+- **Open Q 3 (RQ1 hypothesis Tang2025 citation doubling) — RESOLVED via surgical deletion.** The plan does not integrate Tang2025 where Thorrez2024 previously stood. Instead, T02 step 2 surgically deletes only the miscited phrase *"oraz powtarzalnym wzorcem obserwowanym w predykcji esportowej [Thorrez2024]"* (together with its leading " oraz " connective). The preserved later-sentence Tang2025 caveat (*"— jak wykazali Tang, Wang i Jin [Tang2025] — typowy przyrost 2–5 pp"*) carries the margin-hedge function cleanly with ONE Tang2025 citation in the sentence. Result: post-T02 the RQ1 hypothesis sentence cites Hodge2021 once and Tang2025 once; no doubling; no new content introduced. **Resolves by:** T02 surgical deletion per the explicit instruction. Secondary note: the deletion does narrow the RQ1 hypothesis's inductive base to a single Dota 2 result (Hodge2021) plus a margin caveat (Tang2025). The previously-miscited "repeating pattern in esports prediction" broader claim is lost. This narrowing is intentional: the original citation did not support the broader claim. A correctly-cited cross-esport GBDT-dominance source could be added in a future Pass 2 edit if the narrowed inductive base proves insufficient during defense, but no such citation is added in TG3 (which is scope-limited to correcting miscitations, not introducing new positive evidence).
+- **Open Q 4 (EsportsBench v8.0 stability assumption).** The TG3 narrowing anchors on EsportsBench v8.0 (2025-12-31). If a v9.0 release between 2025-12-31 and the thesis defense adds Age of Empires II or introduces ML-classifier benchmarking, the narrowing would need to move to a newer version. Planner recommendation: the reduced-scope `[REVIEW:]` flag planted in T01 explicitly directs Pass 2 to re-check version stability. **Resolves by:** Pass 2 monitoring / defense-prep verification.
+- **Open Q 5 (four-constraint conjunction tightness).** Whether the four operative constraints (ML-classifier family / cross-game benchmarking SC2+AoE2 / calibration diagnostics and Murphy decomposition / 1v1) are genuinely operationally disjoint or whether a reviewer could collapse some pair into one (e.g., "calibration diagnostics + 1v1 = standard esports-pre-match evaluation"). Planner recommendation: the constraints are disjoint because (a) ML-classifier vs rating-systems is a fundamental method-family distinction EsportsBench-confirmed; (b) cross-game benchmarking (SC2+AoE2) is the two-game paired structure that Thorrez would have performed if AoE2 were included — the paired-game cross-comparison is the operative requirement, not just "two RTS games in the benchmark"; (c) calibration-diagnostics-and-Murphy-decomposition goes beyond EsportsBench's announced accuracy-and-log-loss metric set (EsportsBench README and HuggingFace documentation do not advertise reliability diagrams or Murphy decomposition); (d) 1v1 scope rules out Elbert2025EC-style team matches. Completeness argument: the four constraints are claimed jointly sufficient because (i) ML-classifier family captures the method-space distinction from rating systems; (ii) paired-game cross-comparison captures the two-game structure distinct from per-game fit; (iii) calibration diagnostics capture the probabilistic-evaluation depth distinct from accuracy-only reporting; (iv) 1v1 scope captures the task-structure alignment. An unmentioned paper that satisfies all four would by construction benchmark ML classifiers on SC2+AoE2 with calibration diagrams on 1v1 matches — a configuration that the planner's sweep of 2024–2026 esports-prediction literature did not find. No additional operative constraint (e.g., pre-match vs in-match feature family, temporal vs random CV) is required to distinguish this work because Luka 1 (pre-match vs in-match) and Luka 2 (calibration coverage) are handled as separate gaps in §3.5, each with its own literature disqualification. The four-constraint conjunction is necessary and locally sufficient for Luka 3; broader scope questions fall under Luka 1/2/4 rather than Luka 3. reviewer-adversarial Mode A validates the tightness before T01 proceeds. **Resolves by:** reviewer-adversarial Mode A.
+- **Open Q 6 (whether the Thorrez2024 citation retention at §2.5.5 line 177 risks a consistency issue with Part 3) — RESOLVED via tightening.** The "cechy wejściowe w ML pipelines" sub-claim at `02_theoretical_background.md:177` was an overclaim: EsportsBench benchmarks pure rating systems, not hybrid pipelines. T02 step 4 surgically tightens the line 177 prose by replacing the overclaiming sub-clause with "benchmarkuje rankingi paired-comparison rating systems (m.in. Elo, Glicko, Glicko-2, TrueSkill) na danych esportowych". The Thorrez2024 citation is retained at line 177 with this corrected, tighter claim. No residual inconsistency with Part 3 (line 181 removal) remains: both sites now accurately reflect what EsportsBench benchmarks. **Resolves by:** T02 step 4 tightening edit (iter-1 critique L-5).
+
+## Adversarial critique triggers
+
+The parent session must, after planner returns this plan, dispatch reviewer-adversarial Mode A to produce `planning/current_plan.critique.md`. Triggers for Mode A to look at specifically:
+
+- Four-constraint conjunction tightness (Open Q 5).
+- Whether §3.5 Part 1's rewrite re-commits a novelty claim at a lower abstraction (parallel to TG1 triptych risk).
+- Whether §2.5.5 line 177 retention of `Thorrez2024` is consistent with Part 3's line 181 removal (Open Q 6).
+- Whether ISO YYYY-MM-DD dates and em-dash formatting are preserved in all new prose.
+- Whether the rewritten §1.3 RQ1 hypothesis sentence has exactly one Tang2025 citation (Open Q 3).
+- Whether the new reduced-scope `[REVIEW:]` flag tied to EsportsBench future-release monitoring is tight enough or should be deferred to a global "thesis-wide literature currency" concern.
+- Whether "3-part edit" is correctly decomposed across §3.5 + §3.2.4 + (§1.3 + §2.5.5) versus the §3.5-internal-only alternative (Open Q 1).
+
+> For Category A or F, adversarial critique is required before execution. Dispatch reviewer-adversarial to produce `planning/current_plan.critique.md`.
 
 ---
 
-**Adversarial critique triggers for Step 2** (reviewer-adversarial Mode A targeting recommendations — NOT the critique itself):
+Sources:
 
-- **Hardest-to-catch risk.** Whether T03's §2.3.2 tightened rewrite (45→50 + window correction, no 53-total additions) correctly limits scope to substitution-plus-clarification without introducing net-additive substance.
-- **Arithmetic correctness.** Reviewer should independently verify $\binom{50}{2} = 1\,225$, $\binom{50}{2}+50 = 1\,275$, and confirm no off-by-one or ordering-ambiguity slippage.
-- **Bibkey integrity.** T02's single-token edit to `references.bib:791` must not accidentally touch other lines of the `AoE2DE` entry. Reviewer should diff the entire entry post-T02 against pre-T02.
-- **Cross-section consistency.** Post-T03, all nine sites must carry "50" / "pięćdziesiąt" / "1 225" / "$\binom{50}{2}$" consistently; no site left at 45/990/1035/czterdzieści pięć/45 asymetrycznych. Reviewer should run the Gate grep sweep.
-- **Window consistency at §2.3.2.** The replacement window "2022-08-28 — 2026-02-07" must match Tabela 4.4a line 175 exactly. Reviewer should verify character-level identity.
-- **DLC chronology preservation at §2.3.2.** The existing DLC chronology narrative is preserved; the `[REVIEW:]` flag's civ-count question is removed; the chronology text is retained.
-- **REVIEW_QUEUE.md §1.4 row in-place update.** Verify that question (2) is closed in-place (not moved to Completed table) and question (1) remains Pending — consistent with in-place-update convention (Open Q 5 resolved).
-- **Scope creep guardrails.** Verify File Manifest is strictly limited to the eight listed files (7 + the purged critique). No task prescribes edits to §4.1.1.x, `.claude/scientific-invariants.md`, per-dataset INVARIANTS.md, or any Chapter 5/6/7 file.
-- **Mountain Royals year verification.** Reviewer should independently WebSearch Mountain Royals release date to confirm 2023-10-31 (recommend: Steam DLC page + Wikipedia cross-check).
-- **Pass-2 flag lifecycle.** The §2.3.2 `[REVIEW:]` flag's civ-count question is removed (resolved) and replaced by a reduced-scope DLC-chronology-completeness flag per Mode A A2. Flag count at §2.3.2:67 remains 1 (one out, one in).
-- **No-regression at §4.1.1.x.** §4.1.1.1 already carries the correct 2016–2024 range. T01 edits §2.2.2 and §3.x:55 (inconsistent sites), NOT §4.1.1.1. Reviewer should confirm no accidental edit to §4.1.1.x.
-- **Dispatch shorthand.** Reviewer-adversarial Mode A should confirm the "§4.1.1.1 vs §4.1.1.2" shorthand reinterpretation (Open Q 6).
-
----
-
-This plan is Category F. Adversarial critique via reviewer-adversarial is required before execution begins. Dispatch reviewer-adversarial; output: `planning/current_plan.critique.md`.
+- [EsportsBench dataset on Hugging Face](https://huggingface.co/datasets/EsportsBench/EsportsBench)
+- [Clayton Thorrez personal page](https://cthorrez.github.io/)
+- [EsportsBench GitHub repository](https://github.com/cthorrez/esports-bench)
+- [EsportsBench preprint PDF (binary; manual read required for 80.13% verification)](https://cthorrez.github.io/papers/esportsbench/EsportsBench_preprint.pdf)
