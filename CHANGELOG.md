@@ -19,7 +19,30 @@ merged to `master`.
 
 ### Removed
 
-## [3.32.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg3-luka3-narrowing)
+## [3.33.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg4-bibliography-findings)
+
+### Changed
+
+- Pass-2 TG4 bibliography audit: 11 originally-named references verified + 1 latent bug surfaced during /critic (Lin Shih "Yi-Wei" → "Yu-Wei" typo). 12 edits total to `thesis/references.bib`.
+- **Author-name corrections:** Thorrez2024 (Lucas → Clayton); Hodge2021 (fabricated Sherkat coauthors → canonical 6-author IEEE Xplore list); BaekKim2022 (Jihun/Jinyoung → Insung/Seoung Bum); Aligulac (Kim Espen → Fonn Eivind with community contributors); Elbert2025EC (Schenk Amadeus → Alicia; Stein Nora → Nikolai); Lin2024NCT (Shih Yi-Wei → Yu-Wei).
+- **Metadata completeness:** Glickman2001 DOI added; Lin2024NCT arXiv URL added; Hodge2021 volume/issue/pages added; Thorrez2024 HuggingFace URL + title-variance note added.
+- **Duplicate elimination:** Tarassoli2024 phantom entry deleted (same paper as Khan2024SCPhi2, arXiv:2409.18989); Khan2024SCPhi2 pages 2444–2462 → 2338–2352 per MDPI canonical.
+- **Verified correct (no edit):** CetinTas2023; Bunker2024 (DOI correct, vol/issue/pages deferred to Pass 2 per SAGE online-first ambiguity).
+- **Chapter prose propagation:** `01_introduction.md` — `[Baek2022]` bibkey harmonized to `[BaekKim2022]` at three sites (lines 13, 25, 69); References block initials "Baek, J., & Kim, S." → "Baek, I., & Kim, S. B." `03_related_work.md:69` — resolved Tarassoli2024 `[REVIEW:]` flag removed. `THESIS_STRUCTURE.md:148` — "Tarassoli et al. (2024)" → "Khan & Sukthankar (2024)".
+- WRITING_STATUS.md: §1.1, §1.3, §2.5, §3.2 rows gain PR-TG4 notes.
+- REVIEW_QUEUE.md: Tarassoli2024 reconciliation resolved; new Pass 2 chore documents triple-divergent Thorrez first-name across repo (references.bib "Clayton" canonical; scratchpad `reviews_and_others/related_work_rating_systems.md:393` carries "Calvin"; previously "Lucas" in pre-TG4 bib).
+
+### Added
+
+- `GarciaMendez2025` bibkey inserted into global `thesis/references.bib` (previously cited by bibkey at `01_introduction.md:11` but absent from global bib, breaking BibTeX resolution per `.claude/rules/thesis-writing.md` cross-chapter bibkey convention).
+- `planning/current_plan.md` — Category F TG4 plan (1 /critic iteration with 13 revisions + Mode A pre-execution audit with 6 additional revisions + Mode C draft review PASS).
+- `planning/current_plan.critique.md` — Mode A findings (BLOCKER B1 on Baek occurrence count undercount + 3 WARNINGs + 3 NOTEs); all resolved before execution.
+
+### Removed
+
+- `Tarassoli2024` bibkey deleted from `thesis/references.bib` (phantom entry — fabricated attribution of the SC-Phi2 paper; Khan & Sukthankar 2024 is the canonical author pair).
+
+## [3.32.0] — 2026-04-20 (PR #189: docs/thesis-pass2-tg3-luka3-narrowing)
 
 ### Changed
 

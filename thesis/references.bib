@@ -30,7 +30,7 @@
 % === SC2 prediction ===
 
 @article{BaekKim2022,
-  author  = {Baek, Jihun and Kim, Jinyoung},
+  author  = {Baek, Insung and Kim, Seoung Bum},
   title   = {3-Dimensional convolutional neural networks for predicting {StarCraft II} results and extracting key game situations},
   journal = {PLOS ONE},
   volume  = {17},
@@ -47,20 +47,16 @@
   year      = {2021}
 }
 
-@article{Tarassoli2024,
-  author  = {Tarassoli, Saeid and others},
-  title   = {{SC-Phi2}: A Fine-tuned Small Language Model for {StarCraft II} Macromanagement Tasks},
-  journal = {arXiv preprint arXiv:2409.18989},
-  year    = {2024}
-}
-
 % === MOBA / other esports ===
 
 @article{Hodge2021,
-  author  = {Hodge, Victoria J. and Sherkat, Sam and Sherkat, Ehsan and others},
+  author  = {Hodge, Victoria J. and Devlin, Sam M. and Sephton, Nick J. and Block, Florian O. and Cowling, Peter I. and Drachen, Anders},
   title   = {Win Prediction in Multi-Player Esports: Live Professional Match Prediction},
   journal = {IEEE Transactions on Games},
   year    = {2021},
+  volume  = {13},
+  number  = {4},
+  pages   = {368--379},
   doi     = {10.1109/TG.2019.2948469}
 }
 
@@ -76,7 +72,7 @@
 }
 
 @inproceedings{Elbert2025EC,
-  author    = {Elbert, Nico and von Schenk, Amadeus and Kosse, Fabian and Klockmann, Victor and Stein, Nora and Flath, Christoph},
+  author    = {Elbert, Nico and von Schenk, Alicia and Kosse, Fabian and Klockmann, Victor and Stein, Nikolai and Flath, Christoph},
   title     = {What Drives Team Success? {Large-Scale} Evidence on the Role of the Team Player Effect},
   booktitle = {Proceedings of the 26th ACM Conference on Economics and Computation (EC '25)},
   publisher = {ACM},
@@ -114,7 +110,8 @@
   volume  = {28},
   number  = {6},
   pages   = {673--689},
-  year    = {2001}
+  year    = {2001},
+  doi     = {10.1080/02664760120059219}
 }
 
 @inproceedings{Herbrich2006,
@@ -145,16 +142,17 @@
 % === Esports benchmarking ===
 
 @misc{Thorrez2024,
-  author = {Thorrez, Lucas},
+  author = {Thorrez, Clayton},
   title  = {{EsportsBench}: Rating System Evaluation for Esports},
   year   = {2024},
-  note   = {Evaluated 11 rating systems across 20 esports titles}
+  note   = {Evaluated 11 rating systems across 20 esports titles. Title reflects preprint front matter; HuggingFace dataset page uses subtitle 'A Collection of Datasets for Benchmarking Rating Systems in Esports'.},
+  url    = {https://huggingface.co/datasets/EsportsBench/EsportsBench}
 }
 
 % === Rating systems — additions for §2.5 (Gate 0.5 calibration draft, 2026-04-17) ===
 
 @misc{Aligulac,
-  author       = {Kim, Espen and others},
+  author       = {Fonn, Eivind and {Aligulac contributors}},
   title        = {Aligulac: {StarCraft II} professional player ratings},
   howpublished = {\url{https://aligulac.com/about/faq/}},
   note         = {Source code: \url{https://github.com/TheBB/aligulac}},
@@ -241,11 +239,12 @@
 }
 
 @article{Lin2024NCT,
-  author  = {Lin, Chiu-Chou and Shih, Yi-Wei and Kuo, Kuei-Ting and Chen, Yu-Cheng and Chen, Chien-Hua and Chiu, Wei-Chen and Wu, I-Chen},
+  author  = {Lin, Chiu-Chou and Shih, Yu-Wei and Kuo, Kuei-Ting and Chen, Yu-Cheng and Chen, Chien-Hua and Chiu, Wei-Chen and Wu, I-Chen},
   title   = {Identifying and Clustering Counter Relationships of Team Compositions in {PvP} Games for Efficient Balance Analysis},
   journal = {Transactions on Machine Learning Research},
   year    = {2024},
-  issn    = {2835-8856}
+  issn    = {2835-8856},
+  url     = {https://arxiv.org/abs/2408.17180}
 }
 
 @techreport{Minka2018TR,
@@ -271,6 +270,17 @@
   journal = {arXiv preprint arXiv:2501.10049},
   year    = {2025},
   url     = {https://arxiv.org/abs/2501.10049}
+}
+
+@article{GarciaMendez2025,
+  author  = {Garc{\'i}a-M{\'e}ndez, Silvia and de Arriba-P{\'e}rez, Francisco},
+  title   = {Explainable e-sports win prediction through Machine Learning classification in streaming},
+  journal = {Entertainment Computing},
+  year    = {2025},
+  volume  = {55},
+  pages   = {101027},
+  doi     = {10.1016/j.entcom.2025.101027},
+  url     = {https://arxiv.org/abs/2510.19671}
 }
 
 @inproceedings{Erickson2014,
@@ -410,9 +420,9 @@
   year    = {2024},
   volume  = {5},
   number  = {4},
-  pages   = {2444--2462},
+  pages   = {2338--2352},
   doi     = {10.3390/ai5040115},
-  note    = {Preprint version: arXiv:2409.18989. NOTE: existing bib entry Tarassoli2024 is a misattribution of this same paper; user to reconcile in morning.}
+  note    = {Preprint: arXiv:2409.18989}
 }
 
 % === Additions for §3.1 + §3.3 (2026-04-17) ===

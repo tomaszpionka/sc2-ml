@@ -145,7 +145,7 @@ SC2 Phase 01 (Data Exploration) — game loop timing and APM/MMR findings.
 - Baek & Kim (2022, PLOS ONE): 3D-ResNet, ~90% accuracy on TvP
 - Khan et al. (2021): transformers outperform GRUs on MSC
 - Lin et al. (2019): Neural Processes with uncertainty
-- Tarassoli et al. (2024): fine-tuned Phi-2 for build order prediction
+- Khan & Sukthankar (2024): fine-tuned Phi-2 for build order prediction
 - EsportsBench (Thorrez 2024): Glicko-2 at 80.13% on Aligulac SC2 data
 
 ### 3.3 MOBA and other esports prediction

@@ -1,50 +1,53 @@
-# Plan Critique — reviewer-adversarial Mode A (TG3)
+# Plan Critique — reviewer-adversarial Mode A (TG4)
 
-**Target:** `planning/current_plan.md` (272 lines)
+**Target:** `planning/current_plan.md` (439 lines)
 **Date:** 2026-04-20
 
 ## Verdict: REQUIRE_MINOR_REVISION
 
-1 BLOCKER (B-1) + 2 WARNINGs (W-1, W-2). Three narrow edits before execution.
+1 BLOCKER (B1 — Baek bibkey undercount) + 3 WARNINGs + 3 NOTEs.
 
 ## Findings
 
-### BLOCKER B-1 — Constraint (c) anchor prose overclaims EsportsBench advertised metrics
-T01 step 3(c) instructs: *"EsportsBench w ogłoszonym opisie obejmuje trafność rankingową i log-loss, lecz nie diagramy rzetelności ani dekompozycję Murphy'ego"*.
+### BLOCKER B1 — `[Baek2022]` has THREE occurrences in 01_introduction.md, not two
+Plan line numbers 11 and 69 are wrong. Line 11 is GarciaMendez, not Baek. Actual `[Baek2022]` sites: **13, 25, 69**.
 
-WebFetch of HuggingFace + GitHub README: neither advertises Brier, log-loss, accuracy, reliability, calibration, or Murphy. The "obejmuje trafność i log-loss" positive claim is an OVERCLAIM — replicates L-1 BLOCKER in a new shape.
+**Fix:** T02 step 2 must replace all three; verification grep → 3 hits for `[BaekKim2022]`, 0 for `[Baek2022]`.
 
-**Fix:** rewrite to absence-from-README claim only: *"publicznie dostępna dokumentacja EsportsBench (HuggingFace dataset README v8.0 2025-12-31 oraz README repozytorium GitHub) nie wymienia diagramów rzetelności ani dekompozycji Murphy'ego wśród opisanych metryk benchmarku; integralność tych miar w protokole ewaluacyjnym EsportsBench pozostaje niezweryfikowana w ramach niniejszej pracy pending manualnej analizy preprintu"*.
+### WARNING W1 — EsportsBench URL + title disagreement
+HuggingFace page actually titled "EsportsBench: A Collection of Datasets for Benchmarking Rating Systems in Esports"; bib keeps "Rating System Evaluation for Esports".
 
-Also extend Rollback degradation-mode with a third scenario (c): if preprint PDF Table 2 contains calibration metrics, constraint (c) must be rewritten to cross-game-benchmarking-as-standalone-operative.
+**Fix:** add annotation to `note` field: "Title reflects preprint front matter; HuggingFace dataset page uses subtitle 'A Collection of Datasets for Benchmarking Rating Systems in Esports'." Closes disagreement surface.
 
-### WARNING W-1 — §1.3 RQ1 surgical deletion narrows inductive base, mitigation silent
-Post-deletion, RQ1 hypothesis cites Hodge2021 (Dota 2 only) + Tang2025 margin caveat. Plan Open Q 3 acknowledges narrowing but doesn't mitigate in execution. An examiner asking "why Dota-2-only base for SC2+AoE2 hypothesis?" has an opening.
+### WARNING W2 — Hodge2021 Open Q 5 default unclear
+Plan Open Q 5 deferred to Mode A. **Default:** adopt full first names (IEEE Xplore canonical) per Bunker2024 pattern already in bib.
 
-**Fix:** plant `[REVIEW: RQ1 hipoteza inductive base narrowed to Dota 2 — Pass 2 ocenić, czy dodać cytat na cross-esport GBDT-dominance]` flag at `01_introduction.md:31` post-T02. OR add explicit narrowed-induction note to T03 WRITING_STATUS §1.3 entry.
+### WARNING W3 — Aligulac Option (c) preferred over (a)
+`{Fonn, Eivind and {Aligulac contributors}}` is more defensible than `{Fonn, Eivind}` alone (acknowledges 15-year community project with multiple contributors). **Adopt (c) as planner resolution.**
 
-### WARNING W-2 — Asymmetric rating-family enumeration: §3.2.4 vs §2.5.5:177
-§3.2.4 T01 step 2: lists 5 families (Elo, Glicko, Glicko-2, TrueSkill, warianty BT).
-§2.5.5:177 T02 step 4: lists 4 families (Elo, Glicko, Glicko-2, TrueSkill).
+### NOTE N1 — Chapter-local References block in 01_introduction.md becomes orphaned after global-bib migration
+Hygiene debt; Pass 2 item.
 
-Both are true subsets of EsportsBench's 11 systems. Reviewer will notice asymmetry.
+### NOTE N2 — `reviews_and_others/related_work_rating_systems.md:393` carries "Thorrez, Calvin" (third divergent first-name)
+Post-TG4 repo has Lucas (deleted), Clayton (new bib), Calvin (scratchpad). Add REVIEW_QUEUE entry for Pass 2.
 
-**Fix:** unify phrasing: *"rodziny paired-comparison rating systems, m.in. Elo, Glicko, Glicko-2, TrueSkill"* at both sites.
+### NOTE N3 — Khan2024SCPhi2 title variance (preprint "Macromanagement Tasks" vs MDPI "Build Order Prediction")
+Normal preprint→journal retitling. MDPI canonical is correct. No action.
 
 ## Probes answered
 
-- Four-constraint conjunction: holds at (a), (b), (d); fragility at (c) → B-1 fix required
-- AoE2 absence: confirmed absent from v8.0
-- §1.3 surgical deletion parses cleanly → but see W-1
-- Degradation-mode fallback: covers v9.0+ scenarios; needs third scenario for preprint-PDF divergence (B-1 extension)
-- File Manifest 7 files: confirmed
-- No new bibkeys: confirmed
-- Thorrez author typo deferral: consistent (no TG3 site references author name)
+- 11+1 enumeration table: accurate
+- Lin Shih "Yu-Wei" (not Yi-Wei): arXiv confirms
+- Tarassoli2024 deletion: 0 chapter `[Tarassoli2024]` citations — safe
+- Hodge2021 pages 368–379: IEEE Xplore confirms
+- Khan2024SCPhi2 pages 2338–2352: MDPI confirms
 
 ## Recommendation
 
-REQUIRE_MINOR_REVISION — three edits (B-1 + W-1 + W-2), no redesign needed.
+**REQUIRE_MINOR_REVISION.** Four edits:
+1. B1: T02 replaces `[Baek2022]` at three lines (13, 25, 69); verification updated
+2. W1: annotate EsportsBench `note` field about HuggingFace title variance
+3. W2: ratify full first-name convention for Hodge2021 in Open Q 5
+4. W3: adopt Option (c) for Aligulac in Open Q 1
 
-## Sources
-- EsportsBench HuggingFace v8.0
-- EsportsBench GitHub README
+Plus N2: add REVIEW_QUEUE entry for triple-divergent Thorrez first-name in scratchpad.
