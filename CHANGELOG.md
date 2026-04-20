@@ -19,7 +19,30 @@ merged to `master`.
 
 ### Removed
 
-## [3.33.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg4-bibliography-findings)
+## [3.34.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg5a-internal-consistency-chore)
+
+### Added
+
+- `thesis/reviews_and_others/pass2_dispatch.md` — Pass-2 dispatch audit (446 lines) saved for durable recovery. Recovered from compacted transcript `36812a12` line 6 (34,795 chars). The audit spawned TG1–TG6; TG1–TG4 previously merged but the audit itself lived only in external Claude Chat + transcript. Saving to repo so remaining TG5 + TG6 scope survives future compactions.
+- `planning/current_plan.md` — Category F TG5-PR-5a plan (3 /critic iterations with combined 27 revisions applied + Mode A pre-execution audit with 2 BLOCKER + 4 WARN findings all resolved via structural plan revision + Mode C draft review APPROVE).
+- `planning/current_plan.critique.md` — Mode A findings (2 BLOCKERs on unverified Demšar §3.1.3 attribution + 4 WARNs + 4 NOTEs); BLOCKERs resolved by restructuring F5.6 to flag-planting only (no citation swap).
+
+### Changed
+
+- Pass-2 TG5-PR-5a internal-consistency chore: 5 audit findings addressed — F5.1 (§1.1 flag-count drift), F5.2 (THESIS_STRUCTURE Ch1 footer), F5.3 (Aligulac 80% calibration-not-accuracy reframing), F5.5 (Elbert2025EC §3.4 placement decision), F5.6 (Demšar §3.1.3 location uncertainty — flag-planting only, no citation swap).
+- **F5.1:** `thesis/chapters/REVIEW_QUEUE.md` §1.1 `Flag count` cell corrected from `0` to `2 physical [REVIEW] tags covering 3 audit-named concerns`; `thesis/WRITING_STATUS.md` §1.1 Notes cell refreshed with corresponding enumeration (GarciaMendez2025 at line 11; Shin1993/Forrest2005/Mangat2024 bundle at line 13; bibliography-footer flags at lines 81, 83).
+- **F5.2:** `thesis/THESIS_STRUCTURE.md:67` Chapter 1 "Fed by" footer softened to acknowledge §4.1.3–§4.1.4 cross-corpus framing as motivational feed (prior wording under-claimed "No roadmap phase directly"; over-claim of "Tabela 4.4b, §4.1.3" anchor avoided per Mode A W1).
+- **F5.3:** `thesis/chapters/02_theoretical_background.md:39` (§2.2.3) prose rewritten to distinguish calibration (Aligulac FAQ ~80%) from classification accuracy; existing §2.5.5 line 183 [REVIEW] flag reworded to align. Thorrez2024 comparator insertion at §2.2.3 **intentionally deferred to PR-5b** (chore-scope discipline); PR-5b scope expanded to include F4.5 Aligulac reframing alongside F5.4.
+- **F5.5:** `thesis/chapters/03_related_work.md` §3.4.3 — single-sentence placement-decision inserted grounding Elbert2025EC in AoE2 game identity (not RTS genre); §3.4 organizing principle documented as game-based, not team-size-based.
+- **F5.6 (flag-planting only):** `thesis/chapters/04_data_and_methodology.md` lines 213 (§4.1.4), 375 + 377 (§4.4.4) and `thesis/chapters/02_theoretical_background.md` line 211 (§2.6.3) each receive a canonical `[REVIEW: F5.6 Pass-2 audit H3 claims N≥10 threshold is in Demšar 2006 §3.1.3, not §3.2; manual verification against readable PDF required — Pass 2 closes this flag.]` annotation. **§3.2 citations retained at all four loci.** The §3.2 → §3.1.3 swap deferred to a post-Pass-2 PR pending readable Demšar 2006 PDF (Mode A B1/B2 resolution — swap on unverified audit assertion would replace one unverified citation with another). Line 373 of `04_data_and_methodology.md` already reads `§3.1.3` from TG1 and remained untouched.
+- **T06 metadata cascade:** `WRITING_STATUS.md` and `REVIEW_QUEUE.md` section-row annotations refreshed for §1.1, §2.2, §2.5, §2.6, §3.4, §4.1.4, §4.4.4.
+
+### Fixed
+
+- F6.11 (Elbert `Stein, Nora` → `Nikolai`; `Schenk, Amadeus` → `Alicia`) confirmed already-landed in TG4 (PR #190); dropped from future PR-6b scope.
+- Pre-existing internal drift between WRITING_STATUS §1.1 "0 flags" cell and actual 3 in-prose concerns (audit H1 closure).
+
+## [3.33.0] — 2026-04-20 (PR #190: docs/thesis-pass2-tg4-bibliography-findings)
 
 ### Changed
 

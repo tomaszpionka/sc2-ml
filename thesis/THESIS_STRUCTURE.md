@@ -64,7 +64,7 @@ Sections marked `[CROSS]` synthesise findings from both games.
 ### 1.5 Thesis outline
 - Brief description of each subsequent chapter
 
-**Fed by:** Background reading, literature review. No roadmap phase directly.
+**Fed by:** Literature review (primary). Chapter 1 framing occasionally alludes to empirical findings presented in Chapter 4 (§4.1.3–§4.1.4 on cross-corpus data asymmetry) without pre-committing them; those findings are not anticipated here and remain the responsibility of Chapter 4.
 
 ---
 
