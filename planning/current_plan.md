@@ -46,7 +46,7 @@ The slot label depends **only on `match_id`** (a stable per-match identifier tha
 
 **Alternatives rejected pre-user-decision:**
 - **`old_rating`-ordered** (skill-ordered) — skill-coupled by construction; does not neutralise the W3 artefact, just makes it explicit. Methodologically sound only if the intent is "slot label = skill signal" (distinct purpose from canonical_slot).
-- **`profile_id`-ordered** (lower-ID-first) — 01_04_05 Q4 explicitly rejects: `lower_id_first_win_rate = 0.5066 (+0.66pp)` is *larger* than the team=1 artefact it aimed to neutralise. Account age correlates with skill (early-adopter effect). Upstream artifact verdict: "Profile_id ordering must NOT be used as a slot-neutralizing technique" (`01_04_05_i5_diagnosis.md:94-98`).
+- **`profile_id`-ordered** (lower-ID-first) — 01_04_05 Q4 explicitly rejects: `lower_id_first_win_rate = 0.5066 (+0.66pp)` is a non-trivial skill-correlated edge in what was supposed to be a null-reference control. Account age correlates with skill (early-adopter effect → lower IDs have longer histories + more match experience). Upstream artifact verdict: "Profile_id ordering must NOT be used as a slot-neutralizing technique" (`01_04_05_i5_diagnosis.md:94-98`). The directional point is that profile_id is skill-correlated; magnitude comparison to the team=1 artefact (+2.27pp) is not the load-bearing argument.
 - **Hash on sorted `(min, max)` profile_id tuple** — inherits the same skill correlation; the sort is on a player-property magnitude. Not skill-orthogonal.
 
 **Why now.** Phase 02 execution cannot begin in full scope (only GO-NARROW is unblocked) until this column lands. The `[PRE-canonical_slot]` flag is referenced 7+ times across §4.4.6, spec §9/§11, INVARIANTS §5, risk register AO-R01, research_log, and the Phase 06 interface CSV `notes` column. F1 is the single structural PR that discharges all of them.
@@ -112,7 +112,7 @@ Tasks are ordered to cleanly separate (a) the code change (notebook + schema YAM
 **Verification.**
 - Notebook runs end-to-end with no exceptions.
 - Pre-amendment baseline re-verification (step 3) PASSes.
-- All 6 assertions in step 6 pass.
+- All 7 assertions in step 6 pass.
 - `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.json` exists with `assertions.all_passed: true`.
 - `DESCRIBE matches_history_minimal` shows 10 columns in declared order.
 
@@ -557,7 +557,7 @@ Tasks are ordered to cleanly separate (a) the code change (notebook + schema YAM
 
 All of the following must hold for the plan to be considered complete:
 
-1. **Notebook execution success.** `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.py` runs end-to-end with zero exceptions, baseline re-verification (T01 step 3) PASSes, and all 6 assertions in T01 step 6 return TRUE. Both `.py` and `.ipynb` committed.
+1. **Notebook execution success.** `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_03b_canonical_slot_amendment.py` runs end-to-end with zero exceptions, baseline re-verification (T01 step 3) PASSes, and all 7 assertions in T01 step 6 return TRUE. Both `.py` and `.ipynb` committed.
 2. **Row count preservation.** `SELECT COUNT(*) FROM matches_history_minimal` returns exactly **35,629,894** (identical to pre-amendment baseline). Assertion verified in `01_04_03b_canonical_slot_amendment.json` under `assertions.row_count_preserved: true`.
 3. **Schema width transition.** `DESCRIBE matches_history_minimal` returns **10 columns** in the order `[match_id, started_at, player_id, opponent_id, faction, opponent_faction, won, canonical_slot, duration_seconds, dataset_tag]`. Verified in both the notebook and `matches_history_minimal.yaml` (`schema_version: 10-col`).
 4. **canonical_slot well-formedness.** Distinct values set is exactly `{'slot_A', 'slot_B'}` with zero NULLs; every match_id has exactly one row with each slot value. Skill-orthogonality is established by construction (hash depends only on match_id, independent of player properties), not by a magic-number win-rate threshold. The balance statistic (per-slot win rate ≈ 0.5) is reported as confirmatory evidence, not gated.
@@ -579,7 +579,7 @@ All of the following must hold for the plan to be considered complete:
 - **01_05 notebook re-run.** The existing 01_05_02 PSI, 01_05_06 leakage audit, and 01_05_08 Phase 06 interface notebooks are NOT re-run. Their `[PRE-canonical_slot]` flag references become historical markers of the pre-amendment state and remain in place for audit provenance. A future PR may re-run them as `01_05_Nb` amendments if needed for Phase 02 handoff; not in this plan.
 - **Sibling dataset amendments.** sc2egset and aoe2companion retain the 9-column contract unchanged. Their `[POP:*]` tags and 9-column schemas are unaffected.
 - **Phase 06 interface CSV re-emission.** `phase06_interface_aoestats.csv` was populated in F6 (PR #180) with 30 `[PRE-canonical_slot]` tags on per-slot rows. That artifact is not regenerated here — the flag becomes a historical marker per spec §14 v1.1.0.
-- **Alternative derivation exploration.** Only the two named candidates (profile_id-based, old_rating-based) are considered. Other candidates (e.g., hash-based, lexicographic civilization name, team_0_elo-based) are rejected a priori: hash-based loses determinism under re-ingest, civ-based is target-leaky (feature correlates with target), team-based re-introduces the W3 artefact.
+- **Alternative derivation exploration.** The candidates considered and their outcomes: **hash-on-match_id SELECTED** (2026-04-20; structural-argument skill-orthogonality; stable under re-ingest contingent on match_id stability, which holds for aoestats vendor-provided game_id per `01_04_03_minimal_history_view.py:146-191`). Rejected alternatives: profile_id-ordered (01_04_05 Q4 disqualification — account-age correlates with skill), old_rating-ordered (skill-coupled by construction), hash on sorted (min, max) profile_id tuple (still player-property-dependent), lexicographic civilization name (target-leaky — civ correlates with outcome), team_0_elo-based (re-introduces W3 artefact).
 - **W4 as a standalone entry.** There is no separate BACKLOG `W4` entry in `planning/BACKLOG.md`; W4 is the reviewer-adversarial label for "the schema-amendment workstream to flip I5 PARTIAL → HOLDS". Its operational payload is the INVARIANTS.md §5 row + spec §14 entries in T04/T05. No standalone W4 PR is proposed; it is bundled per Assumption A5.
 - **PR open/push.** Per git-workflow rule, PR creation, push, and version bump (T10 final step) are executed at wrap-up by the user after execution + review pass, not by the executor inline.
 
@@ -596,10 +596,10 @@ All of the following must hold for the plan to be considered complete:
 
 For Category A, adversarial critique is required before execution. Dispatch reviewer-adversarial to produce `planning/current_plan.critique.md` against this plan once the parent writes it to `planning/current_plan.md`. Key review vectors the reviewer should probe:
 
-1. **Derivation choice defence (Q1 RESOLVED 2026-04-20).** Hash-on-match_id selected; skill-orthogonal by construction — the hash depends only on match_id, independent of player properties. Profile_id-ordered was explicitly rejected because 01_04_05 Q4 showed `lower_id_first_win_rate = 0.5066 (+0.66pp)` is *larger* than the team=1 artefact it would neutralize (account-age correlates with skill via early-adopter effect). Old_rating-ordered was rejected as skill-coupled by construction. Hash-based approach sidesteps both defects: no player attribute enters the derivation.
+1. **Derivation choice defence (Q1 RESOLVED 2026-04-20).** Hash-on-match_id selected; skill-orthogonal by structural construction — both rows of any match share the same match_id hence the same hash, and the focal_team pivot distributes them into complementary slots (independent of match_id's semantic content). Profile_id-ordered was explicitly rejected because 01_04_05 Q4 showed `lower_id_first_win_rate = 0.5066 (+0.66pp)` is a non-trivial skill-correlated edge — account-age correlates with skill via early-adopter effect, so profile_id-ordering is not skill-orthogonal regardless of whether the magnitude of this edge is larger or smaller than the team=1 artefact (+2.27pp). Old_rating-ordered was rejected as skill-coupled by construction. Hash-on-match_id sidesteps both defects: no player attribute enters the derivation.
 2. **W4 scope.** Plan claims W4 is pure documentation (INVARIANTS + spec). Reviewer should verify there is no lurking code change needed — e.g., do any existing Phase-06-interface-CSV emitters need to be re-run to drop the `[PRE-canonical_slot]` flag? Plan defers this; reviewer verify deferral is justified.
 3. **Row-count preservation for I9.** T01 asserts `BEFORE_STATS` vs `AFTER_STATS` via the `01_04_03_minimal_history_view.json` baseline. But that baseline was computed 2026-04-18; the underlying DuckDB may have been re-ingested since. Reviewer: verify the baseline is still bit-identical to current DB state, or propose a re-baselining step.
-4. **A2 fallback completeness.** If user overrides Q1 to A2, the plan says "amend NOT NULL assertion to allow NULL". Reviewer verify that all downstream YAML + assertion changes are captured (nullable flips, three-value enum, ties handling in per-slot win rate).
+4. **Fallback completeness.** Q1 resolved 2026-04-20 to hash-on-match_id; profile_id-ordered and old_rating-ordered alternatives both rejected in Problem Statement. Any future reopening of Q1 would require a new planning cycle, not a runtime override — T01 hardcodes the hash-based DDL.
 5. **Thesis §4.4.6 footnote scope.** Plan plants a `[REVIEW: post-F1 resolved]` footnote without rewriting the section prose. Reviewer verify this is acceptable as a closure marker or demand inline section revision.
 
 ---
@@ -608,9 +608,9 @@ For Category A, adversarial critique is required before execution. Dispatch revi
 
 **For the parent (Claude as orchestrator):** This plan is ready to be written to `planning/current_plan.md` without further clarification. Dispatch reviewer-adversarial next; reviewer's critique goes to `planning/current_plan.critique.md`. After critique pass (up to 3 adversarial rounds per symmetric-rigor rule), dispatch executor to run T01 through T10.
 
-**For the user at wake-up:** Two decision points before execution dispatch:
-1. **Q1 derivation choice** (required): approve default A1 (`profile_id`-based, recommended) or override to A2 (`old_rating`-based, skill-ordered). Plan default is A1.
-2. **Execution dispatch** (required): approve executor invocation against `planning/current_plan.md` with task range T01–T10.
+**For the user at wake-up:** One decision point remains before execution dispatch:
+1. ~~**Q1 derivation choice** — RESOLVED 2026-04-20 by user selection: hash-on-match_id. Profile_id-ordered and old_rating-ordered alternatives both rejected in plan body; no further decision needed.~~
+2. **Execution dispatch** (required): approve executor invocation against `planning/current_plan.md` with task range T01–T10. Context at wake-up: plan went through 3 pre-execution adversarial rounds (REDESIGN → REVISE → REVISE) + 1 surgical Pass 4 (line-level fixes for cosmetic defects Pass 3 surfaced). Methodology core sound; scope unchanged.
 
 Files consulted during planning (absolute paths):
 - `/Users/tomaszpionka/Projects/rts-outcome-prediction/planning/BACKLOG.md`
