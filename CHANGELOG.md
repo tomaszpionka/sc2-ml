@@ -19,7 +19,58 @@ merged to `master`.
 
 ### Removed
 
-## [3.30.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg1-methodological-drift)
+## [3.31.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg2-factual-contradictions)
+
+### Changed
+
+- Pass-2 TG2 factual-contradictions correction across thesis §1.1, §1.2,
+  §1.3, §1.4, §2.2.2, §2.3.2, §2.5.4, §3.1.2, §3.2.2 (nine sites across
+  three chapters) + `references.bib`.
+- SC2EGSet date range "2016–2022" → "2016–2024" at §2.2.2:33 and
+  §3.2.2:55 (matching §4.1.1.1, Tabela 4.4a, and the 01_02_04 univariate
+  census Section F endpoints 2016-01-07 — 2024-12-01). §2.2.2 was
+  pre-flagged as MIGRATION CANDIDATE in `sec_4_1_crosswalk.md:14`;
+  §3.2.2 caught via independent grep.
+- `references.bib:791` AoE2DE note field: "The Mountain Royals (2024)"
+  → "The Mountain Royals (2023)" (single-token edit; verified release
+  2023-10-31 via Wikipedia, Steam, Neowin, ageofempires.com).
+- AoE2 civilization count "45" → "50" across nine sites, anchored to
+  the aoestats empirical observation in window 2022-08-28 — 2026-02-07
+  (`aoestats/INVARIANTS.md:10`). Cascading arithmetic: 990 → 1 225
+  unordered non-mirror; 1035 → 1 275 ordered at §2.3.2:69.
+- §2.3.2:67 `[REVIEW:]` flag lifecycle: the original civ-count question
+  is resolved; a reduced-scope flag is planted covering DLC-chronology
+  completeness (Three Kingdoms 2025-05-06, Chronicles: Alexander the
+  Great 2025-10-14, Last Chieftains 2026-02-17). Full-roster cardinality
+  audit deferred to a dedicated Pass-2 edit with fresh source
+  verification.
+- Tabela 4.4a forward-references added at §1.4:45, §2.2.2:33, §2.3.2:67,
+  §3.2.2:55 for window/date-range anchoring consistency.
+- ISO YYYY-MM-DD date format used throughout; em-dash "—" for window
+  ranges (matching Tabela 4.4a character convention).
+- WRITING_STATUS.md: §1.1, §1.2, §1.4, §2.2, §2.3, §3.2 rows gain dated
+  PR-TG2 notes.
+- REVIEW_QUEUE.md: §1.4 row in-place closure of question (2) civ count;
+  question (1) mgz parser remains Pending. §2.2 + §2.3 rows gain
+  PR-TG2 revision notes.
+
+### Added
+
+- `planning/current_plan.md` — Category F TG2 plan after 3 iterations
+  of /critic (~27 revisions applied) and a reviewer-adversarial Mode A
+  pre-execution audit (A1 BLOCKER + A2/A3 MAJORs + A4 MINOR, all
+  resolved).
+- `planning/current_plan.critique.md` — Mode A findings that caught the
+  factually-wrong "53 total, 3 Chronicles excluded" parenthetical
+  (Chronicles shipped in two parts for 6 civs; Three Kingdoms and
+  Last Chieftains also omitted from the DLC chronology). BLOCKER
+  resolved by dropping the parenthetical and deferring full-roster
+  audit.
+- Reduced-scope `[REVIEW:]` flag at §2.3.2:67 for DLC-chronology
+  completeness (Three Kingdoms 2025-05-06, Chronicles: Alexander the
+  Great 2025-10-14, Last Chieftains 2026-02-17).
+
+## [3.30.0] — 2026-04-20 (PR #187: docs/thesis-pass2-tg1-methodological-drift)
 
 ### Changed
 
