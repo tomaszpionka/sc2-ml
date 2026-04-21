@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.41.1] — 2026-04-21 (PR #TBD: fix/aoestats-old-rating-pregame-closure)
+
+### Fixed
+
+- aoestats `old_rating` PRE-GAME classification empirical closure via Step 01_04_06: leaderboard-partitioned consecutive-match temporal consistency test (LAG window `PARTITION BY (profile_id_i64, leaderboard) ORDER BY (started_timestamp, game_id)`; primary scope `random_map`; per-leaderboard + per-time-gap-bucket stratification). CAST discipline per DS-AOESTATS-IDENTITY-04 (`profile_id` DOUBLE → BIGINT). Threshold argument per DS-AOESTATS-02 tolerance (0.95 primary; 50-unit magnitude; 0.90 stratum). Verdict: FAIL (primary agreement=0.9210, max_disagreement=1,118 units; multiple leaderboard and time-gap strata below 0.90). Three follow-up candidates recorded in INVARIANTS.md §3. `INVARIANTS.md §3` "deferred to Phase 02" flag replaced with full empirical finding. Closes aoestats WARNING 2 from `phase01_audit_summary_2026-04-21.md §3`.
+
 ## [3.41.0] — 2026-04-21 (PR #TBD: feat/sc2egset-cross-region-history-impact)
 
 ### Added

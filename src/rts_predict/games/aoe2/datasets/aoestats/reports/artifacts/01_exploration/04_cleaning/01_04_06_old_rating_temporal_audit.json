@@ -1,0 +1,47 @@
+{
+  "n_pairs_primary_scope": 35275197,
+  "n_pairs_total_all_leaderboards": 106700317,
+  "agreement_rate_primary": 0.920968,
+  "max_disagreement_primary": 1118,
+  "median_disagreement_disagreeing_pairs": 16.0,
+  "wilson_ci_95_low": 0.920879,
+  "wilson_ci_95_high": 0.921057,
+  "per_leaderboard_agreement": {
+    "team_random_map": 0.860128,
+    "random_map": 0.920968,
+    "co_team_random_map": 0.786743,
+    "co_random_map": 0.855239
+  },
+  "per_time_gap_agreement": {
+    "<1d": 0.943973,
+    "1-7d": 0.859,
+    "7-30d": 0.707557,
+    ">30d": 0.634484
+  },
+  "tie_rate": 0.0,
+  "duplicate_rows_collapsed": 0,
+  "verdict": "FAIL",
+  "hypothesis_thresholds": {
+    "agreement_primary_min": 0.95,
+    "max_disagreement_max": 50,
+    "stratum_min": 0.9,
+    "catastrophic_halt_min": 0.8
+  },
+  "threshold_rationale": "DS-AOESTATS-02 2-order-of-magnitude factor over 0.03% NULLIF tolerance; 50 rating unit approximate Elo K=40 scale",
+  "ci_method": "wilson",
+  "audit_date": "2026-04-21",
+  "gate_a_rate_pass": false,
+  "gate_a_magnitude_pass": false,
+  "gate_b_pass": false,
+  "gate_c_pass": false,
+  "lb_stratum_failures": {
+    "team_random_map": 0.8601277087250514,
+    "co_team_random_map": 0.7867429143732843,
+    "co_random_map": 0.8552393158798064
+  },
+  "gap_bucket_failures": {
+    "1-7d": 0.8590001321328123,
+    "7-30d": 0.7075571496502624,
+    ">30d": 0.634483765923701
+  }
+}

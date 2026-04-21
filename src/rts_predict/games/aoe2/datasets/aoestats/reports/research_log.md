@@ -8,6 +8,109 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-21 — old_rating PRE-GAME empirical closure (Step 01_04_06)
+
+**Branch:** `fix/aoestats-old-rating-pregame-closure`
+**Category:** D (bug fix — closes deferral flag)
+**Dataset:** aoestats
+**Step scope:** 01_04_06 — leaderboard-partitioned consecutive-match temporal consistency test
+
+### Step description
+
+Closes the `old_rating` PRE-GAME deferral flag in `INVARIANTS.md §3` (was:
+"Formal bivariate temporal leakage test deferred to Phase 02").
+For consecutive matches t, t+1 of the same `profile_id` on the same leaderboard,
+tests whether `players_raw.old_rating[t+1] == players_raw.new_rating[t]`.
+
+### Key findings
+
+**Pre-flight:**
+- Tie rate on `(profile_id_i64, leaderboard, started_timestamp)`: 0.000000% (0 ties / 107,626,399 groups). Well below 1% threshold.
+- Duplicate `(game_id, profile_id_i64)` extra rows: 0 (DISTINCT applied as a safety measure; the 489 duplicate rows noted in INVARIANTS §1 do not have the same profile_id_i64 after DOUBLE → BIGINT cast, or they are missing ratings).
+
+**Primary scope (random_map):**
+- n_pairs: 35,275,197
+- agreement_rate: 0.9210 (Wilson CI 95%: [0.9209, 0.9211])
+- max_disagreement: 1,118 rating units
+- median_disagreement (disagreeing pairs only): 16 rating units
+
+**Per-leaderboard agreement:**
+- `random_map`: 0.9210 (35,275,197 pairs)
+- `team_random_map`: 0.8601 (67,428,909 pairs)
+- `co_random_map`: 0.8552 (1,212,477 pairs)
+- `co_team_random_map`: 0.7867 (2,783,734 pairs)
+- Total across all leaderboards: 106,700,317 pairs
+
+**Per-time-gap-bucket (random_map):**
+- `<1d`: 0.9440 (29,021,397 pairs) — close to 0.95 threshold
+- `1-7d`: 0.8590 (4,661,976 pairs)
+- `7-30d`: 0.7076 (1,057,793 pairs)
+- `>30d`: 0.6345 (534,031 pairs)
+
+**CAST discipline:** `profile_id_i64 := CAST(profile_id AS BIGINT)` applied in all CTEs per DS-AOESTATS-IDENTITY-04. LAG window partitioned by `(profile_id_i64, leaderboard)` to respect independent per-leaderboard rating systems.
+
+### 3-gate verdict: FAIL
+
+- Gate (a) rate: 0.9210 < 0.95 — FAIL
+- Gate (a) magnitude: max_disagreement 1,118 >> 50 units — FAIL
+- Gate (b) leaderboard strata: `team_random_map`=0.860, `co_random_map`=0.855, `co_team_random_map`=0.787 — all < 0.90, FAIL
+- Gate (c) time-gap buckets: `1-7d`=0.859, `7-30d`=0.708, `>30d`=0.634 — all < 0.90, FAIL
+- CATASTROPHIC_HALT: NOT triggered (primary rate 0.921 > 0.80)
+
+### Interpretation
+
+The short-gap (<1d) agreement of 0.944 is near the 0.95 threshold, confirming the API
+convention largely holds for dense play patterns. Disagreements concentrate in longer-gap
+pairs, consistent with rating resets or seasonal updates between matches. The PRE-GAME
+classification is structurally supported (VIEW exclusion of `new_rating`) but empirically
+fails the strict consecutive-match test when longer inter-match gaps are included.
+
+### Decisions taken
+
+- INVARIANTS.md §3 updated: deferral replaced with full empirical finding and FAIL verdict.
+- Artifacts produced: `01_04_06_old_rating_temporal_audit.{json,md}`.
+
+### Decisions deferred (FAIL path — 3 candidates)
+
+1. **Retain with caveat**: accept 0.921 as sufficient for thesis purposes with explicit hedge.
+2. **Demote to CONDITIONAL_PRE_GAME**: investigate whether rating resets / seasonal updates
+   explain the disagreements, then apply a time-gap filter.
+3. **Filter disagreeing pairs in Phase 02**: drop player-match pairs where the consecutive-match
+   convention is violated; treat `old_rating` as reliable only within short time windows.
+
+Decision deferred to Phase 02 planner.
+
+### Thesis mapping
+
+§4.2.3 was read and confirmed during pre-execution verification: §4.2.3 "Reguły czyszczenia i ważny korpus"
+covers cleaning taxonomy, MissingIndicator strategy, missing-data thresholds, and FMI routing.
+It does NOT invoke `old_rating` PRE-GAME classification language. Therefore no thesis Pass-2
+item is triggered by this finding — the FAIL path note is recorded in INVARIANTS.md only.
+
+### Invariants touched
+
+- I3: test enforces strict-prior via LAG — this is the correct temporal discipline check.
+- I6: all SQL verbatim in artifact §2.
+- I7: thresholds argued via DS-AOESTATS-02 tolerance (0.95) and Elo K=40 scale (50-unit magnitude).
+
+### Artifact paths
+
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_06_old_rating_temporal_audit.json`
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_06_old_rating_temporal_audit.md`
+- `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_06_old_rating_temporal_audit.py`
+- `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_06_old_rating_temporal_audit.ipynb`
+
+### Open questions
+
+- Q1: Is the <1d agreement (0.944) sufficient to treat `old_rating` as PRE-GAME for dense
+  play patterns with a time-gap filter applied in Phase 02?
+- Q2: What mechanism drives the 7-30d and >30d disagreements — rating resets, seasonal
+  ELO rebalancing, or API versioning changes?
+- Q3: Should Phase 02 feature engineering apply a time-gap filter (< N days since last match)
+  before trusting `old_rating` as a reliable pre-match rating?
+
+---
+
 ## 2026-04-20 — [BACKLOG F1 + W4 / Phase 02 unblocker] canonical_slot column amendment
 
 **Branch:** `feat/aoestats-canonical-slot`
