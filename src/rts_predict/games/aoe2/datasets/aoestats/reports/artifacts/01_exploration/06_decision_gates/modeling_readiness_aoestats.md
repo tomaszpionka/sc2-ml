@@ -80,7 +80,7 @@ to higher-ELO player in 80.3% of matches (W3 ARTEFACT_EDGE, artifact:
 ~~**GO-NARROW** (READY_CONDITIONAL).~~
 
 Phase 02 may proceed on all feature types including per-slot features (canonical_slot-conditioned
-old_rating, civ, faction stratifiers). The slot-asymmetry blocker (AO-R01) is resolved.
+old_rating, civ, faction stratifiers). The slot-asymmetry blocker (AO-R01) is resolved. Phase 02 feature extractors bind to the cross-dataset `reports/specs/02_00_feature_input_contract.md §2` canonical input spec (version CROSS-02-00-v1, LOCKED 2026-04-21); this memo's scope ends at the Phase 01 output.
 
 Historical rationale for previous GO-NARROW (retained for audit provenance):
 - The slot-asymmetry artefact affects `team=1` label interpretation for per-slot features only.

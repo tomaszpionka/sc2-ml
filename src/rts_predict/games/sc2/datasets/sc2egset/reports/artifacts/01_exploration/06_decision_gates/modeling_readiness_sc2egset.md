@@ -73,7 +73,7 @@ Phase 02 feature engineering for sc2egset may proceed at full scope:
 - Historical match activity features
 - In-game-state features (APM, SQ, supplyCappedPercent) — sc2egset-exclusive; D6 asymmetry flag noted
 
-All features must pass I3 temporal classification check (PRE_GAME or post-game aggregates of prior history).
+All features must pass I3 temporal classification check (PRE_GAME or post-game aggregates of prior history). Phase 02 feature extractors bind to the cross-dataset `reports/specs/02_00_feature_input_contract.md §2` canonical input spec (version CROSS-02-00-v1, LOCKED 2026-04-21); this memo's scope ends at the Phase 01 output.
 
 ---
 

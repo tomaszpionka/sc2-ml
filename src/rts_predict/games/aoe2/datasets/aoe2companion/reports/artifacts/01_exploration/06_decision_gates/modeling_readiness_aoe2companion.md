@@ -69,7 +69,7 @@ Phase 02 feature engineering for aoe2companion may proceed at full scope:
 
 All features must pass I3 temporal classification check (PRE_GAME or post-game aggregates
 of prior history). duration_seconds is POST_GAME_HISTORICAL — must not be used as a PRE_GAME
-feature (I3 guard confirmed in 01_05_06).
+feature (I3 guard confirmed in 01_05_06). Phase 02 feature extractors bind to the cross-dataset `reports/specs/02_00_feature_input_contract.md §2` canonical input spec (version CROSS-02-00-v1, LOCKED 2026-04-21); this memo's scope ends at the Phase 01 output.
 
 ---
 

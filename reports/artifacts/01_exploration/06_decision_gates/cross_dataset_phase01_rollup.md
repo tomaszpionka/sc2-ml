@@ -12,7 +12,7 @@
 | Dataset | Verdict | Flip-predicate | Phase 02 go/no-go |
 |---------|---------|----------------|-------------------|
 | sc2egset | READY_WITH_DECLARED_RESIDUALS | N/A (residuals landed in thesis) | **GO** — full scope |
-| aoestats | READY_CONDITIONAL | BACKLOG F1 (`canonical_slot`) AND W4 (INVARIANTS §5 I5 PARTIAL→HOLDS). If F1 lands without W4, verdict remains READY_CONDITIONAL. | **GO-NARROW** (aggregate / UNION-ALL-symmetric features; per-slot deferred until F1+W4) |
+| aoestats | READY_WITH_DECLARED_RESIDUALS | N/A (flip-predicate SATISFIED 2026-04-20; BACKLOG F1+W4 landed via PR #185). | **GO-FULL** (per-slot features invariant-safe after canonical_slot amendment landed 2026-04-20 per PR #185 / BACKLOG F1+W4; see `modeling_readiness_aoestats.md §1 + §6`) |
 | aoe2companion | READY_WITH_DECLARED_RESIDUALS | N/A (residuals landed in thesis) | **GO** — full scope |
 
 **Evidence artifacts:**
@@ -200,13 +200,15 @@ datasets, subject to scope constraints below.
 | Dataset | Phase 02 scope | Scope constraint | Feature categories permitted |
 |---------|---------------|-----------------|------------------------------|
 | sc2egset | Full | None | PRE_GAME skill (MMR proxy, win-rate, faction/race), map, region, historical activity, IN_GAME_HISTORICAL (APM, SQ, supplyCappedPercent — sc2egset-exclusive) |
-| aoestats | GO-NARROW | F1+W4 required for full scope | Aggregate / UNION-ALL-symmetric: faction win-rate, average ELO from player_history_all, match counts, patch features. Per-slot (p0_civ, p1_civ, p0_old_rating, p1_old_rating) DEFERRED |
+| aoestats | GO-FULL | None (F1+W4 satisfied 2026-04-20 via PR #185 canonical_slot landing) | All feature categories permitted: faction win-rate, average ELO, match counts, patch features, AND per-slot features (canonical_slot-conditioned old_rating, civ, faction stratifiers) |
 | aoe2companion | Full | None | PRE_GAME skill (rating, is_unrated_proxy, win-rate), faction (with unknown-category handling for map_id), historical activity, profileId-based player history |
 
 **Phase 01 gate closure:** All three datasets have completed Pipeline Section 01_06
 (Decision Gates). Phase 01 is officially COMPLETE for all three datasets. Phase 01 outputs
 (CONSORT flows, risk registers, INVARIANTS §5 rows, data dictionaries) constitute the
 authoritative pre-Phase-02 baseline for the thesis.
+
+**Phase 02 input binding:** `reports/specs/02_00_feature_input_contract.md` (LOCKED CROSS-02-00-v1, 2026-04-21) is the canonical input contract across all three datasets. Phase 02 feature-engineering execution reads this spec as the authoritative source for input VIEW names, row grain, join keys, I3 temporal anchor, cross-game categorical encoding protocol, and column-level classification. Amendments follow the §7 change protocol.
 
 ---
 

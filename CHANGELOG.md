@@ -19,6 +19,20 @@ merged to `master`.
 
 ### Removed
 
+## [3.39.0] — 2026-04-21 (PR #TBD: docs/phase02-interface-contract)
+
+### Added
+
+- Cross-dataset Phase 02 feature-engineering input contract at `reports/specs/02_00_feature_input_contract.md` (version CROSS-02-00-v1, LOCKED). Closes sc2egset WARNING 1, aoestats NOTE 3, sc2egset NOTE 4 from the 2026-04-21 Phase 01 sign-off audits. Spec covers: per-dataset canonical input VIEWs + row grain; join keys + I3 temporal anchor (with explicit per-dataset `player_history_all` column enumeration: sc2egset `details_timeUTC` VARCHAR / aoestats `started_timestamp` TIMESTAMPTZ / aoe2companion `started` TIMESTAMP); cross-game categorical encoding protocol (I8 compliance, general rule + instances: faction/race/civ, map, leaderboard); column-level classification summary (§5 tables for 6 VIEW × dataset combinations); Phase 02 Pipeline Section cross-reference (02_01–02_08).
+
+### Changed
+
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md` §5 — added backlink to `reports/specs/02_00_feature_input_contract.md §2` (CROSS-02-00-v1, LOCKED 2026-04-21) as the Phase 02 input binding.
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md` §5 — added backlink to `reports/specs/02_00_feature_input_contract.md §2` (CROSS-02-00-v1, LOCKED 2026-04-21) as the Phase 02 input binding.
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md` §5 — added backlink to `reports/specs/02_00_feature_input_contract.md §2` (CROSS-02-00-v1, LOCKED 2026-04-21) as the Phase 02 input binding.
+- `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` §5 — added Phase 02 input binding paragraph citing `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1).
+- `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` §1 + §5 — aoestats GO-NARROW refreshed to GO-FULL (per-slot features invariant-safe after canonical_slot amendment landed 2026-04-20 per PR #185 / BACKLOG F1+W4); stale READY_CONDITIONAL verdict updated to READY_WITH_DECLARED_RESIDUALS.
+
 ## [3.38.1] — 2026-04-21 (PR #TBD: chore/phase01-audit-cleanup)
 
 ### Fixed
