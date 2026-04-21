@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.41.2] — 2026-04-21 (PR #TBD: chore/aoestats-43-day-gap-provenance)
+
+### Fixed
+
+- chore(aoestats): Phase 01 audit NOTE 2 closure — "43-day post-patch gap figure no artifact provenance" corrected via follow-up verification 2026-04-21. Provenance located at `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/01_acquisition/01_01_01_file_inventory.md:29,38` (reports the 43-day + 8-day + 8-day matches/ gaps and the additional 8-day players/ gap) + `sandbox/aoe2/aoestats/01_exploration/01_acquisition/01_01_01_file_inventory.py` (filename-scanning derivation). Together the `.md` + `.py` pair constitute I9-compliant provenance. `phase01_audit_summary_2026-04-21.md` aoestats NOTE 2 closure-table row updated: OPEN-SCHEDULED → CLOSED with citation. Also cascade-closes the stale aoestats WARNING 2 closure-table row (actually closed by PR #201 / WP-4; audit-summary table row not refreshed at that time — fixed here as a one-line cascade hygiene edit). `INVARIANTS.md §3 Temporal invariants` adds an "Inter-file temporal gaps" bullet at line 75 enumerating all 7 gaps with anchor paths to both the `.md` output and `.py` derivation. Thesis §4.1.2 interpretive claim (post-patch API-schema correlation) retains its existing in-place [REVIEW] flag — Pass-2 Chat workflow territory, not in scope here. **All 5 WPs (WP-1 PR #198, WP-2 PR #199, WP-3 PR #200, WP-4 PR #201, WP-5 this PR) closing the 2026-04-21 Phase 01 audit findings are now complete.**
+
 ## [3.41.1] — 2026-04-21 (PR #TBD: fix/aoestats-old-rating-pregame-closure)
 
 ### Fixed
