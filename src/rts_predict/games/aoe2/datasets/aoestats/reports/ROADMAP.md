@@ -1356,6 +1356,70 @@ research_log_entry: "Added 2026-04-18."
 
 ---
 
+### Step 01_04_07 -- old_rating CONDITIONAL_PRE_GAME Annotation (Phase 01 Amendment)
+
+```yaml
+step_number: "01_04_07"
+name: "old_rating CONDITIONAL_PRE_GAME Annotation (Phase 01 Amendment)"
+description: >
+  Phase 01-level retroactive annotation of old_rating following WP-4 FAIL (01_04_06).
+  Adds derived column time_since_prior_match_days (DOUBLE) to player_history_all VIEW
+  via DDL amendment. Empirically selects threshold N* from candidates {1, 2, 3, 7} days
+  (N*=7, largest N where pooled agreement on random_map >= 0.90). Computes 4x4 leaderboard
+  x time-gap stratification; SCOPE = random_map_only (team_random_map/co_random_map/
+  co_team_random_map fail <7d gate). Demotes old_rating to CONDITIONAL_PRE_GAME in
+  INVARIANTS.md §3. Amends spec 02_00 v1 -> v2. Row count preserved at 107,626,399.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+dataset: "aoestats"
+completed_at: "2026-04-21"
+notebook_path: "sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.py"
+predecessors:
+  - "01_04_06"
+inputs:
+  duckdb_views:
+    - "player_history_all (14 cols, 107,626,399 rows -- pre-01_04_07)"
+  duckdb_tables:
+    - "players_raw"
+    - "matches_raw"
+outputs:
+  duckdb_views:
+    - "player_history_all (replaced via CREATE OR REPLACE -- 15 cols, 107,626,399 rows, post-01_04_07 amendment 2026-04-21)"
+  schema_yamls:
+    - "data/db/schemas/views/player_history_all.yaml (UPDATED -- schema_version: '15-col (AMENDMENT: time_since_prior_match_days added 2026-04-21 per 01_04_07)')"
+  data_artifacts:
+    - "artifacts/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.json"
+  report: "artifacts/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.md"
+key_findings:
+  chosen_threshold_days: 7
+  chosen_scope: "random_map_only"
+  first_match_null_rate: 0.008605
+  correlation_with_rating_reset_magnitude: 0.197529
+  row_count_preserved: true
+  threshold_candidates:
+    "N=1": "pooled_agreement=0.9440 (PASS)"
+    "N=2": "pooled_agreement=0.9393 (PASS)"
+    "N=3": "pooled_agreement=0.9369 (PASS)"
+    "N=7": "pooled_agreement=0.9322 (PASS)"
+  per_leaderboard_at_7d:
+    random_map: 0.9322
+    team_random_map: 0.8681
+    co_random_map: 0.8684
+    co_team_random_map: 0.7946
+gate:
+  artifact_check: >
+    artifacts/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.{json,md} exist.
+    player_history_all.yaml schema_version field present.
+  continue_predicate: >
+    player_history_all has exactly 15 columns (post-01_04_07 amendment 2026-04-21).
+    Row count 107,626,399 unchanged. time_since_prior_match_days in DESCRIBE.
+    INVARIANTS.md §3 reads CONDITIONAL_PRE_GAME with N*=7 and scope=random_map_only.
+    spec 02_00 version = CROSS-02-00-v2.
+research_log_entry: "Added 2026-04-21."
+```
+
+---
+
 ## Pipeline Section 01_05 -- Temporal & Panel EDA
 
 **Spec binding:** `reports/specs/01_05_preregistration.md@7e259dd8`

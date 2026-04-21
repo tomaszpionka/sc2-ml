@@ -3,6 +3,7 @@ dataset: aoestats
 game: aoe2
 object_type: view
 step: '01_04_02'
+schema_version: '15-col (AMENDMENT: time_since_prior_match_days added 2026-04-21 per 01_04_07)'
 row_count: 107626399
 describe_artifact: src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
 generated_date: '2026-04-17'
@@ -92,6 +93,20 @@ columns:
   description: Whether this player won the match.
   notes: TARGET. Used as prediction label in matches_1v1_clean (via p0_winner/p1_winner).
     Retained here for win-rate feature computation across all game types.
+- name: time_since_prior_match_days
+  type: DOUBLE
+  nullable: true
+  description: Calendar days since this player's prior match on the same leaderboard
+    (LAG window partitioned by CAST(profile_id AS BIGINT), leaderboard; ordered by
+    started_timestamp, game_id tie-breaker).
+  notes: 'CONTEXT. NULL for first match per (profile_id, leaderboard) sequence. Used
+    by INVARIANTS.md §3 CONDITIONAL_PRE_GAME classification of old_rating — PRE-GAME
+    iff leaderboard = ''random_map'' AND (time_since_prior_match_days < 7 OR time_since_prior_match_days
+    IS NULL) — the parentheses around the disjunction are load-bearing under SQL AND-over-OR
+    precedence; the scope predicate gates both the <7d cutoff and the NULL fallback.
+    Chosen N*=7 (largest N in {1,2,3,7} clearing 0.90 pooled on random_map) and
+    scope=random_map_only (3 of 4 leaderboards fail at <7d) per 01_04_07 artifact §4-§5.
+    NULL is treated as PRE-GAME (no prior-match cross-session risk).'
 provenance:
   source_tables:
   - players_raw

@@ -1,0 +1,115 @@
+{
+  "step": "01_04_07",
+  "view_amended": "player_history_all",
+  "column_added": "time_since_prior_match_days",
+  "column_type": "DOUBLE",
+  "row_count_pre": 107626399,
+  "row_count_post": 107626399,
+  "first_match_null_rate": 0.008605,
+  "threshold_candidates": {
+    "1": {
+      "n_pairs_eligible": 29021397,
+      "pooled_agreement": 0.943973
+    },
+    "2": {
+      "n_pairs_eligible": 31283114,
+      "pooled_agreement": 0.939304
+    },
+    "3": {
+      "n_pairs_eligible": 32235871,
+      "pooled_agreement": 0.936925
+    },
+    "7": {
+      "n_pairs_eligible": 33683373,
+      "pooled_agreement": 0.932212
+    }
+  },
+  "chosen_threshold_days": 7,
+  "threshold_argument": "largest N in {1,2,3,7} where pooled agreement on random_map >= 0.90; chosen N*=7 with pooled agreement 0.932212",
+  "stratification_4x4": {
+    "co_random_map": {
+      "<1d": {
+        "n_pairs": 915616,
+        "agreement_rate": 0.895027
+      },
+      "1-7d": {
+        "n_pairs": 227305,
+        "agreement_rate": 0.760956
+      },
+      "7-30d": {
+        "n_pairs": 48500,
+        "agreement_rate": 0.647216
+      },
+      ">30d": {
+        "n_pairs": 21056,
+        "agreement_rate": 0.622055
+      }
+    },
+    "co_team_random_map": {
+      "<1d": {
+        "n_pairs": 2164037,
+        "agreement_rate": 0.814724
+      },
+      "1-7d": {
+        "n_pairs": 496101,
+        "agreement_rate": 0.706669
+      },
+      "7-30d": {
+        "n_pairs": 88722,
+        "agreement_rate": 0.630464
+      },
+      ">30d": {
+        "n_pairs": 34874,
+        "agreement_rate": 0.587114
+      }
+    },
+    "random_map": {
+      "<1d": {
+        "n_pairs": 29021397,
+        "agreement_rate": 0.943973
+      },
+      "1-7d": {
+        "n_pairs": 4661976,
+        "agreement_rate": 0.859
+      },
+      "7-30d": {
+        "n_pairs": 1057793,
+        "agreement_rate": 0.707557
+      },
+      ">30d": {
+        "n_pairs": 534031,
+        "agreement_rate": 0.634484
+      }
+    },
+    "team_random_map": {
+      "<1d": {
+        "n_pairs": 55493653,
+        "agreement_rate": 0.878206
+      },
+      "1-7d": {
+        "n_pairs": 9224946,
+        "agreement_rate": 0.8072
+      },
+      "7-30d": {
+        "n_pairs": 1946974,
+        "agreement_rate": 0.68376
+      },
+      ">30d": {
+        "n_pairs": 763336,
+        "agreement_rate": 0.635358
+      }
+    }
+  },
+  "per_leaderboard_at_chosen_threshold": {
+    "co_random_map": 0.868363,
+    "co_team_random_map": 0.794572,
+    "random_map": 0.932212,
+    "team_random_map": 0.868085
+  },
+  "chosen_scope": "random_map_only",
+  "scope_argument": "Not all leaderboards clear 0.90 at <7d cutoff. Failures: {'co_random_map': 0.8683627302324483, 'co_team_random_map': 0.7945723116620266, 'team_random_map': 0.8680845980612157}. CONDITIONAL_PRE_GAME classification scoped to random_map only.",
+  "correlation_with_rating_reset_magnitude": 0.197529,
+  "audit_date": "2026-04-21",
+  "current_ddl": "CREATE OR REPLACE VIEW player_history_all AS\nWITH player_counts AS (\n    SELECT game_id, COUNT(*) AS player_count\n    FROM players_raw\n    GROUP BY game_id\n)\nSELECT\n    CAST(p.profile_id AS BIGINT) AS profile_id,\n    p.game_id,\n    m.started_timestamp,\n    m.leaderboard,\n    m.map,\n    m.patch,\n    pc.player_count,\n    m.mirror,\n    m.replay_enhanced,\n    p.civ,\n    p.team,\n    NULLIF(p.old_rating, 0) AS old_rating,\n    p.old_rating = 0        AS is_unrated,\n    p.winner\nFROM players_raw p\nINNER JOIN matches_raw m ON p.game_id = m.game_id\nINNER JOIN player_counts pc ON p.game_id = pc.game_id\nWHERE p.profile_id IS NOT NULL\n  AND m.started_timestamp IS NOT NULL",
+  "amended_ddl": "CREATE OR REPLACE VIEW player_history_all AS\nWITH player_counts AS (\n    SELECT game_id, COUNT(*) AS player_count\n    FROM players_raw\n    GROUP BY game_id\n),\nlag_base AS (\n    SELECT\n        CAST(p.profile_id AS BIGINT) AS profile_id,\n        p.game_id,\n        m.started_timestamp,\n        m.leaderboard,\n        m.map,\n        m.patch,\n        pc.player_count,\n        m.mirror,\n        m.replay_enhanced,\n        p.civ,\n        p.team,\n        NULLIF(p.old_rating, 0) AS old_rating,\n        p.old_rating = 0        AS is_unrated,\n        p.winner,\n        LAG(m.started_timestamp) OVER (\n            PARTITION BY CAST(p.profile_id AS BIGINT), m.leaderboard\n            ORDER BY m.started_timestamp, m.game_id\n        ) AS prev_started_timestamp\n    FROM players_raw p\n    INNER JOIN matches_raw m ON p.game_id = m.game_id\n    INNER JOIN player_counts pc ON p.game_id = pc.game_id\n    WHERE p.profile_id IS NOT NULL\n      AND m.started_timestamp IS NOT NULL\n)\nSELECT\n    profile_id,\n    game_id,\n    started_timestamp,\n    leaderboard,\n    map,\n    patch,\n    player_count,\n    mirror,\n    replay_enhanced,\n    civ,\n    team,\n    old_rating,\n    is_unrated,\n    winner,\n    CAST(\n        EXTRACT(EPOCH FROM (started_timestamp - prev_started_timestamp)) / 86400.0\n        AS DOUBLE\n    ) AS time_since_prior_match_days\nFROM lag_base"
+}
