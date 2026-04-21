@@ -19,6 +19,19 @@ merged to `master`.
 
 ### Removed
 
+## [3.42.0] — 2026-04-21 (PR #TBD: feat/aoestats-old-rating-conditional-classification)
+
+### Added
+
+- New Phase 01 step 01_04_07 — aoestats `old_rating` CONDITIONAL_PRE_GAME annotation. `player_history_all` VIEW amended via DDL to add `time_since_prior_match_days` DOUBLE column (row count preserved at 107,626,399). Notebook + MD + JSON artifacts with data-driven threshold selection (N*=7 days chosen empirically from candidates {1, 2, 3, 7}) + 4×4 leaderboard × time-gap stratification (SCOPE = `random_map_only`, chosen empirically: `team_random_map`, `co_random_map`, `co_team_random_map` fail <7d gate). Applies WP-4 FAIL finding as Phase 01 cleaning annotation per user directive 2026-04-21.
+
+### Changed
+
+- `INVARIANTS.md §3` — `old_rating` demoted from PRE-GAME (WP-4 FAIL) to CONDITIONAL_PRE_GAME with empirically-selected N*=7 + SCOPE=random_map_only + explicit NULL-first-match handling (NULL → PRE-GAME, no prior-match cross-session risk). Threshold selection table (N ∈ {1,2,3,7}) + 4×4 leaderboard × time-gap stratification + scope argument all documented in INVARIANTS.md §3.
+- `player_history_all.yaml` — `schema_version` field introduced per canonical_slot descriptive-string precedent: `'15-col (AMENDMENT: time_since_prior_match_days added 2026-04-21 per 01_04_07)'`. New column entry for `time_since_prior_match_days`.
+- `reports/specs/02_00_feature_input_contract.md` — amended CROSS-02-00-v1 → CROSS-02-00-v2 per §7 change protocol: §2.2 column count 14 → 15; schema_version string introduced; §5.5 adds `time_since_prior_match_days` CONTEXT column row; `old_rating` reclassified PRE_GAME → CONDITIONAL_PRE_GAME; §7 amendment log entry added.
+- `aoestats/reports/ROADMAP.md` — step 01_04_07 entry added with current-state `player_history_all` reference as 15-col post-amendment.
+
 ## [3.41.2] — 2026-04-21 (PR #TBD: chore/aoestats-43-day-gap-provenance)
 
 ### Fixed

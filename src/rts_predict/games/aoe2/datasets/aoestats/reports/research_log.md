@@ -8,6 +8,96 @@ AoE2 / aoestats findings. Reverse chronological.
 
 ---
 
+## 2026-04-21 — old_rating CONDITIONAL_PRE_GAME Phase 01 annotation (Step 01_04_07, data-driven threshold)
+
+**Branch:** `feat/aoestats-old-rating-conditional-classification`
+**Category:** A
+**Dataset:** aoestats
+**Step scope:** WP-4 FAIL → Phase 01 01_04 annotation per docs/PHASES.md; post-Mode-A data-driven threshold + 4×4 scope selection
+
+### Step description
+
+Applied a Phase 01 cleaning-rule annotation to make `old_rating` semantically usable
+downstream. Added `time_since_prior_match_days` DOUBLE column to `player_history_all`
+VIEW via DDL amendment (LAG window `PARTITION BY CAST(profile_id AS BIGINT), leaderboard
+ORDER BY started_timestamp, game_id`). Row count preserved at 107,626,399.
+
+### Artifacts produced
+
+- Notebook: `sandbox/aoe2/aoestats/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.py`
+- MD artifact: `reports/artifacts/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.md`
+- JSON artifact: `reports/artifacts/01_exploration/04_cleaning/01_04_07_old_rating_conditional_annotation.json`
+
+### What was done
+
+Added `time_since_prior_match_days` DOUBLE column to `player_history_all` VIEW (14 → 15 columns).
+Empirically selected threshold N* = 7 days from candidates {1, 2, 3, 7} (largest N where pooled
+agreement on `random_map` >= 0.90; all 4 candidates passed). Empirically selected SCOPE =
+`random_map_only` (team_random_map=0.868, co_random_map=0.868, co_team_random_map=0.795 all
+fail <7d gate). Demoted `old_rating` from PRE-GAME to CONDITIONAL_PRE_GAME in INVARIANTS.md §3.
+Amended spec 02_00 v1 → v2.
+
+### Why
+
+User directive 2026-04-21 requires Phase 01-level fix for the WP-4 FAIL finding. Mode A review
+caught that the original plan's pre-specified 7-day cutoff included the 1-7d bucket (0.859) which
+fails the 0.90 stratum gate, and that 01_04_06's per-time-gap stratification was random_map-only
+and could not justify a global cutoff. The revised plan applied empirical selection from data.
+
+### How (reproducibility)
+
+Notebook 01_04_07; DDL amendment verbatim per I6; per-leaderboard LAG partition + game_id
+tie-breaker match 01_04_06. DuckDB CAST(profile_id AS BIGINT) per DS-AOESTATS-IDENTITY-04.
+
+### Findings
+
+**Threshold candidates (pooled <N days agreement on random_map):**
+
+| N (days) | n_pairs_eligible | pooled_agreement | Gate |
+|----------|-----------------|-----------------|------|
+| 1 | 29,021,397 | 0.943973 | PASS |
+| 2 | 31,283,114 | 0.939304 | PASS |
+| 3 | 32,235,871 | 0.936925 | PASS |
+| 7 | 33,683,373 | 0.932212 | PASS |
+
+All 4 candidates pass 0.90 on random_map → N* = 7 (largest).
+
+**4×4 leaderboard × time-gap stratification (agreement_rate):**
+
+| Leaderboard | <1d | 1-7d | 7-30d | >30d | At <7d |
+|-------------|-----|------|-------|------|--------|
+| random_map | 0.9440 | 0.8590 | 0.7076 | 0.6345 | 0.9322 |
+| team_random_map | 0.8782 | 0.8072 | 0.6838 | 0.6354 | 0.8681 |
+| co_random_map | 0.8950 | 0.7610 | 0.6472 | 0.6221 | 0.8684 |
+| co_team_random_map | 0.8147 | 0.7067 | 0.6305 | 0.5871 | 0.7946 |
+
+SCOPE = `random_map_only` (team_random_map, co_random_map, co_team_random_map fail <7d gate).
+
+**First-match NULL rate:** 0.008605 (0.86% of all player_history_all rows are first-match per leaderboard; NULL → PRE-GAME per INVARIANTS.md §3).
+
+**Pearson ρ (gap_days vs |old_rating - prev_new_rating|):** 0.197529 — positive, consistent with seasonal/boundary rating resets hypothesis.
+
+### Decisions taken
+
+CONDITIONAL_PRE_GAME classification: `old_rating` is PRE-GAME iff
+`leaderboard = 'random_map'` AND (`time_since_prior_match_days < 7` OR `time_since_prior_match_days IS NULL`).
+
+### Decisions deferred
+
+Phase 02 chooses how to USE the annotation (filter, dual feature paths, etc.). Per-leaderboard-specific
+thresholds for non-random_map leaderboards deferred to a future step if needed.
+
+### Thesis mapping
+
+§4.2.3 may reference CONDITIONAL_PRE_GAME + evidence chain (01_04_06 + 01_04_07). Pass-2 Chat.
+
+### Open questions / follow-ups
+
+If SCOPE = random_map_only, whether to compute separate thresholds for other leaderboards in a
+future step is deferred.
+
+---
+
 ## 2026-04-21 — old_rating PRE-GAME empirical closure (Step 01_04_06)
 
 **Branch:** `fix/aoestats-old-rating-pregame-closure`

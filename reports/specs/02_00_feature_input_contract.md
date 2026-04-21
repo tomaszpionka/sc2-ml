@@ -1,16 +1,16 @@
 ---
-spec_id: CROSS-02-00-v1
-version: CROSS-02-00-v1
+spec_id: CROSS-02-00-v2
+version: CROSS-02-00-v2
 status: LOCKED
 date: 2026-04-21
 invariants_touched: [I2, I3, I5, I8]
-supersedes: null
+supersedes: CROSS-02-00-v1
 datasets_bound: [sc2egset, aoestats, aoe2companion]
 ---
 
 # Cross-Dataset Phase 02 Feature-Engineering Input Contract
 
-## CROSS-02-00-v1 (LOCKED 2026-04-21)
+## CROSS-02-00-v2 (LOCKED 2026-04-21)
 
 This document is the authoritative cross-dataset input contract for Phase 02
 feature engineering. It formalizes the interface between Phase 01 outputs and
@@ -117,8 +117,8 @@ columns only and exclude `canonical_slot`.
 | VIEW name | `player_history_all` |
 | Row grain | 1 row per player per match (all leaderboards; no 1v1 filter) |
 | Row count | 107,626,399 |
-| Column count | 14 |
-| Schema version | (see yaml; no explicit schema_version field) |
+| Column count | 15 |
+| Schema version | `15-col (AMENDMENT: time_since_prior_match_days added 2026-04-21 per 01_04_07)` |
 | Source artifact | `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/player_history_all.yaml` |
 | Step | `01_04_02` |
 
@@ -398,7 +398,7 @@ engineering:
 | `header_elapsedGameLoops` | BIGINT | IN_GAME_HISTORICAL | Game duration in loops; safe only as history aggregate filtered < T |
 | `is_mmr_missing` | BOOLEAN | PRE_GAME | TRUE if MMR=0 (unrated professional; MNAR) |
 
-### §5.5 `player_history_all` — aoestats (14 cols)
+### §5.5 `player_history_all` — aoestats (15 cols)
 
 | Column | Type | Classification | Notes |
 |--------|------|----------------|-------|
@@ -409,10 +409,11 @@ engineering:
 | `map` | VARCHAR | PRE_GAME | Map name; 77+ distinct in 1v1 scope |
 | `patch` | BIGINT | CONTEXT | Game patch number |
 | `civ` | VARCHAR | PRE_GAME | Civilization name; Phase 02 faction proficiency feature |
-| `old_rating` | BIGINT | PRE_GAME | ELO before match; NULL=unrated (NULLIF 0 in 01_04_02) |
+| `old_rating` | BIGINT | CONDITIONAL_PRE_GAME | ELO before match; NULL=unrated (NULLIF 0 in 01_04_02). PRE-GAME iff `leaderboard = 'random_map'` AND (`time_since_prior_match_days < 7` OR `time_since_prior_match_days IS NULL`). NULL treated as PRE-GAME per INVARIANTS.md §3. |
 | `is_unrated` | BOOLEAN | PRE_GAME | TRUE if old_rating was 0 sentinel |
 | `winner` | BOOLEAN | TARGET | Win outcome; retain for win-rate computation |
 | `mirror` | BOOLEAN | PRE_GAME | Both players played same civ |
+| `time_since_prior_match_days` | DOUBLE | CONTEXT | Calendar days since player's prior match on same leaderboard; NULL for first match per (profile_id, leaderboard). Phase 02 CONDITIONAL_PRE_GAME gate for old_rating via < 7 condition (NULL treated as PRE-GAME per INVARIANTS.md §3). Added 01_04_07 (2026-04-21). |
 
 ### §5.6 `player_history_all` — aoe2companion (19 cols; abbreviated — key columns shown)
 
@@ -476,6 +477,7 @@ in the frontmatter MUST be bumped in the same commit as the amendment.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | CROSS-02-00-v1 | 2026-04-21 | planner-science | Initial LOCKED version. Closes sc2egset WARNING 1, aoestats NOTE 3, sc2egset NOTE 4 from 2026-04-21 Phase 01 sign-off audits. |
+| CROSS-02-00-v2 | 2026-04-21 | planner-science | aoestats §5.5 `player_history_all` adds `time_since_prior_match_days` (DOUBLE, CONTEXT) per WP-6 / 01_04_07. §2.2 column count 14 → 15; schema_version string introduced per canonical_slot precedent. `old_rating` reclassified PRE_GAME → CONDITIONAL_PRE_GAME in §5.5. Motivation: WP-4 empirical FAIL of unconditional `old_rating` PRE-GAME classification; Phase 01-level annotation per docs/PHASES.md §Phase 01 01_04 discipline. Major version bump per §7 (§2 column-count commitment change). |
 
 ---
 
