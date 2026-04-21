@@ -52,7 +52,7 @@ FROM (
 
 **Branch selected:** (iii) — server/region-scoped ID. `player_id_worldwide` (full `R-S2-G-P`) delivers lower `max(migration_rate, cross_scope_collision_rate)` than any nickname-based alternative for within-scope use.
 
-**Tolerance and accepted bias:** The ~12% cross-region duplication (same physical player under multiple `player_id_worldwide` values) is accepted bias because no stable worldwide alternative exists without manual curation. The 294 Class A cross-region candidate pairs are deferred to a future manual-curation upgrade path. (01_04_04b)
+**Tolerance and accepted bias:** The ~12% cross-region duplication (same physical player under multiple `player_id_worldwide` values) is accepted bias because no stable worldwide alternative exists without manual curation. The 294 Class A cross-region candidate pairs are deferred to a future manual-curation upgrade path. (01_04_04b) Empirical impact on Phase 02 rolling-window features (01_05_10, 2026-04-21): at window=30, median undercount is 16.0 games, p95 is 29.0 games; sensitivity at windows {5, 10, 100} shows consistent FAIL (median 0/0/61, p95 5/9/98) — only W=5 has median=0 but p95 is already at the boundary. MMR-fragmentation Spearman ρ = 0.1384 (bootstrap 95% CI [-0.0086, 0.2913], n=157). Verdict: FAIL against 3-threshold gate (median_rolling30 ≤ 1 AND p95_rolling30 ≤ 5 AND |bootstrap_CI_upper(ρ)| < 0.2). Rare-handle subsample (nickname length ≥ 8, n=96) shows lower median (7 games) but equal p95 (29 games), consistent with full-sample FAIL verdict — the bias is a genuine fragmentation effect, not solely a short-handle-collision artifact. See `reports/artifacts/01_exploration/05_temporal_panel_eda/cross_region_history_impact_sc2egset.md`.
 
 **Rejected candidates:**
 

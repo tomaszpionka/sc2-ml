@@ -2,6 +2,79 @@
 
 ---
 
+## 2026-04-21 — [Phase 01 / Step 01_05_10] Cross-region history-fragmentation quantification
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Branch:** feat/sc2egset-cross-region-history-impact
+
+### Step scope
+
+Phase 02 rolling-feature impact quantification. Closes sc2egset WARNING 3 from
+`reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md §2`.
+
+### Artifacts produced
+
+- **Notebook:** `sandbox/sc2/sc2egset/01_exploration/05_temporal_panel_eda/01_05_10_cross_region_history_impact.py` (+ paired `.ipynb`)
+- **MD:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/05_temporal_panel_eda/cross_region_history_impact_sc2egset.md`
+- **JSON:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/05_temporal_panel_eda/cross_region_history_impact_sc2egset.json`
+
+### What
+
+Per-(cross-region player, match) rolling-window undercount at window=30 (primary) +
+sensitivity across {5, 10, 100} + MMR-fragmentation Spearman ρ with bootstrap 95% CI
+(n_bootstrap=1000) + rare-handle subsample (length ≥ 8, n=96 nicknames).
+
+### Why
+
+Closes sc2egset WARNING 3 (`phase01_audit_summary_2026-04-21.md §2`): "For the 12% of
+cross-region cases, by how many games is the history underestimated, and is this correlated
+with skill level?" Produces thesis-citation-grade quantification for §4.2.2 Pass-2.
+Enforces I2 accepted-bias framing with empirical numbers.
+
+### How (reproducibility)
+
+- Notebook `01_05_10`; SQL verbatim in MD §2 (I6 discipline).
+- DuckDB `PERCENTILE_CONT` as percentile engine (all JSON percentile fields).
+- `scipy.stats.bootstrap` with `paired=True`, `n_resamples=1000`, `random_state=42`.
+- Temporal discipline: `ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING` on ISO-8601
+  VARCHAR `details_timeUTC`; no duplicate match times per toon_id confirmed.
+
+### Findings
+
+- **n_cross_region_nicknames:** 246 (no drift from INVARIANTS.md §2 figure).
+- **median_rolling30_undercount:** 16.0 games (threshold ≤ 1 — FAIL).
+- **p95_rolling30_undercount:** 29.0 games (threshold ≤ 5 — FAIL).
+- **Sensitivity {W=5, 10, 100}:** median 0/0/61, p95 5/9/98 — W=5 median passes but p95
+  is borderline; all higher windows fail both thresholds.
+- **Spearman ρ (MMR vs fragmentation):** 0.1384, p=0.084, bootstrap 95% CI [-0.009, 0.291].
+- **|CI_upper(ρ)|:** 0.2913 (threshold < 0.2 — FAIL).
+- **Rare-handle (length ≥ 8, n=96):** median=7.0, p95=29.0, ρ=0.159, CI_high=0.390 —
+  consistent with full-sample FAIL verdict; bias is not purely short-handle collision.
+- **fragmentation_ratio_median_lifetime:** 0.650 (loose upper bound; descriptive only).
+
+### Decisions taken
+
+**VERDICT: FAIL.** All 3 gate thresholds violated. The I2 Branch (iii) accepted-bias
+framing requires quantitative qualification in thesis §4.2.2.
+
+### Decisions deferred
+
+FAIL verdict: Phase 02 mitigation scope enumerated in artifact §6 — three Cat D
+candidates: (1) manual curation of 294 Class A cross-region pairs, (2) `is_cross_region`
+flag column in Phase 02 for sensitivity analysis, (3) revised I2 branch post-curation.
+Decision between these options is deferred to the Phase 02 planning session.
+
+### Thesis mapping
+
+- **§4.2.2:** Quantitative caveat addition for I2 Branch (iii) accepted-bias framing.
+  The artifact §5 FAIL paragraph is the Pass-2 base; the three pre-drafted paragraphs
+  (PASS / MARGINAL / FAIL) cover all verdict branches.
+- **Open question (Phase 02 planning):** Whether to implement `is_cross_region` flag
+  column or manual-curation unification as the Phase 02 mitigation.
+
+---
+
 ## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
 
 **Branch:** `feat/phase01-decision-gates-01-06`

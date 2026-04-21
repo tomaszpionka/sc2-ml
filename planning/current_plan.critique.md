@@ -1,8 +1,8 @@
-# Adversarial Review — Plan (Mode A) — WP-2
+# Adversarial Review — Plan (Mode A) — WP-3
 
-**Plan:** `planning/current_plan.md` (WP-2 — Mandatory Pre-Training Leakage Audit Protocol Spec)
-**Branch:** `docs/phase02-leakage-audit-protocol`
-**Base:** `master` @ `5682acfb` (post PR #198; version 3.39.0)
+**Plan:** `planning/current_plan.md` — WP-3 sc2egset cross-region history-fragmentation quantification
+**Branch:** `feat/sc2egset-cross-region-history-impact`
+**Base:** master `000251f0` (v3.40.0 post PR #199)
 **Date:** 2026-04-21
 **Reviewer:** reviewer-adversarial, Mode A (pre-execution)
 
@@ -10,38 +10,58 @@
 
 | Lens | Verdict |
 |---|---|
-| Temporal discipline | SOUND — spec is about preventing I3 violations; does not itself introduce any |
-| Statistical methodology | N/A — docs-only spec; no statistical tests invoked |
-| Feature engineering | N/A — spec prescribes audit protocol, not feature construction |
-| Thesis defensibility | ADEQUATE — gate mechanism is non-binding without tooling; examiners can ask |
-| Cross-game comparability | AT RISK — aoestats Phase 01 audit is Markdown, not JSON; plan's template-inheritance claim is false for one of three datasets |
+| Temporal discipline (I3) | AT RISK — measured quantity misrepresents real Phase 02 bias |
+| Statistical methodology | FLAWED — power/threshold asymmetry; median masks tail |
+| Feature engineering realism | AT RISK — static-aggregate simulation vs rolling-prefix reality |
+| Thesis defensibility | WEAK — binary PASS/FAIL from underpowered test is brittle |
+| Cross-game comparability | ADEQUATE — asymmetry defensible if stated |
+| SQL correctness / verifiability | AT RISK — 4 SQLs described, not specified |
+| Reproducibility (I6) | ADEQUATE — specify percentile engine |
+| Invariant compliance | AT RISK — I7 self-referential (30-game window); I2 drift risk |
+| Cat A plan completeness | ADEQUATE — notebook-steps substitute for functions |
+| Out-of-scope discipline | SOUND |
+| Execution realism | AT RISK — 6 tasks in 1 session optimistic |
 
 ## BLOCKER / WARNING / NOTE findings
 
-1. **[BLOCKER] Assumption 2 is factually wrong for aoestats.** Plan's Assumptions section claims all three Phase 01 leakage-audit JSON artifacts carry `future_leak_count`, `post_game_token_violations`, `reference_window_assertion`. The aoestats Phase 01 audit at `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_06_temporal_leakage_audit_v1.md` is a **Markdown file, NOT JSON**; its structure uses freeform section headers (Q7.1, Q7.2, Q7.3, Q7.4) rather than key-value fields. sc2egset + aoe2companion audits ARE JSON and do carry the three fields. T01 instruction 4 asks the executor to tabulate a "shared field matrix across 3 Phase 01 artifacts" — the true intersection is empty because the aoestats MD contributes zero JSON field names. The plan must acknowledge the format asymmetry and define semantic equivalences (e.g., Q7.1 → `future_leak_count`, Q7.2 → `post_game_token_violations`, Q7.3 → `reference_window_assertion`).
+**1. [BLOCKER] The measurement does not model the Phase 02 bias it claims to quantify.** T02 Analysis §3 operationalises "undercount" as `total_games − max_games` per cross-region nickname — a **static lifetime aggregate**. Phase 02 rolling features at match T for player-ID X see the **prefix of X's timeline up to T**, not X's lifetime total. A player with 100 lifetime games split 50/50 EU/NA at their 25th EU match has a rolling feature over games 1–24 in EU — the "50-game undercount" is hypothetical. The right quantity is **per-(cross-region player, match T) rolling-window undercount**. The current metric overstates bias by counting late-life matches that can never leak into early-life features. Fix: T02 Analysis §3 computes per-match rolling-window undercount at a stated primary window (e.g., 30 games) with sensitivity across {5, 10, 30, 100}; OR §5 explicitly reframes as a loose upper bound.
 
-2. **[BLOCKER] "sc2egset WARNING 2 from 2026-04-21 Phase 01 sign-off audits" has no on-disk referent.** The plan cites the finding code "WARNING 2" but no artifact in the repo carries that designation. The sc2egset modeling-readiness doc uses risk IDs SC-R01 through SC-R07; the cross-dataset rollup enumerates dimensions D1–D6; `pass2_status.md` tracks F5.x/F6.x Pass-2 findings, not W-x Phase 01 audit findings. The actual source is the reviewer-adversarial agent output from earlier this session (agent af5c57132779f1103) which was summarized in chat but NOT committed as an artifact. Invariant I9 requires traceability to existing artifacts. An examiner asking "show me the sc2egset WARNING 2 you claim to close" finds nothing. Fix: commit a Phase 01 audit summary artifact consolidating the 3 dataset sign-off verdicts + their WARNING/NOTE enumerations as the durable on-disk referent for WP-2, WP-3, WP-4, WP-5.
+**2. [BLOCKER] Spearman ρ threshold is underpowered.** Plan requires `|ρ| < 0.1` for PASS. At n≈200 (246 minus the MMR-filtered subset), Spearman ρ with |ρ|=0.1 at α=0.05 has ~30% power. The threshold PASSES vacuously in ~70% of worlds where a real ρ=0.1 exists. The test literally cannot reject H0. Fix: raise threshold to |ρ|<0.2 (~80% power at n=200) citing a power calculation in the notebook; OR replace binary threshold with bootstrap 95% CI on ρ for graded interpretation.
 
-3. **[WARNING] T02 verification grep count will produce a false "FAIL".** Verification step says "`grep 'CROSS-02-01-v1'` returns exactly ONE match (frontmatter)." But T02 instructions also embed `CROSS-02-01-v1` in §1 prose (cites WP-1 sibling), §3 schema field description, and possibly §8. The grep will return several matches even on a correctly-executed spec. Fix: frontmatter-scope the assertion, e.g., `grep '^spec_id: CROSS-02-01-v1'`.
+**3. [BLOCKER] Median-only threshold hides right-tail bias.** Gate Condition requires `median_undercount ≤ 1`. For right-skewed distributions typical of "some players migrate a lot, most don't," median can be 0 while p95 is 50. The 5% subpopulation with high fragmentation produces heavily biased rolling features — they're Phase 02 feature outliers exactly where they matter. Median-only verdict invites "your verdict missed the 5% of players who are the entire problem." Fix: add `p95_undercount_games ≤ K` alongside median; PASS iff BOTH cross thresholds.
 
-4. **[WARNING] §5 gate condition is advisory without CI tooling.** T02 instruction 6 + Gate Condition prescribe: "verdict = PASS required for 02_01 exit; missing audit OR verdict != PASS blocks the Pipeline Section." No pre-commit hook, CI script, or tooling in `scripts/` or `.github/workflows/` reads the JSON and fails commits if `verdict != "PASS"`. The gate is documented but not enforced. Examiner-grade weakness: "You say this is binding — what prevents bypassing it?" Fix: either (a) schedule a follow-up task adding a CI/pre-commit guard (separate PR, noted in §Out of scope or §Open questions), or (b) explicitly acknowledge in §5 that v1 enforcement is "by convention + mandatory adversarial review, not by automated tooling," with §7 future-amendment target to add tooling enforcement.
+**4. [WARNING] 30-game rolling-window rationale is self-referential per I7.** Gate §Threshold derivation justifies `median ≤ 1 game` by "3.3% relative error against a rolling-30-games feature." No artifact establishes 30 as the chosen Phase 02 window — Phase 02 hasn't been designed. The rationale grounds a threshold in a future step's magic number. Fix: cite window size as hypothetical with sensitivity across {5, 10, 30, 100}; OR drop relative-error framing and argue against concrete external reference.
 
-5. **[NOTE] `spec_id`/`version` field collapse is cosmetic but creates a two-field redundancy.** T02 instruction 1 prescribes `spec_id: CROSS-02-01-v1`, `version: CROSS-02-01-v1` (identical). WP-1's spec (`02_00_feature_input_contract.md`) has the same collapse. If both fields permanently carry the same value, one is dead weight. The §7 version pattern `CROSS-02-01-vN.M.K` implies full replacement, keeping the two synchronized and therefore redundant. Examiner question risk: "What is the semantic difference between `spec_id` and `version`?" Not blocking; worth flagging for future spec-versioning-convention amendment that standardizes across WP-1 + WP-2.
+**5. [WARNING] T01 ±5 drift tolerance is a magic number.** "Arbitrary but documented" is what I7 forbids. Fix: state "proceed on any count; supersede 01_04_04 authoritatively"; OR justify ±5 as a specific fraction (e.g., 2% of 246).
 
-6. **[NOTE] §2.2 POST-GAME lineage resolution defers to "SQL AST walk or Python docstring".** The plan names two lineage-resolution mechanisms without selecting one. For cascading SQL views (this pipeline's pattern), no existing AST-walk tool exists in `scripts/`; for Python notebook code, docstring tracing requires conventions not yet defined. Plan explicitly declares implementation out of scope (Phase 02 planner-science decides). But if Phase 02 picks "manual checklist" as the implementation, §2.2's lineage audit is unenforceable for deep VIEW cascades. The spec should note this limitation so Phase 02 planner-science cannot miss it.
+**6. [WARNING] Binary PASS/FAIL cannot map to graded thesis prose.** An examiner asking "what if ρ=0.15?" gets no answer from binary verdict. Cat F author downstream must improvise. Fix: T03 §5 emits three pre-drafted paragraphs (clean PASS / marginal / FAIL) selected by verdict.
+
+**7. [NOTE] Reproducibility: specify percentile computation engine.** DuckDB `PERCENTILE_CONT(0.95)` and pandas `quantile(0.95)` can differ at small n. Specify in T02 which engine computes each statistic so I6 SQL-verbatim applies to the JSON numbers.
+
+**8. [NOTE] "Same physical player" assumption unverified.** T02 Analysis §3 treats all matches of a cross-region nickname as the same physical player. INVARIANTS.md §2 warns 30.6% within-region handle collision rate exists; across regions, some 246 nicknames are **different physical players** (common handles like "Zerg", gamertags <6 chars). Counting their matches as one player inflates apparent undercount. Fix: T02 Analysis §4 additionally reports results restricted to "rare-handle" subsample (e.g., nickname length ≥ 8) to control for within-region handle collision confound.
+
+**9. [NOTE] Execution realism: 6 tasks in 1 session is optimistic.** T02 hypothesis-driven SQL iteration + T03–T06 artifact/INVARIANTS/log/version. Per `feedback_notebook_iterative_testing.md`, T02 alone expects iteration cycles. Realistic: session 1 = T01+T02; session 2 = T03–T06. Fix: Dispatch sequence acknowledges 2-session budget OR compresses T04–T06 into wrap-up.
 
 ## Verdict
 
-**REVISE BEFORE EXECUTION.** BLOCKER 1 (aoestats format asymmetry) and BLOCKER 2 (traceability gap) must be addressed before execution. BLOCKER 2 in particular affects all four remaining WPs (WP-2, WP-3, WP-4, WP-5) — they all cite 2026-04-21 audit findings without a committed on-disk source.
+**REVISE BEFORE EXECUTION.** Three methodological flaws combine to make the executed artifact fragile under examiner scrutiny: measured quantity doesn't model real Phase 02 bias (BLOCKER-1); MMR correlation threshold is underpowered to falsify (BLOCKER-2); median-only verdict hides the tail where bias lives (BLOCKER-3). Any one alone survives with hedged prose; all three together invite a reviewer to dismiss the quantitative claim as not actually measuring Phase 02 bias.
 
 ## If REVISE: required revisions (enumerated list)
 
-1. **Fix Assumption 2** — plan Assumptions section: correct the claim that all three Phase 01 audits are JSON. Acknowledge that aoestats is Markdown. T01 instruction 4 must instruct executor to handle format asymmetry with explicit field equivalences (Q7.x ↔ JSON field names).
+1. **BLOCKER-1:** T02 Analysis §3 computes per-(cross-region player, match) rolling-window undercount at one primary window size with sensitivity report across {5, 10, 30, 100}; OR §5 explicitly states lifetime aggregate is a loose upper bound. Pick one — current framing claims Phase 02 relevance the measurement doesn't support.
 
-2. **Add T05 (new task)** — Create Phase 01 audit summary artifact at `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` consolidating the 3 dataset sign-off verdicts (sc2egset, aoestats, aoe2companion) with their WARNING/NOTE enumerations. This artifact becomes the durable on-disk referent for WP-2 (closes WARNING 2) and future WP-3/WP-4/WP-5 (close other findings). File manifest becomes 6 git-diff-scope files (was 5). Renumber existing T04 → T06.
+2. **BLOCKER-2:** Raise |ρ| threshold to 0.2 citing power analysis, OR replace with bootstrap 95% CI interpretation. Notebook includes the power calculation verbatim.
 
-3. **Fix T02 verification grep** — change the criterion from `grep "CROSS-02-01-v1"` returning "exactly ONE match" to a frontmatter-scoped assertion like `grep "^spec_id: CROSS-02-01-v1"` returning one match.
+3. **BLOCKER-3:** Gate Condition adds `p95_undercount_games ≤ K` with empirical K justification. Verdict PASS iff BOTH median AND p95 cross thresholds.
 
-4. **Acknowledge gate non-enforcement in spec §5** — T02 instruction 6 should also instruct the spec to note that v1 enforcement is "by convention + mandatory adversarial review, not by automated tooling," with §7 prescribing tooling enforcement as a future amendment target (follow-up PR to add CI/pre-commit guard).
+4. **WARNING-4:** Rewrite Gate "Threshold derivation" to cite concrete reference (or sensitivity sweep across windows), not a hypothetical single Phase 02 window.
 
-(NOTEs 5 and 6 are optional; NOTE 5 can be addressed in a future spec-versioning-convention chore that standardizes both WP-1 and WP-2 frontmatter; NOTE 6 can be addressed by adding one sentence to spec §2.2 acknowledging the implementation-dependency limitation.)
+5. **WARNING-5:** Justify ±5 drift tolerance empirically, OR remove and record whatever count is current.
+
+6. **WARNING-6:** T03 §5 emits three pre-drafted paragraphs selected by verdict.
+
+7. **NOTE-7:** T02/T03 specify percentile computation engine (DuckDB SQL vs pandas) per statistic.
+
+8. **NOTE-8:** T02 Analysis §4 additionally reports results restricted to "rare-handle" subsample (nickname length ≥ 8) to control for within-region handle collision.
+
+9. **NOTE-9:** Dispatch sequence acknowledges 2-session execution budget, OR compresses T04–T06 into a single wrap-up task.

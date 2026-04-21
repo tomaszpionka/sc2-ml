@@ -1,0 +1,53 @@
+{
+  "n_cross_region_nicknames": 246,
+  "median_rolling30_undercount_games": 16.0,
+  "p95_rolling30_undercount_games": 29.0,
+  "fragmentation_ratio_median_lifetime": 0.65,
+  "mmr_spearman_rho_point": 0.1384,
+  "mmr_spearman_rho_bootstrap_ci_low": -0.0086,
+  "mmr_spearman_rho_bootstrap_ci_high": 0.2913,
+  "n_bootstrap": 1000,
+  "n_players_with_mmr": 157,
+  "sensitivity_windows": {
+    "5": {
+      "median": 0.0,
+      "p95": 5.0
+    },
+    "10": {
+      "median": 0.0,
+      "p95": 9.0
+    },
+    "30": {
+      "median": 16.0,
+      "p95": 29.0
+    },
+    "100": {
+      "median": 61.0,
+      "p95": 98.0
+    }
+  },
+  "rare_handle_subsample": {
+    "n_players": 96,
+    "median_rolling30_undercount": 7.0,
+    "p95_rolling30_undercount": 29.0,
+    "mmr_rho_point": 0.1593,
+    "mmr_rho_ci_low": -0.0664,
+    "mmr_rho_ci_high": 0.3902
+  },
+  "verdict": "FAIL",
+  "hypothesis_thresholds": {
+    "median_rolling30_max": 1,
+    "p95_rolling30_max": 5,
+    "mmr_rho_ci_upper_abs_max": 0.2,
+    "window_primary": 30,
+    "sensitivity_windows": [
+      5,
+      10,
+      30,
+      100
+    ]
+  },
+  "audit_date": "2026-04-21",
+  "percentile_engine": "duckdb_PERCENTILE_CONT",
+  "bootstrap_engine": "scipy.stats.bootstrap + pandas"
+}

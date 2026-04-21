@@ -19,6 +19,17 @@ merged to `master`.
 
 ### Removed
 
+## [3.41.0] — 2026-04-21 (PR #TBD: feat/sc2egset-cross-region-history-impact)
+
+### Added
+
+- New Phase 01 step 01_05_10 — sc2egset cross-region history-fragmentation impact; notebook `01_05_10_cross_region_history_impact` (`.py` + `.ipynb`) + MD + JSON artifacts at `reports/artifacts/01_exploration/05_temporal_panel_eda/`. Closes sc2egset WARNING 3. Per-(player, match) rolling-window undercount at window=30 (primary) + sensitivity {5, 10, 100} + MMR-fragmentation Spearman ρ with bootstrap 95% CI (n=1000) + rare-handle subsample control (length ≥ 8). 3-threshold gate: median_rolling30 ≤ 1 AND p95_rolling30 ≤ 5 AND |bootstrap_CI_upper(ρ)| < 0.2. Verdict: FAIL (16.0/29.0/0.2913). Cat D mitigation scope enumerated in artifact §6.
+
+### Changed
+
+- `INVARIANTS.md §2` extended with quantitative Phase 02 rolling-feature impact statement from 01_05_10 measurements: median=16.0, p95=29.0, ρ CI=[-0.009, 0.291], rare-handle subsample comparison, FAIL verdict citation.
+- `research_log.md` new 01_05_10 entry (2026-04-21) with full sub-sections per per-dataset-log protocol.
+
 ## [3.40.0] — 2026-04-21 (PR #TBD: docs/phase02-leakage-audit-protocol)
 
 ### Added
