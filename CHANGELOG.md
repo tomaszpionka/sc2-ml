@@ -19,6 +19,16 @@ merged to `master`.
 
 ### Removed
 
+## [3.38.0] — 2026-04-21 (PR #TBD: docs/thesis-pass2-status-refresh-and-local-closures)
+
+### Changed
+
+- docs(thesis): Pass-2 Code-track wrap-up — `thesis/reviews_and_others/pass2_status.md` fully refreshed after stale drift since PR #191 (was "3.34.0 / 5 PRs merged / 3 remaining"; now "3.38.0 / 8 audit PRs + 1 handoff + 1 refresh / all scheduled Code PRs complete"). Extended with F-finding closure matrix, remaining-work categorization (Category 1 PDF-read / Category 2 external-search / Category 3 locally-closed), updated flag inventory, 3 new gotchas (#9 stale-handoff risk; #10 HuggingFace README ≠ data; #11 rapid re-verification beats audit-trust), extended version trajectory through 3.38.0, and Claude Chat Pass-2 handoff protocol.
+- docs(thesis): F6.6 EsportsBench v7.0/v8.0 reconciliation CLOSED locally — web-verification 2026-04-21 via HuggingFace commit history (dataset `EsportsBench/EsportsBench`, commit `0482ab5` dated 2026-01-25, message "update to 8.0", 20 parquet files updated, size 351.6 MB → 357.6 MB) confirmed v8.0 with cutoff 2025-12-31 IS released, not planned. `02_theoretical_background.md:179` (§2.5.5) and `03_related_work.md:77` (§3.2.4) parentheticals both simplified from "(publicznie dostępna wersja HuggingFace v7.0, cutoff 2025-09-30; planowana wersja v8.0 ma cutoff 2025-12-31)" to "(wersja HuggingFace v8.0, cutoff 2025-12-31)"; both F6.6 [REVIEW] flags removed. §3.5 Luka 3 wording ("v8.0 (2025-12-31)") already aligned. Net prose flag delta: −2 occurrences.
+- docs(thesis): F6.8 SBGames Proceedings ISSN CLOSED locally — web-verification 2026-04-21 via ISSN.org portal (https://portal.issn.org/resource/ISSN/2179-2259) confirmed ISSN 2179-2259 = SBGames Proceedings (Confirmed record; Online medium; Brazil; last modified 2024-10-08; independently corroborated by SBGames 2013 paper front matter). `% [REVIEW: F6.8]` BibTeX comment at `references.bib:500` removed; `issn = {2179-2259}` field retained unchanged.
+- docs(thesis): `REVIEW_QUEUE.md` and `WRITING_STATUS.md` §2.5 / §3.2 / §3.3 rows gain 2026-04-21 dated closure notes documenting the F6.6 and F6.8 local closures with source URLs and HF commit anchors.
+- Post-refresh flag inventory: `thesis/chapters/*.md` carries 65 flag-matching lines (was 66; Δ −1 line, −2 flag occurrences). All remaining flags are Claude Chat Pass-2 items (Category 1 PDF-read: F5.6 Demšar, F6.4 Vinyals, F6.7 Yang, F6.2 Elbert, Minami verification; Category 2 external-search: F6.1 four seed authors, F6.5 patch-notes citation, F6.9 Xie Medium post).
+
 ## [3.37.0] — 2026-04-20 (PR #TBD: docs/thesis-pass2-tg6b-bib-hygiene-minor-prose)
 
 ### Changed
