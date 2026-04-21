@@ -2,6 +2,82 @@
 
 ---
 
+## 2026-04-21 — [Phase 01 / Step 01_04_05] Cross-region fragmentation Phase 01 annotation
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Branch:** feat/sc2egset-cross-region-annotation
+
+### Step scope
+
+Phase 01 01_04 DDL amendment. Adds `is_cross_region_fragmented` BOOLEAN to
+`player_history_all` VIEW. Operationalizes INVARIANTS.md §2 accepted-bias framing
+as a Phase 02-consumable filter. Motivated by WP-3 FAIL finding (01_05_10) and
+user directive 2026-04-21 requiring Phase 01-level annotation per docs/PHASES.md.
+
+### Artifacts produced
+
+- **Notebook:** `sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_05_cross_region_annotation.py` (+ paired `.ipynb`)
+- **MD:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_05_cross_region_annotation.md`
+- **JSON:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_05_cross_region_annotation.json`
+
+### What
+
+VIEW DDL amended: source `FROM matches_flat mf WHERE mf.replay_id IS NOT NULL`
+(preserved verbatim from 01_04_02). `WITH cross_region_toons AS (...)` CTE prepended.
+New BOOLEAN column `is_cross_region_fragmented` appended as 38th projected column.
+1,923 cross-region toon_ids flagged. Row count preserved at 44,817.
+
+### Why
+
+User directive 2026-04-21: address Phase 01 issues in the responsible phase
+(`docs/PHASES.md §Phase 01 01_04` discipline). WP-3 (01_05_10) empirically FAILed
+the "accepted bias" framing — at window=30, median undercount=16.0 games, p95=29.0
+games. Phase 02 consumers need a pre-derived flag to operationalize bias mitigation
+without re-deriving the cross-region set per query.
+
+### How (reproducibility)
+
+- Notebook `01_04_05`; SQL verbatim per I6; canonical_slot + WP-6 DDL-amendment-pattern
+  precedent. DuckDB writable connection; DROP+CREATE VIEW executed in notebook.
+- Zero-tolerance drift check on nickname_count vs INVARIANTS.md §2 (246) — PASSED.
+
+### Findings
+
+- **nickname_count:** 246 (no drift from INVARIANTS.md §2 — zero-tolerance check PASSED)
+- **toon_id_count:** 1,923 distinct cross-region toon_ids
+- **handle_length_breakdown:** lt_5=636, 5_to_7=831, ge_8=456 (per distinct toon_id)
+- **rows_flagged_true:** 37,101
+- **rows_flagged_false:** 7,716
+- **total rows:** 44,817 (row count preserved)
+- **NULL in is_cross_region_fragmented:** 0 (BOOLEAN by construction)
+- **Pre-existing spec-vs-yaml drift:** spec §2.1 LOCKED v2 said 36 cols; yaml had 37
+  since 01_04_02 (pre-existing drift reconciled in spec CROSS-02-00-v3 §7 amendment log)
+
+### Decisions taken
+
+- Per-toon flag granularity (not per-nickname): rolling-window features are computed
+  per `player_id_worldwide` (= toon_id); bias is per-toon.
+- Blanket flag with no handle-length filter: over-flagging preferred to under-flagging;
+  false-positive bound cited from lt_5=636 count; Phase 02 can subset to length ≥ 8
+  via additional JOIN for strict sensitivity analysis.
+
+### Decisions deferred
+
+Phase 02 chooses filter/dual-paths/sensitivity strategy. Manual curation of 294
+Class A cross-region pairs remains available if Phase 02 findings warrant.
+
+### Thesis mapping
+
+- **§4.2.2:** WP-3 quantitative caveat + WP-7 operationalization (Phase 01 annotation
+  as Phase 02 precursor). Pass-2 Chat.
+
+### Open questions / follow-ups
+
+- Manual curation of 294 Class A pairs deferred; available as future upgrade path.
+
+---
+
 ## 2026-04-21 — [Phase 01 / Step 01_05_10] Cross-region history-fragmentation quantification
 
 **Category:** A (science)

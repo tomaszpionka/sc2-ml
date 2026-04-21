@@ -1,0 +1,25 @@
+{
+  "step": "01_04_05",
+  "view_amended": "player_history_all",
+  "view_source_alias": "matches_flat mf",
+  "column_added": "is_cross_region_fragmented",
+  "column_type": "BOOLEAN",
+  "row_count_pre": 44817,
+  "row_count_post": 44817,
+  "column_count_yaml_pre": 37,
+  "column_count_yaml_post": 38,
+  "column_count_spec_pre_locked": 36,
+  "column_count_spec_drift_reconciled": true,
+  "nickname_count": 246,
+  "toon_id_count": 1923,
+  "rows_flagged_true": 37101,
+  "rows_flagged_false": 7716,
+  "flagged_toons_distinct": 1923,
+  "handle_length_breakdown": {
+    "lt_5": 636,
+    "5_to_7": 831,
+    "ge_8": 456
+  },
+  "conservatism_argument": "The flag is blanket (no handle-length filter) by design. Rationale: length-filtered flags (e.g., length >= 8 per WP-3 rare-handle subsample) could miss genuine cross-region players with short handles. False-positive rate bounded by the lt_5 count (636 toons with min nickname length < 5): these short-handle toons are more likely handle-collision artifacts than genuine same-player fragmentation. Phase 02 may subset to length >= 8 via an additional JOIN for strict sensitivity analysis; the blanket flag is the conservative default. Trade-off: under-flagging misses real bias; over-flagging dilutes sensitivity signal. Plan chooses over-flagging as the safer Phase-02-informing default.",
+  "audit_date": "2026-04-21"
+}

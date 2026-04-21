@@ -19,6 +19,19 @@ merged to `master`.
 
 ### Removed
 
+## [3.43.0] — 2026-04-21 (PR #TBD: feat/sc2egset-cross-region-annotation)
+
+### Added
+
+- New Phase 01 step 01_04_05 — sc2egset cross-region fragmentation annotation. `player_history_all` VIEW amended via DDL to add `is_cross_region_fragmented` BOOLEAN column (row count preserved at 44,817; source `matches_flat mf`). Notebook + MD + JSON artifacts. Flag TRUE for cross-region toon_ids (toons whose LOWER(nickname) appears in 2+ regions — 1,923 toons from 246 nicknames per INVARIANTS.md §2). Applies WP-3 FAIL finding as Phase 01 cleaning annotation per user directive 2026-04-21.
+
+### Changed
+
+- `INVARIANTS.md §2` — "Tolerance and accepted bias" paragraph extended with Phase 01 operationalization sentence citing `is_cross_region_fragmented` column + 01_04_05 artifact + blanket-flag conservatism argument (handle-length breakdown: lt_5=636, 5_to_7=831, ge_8=456 per distinct toon_id).
+- `player_history_all.yaml` — `schema_version` descriptive string introduced per canonical_slot + WP-6 precedent: `'38-col (AMENDMENT: is_cross_region_fragmented added 2026-04-21 per 01_04_05)'`. New column entry for `is_cross_region_fragmented` appended.
+- `reports/specs/02_00_feature_input_contract.md` — CROSS-02-00-v2 → CROSS-02-00-v3 per §7 change protocol: §2.1 column count corrected post-amendment to 38 (reconciles both WP-7 addition AND pre-existing spec-vs-yaml drift of 36 → 37 → 38); §5.4 adds `is_cross_region_fragmented` BOOLEAN/CONTEXT column row; §7 amendment log entry added.
+- `sc2egset/reports/ROADMAP.md` — step 01_04_05 entry added with completed_at, artifacts, key findings, and gate condition.
+
 ## [3.42.0] — 2026-04-21 (PR #TBD: feat/aoestats-old-rating-conditional-classification)
 
 ### Added

@@ -1,16 +1,16 @@
 ---
-spec_id: CROSS-02-00-v2
-version: CROSS-02-00-v2
+spec_id: CROSS-02-00-v3
+version: CROSS-02-00-v3
 status: LOCKED
 date: 2026-04-21
 invariants_touched: [I2, I3, I5, I8]
-supersedes: CROSS-02-00-v1
+supersedes: CROSS-02-00-v2
 datasets_bound: [sc2egset, aoestats, aoe2companion]
 ---
 
 # Cross-Dataset Phase 02 Feature-Engineering Input Contract
 
-## CROSS-02-00-v2 (LOCKED 2026-04-21)
+## CROSS-02-00-v3 (LOCKED 2026-04-21)
 
 This document is the authoritative cross-dataset input contract for Phase 02
 feature engineering. It formalizes the interface between Phase 01 outputs and
@@ -86,10 +86,10 @@ Reference: `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_pha
 | VIEW name | `player_history_all` |
 | Row grain | 1 row per player per match (all game types; no 1v1 filter) |
 | Row count | 44,817 |
-| Column count | 36 |
-| Schema version | (see yaml; no explicit schema_version field) |
+| Column count | 38 |
+| Schema version | `38-col (AMENDMENT: is_cross_region_fragmented added 2026-04-21 per 01_04_05)` |
 | Source artifact | `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_history_all.yaml` |
-| Step | `01_04_02` |
+| Step | `01_04_02` (amended by `01_04_05`) |
 
 ### §2.2 aoestats
 
@@ -376,7 +376,7 @@ Tag vocabulary: `IDENTITY`, `CONTEXT`, `PRE_GAME`, `TARGET`,
 | `duration_seconds` | BIGINT | POST_GAME_HISTORICAL | DO NOT use as PRE_GAME feature (I3) |
 | `dataset_tag` | VARCHAR | IDENTITY | Constant `'aoe2companion'` |
 
-### §5.4 `player_history_all` — sc2egset (36 cols; abbreviated — key columns shown)
+### §5.4 `player_history_all` — sc2egset (38 cols; abbreviated — key columns shown)
 
 Full column list is in the source yaml. Key columns for Phase 02 feature
 engineering:
@@ -397,6 +397,7 @@ engineering:
 | `supplyCappedPercent` | INTEGER | IN_GAME_HISTORICAL | % supply-capped; safe only as history aggregate filtered < T |
 | `header_elapsedGameLoops` | BIGINT | IN_GAME_HISTORICAL | Game duration in loops; safe only as history aggregate filtered < T |
 | `is_mmr_missing` | BOOLEAN | PRE_GAME | TRUE if MMR=0 (unrated professional; MNAR) |
+| `is_cross_region_fragmented` | BOOLEAN | CONTEXT | TRUE iff row's toon_id in cross-region set. Phase 02 operationalization: filter `WHERE NOT is_cross_region_fragmented` (safe subset), dual feature paths, OR sensitivity indicator. Blanket flag; false positives bounded by short-handle count per 01_04_05 §6. No NULL. Added 01_04_05 (2026-04-21). |
 
 ### §5.5 `player_history_all` — aoestats (15 cols)
 
@@ -478,6 +479,7 @@ in the frontmatter MUST be bumped in the same commit as the amendment.
 |---------|------|--------|---------|
 | CROSS-02-00-v1 | 2026-04-21 | planner-science | Initial LOCKED version. Closes sc2egset WARNING 1, aoestats NOTE 3, sc2egset NOTE 4 from 2026-04-21 Phase 01 sign-off audits. |
 | CROSS-02-00-v2 | 2026-04-21 | planner-science | aoestats §5.5 `player_history_all` adds `time_since_prior_match_days` (DOUBLE, CONTEXT) per WP-6 / 01_04_07. §2.2 column count 14 → 15; schema_version string introduced per canonical_slot precedent. `old_rating` reclassified PRE_GAME → CONDITIONAL_PRE_GAME in §5.5. Motivation: WP-4 empirical FAIL of unconditional `old_rating` PRE-GAME classification; Phase 01-level annotation per docs/PHASES.md §Phase 01 01_04 discipline. Major version bump per §7 (§2 column-count commitment change). |
+| CROSS-02-00-v3 | 2026-04-21 | planner-science | sc2egset §5.4 `player_history_all` adds `is_cross_region_fragmented` (BOOLEAN, CONTEXT) per WP-7 / 01_04_05. §2.1 column count corrected: the spec's LOCKED v2 value was 36 while the yaml has been 37 since 01_04_02 (pre-existing spec-vs-yaml drift; reconciled during this amendment). Post-amendment value is 38. Motivation: WP-3 (01_05_10) empirical FAIL of accepted-bias framing; Phase 01-level annotation per docs/PHASES.md §Phase 01 01_04 discipline. Major version bump per §7 (§2 column-count commitment change). |
 
 ---
 

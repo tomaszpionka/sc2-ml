@@ -1,8 +1,8 @@
-# Adversarial Review — Plan (Mode A) — WP-6
+# Adversarial Review — Plan (Mode A) — WP-7
 
-**Plan:** `planning/current_plan.md` — aoestats `old_rating` Phase 01 CONDITIONAL_PRE_GAME annotation
-**Branch:** `feat/aoestats-old-rating-conditional-classification`
-**Base:** master `78300433` (post PR #202; version 3.41.2)
+**Plan:** `planning/current_plan.md` — sc2egset cross-region fragmentation Phase 01 annotation
+**Branch:** `feat/sc2egset-cross-region-annotation`
+**Base:** master `6ea71edf` (post PR #203; version 3.42.0)
 **Category:** A (Phase 01 cleaning-rule extension)
 **Date:** 2026-04-21
 **Reviewer:** reviewer-adversarial, Mode A (pre-execution)
@@ -11,72 +11,86 @@
 
 | Lens | Verdict |
 |------|---------|
-| Temporal discipline (I3) | SOUND |
-| Feature engineering (I7 threshold justification) | AT RISK |
-| Statistical methodology | SOUND |
-| Thesis defensibility | ADEQUATE with revisions |
+| Temporal discipline (I3) | SOUND — static set-membership flag, no per-row temporal filter |
+| Statistical methodology | N/A — annotation-only |
+| Feature engineering (I7) | AT RISK — ±5 drift tolerance unjustified |
+| Thesis defensibility | AT RISK — blanket flag conservatism not argued |
 | Cross-game comparability | MAINTAINED |
 
 ## BLOCKER / WARNING / NOTE findings
 
-### BLOCKER-1 — 7-day threshold is internally inconsistent with cited evidence (I7)
+### BLOCKER-1 — Column-count arithmetic is wrong (51 → 52 assumed; actual 37 → 38; spec says 36)
 
-Plan cites 01_04_06's stratification (<1d=0.944, 1-7d=0.859, 7-30d=0.708, >30d=0.634). Plan sets the CONDITIONAL_PRE_GAME condition at `time_since_prior_match_days < 7` — i.e., the PRE-GAME region INCLUDES the 1-7d bucket (0.859), which fails BOTH the WP-4 primary 0.95 gate AND the WP-4 stratum 0.90 gate.
+Plan treats `player_history_all` as 51 cols → 52 post-amendment. **Actual state:**
+- Yaml lists 37 columns (confirmable via DESCRIBE).
+- Spec 02_00 §2.1 line 90 says `Column count | 36` (LOCKED at v2) — already stale vs yaml.
+- `sandbox/.../01_04_02_data_cleaning_execution.py:364` notes "Net: 51 - 16 + 2 = 37 columns" — 51 was a pre-cleaning intermediate, 37 is post-cleaning actual.
 
-Plan's own §3 cites "aligns with observed stability" and "agreement is sufficiently high (≥ 0.859)" — but 0.859 is below the stratum threshold that WP-4 itself set. The only bucket clearing any WP-4 gate is `<1d` at 0.944. I7 requires the threshold to be argued from data OR literature; the current argument is internally inconsistent (cites 0.944 as evidence while operationalizing 0.859 as the boundary).
+Plan's 51/52 arithmetic cascades into T04 yaml schema_version (`'52-col ...'`), T05 INVARIANTS sentence, T06 spec §2.1 cell, T09 CHANGELOG. All silent drift if executed as-written.
 
-**Fix options:**
-- (a) Tighten cutoff to `< 1 day` (the only bucket clearing 0.90 stratum gate).
-- (b) Keep 7-day but compute pooled `<7d` agreement in T02 and argue explicitly whether the pooled rate defensibly clears a thesis-grade stratum gate.
+**Fix:** T01 verifies actual current yaml column count (37) AND spec §2.1 current-state value (36 per LOCKED v2 — document the pre-existing drift). Template all downstream amendment strings off T01's verified counts. Target: yaml 37 → 38; spec §2.1 from 36 (or correctly 37 pending the pre-existing drift reconciliation) → 38. The spec-vs-yaml pre-existing drift (36 vs 37) is documented in the §7 amendment log as a corrected-during-amendment item.
 
-### BLOCKER-2 — Cross-leaderboard evidence inheritance (I7)
+### BLOCKER-2 — VIEW DDL wrap pattern uses non-existent `pha` alias
 
-01_04_06's per-time-gap stratification was computed ONLY on `random_map` (per 01_04_06 SQL §5.5: `WHERE m.leaderboard = 'random_map'` inside the dedup CTE for the per-time-gap query). The other 3 leaderboards (team_random_map, co_team_random_map, co_random_map) had ONLY leaderboard-level agreement computed (0.860/0.787/0.855), NOT time-gap breakdowns.
+Plan T02 says "wrap existing SELECT source in subquery aliased `pha`" + `(pha.toon_id IN (...))`. **Actual DDL** at `sandbox/.../01_04_02_data_cleaning_execution.py:440`: `... FROM matches_flat mf WHERE mf.replay_id IS NOT NULL;`. The source is `matches_flat mf`, NOT `player_history_all` re-projected. `cross_region_toons` CTE derives from `replay_players_raw`; the VIEW body projects from `matches_flat` (which does expose `toon_id` per yaml line 22).
 
-Plan classifies `old_rating` globally as CONDITIONAL_PRE_GAME with `< 7 days` — imports `random_map` evidence to 3 other leaderboards without test. Coordinated-team / co-op matchmaking may behave differently.
+Three ambiguous interpretations of plan T02 (rename `mf` → `pha`? wrap subquery? change source?) each with different effects.
 
-**Fix options:**
-- (a) Restrict CONDITIONAL_PRE_GAME condition to `leaderboard = 'random_map' AND time_since_prior_match_days < N` in INVARIANTS.md (honest scope).
-- (b) Extend T02 to compute 4×4 leaderboard × time-gap stratification; if all 4 leaderboards clear 0.90 at `<7d`, generalize; otherwise scope to random_map.
+**Fix:** T02 must specify: preserve `FROM matches_flat mf WHERE mf.replay_id IS NOT NULL`; add projected column `(mf.toon_id IN (SELECT toon_id FROM cross_region_toons)) AS is_cross_region_fragmented` inside the existing SELECT; prepend `WITH cross_region_toons AS (...)` CTE. No source rename, no outer subquery alias.
 
-### WARNING-1 — Schema-versioning pattern deviates from canonical_slot precedent
+### WARNING-3 — ±5 drift tolerance is I7 magic number
 
-`player_history_all.yaml` currently has NO `schema_version` field (verified; spec 02_00 §2.2 explicitly states "no explicit schema_version field"). Plan T04 proposes `v1.0 → v1.1.0` — creating a new semver field from nothing. Precedent (canonical_slot amendment) uses a DESCRIPTIVE string (`'10-col (AMENDMENT: canonical_slot added 2026-04-20)'`), not semver.
+T01 step 3: "If drift > ±5, halt and supersede." WP-3/WP-4 precedents use zero-tolerance halt-on-any-drift. Plan §Assumptions contradicts T01 step 3 ("no ±tolerance"). ±5 has no empirical basis.
 
-**Fix:** adopt descriptive-string pattern (`'15-col (AMENDMENT: time_since_prior_match_days added 2026-04-21)'`), OR justify semver introduction explicitly + update spec 02_00 §2.2 to document the new `schema_version` field's introduction.
+**Fix:** Remove "> ±5"; halt on any drift (matches WP-3/WP-4 + §Assumptions). Align T01 + §Assumptions + §Open questions Q4 to one policy.
 
-### WARNING-2 — Downstream "14 cols" references go silently stale
+### WARNING-4 — Plan self-contradicts on drift handling
 
-Grep confirms multiple artifacts cite `player_history_all` as 14 columns: `ROADMAP.md:1000`, `ROADMAP.md:1053`, `research_log.md:606, 634`, spec `02_00 §2.2 "Column count | 14"`. Post-amendment the column count is 15. Plan T06 updates §5.5 classification table but does NOT update §2.2's column-count cell. Spec 02_00 becomes internally contradictory (§2.2 says 14; §5.5 lists 15 rows).
+§Assumptions says "no ±tolerance"; T01 says "> ±5"; §Open questions Q4 says "> ±5". Three instances, two conflicting policies.
 
-**Fix:** T06 updates spec §2.2 aoestats `player_history_all` "Column count" 14 → 15. New T-step (or extension) updates ROADMAP.md:1000 current-state reference. Historical research_log entries NOT touched (historical record preserved).
+**Fix:** Pick one (zero-tolerance per WP-3/WP-4), apply consistently.
 
-### WARNING-3 — NULL-on-first-match CONDITIONAL semantics undocumented
+### WARNING-5 — INVARIANTS §2 three-sentence coherence not addressed
 
-`time_since_prior_match_days` is NULL for first match per (profile_id, leaderboard). Condition `< 7` evaluates NULL (not TRUE) under SQL three-valued logic — Phase 02 consumer applying `WHERE time_since_prior_match_days < 7` silently DROPS all first-match rows. For a player's very first rated match, `old_rating` is the aoestats API-provided starting rating (typically 1000) — arguably PRE-GAME by definition since no prior match exists.
+§2 "Tolerance and accepted bias" paragraph currently has: (a) original accepted-bias sentence; (b) WP-3 PR #200 impact sentence; (c) planned WP-7 sentence. Three appended sentences → long monolithic prose.
 
-**Fix:** INVARIANTS.md §3 revision + spec 02_00 §5.5 note must spell out NULL handling rule (recommendation: treat NULL as PRE-GAME since "no prior match" = "no cross-session risk"). T03 JSON records first-match NULL rate.
+**Fix (suggested, not blocking):** Consider extracting WP-3 + WP-7 findings as a sub-heading "§2 Mitigation status" or bullet form. At minimum, explicit sentence breaks.
 
-### NOTE-1 — `matches_1v1_clean` uses a different `old_rating` path
+### WARNING-6 — Blanket flag conservatism not argued vs handle-length breakdown
 
-`matches_1v1_clean` exposes `p0_old_rating`/`p1_old_rating` from `matches_raw` via `p0`/`p1` CTE. These flow into Phase 02 THROUGH `matches_history_minimal` UNION-pivot. `matches_history_minimal.yaml` does not expose `old_rating` as a named column in the 10-col contract. Phase 02 rating features are to be joined from `player_history_all` only. Plan's "Out of scope / Q4" correctly defers `matches_history_minimal` propagation. Context, not risk.
+Plan T02 computes `flagged_toons_length_lt_5 / 5_to_7 / 8_plus` but flag definition ignores length. Blanket flag treats "Zerg" (length 4, handle-collision artifact) identically to "Serral" (length 6, genuine cross-region player). Phase 02 sensitivity analysis gets diluted.
 
-### NOTE-2 — Major-vs-minor spec bump defensible per §7
+**Fix:** T03 §3 + T05 INVARIANTS §2 sentence explicitly argue blanket-flag conservatism: "false-positive rate bounded by length-<5 count; Phase 02 may subset to length ≥ 8 via additional join for strict analysis." One sentence; cites plan's own length breakdown.
 
-Spec 02_00 §7: "any change to §2 column-grain commitments (VIEW names, row counts, column counts, schema_version values)… is major vN+1." Adding a column bumps column count 14 → 15 — squarely inside the "column counts" clause. Major bump v1 → v2 is correct per literal spec text. NO revision needed.
+### WARNING-7 — Spec §5.1 does not exist for sc2egset PH; correct is §5.4
 
-### NOTE-3 — Correlation-with-reset cell is sanity check, not evidence
+Plan T06 step 4 says "§5.1 sc2egset `player_history_all` classification table". Spec 02_00 actual: §5.1 is `matches_history_minimal — sc2egset`; `player_history_all — sc2egset` is at §5.4 (line 379-399).
 
-T02's rating-reset correlation cell provides sanity check on semantic coupling with WP-4. It does not provide new evidence for the threshold choice. Plan correctly scopes as verification. No revision.
+**Fix:** T06 step 4 + §Scope line 33 must reference §5.4, not §5.1.
+
+### NOTE-8 — ROADMAP.md has zero "51/52/36 cols/columns/-col" references
+
+Grep returns zero. T07 premise of "update current-state 51 → 52 references" has no targets. T07 reduces to: add new 01_04_05 step entry only.
+
+### NOTE-9 — Rare-handle subsample n=96 consistency confirmed (INVARIANTS.md §2 / WP-3 §6).
+
+### NOTE-10 — MMR correlation appropriately scoped out (WP-3 §5 carries it; WP-7 is operationalization).
+
+### NOTE-11 — No plan-code discipline respected in T05 template. OK.
+
+### NOTE-12 — Correlated subquery at n=44,817 × 2,495 is trivial for DuckDB hash-semi-join. Non-issue.
+
+### NOTE-13 — Column-ordering append-at-end matches canonical_slot + WP-6 precedent. OK.
 
 ## Verdict
 
-**REVISE BEFORE EXECUTION.** BLOCKER-1 (internal threshold inconsistency) + BLOCKER-2 (cross-leaderboard evidence inheritance) must both be addressed. WARNINGs 1-3 are substantive documentation/semantic fixes.
+**REVISE BEFORE EXECUTION.** 2 BLOCKERs (column arithmetic; VIEW source alias) + 5 WARNINGs (drift tolerance, self-contradiction, prose coherence, blanket-flag argument, spec section mis-reference). Post-revision, plan is APPROVE-ready within 1-cap.
 
 ## If REVISE: required revisions (enumerated)
 
-1. **BLOCKER-1:** T02 computes pooled `<Nd` agreement rate per candidate cutoff (N=1, 2, 3, 7). Pick the largest N where pooled rate ≥ 0.90 (WP-4 stratum gate). Justify the chosen N with the pooled computation in the notebook. INVARIANTS.md §3 and spec 02_00 §5.5 document the chosen N with rationale.
-2. **BLOCKER-2:** T02 adds a 4×4 leaderboard × time-gap-bucket stratification table. If all 4 leaderboards clear 0.90 at the chosen cutoff, generalize the CONDITIONAL_PRE_GAME condition globally; otherwise scope the INVARIANTS.md classification to `leaderboard = 'random_map' AND time_since_prior_match_days < N`.
-3. **WARNING-1:** Align T04 schema_version format with canonical_slot precedent (descriptive string, not semver).
-4. **WARNING-2:** T06 updates spec 02_00 §2.2 "Column count" 14 → 15. Add sub-step updating ROADMAP.md:1000 current-state reference. Historical research_log entries NOT touched.
-5. **WARNING-3:** INVARIANTS.md §3 revision + spec 02_00 §5.5 note spell out NULL-first-match rule (recommendation: NULL → PRE-GAME since no prior-match risk). T03 JSON records first-match NULL rate.
+1. **BLOCKER-1:** T01 verifies current yaml column count (37) AND spec §2.1 LOCKED value (36 — pre-existing drift). Template all downstream strings off T01-verified counts: yaml 37 → 38; spec §2.1 corrected to 38 (acknowledge pre-existing 36→37 drift in §7 amendment log). Remove hardcoded "51"/"52" from plan.
+2. **BLOCKER-2:** T02 "Amended DDL" pattern: preserve `FROM matches_flat mf WHERE mf.replay_id IS NOT NULL`; prepend `WITH cross_region_toons AS (...)` CTE; add one projected column `(mf.toon_id IN (SELECT toon_id FROM cross_region_toons)) AS is_cross_region_fragmented` inside existing SELECT. No rename; no wrap.
+3. **WARNING-3 + WARNING-4:** Remove "> ±5" everywhere; halt on any drift per WP-3/WP-4 precedent. Align §Assumptions / T01 step 3 / §Open-questions Q4.
+4. **WARNING-6:** T03 §3 + T05 INVARIANTS §2 sentence argue blanket-flag conservatism explicitly; cite length breakdown as context.
+5. **WARNING-7:** T06 step 4 and §Scope reference §5.4 (not §5.1). §5.1 is MHM.
+6. **NOTE-8 housekeeping:** T07 reduces to adding new 01_04_05 step entry; no current-state count references to update.

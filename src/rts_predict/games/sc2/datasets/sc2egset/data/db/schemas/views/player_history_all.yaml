@@ -4,6 +4,7 @@ game: sc2
 object_type: view
 step: '01_04_02'
 row_count: 44817
+schema_version: '38-col (AMENDMENT: is_cross_region_fragmented added 2026-04-21 per 01_04_05)'
 describe_artifact: src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/04_cleaning/01_04_02_post_cleaning_validation.json
 generated_date: '2026-04-17'
 columns:
@@ -210,6 +211,19 @@ columns:
   nullable: true
   description: 'Game option: competitive mode. Variable cardinality (n_distinct=2).'
   notes: "CONTEXT. Game option: competitive mode. Variable cardinality (n_distinct=2)."
+- name: is_cross_region_fragmented
+  type: BOOLEAN
+  nullable: false
+  description: TRUE iff this row's toon_id is in the set of cross-region toon_ids
+    (toons whose LOWER(nickname) appears in 2+ regions in replay_players_raw). Derived
+    flag; no NULL by construction.
+  notes: "CONTEXT. Operationalizes INVARIANTS.md §2 accepted-bias framing as a Phase\
+    \ 02-consumable filter. Phase 02 rolling features over player_id_worldwide should\
+    \ apply `WHERE NOT is_cross_region_fragmented` as safe-subset filter, OR use dual\
+    \ feature paths, OR use as sensitivity indicator. Blanket flag (no handle-length\
+    \ filter) by design — false positives bounded by short-handle count (see 01_04_05\
+    \ §6 conservatism argument). Empirical grounding from WP-3 (01_05_10): median_rolling30_undercount=16,\
+    \ p95=29 on flagged toons. Derivation in 01_04_05 artifact."
 provenance:
   source_tables:
   - replay_players_raw

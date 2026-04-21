@@ -1433,6 +1433,50 @@ key_findings:
   - "No external bridge available for cross-region toon_id merge (R2 confirmed)"
 ```
 
+### Step 01_04_05 — Cross-Region Fragmentation Phase 01 Annotation
+
+```yaml
+step_number: "01_04_05"
+name: "Cross-Region Fragmentation Phase 01 Annotation"
+description: >
+  Add is_cross_region_fragmented BOOLEAN column to the player_history_all VIEW via DDL
+  amendment. Flag TRUE iff a row's toon_id belongs to the set of cross-region toon_ids
+  (toons whose LOWER(nickname) appears in 2+ regions in replay_players_raw). Operationalizes
+  the INVARIANTS.md §2 accepted-bias framing as a Phase 02-consumable filter.
+phase: "01 -- Data Exploration"
+pipeline_section: "01_04 -- Data Cleaning"
+category: "A"
+motivation: >
+  WP-3 (01_05_10) empirically FAILed the accepted-bias framing: at window=30,
+  median rolling-window undercount=16.0 games, p95=29.0 games. User directive
+  2026-04-21 requires a Phase 01 01_04 annotation per docs/PHASES.md discipline
+  so Phase 02 consumers can apply the accepted-bias framing without re-deriving
+  the cross-region set per query.
+predecessor_step: "01_04_04b"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_05_cross_region_annotation.py"
+completed_at: "2026-04-21"
+outputs:
+  view_amended: "player_history_all (38 cols post-amendment; source FROM matches_flat mf)"
+  schema_yaml: "src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_history_all.yaml"
+  artifacts:
+    - "reports/artifacts/01_exploration/04_cleaning/01_04_05_cross_region_annotation.json"
+    - "reports/artifacts/01_exploration/04_cleaning/01_04_05_cross_region_annotation.md"
+key_findings:
+  - "nickname_count: 246 (no drift from INVARIANTS.md §2 — zero-tolerance check PASSED)"
+  - "toon_id_count: 1,923 distinct cross-region toon_ids"
+  - "rows_flagged_true: 37,101; rows_flagged_false: 7,716; total: 44,817 (row count preserved)"
+  - "handle_length_breakdown: lt_5=636, 5_to_7=831, ge_8=456 (per distinct toon_id)"
+  - "NULL count in is_cross_region_fragmented: 0 (BOOLEAN by construction)"
+  - "flag is blanket (no length filter): false positives bounded by lt_5=636 toons"
+gate:
+  continue_predicate: >
+    player_history_all VIEW amended to 38 cols; row count 44,817 preserved;
+    is_cross_region_fragmented BOOLEAN column fully populated (zero NULLs);
+    01_04_05 JSON + MD artifacts exist.
+  halt_predicate: >
+    nickname_count drift detected vs INVARIANTS.md §2 (zero-tolerance per WP-3/WP-4 precedent).
+```
+
 ---
 
 ### Step 01_05_01 — Q1 Quarterly Grain & Overlap Window
