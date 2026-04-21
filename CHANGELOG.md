@@ -19,6 +19,12 @@ merged to `master`.
 
 ### Removed
 
+## [3.43.1] — 2026-04-21 (PR #TBD: chore/cross-research-log-refresh)
+
+### Changed
+
+- chore(research_log): refresh top-level `reports/research_log.md` CROSS index + add 5 CROSS entries backfilling this session's cross-dataset work. Index-table last-entry dates updated: sc2egset `2026-04-19 (01_06)` → `2026-04-21 (01_04_05 cross-region fragmentation annotation; WP-7)`; aoestats `2026-04-20 (BACKLOG F1 + W4)` → `2026-04-21 (01_04_07 old_rating CONDITIONAL_PRE_GAME annotation; WP-6)`; aoe2companion unchanged (`2026-04-19 (01_06)`; no aoe2companion work in-session). 5 new CROSS entries prepended (reverse-chronological): WP-7 spec 02_00 v2→v3 amendment + sc2egset 01_04_05 cross-region annotation; WP-6 spec 02_00 v1→v2 amendment + aoestats 01_04_07 CONDITIONAL_PRE_GAME annotation; WP-2 PR #199 cross-dataset leakage-audit protocol spec CROSS-02-01-v1 + Phase 01 audit summary artifact; WP-1 PR #198 cross-dataset Phase 01 → Phase 02 input contract spec CROSS-02-00-v1; PR #197 Phase 01 audit cleanup (7 NOTE-level findings across 3 datasets). Per-dataset research_logs were already up-to-date (top entries: aoestats 01_04_07; sc2egset 01_04_05; aoe2companion 01_06 unchanged).
+
 ## [3.43.0] — 2026-04-21 (PR #TBD: feat/sc2egset-cross-region-annotation)
 
 ### Added

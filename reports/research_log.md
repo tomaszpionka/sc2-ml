@@ -9,9 +9,59 @@ live in per-dataset logs — one per game/dataset combination.
 
 | Dataset | Log | Last entry |
 |---------|-----|------------|
-| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-19 (01_06) |
-| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-20 (BACKLOG F1 + W4 canonical_slot) |
+| sc2 / sc2egset | [sc2egset research log](../src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md) | 2026-04-21 (01_04_05 cross-region fragmentation annotation; WP-7) |
+| aoe2 / aoestats | [aoestats research log](../src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md) | 2026-04-21 (01_04_07 old_rating CONDITIONAL_PRE_GAME annotation; WP-6) |
 | aoe2 / aoe2companion | [aoe2companion research log](../src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md) | 2026-04-19 (01_06) |
+
+---
+
+## [CROSS] 2026-04-21 — [WP-7 / sc2egset] `is_cross_region_fragmented` annotation + spec 02_00 CROSS-02-00-v2 → v3
+
+**Source:** sc2egset research_log.md 2026-04-21 `[Phase 01 / Step 01_04_05] Cross-region fragmentation Phase 01 annotation` entry; PR #204.
+
+Retroactive Phase 01 01_04 annotation addressing WP-3 FAIL (PR #200 / 01_05_10): `player_history_all` VIEW amended via DDL to add `is_cross_region_fragmented` BOOLEAN column. 1,923 toon_ids flagged (from 246 cross-region nicknames per INVARIANTS.md §2); 37,101 / 7,716 row-level TRUE/FALSE distribution (83% flagged — tournament data is dominated by cross-region professionals). Spec 02_00 bumped v2 → v3 per §7 (§2.1 column count 36 → 38, reconciling pre-existing spec-vs-yaml drift; §5.4 adds new column row). INVARIANTS.md §2 gets Phase 01 operationalization sentence with blanket-flag conservatism argument (false positives bounded by 636 short-handle toons).
+
+**Phase 02 implication:** Phase 02 rolling-window features over `player_id_worldwide` can now filter cleanly via `WHERE NOT is_cross_region_fragmented` (17% retention — strict) or use as model covariate / sensitivity indicator (preserves corpus). Decision deferred to Phase 02 planner-science.
+
+---
+
+## [CROSS] 2026-04-21 — [WP-6 / aoestats] `time_since_prior_match_days` annotation + spec 02_00 CROSS-02-00-v1 → v2
+
+**Source:** aoestats research_log.md 2026-04-21 `[Phase 01 / Step 01_04_07] old_rating CONDITIONAL_PRE_GAME Phase 01 annotation` entry; PR #203.
+
+Retroactive Phase 01 01_04 annotation addressing WP-4 FAIL (PR #201 / 01_04_06): `player_history_all` VIEW amended via DDL to add `time_since_prior_match_days` DOUBLE column (LAG window partitioned by `(CAST(profile_id AS BIGINT), leaderboard)`). `old_rating` reclassified in INVARIANTS.md §3 from unconditional PRE-GAME to CONDITIONAL_PRE_GAME: condition `leaderboard = 'random_map' AND (time_since_prior_match_days < 7 OR time_since_prior_match_days IS NULL)`. Data-driven choices: N*=7 selected as largest N ∈ {1,2,3,7} where pooled agreement on `random_map` clears 0.90 stratum gate (actual: 0.944/0.939/0.937/0.932); SCOPE=`random_map_only` because 3 of 4 leaderboards fail at <7d. Spec 02_00 bumped v1 → v2 per §7 (§2.2 column count 14 → 15; §5.5 adds new column row; §7 amendment log).
+
+**Phase 02 implication:** Phase 02 rolling features using `old_rating` as a PRE-GAME signal must apply the CONDITIONAL gate as a filter, or use dual feature paths (within-scope vs cross-session). Row-level first-match NULL rate 0.86%. NULL is treated as PRE-GAME (no prior-match cross-session risk). Cross-leaderboard features on team_random_map / co_random_map / co_team_random_map CANNOT treat `old_rating` as PRE-GAME.
+
+---
+
+## [CROSS] 2026-04-21 — [WP-2 / 3 datasets] Cross-dataset leakage-audit protocol spec (CROSS-02-01-v1) + Phase 01 audit summary artifact
+
+**Source:** PR #199. No single per-dataset log entry — cross-dataset spec creation + repo-root audit summary artifact.
+
+Sibling spec to WP-1's CROSS-02-00-v1 (input contract). `reports/specs/02_01_leakage_audit_protocol.md` (LOCKED v1) prescribes mandatory pre-training temporal-leakage audit for Phase 02: four dimensions (cutoff-time structural check, POST-GAME token absence, normalization fit-scope, reference-window assertion) + JSON+MD artifact schema + v1 enforcement = convention-based (reviewer-adversarial gate, not automated tooling; CI/pre-commit tooling is §7 future-amendment target). Binds Pipeline Section 02_01 as a hard exit gate. REUSED (not re-gated) by 02_03 and 02_06 on new feature materialization. Companion artifact: `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` — durable I9 trace of the 2026-04-21 reviewer-adversarial Phase 01 sign-off sweep across all 3 datasets (5 WARNINGs + 9 NOTEs across sc2egset/aoestats/aoe2companion; READY_WITH_CAVEATS verdicts; 14-row closure table). 3 dataset ROADMAPs gain Phase 02 placeholder mandatory-entry requirement citation.
+
+**Phase 02 implication:** Phase 02 consumers have a canonical spec for the audit mechanism. Closes sc2egset WARNING 2 from 2026-04-21 Phase 01 sign-off audits (traceable via audit summary artifact).
+
+---
+
+## [CROSS] 2026-04-21 — [WP-1 / 3 datasets] Cross-dataset Phase 01 → Phase 02 input contract spec (CROSS-02-00-v1)
+
+**Source:** PR #198. No single per-dataset log entry — cross-dataset spec creation.
+
+`reports/specs/02_00_feature_input_contract.md` (LOCKED CROSS-02-00-v1) formalizes the Phase 01 → Phase 02 interface across all three datasets. Eight sections: scope + I2 cross-branch-binding note; per-dataset canonical input VIEWs with row grain; join keys + I3 temporal anchor with per-dataset sub-sections §3.1–§3.4 (MHM harmonized `started_at`; PH per-dataset raw anchors: sc2egset `details_timeUTC` VARCHAR / aoestats `started_timestamp` TIMESTAMPTZ / aoe2companion `started` TIMESTAMP; rolling-window I3 guard with anchor placeholders; composite `(dataset_tag, player_id)` for cross-dataset joins); cross-game categorical encoding protocol (general rule + faction/race/civ, map, leaderboard instances per I8); column-level classification summary; Phase 02 Pipeline Section cross-reference (02_01–02_08); spec change protocol; referenced artifacts. 3 `modeling_readiness_*.md` memos back-linked; `cross_dataset_phase01_rollup.md` refreshed (aoestats GO-NARROW → GO-FULL stale fix alongside backlink).
+
+**Phase 02 implication:** Phase 02 planner-science reads this spec as the authoritative source for input VIEW names, row grain, join keys, I3 temporal anchors per dataset, cross-game encoding protocol, and column-level classification. Closes sc2egset WARNING 1 + aoestats NOTE 3 + sc2egset NOTE 4 from 2026-04-21 Phase 01 audits.
+
+---
+
+## [CROSS] 2026-04-21 — [3 datasets] Phase 01 audit cleanup PR #197 — 7 NOTE-level findings closed
+
+**Source:** PR #197. Closure scope: 3 datasets × scattered artifacts.
+
+Batched Cat C cleanup of all 7 NOTE-level findings from the 2026-04-21 reviewer-adversarial Phase 01 sign-off sweep (reference: `phase01_audit_summary_2026-04-21.md` closure table). sc2egset NOTE 5 (`reports/research_log.md` stale index dates — ironic that THAT fix is what this entry complements); aoe2companion NOTE 1 (LPM ICC 0.000485 → 0.000491 research_log prose correction); aoe2companion NOTE 2 (new risk-register entry AC-R06 for I8 AT RISK); aoe2companion NOTE 3 (ROADMAP path citation clarification); aoe2companion NOTE 4 (`01_05_05_icc.json` absolute-path → repo-root-relative); aoestats WARNING 1 (`data_quality_report_aoestats.md:52` 9 cols → 10 post-canonical_slot); aoestats NOTE 5 (`01_05_06_temporal_leakage_audit_v1.md` Q7.4 BACKLOG F6 amendment annotation). Zero methodology errors across all 7; documentation/provenance gap class.
+
+**Phase 02 implication:** audit closure table cleared of NOTE-tier pendencies; only Cat A / Cat D items remained (WP-3, WP-4, WP-6, WP-7) which were subsequently closed in PR #200/201/203/204.
 
 ---
 
