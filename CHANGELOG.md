@@ -19,6 +19,19 @@ merged to `master`.
 
 ### Removed
 
+## [3.40.0] — 2026-04-21 (PR #TBD: docs/phase02-leakage-audit-protocol)
+
+### Added
+
+- Phase 01 audit summary artifact at `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` — on-disk traceability for the 2026-04-21 reviewer-adversarial Phase 01 sign-off sweep (3 datasets, verdicts READY_WITH_CAVEATS, zero BLOCKERs; 5 WARNINGs + 9 NOTEs enumerated with closure map). Referenced by WP-2/WP-3/WP-4/WP-5 for I9 traceability.
+- Cross-dataset Phase 02 pre-training leakage-audit protocol at `reports/specs/02_01_leakage_audit_protocol.md` (version CROSS-02-01-v1, LOCKED 2026-04-21). Sibling spec to WP-1's `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1). Closes sc2egset WARNING 2 from the 2026-04-21 Phase 01 sign-off audits (now traceable via `phase01_audit_summary_2026-04-21.md §2`). Binds Pipeline Section 02_01 as a hard exit gate; v1 enforcement is convention-based (reviewer-adversarial mandatory review gate); automated tooling enforcement is scheduled as the top-priority §7 future-amendment target. Audits four dimensions: (1) cutoff-time structural check (strict `<` operator, per-dataset anchor column), (2) POST-GAME token absence from feature lineage, (3) normalization fit-scope (training folds only), (4) reference-window assertion (reused from Phase 01). Prescribes JSON + sibling Markdown audit artifact schema. Protocol is reused (not re-gated) by 02_03 and 02_06.
+
+### Changed
+
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md` Phase 02 placeholder — appended mandatory-entry requirement paragraph citing `reports/specs/02_01_leakage_audit_protocol.md` (CROSS-02-01-v1) as hard gate for Pipeline Section 02_01 exit.
+- `src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md` Phase 02 placeholder — same mandatory-entry requirement paragraph as sc2egset (identical wording, no dataset-specific variance).
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` Phase 02 placeholder — same mandatory-entry requirement paragraph as sc2egset.
+
 ## [3.39.0] — 2026-04-21 (PR #TBD: docs/phase02-interface-contract)
 
 ### Added

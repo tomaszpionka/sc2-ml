@@ -1,230 +1,200 @@
 ---
 category: E
-branch: docs/phase02-interface-contract
+branch: docs/phase02-leakage-audit-protocol
 date: 2026-04-21
 planner_model: claude-opus-4-7
 dataset: null
 phase: null
 pipeline_section: null
-invariants_touched: [I2, I3, I5, I8]
+invariants_touched: [I3, I9]
 source_artifacts:
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml
-  - src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_history_all.yaml
-  - src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_1v1_clean.yaml
-  - src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_history_minimal.yaml
-  - src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/player_history_all.yaml
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/views/matches_1v1_clean.yaml
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/views/matches_history_minimal.yaml
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/views/player_history_all.yaml
-  - reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md
+  - reports/specs/02_00_feature_input_contract.md
   - reports/specs/01_05_preregistration.md
+  - src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/05_temporal_panel_eda/leakage_audit_sc2egset.json
+  - src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_06_temporal_leakage_audit_v1.md
+  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.json
+  - src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md
+  - src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md
+  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md
   - docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md
-  - thesis/reviews_and_others/pass2_status.md
   - .claude/scientific-invariants.md
-  - docs/PHASES.md
+  - thesis/reviews_and_others/pass2_status.md
 critique_required: true
 research_log_ref: null
 ---
 
-# Plan: WP-1 — Phase 01 → Phase 02 Interface Contract Spec
+# Plan: WP-2 — Mandatory Pre-Training Leakage Audit Protocol Spec (REVISED 2026-04-21 post Mode A)
 
 ## Scope
 
-This plan creates a single cross-dataset methodology spec that formalizes the interface between Phase 01 outputs and Phase 02 feature-engineering inputs. The spec names canonical input VIEWs per dataset, join keys, the I3 temporal anchor, the cross-game faction encoding protocol, and a column-level classification summary. It closes three Phase 01 sign-off audit findings (reviewer-adversarial sweep 2026-04-21):
+Create a sibling methodology spec to WP-1's `02_00_feature_input_contract.md` that formalizes a mandatory pre-training temporal leakage audit for Phase 02. Closes the sc2egset Phase 01 sign-off finding (WARNING 2 per 2026-04-21 reviewer-adversarial agent `af5c57132779f1103` output, consolidated into a new on-disk artifact by T02 below): "no mandated Phase 02 pre-training leakage-audit protocol at the Phase 01 gate." The spec binds Pipeline Section 02_01 (Pre-Game vs In-Game Boundary) as a hard gate.
 
-- **sc2egset WARNING 1** — no explicit Phase-02-facing join/table-grain specification.
-- **aoestats NOTE 3** — `player_history_all` structurally load-bearing but not formalized in interface docs.
-- **sc2egset NOTE 4** — cross-game faction encoding protocol undefined.
+Scope: one new Phase 01 audit summary artifact (creating durable on-disk traceability for the 2026-04-21 adversarial sweep; satisfies I9 for WP-2 + downstream WP-3/WP-4/WP-5) + one new spec + 3 ROADMAP placeholder amendments + version bump + CHANGELOG. **Not** a Phase 02 architecture exercise and **not** a rewrite of WP-1's input contract spec.
 
-Scope is intentionally tight: one new spec document + 4 cross-links + version bump. **Not** a Phase 02 architecture exercise — this spec describes Phase 02 **inputs**, not Phase 02 **decisions**. WP-2 through WP-5 (leakage-audit protocol, empirical quantifications, old_rating closure, 43-day gap provenance) are separate PRs.
+**Post-Mode-A revision summary (2026-04-21):** Mode A adversarial critique surfaced 2 BLOCKERs + 2 WARNINGs + 2 NOTEs. Revisions applied: (1) Assumption 2 corrected to acknowledge aoestats Phase 01 audit is MD (not JSON); T01 updated with format-asymmetry handling + Q7.x ↔ JSON field equivalences. (2) NEW T02 added to create Phase 01 audit summary artifact — establishes I9 traceability before the spec cites "WARNING 2"; existing T02–T04 renumbered to T03–T05. (3) T03 verification grep scoped to frontmatter. (4) Spec §5 gate-enforcement language clarified to convention-based v1 with tooling-enforcement as §7 future-amendment target. (5) NOTE 6 applied: spec §2.2 acknowledges lineage-resolution implementation-dependency limitation. (NOTE 5 spec_id/version field collapse deferred to a future spec-versioning-convention chore that standardizes both WP-1 and WP-2 frontmatter.) Symmetric 1-revision cap consumed.
 
 ## Problem Statement
 
-The 3 reviewer-adversarial Phase 01 sign-off audits (2026-04-21) returned READY_WITH_CAVEATS across sc2egset / aoestats / aoe2companion. Zero BLOCKERs. A cross-cutting caveat: Phase 01 gate artifacts (`modeling_readiness_*.md` memos + `cross_dataset_phase01_rollup.md`) describe *what was done* in Phase 01 but do not formalize *what Phase 02 feature-engineering extractors consume*. The memos list permitted feature categories but do not enumerate:
-
-- The canonical input VIEW names per dataset.
-- The row grain (per-match vs per-player) each VIEW commits to.
-- The join keys Phase 02 will use for rolling-window features.
-- The I3 temporal anchor column each dataset commits to.
-- The cross-game encoding protocol for polymorphic categoricals (`faction` is flagged as per-game polymorphic in the yamls but no artifact writes down the encoding rule).
+Phase 01 produced per-dataset leakage audits that confirmed zero future-leakage at the VIEW level. These audits are structurally correct for Phase 01 but **cannot verify Phase 02 rolling-window feature code** — Phase 01 audits the schema that Phase 02 consumes, not the features Phase 02 computes.
 
 Consequences if unaddressed before Phase 02 kickoff:
 
-- Phase 02 `planner-science` reverse-engineers the Phase 01→02 interface from scattered yamls + research-log entries, producing a plan that may silently diverge per dataset.
-- Three-dataset harmonization for RQ3 (cross-game comparison) risks divergent input assumptions; an examiner asking "which table feeds what for the cross-game feature engineering?" receives dataset-specific answers with no canonical source.
-- The `faction` polymorphism flag in the yamls is non-binding — Phase 02 implementers could inadvertently encode faction as a single cross-game categorical, violating I8.
+- Phase 02 feature extractors may compute rolling-window win-rate / match-count / Elo features using `WHERE ph.<anchor> <= target.started_at` (equality-inclusive) instead of strict `<` required by I3. No gate catches this.
+- Normalization statistics (mean, std, min, max) fit on the full dataset rather than training folds introduces future-into-past leakage invisible at schema level.
+- Target encoding (K-fold target-encoded categoricals) fit without fold-aware masking leaks the target into training features.
+- Examiner asks: "How do you verify Phase 02 feature code is leakage-free?" The Phase 01 audits are the current answer; they are structurally inadequate.
 
-The `reports/specs/01_05_preregistration.md` spec provides the **frontmatter and versioning-discipline reference** for this kind of LOCKED spec (YAML frontmatter with spec_id + version + status, amendment log, change protocol). Its §1 column contract is dataset-specific and is NOT inherited here — the column lists in the new spec are derived from the current yamls exclusively (01_05 §1 pre-dates PR-TG3's 9-col harmonization + PR #185's canonical_slot addition, and only 4 of its 9 column names overlap with the current yamls). This plan produces `reports/specs/02_00_feature_input_contract.md` as the cross-dataset analog for Phase 02 input, using 01_05's structural pattern but NOT its column-content.
+The `reports/specs/02_00_feature_input_contract.md` (WP-1, landed PR #198, version CROSS-02-00-v1 LOCKED) provides the input-side binding. This plan produces the verification-side sibling: `reports/specs/02_01_leakage_audit_protocol.md` (version CROSS-02-01-v1, LOCKED). Both specs together define the Phase 01 → Phase 02 contract: WP-1 names what Phase 02 reads; WP-2 names what Phase 02 must verify before training.
+
+Additionally, WP-2 closes a traceability gap surfaced by Mode A: the 2026-04-21 reviewer-adversarial Phase 01 sign-off findings (3 dataset verdicts, 5 WARNINGs, 9 NOTEs) were generated as agent output + chat summaries but never committed as repo artifacts. T02 below produces a consolidated summary artifact so WP-2, WP-3, WP-4, WP-5 all cite a durable on-disk source (I9 compliance).
 
 ## Assumptions & unknowns
 
-- **Assumption:** All three datasets have both `matches_history_minimal` and `player_history_all` yamls on disk (verified by Glob 2026-04-21 pre-planning — all 6 files exist). T01 re-verifies their column schemas.
-- **Assumption:** The cross-dataset 9-col `matches_history_minimal` contract from PR-TG3 remains authoritative; aoestats's local 10-col extension (canonical_slot per PR #185) does not break UNION ALL projections when limited to the shared 9 columns.
-- **Assumption (MHM anchor):** `started_at` (TIMESTAMP) is the canonical I3 temporal anchor in `matches_history_minimal` across all three datasets — confirmed by the Phase 01 leakage audits (`leakage_audit_*.json`) that used this column as the reference for past-only filtering.
-- **Assumption (PH anchors are NOT canonical):** The corresponding temporal anchor in `player_history_all` has three different column names and two different dtypes across datasets: sc2egset `details_timeUTC` (VARCHAR), aoestats `started_timestamp` (TIMESTAMPTZ), aoe2companion `started` (TIMESTAMP). The spec MUST enumerate these per-dataset rather than prescribing a single SQL pattern that names `started_at` on `player_history_all`. An executor that writes `WHERE ph.started_at < target.started_at` against `player_history_all` produces a column-not-found error on 2 of 3 datasets.
-- **Assumption (PH join keys are NOT harmonized):** `matches_history_minimal` exposes the harmonized `player_id`, but `player_history_all` exposes raw per-dataset IDs: sc2egset `toon_id`, aoestats `profile_id`, aoe2companion `profileId`. The spec MUST enumerate these per-dataset.
-- **Assumption (cross-game polymorphism is NOT limited to `faction`):** At least three additional columns have per-dataset polymorphic vocabulary that Phase 02 will hit: `map`/`metadata_mapName` (sc2 map names vs aoe2 map names are empirically disjoint — 94 distinct aoec maps + 77 distinct aoestats maps + sc2 map names like "Catalyst LE"), `leaderboard` (aoestats + aoe2companion only; sc2egset has none — asymmetric presence), and the column-name asymmetry `civ` (aoestats/aoe2companion) vs `race` (sc2egset). §4 encoding protocol must declare a GENERAL rule covering any per-dataset polymorphic categorical, not just `faction`.
-- **Unknown:** Whether the spec must also document how `canonical_slot` (aoestats-only) propagates to Phase 02 per-slot features. **Resolution:** in scope as §2 aoestats sub-section (with explicit "aoestats-only; sibling datasets do not require this key" note); does NOT require its own § in the spec.
-- **Unknown:** Whether `dataset_tag` / `game` already exists as a column in `matches_history_minimal` or is computed on-demand during cross-dataset UNION. **Resolution:** T01 inspects the yamls. If absent, spec §4 prescribes it as a synthesized column for cross-game encoders.
+- **Assumption (WP-1 landed and stable):** `reports/specs/02_00_feature_input_contract.md` exists at `CROSS-02-00-v1` LOCKED per PR #198 merge. Verified via `git log master -- reports/specs/02_00_feature_input_contract.md`.
+- **Assumption (Phase 01 leakage audit artifacts have HETEROGENEOUS formats):** sc2egset carries `leakage_audit_sc2egset.json` (JSON with `future_leak_count`, `post_game_token_violations`, `reference_window_assertion`); aoe2companion carries `01_05_08_leakage_audit.json` (same JSON schema); aoestats carries `01_05_06_temporal_leakage_audit_v1.md` (Markdown, NOT JSON; uses Q7.1–Q7.4 section headers). T01 handles this asymmetry with explicit field equivalences: Q7.1 → `future_leak_count`, Q7.2 → `post_game_token_violations`, Q7.3 → `reference_window_assertion` (Q7.4 is canonical_slot readiness, not a Phase 02 template field).
+- **Assumption (Phase 02 Pipeline Section numbering is stable):** `docs/PHASES.md` §Phase 02 lists 8 Pipeline Sections (02_01 through 02_08). This plan binds the audit gate to 02_01 exit. No renumbering expected.
+- **Assumption (pass2_status.md is the interim audit-finding registry):** `thesis/reviews_and_others/pass2_status.md` (updated PR #196) references the 2026-04-21 Phase 01 audits at high level but does not enumerate W-codes. T02 below creates the formal audit artifact; pass2_status.md back-references it after this PR merges (follow-up task, not in WP-2 scope).
+- **Unknown:** Whether the audit should also cover Phase 02 Pipeline Sections 02_03 and 02_06. **Resolution:** spec §1 binds 02_01 as the mandatory hard gate; §6 documents that 02_03 and 02_06 REUSE the protocol if they materialize new features; not a second gate — a protocol reuse rule.
+- **Unknown:** Whether Phase 02 planner-science will implement the audit as Python module + CLI, or as spec-only document with per-step manual execution. **Resolution:** this spec prescribes the PROTOCOL + ARTIFACT SCHEMA; the IMPLEMENTATION is a Phase 02 architecture decision, explicitly out of WP-2 scope. Spec §5 explicitly notes that v1 enforcement is convention-based + reviewer-gated (not automated tooling); §7 prescribes tooling enforcement as a future-amendment target.
 
 ## Literature context
 
-Not applicable at thesis-citation level — this is an internal project methodology spec. Reference materials consulted:
+Not applicable at thesis-citation level — internal methodology spec. References:
 
-- `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md` §1–§2 (defines what Phase 02 consumes; scope-of-inputs for this spec).
-- `.claude/scientific-invariants.md` (I3 temporal, I5 symmetry, I8 cross-dataset — the three invariants this spec operationalizes).
-- `reports/specs/01_05_preregistration.md` (pattern reference: spec structure, version-locking discipline, frontmatter format).
-- `docs/PHASES.md` §Phase 02 (the 8 Pipeline Sections — 02_01 through 02_08 — this spec supports).
+- `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md` §2 (cutoff-time mechanism this audit verifies).
+- `.claude/scientific-invariants.md` I3 (temporal), I9 (traceability — the new audit summary artifact satisfies I9 for the 2026-04-21 findings).
+- `reports/specs/02_00_feature_input_contract.md` (WP-1 sibling spec; cited at §1 and §8).
+- `reports/specs/01_05_preregistration.md` (frontmatter + versioning-discipline reference).
+- Existing Phase 01 leakage audits (sc2egset + aoe2companion JSON; aoestats MD): template for the Phase 02 audit artifact schema.
 
 ## Execution Steps
 
-### T01 — Inventory current-state VIEW schemas
+### T01 — Inventory Phase 01 leakage-audit artifacts (HETEROGENEOUS formats)
 
-**Objective:** Before drafting the spec, capture the authoritative column-level schema of the Phase 01 → Phase 02 input VIEWs across the three datasets. Flag any schema surprises that would require spec revision.
+**Objective:** Read the three Phase 01 leakage-audit artifacts and capture their schemas, handling the format asymmetry (2 JSON + 1 MD). Derive the Phase-02 baseline template fields.
 
 **Instructions:**
-1. Read all 6 canonical yamls:
-   - `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/matches_history_minimal.yaml`
-   - `src/rts_predict/games/sc2/datasets/sc2egset/data/db/schemas/views/player_history_all.yaml`
-   - `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/matches_history_minimal.yaml`
-   - `src/rts_predict/games/aoe2/datasets/aoestats/data/db/schemas/views/player_history_all.yaml`
-   - `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/views/matches_history_minimal.yaml`
-   - `src/rts_predict/games/aoe2/datasets/aoe2companion/data/db/schemas/views/player_history_all.yaml`
-2. For each, capture: (a) schema_version; (b) column count; (c) column list with classification tags (PRE_GAME / POST_GAME_HISTORICAL / CONTEXT / IDENTITY / TARGET); (d) row grain (per-match / per-player / 2-row-per-match).
-3. Also read `matches_1v1_clean.yaml` for aoestats + aoe2companion (these are the cleaned tables preceding `matches_history_minimal`; not Phase 02 inputs themselves but necessary for the spec's §2 provenance chain).
-4. Tabulate `matches_history_minimal` side-by-side (sc2egset 9 cols, aoestats 10 cols incl. canonical_slot, aoe2companion N cols — confirm N from yaml).
-5. Verify all three `matches_history_minimal` share the same 9-col contract (the aoestats 10th col is additive, not substitutive).
-6. **Column-set contrast:** tabulate `matches_history_minimal` column names vs `player_history_all` column names vs `reports/specs/01_05_preregistration.md §1` column list (all three sources). Flag that 01_05 §1 lists {match_id, started_at, player_id, team, chosen_civ_or_race, rating_pre, won, map_id, patch_id} — only 4 of these names (`match_id`, `started_at`, `player_id`, `won`) exist in the current `matches_history_minimal` yamls. 01_05 §1 is STALE relative to post-PR-TG3 and post-PR-#185 schemas. Executor MUST NOT inherit column names from 01_05 §1 into the new spec §2 or §5. All column names in the new spec derive from the yamls EXCLUSIVELY.
-7. Identify temporal-anchor columns in `player_history_all` per dataset (sc2egset `details_timeUTC` VARCHAR, aoestats `started_timestamp` TIMESTAMPTZ, aoe2companion `started` TIMESTAMP) and join-key columns (sc2egset `toon_id`, aoestats `profile_id`, aoe2companion `profileId`). These are the per-dataset raw columns §3.2 of the new spec will enumerate.
-8. If ANY yaml is missing or schema-unstable, HALT and report back to user; do NOT proceed to T02 silently.
+1. Read `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/05_temporal_panel_eda/leakage_audit_sc2egset.json` — note JSON schema.
+2. Read `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.json` — note JSON schema.
+3. Read `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_06_temporal_leakage_audit_v1.md` — note its Q7.1–Q7.4 section structure.
+4. **Format-asymmetry handling:** Two JSON artifacts + one MD artifact. Define semantic equivalences explicitly: Q7.1 (aoestats MD) ↔ `future_leak_count` (sc2egset + aoe2companion JSON); Q7.2 ↔ `post_game_token_violations`; Q7.3 ↔ `reference_window_assertion`. Q7.4 is canonical_slot readiness — aoestats-specific; not part of the Phase 02 template baseline.
+5. Tabulate the baseline template (intersection of 3 artifacts, using the Q7.x ↔ JSON-field mappings): 3 shared dimensions (`future_leak_count`, `post_game_token_violations`, `reference_window_assertion`) form the Phase-02-audit baseline.
+6. Enumerate the Phase-02-specific audit dimensions the new spec must add: (a) cutoff-time structural check (strict `<` vs `<=`); (b) normalization fit-scope (training-fold only); (c) target-encoding fold-awareness (K-fold masked); (d) features-audited column list.
 
 **Verification:**
-- Executor's working notes include a column-count tally for all 6 yamls.
-- Side-by-side `matches_history_minimal` table comparison confirms the 9-col shared contract.
-- Per-dataset `player_history_all` anchor + join-key columns enumerated (3 datasets × 2 columns = 6 entries).
-- 01_05 §1 staleness explicitly flagged in executor's notes (not silently ignored).
-- No missing files.
+- Executor notes a side-by-side field matrix across the 3 Phase 01 artifacts with Q7.x ↔ JSON-field mappings explicit.
+- 4 Phase-02-specific audit dimensions enumerated in executor's notes.
 
-**File scope:** None (read-only; preparatory).
-**Read scope:** (the 6 yamls + 2 `matches_1v1_clean.yaml` listed above).
+**File scope:** None (read-only).
+**Read scope:** (3 artifacts listed above).
 
 ---
 
-### T02 — Draft `reports/specs/02_00_feature_input_contract.md`
+### T02 — Create Phase 01 audit summary artifact (on-disk traceability)
 
-**Objective:** Produce the cross-dataset Phase 02 input contract spec at `reports/specs/02_00_feature_input_contract.md`, following the `01_05_preregistration.md` pattern.
+**Objective:** Establish a durable on-disk referent for the 2026-04-21 reviewer-adversarial Phase 01 sign-off audits. The 3 agent outputs (sc2egset, aoestats, aoe2companion sign-off verdicts with WARNING/NOTE enumerations) live only in chat transcripts and pass2_status.md references today. This new artifact makes them traceable for WP-2 (closes WARNING 2) and downstream WP-3/WP-4/WP-5 which cite other findings.
 
 **Instructions:**
-1. Create new file `reports/specs/02_00_feature_input_contract.md` with YAML frontmatter: `spec_id: 02_00`, `version: CROSS-02-00-v1`, `status: LOCKED`, `date: 2026-04-21`, `invariants_touched: [I2, I3, I5, I8]`, `supersedes: null`.
-2. Write **§1 Scope and binding** — Which Phase 02 Pipeline Sections consume this spec. Per `docs/PHASES.md`, Phase 02 has 8 Pipeline Sections (02_01 through 02_08). This spec binds §2 column-grain commitments for all 8; §4 encoding protocol specifically binds 02_05 (Categorical Encoding) and 02_07 (Rating Systems & Domain Features) for the cross-game encoding rule. **I2 cross-branch binding note:** this spec prescribes a harmonized `player_id` join column in `matches_history_minimal` across three datasets whose I2 branch resolutions differ (sc2egset Branch iii region-scoped `toon_id`; aoestats Branch v structurally-forced `profile_id`; aoe2companion Branch i API-namespace `profileId`, per `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md:34`). Binding a shared join column atop three I2 branches is an I2-touching cross-dataset commitment; the harmonization happens inside the `matches_history_minimal` VIEW construction (not in this spec), and this spec merely names the harmonized column as the canonical Phase 02 join key on MHM. Raw I2-branch columns (`toon_id` / `profile_id` / `profileId`) are explicitly exposed in `player_history_all` and must be named per-dataset in §3 (next instruction).
-3. Write **§2 Per-dataset canonical input VIEWs** — One sub-§ per dataset. Each sub-§ enumerates: (a) Primary VIEW for per-match features: `matches_history_minimal` (all three) with row count + column count + schema_version; (b) History VIEW for rolling-window features: `player_history_all` (all three) with row count + column count + schema_version; (c) aoestats-specific note: `canonical_slot` column present; aoestats-only; does not appear in sc2egset / aoe2companion. Populate from T01 tally.
-4. Write **§3 Join keys and I3 temporal anchor — per-dataset mappings** — Declare separate mapping tables for the two VIEW classes (not a single SQL pattern; the column names differ between VIEWs and between datasets). **Sub-§3.1 `matches_history_minimal` (harmonized, cross-dataset canonical):** join key `player_id`; I3 temporal anchor `started_at` (TIMESTAMP); match key `match_id` (prefixed `<dataset_tag>::` — collision-safe cross-dataset); `dataset_tag` ∈ {sc2egset, aoestats, aoe2companion}. **Sub-§3.2 `player_history_all` (per-dataset raw; NOT harmonized at source):** table of per-dataset column mappings — sc2egset: `toon_id` (join) + `details_timeUTC` VARCHAR (anchor); aoestats: `profile_id` (join) + `started_timestamp` TIMESTAMPTZ (anchor); aoe2companion: `profileId` (join) + `started` TIMESTAMP (anchor). **Sub-§3.3 Rolling-window I3 guard:** every rolling-window query MUST apply `WHERE ph.<anchor_col> < target.started_at` (equality forbidden; the per-dataset anchor column comes from §3.2). Example SQL written in the spec MUST use placeholders (e.g., `ph.<anchor>`), not hard-code `started_at`, and the spec MUST explicitly caution executors that naive `SELECT * FROM player_history_all WHERE started_at < ...` will fail for 2 of 3 datasets. **Sub-§3.4 Cross-dataset player-history joins:** when UNION-ALL'ing player histories across datasets for cross-game analysis, composite key `(dataset_tag, player_id)` is required — bare `player_id` is per-dataset-scoped only; cross-dataset string-collision of raw IDs is structurally possible (sc2egset toon_id and aoec profileId occupy different namespaces but are both exposed as string/int at the application layer). The harmonization option is to wrap `player_history_all` in a Phase-02-owned canonicalizing VIEW per dataset that renames anchors + IDs to `started_at` + `player_id`; the spec should NAME this option but not prescribe it (Phase 02 picks at 02_01 kickoff).
-5. Write **§4 Cross-game categorical encoding protocol (I8 compliance)** — Declare a GENERAL rule, then enumerate concrete instances. **General binding rule:** any column whose vocabulary is per-dataset (disjoint, non-interchangeable values across `dataset_tag` partitions) MUST be encoded within a `dataset_tag` partition. **Explicitly forbidden:** `GROUP BY <polymorphic_col>` or `OneHotEncoder(<polymorphic_col>)` across `dataset_tag` values; either pattern treats game-specific categoricals as shared vocabulary and violates I8. **Known instances of per-dataset polymorphic vocabulary (non-exhaustive):** (a) `faction`/`race`/`civ` — sc2egset ∈ {Prot, Terr, Zerg, Rand}, aoestats+aoe2companion ∈ {civ names, e.g., Britons, Franks, Persians, …}; note also the column-name asymmetry `race` (sc2egset) vs `civ` (aoe2 datasets); (b) `map` / `metadata_mapName` — sc2 map names (e.g., "Catalyst LE") vs aoe2 map names are empirically disjoint (94 distinct aoec maps, 77 distinct aoestats maps per `matches_1v1_clean.yaml`); (c) `leaderboard` — present in aoestats + aoe2companion, absent in sc2egset (asymmetric presence, not polymorphism, but same Phase 02 consequence: any join or encoder must branch on `dataset_tag`). **Acceptable patterns:** (α) per-game separate encoders with fit/transform called within a `dataset_tag` partition; (β) synthesized cross-game categorical (e.g., `faction_family := "sc2_race" if dataset_tag=sc2egset else "aoe2_civ"`) used as a grouping column; (γ) game-conditional target encoding. Reference: `.claude/scientific-invariants.md` I8. **Spec-maintenance note:** new cross-dataset polymorphic categoricals discovered during Phase 02 require a spec amendment (§7 change protocol).
-6. Write **§5 Column-level classification summary** — For each canonical VIEW × dataset, reproduce the column-level classification (PRE_GAME / POST_GAME_HISTORICAL / CONTEXT / IDENTITY / TARGET) from the source yamls. This is the authoritative reference; Phase 02 consumers cite this §, not the scattered yamls. Use 3 tables (one per VIEW-type × dataset), each listing {column_name, type, classification, notes_if_any}.
-7. Write **§6 Cross-reference table for Phase 02 Pipeline Sections** — For each of the 8 Pipeline Sections (02_01 … 02_08), name the expected input column set + transformation type. Source: `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md` §1–§7. Example rows: `02_01 Pre-Game vs In-Game Boundary` ← all PRE_GAME columns from `matches_history_minimal`; `02_03 Temporal Features, Windows, Decay` ← `player_history_all` joined on `(player_id, started_at < T)`. Keep the table abstract — do NOT specify concrete feature names (those belong in 02_08 Feature Documentation & Catalog).
-8. Write **§7 Spec change protocol** — Version bumps follow `01_05_preregistration.md` pattern: `CROSS-02-00-vN.M.K`. Any amendment requires `planner-science` + `reviewer-adversarial` gate; minor revisions that don't alter §2 column-grain commitments or §4 encoding rule are vN.M+1; any change to either is a major vN+1.
-9. Write **§8 Referenced artifacts** — List `.claude/scientific-invariants.md`, `docs/PHASES.md`, `reports/specs/01_05_preregistration.md`, per-dataset yamls referenced in §2 and §5.
+1. Create new file `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md`.
+2. Write the artifact with four sections:
+   - **§1 Scope and method** — Summarize the adversarial Phase 01 sign-off sweep: date 2026-04-21, 3 reviewer-adversarial Sonnet agent dispatches (one per dataset), lens scope (Phase 01 completeness / decision gate quality / Phase 02 input readiness / invariant compliance / temporal leakage / research-log consistency / cross-dataset schema readiness). Verdicts across all 3: READY_WITH_CAVEATS; zero BLOCKERs.
+   - **§2 sc2egset findings** — Enumerate verdict tier, findings list, remediation map. WARNINGs: W1 (no explicit Phase-02-facing join/table-grain specification — closed by WP-1 PR #198), W2 (no mandated Phase 02 pre-training leakage-audit protocol — closed by THIS PR, WP-2), W3 (~12% cross-region history fragmentation unquantified — scheduled WP-3). NOTEs: N1 (cross-game faction encoding protocol undefined — closed by WP-1 PR #198 as §4), N2 (`reports/research_log.md` index stale dates for sc2egset — closed by PR #197).
+   - **§3 aoestats findings** — WARNINGs: W1 (`data_quality_report_aoestats.md:52` stale 9-col claim — closed by PR #197), W2 (`old_rating` PRE-GAME classification deferred empirical test — scheduled WP-4). NOTEs: N1 (`player_history_all` interface documentation gap — closed by WP-1 PR #198 as §3.2), N2 ("43-day post-patch gap" figure no artifact provenance — scheduled WP-5), N3 (Q7.4 FAILED sub-check not amended post-BACKLOG F6 — closed by PR #197).
+   - **§4 aoe2companion findings** — NOTEs only (zero WARNINGs): N1 (LPM ICC value discrepancy 0.000485 vs 0.000491 — closed by PR #197), N2 (I8 cross-dataset ICC spec v1.0.2 AT RISK — closed by PR #197 AC-R06), N3 (`cross_dataset_phase01_rollup.md` path ambiguity — closed by PR #197), N4 (absolute paths in `01_05_05_icc.json` — closed by PR #197).
+3. Include frontmatter: `audit_date: 2026-04-21`, `auditor: reviewer-adversarial (Sonnet)`, `datasets: [sc2egset, aoestats, aoe2companion]`, `verdict_tier: READY_WITH_CAVEATS (all 3)`, `consolidation_date: 2026-04-21`, `supersedes: null`.
+4. Add a closing §5 "Finding closure status table" cross-referencing each finding → the PR that closed it (or WP that will close it).
+5. Do NOT reproduce the full verbatim agent transcripts — this is a summary artifact, not a full audit log. Capture the structural findings with enough detail that future agents/examiners can understand the finding, its severity, and its closure path.
 
 **Verification:**
-- File exists at `reports/specs/02_00_feature_input_contract.md`.
+- File exists at `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md`.
+- All 3 datasets' findings enumerated (at minimum: 5 WARNINGs + 9 NOTEs + 3 verdicts).
+- Each finding cross-referenced to its closing PR/WP.
+- Frontmatter present with all prescribed fields.
+
+**File scope:**
+- `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` (Create)
+
+**Read scope:**
+- `thesis/reviews_and_others/pass2_status.md` (interim finding registry).
+
+---
+
+### T03 — Draft `reports/specs/02_01_leakage_audit_protocol.md`
+
+**Objective:** Produce the sibling methodology spec following the WP-1 spec pattern (versioned, LOCKED, YAML frontmatter, sectioned).
+
+**Instructions:**
+1. Create new file `reports/specs/02_01_leakage_audit_protocol.md` with YAML frontmatter: `spec_id: CROSS-02-01-v1`, `version: CROSS-02-01-v1`, `status: LOCKED`, `date: 2026-04-21`, `invariants_touched: [I3]`, `supersedes: null`, `datasets_bound: [sc2egset, aoestats, aoe2companion]`, `sibling_specs: [CROSS-02-00-v1]`, `closes_finding: "sc2egset WARNING 2 per reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md §2"`.
+2. Write **§1 Scope and binding** — Hard gate for Pipeline Section 02_01 (Pre-Game vs In-Game Boundary): no step in 02_01 may exit without the audit artifact committed. REUSED (not re-gated) by 02_03 (Temporal Features, Windows, Decay, Cold Starts) and 02_06 (Feature Selection) whenever they materialize new features — protocol re-run produces new audit artifact; gate scoped to 02_01 exit. Cite WP-1 sibling spec `CROSS-02-00-v1` as the input contract this audit presupposes. Cite `phase01_audit_summary_2026-04-21.md §2` (sc2egset WARNING 2) as the closed finding.
+3. Write **§2 What is audited** — Four dimensions:
+   - **§2.1 Cutoff-time structural check:** Every Phase 02 feature-generating SQL/Python expression that reads `player_history_all` MUST apply `WHERE ph.<anchor_col> < target.started_at` (per WP-1 §3.3; anchor column per-dataset per WP-1 §3.2). Equality (`<=`) is forbidden. Audit asserts: (a) filtered scope; (b) `<` operator; (c) per-dataset anchor column (not canonical `started_at`).
+   - **§2.2 POST-GAME token absence:** Every materialized feature column's source lineage must not include POST_GAME_HISTORICAL, IN_GAME_HISTORICAL, or TARGET columns per WP-1 §5 classification. Audit: source-column lineage resolution via SQL AST walk (for SQL views) or Python docstring trace (for notebook code). **Implementation-dependency limitation:** lineage-resolution mechanism is implementer's choice; for cascading VIEWs without AST-walk tooling and for Python code without docstring conventions, audit rigor depends on manual review. Phase 02 planner-science must either (a) author a lineage-resolution script, OR (b) restrict Phase 02 feature materialization to a set of patterns where manual review is feasible.
+   - **§2.3 Normalization fit-scope:** Any scaling / normalization (mean, std, min, max, quantile) or K-fold target-encoding statistic MUST be fit on training folds only. Audit: for scikit-learn `Pipeline` steps, assert `fit` called with training-fold data only; for manual encoding code, assert fold-mask discipline via code review.
+   - **§2.4 Reference-window assertion (reused from Phase 01):** The temporal window used for feature computation must match the training window of the model. Audit asserts training-fold start/end timestamps match feature-computation window.
+4. Write **§3 Audit artifact schema** — Phase 02 audit runs MUST produce `reports/artifacts/02_*/leakage_audit_<dataset>.json`. Fields: `spec_version` (CROSS-02-01-v1), `dataset` (∈ {sc2egset, aoestats, aoe2companion}), `phase_02_step` (e.g., `02_01_01`), `audit_date` (ISO), `future_leak_count` (int; 0 required for pass), `post_game_token_violations` (int; 0 required for pass), `normalization_fit_scope` (string; "training_fold_only" required for pass), `target_encoding_fold_awareness` (string; "K_fold_masked" required for pass or "N/A_no_target_encoding"), `cutoff_time_filter_structural_check` (string; "pass" required), `reference_window_assertion` (string; "pass" required), `features_audited` (list of column names), `verdict` (string; "PASS" required for 02_01 exit). Sibling Markdown report (`.md`, same base name) narrates the audit with SQL verbatim per I6.
+5. Write **§4 Execution timing** — Audit runs AFTER every Phase 02 feature materialization, BEFORE any training. "Materialization" = any step that persists a new feature column to DuckDB or Parquet consumed by the training pipeline.
+6. Write **§5 Gate condition (v1 enforcement: convention-based)** — Pipeline Section 02_01 exit requires: (a) every feature materialized in 02_01 appears in `features_audited`; (b) `verdict = "PASS"`; (c) artifact JSON + MD both present at the prescribed path. Missing audit OR verdict != PASS blocks 02_01 exit. **v1 ENFORCEMENT MECHANISM:** convention-based — no CI check, pre-commit hook, or gate script in the current toolchain reads the JSON and fails commits on `verdict != PASS`. Enforcement is (i) the reviewer-adversarial mandatory review gate before any 02_01 exit PR is merged, and (ii) this spec's convention. See §7 for the tooling-enforcement follow-up target.
+7. Write **§6 Scope reuse by 02_03 and 02_06** — When 02_03 materializes new rolling-window features or 02_06 materializes new feature-selection outputs, re-run the protocol and produce a new audit artifact (same schema). Not a re-gate (02_03 and 02_06 have their own Pipeline Section exit gates; this protocol is reused inside them).
+8. Write **§7 Spec change protocol** — Version bumps follow WP-1 pattern: `CROSS-02-01-vN.M.K`. Any amendment requires `planner-science` + `reviewer-adversarial` gate. Any change to §2 audit dimensions or §5 gate condition is a major vN+1. **Future-amendment target:** v2 should add CI/pre-commit tooling enforcement of §5 gate (reads JSON, fails commits on `verdict != PASS`); scheduled as a follow-up chore after initial Phase 02 execution validates the audit schema. Noted here as the top-priority §7 amendment.
+9. Write **§8 Referenced artifacts** — List `.claude/scientific-invariants.md` I3, `docs/PHASES.md` §Phase 02, `reports/specs/02_00_feature_input_contract.md` (sibling), `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` (closes sc2egset WARNING 2 per §2), `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md` §2, and the three Phase 01 leakage-audit artifacts (template references).
+
+**Verification:**
+- File exists at `reports/specs/02_01_leakage_audit_protocol.md`.
 - All 8 sections present.
-- `grep "CROSS-02-00-v1"` across the repo returns exactly ONE match (this spec's frontmatter).
-- §2 column counts match T01 yaml-derived counts for all three datasets.
-- §4 explicitly states the cross-game encoding rule AND the I8 citation.
-- §5 classification tags match source yamls (spot-check ≥1 column per VIEW-type × dataset).
-- §6 enumerates all 8 Pipeline Sections.
+- `grep "^spec_id: CROSS-02-01-v1" reports/specs/02_01_leakage_audit_protocol.md` returns exactly ONE match (frontmatter-scoped).
+- §3 audit artifact schema lists the required JSON fields verbatim.
+- §5 gate condition explicitly states "verdict = PASS" required for 02_01 exit AND acknowledges v1 convention-based enforcement.
+- §7 explicitly names tooling-enforcement as future-amendment target.
+- §1 cites both CROSS-02-00-v1 (sibling) AND `phase01_audit_summary_2026-04-21.md §2` (closed finding).
 
 **File scope:**
-- `reports/specs/02_00_feature_input_contract.md` (Create)
+- `reports/specs/02_01_leakage_audit_protocol.md` (Create)
 
 **Read scope:**
-- All yamls from T01 (6 files).
-- `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md`
-- `.claude/scientific-invariants.md`
-- `docs/PHASES.md`
-- `reports/specs/01_05_preregistration.md` (pattern reference)
+- 3 Phase 01 leakage-audit artifacts (from T01).
+- `reports/specs/02_00_feature_input_contract.md` (WP-1 sibling).
+- `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` (from T02).
+- `.claude/scientific-invariants.md`, `docs/PHASES.md`, `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md`.
 
 ---
 
-### T03 — Backward-link the three `modeling_readiness_*.md` memos
+### T04 — Amend three dataset ROADMAPs' Phase 02 placeholder sections
 
-**Objective:** Each of the three dataset-scoped `modeling_readiness_*.md` §5 paragraphs should cite the new spec as the formal Phase 02 input contract, so a Phase 02 executor reading the memo is redirected to the spec.
+**Objective:** Each dataset ROADMAP has `## Phase 02 — Feature Engineering (placeholder)`. Add a one-paragraph mandatory-entry note citing the WP-2 spec as hard gate for Pipeline Section 02_01 exit.
 
 **Instructions:**
-1. Edit `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md` §5 — append a sentence: "Phase 02 feature extractors bind to the cross-dataset `reports/specs/02_00_feature_input_contract.md §2` canonical input spec (version CROSS-02-00-v1, LOCKED 2026-04-21); this memo's scope ends at the Phase 01 output."
-2. Same-shape edit to `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md` §5.
-3. Same-shape edit to `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md` §5.
+1. Edit `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md` — locate `## Phase 02 — Feature Engineering (placeholder)` (around line 1718); after existing two-line content, append: "\n\n**Mandatory entry requirement (added 2026-04-21 per WP-2):** Before any step in Pipeline Section 02_01 exits, a leakage-audit artifact must be produced per `reports/specs/02_01_leakage_audit_protocol.md` (CROSS-02-01-v1, LOCKED 2026-04-21). The audit verifies cutoff-time structural filters, POST-GAME token absence from feature lineage, normalization fit-scope, and reference-window assertion. `verdict = PASS` is required for 02_01 exit. v1 enforcement is convention-based (reviewer-adversarial gate); automated tooling enforcement is a §7 future-amendment target. Input contract: `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1). Protocol is reused (not re-gated) by 02_03 and 02_06."
+2. Same-shape edit to `src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md` (around line 1684).
+3. Same-shape edit to `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` (around line 1412).
 
 **Verification:**
-- `grep -l "02_00_feature_input_contract.md" src/rts_predict/games/*/datasets/*/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_*.md` returns all 3 paths.
+- `grep -l "02_01_leakage_audit_protocol.md" src/rts_predict/games/*/datasets/*/reports/ROADMAP.md` returns all 3 paths.
+- Each ROADMAP's Phase 02 placeholder now enumerates the mandatory-entry requirement.
 
 **File scope:**
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md` (Update)
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md` (Update)
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md` (Update)
+- sc2egset `ROADMAP.md` (Update)
+- aoestats `ROADMAP.md` (Update)
+- aoe2companion `ROADMAP.md` (Update)
 
 **Read scope:**
-- `reports/specs/02_00_feature_input_contract.md` (from T02)
+- `reports/specs/02_01_leakage_audit_protocol.md` (from T03)
 
 ---
 
-### T04 — Link from `cross_dataset_phase01_rollup.md`
+### T05 — Version bump + CHANGELOG
 
-**Objective:** The cross-dataset Phase 01 rollup should reference the new spec as the Phase 02 Go/No-Go input binding across all three datasets.
-
-**Instructions:**
-1. Read `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` to locate the appropriate section for the reference (likely §4 or §5 "Phase 02 Go/No-Go" or equivalent; if absent, create such a subsection).
-2. Add reference text: "**Phase 02 input binding:** `reports/specs/02_00_feature_input_contract.md` (LOCKED CROSS-02-00-v1, 2026-04-21) is the canonical input contract across all three datasets. Phase 02 feature-engineering execution reads this spec as the authoritative source for input VIEW names, row grain, join keys, I3 temporal anchor, cross-game categorical encoding protocol, and column-level classification. Amendments follow the §7 change protocol."
-
-**Verification:**
-- `grep "02_00_feature_input_contract.md" reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` returns ≥1 match.
-
-**File scope:**
-- `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` (Update)
-
-**Read scope:**
-- `reports/specs/02_00_feature_input_contract.md` (from T02)
-
----
-
-### T05 — Refresh `cross_dataset_phase01_rollup.md` stale GO-NARROW text
-
-**Objective:** `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md:15` still says aoestats "**GO-NARROW** (aggregate / UNION-ALL-symmetric features; per-slot deferred until F1+W4)" — text that became stale 2026-04-20 when canonical_slot landed via PR #185 (BACKLOG F1+W4). Since T04 adds a new backlink to this same file, it would be thesis-defensibility liability to leave contradictory text next to the new content. Refresh it in the same PR.
+**Objective:** Version 3.39.0 → 3.40.0 (minor, docs). CHANGELOG entry.
 
 **Instructions:**
-1. Edit `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` — locate the aoestats GO-NARROW line (around line 15 per 2026-04-21 inspection; verify exact line at execution time).
-2. Change "**GO-NARROW** (aggregate / UNION-ALL-symmetric features; per-slot deferred until F1+W4)" to "**GO-FULL** (per-slot features invariant-safe after canonical_slot amendment landed 2026-04-20 per PR #185 / BACKLOG F1+W4; see `modeling_readiness_aoestats.md §1 + §6`)."
-3. Verify no other rollup statements still reference "per-slot deferred" or "F1+W4 pending" for aoestats (if found, update or flag).
+1. Edit `pyproject.toml`: `version = "3.39.0"` → `version = "3.40.0"`.
+2. Edit `CHANGELOG.md`: move `[Unreleased]` contents aside; add new `[3.40.0] — 2026-04-21 (PR #TBD: docs/phase02-leakage-audit-protocol)`:
+   - `### Added`: Phase 01 audit summary artifact at `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` (on-disk traceability for 2026-04-21 reviewer-adversarial sign-off sweep; referenced by WP-2/WP-3/WP-4/WP-5). Cross-dataset Phase 02 pre-training leakage-audit protocol at `reports/specs/02_01_leakage_audit_protocol.md` (version CROSS-02-01-v1, LOCKED). Sibling spec to WP-1's `02_00_feature_input_contract.md` (CROSS-02-00-v1). Closes sc2egset WARNING 2 from 2026-04-21 Phase 01 audits (now traceable via audit summary artifact). Binds Pipeline Section 02_01 as hard gate; v1 enforcement convention-based (reviewer-adversarial); tooling-enforcement scheduled as §7 future amendment. Audits four dimensions: cutoff-time structural check, POST-GAME token absence, normalization fit-scope, reference-window assertion. Prescribes JSON + MD audit artifact schema. Reused (not re-gated) by 02_03 and 02_06.
+   - `### Changed`: edits to 3 dataset ROADMAPs' Phase 02 placeholders appending mandatory-entry requirement citation.
+3. Reset `[Unreleased]` to empty with `### Added / Changed / Fixed / Removed`.
 
 **Verification:**
-- `grep "GO-NARROW" reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` returns zero aoestats hits.
-- `grep "GO-FULL" reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` returns the updated aoestats line.
-
-**File scope:**
-- `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` (Update — combined with T04 edit; both edits land in the same file touch)
-
-**Read scope:**
-- `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md`
-
----
-
-### T06 — Version bump + CHANGELOG
-
-**Objective:** Version 3.38.1 → 3.39.0 (minor bump for docs, per `.claude/rules/git-workflow.md`), CHANGELOG entry populated.
-
-**Instructions:**
-1. Edit `pyproject.toml`: `version = "3.38.1"` → `version = "3.39.0"`.
-2. Edit `CHANGELOG.md`: move `[Unreleased]` contents (empty) aside; add new `[3.39.0] — 2026-04-21 (PR #TBD: docs/phase02-interface-contract)` block with:
-   - `### Added`: "Cross-dataset Phase 02 feature-engineering input contract at `reports/specs/02_00_feature_input_contract.md` (version CROSS-02-00-v1, LOCKED). Closes sc2egset WARNING 1, aoestats NOTE 3, sc2egset NOTE 4 from the 2026-04-21 Phase 01 sign-off audits. Spec covers: per-dataset canonical input VIEWs + row grain; join keys + I3 temporal anchor; cross-game categorical encoding protocol (I8 compliance); column-level classification summary; Phase 02 Pipeline Section cross-reference."
-   - `### Changed`: edits to 3 `modeling_readiness_*.md` memos + `cross_dataset_phase01_rollup.md` back-linking the new spec; `cross_dataset_phase01_rollup.md` aoestats GO-NARROW → GO-FULL refresh (stale since PR #185 canonical_slot landing 2026-04-20).
-3. Reset `[Unreleased]` to empty with `### Added / Changed / Fixed / Removed` headers.
-
-**Verification:**
-- `grep '^version' pyproject.toml` returns `version = "3.39.0"`.
-- `CHANGELOG.md` `[3.39.0]` block populated; `[Unreleased]` reset empty.
+- `grep '^version' pyproject.toml` returns `version = "3.40.0"`.
+- `CHANGELOG.md` `[3.40.0]` block populated; `[Unreleased]` reset empty.
 
 **File scope:**
 - `pyproject.toml` (Update)
@@ -238,53 +208,51 @@ Not applicable at thesis-citation level — this is an internal project methodol
 
 | File | Action |
 |------|--------|
-| `reports/specs/02_00_feature_input_contract.md` | Create |
-| `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_sc2egset.md` | Update |
-| `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoestats.md` | Update |
-| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/modeling_readiness_aoe2companion.md` | Update |
-| `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` | Update |
+| `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` | Create |
+| `reports/specs/02_01_leakage_audit_protocol.md` | Create |
+| `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md` | Update |
+| `src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md` | Update |
+| `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` | Update |
 | `pyproject.toml` | Update |
 | `CHANGELOG.md` | Update |
-| `planning/current_plan.md` | (this plan; tracked separately from git-diff manifest) |
-| `planning/current_plan.critique.md` | (produced by reviewer-adversarial Mode A before execution) |
+| `planning/current_plan.md` | (this plan; tracked separately) |
+| `planning/current_plan.critique.md` | (produced by reviewer-adversarial Mode A) |
 
-7 git-diff-scope files + 2 planning-meta files. Note: `cross_dataset_phase01_rollup.md` receives TWO edits (T04 new backlink + T05 GO-NARROW→GO-FULL refresh) — still one file in the manifest.
+6 git-diff-scope files (2 new + 4 modified) + 2 planning-meta files.
 
 ## Gate Condition
 
-- `reports/specs/02_00_feature_input_contract.md` exists at `CROSS-02-00-v1` LOCKED with all 8 sections populated and column-counts verified against T01 yaml tally.
-- All three `modeling_readiness_*.md` memos §5 carry the back-reference sentence with the exact spec path and version string.
-- `reports/artifacts/01_exploration/06_decision_gates/cross_dataset_phase01_rollup.md` cites the new spec as the Phase 02 input binding AND its aoestats status reads GO-FULL (not GO-NARROW; refreshed per T05).
-- `pyproject.toml` `version = "3.39.0"`.
-- `CHANGELOG.md` `[3.39.0]` populated; `[Unreleased]` reset.
-- All three `PHASE_STATUS.yaml` files UNCHANGED (Phase 01 remains `complete`; this PR does not alter Phase 01 exit state, only formalizes the Phase 01→02 interface).
-- `planning/current_plan.critique.md` filed by reviewer-adversarial Mode A before execution; user reviews and approves.
-- `git diff --stat` on the final commit touches exactly the 7 files in the File Manifest (plus `planning/current_plan.md` + `planning/current_plan.critique.md` which are excluded from git-diff-scope gates).
+- `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md` exists with all 3 dataset sections + finding closure table.
+- `reports/specs/02_01_leakage_audit_protocol.md` exists at `CROSS-02-01-v1` LOCKED with all 8 sections populated; §1 cites both CROSS-02-00-v1 sibling + phase01_audit_summary referent; §5 acknowledges v1 convention-based enforcement; §7 names tooling enforcement as future amendment.
+- All 3 dataset ROADMAPs' Phase 02 placeholder sections cite the spec with mandatory-entry requirement.
+- `pyproject.toml` `version = "3.40.0"`.
+- `CHANGELOG.md` `[3.40.0]` populated; `[Unreleased]` reset.
+- All three `PHASE_STATUS.yaml` UNCHANGED.
+- `planning/current_plan.critique.md` filed by Mode A; revisions applied.
+- `git diff --stat` on final commit touches exactly the 6 files in the File Manifest.
 
 ## Out of scope
 
-- **WP-2 (leakage audit protocol)** — separate sibling spec `reports/specs/02_01_leakage_audit_protocol.md` in a follow-up PR (`docs/phase02-leakage-audit-protocol`). Planner-science recommended this separation; adversarial critique may revisit.
-- **WP-3 (sc2egset cross-region empirical quantification)** — separate Cat A PR with its own notebook + artifact; not coupled to this spec.
-- **WP-4 (aoestats `old_rating` PRE-GAME closure)** — separate Cat D PR.
-- **WP-5 (aoestats 43-day gap provenance)** — separate Cat C or A PR; direction (retract vs derive) decided at execution-time via grep over thesis+reports+planning.
-- **Feature naming conventions** for Phase 02 — belongs in Pipeline Section 02_08 (Feature Documentation & Catalog), NOT in this input spec. Explicitly deferred.
-- **Phase 02 architectural decisions** (which classifiers, which splits, HPO strategy, etc.) — that is the Phase 02 kickoff `planner-science` session, a separate deliverable.
-- **Updates to `docs/PHASES.md` Phase 02 Pipeline Section enumeration** — not touched; this spec consumes the existing 8-section enumeration as authoritative.
-- **Changes to any VIEW schema yaml** — the spec *describes* current schemas; it does not propose changes to them. Any schema change requires a separate feat PR that also amends this spec with a version bump.
+- **Phase 02 audit implementation** (Python script, CLI, SQL macros) — Phase 02 planner-science decision.
+- **CI/pre-commit tooling for gate enforcement** — scheduled as §7 future-amendment target post initial Phase 02 execution.
+- **Spec-versioning-convention chore** (NOTE 5: `spec_id`/`version` collapse) — deferred to a separate chore that standardizes both WP-1 + WP-2 frontmatter.
+- **WP-3 / WP-4 / WP-5** — separate PRs; each cites `phase01_audit_summary_2026-04-21.md` for its closed finding.
+- **Phase 02 Pipeline Section decomposition** (steps 02_01_01, ...) — Phase 02 kickoff planner-science session.
+- **Amendments to WP-1's spec** (`02_00_feature_input_contract.md`) — WP-2 is a sibling, not a revision.
+- **Thesis prose updates** — none required.
 
 ## Open questions
 
-- **Q1: Does the spec's §6 Phase 02 Pipeline Section cross-reference need to enumerate concrete feature examples (e.g., `rolling_win_rate_30d`), or stay abstract?** — Recommendation: stay abstract; concrete feature names belong in 02_08. Resolves now (T02 instruction 7 enforces abstract).
-- **Q2: Should the `dataset_tag` column be formally added to every `matches_history_minimal` VIEW, or synthesized at UNION-ALL time?** — Resolves during T01. If already present in all 3 yamls: spec §3 names it as a canonical column. If absent: spec §3 prescribes it as synthesized during cross-dataset UNION; does NOT modify the VIEWs (that's a future schema-bump PR).
-- **Q3: Is there an existing aoestats-only column (canonical_slot) that the spec should flag as "breaks the cross-dataset UNION contract"?** — Yes; spec §2 aoestats sub-§ notes that canonical_slot is aoestats-local; cross-dataset UNION queries MUST project the shared 9-col subset. This instruction is already baked into T02 step 3.
+- **Q1: Should §2.3 fit-scope audit distinguish sklearn Pipeline fits (automatic via CV) from manual fit scripts?** — Yes; §2.3 text notes both paths with different assertion mechanisms. Resolved in T03 step 3.
+- **Q2: Should the audit schema reserve fields for future extensions (e.g., `privacy_leakage_count`)?** — No. Spec is LOCKED at v1; extensions follow §7 change protocol.
+- **Q3: Should WP-2 propose an initial Python implementation stub?** — No. Explicitly out of scope per §Out of scope.
 
 ## Dispatch sequence
 
-1. This plan written at `planning/current_plan.md`.
-2. `reviewer-adversarial` Mode A invoked against this plan 2026-04-21 — `planning/current_plan.critique.md` filed with verdict REVISE (2 BLOCKERs on §3 column names, 2 WARNINGs on 01_05 staleness + §4 scope, 3 NOTEs on I2 / composite key / rollup GO-NARROW staleness). **Revision round applied 2026-04-21:** all 8 required revisions addressed in this plan (frontmatter I2 added; Problem Statement 01_05 "pattern to follow" language removed; Assumptions block split into 4 explicit per-dataset assumptions; T01 column-contrast + per-dataset anchor sub-step added; T02 §1 I2 cross-branch-binding note added; §3 rewritten with per-dataset sub-sections 3.1/3.2/3.3/3.4 including composite-key clause; §4 generalized with map/race-civ/leaderboard instances; new T05 added for rollup GO-NARROW→GO-FULL refresh; T01–T05 sequence renumbered to T01–T06). Symmetric 1-revision cap consumed; execution may proceed.
-3. (Skipped for Cat E unless adversarial flagged issues): `/critic` skill. User indicated direct adversarial is sufficient.
-4. Executor dispatched against this plan with T01–T06.
-5. `reviewer` (standard) post-execution review (Category E default).
-6. Pre-commit validation (ruff / mypy N/A; planning-drift passes since plan present).
-7. Commit + PR + merge per standard workflow.
-8. Post-merge purge of `planning/current_plan.md` + `planning/current_plan.critique.md` by the next plan overwriting them (next plan = WP-2 or Phase 02 kickoff, per user direction).
+1. This plan written at `planning/current_plan.md` on branch `docs/phase02-leakage-audit-protocol`.
+2. `reviewer-adversarial` Mode A invoked against prior version of this plan 2026-04-21 — verdict REVISE with 2 BLOCKERs + 2 WARNINGs + 2 NOTEs. **Revision round applied 2026-04-21:** Assumption 2 corrected (aoestats MD format); T02 added for Phase 01 audit summary artifact (I9 traceability; existing T02–T04 renumbered T03–T05); T03 verification grep scoped to frontmatter; §5 gate v1 enforcement language clarified; §7 tooling-enforcement future-amendment target added; NOTE 6 §2.2 implementation-dependency limitation acknowledged. Symmetric 1-revision cap consumed.
+3. Executor dispatched with T01–T05.
+4. `reviewer` (standard, Cat E default) post-execution review.
+5. Pre-commit validation (ruff / mypy N/A; planning-drift passes).
+6. Commit + PR + merge per standard workflow.
+7. Post-merge: next plan (WP-3, WP-4, or WP-5) overwrites `planning/current_plan.md`.

@@ -1686,6 +1686,8 @@ research_log_entry: "Required on completion."
 Pipeline Sections: see `docs/PHASES.md`.
 Steps to be defined when Phase 01 gate is met.
 
+**Mandatory entry requirement (added 2026-04-21 per WP-2):** Before any step in Pipeline Section 02_01 exits, a leakage-audit artifact must be produced per `reports/specs/02_01_leakage_audit_protocol.md` (CROSS-02-01-v1, LOCKED 2026-04-21). The audit verifies cutoff-time structural filters, POST-GAME token absence from feature lineage, normalization fit-scope, and reference-window assertion. `verdict = PASS` is required for 02_01 exit. v1 enforcement is convention-based (reviewer-adversarial gate); automated tooling enforcement is a §7 future-amendment target. Input contract: `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1). Protocol is reused (not re-gated) by 02_03 and 02_06.
+
 ---
 
 ## Phase 03 — Splitting & Baselines (placeholder)
