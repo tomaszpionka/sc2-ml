@@ -85,6 +85,44 @@ cardinality-vs-mechanics distinction.
 
 **All Chapter 2 empirical claims: 11, all intact. Three open [REVIEW] flags (C2-08, C2-10, C2-11) do not indicate artifact staleness — they are literature-verification items for Pass 2.**
 
+### T13 claim deltas (Chapter 2 prose 2026-04-26)
+
+T13 (Chapter 2 cleanup rewrite) revised Chapter 2 prose to apply T05 source-specific
+terminology (CX-08 PRIMARY FIX), T09 cross-dataset comparability framing, and T10
+risk register mitigation (RISK-04 / RISK-05 / RISK-12 / RISK-14 / RISK-25). Numerical
+claims (50 civilizations, 1 225 unordered pairs, 9 race pairs, 555 Random-race
+replays, 22.4 game loops/s, 80.13% Glicko-2, 411 030 SC2 matches) unchanged in count;
+their framing is now hedged for date-validity, roster instability, ECE-vs-proper-
+scoring-rule distinction, and SC2EGSet-not-being-ladder.
+
+| Claim ID | Section/line locus | Delta | Evidence source |
+|----------|-------------------|-------|-----------------|
+| C2-T13-01 | §2.2.3 line 37 (CX-08 PRIMARY FIX, RISK-01/02/03/04/05) | "ladderowa populacja rankingowa" → expanded paragraph using T05 Tier-4 wording for aoestats and mixed-mode wording for aoe2companion; explicit disclaimer that SC2EGSet is "turniejowy korpus replay'ów profesjonalnych (`leaderboard_raw` jest NULL dla 100% rekordów), nie próba meczów rankingowych z systemu matchmakingu"; added "w których uczestniczy znacznie szersza populacja graczy" qualifier on Battle.net ladder reference | T05 §4.4 lines 334–337, §4.1.7; T09 §1 row "Ranked / ladder / quickplay / matchmaking status"; T09 CX-08 wording-change-required; T10 RISK-01/02/03/04/05 |
+| C2-T13-02 | §2.3.2 line 69 (DLC chronology + roster instability framing, RISK-12 / RISK-25) | "W okresie objętym analizowanymi danymi… oferuje pięćdziesiąt cywilizacji dostępnych w trybie rankingowym" → "W oknie czasowym analizowanych danych aoestats (2022-08-28 — 2026-02-07, Tabela 4.4a) Age of Empires II: Definitive Edition zawierał do 50 cywilizacji obserwowanych w korpusie"; appended sentence "Roster ulegał rozszerzeniu w trakcie analizowanego okna czasowego wraz z premierami kolejnych dodatków DLC, zatem nie wszystkie cywilizacje były dostępne przez całe okno; wartość 50 odzwierciedla stan końcowy obserwowany pod koniec analizowanego okresu"; "trybie rankingowym" qualifier dropped per RISK-04 Tier 4 framing for aoestats. [REVIEW: DLC chronology completeness] flag retained verbatim. | T10 RISK-12 / RISK-25; F-014 / F-084; T05 §4.1.7; consistency with T12 hedges in §1.1 / §1.2 / §1.3 / §1.4 |
+| C2-T13-03 | §2.3.2 line 71 (1 225 pair-space framing, RISK-25) | "pięćdziesiąt cywilizacji generuje $\binom{50}{2} + 50 = 1\,275$ uporządkowanych par (lub 1 225 jeśli wyłączyć pojedynki tej samej cywilizacji), co jest o dwa rzędy wielkości większe niż dziewięć możliwych zestawień rasowych w SC2" → preserved core arithmetic but framed it under the explicit hedge "przy założeniu stałego rosteru zaobserwowanego pod koniec analizowanego okna" + "do 1 225 nieuporządkowanych par"; appended interpretation paragraph "Liczby te należy interpretować jako górne ograniczenie wysokowymiarowej przestrzeni par cywilizacji obowiązujące przy stałym roster — w trakcie analizowanego okna premiery kolejnych dodatków DLC powiększały dostępny zestaw cywilizacji, w konsekwencji nie wszystkie pary były obserwowalne przez całe okno"; "średnia liczba meczów na uporządkowaną parę cywilizacji wynosi około 17 200" → "wynosiłaby około 17 200" (conditional on uniform roster); skewness paragraph extended with "oraz na zmienną dostępność cywilizacji w czasie" | T10 RISK-25; consistency with T12 §1.3 RQ3 hypothesis hedge; F-014 / F-084 |
+| C2-T13-04 | §2.5.4 line 173 (1 225 pair-space framing in rating-system context, RISK-25) | "przestrzeń 1 225 par cywilizacji (dla 50 cywilizacji dostępnych w okresie objętym analizowanymi danymi)" → "wysokowymiarowa przestrzeń par cywilizacji (do 1 225 nieuporządkowanych par przy założeniu stałego rosteru zaobserwowanego pod koniec analizowanego okna danych aoestats)" | T10 RISK-25; consistency with C2-T13-02 / C2-T13-03 + §2.3.2 |
+| C2-T13-05 | §2.6.2 final ¶ (ECE not a proper scoring rule, RISK-14 / F-087) | Original prose "operacyjną ramą diagnostyki agregatowej w niniejszej pracy jest zestaw trzech elementów: Expected Calibration Error (ECE) w standardowym binningu dziesięciokwantylowym, diagram rzetelności…, oraz dekompozycja Murphy'ego" reframed: wynik Briera + strata logarytmiczna explicitly named jako właściwe reguły punktacji (Gneiting2007); ECE explicitly demarked as "funkcję pomocniczą, opisową — w odróżnieniu od wyniku Briera i straty logarytmicznej, sama wartość ECE nie jest właściwą regułą punktacji w sensie Gneitinga i Raftery [Gneiting2007], ponieważ jej wartość oczekiwana nie jest minimalizowana wyłącznie przez raportowanie prawdziwej dystrybucji warunkowej, a estymacja zależy od arbitralnego wyboru schematu binningu"; operational frame redescribed jako "dwie właściwe reguły punktacji jako miary główne plus zestaw diagnostyczny ECE + diagram rzetelności + dekompozycja Murphy'ego". Reliability diagram annotated "graficznym, niezależnym od wyboru binningu w jego ciągłej wersji bandwidth-aware". | T10 RISK-14; F-087 cross-cutting external-audit; Gneiting2007 (already in bib); consistency with T11 §4.4.4 ECE framing |
+
+**Wording-change-required claims resolved by T13:** CX-08 (line 37 "ladder ranking population" — fully rewritten with Tier 4 + mixed-mode framing for aoestats and aoe2companion respectively, plus explicit SC2EGSet not-ladder disclaimer).
+
+**Open Pass-2 verification flags retained verbatim in Chapter 2 (per T13 instructions):**
+- F-008 §2.1 line 15 (post-Phase-04 difficulty-asymmetry claim revisit)
+- F-009 §2.2.3 line 39 (Thorrez2024 / Aligulac F4.5 — exact value + Aligulac row check)
+- F-010 §2.2.4 line 49 (Liquipedia_GameSpeed / BlizzardS2Protocol grey-lit policy)
+- F-011 §2.2.4 line 51 (Patch 2.0.8 release date citation)
+- F-012 §2.3.2 line 61 (epoch-time peer-reviewed source)
+- F-013 §2.3.2 line 65 (map pool representativeness for corpus window)
+- F-014 §2.3.2 line 69 (DLC chronology completeness — Three Kingdoms / Chronicles: Alexander / Last Chieftains)
+- F-015 §2.4.4 line 117 (SVM-linear inclusion decision after Phase 03)
+- F-016 §2.4.6 line 131 (GNN exclusion decision after Phase 04/05)
+- F-017 §2.4.7 line 135 (method hierarchy reordering after Phase 04)
+- F-018 §2.5.3 line 163 (TrueSkill 2 RTS independent validation)
+- F-019 §2.5.5 lines 185–186 (Aligulac historical snapshots + F4.5/F5.3 closure)
+- F-020 §2.6.3 line 213 (Demšar §3.1.3 vs §3.2 section verification)
+- F-021 §2.6.4 lines 229–230 (Phase 04 cross-game concordance + Phase 03 IID assumption check)
+
+All 14 retained flags route to Pass 2 / T14 territory; T13 does not perform external literature verification.
+
 ---
 
 ## Chapter 3 — Related Work

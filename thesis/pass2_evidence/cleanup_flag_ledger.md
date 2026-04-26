@@ -237,6 +237,49 @@ where Pass-2 verification is still required.
 
 **Note on T11 scope discipline:** rows assigned in the original ledger to T18 (final consistency pass) for workflow-leakage cleanup were addressed proactively by T11 because they were collocated with §4.2.3 / §4.4.5 / §4.4.6 prose changes also owned by T11; per T10 RISK-08 explicit instruction, T18 must not be the first stage to notice or own §4.2.3 prose work. Rows that are pure REVIEW_QUEUE / bib hygiene (F-077 REVIEW_QUEUE portion, F-091/F-092/F-093/F-094) remain assigned to T17 as before.
 
+---
+
+## T13 status update (2026-04-26)
+
+T13 (Chapter 2 cleanup rewrite) addressed the following Chapter 2 + Chapter-2-locus
+cross-cutting ledger rows. Status transitions are recorded inline; the ledger Status
+column above remains "open" for rows where Pass-2 verification is still required.
+
+| Ledger ID | T13 disposition | Detail |
+|-----------|-----------------|--------|
+| F-008 | preserved | §2.1 line 15 closing-claim post-Phase-04 revisit — [REVIEW] flag retained verbatim (Phase 04 dependency, not a T13 literature-verification item) |
+| F-009 | preserved | §2.2.3 line 39 Thorrez2024 / Aligulac F4.5 — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 owns Table 2 PDF read + Aligulac-row check) |
+| F-010 | preserved | §2.2.4 line 49 Liquipedia_GameSpeed / BlizzardS2Protocol grey-lit — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 / T14 owns Vinyals2017 §3 PDF verification) |
+| F-011 | preserved | §2.2.4 line 51 Patch 2.0.8 release date — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 owns patch-notes citation acquisition; not in T13 bib-edit scope) |
+| F-012 | preserved | §2.3.2 line 61 epoch-time peer-reviewed source — [REVIEW] flag retained verbatim (literature search T14 territory) |
+| F-013 | preserved | §2.3.2 line 65 map pool representativeness — [REVIEW] flag retained verbatim (literature/Liquipedia verification T14 territory) |
+| F-014 | preserved | §2.3.2 line 69 DLC chronology completeness — [REVIEW] flag retained verbatim per T13 instruction; surrounding prose hedged with "do 50 cywilizacji obserwowanych w korpusie" + roster-instability sentence per RISK-12 / RISK-25 |
+| F-015 | preserved | §2.4.4 line 117 SVM-linear inclusion decision — [REVIEW] flag retained verbatim (Phase 03 dependency) |
+| F-016 | preserved | §2.4.6 line 131 GNN exclusion decision — [REVIEW] flag retained verbatim (Phase 04/05 dependency) |
+| F-017 | preserved | §2.4.7 line 135 method hierarchy reordering — [REVIEW] flag retained verbatim (Phase 04 dependency) |
+| F-018 | preserved | §2.5.3 line 163 TrueSkill 2 RTS independent validation — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 / T14 owns literature search) |
+| F-019 | preserved | §2.5.5 lines 185–186 Aligulac historical snapshots + F4.5/F5.3 — both [REVIEW] flags retained verbatim per T13 instruction (Pass 2 / T14 owns Thorrez2024 Table 2 PDF read) |
+| F-020 | preserved | §2.6.3 line 213 Demšar §3.1.3 vs §3.2 location dispute — both [REVIEW] flags retained verbatim per T13 instruction (Pass 2 owns PDF section verification; T13 explicitly forbidden from declaring section-location certainty) |
+| F-021 | preserved | §2.6.4 lines 229–230 Phase 04 cross-game concordance + Phase 03 IID assumption — both [REVIEW] flags retained verbatim (Phase 03/04 dependencies) |
+| F-078 | partly-resolved-by-T13 (Chapter 2 portion) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation in Chapter 2 — §2.2.3 line 37 rewritten using T05 Tier-4 (aoestats) and Tier-2/3 mixed-mode (aoe2companion) wording per T05 §4.4. Chapter 1 portion previously partly-resolved-by-T12; Chapter 4 portion previously resolved-by-T11. Cross-cutting row remains open until full Pass-2 verification of source-specific tier labels. |
+| F-079 | partly-resolved-by-T13 (Chapter 2 portion) | aoestats `random_map` Tier 4 framing applied to Chapter 2 §2.2.3 line 37 (CX-08 PRIMARY FIX locus); never names aoestats as ranked ladder without qualification. Chapter 1 portion previously resolved-by-T12; Chapter 4 portion previously resolved-by-T11. |
+| F-080 | partly-resolved-by-T13 (Chapter 2 framing portion) | SC2 vs AoE2 cross-dataset comparability framing in Chapter 2 §2.2.3 — added explicit "SC2EGSet jest turniejowym korpusem replay'ów profesjonalnych… nie próbą meczów rankingowych z systemu matchmakingu" disclaimer; the existing §2.1 closing paragraph already frames the four-axis confound contextually via the data-availability asymmetry framing. Full §6.3 bounded-comparability statement still deferred (Chapter 6 not yet drafted). |
+| F-084 | partly-resolved-by-T13 (Chapter 2 portion, including §2.5.4 follow-up) | AoE2 civilization count 50 cross-cutting (Ch 1 + Ch 2): Chapter 1 portion previously partly-resolved-by-T12 (§1.1 / §1.2 / §1.3 / §1.4). T13 extends the same hedge to Chapter 2: §2.3.2 line 69 generic civ-count claim → "do 50 cywilizacji obserwowanych w korpusie" + roster-instability appendix; §2.3.2 line 71 1 225-pair claim → "przy założeniu stałego rosteru" hedge + interpretation paragraph; §2.5.4 line 173 1 225-pair claim → "wysokowymiarowa przestrzeń par cywilizacji (do 1 225 nieuporządkowanych par przy założeniu stałego rosteru zaobserwowanego pod koniec analizowanego okna danych aoestats)". Chapter 2 framing portion now harmonised across §2.3.2 / §2.5.4 with Chapter 1 §1.1 / §1.2 / §1.3 / §1.4 hedges. DLC chronology absolute verification (Three Kingdoms, Chronicles: Alexander, Last Chieftains) still routes to Pass-2 (F-014 retained). |
+| F-085 | preserved (Chapter 2 portion) | Demšar / Benavoli / Friedman / Nemenyi classifier-comparison framing — already revised in §2.6.3 to reject Nemenyi post-Benavoli2016 and present tests as candidates; §3.1.3 vs §3.2 section-location dispute is the F-020 / F-056 unverified item, retained as [REVIEW] flag for Pass 2 PDF verification |
+| F-087 | resolved-by-T13 (Chapter 2 portion) | ECE / calibration overclaiming in §2.6.2 — final ¶ rewritten to explicitly distinguish wynik Briera + strata logarytmiczna jako właściwe reguły punktacji (Gneiting2007) od ECE jako "funkcji pomocniczej, opisowej… której wartość oczekiwana nie jest minimalizowana wyłącznie przez raportowanie prawdziwej dystrybucji warunkowej, a estymacja zależy od arbitralnego wyboru schematu binningu". Operational frame redescribed as "dwie właściwe reguły punktacji jako miary główne plus zestaw diagnostyczny ECE + diagram rzetelności + dekompozycja Murphy'ego". Chapter 4 §4.4.4 portion previously resolved-by-T11 (F-087 was T13 -> T11 chain; T13 prose now matches T11 framing). |
+| F-091 | preserved (T17 territory) | REVIEW_QUEUE.md §2.5 entry v8.0 sync — T13 verified that §2.5.5 line 179 currently reads `(wersja HuggingFace v8.0, cutoff 2025-12-31)` and no [REVIEW: F6.6] flag remains in the chapter prose at this locus; the REVIEW_QUEUE pending-table entry at line 21 (REVIEW_QUEUE.md) reflects accurate post-2026-04-21 closure. F-091 is a REVIEW_QUEUE-internal sync row owned by T17, not a T13 prose item. |
+
+**Counts of T13 dispositions:**
+- resolved-by-T13: 1 (F-087 — ECE-not-a-proper-scoring-rule prose distinction in §2.6.2)
+- partly-resolved-by-T13: 4 (F-078 Chapter 2 portion; F-079 Chapter 2 portion; F-080 Chapter 2 framing portion; F-084 Chapter 2 framing portion including §2.3.2 + §2.5.4)
+- preserved (ledger concerns): 14 in-text Chapter 2 ledger entries F-008..F-021, plus cross-cutting cumulative concern F-085 sharing the same physical flag at §2.6.3 line 213 with F-020. F-091 is a REVIEW_QUEUE-discrepancy entry (REVIEW_QUEUE.md §2.5 row, no in-text Chapter 2 [REVIEW:] flag — metadata sync only; routes to T17). All retained per T13 instruction; Pass-2 verification still required.
+- physical Chapter 2 [REVIEW:] flag-bearing lines on disk (`rg -c` on Chapter 2): **15** (lines 15, 39, 49, 51, 61, 65, 69, 117, 131, 135, 163, 171, 185, 213, 229). Three of those lines (185, 213, 229) carry 2 `[REVIEW:` flags each, yielding **18 literal `[REVIEW:` occurrences** total. The 14 vs 15 vs 18 numbers reconcile as: 14 = ledger concerns F-008..F-021 (one ledger row per concern); 15 = unique flag-bearing lines on disk; 18 = literal `[REVIEW:` occurrences (lines 185 / 213 / 229 each pack two concerns into adjacent flags).
+- routed elsewhere: 0 (F-091 was already T17 territory pre-T13)
+
+**T13 did NOT plant any new [REVIEW] flags** in Chapter 2 — every flag in the post-T13 chapter prose was already present pre-T13. T13 made only structural / wording changes consistent with T05/T09/T10 evidence.
+
+**Note on T13 scope discipline:** T13's mandate (per planning/current_plan.md T13 spec lines 1117–1173) is structural cleanup informed by T05/T09/T10/T11/T12 evidence. T13 explicitly defers all literature verification (Demsar2006 PDF section locations, Thorrez2024 Table 2 exact values, Aligulac FAQ current wording, Vinyals2017 SC2LE confirmation, Nakagawa2017 / Browne2005 lower-bound verification, TrueSkill 2 RTS independent validation, AoE2 DLC chronology absolute timestamps, etc.) to T14 / Pass 2. Rows that are pure REVIEW_QUEUE sync (F-091/F-092/F-093/F-094) or pure literature checks remain assigned to T17 / T14 / Pass 2 as before. T13 also explicitly does NOT touch `WRITING_STATUS.md` per parent instruction — global synchronization belongs to T17.
+
 ### By severity
 
 | Severity | Count |
