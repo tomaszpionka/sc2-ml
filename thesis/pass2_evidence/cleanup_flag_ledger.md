@@ -143,6 +143,39 @@ Lineage status vocabulary (from T03): intact / stale / missing / contradictory /
 
 ---
 
+## T12 status update (2026-04-26)
+
+T12 (Chapter 1 cleanup rewrite) addressed the following Chapter 1 + Chapter-1-locus
+cross-cutting ledger rows. Status transitions are recorded inline; the ledger Status
+column above remains "open" for rows where Pass-2 verification is still required.
+
+| Ledger ID | T12 disposition | Detail |
+|-----------|----------------|--------|
+| F-001 | preserved | GarciaMendez2025 verification ([REVIEW] flag at §1.1 line 11 retained verbatim — Pass-2 owns ScienceDirect full-text read) |
+| F-002 | preserved | Shin1993/Forrest2005/Mangat2024 esports-betting transfer ([REVIEW] flag at §1.1 line 11 retained verbatim) |
+| F-003 | preserved | RQ wording finalisation ([REVIEW] flag at §1.3 line 29 retained verbatim — Phase 03/04 dependency) |
+| F-004 | preserved | RQ4 cold-start strata thresholds ([REVIEW] flag at §1.3 line 37 retained verbatim — Phase 03 dependency) |
+| F-005 | preserved | AoE2 mgz parser roadmap ([REVIEW] flag at §1.4 line 43 retained verbatim — AoE2 ROADMAP cross-check) |
+| F-006 | preserved | GarciaMendez2025 bib entry verification (line 83 [REVIEW] retained — same as F-001) |
+| F-007 | preserved | Mangat2024 bib entry verification (line 85 [REVIEW] retained) |
+| F-078 | partly-resolved-by-T12 (Chapter 1 portion) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation in Chapter 1 — Chapter 1 §1.1, §1.4 lines 41 + 45 rewritten using T05 Tier-4 (aoestats) and Tier-2/3 mixed-mode (aoe2companion) wording per T05 §4.4. Chapter 4 portion previously resolved by T11. Cross-cutting nature retained: Chapter 2 §2.2.3 portion routes to T13. |
+| F-079 | partly-resolved-by-T12 (Chapter 1 portion) | aoestats `random_map` Tier 4 framing applied to Chapter 1 §1.4 line 45 (CX-05 primary fix locus); never names aoestats as ranked ladder without qualification. Chapter 4 portion previously resolved by T11. |
+| F-080 | partly-resolved-by-T12 (Chapter 1 framing portion) | SC2 vs AoE2 cross-dataset comparability bounded statement: T12 added explicit "Charakter porównania krzyżowego" paragraph at §1.4 articulating four-axis confound framing per T09 §2 Final Comparison Frame. Full §6.3 bounded-comparability statement still deferred (Chapter 6 not yet drafted). |
+| F-082 | partly-resolved-by-T12 (Chapter 1 portion only — flag preserved verbatim) | GarciaMendez2025 cross-cutting (Ch 1 + Ch 3) — Chapter 1 §1.1 line 11 [REVIEW] flag retained verbatim per T12 instruction (Pass-2 / T14 owns full-text verification of authors, target game, accuracy figure). Chapter 3 §3.3.5 portion routes to T14. |
+| F-083 | preserved (Chapter 1 portion) | Hodge2021 phrasing + Dota 2 transfer limits — §1.1 line 11 framing was not the Chapter 1 cleanup target; Hodge2021 [REVIEW] not planted in Chapter 1; full transfer-limit verification routed to T14 (Chapter 3 §3.3.1) |
+| F-084 | partly-resolved-by-T12 (Chapter 1 framing portion, including §1.2 follow-up patch) | AoE2 civilization count 50 over data window: T12 added explicit roster-instability hedge at §1.1 line 13 ("do 50 cywilizacji… roster ulegał rozszerzeniu") and §1.1 line 15 / §1.3 RQ3 / §1.4 oś trzecia ("do 1 225 nieuporządkowanych par przy założeniu stałego rosteru"). T12 follow-up patch (2026-04-26) extends the same hedge to §1.2 line 23 generic structural cardinality framing: `(50 cywilizacji wobec 3 ras w SC2)` → `(do 50 cywilizacji obserwowanych w analizowanym oknie danych aoestats — liczba cywilizacji rosła w czasie wraz z premierami kolejnych dodatków DLC, zatem nie wszystkie pary były dostępne przez całe okno; wobec 3 ras w SC2)`. Chapter 1 framing portion now harmonised across §1.1 / §1.2 / §1.3 / §1.4. DLC chronology absolute verification (Three Kingdoms, Chronicles: Alexander, Last Chieftains) still routes to T13 (Chapter 2 §2.3.2). |
+| F-088 | partly-resolved-by-T12 (Chapter 1 portion) | SHAP/feature importance causal interpretation: Chapter 1 §1.1 coaching-tools sentence (line 11) NOT modified by T12 — wording is descriptive ("identyfikacji słabych punktów… na podstawie analizy ważności cech"), §1.4 already explicitly disclaims causal claims. RISK-13 hedge at §1.1 deemed unnecessary in current Chapter 1 wording; full SHAP causal hedge routes to T14 (Chapter 3 §3.3.5) and T11 (Chapter 4 §4.4 once SHAP analysis drafted). |
+
+**Counts of T12 dispositions:**
+- resolved-by-T12: 0 (all Chapter 1 [REVIEW] flags retained per Pass-2 dependency)
+- partly-resolved-by-T12: 6 (F-078 Chapter 1 portion; F-079 Chapter 1 portion; F-080 Chapter 1 framing portion; F-082 Chapter 1 portion; F-084 Chapter 1 framing portion; F-088 Chapter 1 portion)
+- preserved: 8 (F-001, F-002, F-003, F-004, F-005, F-006, F-007, F-083 Ch 1 portion)
+- routed elsewhere: F-082 Chapter 3 portion to T14; F-083 Chapter 3 portion to T14; F-084 Chapter 2 portion to T13; F-088 Chapter 3/4 portions to T14/T11
+
+**T12 also planted ONE NEW Chapter 1 [REVIEW] flag** at §1.1 line 13: `[REVIEW: T14 / Pass-2 — zweryfikować pełność tego stwierdzenia względem prac z lat 2024–2026 (m.in. Elbert2025EC oraz cztery kandydatury autorskie odnotowane w F-036)]`. This flag accompanies the bounded research-gap rewording per RISK-16 and routes to T14 (Chapter 3 literature verification).
+
+---
+
 ## T11 status update (2026-04-26)
 
 T11 (Chapter 4 cleanup rewrite) addressed the following Chapter 4 ledger rows. Status
