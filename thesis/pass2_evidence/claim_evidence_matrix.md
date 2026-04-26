@@ -85,11 +85,36 @@ draft estimate). Fix = class A wording change in §3.2.2, forwarding to §4.1.3 
 
 ## Chapter 4 — Data and Methodology
 
+**T11 update (2026-04-26):** Chapter 4 prose was revised in T11 (cleanup rewrite) to apply
+T05 source-specific terminology, T09 grain-disambiguation patches, T10 risk register
+mitigation (RISK-01/02/03/04/07/08/23/24/26), and to remove workflow-leakage prose. The
+v1 crosswalks remain frozen and unchanged. Below: T11-induced claim deltas (numerical
+values unchanged; framing/grain clarified).
+
+### T11 claim deltas (Chapter 4 prose 2026-04-26)
+
+| Claim ID | Section/line locus | Delta | Evidence source |
+|----------|-------------------|-------|-----------------|
+| C4-T11-01 | §4.1.2.0 line 79 (closing rationale dual-corpus) | wording: "rankingowa ladderowa (dwa korpusy AoE2)" → "publiczna populacja 1v1 Random Map (dwa korpusy AoE2 o niejednorodnej kompozycji rankingu i quickplay/matchmakingu)" | T05 §4.4 (line 340); T09 CX-12 |
+| C4-T11-02 | §4.1.3 Tabela 4.4a Populacja row | aoestats: "Ladder rankingowy 1v1 random_map" → Tier 4 wording with grain (~641K profile_id post-cleaning); aoe2companion: "Ladder rankingowy 1v1 (rm_1v1 + qp_rm_1v1)" → mixed-mode wording; SC2: added grain (~2 495 player_id_worldwide, Heckman selection) | T05 §4.4 lines 334–335; T09 CX-13/CX-14 |
+| C4-T11-03 | §4.1.3 Tabela 4.4b Liczba meczów row | added grain labels: SC2 22 209 par meczowych / 44 418 player-rows; aoestats 17 814 947 meczów (1-row-per-match); aoe2companion 30 531 196 par meczowych / 61 062 392 player-rows / 683 790 distinct profileId in lb=6+18 cohort | T09 §1 row "Unit of observation"; T10 RISK-07/24; T10 WARNING-3/4 |
+| C4-T11-04 | §4.1.3 Tabela 4.4b new row "Konstrukcja focal/opponent" | NEW row added to table describing per-dataset focal/opponent construction; explicitly differentiates SC2EGSet 2-row, aoestats 1-row UNION-ALL, aoe2companion 2-row | T10 RISK-24 |
+| C4-T11-05 | §4.1.4 line 211 Twierdzenia dataset-conditional | replaced "rankingowe ladderowe (`[POP:ranked_ladder]`)" with mixed-mode + Tier 4 framing + new operational tags `[POP:rm_1v1_and_qp_rm_1v1]` and `[POP:1v1_random_map]`; explicit four-asymmetry framing of cross-game claims | T05 §4.4 line 337; T09 CX-17; T10 RISK-05/06 |
+| C4-T11-06 | §4.2.5 Tabela 4.5 Populacja scope row | aoestats "ladder 1v1 random_map" → Tier 4 wording; aoe2companion "ladder 1v1 (rm_1v1 + qp_rm_1v1)" → explicit ranked candidate + quickplay/matchmaking-derived | T05 §4.4 lines 338–339; T09 CX-21 |
+| C4-T11-07 | §4.2.5 Tabela 4.5 Kardynalność row | added grain labels: SC2 2 495 toon_id (post-cleaning); aoestats 641 662 profile_id (post-cleaning matches_1v1_clean); aoe2companion 3 387 273 profileId from `matches_raw` cross-leaderboard cardinality (NOT lb=6+18 cohort, which has 683 790 distinct profileId per `01_04_04_identity_resolution`) | T10 RISK-07; T09 §1 row "Population" line 19 |
+| C4-T11-08 | §4.2.5 Uwaga do Tabeli 4.5 | rephrased "rankingowej (pełne historie kontowe)" → "publicznych rekordach z głębokimi historiami kontowymi (zarówno meczów rankingowych, jak i quickplay/matchmakingu)"; added grain caveat for ~78 figure | T10 RISK-07 |
+| C4-T11-09 | §4.4.6 closure paragraph | removed `PR #TBD` (post-F1 already merged), `BACKLOG.md F1/F6` references, shell `grep` literal, Phase 02 references; added neutral closure phrasing tying flag to Pass-2 historical-narrative rewrite | T10 RISK-23; F-065/F-066/F-070/F-071/F-077 |
+| C4-T11-10 | §4.2.3 line 303 (workflow-leakage) | replaced `.claude/scientific-invariants.md:86` file-path reference with academic phrasing "zasada prowenancji liczb (każda stała numeryczna musi być uzasadniona literaturą lub empirycznie, z dokumentacją derywacji w trwałym artefakcie)" | T10 RISK-08 (BLOCKER-B resolution); F-072 |
+| C4-T11-11 | §4.4.4 Metryki podstawowe + Metryki dyskryminacyjne i kalibracyjne | tightened ECE framing: now explicitly stated as opisowa diagnostyka kalibracji (binning-dependent), NOT proper scoring rule per [Gneiting2007]; not equated with Brier/log-loss | T10 RISK-14 |
+| C4-T11-12 | §4.4.5 Wybór observed-scale vs latent-scale ICC | softened "observed-scale headline stanowi zatem **dolne oszacowanie** latent-scale wielkości" → cautious "może być systematycznie nie mniejsza"; ICC reframed as "diagnostyka uzupełniająca", not main methodological measure | T10 RISK-15 |
+| C4-T11-13 | Multiple §4.1, §4.2, §4.4 paragraphs (workflow-leakage) | systematic replacement of `Phase 01` / `Phase 02` / `Phase 03/04` workflow codes with academic phrasing ("etap eksploracji danych", "etap czyszczenia danych", "faza inżynierii cech", "faza splittingu i baselines", "faza treningu modeli"); invariant codes I3/I5/I7/I8/I9/I10 rephrased as named scientific principles ("zasada dyscypliny temporalnej", "zasada symetrycznego traktowania graczy", "zasada prowenancji liczb", "zasada jednolitego protokołu preprocessingu", "zasada niemodyfikowalności surowych tabel", "zasada prowenancji surowych tabel") | T10 RISK-08 / WARNING-3/4; F-066–F-076 |
+
 ### §4.1 claims (SC2EGSet and AoE2 corpus descriptions)
 
 See `sec_4_1_crosswalk.md` — frozen v1 crosswalk with 101 rows covering all §4.1.1, §4.1.2,
 and §4.1.3 prose numbers. Zero halt events at creation; all numbers grounded per
-`sec_4_1_halt_log.md`.
+`sec_4_1_halt_log.md`. **Numerical values unchanged by T11; only framing/grain/terminology
+revised.**
 
 Quick reference to key claim clusters:
 

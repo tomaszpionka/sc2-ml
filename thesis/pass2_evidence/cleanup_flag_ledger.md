@@ -141,6 +141,69 @@ Lineage status vocabulary (from T03): intact / stale / missing / contradictory /
 
 **Total ledger entries: 101 (F-001 through F-101)**
 
+---
+
+## T11 status update (2026-04-26)
+
+T11 (Chapter 4 cleanup rewrite) addressed the following Chapter 4 ledger rows. Status
+transitions are recorded inline; the ledger Status column above remains "open" for rows
+where Pass-2 verification is still required.
+
+| Ledger ID | T11 disposition | Detail |
+|-----------|----------------|--------|
+| F-039 | preserved | SC2EGSet Zenodo CC-BY 4.0 + version verification — [REVIEW] flag retained pending Pass-2 metadata read |
+| F-040 | preserved | acquisition date proxy + 46 patches — [REVIEW] flag retained |
+| F-041 | preserved | aoestats ToS + 172/171 asymmetry — [REVIEW] flag retained |
+| F-042 | preserved | elo_diff exact values — [REVIEW] retained; provisional Polish idiom for "prowizoryczny" applied to PRE-canonical_slot wording |
+| F-043 | preserved | 744-cohort framing — [REVIEW] retained |
+| F-044 | preserved | aoe2companion ToS + profile_id max — [REVIEW] retained |
+| F-045 | preserved | temporal density Tabela 4.4a — [REVIEW] retained |
+| F-046 | preserved | F5.4 anchoring — [REVIEW] retained |
+| F-047 | partly-resolved-by-T11 | F6 stale flag content — `PR #TBD` removed; substantive rewrite pending Pass-2 |
+| F-048 | preserved | F5.6 co-locus — [REVIEW] retained pending Pass-2 PDF read |
+| F-049 | preserved | I10 narrative — [REVIEW] retained |
+| F-050 | preserved | Polish-terms verification §4.2.2 — [REVIEW] retained |
+| F-051 | preserved | Branch (ii) framework framing — [REVIEW] retained |
+| F-052 | preserved | name cardinality discrepancy — [REVIEW] retained |
+| F-053 | preserved | §4.3.1 forward-ref / multi-account — [REVIEW] retained |
+| F-054 | preserved | MMR MAR-primary / MNAR-sensitivity — [REVIEW] retained |
+| F-055 | preserved | 80% threshold operational heuristic — [REVIEW] retained |
+| F-056 | preserved | F5.6 §4.4.4 §3.2 vs §3.1.3 — [REVIEW] retained pending Pass-2 PDF read |
+| F-057 | preserved | TG1 candidate-framing — [REVIEW] reworded but retained |
+| F-058 | preserved | Nakagawa2017 lower-bound — [REVIEW] retained, claim weakened |
+| F-059 | preserved | Chung2013 REML — [REVIEW] retained |
+| F-060 | preserved | sc2egset CI method — [UNVERIFIED] retained in Tabela 4.7 |
+| F-061 | preserved | Gelman2007 §11–12 small-cohort — [REVIEW] retained |
+| F-062 | preserved | duplicate of F-060 — same disposition |
+| F-063 | preserved | per-slot vs aggregate examiner-readability — [REVIEW] retained |
+| F-064 | partly-resolved-by-T11 | post-F6 stale grep claim — workflow-leakage `grep` literal removed from prose; substantive count update deferred to Pass-2 |
+| F-065 | resolved-by-T11 | post-F1 closure narrative — `PR #TBD` removed; section reframed for post-F1 state per T05 F-098 reclassification (PR #185 confirmed merged) |
+| F-066 | resolved-by-T11 | `PR #TBD` workflow leakage — removed from §4.4.6 and §4.1.2.1 prose; replaced with neutral phrasing |
+| F-067 | resolved-by-T11 | `planning/BACKLOG.md F1` workflow leakage in §4.1.2.1 — removed; replaced with "planowane uzupełnienie schematu w fazie inżynierii cech" |
+| F-068 | resolved-by-T11 | `planning/BACKLOG.md F6` workflow leakage in §4.1.4 — paragraph rewritten to remove BACKLOG reference |
+| F-069 | resolved-by-T11 | `planning/BACKLOG.md` reference in §4.4.5 Tabela 4.7 footnote — removed; replaced with "znana drobna niespójność odłożona jako planowana drobna korekta w przyszłej iteracji harmonizacji metod CI" |
+| F-070 | resolved-by-T11 | `planning/BACKLOG.md F1` and `planning/BACKLOG.md` references in §4.4.6 — both removed; section reframed |
+| F-071 | resolved-by-T11 | `grep '[PRE-canonical_slot]'` shell literal in §4.4.6 — removed; replaced with factual statement "metadana artefaktu interfejsu temporalnego aoestats (`phase06_interface_aoestats.csv`, 136 wierszy danych) niesie tag `[PRE-canonical_slot]` w zaktualizowanym polu `notes` w 30 wierszach" |
+| F-072 | resolved-by-T11 | `.claude/scientific-invariants.md:86` file path leakage in §4.2.3 line 303 — removed; replaced with academic "zasada prowenancji liczb" reference (resolves RISK-08 BLOCKER-B per T10 Round 2) |
+| F-073 | resolved-by-T11 | `Phase 01 / Pipeline Section 01_04` in Tabela 4.4b caption — replaced with "po wstępnym czyszczeniu danych" |
+| F-074 | resolved-by-T11 | "Reguły cleaning stosowane w Phase 01" in §4.2.3 — replaced with "Reguły cleaning stosowane w etapie czyszczenia danych" |
+| F-075 | resolved-by-T11 | "Phase 01" in §4.2.3 line 301 (MissingIndicator strategy) — replaced with "etap czyszczenia danych" |
+| F-076 | partly-resolved-by-T11 | HTML comment §4.3 BLOCKED-Phase-01/02/03/04 strings — converted to academic placeholder language ("Sekcja oczekuje na materializację cech w fazie inżynierii cech", etc.) |
+| F-077 | resolved-by-T11 (in chapter prose) | `PR #TBD` reference in §4.4.6 chapter prose — removed; REVIEW_QUEUE entry updated separately. Note: original F-077 also covers REVIEW_QUEUE.md row line 45 — that entry remains for T17 to update REVIEW_QUEUE.md table (out of T11 scope) |
+| F-078 | resolved-by-T11 (in chapter prose) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation — Chapter 4 §4.1.3 / §4.2.3 / §4.1.4 / Tabela 4.4a/b / Tabela 4.5 all rewritten per T05 §4.4 + T09 CX-classification (RISK-01/02/03/04/23 mitigated in chapter prose) |
+| F-079 | resolved-by-T11 (in chapter prose) | aoestats `random_map` Tier 4 framing — applied throughout Chapter 4 |
+| F-080 | preserved | SC2 vs AoE2 cross-dataset comparability — bounded statement deferred to §6.3 (Chapter 6 not yet drafted; T09 evidence in matrix file) |
+| F-081 | partly-resolved-by-T11 | SC2EGSet vs SC2ReSet vs DatasetPreparator — added clarifying sentence in §4.1.1.0 with [REVIEW] flag for Pass-2 confirmation against full Bialecki2023 text |
+| F-090 | resolved-by-T11 (in chapter prose) | aoe2companion CONSORT row R01 wording — Tabela 4.3 R01 line updated to "(rm_1v1 ranked candidate, ID 6 + qp_rm_1v1 quickplay/matchmaking, ID 18)" |
+
+**Counts of T11 dispositions:**
+- resolved-by-T11: 16 (F-065, F-066, F-067, F-068, F-069, F-070, F-071, F-072, F-073, F-074, F-075, F-077 chapter portion, F-078 chapter portion, F-079 chapter portion, F-090 chapter portion, plus C4-T11 implicit deltas)
+- partly-resolved-by-T11: 4 (F-047, F-064, F-076, F-081)
+- preserved: 21 (Pass-2 verification still required for all the [REVIEW] flags listed above)
+- routed elsewhere: F-077 REVIEW_QUEUE portion routed to T17
+
+**Note on T11 scope discipline:** rows assigned in the original ledger to T18 (final consistency pass) for workflow-leakage cleanup were addressed proactively by T11 because they were collocated with §4.2.3 / §4.4.5 / §4.4.6 prose changes also owned by T11; per T10 RISK-08 explicit instruction, T18 must not be the first stage to notice or own §4.2.3 prose work. Rows that are pure REVIEW_QUEUE / bib hygiene (F-077 REVIEW_QUEUE portion, F-091/F-092/F-093/F-094) remain assigned to T17 as before.
+
 ### By severity
 
 | Severity | Count |
