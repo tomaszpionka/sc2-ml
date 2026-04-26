@@ -15,6 +15,29 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-04-26 — Cross-dataset comparison-frame decision (T09 audit cleanup)
+
+**Source:** T09 executor (thesis/audit-methodology-lineage-cleanup).
+**Detailed evidence:** `thesis/pass2_evidence/cross_dataset_comparability_matrix.md`
+
+**Framing decision (binding for T11/T12/T13 chapter edits):**
+
+The thesis compares prediction methods under three structurally different data regimes:
+- **SC2EGSet:** Professional/tournament replay corpus with replay-derived in-game telemetry; ~2,495 distinct player identities; Battle.net MMR 83.95% absent; in-game event streams available.
+- **aoestats:** Third-party 1v1 Random Map records (source label `leaderboard='random_map'`; queue semantics unverified — Tier 4 per T05); 17.8M matches post-cleaning; no in-game state; no player name column.
+- **aoe2companion:** Public 1v1 Random Map **mixed-mode** records spanning two leaderboards. Leaderboard-activity distribution (`leaderboard_raw` per `aoe2companion/research_log.md:872`): `rm_1v1` (ID 6) ≈ 54M raw entries (~88.5% within lb=6+18 subset); `qp_rm_1v1` (ID 18) ≈ 7M raw entries (~11.5%). Post-cleaning analytical view (`matches_1v1_clean`): 30,531,196 match-pairs / 683,790 distinct `profileId`s in the lb=6+18 cohort. No in-game state; mixed ranked + quickplay population.
+
+Observed differences between SC2 and AoE2 results must be interpreted as method/data/population differences, NOT pure game-mechanic differences.
+
+**No dataset row counts, filters, or artifacts were changed in T09.** This is a framing and labelling decision only.
+
+**Downstream constraints:** T11 (Chapter 4) and T12/T13 (Chapters 1–2) must apply the revised terminology:
+- aoestats: never "ranked ladder" without qualification — use Tier 4 label
+- aoe2companion combined scope: never "ranked ladder" for the combined ID 6 + ID 18 population
+- 9 wording-change-required claims identified in Chapters 1–4 (see matrix §3)
+
+---
+
 ## [CROSS] 2026-04-21 — [WP-7 / sc2egset] `is_cross_region_fragmented` annotation + spec 02_00 CROSS-02-00-v2 → v3
 
 **Source:** sc2egset research_log.md 2026-04-21 `[Phase 01 / Step 01_04_05] Cross-region fragmentation Phase 01 annotation` entry; PR #204.
