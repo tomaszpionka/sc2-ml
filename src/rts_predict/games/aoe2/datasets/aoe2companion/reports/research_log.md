@@ -1971,4 +1971,97 @@ Thesis §4.2.2 (per `planning/current_plan.md`) had cited `collision_rate = 3.7%
 
 ### Open questions / follow-ups
 
+---
+
+## 2026-04-26 — [Phase 01 / Step 01_06_02] Data Quality Report regeneration — R01 wording correction (T07/T08 repair)
+
+**Category:** D (bug fix — data provenance / wording)
+**Dataset:** aoe2companion
+**Branch:** thesis/audit-methodology-lineage-cleanup
+**Scope:** Step 01_06_02 generator and generated artifact only. No raw data, filters, row counts, or cleaning logic changed. Wording / semantic-scope repair only.
+
+### Discovery
+
+T05 (aoe2_ladder_provenance_audit.md, 2026-04-26) classified the generated artifact `data_quality_report_aoe2companion.md` line 29 as "unsupported": the R01 Action column read "Retain 1v1 ranked ladder only" — a mis-label, because the filter `internalLeaderboardId IN (6, 18)` retains two distinct populations:
+
+- `internalLeaderboardId = 6` → `rm_1v1` — ranked 1v1 Random Map ladder
+- `internalLeaderboardId = 18` → `qp_rm_1v1` — quickplay/matchmaking-derived 1v1 Random Map (per repo-local evidence and BLOCKER-1 fallback rule: treat ambiguous queue as quickplay, never ranked)
+
+Calling the combined population "ranked ladder only" is factually incorrect and must not propagate into Chapter 4 prose.
+
+T06 (2026-04-26) confirmed the mis-label was isolated to the string literal in the generator (line 99 of `01_06_02_data_quality_report.py`); the ROADMAP Step 01_06_02 wording does not carry this language.
+
+### Generator change (T07, 2026-04-26)
+
+File: `sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py`
+
+Line 99 R01 Action string template changed from:
+
+```
+Retain 1v1 ranked ladder only
+```
+
+to:
+
+```
+Retain 1v1 Random Map scope: rm_1v1 ranked (ID 6) + qp_rm_1v1 quickplay (ID 18)
+```
+
+The paired `.ipynb` was synced via jupytext and executed end-to-end:
+
+```
+source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.ipynb
+```
+
+### Artifact regenerated
+
+`src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoe2companion.md`
+
+R01 row (line 29) after regeneration:
+
+```
+| R01 | `internalLeaderboardId IN (6, 18)` (rm/ew scope) | Retain 1v1 Random Map scope: rm_1v1 ranked (ID 6) + qp_rm_1v1 quickplay (ID 18) | 216,027,260 rows excluded |
+```
+
+### Assertion status (from T07 execution)
+
+- `s3_matches == 30,531,196` — PASS
+- `c2["all_assertions_pass"] is True` — PASS
+
+All row counts, cleaning rule logic, and column-drop decisions are unchanged from the original notebook run. The regeneration confirms the corrected artifact is numerically identical to the original.
+
+### Limitation
+
+This is a wording / semantic-scope repair only. No raw data, filter predicates, row counts, or cleaning logic changed. The repair closes the lineage defect introduced by the generator's string literal; it does not alter any analytical result.
+
+### Note on pre-existing condition-cell label
+
+The condition cell of the R01 row retains the label "(rm/ew scope)" — this is a pre-existing shorthand in the generator and was not introduced or modified by T07. It is noted for completeness; the Action column now carries the authoritative mixed-mode description.
+
+### Pre-commit follow-up
+
+Pre-commit follow-up also clarified the R01 condition shorthand from `(rm/ew scope)` to explicit `(ID 6 rm_1v1 + ID 18 qp_rm_1v1 scope)` wording, and the identity-summary metric label from `(rm+ew scope)` to the same explicit form; no row counts, filters, or cleaning logic changed.
+
+### Downstream thesis implication
+
+Chapter 4 may reference this artifact (Step 01_06_02 generated artifact) only with mixed-mode wording. The description "ranked ladder" or "ranked ladder only" must not appear in any thesis prose that cites this artifact as source. Specifically: §4.1.3 / §4.2.3 / §4.3 Tabela 4.4a / Tabela 4.4b / Tabela 4.5 — see T11 action targets in T05 audit §5.
+
+### References
+
+- T05 audit: `thesis/pass2_evidence/aoe2_ladder_provenance_audit.md` (§4.4 occurrence table, §5 propagation trace, §6 repair determination)
+- Regeneration decision: `thesis/pass2_evidence/notebook_regeneration_manifest.md` (T06 decision record, Step 01_06_02 detail)
+
+### Invariants touched
+
+None — the cleaning rule filter predicate `internalLeaderboardId IN (6, 18)` was always correct. Only the prose description of its scope has changed.
+
+### Thesis mapping
+
+- Chapter 4, §4.1.2 / §4.1.3 — aoe2companion scope description (R01 action wording feeds CONSORT narrative)
+- Chapter 4, §4.2.3 — Tabela 4.4b / Tabela 4.5 scope rows (mixed-mode wording required)
+
+### Open questions / follow-ups
+
+- T11 must apply corrected "mixed-mode" terminology to §4.1.2, §4.2.3, §4.1.4 thesis prose per T05 audit §5 action targets.
+
 - None in scope; thesis §4.2.2 now cites a reproducible figure.

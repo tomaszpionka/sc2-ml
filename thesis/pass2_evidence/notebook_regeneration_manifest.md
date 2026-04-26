@@ -136,7 +136,7 @@ All Phase 01 aoe2companion steps are `complete` per STEP_STATUS.yaml (completed 
 | sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.py | 01_05_08 | intact | Temporal leakage audit background | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.py | 01_05_09 | intact | Phase 01 exit memo background | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py | 01_06_01 | intact | Data dictionary background | confirmed_intact | — |
-| sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py | 01_06_02 | stale — R01 description carries "Retain 1v1 ranked ladder only" (mis-label per T05/Q2); ID 18 is qp_rm_1v1 (quickplay), not ranked ladder | Quality report — R01 cleaning rule mis-labels qp_rm_1v1 (ID 18) as ranked ladder | **flagged_stale** | T05/Q2 BLOCKER-1 propagation |
+| sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py | 01_06_02 | intact (post-T07/T08 regeneration) — R01 Action column corrected to mixed-mode wording; no "ranked ladder only" remnant | Quality report — R01 cleaning rule mis-labels qp_rm_1v1 (ID 18) as ranked ladder (repaired T07; lineage closed T08) | **confirmed_intact** | T05/Q2 BLOCKER-1 propagation |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_03_risk_register.py | 01_06_03 | intact | Risk register background | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_04_modeling_readiness.py | 01_06_04 | intact | Modeling readiness background | confirmed_intact | — |
 
@@ -148,7 +148,11 @@ All Phase 01 aoe2companion steps are `complete` per STEP_STATUS.yaml (completed 
 
 **T06 decision date:** 2026-04-26
 
-**Status:** `flagged_stale` (was `confirmed_intact` in T03 manifest; flipped by T06 per T05/Q2 finding)
+**Status:** `regenerated_pending_log` (was `confirmed_intact` in T03 manifest; flipped to `flagged_stale` by T06 per T05/Q2 finding; transitioned to `regenerated_pending_log` by T07 on 2026-04-26)
+
+**Post-T07 status (2026-04-26):** artifact regenerated successfully; manifest row transitioned to `regenerated_pending_log`. Pending T08 research_log + STEP_STATUS closure before promotion to `confirmed_intact`.
+
+**Post-T08 status (2026-04-26):** T07 regenerated artifact successfully. T08 research_log entry added to `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md` (section "2026-04-26 — [Phase 01 / Step 01_06_02] Data Quality Report regeneration"). STEP_STATUS.yaml inspected: schema contains only `name`, `pipeline_section`, `status`, `completed_at` fields per step (no `notes` or `regen_history` scalar fields); a YAML comment was appended to the Step 01_06_02 block following the precedent set by Step 01_05_09; `status` remains `complete` — the wording repair does not affect completion status. Full repair lineage (ROADMAP → notebook → artifact → research_log → STEP_STATUS) is now closed. Step 01_06_02 promoted to `confirmed_intact`. **Chapter 4 rewrite gate is now unlocked for this specific artifact.** Pre-commit follow-up (2026-04-26): also clarified `(rm/ew scope)` and `(rm+ew scope)` shorthand in generator lines 99 and 128 to explicit `(ID 6 rm_1v1 + ID 18 qp_rm_1v1 scope)`. Notebook re-executed and artifact re-verified; no `rm/ew`, `rm+ew`, `ranked ladder`, or `rankingowy` wording remains. All four T11-gate conditions still satisfied.
 
 **Cause:** `T05/Q2 BLOCKER-1 propagation` (per T16 14A.1 BLOCKER-1 sub-check 6 extension)
 
@@ -219,22 +223,25 @@ No Phase 02+ notebooks exist yet. When created, they will be added to this manif
 
 ## Summary
 
-**Last updated:** 2026-04-26 by T06 executor (thesis/audit-methodology-lineage-cleanup).
-**Change from T03 baseline:** aoe2companion Step 01_06_02 reclassified from `confirmed_intact` to `flagged_stale` per T05/Q2 finding. Count: confirmed_intact 85→84; flagged_stale 0→1.
+**Last updated:** 2026-04-26 by T08 executor (thesis/audit-methodology-lineage-cleanup).
+**Change from T06 baseline:** aoe2companion Step 01_06_02 transitioned from `flagged_stale` → `regenerated_pending_log` (T07) → `confirmed_intact` (T08). Count: confirmed_intact 84→85; flagged_stale 0; regenerated_pending_log 1→0.
+**Change from T07 baseline:** aoe2companion Step 01_06_02 transitioned from `regenerated_pending_log` to `confirmed_intact` by T08 (research_log entry added + STEP_STATUS comment appended). Full repair lineage closed.
 
-| Dataset | confirmed_intact | not_yet_assessed | flagged_stale | phase_blocked |
-|---------|-----------------|-----------------|---------------|---------------|
-| sc2egset (Phase 01) | 32 | 2 | 0 | 0 |
-| aoestats (Phase 01) | 22 | 5 | 0 | 0 |
-| aoe2companion (Phase 01) | 30 | 0 | 1 | 0 |
-| Phase 02+ (all) | 0 | 0 | 0 | n/a (no notebooks exist) |
-| **Total** | **84** | **7** | **1** | **0** |
+| Dataset | confirmed_intact | not_yet_assessed | flagged_stale | regenerated_pending_log | phase_blocked |
+|---------|-----------------|-----------------|---------------|------------------------|---------------|
+| sc2egset (Phase 01) | 32 | 2 | 0 | 0 | 0 |
+| aoestats (Phase 01) | 22 | 5 | 0 | 0 | 0 |
+| aoe2companion (Phase 01) | 31 | 0 | 0 | 0 | 0 |
+| Phase 02+ (all) | 0 | 0 | 0 | 0 | n/a (no notebooks exist) |
+| **Total** | **85** | **7** | **0** | **0** | **0** |
 
-**1 notebook is flagged_stale:** `sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py` (Step 01_06_02). See detail record above. Generator edit + regeneration required before T11.
+**0 notebooks are flagged_stale. 0 notebooks are regenerated_pending_log.** All aoe2companion Phase 01 notebooks are `confirmed_intact`. Full repair lineage for Step 01_06_02 is closed.
 
 The 7 `not_yet_assessed` notebooks are supplementary or extra-step notebooks not directly linked
 to a thesis claim in Chapters 1–4 (cross-region annotation, scaffold, extra cleaning steps).
 They require no regeneration for thesis lineage purposes.
+
+**Escape valve status (post-T08):** 0 stale Steps across all three datasets combined. 0 Steps are `regenerated_pending_log`. All Phase 01 notebooks across all three datasets are `confirmed_intact` or `not_yet_assessed`. Escape valve did NOT fire.
 
 The T05/Q2 BLOCKER-1 `qp_rm_1v1` leaderboard label issue in
 `aoe2companion/01_exploration/05_temporal_panel_eda/01_05_03_stratification.py` is flagged with
@@ -242,4 +249,4 @@ cause `T05/Q2 BLOCKER-1 propagation` but artifact is confirmed_intact — the no
 is correct; only §4.2.3 / §4.1.4 prose may need terminology clarification (class A/B edit).
 No notebook regeneration is triggered by this finding alone.
 
-**Escape valve status:** 1 stale Step across all three datasets combined. Threshold = 10. Escape valve does NOT fire. T06 work proceeds normally.
+**Escape valve status (T06 baseline, superseded):** 1 stale Step across all three datasets combined. Threshold = 10. Escape valve did NOT fire. — Superseded by T07: Step 01_06_02 transitioned to `regenerated_pending_log`; 0 stale Steps remain.

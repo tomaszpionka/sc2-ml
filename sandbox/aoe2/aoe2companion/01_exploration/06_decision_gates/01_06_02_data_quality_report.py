@@ -96,7 +96,7 @@ Duration is POST_GAME_HISTORICAL and does not affect the prediction label `won` 
 
 | Rule | Condition | Action | Impact |
 |---|---|---|---|
-| R01 | `internalLeaderboardId IN (6, 18)` (rm/ew scope) | Retain 1v1 ranked ladder only | {excl_01:,} rows excluded |
+| R01 | `internalLeaderboardId IN (6, 18)` (ID 6 rm_1v1 + ID 18 qp_rm_1v1 scope) | Retain 1v1 Random Map scope: rm_1v1 ranked (ID 6) + qp_rm_1v1 quickplay (ID 18) | {excl_01:,} rows excluded |
 | R02 | Dedup (matchId, profileId) + profileId=-1 | Remove duplicates and invalid players | {excl_12:,} rows excluded |
 | R03 | 2-row matches with complementary `won` | Remove non-complementary results | {excl_23:,} rows excluded |
 | DS-AOEC-01 | server/scenario/modDataset/password: NULL >40% (MNAR/MAR) | DROP 4 columns | -4 cols matches_1v1_clean |
@@ -125,7 +125,7 @@ Duration is POST_GAME_HISTORICAL and does not affect the prediction label `won` 
 
 | Metric | Value |
 |---|---|
-| Total distinct profileIds (rm+ew scope) | {id_total:,} |
+| Total distinct profileIds (ID 6 rm_1v1 + ID 18 qp_rm_1v1 scope) | {id_total:,} |
 | Stable profiles (1 name ever) | {100-rename_pct:.2f}% |
 | Any rename | {rename_pct:.2f}% |
 | Name collision rate (same name, multiple profileIds) | {collision_pct:.2f}% |
