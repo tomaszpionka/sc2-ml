@@ -1204,6 +1204,17 @@ citation-clean. Mirrors source `Stage 13`.
    bleeds into Chapter 3 prose.
 7. Record verifications and outcomes in
    `thesis/pass2_evidence/literature_verification_log.md`.
+8. For every changed Chapter 3 empirical or literature claim,
+   update `thesis/pass2_evidence/claim_evidence_matrix.md` (add a
+   T14 delta row in the Chapter 3 section). This preserves the
+   chapter-to-global-registry propagation discipline established
+   in T03 (instruction 4) and T04 (instruction 3) and applied in
+   T11–T13.
+9. For every Chapter 3 ledger row resolved, preserved, or
+   rerouted, update `thesis/pass2_evidence/cleanup_flag_ledger.md`
+   (extend the T14 status section). Do not mark an issue resolved
+   unless Chapter 3 prose, `references.bib`, and
+   `literature_verification_log.md` all support resolution.
 
 **Verification:**
 - No known phantom citations remain in `03_related_work.md`.
@@ -1218,6 +1229,8 @@ citation-clean. Mirrors source `Stage 13`.
 - `thesis/chapters/03_related_work.md`
 - `thesis/references.bib`
 - `thesis/pass2_evidence/literature_verification_log.md`
+- `thesis/pass2_evidence/claim_evidence_matrix.md`
+- `thesis/pass2_evidence/cleanup_flag_ledger.md`
 - `thesis/chapters/REVIEW_QUEUE.md`
 
 **Read scope:**

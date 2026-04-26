@@ -190,3 +190,11 @@ BLOCKER-1 sub-check 6 was verified **PASS** by reviewer-adversarial in two indep
 **Round 2 status:** consumed. The 2026-04-26 patch is a targeted resolution of Round 2 BLOCKERs; it does NOT consume a new adversarial round. The 3-round symmetric cap remains respected (Round 1 plan critique = consumed; Round 2 mid-PR gate = consumed; Round 3 final PR gate = reserved for T19).
 
 **T11 readiness:** still **BLOCKED** until a targeted blocker-resolution check (analogous to the BLOCKER-1 sub-check 6 follow-up earlier in this PR) returns PASS for both BLOCKER-A (RISK-24/25/26 well-grounded and routed correctly) and BLOCKER-B (RISK-08 routing internally consistent, prose ownership unambiguous). After PASS, T11 dispatch may proceed with the four WARNINGs carried into its instructions and NOTEs tracked separately.
+
+---
+
+## Plan-manifest correction (T14 pre-dispatch)
+
+**Date:** 2026-04-26
+
+T14 scope correction (2026-04-26): before T14 execution, the plan was amended to include `claim_evidence_matrix.md` and `cleanup_flag_ledger.md` in T14 write scope, preserving the same audit-trail discipline used in T11–T13. This is a manifest correction, not a scientific scope expansion. The two files are already authorised globally in the master File Manifest (lines 1768 and 1771); the T14 per-task `**File scope:**` block was extended to surface them explicitly for the executor, and instructions 8–9 were added to T14 to make the chapter→registry propagation contract explicit.
