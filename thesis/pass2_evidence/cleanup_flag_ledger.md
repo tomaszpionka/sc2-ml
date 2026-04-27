@@ -360,3 +360,45 @@ The only stale finding (C3-01, §3.2.2 file count 17930/55 vs 22390/70) was alre
 ## T05 readiness
 
 T05 is ready to start. The two BLOCKER-severity items (F-078 and F-090) are exactly the aoe2companion leaderboard-ID semantics question (BLOCKER-1) that T05 is designed to address. No new stale Steps block T05 from executing.
+
+---
+
+## T14 status update (2026-04-26)
+
+T14 (Chapter 3 cleanup rewrite + bulk Pass-2 literature verification) addressed
+the following Chapter 3 + Chapter-3-locus cross-cutting ledger rows. Status
+transitions are recorded inline; the ledger Status column above remains "open"
+for rows where Pass-2 verification is still required.
+
+| Ledger ID | T14 disposition | Detail |
+|-----------|-----------------|--------|
+| F-022 | preserved | §3.2.2 line 49 Vinyals2017 baseline scope hedge — chapter prose already correctly hedges; arXiv:1708.04782 verified 2026-04-26 as primarily RL/agent paper with win prediction as auxiliary task; flag retained verbatim pending Pass-2 PDF read |
+| F-023 | preserved | §3.2.2 line 55 SC2EGSet corpus structure forward-ref to §4.1.1 — prose forward-ref already present; flag retained |
+| F-024 | preserved | C3-01 SC2EGSet 17 930 vs 22 390 prose inconsistency — Bialecki2023 paper carries the historical 17 930 / 55 figure pre-corpus expansion; chapter prose correctly traces via [Bialecki2023] citation with §4.1.3 Tabela 4.4a holding the post-merge 22 390 / 70 figure for the live corpus. Pass-2 wording-fix candidate for forward-ref consistency. |
+| F-025 | preserved | §3.2.4 line 77 EsportsBench 80.13% — preprint PDF binary FlateDecode failure mode noted in chapter prose flag wording per C3-T14-01; manual PDF read still required for Pass-2 |
+| F-026 | partly-resolved-by-T14 | §3.3.1 line 91 Yang2017Dota — 9:1 proportion confirmed via arXiv ar5iv HTML (`https://ar5iv.labs.arxiv.org/html/1701.03162`, dostęp 2026-04-26); split-method (random vs temporal) confirmed NOT specified in preprint text; 58.69% reattributed to Yang's own LR reimplementation of Conley/Kinkade baseline (not separate "60.07%" reading); refined chapter-prose [REVIEW] flag retained for definitive Pass-2 closure on split-method question |
+| F-027 | preserved | §3.3.3 line 107 CS:GO peer-reviewed selection — Xenopoulos et al. selection deferred to Pass-2; out of T14 scope |
+| F-028 | preserved | §3.3.4 line 111 Valorant peer-reviewed 2025–2026 — out of T14 scope |
+| F-029 | preserved | §3.4.1 line 131 CetinTas2023 86% — IEEE Xplore DOI 10.1109/UBMK59864.2023.10391048 verified via search snippet 2026-04-26; exact 86% value still pending Pass-2 manual PDF read |
+| F-030 | preserved | §3.4.1 line 133 CetinTas2023 NB/DT vs "Regression Analysis" title — methodology vs title tension preserved as in-prose [REVIEW] |
+| F-031 | preserved | §3.4.3 line 151 EC'25 citation convention extended-abstract @inproceedings vs @misc — bib retains @inproceedings with `note` clarifying extended-abstract format; Pass-2 librarian decision |
+| F-032 | preserved | §3.4.3 line 151 ACM EC 2025 acceptance-rate — note level, optional addition |
+| F-033 | preserved | §3.4.4 line 159 grey-literature acceptability PJAIT — out of T14 scope |
+| F-034 | preserved | §3.4.4 line 161 Xie2020 R²-vs-accuracy — Medium post text still requires Pass-2 manual read |
+| F-035 | resolved-by-T14 | §3.4.4 line 163 aoe2insights.com / Elbert2025EC source-confirmation — VERIFIED via arXiv HTML preprint `https://arxiv.org/html/2506.04475v1` (dostęp 2026-04-26): "The dataset was sourced from the analytics platform aoe2insights.com". Chapter-prose [REVIEW] flag at §3.4.4 line 163 REMOVED; replaced with verified citation hedge per C3-T14-08 |
+| F-036 | preserved | §3.5 line 185 4 author candidates (Brookhouse & Buckley, Caldeira et al., Alhumaid & Tur, Ferraz et al.) — WebSearch 2026-04-26 still does not surface these; [NEEDS CITATION] flag retained verbatim for Pass-2 manual library lookup |
+| F-037 | resolved-by-T14 | §3.5 line 187 Elbert2025EC attribution method — VERIFIED as linear FE residualization (NOT SHAP) via arXiv HTML preprint `https://arxiv.org/html/2506.04475v1` (dostęp 2026-04-26): "the Team Player Effect was identified as the extent to which a team's observed performance exceeded this predicted value when a specific individual was part of the group" — residualization via linear regression (NOT SHAP). Chapter-prose [REVIEW: F6.2 Pass-2 audit] flag REMOVED; speculative hedge "zgodnie z naszym odczytaniem… jeśli nasze odczytanie jest poprawne" REMOVED; replaced with verified description per C3-T14-11 |
+| F-038 | partly-resolved-by-T14 | §3.5 line 189 EsportsBench narrowing — version refresh: v8.0 / 2025-12-31 → v9.0 / 2026-03-31 (verified via HuggingFace dataset card 2026-04-26); AoE2-not-in-benchmark verified (20 titles: SC1, SC2, WC3, LoL, Dota 2, CS, Overwatch, Valorant, Rainbow Six, Halo, CoD, SF, Tekken, KoF, Guilty Gear, Rocket League, Smash Melee, Smash Ultimate, EA Sports FC, Tetris); calibration-metric coverage in Thorrez2024 Table 2 still requires Pass-2 manual PDF read (preprint PDF returned binary FlateDecode stream). [REVIEW] flag refined to scope to (a) post-2026-04-26 EsportsBench version updates and (b) preprint Table 2 metric inventory per C3-T14-12 |
+| F-082 | partly-resolved-by-T14 (Chapter 3 portion) | §3.5 line 191 GarciaMendez2025 cross-cutting cite — VERIFIED target game = streaming CS:GO context (Faceit, Leetify, Scope.gg, Steam APIs) per Entertainment Computing 55 / arXiv:2510.19671 / Universidade de Vigo author profile 2026-04-26; chapter prose at §3.5 Luka 4 line 191 already correctly framed as "streaming-ML kontekst" with refinement to "w środowiskach typu Counter-Strike, gdzie cechy są pozyskiwane przez API platformy strumieniowej" per C3-T14-13. Chapter 1 §1.1 portion remains in T12 territory (not edited by T14); cross-cutting closure pending Pass-2 manual full-text read of GarciaMendez2025. |
+| F-083 | partly-resolved-by-T14 (Chapter 3 portion) | §3.3.1 Hodge2021 phrasing + Dota 2 transfer limits — VERIFIED via IEEE Trans. Games 13(4) 368–379, DOI 10.1109/TG.2019.2948469 + York Research Database 2026-04-26: "their model achieved up to 85% accuracy after 5 minutes of gameplay" — chapter prose at §3.3.1 line 93 already correctly phrases this. Chapter 3 §3.3.5 already explicitly bounds MOBA-to-RTS transfer with four limitations. Chapter 1 §1.1 portion remains in T12 territory. |
+| F-088 | partly-resolved-by-T14 (Chapter 3 portion — no prose change required) | §3.3.5 line 117 SHAP causal interpretation in Chapter 3 — chapter prose already hedges via §1.4 cross-ref; T14 no Chapter 3 prose change required (RISK-13 Chapter 3 portion previously partly-resolved-by-T12); §4.4 SHAP analysis hedge still routes to T11 once Phase 02 SHAP analysis is drafted |
+
+**Counts of T14 dispositions:**
+- resolved-by-T14: 2 (F-035, F-037 — both substantively closed via web verification of Elbert2025EC source + attribution method)
+- partly-resolved-by-T14: 4 (F-026 split-method substantive narrowing; F-038 v9.0 refresh; F-082 Chapter 3 portion; F-083 Chapter 3 portion)
+- partly-resolved-by-T14 (Chapter 3 portion — no prose change required): 1 (F-088 — already hedged in §1.4 / §3.3.5)
+- preserved (verbatim, Pass-2 routing): 14 (F-022, F-023, F-024, F-025, F-027, F-028, F-029, F-030, F-031, F-032, F-033, F-034, F-036, F-024 prose-fix forwarded to Pass-2)
+
+**Note on T14 scope discipline:** T14's mandate (per `planning/current_plan.md` T14 spec lines 1174–1241) is structural cleanup informed by T05/T09/T10 evidence PLUS bulk Pass-2 literature verification (per `.claude/rules/thesis-writing.md` Literature Search Protocol). T14 explicitly performs WebSearch / WebFetch verification for every literature claim and does NOT rely on memory. Where verification could not be completed (PDF binary streams not extractable: Demsar2006, EsportsBench preprint, CetinTas2023 IEEE Xplore full PDF), the chapter-prose [REVIEW] flag is preserved or refined to reflect the specific failure mode. T14 explicitly does NOT touch `WRITING_STATUS.md` per parent instruction — global synchronization belongs to T17. T14 explicitly does NOT edit `pass2_evidence/sec_4_*_crosswalk.md` or `sec_4_*_halt_log.md` (frozen v1).
+
+**T14 also planted ZERO new [REVIEW] / [NEEDS CITATION] flags in Chapter 3** — every flag in the post-T14 chapter prose was already present pre-T14 (F-035 and F-037 removed; F-026 and F-025 reworded; F-038 reworded; all others preserved verbatim).
