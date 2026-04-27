@@ -1,16 +1,16 @@
 ---
-spec_id: CROSS-02-00-v3
-version: CROSS-02-00-v3
+spec_id: CROSS-02-00-v3.0.1
+version: CROSS-02-00-v3.0.1
 status: LOCKED
-date: 2026-04-21
+date: 2026-04-26
 invariants_touched: [I2, I3, I5, I8]
-supersedes: CROSS-02-00-v2
+supersedes: CROSS-02-00-v3
 datasets_bound: [sc2egset, aoestats, aoe2companion]
 ---
 
 # Cross-Dataset Phase 02 Feature-Engineering Input Contract
 
-## CROSS-02-00-v3 (LOCKED 2026-04-21)
+## CROSS-02-00-v3.0.1 (LOCKED 2026-04-26)
 
 This document is the authoritative cross-dataset input contract for Phase 02
 feature engineering. It formalizes the interface between Phase 01 outputs and
@@ -221,6 +221,25 @@ data-quality failure.
 3. The I3 guard applies to all Phase 02 Pipeline Sections, not only 02_03.
    Any Section that touches `player_history_all` inherits this constraint.
 
+**UTC session discipline (Concern 6 / T15).** The aoestats anchor column
+`started_timestamp` is stored as `TIMESTAMPTZ`; its counterpart in
+`matches_history_minimal.started_at` is stored as `TIMESTAMP` after
+`CAST(... AT TIME ZONE 'UTC')`. Any DuckDB session that compares
+`TIMESTAMPTZ` values (e.g., in a rolling-window `WHERE
+ph.started_timestamp < target.started_at`) MUST operate with a UTC
+session timezone to avoid implicit offset injection. Phase 02
+implementations MUST add the assertion below at the start of every
+notebook or script that issues cross-column timestamp comparisons
+involving `started_timestamp`:
+
+```python
+con.execute("SET TimeZone = 'UTC'")
+```
+
+This is an implementation guard, not a schema contract; failing to set
+the session timezone does not change the on-disk values but can produce
+silent offset errors on machines where the OS timezone is not UTC.
+
 ### §3.4 Cross-Dataset Player-History Joins
 
 When UNION-ALL'ing player histories across datasets for cross-game analysis
@@ -399,6 +418,26 @@ engineering:
 | `is_mmr_missing` | BOOLEAN | PRE_GAME | TRUE if MMR=0 (unrated professional; MNAR) |
 | `is_cross_region_fragmented` | BOOLEAN | CONTEXT | TRUE iff row's toon_id in cross-region set. Phase 02 operationalization: filter `WHERE NOT is_cross_region_fragmented` (safe subset), dual feature paths, OR sensitivity indicator. Blanket flag; false positives bounded by short-handle count per 01_04_05 §6. No NULL. Added 01_04_05 (2026-04-21). |
 
+**SC2 in-game telemetry scope decision (Concern 8 / T15 record).**
+`IN_GAME_HISTORICAL` columns (`APM`, `SQ`, `supplyCappedPercent`,
+`header_elapsedGameLoops`) are present in `player_history_all` for
+sc2egset and are classified as safe only as history aggregates filtered
+`< T` (Invariant I3). These columns are AVAILABLE but their use in
+Phase 02 is NOT YET VALIDATED: T16 (Phase 02 tracker_events semantic
+validation sub-step 14A.6) has not yet executed. Until T16 executes:
+
+- Phase 02 pre-game feature sets MUST NOT treat `IN_GAME_HISTORICAL`
+  columns as pre-game inputs (classification is firm).
+- Phase 02 may include rolling aggregates of `IN_GAME_HISTORICAL`
+  values from prior matches (filtered `< T`) as in-game history
+  features, subject to T16 semantic validation.
+- Thesis methodology MUST frame SC2 in-game telemetry features as
+  "available and classified but not yet validated for Phase 02
+  feature generation" until T16 completes.
+- T16 sub-step 14A.6 execution is CONDITIONAL on this spec's
+  T15-recorded decision: in-game telemetry is RETAINED IN SCOPE
+  pending T16 validation, NOT pre-emptively excluded.
+
 ### §5.5 `player_history_all` — aoestats (15 cols)
 
 | Column | Type | Classification | Notes |
@@ -480,6 +519,7 @@ in the frontmatter MUST be bumped in the same commit as the amendment.
 | CROSS-02-00-v1 | 2026-04-21 | planner-science | Initial LOCKED version. Closes sc2egset WARNING 1, aoestats NOTE 3, sc2egset NOTE 4 from 2026-04-21 Phase 01 sign-off audits. |
 | CROSS-02-00-v2 | 2026-04-21 | planner-science | aoestats §5.5 `player_history_all` adds `time_since_prior_match_days` (DOUBLE, CONTEXT) per WP-6 / 01_04_07. §2.2 column count 14 → 15; schema_version string introduced per canonical_slot precedent. `old_rating` reclassified PRE_GAME → CONDITIONAL_PRE_GAME in §5.5. Motivation: WP-4 empirical FAIL of unconditional `old_rating` PRE-GAME classification; Phase 01-level annotation per docs/PHASES.md §Phase 01 01_04 discipline. Major version bump per §7 (§2 column-count commitment change). |
 | CROSS-02-00-v3 | 2026-04-21 | planner-science | sc2egset §5.4 `player_history_all` adds `is_cross_region_fragmented` (BOOLEAN, CONTEXT) per WP-7 / 01_04_05. §2.1 column count corrected: the spec's LOCKED v2 value was 36 while the yaml has been 37 since 01_04_02 (pre-existing spec-vs-yaml drift; reconciled during this amendment). Post-amendment value is 38. Motivation: WP-3 (01_05_10) empirical FAIL of accepted-bias framing; Phase 01-level annotation per docs/PHASES.md §Phase 01 01_04 discipline. Major version bump per §7 (§2 column-count commitment change). |
+| CROSS-02-00-v3.0.1 | 2026-04-26 | T15 executor (thesis/audit-methodology-lineage-cleanup) | Two prose clarifications — no table cell values changed (patch per §7). (1) §3.3 UTC session discipline note: requires `SET TimeZone = 'UTC'` in Phase 02 notebooks that compare `TIMESTAMPTZ` vs `TIMESTAMP` columns (`started_timestamp` aoestats vs `matches_history_minimal.started_at`); addresses T15 Concern 6 leakage-gate. (2) §5.4 SC2 in-game telemetry scope decision note: `IN_GAME_HISTORICAL` columns (`APM`, `SQ`, `supplyCappedPercent`, `header_elapsedGameLoops`) are RETAINED IN SCOPE pending T16 sub-step 14A.6 semantic validation; thesis methodology must frame in-game telemetry as "available but not yet validated for Phase 02"; addresses T15 Concern 8. Signoff: planner-science + reviewer-adversarial co-signoff satisfied by T10 Round 2 consolidated mid-PR gate per Assumption (D) and BLOCKER-2 resolution. |
 
 ---
 

@@ -1,22 +1,22 @@
 ---
-spec_id: CROSS-02-01-v1
-version: CROSS-02-01-v1
+spec_id: CROSS-02-01-v1.0.1
+version: CROSS-02-01-v1.0.1
 status: LOCKED
-date: 2026-04-21
+date: 2026-04-26
 invariants_touched: [I3]
-supersedes: null
+supersedes: CROSS-02-01-v1
 datasets_bound: [sc2egset, aoestats, aoe2companion]
-sibling_specs: [CROSS-02-00-v1]
+sibling_specs: [CROSS-02-00-v3.0.1]
 closes_finding: "sc2egset WARNING 2 per reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md §2"
 ---
 
 # Cross-Dataset Phase 02 Pre-Training Leakage Audit Protocol
 
-## CROSS-02-01-v1 (LOCKED 2026-04-21)
+## CROSS-02-01-v1.0.1 (LOCKED 2026-04-26)
 
 This document is the authoritative cross-dataset pre-training leakage audit protocol for Phase 02 feature engineering. It formalizes the mandatory audit gate for Pipeline Section 02_01 (Pre-Game vs In-Game Boundary) and prescribes the audit artifact schema, execution timing, and gate condition across three datasets: sc2egset, aoestats, and aoe2companion.
 
-This spec is the verification-side sibling to `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1, LOCKED 2026-04-21). WP-1 names what Phase 02 reads; WP-2 (this spec) names what Phase 02 must verify before training.
+This spec is the verification-side sibling to `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v3.0.1, LOCKED 2026-04-26). WP-1 names what Phase 02 reads; WP-2 (this spec) names what Phase 02 must verify before training.
 
 Amendments follow the §7 change protocol.
 
@@ -28,7 +28,7 @@ Amendments follow the §7 change protocol.
 
 This spec closes sc2egset WARNING 2 from the 2026-04-21 reviewer-adversarial Phase 01 sign-off audits. The finding is: "No mandated Phase 02 pre-training leakage-audit protocol at the Phase 01 gate." The durable on-disk referent for that finding is `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md §2`.
 
-The sibling input contract `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1) specifies which VIEWs Phase 02 reads, their column grain, join keys, and I3 temporal anchor. This spec presupposes CROSS-02-00-v1 compliance: the audit defined here verifies the feature-computation code built on top of those inputs, not the inputs themselves.
+The sibling input contract `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v3.0.1) specifies which VIEWs Phase 02 reads, their column grain, join keys, and I3 temporal anchor. This spec presupposes CROSS-02-00-v3.0.1 compliance: the audit defined here verifies the feature-computation code built on top of those inputs, not the inputs themselves.
 
 ### Pipeline Section Binding
 
@@ -45,7 +45,7 @@ The protocol is **reused** (not re-gated) by:
 
 ### §2.1 Cutoff-Time Structural Check
 
-Every Phase 02 feature-generating SQL expression or Python code block that reads `player_history_all` MUST apply a strict temporal filter: `WHERE ph.<anchor_col> < target.started_at` (per CROSS-02-00-v1 §3.3). The equality form `<=` is forbidden because it would include the target match's own history row in the feature computation, violating Invariant I3.
+Every Phase 02 feature-generating SQL expression or Python code block that reads `player_history_all` MUST apply a strict temporal filter: `WHERE ph.<anchor_col> < target.started_at` (per CROSS-02-00-v3.0.1 §3.3). The equality form `<=` is forbidden because it would include the target match's own history row in the feature computation, violating Invariant I3.
 
 The audit asserts three sub-conditions for each feature-generating expression:
 
@@ -53,11 +53,11 @@ The audit asserts three sub-conditions for each feature-generating expression:
 
 (b) The filter operator is strict `<` (not `<=`, `>=`, `=`, or absent).
 
-(c) The anchor column is the per-dataset canonical column per CROSS-02-00-v1 §3.2: `details_timeUTC` (sc2egset), `started_timestamp` (aoestats), `started` (aoe2companion). Using the cross-dataset alias `started_at` in a context where the per-dataset column name differs is a violation.
+(c) The anchor column is the per-dataset canonical column per CROSS-02-00-v3.0.1 §3.2: `details_timeUTC` (sc2egset), `started_timestamp` (aoestats), `started` (aoe2companion). Using the cross-dataset alias `started_at` in a context where the per-dataset column name differs is a violation.
 
 ### §2.2 POST-GAME Token Absence
 
-Every materialized feature column's source lineage must not include columns classified as POST_GAME_HISTORICAL, IN_GAME_HISTORICAL, or TARGET per CROSS-02-00-v1 §5. Including such columns in a pre-game feature would leak information available only after match completion into the pre-game prediction context.
+Every materialized feature column's source lineage must not include columns classified as POST_GAME_HISTORICAL, IN_GAME_HISTORICAL, or TARGET per CROSS-02-00-v3.0.1 §5. Including such columns in a pre-game feature would leak information available only after match completion into the pre-game prediction context.
 
 Audit approach: source-column lineage resolution via SQL AST walk (for SQL views) or Python docstring trace (for notebook code).
 
@@ -120,6 +120,18 @@ The audit MUST run AFTER every Phase 02 feature materialization step and BEFORE 
 
 The audit must cover ALL feature columns materialized in the Pipeline Section being audited. Partial audits (covering only a subset of columns) do not satisfy the gate condition.
 
+**Stale-artifact discipline (Concern 7 / T15 record).** If a
+feature-generating notebook or SQL view changes after an audit
+artifact has been produced, the artifact is stale and must be
+re-generated before the audit result can be cited. The authoritative
+stale/current status of any Phase 02 audit artifact is recorded in
+`thesis/pass2_evidence/notebook_regeneration_manifest.md` (the
+manifest). An audit artifact is valid for gate purposes ONLY if the
+manifest records its status as `confirmed_intact` at the time of the
+02_01 exit PR merge. Generated artifacts MUST NOT be manually patched;
+re-run the full feature-generation + audit pipeline to produce a valid
+artifact.
+
 ---
 
 ## §5 Gate Condition (v1 enforcement: convention-based)
@@ -162,9 +174,19 @@ Any amendment requires sign-off from both `planner-science` and `reviewer-advers
 
 - `.claude/scientific-invariants.md` Invariant I3 — temporal discipline; the strict `<` cutoff requirement this audit enforces.
 - `docs/PHASES.md` §Phase 02 — canonical Pipeline Section numbering (02_01 through 02_08) and step definitions.
-- `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v1, LOCKED 2026-04-21) — sibling input contract; defines VIEWs, column grain, join keys, temporal anchor, and column-level classification this audit presupposes.
+- `reports/specs/02_00_feature_input_contract.md` (CROSS-02-00-v3.0.1, LOCKED 2026-04-26) — sibling input contract; defines VIEWs, column grain, join keys, temporal anchor, and column-level classification this audit presupposes.
 - `reports/artifacts/01_exploration/06_decision_gates/phase01_audit_summary_2026-04-21.md §2` — on-disk referent for sc2egset WARNING 2, the closed finding that motivated this spec.
 - `docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md §2` — cutoff-time mechanism this audit verifies.
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/05_temporal_panel_eda/leakage_audit_sc2egset.json` — Phase 01 sc2egset leakage audit; template for §3 JSON field inheritance and §2.4 reference-window values.
 - `src/rts_predict/games/aoe2/datasets/aoestats/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_06_temporal_leakage_audit_v1.md` — Phase 01 aoestats leakage audit (Markdown format; Q7.1–Q7.4 structure; §2.4 reference-window values).
 - `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.json` — Phase 01 aoe2companion leakage audit; template for §3 JSON field inheritance and §2.4 reference-window values.
+- `thesis/pass2_evidence/notebook_regeneration_manifest.md` — authoritative stale/current status for generated audit artifacts; §4 stale-artifact discipline references this file.
+
+---
+
+## §9 Amendment Log
+
+| Version | Date | Author | Classification | Summary |
+|---------|------|--------|----------------|---------|
+| CROSS-02-01-v1 | 2026-04-21 | planner-science | Initial | Initial LOCKED version. Closes sc2egset WARNING 2 from 2026-04-21 Phase 01 sign-off audits. §1 scope + §2 audit dimensions + §3 artifact schema + §4 execution timing + §5 gate condition + §6 scope reuse + §7 change protocol. |
+| CROSS-02-01-v1.0.1 | 2026-04-26 | T15 executor (thesis/audit-methodology-lineage-cleanup) | Patch — prose clarification in §4 and §8; no §2 audit dimension or §5 gate condition changed | §4: stale-artifact discipline note added — if a feature-generating notebook or SQL view changes after an audit artifact is produced, the artifact must be re-generated; `thesis/pass2_evidence/notebook_regeneration_manifest.md` is the authoritative stale/current authority; generated artifacts must not be manually patched. Addresses T15 Concern 7. §8: sibling spec reference updated from CROSS-02-00-v1 to CROSS-02-00-v3.0.1 to track current sibling version. **JSON schema `spec_version` field stability:** the §3 artifact-schema literal `"CROSS-02-01-v1"` is intentionally retained at this patch increment — patch versions (vN.M.K+1) do NOT change artifact-schema literal values, because doing so would invalidate `confirmed_intact` lineage of pre-existing audit artifacts (`leakage_audit_sc2egset.json` etc. produced under the original v1 schema). Future major (vN+1) or minor (vN.M+1) bumps that change §2 audit dimensions or §3 schema fields will increment the artifact literal accordingly. Convention: artifact `spec_version` records the spec major.minor (NOT patch) revision. Signoff: planner-science + reviewer-adversarial co-signoff satisfied by T10 Round 2 consolidated mid-PR gate per Assumption (D) and BLOCKER-2 resolution. |
