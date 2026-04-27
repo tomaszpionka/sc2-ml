@@ -8,6 +8,50 @@ AoE2 / aoe2companion findings. Reverse chronological.
 
 ---
 
+## 2026-04-27 — [Phase 01 / Step 01_06_01] Data Dictionary temporal-classification repair
+
+**Branch:** `thesis/audit-methodology-lineage-cleanup`
+**Category:** F (thesis methodology — T16 14A.1 data-dictionary audit)
+**Scope:** Step 01_06_01 generator bug fix and artifact regeneration.
+
+### Finding
+
+T16 sub-step 14A.1 identified a same-class temporal-classification contradiction in
+`data_dictionary_aoe2companion.csv`:
+
+- `rating` / `player_history_all`: column `temporal_classification` was `TARGET`
+- Correct classification: `PRE_GAME` (per YAML notes and CROSS-02-00 §5.6)
+- Root cause: generator `classify()` used substring `"TARGET" in n` which matched
+  "target" inside the I3-guard phrase "started < target_match.started". This is a
+  keyword-priority bug, not a semantic error in the YAML or spec.
+
+Additionally, `started` / `player_history_all` was also misclassified as `TARGET`
+for the same reason (notes: "WHERE ph.started < target_match.started").
+Correct classification: `METADATA` (CONTEXT per YAML).
+
+### Repair
+
+1. ROADMAP Step 01_06_01 `description` updated to note the whole-word-boundary requirement;
+   `gate.continue_predicate` extended to assert no PRE_GAME column is classified as TARGET.
+2. Generator `classify()` function updated: `"TARGET" in n` → `re.search(r'\bTARGET\b', n)`.
+   All other temporal class labels used distinctive enough strings; no similar risk found.
+3. Notebook synced via jupytext and executed end-to-end (nbconvert, 600s timeout).
+4. Regenerated artifact counts: PRE_GAME 38 → 39; METADATA 16 → 17; TARGET 5 → 3.
+   Only the 3 `won` columns remain TARGET — the correct outcome.
+
+### Invariants
+
+- I3 (temporal discipline): the misclassification was in the generated dictionary artifact
+  only; the authoritative YAML and CROSS-02-00 §5.6 were always correct.
+- G4 (generated artifacts): fixed via generator update and regeneration, not manual patch.
+
+### Notebook regeneration manifest
+
+Row for `01_06_01_data_dictionary.py` updated to `confirmed_intact` with cause
+`T16 14A.1 finding` in `thesis/pass2_evidence/notebook_regeneration_manifest.md`.
+
+---
+
 ## 2026-04-19 — [Phase 01 / Pipeline Section 01_06] Decision Gates — Phase 01 closure
 
 **Branch:** `feat/phase01-decision-gates-01-06`

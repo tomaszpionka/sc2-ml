@@ -3,7 +3,7 @@
 **Spec:** `reports/specs/01_06_readiness_criteria.md` v1.0
 **Date:** 2026-04-19
 
-## Temporal Classification: {'IDENTIFIER': 16, 'METADATA': 16, 'PRE_GAME': 38, 'TARGET': 5, 'POST_GAME_HISTORICAL': 4}
+## Temporal Classification: {'IDENTIFIER': 16, 'METADATA': 17, 'PRE_GAME': 39, 'TARGET': 3, 'POST_GAME_HISTORICAL': 4}
 
 ## Key Notes
 - `profileId` / `player_id`: Branch (i) API-namespace identifier. Identity-rate reconciliation

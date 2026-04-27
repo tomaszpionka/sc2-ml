@@ -135,7 +135,7 @@ All Phase 01 aoe2companion steps are `complete` per STEP_STATUS.yaml (completed 
 | sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_07_phase06_interface.py | 01_05_07 | intact | C4-09 (74/74 [POP:ranked_ladder] rows) | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_08_leakage_audit.py | 01_05_08 | intact | Temporal leakage audit background | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_09_gate_memo.py | 01_05_09 | intact | Phase 01 exit memo background | confirmed_intact | — |
-| sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py | 01_06_01 | intact | Data dictionary background | confirmed_intact | — |
+| sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py | 01_06_01 | intact (post-T16/14A.1 regeneration) — `classify()` keyword-priority bug fixed; `rating`/`player_history_all` now correctly PRE_GAME (not TARGET); artifact regenerated 2026-04-27 | Data dictionary — `rating` in `player_history_all` was misclassified as TARGET due to `classify()` matching "target" inside "target_match.started" in I3 note. CROSS-02-00 §5.6 correct classification is PRE_GAME. | **confirmed_intact** | T16 14A.1 finding |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_02_data_quality_report.py | 01_06_02 | intact (post-T07/T08 regeneration) — R01 Action column corrected to mixed-mode wording; no "ranked ladder only" remnant | Quality report — R01 cleaning rule mis-labels qp_rm_1v1 (ID 18) as ranked ladder (repaired T07; lineage closed T08) | **confirmed_intact** | T05/Q2 BLOCKER-1 propagation |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_03_risk_register.py | 01_06_03 | intact | Risk register background | confirmed_intact | — |
 | sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_04_modeling_readiness.py | 01_06_04 | intact | Modeling readiness background | confirmed_intact | — |
@@ -143,6 +143,31 @@ All Phase 01 aoe2companion steps are `complete` per STEP_STATUS.yaml (completed 
 ---
 
 ## flagged_stale entries — detail records
+
+### Step 01_06_01 — aoe2companion Data Dictionary (T16 14A.1 repair)
+
+**T16 14A.1 decision date:** 2026-04-27
+
+**Status:** `confirmed_intact` (was `confirmed_intact` in T03 manifest; flipped to `flagged_stale` by T16 14A.1 finding on 2026-04-27; repaired and promoted to `confirmed_intact` in same T16 session)
+
+**Cause:** `T16 14A.1 finding`
+
+**Contradiction found:**
+- `rating` in `player_history_all` table: column 9 (`temporal_classification`) in `data_dictionary_aoe2companion.csv` was `TARGET`
+- Correct classification: `PRE_GAME` (per YAML notes: "PRE_GAME. I3: use only games where started < target_match.started"; per CROSS-02-00 §5.6 which classifies `rating` as `PRE_GAME`)
+- Root cause: `classify()` function in generator used substring matching (`"TARGET" in n`) which matched "TARGET" inside "target_match.started" in the I3-guard note text. This is a generator keyword-priority bug — not a semantic error in the YAML or spec.
+
+**ROADMAP update (2026-04-27):**
+- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` Step 01_06_01: description updated to note the `classify()` whole-word-matching requirement; gate `continue_predicate` extended with "No PRE_GAME column (per YAML notes or CROSS-02-00 §5.6) is classified as TARGET in the CSV."
+
+**Generator fix:**
+- `sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py`: `classify()` updated to use `re.search(r'\bTARGET\b', n)` (whole-word boundary) instead of `"TARGET" in n` (substring). All other temporal class labels already used distinctive enough strings that a similar false-positive risk was not present.
+
+**Artifact regeneration:** Executed 2026-04-27 via `source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py.ipynb` (600s timeout). `rating`/`player_history_all` row now correctly classified as `PRE_GAME`. Total PRE_GAME count changed accordingly; no other rows affected.
+
+**Lineage closed:** ROADMAP updated → notebook fixed → artifact regenerated → research_log entry added → STEP_STATUS.yaml comment added.
+
+---
 
 ### Step 01_06_02 — aoe2companion Data Quality Report
 

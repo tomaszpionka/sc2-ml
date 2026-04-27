@@ -1300,7 +1300,10 @@ name: "Data Dictionary"
 description: "Enumerate every column consumed downstream in Phase 02 from matches_1v1_clean,
   player_history_all, and matches_history_minimal. Flag identity-rate reconciliation
   (2026-04-19: 2.57%/3.55% rm_1v1 scope) in invariant_notes for profileId. Note Branch (i)
-  API-namespace identifier. Produce data_dictionary_aoe2companion.csv and .md per spec §1.1."
+  API-namespace identifier. Produce data_dictionary_aoe2companion.csv and .md per spec §1.1.
+  Generator classify() function must use whole-word keyword matching for temporal class labels
+  to avoid false-positive TARGET classification for columns whose YAML notes reference
+  'target_match' (e.g., the I3-guard note on player_history_all.rating). See 2026-04-27 repair."
 phase: "01 -- Data Exploration"
 pipeline_section: "01_06 -- Decision Gates"
 dataset: "aoe2companion"
@@ -1315,7 +1318,8 @@ outputs:
   report: "reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.md"
 gate:
   artifact_check: "CSV and MD exist."
-  continue_predicate: "profileId row has identity-rate reconciliation note in invariant_notes."
+  continue_predicate: "profileId row has identity-rate reconciliation note in invariant_notes.
+    No PRE_GAME column (per YAML notes or CROSS-02-00 §5.6) is classified as TARGET in the CSV."
 thesis_mapping:
   - "Chapter 4 -- Data and Methodology > §4.1.2 AoE2 datasets"
 research_log_entry: "Required on completion."
