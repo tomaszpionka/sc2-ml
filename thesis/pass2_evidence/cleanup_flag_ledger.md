@@ -402,3 +402,130 @@ for rows where Pass-2 verification is still required.
 **Note on T14 scope discipline:** T14's mandate (per `planning/current_plan.md` T14 spec lines 1174–1241) is structural cleanup informed by T05/T09/T10 evidence PLUS bulk Pass-2 literature verification (per `.claude/rules/thesis-writing.md` Literature Search Protocol). T14 explicitly performs WebSearch / WebFetch verification for every literature claim and does NOT rely on memory. Where verification could not be completed (PDF binary streams not extractable: Demsar2006, EsportsBench preprint, CetinTas2023 IEEE Xplore full PDF), the chapter-prose [REVIEW] flag is preserved or refined to reflect the specific failure mode. T14 explicitly does NOT touch `WRITING_STATUS.md` per parent instruction — global synchronization belongs to T17. T14 explicitly does NOT edit `pass2_evidence/sec_4_*_crosswalk.md` or `sec_4_*_halt_log.md` (frozen v1).
 
 **T14 also planted ZERO new [REVIEW] / [NEEDS CITATION] flags in Chapter 3** — every flag in the post-T14 chapter prose was already present pre-T14 (F-035 and F-037 removed; F-026 and F-025 reworded; F-038 reworded; all others preserved verbatim).
+
+---
+
+## T17 status update (2026-04-27)
+
+T17 (REVIEW_QUEUE / WRITING_STATUS / cleanup_flag_ledger synchronization) performed the
+following documentation-only changes. No thesis prose was edited in T17.
+
+### Physical flag inventory (post-T11/T12/T13/T14)
+
+Physical `[REVIEW:]`, `[UNVERIFIED:]`, `[NEEDS CITATION]` flags in Chapters 1–4 at T17 baseline:
+
+| Chapter | [REVIEW:] | [UNVERIFIED:] | [NEEDS CITATION] | [NEEDS JUSTIFICATION] | [TODO] | Total |
+|---------|-----------|--------------|------------------|-----------------------|--------|-------|
+| Chapter 1 (`01_introduction.md`) | 7 | 0 | 0 | 0 | 0 | 7 |
+| Chapter 2 (`02_theoretical_background.md`) | 15 | 0 | 0 | 0 | 0 | 15 |
+| Chapter 3 (`03_related_work.md`) | 13 | 0 | 1 | 0 | 0 | 14 |
+| Chapter 4 (`04_data_and_methodology.md`) | 27 | 1 | 0 | 0 | 0 | 28 |
+| **Total** | **62** | **1** | **1** | **0** | **0** | **64** |
+
+All 64 physical flags are accounted for in the ledger rows F-001 through F-101. No unregistered
+flags were found. Classification of each flag:
+
+- Flags removed by T11/T12/T13/T14 (resolved/partly-resolved): approximately 10 physical flags
+  removed across all chapters (workflow-leakage flags F-065 through F-077 chapter portions resolved
+  by T11; F-035 and F-037 removed from Chapter 3 by T14; F-087 ECE prose distinction resolved in
+  §2.6.2 by T13).
+- Remaining 64 flags: **all preserved** per Pass-2 dependency (see individual T11/T12/T13/T14
+  disposition tables above). No flag in the remaining 64 is intentionally unresolved without reason;
+  each has a Pass-2 verification item, a future-Phase dependency, or a deferred-to-T18/T20 routing.
+
+### T17 REVIEW_QUEUE changes
+
+| Change | Type |
+|--------|------|
+| §3.4 flag count corrected to 4 [REVIEW] post-T14 (F-035 removed from prose) | Modified |
+| §3.5 flag count corrected to 2 [REVIEW/NEEDS CITATION] post-T14 (F-037 removed; F-036 + F-038 retained) | Modified |
+| GATE-14A6 added as new pending item (SC2 tracker_events semantic validation, Step 01_03_05 not yet executed) | Added |
+| T16 Step 01_06_01 data-dictionary repair confirmed-intact note added | Added |
+
+### T17 WRITING_STATUS changes
+
+| Section | Old status | New status | Reason |
+|---------|-----------|-----------|--------|
+| §1.3 Research questions | DRAFTED | REVISED | T12 rewrote RQ3 hypothesis with four-confound disclaimer and added new [REVIEW] flag at line 13 |
+| §1.4 Scope and limitations | DRAFTED | REVISED | T12 substantially rewrote §1.4 corpus enumeration and added "Charakter porównania krzyżowego" paragraph |
+| §2.1 Gry strategiczne czasu rzeczywistego | DRAFTED | REVISED | T13 structural cleanup applied; [REVIEW] flag retained (Phase 04 dependency) |
+| §2.2 StarCraft II | DRAFTED | REVISED | T13 structural cleanup applied (Tier 4/mixed-mode framing + data-regime asymmetry statement); flags retained |
+| §2.3 Age of Empires II | DRAFTED | REVISED | T13 structural cleanup applied (DLC-chronology prose hedge + §2.5.4 civ-pair hedge); flags retained |
+| §2.5 Player skill rating systems | DRAFTED | REVISED | T13 structural cleanup applied (§2.5.4 civ-pair hedge harmonisation); all 4 [REVIEW] flags retained |
+| §3.4 AoE2 prediction | DRAFTED | REVISED | T14 applied bounded-gap framing + verified Elbert2025EC source; F-035 [REVIEW] removed; 4 flags remain |
+| Chapter 4 blocked sections note | — | Updated | GATE-14A6 note added: §4.4 cannot reach FINAL until Step 01_03_05 executes |
+
+No sections were elevated to FINAL in T17. All REVISED sections still carry at least one [REVIEW]
+or [NEEDS CITATION] flag and MUST NOT be marked FINAL until those flags are resolved.
+
+### T17 ledger row dispositions
+
+| Ledger ID | T17 disposition | Detail |
+|-----------|----------------|--------|
+| F-091 | confirmed-T17 (already closed) | REVIEW_QUEUE §2.5 entry v8.0 sync — T13 verified §2.5.5 line 179 already reads `(wersja HuggingFace v8.0, cutoff 2025-12-31)` with no [REVIEW: F6.6] flag. REVIEW_QUEUE §2.5 row's 2026-04-21 + 2026-04-26 closure notes record this. No further action needed. |
+| F-092 | confirmed-T17 (already closed) | REVIEW_QUEUE §3.2 entry F6.6 EsportsBench version — locally closed 2026-04-21; REVIEW_QUEUE §3.2 row already documents the closure. No further action needed. |
+| F-093 | confirmed-T17 (already closed) | REVIEW_QUEUE §3.3 entry F6.8 Silva2018LoL ISSN — locally closed 2026-04-21; REVIEW_QUEUE §3.3 row already documents the closure. No further action needed. |
+| F-094 | confirmed-T17 | REVIEW_QUEUE §4.4.6 Post-F1 row — T11 resolved the `PR #TBD` prose leakage in chapter prose; REVIEW_QUEUE line 49 already shows "Resolved-by-T11 (chapter-prose layer)". Substantive Post-F1 narrative rewrite remains deferred to Pass-2. |
+| F-077 | confirmed-T17 | REVIEW_QUEUE `PR #TBD` in §4.4.6 — T11 resolved chapter-prose layer per F-077 routing note; T17 confirms REVIEW_QUEUE row is already updated. |
+| F-078 | confirmed-resolved-cross-chapter (T17) | BLOCKER-1 (`qp_rm_1v1` ID 18) chapter-prose closure: Chapter 4 resolved-by-T11 (line 226); Chapter 1 partly-resolved-by-T12 (line 161); Chapter 2 partly-resolved-by-T13 (line 264); supporting artifact `data_quality_report_aoe2companion.md` regenerated and `confirmed_intact` via T07/T08 (`notebook_regeneration_manifest.md` line 139). T05 Q2 provenance verdict (Tier 2/3 mixed-mode for aoe2companion) is the source-of-truth wording authority for all chapter prose. No outstanding chapter-prose work; future Pass-2 verification limited to source-tier classification refinement. |
+| F-079 | confirmed-resolved-cross-chapter (T17) | aoestats `random_map` Tier 4 framing applied across Chapter 1 §1.4 (T12 line 162), Chapter 2 §2.2.3 (T13 line 265), Chapter 4 §4.2.3 / §4.1.2 (T11 line 227). aoestats source semantics remain semantically opaque per T05 Tier 4 conclusion (`aoe2_ladder_provenance_audit.md` §4.2.4); thesis prose hedges accordingly without claiming "ranked ladder" status. No outstanding chapter-prose work. |
+| F-080 | confirmed-partly-resolved-cross-chapter (T17) — §6.3 deferred | Cross-dataset comparability framing closed in Chapter 1–4 prose: T12 §1.4 "Charakter porównania krzyżowego" four-confound paragraph (line 163); T13 §2.2.3 disclaimer (line 266); T11 §4.1.4 dataset-conditional scoping (line 228); T14 Chapter 3 framing portion. Bounded statement at §6.3 remains deferred per Chapter 6 BLOCKED status (Phase 03/04 not yet executed). T09 cross-dataset comparability matrix (`cross_dataset_comparability_matrix.md`) supports this disposition. |
+| F-084 | confirmed-resolved-cross-chapter (T17) — Phase 02 feature-engineering gate retained | AoE2 civ-count / civ-pair hedge harmonised across Chapter 1 §1.1 / §1.2 / §1.3 / §1.4 (T12 line 166) and Chapter 2 §2.3.2 / §2.5.4 (T13 line 267). Civ-pair encoding (1 225 unordered pairs hypothesis under stable-roster assumption) remains a Phase 02 feature-engineering implementation question (RISK-25 in `methodology_risk_register.md`); no thesis prose claims feature-engineering implementation has been chosen. Pass-2 DLC-chronology absolute verification (Three Kingdoms, Last Chieftains, Chronicles: Alexander) routed via F-014. |
+| F-087 | confirmed-resolved-cross-chapter (T17) | ECE distinction fully closed: Chapter 2 §2.6.2 resolved-by-T13 (line 269) explicitly distinguishes wynik Briera + strata logarytmiczna jako właściwe reguły punktacji from ECE jako descriptive calibration diagnostic; Chapter 4 §4.4.4 portion previously resolved-by-T11 (T13 row notes "Chapter 4 §4.4.4 portion previously resolved-by-T11; T13 prose now matches T11 framing"). No remaining Chapter 4 wording issue. |
+| F-095 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_04_05_cross_region_annotation.py` — manifest status `not_yet_assessed` retained; no T16 14A.5 escalation triggered (cross-region fragmentation defer-with-gate per `phase02_readiness_hardening.md` §14A.5 routes to RISK-20 in `methodology_risk_register.md`, not to this notebook). No thesis claim depends on this notebook. |
+| F-096 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_05_00_scaffold.py` — manifest status `not_yet_assessed` retained; no thesis claim depends on this scaffold notebook. |
+| F-097 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_05_10_cross_region_history_impact.py` — empirical FAIL verdict at W=30 (median undercount 16.0 games; p95 29.0) is used by `phase02_readiness_hardening.md` §14A.5 to defer with gate, but the notebook itself remains `not_yet_assessed` per manifest; F-097 disposition unchanged. |
+| F-098 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_03b_canonical_slot_amendment.py` — manifest status `not_yet_assessed`; conditional on BACKLOG F1 execution status; §4.4.6 chapter prose hedges accordingly per F-094 disposition. |
+| F-099 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_06_old_rating_temporal_audit.py` — manifest status `not_yet_assessed`; no thesis claim depends on this artifact. |
+| F-100 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_07_old_rating_conditional_annotation.py` — manifest status `not_yet_assessed`; no thesis claim depends on this artifact. |
+| F-101 | confirmed-preserved-informational (T17) | aoestats not_yet_assessed enumeration row — informational accounting only; no notebook-level disposition needed. |
+
+**Critical preservation note on T16 / Step 01_06_01 + Step 01_06_02 (NOT in F-095..F-101 range):**
+
+- aoe2companion `01_06_01_data_dictionary.py` (Data Dictionary) — `confirmed_intact` post-T16 14A.1 repair (`notebook_regeneration_manifest.md` line 138). NOT in F-095..F-101 range because never `not_yet_assessed` — was `confirmed_intact → flagged_stale → confirmed_intact` cycle within T16 14A.1 itself.
+- aoe2companion `01_06_02_data_quality_report.py` (Data Quality Report) — `confirmed_intact` post-T07/T08 regeneration (`notebook_regeneration_manifest.md` line 139); ledger row F-090 resolved-by-T11 (line 230). NOT in F-095..F-101 range because never `not_yet_assessed`.
+
+Neither notebook requires a F-095..F-101 ledger entry because both are tracked via the manifest's `confirmed_intact` status, not the `not_yet_assessed` registry. T17 confirms both are correctly recorded.
+
+**RISK-21 cross-link (F-102 explicit reference):**
+
+RISK-21 in `thesis/pass2_evidence/methodology_risk_register.md` is the methodology-risk record corresponding to ledger entry F-102 (GATE-14A6). Both link to Step 01_03_05 (not yet executed). RISK-21 status: open/gated. F-102 status: open. No further T17 action; routing through `phase02_readiness_hardening.md` §14A.6 + REVIEW_QUEUE pending item satisfies the audit-trail requirement.
+
+### F-102 — GATE-14A6 (new ledger row)
+
+| Field | Value |
+|-------|-------|
+| ID | F-102 |
+| Chapter / file / section | `04_data_and_methodology.md` §4.4 (in-game features — not yet drafted) |
+| Exact issue or flag | GATE-14A6: SC2 `tracker_events` semantic validation not executed; Step 01_03_05 not yet created/run |
+| Issue type | external-audit |
+| Severity | major |
+| Lineage status from T03 | N-A (Step 01_03_05 does not yet exist) |
+| Source needed | BlizzardS2Protocol or Vinyals2017 §3 — per-event semantics (cumulative vs. instantaneous) |
+| Artifact needed | Step 01_03_05 output artifact (new, not yet created) |
+| Downstream task | T15 (decision gate) → conditional T16 14A.6 (deferred) |
+| Proposed action | Do not claim validated tracker_events-derived features. Use permitted framing from `phase02_readiness_hardening.md` §14A.6. |
+| Regen required | Yes — new Step 01_03_05 creation required (not regen of existing artifact) |
+| Status | open — GATE-14A6 recorded; overclaiming prevented; Step 01_03_05 not yet scheduled |
+
+Added to REVIEW_QUEUE.md as new pending item (2026-04-27).
+
+### T15 non-blocker recommendation routing (T17 record)
+
+The T15 reviewer-deep non-blocker recommendation to record borderline patch-vs-minor
+classification calls in `audit_cleanup_summary.md` is OUT of T17 file scope. That file
+is not in the T17 write-list. The recommendation is routed to T20 (final audit summary)
+per the T17 task specification. No new ledger row is required at this stage because no
+existing entry tracks `audit_cleanup_summary.md` patch-vs-minor classification; T20 will
+create the appropriate entry when it assembles the final PR summary.
+
+**Counts of T17 dispositions:**
+- confirmed-T17 (already closed via earlier tasks): 5 (F-077, F-091, F-092, F-093, F-094)
+- confirmed-resolved-cross-chapter (T17): 4 (F-078, F-079, F-084, F-087)
+- confirmed-partly-resolved-cross-chapter (T17) — Chapter 6 deferred: 1 (F-080)
+- confirmed-preserved-not-yet-assessed (T17): 6 (F-095, F-096, F-097, F-098, F-099, F-100)
+- confirmed-preserved-informational (T17): 1 (F-101)
+- new row added: 1 (F-102 — GATE-14A6, cross-linked to RISK-21)
+- T15 routing note: 1 (non-blocker recommendation → T20)
+- **Total T17 actions: 19**
+- no ledger rows re-opened or newly flagged in T17
