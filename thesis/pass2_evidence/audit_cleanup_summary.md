@@ -193,6 +193,51 @@ BLOCKER-1 sub-check 6 was verified **PASS** by reviewer-adversarial in two indep
 
 ---
 
+## T19 — Final review gates (Round 3 of 3, 2026-04-27)
+
+T19 ran the final review gates after T18. Mechanical checks passed clean (35 files / 18 commits, 64 physical chapter flags preserved, 0 workflow leakage in chapter prose, 0 stale-ranked-ladder claims, 560/560 pytest passing, 22 spec-version refs all current/historical, manifest 0 stale / 0 pending). Detailed gate report: `thesis/pass2_evidence/reviewer_gate_report.md`.
+
+**Both reviewers converged on PASS-WITH-NOTES.** 0 BLOCKERs. 3 WARNINGs + 9 NOTEs total.
+
+### WARNINGs requiring T20 attention
+
+| ID | File / Section | Required action |
+|---|---|---|
+| WARNING-1 | `thesis/chapters/04_data_and_methodology.md:206` | Replace "populację ladderową (AoE2)" with "publiczne populacje 1v1 Random Map (AoE2)" or analogous wording from §4.1.2.0 line 79 |
+| WARNING-2 | Ch 4 §4.3.2 placeholder or §4.4 stub | Add GATE-14A6 acknowledgement hedge so examiner reading Ch 4 sees the deferral |
+| WARNING-3 | Ch 4 §4.4.5 ~line 388 | T20 PR body highlights ICC argument analogical-use of [Gelman2007] §11–12 |
+
+### Spec amendment classifications (T15 reviewer-deep recommendation routed to T20)
+
+The T15 reviewer-deep non-blocker recommendation to record borderline patch-vs-minor classification calls in this audit summary is now active for T20:
+
+- **CROSS-02-00 v3 → v3.0.1 (T15)**: classified PATCH per `02_00_feature_input_contract.md` §7. Borderline against minor: §3.3 UTC discipline added a *binding requirement* (`SET TimeZone = 'UTC'`), which could be argued to be a §5-equivalent gate addition. PATCH classification stands because: (a) no §2 column-grain commitment changed; (b) no §4 encoding rule changed; (c) no §5 gate condition added/removed at the spec-protocol level — the requirement is a §3 discipline note, not a §5 gate. T10 Round 2 consolidated signoff covers this per Assumption (D) and BLOCKER-2 resolution.
+- **CROSS-02-01 v1 → v1.0.1 (T15)**: classified PATCH per `02_01_leakage_audit_protocol.md` §7. Borderline against minor: §4 stale-artifact discipline added an authoritative-reference invariant (`notebook_regeneration_manifest.md` is the stale/current authority), which could be argued to be a §2-equivalent audit-dimension addition. PATCH classification stands because: (a) no §2 audit dimension was added; (b) no §3 schema field changed; (c) no §5 gate condition changed; (d) §4 enforcement is convention-based per §5 ("no CI check, pre-commit hook, or gate script"). The §3 JSON-schema literal `"CROSS-02-01-v1"` is intentionally retained at the patch increment per §192 stability convention (patches do NOT change artifact-schema literal values, because doing so would invalidate `confirmed_intact` lineage of pre-existing audit artifacts produced under the original v1 schema).
+
+### Adversarial cap accounting
+
+- Round 1 (plan critique) — consumed 2026-04-26
+- Round 2 (T10 mid-PR gate, including the BLOCKER-A/B resolution patch) — consumed 2026-04-26
+- Round 3 (T19 final PR gate) — consumed 2026-04-27
+
+3 of 3 rounds consumed; symmetric cap respected. No further reviewer-adversarial dispatch on this PR.
+
+**T20 readiness:** YES — CONDITIONAL on (a) WARNING-1 + WARNING-2 mechanical fixes (Ch 4 wording residue + GATE-14A6 visibility) and (b) T20 PR body enumeration of flag priority classes, GATE-14A6 status, §6.3 deferral, §4.4.6 redactional routing, §4.4.5 ICC analogical-use, and the spec amendment classifications recorded above.
+
+### Post-T19 warning-resolution micro-pass
+
+**Date:** 2026-05-04
+
+A narrow T18-style mechanical consistency micro-pass was executed before T20 PR-body draft to clear the two T19 Chapter 4 mechanical warnings (WARNING-1 and WARNING-2). The micro-pass touched only `thesis/chapters/04_data_and_methodology.md` plus the two T19 report files (`reviewer_gate_report.md` and this summary). No notebooks, generated artifacts, ROADMAPs, research_logs, STEP_STATUS files, specs, schemas, references.bib, raw data, REVIEW_QUEUE.md, or WRITING_STATUS.md were touched.
+
+- **WARNING-1 — RESOLVED.** §4.1.3 closing rationale (Chapter 4 line 206) now reads `na publiczne populacje 1v1 Random Map (AoE2) i odwrotnie` instead of `na populację ladderową (AoE2) i odwrotnie`. The replacement mirrors the conservative wording already established at §4.1.2.0 line 79 and matches the Tier-4 / mixed-mode framing used throughout §4.1.3 / §4.1.4 / Tabela 4.4a / Tabela 4.5.
+- **WARNING-2 — RESOLVED.** §4.3.2 (`SC2-specific in-game features`) now contains a visible-prose paragraph headed `**Status walidacji semantycznej strumienia tracker_events_raw.**` that acknowledges the existence of the SC2 `tracker_events_raw` stream, the non-execution of dedicated semantic validation Step 01_03_05 in the current iteration, the open status of GATE-14A6, and the methodological consequence that `tracker_events_raw`-derived features are not yet treated as a fully validated model input. The hedge intentionally does not imply the validation has been completed.
+- **WARNING-3 — REMAINS T20 PR-body documentation only.** No Chapter 4 edit was performed for WARNING-3; §4.4.5 ICC argument continues to use [Gelman2007] §11–12 analogically with the supporting `[REVIEW]` flag at line 208 acknowledging the analogical use. T20 PR body must mention that §4.4.5 uses the ICC argument analogically with [Gelman2007] §11–12, not as a direct empirical proof.
+- **Adversarial cap unchanged.** No new reviewer-adversarial round was invoked. Round 3 (T19) remains consumed and continues to be the final adversarial round on this PR.
+- **Validation results.** All five mechanical re-checks in `reviewer_gate_report.md` §7 returned the expected outcomes: WARNING-1 wording residue gone (only the line-212 negated `„ranked ladder"` mention remains); GATE-14A6 hedge visible in §4.3.2; chapter-prose workflow-leakage zero; physical chapter flag count preserved at 64 (Ch 1: 7, Ch 2: 15, Ch 3: 14, Ch 4: 28); manifest current `Status:` rows show zero `flagged_stale` and zero `regenerated_pending_log`.
+
+---
+
 ## Plan-manifest correction (T14 pre-dispatch)
 
 **Date:** 2026-04-26
