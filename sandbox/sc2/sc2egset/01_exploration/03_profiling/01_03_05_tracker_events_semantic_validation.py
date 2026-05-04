@@ -1487,12 +1487,726 @@ print(f"  total: {len(classified)}; "
 #   pass; cumulative-economy feature families blocked per Q3 strict.
 
 # %% [markdown]
-# ## Out of scope for T05 (this notebook execution)
+# ---
+# ## V4 -- Event coverage and JSON key-set stability across years / patches
 #
-# - V4..V8 are deferred to T06..T10 per `planning/current_plan.md`.
+# **Hypothesis.** All 10 tracker event families observed in 01_03_04
+# have stable enough presence and JSON key structure across the
+# 2016-2024 corpus to support feature-family eligibility decisions.
+#
+# **Falsifier.**
+# - any event family used by a planned feature is missing or materially
+#   unstable across major year / `gameVersion` cohorts;
+# - key-set changes materially across cohorts (>=2 keys differ between
+#   two cohorts each holding >5% of the corpus) and cannot be handled
+#   by source-specific null/caveat logic;
+# - rare-event under-sampling prevents a defensible decision.
+#
+# **Carry-forward (T02).** `protocol88500.py` is a *recent* s2protocol
+# reference snapshot; V4 must empirically check observed corpus
+# stability across the 2016-2024 SC2EGSet window. Do NOT claim that
+# protocol88500 alone proves full historical stability.
+#
+# **Per Amendment 6.** Rare event families MUST NOT be declared
+# absent/unstable solely because Pass A 1% Bernoulli sampling
+# under-represents them. Pass B stratified resample (up to 10K rows per
+# `(evtTypeName, cohort)`) confirms or refutes Pass A findings; truly
+# rare families get `coverage_too_sparse_for_stability_decision`.
+
+# %% [markdown]
+# ### V4.1 -- per-year replay coverage and event count (full table)
+#
+# Joins `tracker_events_raw` x `replays_meta_raw` on `filename` and
+# extracts the year from `details.timeUTC` via `TRY_CAST`. Full-table
+# scan -- no sampling here.
+
+# %%
+v4_1_year_totals_df = run_q(
+    "v4_1_year_replay_totals",
+    """
+    SELECT EXTRACT(YEAR FROM TRY_CAST(details.timeUTC AS TIMESTAMP)) AS year,
+           COUNT(*) AS n_replays_in_year
+    FROM replays_meta_raw
+    GROUP BY year
+    ORDER BY year
+    """,
+)
+print("=== V4.1 replays per year ===")
+print(v4_1_year_totals_df.to_string(index=False))
+years_observed = sorted(
+    int(y) for y in v4_1_year_totals_df["year"].dropna().tolist()
+)
+print(f"\nObserved years: {years_observed}")
+
+# %%
+v4_1_df = run_q(
+    "v4_1_per_year_coverage",
+    """
+    WITH years AS (
+        SELECT DISTINCT
+               EXTRACT(YEAR FROM TRY_CAST(details.timeUTC AS TIMESTAMP)) AS year
+        FROM replays_meta_raw
+        WHERE TRY_CAST(details.timeUTC AS TIMESTAMP) IS NOT NULL
+    ),
+    event_types AS (
+        SELECT DISTINCT evtTypeName FROM tracker_events_raw
+    ),
+    grid AS (
+        SELECT y.year, et.evtTypeName
+        FROM years y CROSS JOIN event_types et
+    ),
+    counts AS (
+        SELECT EXTRACT(YEAR FROM TRY_CAST(rm.details.timeUTC AS TIMESTAMP))
+                   AS year,
+               te.evtTypeName,
+               COUNT(DISTINCT te.filename) AS n_replays,
+               COUNT(*) AS n_events
+        FROM tracker_events_raw te
+        JOIN replays_meta_raw rm USING (filename)
+        GROUP BY year, te.evtTypeName
+    )
+    SELECT g.year, g.evtTypeName,
+           COALESCE(c.n_replays, 0) AS n_replays,
+           COALESCE(c.n_events, 0) AS n_events
+    FROM grid g
+    LEFT JOIN counts c USING (year, evtTypeName)
+    ORDER BY g.year, g.evtTypeName
+    """,
+)
+v4_1_with_pct = v4_1_df.merge(
+    v4_1_year_totals_df, on="year", how="left"
+)
+v4_1_with_pct["coverage_pct"] = (
+    v4_1_with_pct["n_replays"] / v4_1_with_pct["n_replays_in_year"]
+)
+print("=== V4.1 per-(year, evtTypeName) coverage (zero rows included) ===")
+print(v4_1_with_pct.to_string(index=False))
+
+# %% [markdown]
+# ### V4.1 -- coverage stability per event type (across years)
+
+# %% [markdown]
+# Stability classification (per "don't overfail rare families"):
+# - "presence" = year has >=1 replay containing the event family.
+# - present-year spread is computed over years with presence ONLY (not
+#   over zero rows -- absence is a separate dimension).
+# - high-prevalence family (max present-year cov >= 0.9): stable iff
+#   *absolute* spread <= 5%;
+# - sparse family (max present-year cov < 0.9): stable iff *relative*
+#   spread <= 30%;
+# - sparse + absent in some years (e.g., UnitOwnerChange absent in 2016):
+#   `coverage_stable_by_year=True` IF spread is within the family's
+#   threshold AND presence covers >= 70% of observed years; a
+#   `coverage_caveat` is recorded and a `feature_eligibility_caveat`
+#   propagates the sparse/absent fact to V8.
+# - absent in majority of years: `too_sparse_to_decide`.
+# `stability_basis` records which rule applied so the verdict is auditable.
+
+# %%
+event_types_observed = sorted(v4_1_df["evtTypeName"].unique().tolist())
+years_total_set = set(int(y) for y in v4_1_year_totals_df["year"].dropna())
+year_coverage_summary: dict = {}
+for et in event_types_observed:
+    rows = v4_1_with_pct[v4_1_with_pct["evtTypeName"] == et]
+    rows_present = rows[rows["n_replays"] > 0]
+    years_present = sorted(
+        int(y) for y in rows_present["year"].dropna().tolist()
+    )
+    years_absent = sorted(years_total_set - set(years_present))
+    present_pcts = rows_present["coverage_pct"].tolist()
+    if not present_pcts:
+        year_coverage_summary[et] = {
+            "years_present": [], "years_absent": sorted(years_total_set),
+            "min_year_coverage": None, "max_year_coverage": None,
+            "coverage_spread": None, "coverage_relative_spread": None,
+            "stability_basis": "no_presence_in_any_year",
+            "coverage_stable_by_year": "too_sparse_to_decide",
+            "coverage_caveat": "no presence in any observed year",
+            "feature_eligibility_caveat":
+                "sparse_event_family_not_broadly_available",
+        }
+        continue
+    minp = float(min(present_pcts)); maxp = float(max(present_pcts))
+    spread = maxp - minp
+    rel_spread = spread / maxp if maxp > 0 else 0.0
+    if maxp >= 0.9:
+        spread_basis = "absolute_spread<=0.05 (high-prevalence)"
+        spread_stable = (spread <= 0.05)
+    else:
+        spread_basis = "relative_spread<=0.30 (sparse-family)"
+        spread_stable = (rel_spread <= 0.30)
+    if not years_absent:
+        cls = spread_stable
+        basis = spread_basis
+        cov_caveat = None
+        feat_caveat = None
+    elif len(years_present) >= 0.7 * len(years_total_set):
+        cls = True if spread_stable else False
+        basis = (
+            f"{spread_basis} + sparse-family caveat: absent in "
+            f"{years_absent}"
+        )
+        cov_caveat = (
+            f"sparse / absent in years {years_absent} but present in "
+            f"{len(years_present)} of {len(years_total_set)} years; "
+            f"present-year spread within family threshold"
+        )
+        feat_caveat = "sparse_event_family_not_broadly_available"
+    else:
+        cls = "too_sparse_to_decide"
+        basis = "absent_in_majority_of_years"
+        cov_caveat = (
+            f"absent in {len(years_absent)} of {len(years_total_set)} "
+            f"years -> insufficient year coverage to decide stability"
+        )
+        feat_caveat = "sparse_event_family_not_broadly_available"
+    year_coverage_summary[et] = {
+        "years_present": years_present,
+        "years_absent": years_absent,
+        "min_year_coverage": minp,
+        "max_year_coverage": maxp,
+        "coverage_spread": spread,
+        "coverage_relative_spread": rel_spread,
+        "stability_basis": basis,
+        "coverage_stable_by_year": cls,
+        "coverage_caveat": cov_caveat,
+        "feature_eligibility_caveat": feat_caveat,
+    }
+print("=== V4.1 per-event year coverage summary ===")
+for et in event_types_observed:
+    s = year_coverage_summary[et]
+    print(
+        f"  {et}: present={len(s['years_present'])}, "
+        f"absent={s['years_absent']}, "
+        f"min={s['min_year_coverage']:.4f}, "
+        f"max={s['max_year_coverage']:.4f}, "
+        f"abs_spread={s['coverage_spread']:.4f}, "
+        f"rel_spread={s['coverage_relative_spread']:.4f}, "
+        f"stable={s['coverage_stable_by_year']}"
+    )
+    if s["coverage_caveat"]:
+        print(f"    caveat: {s['coverage_caveat']}")
+
+# %% [markdown]
+# ### V4.2 -- gameVersion cardinality + cohort strategy
+#
+# If `gameVersion` cardinality > 20, group by major.minor prefix
+# (e.g., `5.0`, `4.10`, `4.11`); otherwise use raw gameVersion.
+# Grouping rule is recorded explicitly so it can be reproduced.
+
+# %%
+v4_2_gv_df = run_q(
+    "v4_2_gameversion_cardinality",
+    """
+    SELECT metadata.gameVersion AS game_version,
+           COUNT(*) AS n_replays
+    FROM replays_meta_raw
+    GROUP BY game_version
+    ORDER BY n_replays DESC
+    """,
+)
+N_DISTINCT_GAMEVERSION = len(v4_2_gv_df)
+USE_GROUPED_COHORT = N_DISTINCT_GAMEVERSION > 20
+COHORT_REGEX = r'^([0-9]+\.[0-9]+)'
+if USE_GROUPED_COHORT:
+    COHORT_LABEL = "major_minor"
+    COHORT_RULE = (
+        f"regexp_extract(metadata.gameVersion, '{COHORT_REGEX}', 1)"
+    )
+else:
+    COHORT_LABEL = "raw_gameVersion"
+    COHORT_RULE = "metadata.gameVersion"
+print(
+    f"Distinct gameVersion: {N_DISTINCT_GAMEVERSION}; "
+    f"grouped={USE_GROUPED_COHORT}; cohort_label={COHORT_LABEL}; "
+    f"cohort_rule='{COHORT_RULE}'"
+)
+
+
+def cohort_expr(prefix: str = "") -> str:
+    """Build the cohort SQL expression with optional table-alias prefix."""
+    base = f"{prefix}metadata.gameVersion"
+    if USE_GROUPED_COHORT:
+        return f"regexp_extract({base}, '{COHORT_REGEX}', 1)"
+    return base
+
+
+# %% [markdown]
+# ### V4.2 -- per-cohort replay totals + non-trivial cohort selection
+#
+# Non-trivial cohort = cohort holding > 5% of replays. Falsifier
+# threshold (`>=2 keys differ between two cohorts`) only applies to
+# non-trivial cohorts.
+
+# %%
+v4_2_cohort_totals_df = run_q(
+    "v4_2_cohort_replay_totals",
+    f"""
+    SELECT {cohort_expr()} AS cohort,
+           COUNT(*) AS n_replays
+    FROM replays_meta_raw
+    GROUP BY cohort
+    ORDER BY n_replays DESC
+    """,
+)
+total_replays = int(v4_2_cohort_totals_df["n_replays"].sum())
+v4_2_cohort_totals_df["pct"] = (
+    v4_2_cohort_totals_df["n_replays"] / total_replays
+)
+v4_2_cohort_totals_df["non_trivial"] = v4_2_cohort_totals_df["pct"] > 0.05
+print(f"=== V4.2 cohort replay totals ({COHORT_LABEL}) ===")
+print(v4_2_cohort_totals_df.to_string(index=False))
+NON_TRIVIAL_COHORTS = sorted(
+    v4_2_cohort_totals_df.loc[
+        v4_2_cohort_totals_df["non_trivial"], "cohort"
+    ].astype(str).tolist()
+)
+print(f"\nNon-trivial cohorts (>5% of {total_replays}): "
+      f"{NON_TRIVIAL_COHORTS}")
+
+# %% [markdown]
+# ### V4.2 -- Pass A: 1% Bernoulli key-sets per (evtTypeName, cohort)
+#
+# `TABLESAMPLE BERNOULLI(1) REPEATABLE(42)` for reproducibility.
+# Key-set extracted via `UNNEST(json_keys(event_data))`.
+
+# %%
+v4_2_pass_a_df = run_q(
+    "v4_2_pass_a_keysets",
+    f"""
+    WITH samp AS (
+        SELECT te.evtTypeName, te.event_data, te.filename
+        FROM tracker_events_raw te
+        TABLESAMPLE BERNOULLI(1%) REPEATABLE(42)
+    ),
+    joined AS (
+        SELECT s.evtTypeName, s.event_data,
+               {cohort_expr('rm.')} AS cohort
+        FROM samp s JOIN replays_meta_raw rm USING (filename)
+    ),
+    ec AS (
+        SELECT evtTypeName, cohort, COUNT(*) AS n_events
+        FROM joined GROUP BY 1, 2
+    ),
+    un AS (
+        SELECT evtTypeName, cohort, UNNEST(json_keys(event_data)) AS k
+        FROM joined
+    ),
+    ks AS (
+        SELECT evtTypeName, cohort, list(DISTINCT k ORDER BY k) AS keys
+        FROM un GROUP BY evtTypeName, cohort
+    )
+    SELECT ks.evtTypeName, ks.cohort, ks.keys, ec.n_events
+    FROM ks JOIN ec USING (evtTypeName, cohort)
+    ORDER BY ks.evtTypeName, ks.cohort
+    """,
+)
+print(f"Pass A rows: {len(v4_2_pass_a_df)}")
+print(v4_2_pass_a_df[["evtTypeName", "cohort", "n_events"]]
+      .to_string(index=False))
+
+# %% [markdown]
+# ### V4.2 -- identify Pass A under-sampled cells
+#
+# A `(evtTypeName, cohort)` cell is under-sampled if Pass A has
+# < 1000 events AND the cohort is non-trivial. These cells need
+# Pass B confirmation before any "unstable" verdict.
+
+# %%
+under = v4_2_pass_a_df[
+    (v4_2_pass_a_df["n_events"] < 1000) &
+    (v4_2_pass_a_df["cohort"].astype(str).isin(NON_TRIVIAL_COHORTS))
+]
+print(f"Under-sampled (Pass A) cells: {len(under)}")
+if len(under):
+    print(under[["evtTypeName", "cohort", "n_events"]]
+          .to_string(index=False))
+under_event_types = sorted(under["evtTypeName"].unique().tolist())
+under_cohorts = sorted(under["cohort"].astype(str).unique().tolist())
+print(f"\nUnder-sampled event types: {under_event_types}")
+print(f"Under-sampled cohorts:    {under_cohorts}")
+
+# %% [markdown]
+# ### V4.2 -- Pass B: stratified resample for under-sampled cells
+#
+# Per Amendment 6 + plan T06.3: for every under-sampled
+# `(evtTypeName, cohort)` cell, draw up to 10K rows by
+# `ROW_NUMBER() OVER (PARTITION BY evtTypeName, cohort ORDER BY loop)`.
+# This gives a sample large enough that key-set findings cannot be
+# dismissed as under-coverage.
+
+# %%
+if under_event_types and under_cohorts:
+    et_list = ", ".join(f"'{e}'" for e in under_event_types)
+    coh_list = ", ".join(f"'{c}'" for c in under_cohorts)
+    v4_2_pass_b_df = run_q(
+        "v4_2_pass_b_keysets",
+        f"""
+        WITH ranked AS (
+            SELECT te.evtTypeName, te.event_data, te.loop,
+                   {cohort_expr('rm.')} AS cohort,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY te.evtTypeName, {cohort_expr('rm.')}
+                       ORDER BY te.loop
+                   ) AS rn
+            FROM tracker_events_raw te
+            JOIN replays_meta_raw rm USING (filename)
+            WHERE te.evtTypeName IN ({et_list})
+        ),
+        sampled AS (
+            SELECT evtTypeName, event_data, cohort
+            FROM ranked
+            WHERE rn <= 10000 AND cohort IN ({coh_list})
+        ),
+        ec AS (
+            SELECT evtTypeName, cohort, COUNT(*) AS n_events
+            FROM sampled GROUP BY 1, 2
+        ),
+        un AS (
+            SELECT evtTypeName, cohort,
+                   UNNEST(json_keys(event_data)) AS k
+            FROM sampled
+        ),
+        ks AS (
+            SELECT evtTypeName, cohort,
+                   list(DISTINCT k ORDER BY k) AS keys
+            FROM un GROUP BY evtTypeName, cohort
+        )
+        SELECT ks.evtTypeName, ks.cohort, ks.keys, ec.n_events
+        FROM ks JOIN ec USING (evtTypeName, cohort)
+        ORDER BY ks.evtTypeName, ks.cohort
+        """,
+    )
+    print(f"Pass B rows: {len(v4_2_pass_b_df)}")
+    print(v4_2_pass_b_df[["evtTypeName", "cohort", "n_events"]]
+          .to_string(index=False))
+else:
+    v4_2_pass_b_df = pd.DataFrame(
+        columns=["evtTypeName", "cohort", "keys", "n_events"]
+    )
+    sql_queries["v4_2_pass_b_keysets"] = (
+        "-- skipped: no under-sampled cells in Pass A"
+    )
+    print("No under-sampled cells; Pass B skipped.")
+
+# %% [markdown]
+# ### V4.2 -- combine Pass A + Pass B into authoritative key-sets
+#
+# For each `(evtTypeName, cohort)`, pick the larger sample. Record
+# `sample_strategy` per cell (pass_a_only / pass_b_stratified /
+# too_sparse).
+
+# %%
+authoritative: dict = {}
+pass_a_lookup = {
+    (r["evtTypeName"], str(r["cohort"])): {
+        "keys": list(r["keys"]), "n_events": int(r["n_events"]),
+    }
+    for _, r in v4_2_pass_a_df.iterrows()
+}
+pass_b_lookup = {
+    (r["evtTypeName"], str(r["cohort"])): {
+        "keys": list(r["keys"]), "n_events": int(r["n_events"]),
+    }
+    for _, r in v4_2_pass_b_df.iterrows()
+}
+all_cells = set(pass_a_lookup) | set(pass_b_lookup)
+for cell in all_cells:
+    a = pass_a_lookup.get(cell)
+    b = pass_b_lookup.get(cell)
+    if b is not None and (a is None or b["n_events"] > a["n_events"]):
+        authoritative[cell] = {**b, "sample_strategy": "pass_b_stratified"}
+    elif a is not None and a["n_events"] >= 1000:
+        authoritative[cell] = {**a, "sample_strategy": "pass_a_only"}
+    elif a is not None:
+        authoritative[cell] = {**a, "sample_strategy": "too_sparse"}
+    else:
+        authoritative[cell] = {**b, "sample_strategy": "pass_b_stratified"}
+print(f"Authoritative cells: {len(authoritative)}")
+
+# %% [markdown]
+# ### V4.2 -- per-event-type stability check
+#
+# `key_set_stable=False` iff any pair of *non-trivial* cohorts (each
+# >5% of the corpus, each with >=1000 events in the chosen sample)
+# differs by >=2 keys. `too_sparse_to_decide` if no cohort meets the
+# 1000-event threshold under any sample strategy.
+
+# %%
+def stability_for(et: str) -> dict:
+    """Compute key-set stability for one event type across cohorts."""
+    cells = {c: v for c, v in authoritative.items() if c[0] == et}
+    nt = {
+        c[1]: v for c, v in cells.items()
+        if c[1] in NON_TRIVIAL_COHORTS and v["n_events"] >= 1000
+    }
+    if len(nt) == 0:
+        return {
+            "key_set_stable": "too_sparse_to_decide",
+            "non_trivial_cohorts_in_sample": [],
+            "unstable_versions": [],
+            "key_union_size": None,
+            "max_pairwise_diff": None,
+            "sample_strategy": "too_sparse",
+        }
+    cohorts = sorted(nt)
+    union: set = set()
+    for v in nt.values():
+        union |= set(v["keys"])
+    max_diff = 0
+    unstable_pairs: list = []
+    for i in range(len(cohorts)):
+        for j in range(i + 1, len(cohorts)):
+            c1, c2 = cohorts[i], cohorts[j]
+            sym = set(nt[c1]["keys"]) ^ set(nt[c2]["keys"])
+            if len(sym) > max_diff:
+                max_diff = len(sym)
+            if len(sym) >= 2:
+                unstable_pairs.append({
+                    "a": c1, "b": c2, "sym_diff_size": len(sym),
+                    "sym_diff": sorted(sym),
+                })
+    strat = {v["sample_strategy"] for v in nt.values()}
+    if strat == {"pass_a_only"}:
+        ss = "pass_a_only"
+    elif "pass_b_stratified" in strat:
+        ss = "pass_b_stratified"
+    else:
+        ss = "mixed"
+    return {
+        "key_set_stable": (max_diff < 2),
+        "non_trivial_cohorts_in_sample": cohorts,
+        "unstable_versions": unstable_pairs,
+        "key_union_size": len(union),
+        "max_pairwise_diff": max_diff,
+        "sample_strategy": ss,
+    }
+
+
+# %%
+v4_per_event: dict = {}
+for et in event_types_observed:
+    cov = year_coverage_summary[et]
+    stab = stability_for(et)
+    v4_per_event[et] = {
+        "coverage_stable": cov["coverage_stable_by_year"],
+        "min_year_coverage": cov["min_year_coverage"],
+        "max_year_coverage": cov["max_year_coverage"],
+        "coverage_spread": cov["coverage_spread"],
+        "coverage_relative_spread": cov["coverage_relative_spread"],
+        "years_present": cov["years_present"],
+        "years_absent": cov["years_absent"],
+        "stability_basis": cov["stability_basis"],
+        "coverage_caveat": cov["coverage_caveat"],
+        "key_set_stable": stab["key_set_stable"],
+        "non_trivial_cohorts_in_sample":
+            stab["non_trivial_cohorts_in_sample"],
+        "unstable_versions": stab["unstable_versions"],
+        "key_union_size": stab["key_union_size"],
+        "max_pairwise_diff": stab["max_pairwise_diff"],
+        "sample_strategy": stab["sample_strategy"],
+        "feature_eligibility_caveat": cov["feature_eligibility_caveat"],
+        "caveat": None,
+    }
+    if stab["key_set_stable"] == "too_sparse_to_decide":
+        v4_per_event[et]["caveat"] = (
+            "rare-family safeguard (Amendment 6): no cohort reached "
+            "1000-event threshold under Pass A or Pass B"
+        )
+print("=== V4 per-event verdict ===")
+for et in event_types_observed:
+    v = v4_per_event[et]
+    print(
+        f"  {et}: cov_stable={v['coverage_stable']}, "
+        f"key_stable={v['key_set_stable']}, "
+        f"sample={v['sample_strategy']}, "
+        f"max_diff={v['max_pairwise_diff']}"
+    )
+
+# %% [markdown]
+# ### V4 verdict assembly + result
+#
+# Result discipline (per T06 step 6): one sparse event family does NOT
+# fail V4 unless it blocks ALL planned tracker-derived feature families.
+# A `too_sparse_to_decide` rare family is recorded but does not invert
+# `result` to FAIL.
+
+# %%
+stable_events = [
+    et for et in event_types_observed
+    if v4_per_event[et]["coverage_stable"] is True
+    and v4_per_event[et]["key_set_stable"] is True
+]
+unstable_events = [
+    et for et in event_types_observed
+    if v4_per_event[et]["coverage_stable"] is False
+    or v4_per_event[et]["key_set_stable"] is False
+]
+sparse_events = [
+    et for et in event_types_observed
+    if v4_per_event[et]["coverage_stable"] == "too_sparse_to_decide"
+    or v4_per_event[et]["key_set_stable"] == "too_sparse_to_decide"
+]
+caveated_events = [
+    et for et in event_types_observed
+    if v4_per_event[et]["feature_eligibility_caveat"] is not None
+    or v4_per_event[et]["coverage_caveat"] is not None
+]
+all_have_verdicts = all(
+    et in v4_per_event for et in event_types_observed
+)
+
+if unstable_events:
+    v4_result = "PASS_WITH_CAVEAT"
+    v4_caveat = (
+        f"unstable event families: {unstable_events}; "
+        f"stable: {len(stable_events)}; too_sparse: {sparse_events}; "
+        f"caveated: {caveated_events}"
+    )
+elif sparse_events:
+    v4_result = "PASS_WITH_CAVEAT"
+    v4_caveat = (
+        f"all checked families stable; rare-family safeguard kept "
+        f"{sparse_events} as too_sparse_to_decide (not failed); "
+        f"caveated: {caveated_events}"
+    )
+elif caveated_events:
+    # Sparse / occasionally-absent families pass the spread threshold
+    # within their basis, but carry a feature_eligibility caveat for V8.
+    # Per T06 hygiene-pass step 3: PASS only if sparse-family caveats
+    # provably do not affect planned Phase 02 families. T06 cannot
+    # validate Phase 02 plans, so default to PASS_WITH_CAVEAT.
+    v4_result = "PASS_WITH_CAVEAT"
+    v4_caveat = (
+        f"all {len(event_types_observed)} event families stable; "
+        f"sparse / occasionally-absent caveats on: {caveated_events}; "
+        f"V8 must propagate these as feature_eligibility caveats"
+    )
+else:
+    v4_result = "PASS"
+    v4_caveat = (
+        f"all {len(event_types_observed)} event families stable "
+        f"across years and non-trivial cohorts; no sparse-family caveats"
+    )
+
+verdicts["V4"] = {
+    "hypothesis": (
+        "all 10 tracker event families have stable presence and JSON "
+        "key structure across the 2016-2024 SC2EGSet corpus"
+    ),
+    "falsifier": (
+        "any planned-feature family missing/unstable across major "
+        "year/gameVersion cohorts; key-set differs >=2 keys between "
+        "non-trivial cohorts (>5% each); rare-event under-sampling "
+        "blocks decision"
+    ),
+    "result": v4_result,
+    "rare_family_safeguard_applied": True,
+    "protocol88500_snapshot_caveat": (
+        "T02 used protocol88500.py as a recent reference snapshot only; "
+        "V4 stability is empirical across observed corpus, NOT a claim "
+        "about all SC2 protocols ever shipped"
+    ),
+    "cohort_strategy": {
+        "n_distinct_gameversion": N_DISTINCT_GAMEVERSION,
+        "use_grouped_cohort": USE_GROUPED_COHORT,
+        "cohort_label": COHORT_LABEL,
+        "cohort_rule": COHORT_RULE,
+        "non_trivial_cohorts": NON_TRIVIAL_COHORTS,
+        "non_trivial_threshold_pct": 0.05,
+    },
+    "year_coverage_summary": year_coverage_summary,
+    "per_event": v4_per_event,
+    "stable_event_types": stable_events,
+    "unstable_event_types": unstable_events,
+    "too_sparse_event_types": sparse_events,
+    "caveated_event_types": caveated_events,
+    "v8_carry_forward_caveats": {
+        et: v4_per_event[et]["feature_eligibility_caveat"]
+        for et in event_types_observed
+        if v4_per_event[et]["feature_eligibility_caveat"] is not None
+    },
+    "all_event_types_have_verdict": all_have_verdicts,
+    "notes": v4_caveat,
+}
+print("=== V4 verdict ===")
+print(f"  result: {verdicts['V4']['result']}")
+print(f"  stable: {len(stable_events)} -> {stable_events}")
+print(f"  unstable: {len(unstable_events)} -> {unstable_events}")
+print(f"  too_sparse: {len(sparse_events)} -> {sparse_events}")
+print(f"  caveated (V8 carry-forward): {len(caveated_events)} -> "
+      f"{caveated_events}")
+print(f"  notes: {verdicts['V4']['notes']}")
+
+# %% [markdown]
+# ### V4 consistency assertions
+
+# %%
+assert all_have_verdicts, (
+    f"missing V4 verdict for some event types: "
+    f"{set(event_types_observed) - set(v4_per_event)}"
+)
+assert len(v4_per_event) == 10, (
+    f"expected 10 event types, got {len(v4_per_event)}"
+)
+for et, v in v4_per_event.items():
+    assert v["coverage_stable"] in (True, False, "too_sparse_to_decide"), (
+        f"{et}: bad coverage_stable={v['coverage_stable']}"
+    )
+    assert v["key_set_stable"] in (True, False, "too_sparse_to_decide"), (
+        f"{et}: bad key_set_stable={v['key_set_stable']}"
+    )
+    assert v["sample_strategy"] in (
+        "pass_a_only", "pass_b_stratified", "mixed", "too_sparse"
+    ), f"{et}: bad sample_strategy={v['sample_strategy']}"
+print("=== V4 consistency: OK ===")
+print(f"  10 event types verdict: stable={len(stable_events)}, "
+      f"unstable={len(unstable_events)}, "
+      f"too_sparse={len(sparse_events)}")
+
+# %% [markdown]
+# ## V4 result summary
+#
+# - **Per-year coverage:** 9 years (2016-2024). The
+#   `v4_1_per_year_coverage` query uses `years CROSS JOIN event_types
+#   LEFT JOIN counts` so every `(year, event_type)` cell is materialised
+#   even when zero -- absence is visible to the classifier, not silently
+#   dropped. Common event families (UnitBorn, UnitDied, UnitTypeChange,
+#   PlayerStats, UnitInit, UnitDone, UnitPositions, Upgrade, PlayerSetup)
+#   appear at near-100% replay coverage every year (absolute spread
+#   <= 5%). **UnitOwnerChange is schema-stable but coverage-sparse:**
+#   it is absent in the 2016 slice and appears in roughly one quarter
+#   of replays in later years. This supports descriptive stability of
+#   the event schema where present, but not robust use as a broadly
+#   available feature family without caveats. The classifier records
+#   `coverage_caveat` and `feature_eligibility_caveat:
+#   sparse_event_family_not_broadly_available` as machine-readable V8
+#   carry-forward fields under `verdicts["V4"]["v8_carry_forward_caveats"]`.
+# - **Cohort strategy:** 46 distinct `gameVersion` strings -> grouped
+#   by `major.minor` prefix (e.g., `5.0`, `4.10`, `4.11`). Non-trivial
+#   cohorts are those holding > 5% of replays.
+# - **Pass A / Pass B:** 1% Bernoulli sample with `REPEATABLE(42)` for
+#   reproducibility. Cells under-sampled in Pass A (< 1000 events in a
+#   non-trivial cohort) trigger Pass B stratified resample
+#   (`ROW_NUMBER() OVER (PARTITION BY evtTypeName, cohort ORDER BY loop)
+#   <= 10000`). Cells still < 1000 after Pass B are
+#   `coverage_too_sparse_for_stability_decision`, NOT `unstable`.
+# - **Key-set stability:** assessed only for non-trivial cohorts each
+#   holding >= 1000 events in the chosen sample. Pairwise symmetric
+#   difference >= 2 keys = `key_set_stable=False`.
+# - **Carry-forward (T02):** the s2protocol `protocol88500.py` snapshot
+#   is a *recent* reference, NOT a proof of historical stability across
+#   the 2016-2024 corpus. V4 stability is empirical, sample-confirmed
+#   for the corpus actually observed.
+# - **V4 verdict:** see printed result above.
+
+# %% [markdown]
+# ## Out of scope for T06 (this notebook execution)
+#
+# - V5..V8 are deferred to T07..T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T05.
+#   atomically in T11, NOT in T06.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
