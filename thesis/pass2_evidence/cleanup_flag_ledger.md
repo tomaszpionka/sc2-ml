@@ -1,0 +1,531 @@
+# Cleanup Flag Ledger
+Generated: 2026-04-26 by T04 executor (thesis/audit-methodology-lineage-cleanup).
+
+Purpose: Comprehensive inventory of every in-text flag, workflow-leakage term,
+and external-audit issue across Chapters 1–4 of the thesis draft.
+Also enumerates the 7 not_yet_assessed notebooks per the T04 constraint.
+
+## Schema
+
+Each row captures 12 fields:
+1. ID — sequential F-001, F-002, …
+2. Chapter / file / section
+3. Exact issue or flag (verbatim or descriptive)
+4. Issue type
+5. Severity
+6. Lineage status from T03
+7. Source needed
+8. Artifact needed
+9. Downstream task expected to resolve it
+10. Proposed action
+11. Whether notebook/artifact regeneration may be required
+12. Current status
+
+Issue type vocabulary: in-text-flag / workflow-leakage / external-audit / lineage-stale / notebook-not-assessed / REVIEW_QUEUE-discrepancy
+
+Severity vocabulary: blocker / major / minor / note
+
+Lineage status vocabulary (from T03): intact / stale / missing / contradictory / prose-only / N-A
+
+---
+
+## Ledger rows
+
+| ID | Chapter / file / section | Exact issue or flag | Issue type | Severity | Lineage status from T03 | Source needed | Artifact needed | Downstream task | Proposed action | Regen required | Status |
+|----|--------------------------|---------------------|------------|----------|------------------------|---------------|-----------------|-----------------|-----------------|----------------|--------|
+| F-001 | `01_introduction.md` §1.1 line 11 | `[REVIEW: GarciaMendez2025 — zweryfikować pełną listę autorów, grę docelową i dokładną trafność; dostęp ograniczony do metadanych ScienceDirect]` | in-text-flag | major | prose-only | ScienceDirect full-text GarciaMendez2025 (Entertainment Computing 55, 101027) | N/A (literature) | T12 | Pass-2: read full text; confirm full author list (currently only García-Méndez and de Arriba-Pérez listed), exact accuracy figure, and target game identity | no | open |
+| F-002 | `01_introduction.md` §1.1 line 11 | `[REVIEW: Shin1993 i Forrest2005 dotyczą rynków sportów tradycyjnych — przenoszenie mechanizmów na rynek esportowy wymaga odrębnego uzasadnienia; Mangat2024 omawia zakłady esportowe z perspektywy psychologii hazardu, nie wyceny kursów]` | in-text-flag | minor | prose-only | Mangat2024 Journal of Gambling Studies (already in bib); independent esports-betting mechanism justification | N/A (literature) | T12 | Pass-2: add one-sentence explicit justification for applying traditional-sports betting mechanisms to esports, or soften claim; verify Mangat2024 vol/pages if cited in text | no | open |
+| F-003 | `01_introduction.md` §1.3 line 29 | `[REVIEW: pytania finalizować po fazach 03–04 w razie ujawnienia niemożliwych do operacjonalizacji elementów.]` | in-text-flag | note | prose-only | N/A (Phase 03/04 empirical context) | N/A (future phases) | T12 | Revisit RQ wording after Phase 03 completion; update or remove this flag | no | open |
+| F-004 | `01_introduction.md` §1.3 line 37 | `[REVIEW: po Phase 03 zweryfikować, czy granice warstw stratyfikacji opierać na empirycznym rozkładzie liczby meczów per gracz w korpusach zamiast na arbitralnych progach (<10, 10–50, 50–200, >200).]` | in-text-flag | minor | prose-only | N/A (Phase 03 empirical output) | Phase 03 match-count distribution artifact | T12 | After Phase 03: replace arbitrary strata thresholds with empirically derived percentile boundaries | no | open |
+| F-005 | `01_introduction.md` §1.4 line 43 | `[REVIEW: zweryfikować, czy w mapie drogowej AoE2 powstaną modyfikacje uzasadniające uzupełnienie tej argumentacji o nową przesłankę.]` | in-text-flag | note | prose-only | AoE2 ROADMAP.md current state | N/A | T12 | Pass-2: check AoE2 roadmap for any scope change that would add a fifth rationale for excluding mgz parser; update if needed | no | open |
+| F-006 | `01_introduction.md` References line 81 | `[REVIEW: pełna lista autorów i gra docelowa wymagają weryfikacji z pełnego tekstu]` (in bib entry for GarciaMendez2025) | in-text-flag | major | N-A | ScienceDirect full-text GarciaMendez2025 | N/A | T12 | Same as F-001: verify full author list and game identity from full text; update bib entry if needed | no | open |
+| F-007 | `01_introduction.md` References line 83 | `[REVIEW: cytowane wyłącznie w komentarzu wewnętrznym — jeśli włączane do tekstu, zweryfikować numer tomu/stron]` (in bib entry for Mangat2024) | in-text-flag | minor | N-A | Mangat2024 Journal of Gambling Studies vol/issue/pages | N/A | T12 | Pass-2: verify vol=40 no.1 pp.145-165 (already in bib) or correct; decide if bib entry is retained | no | open |
+| F-008 | `02_theoretical_background.md` §2.1 line 15 | `[REVIEW: zweryfikować po Phase 04, czy uzyskane wyniki na SC2 i AoE2 uzasadniają wzmocnienie lub osłabienie tezy o jakościowej różnicy trudności predykcji]` | in-text-flag | note | prose-only | N/A (Phase 04 empirical output) | Phase 04 results artifact | T13 | After Phase 04: revisit §2.1 closing claim in light of actual SC2 vs AoE2 pre-game prediction quality differential | no | open |
+| F-009 | `02_theoretical_background.md` §2.2.3 line 39 | `[REVIEW: F4.5 Pass-2 audit — Thorrez2024 Table 2 exact value; whether Aligulac row exists in EsportsBench; calibration vs accuracy distinction preserved]` | in-text-flag | major | intact | Thorrez2024 EsportsBench preprint Table 2 (PDF) | N/A (literature) | T13 | Pass-2: manually read Thorrez2024 Table 2 to confirm 80.13% and check for Aligulac-on-Aligulac row; update §2.2.3 and §3.2.4 and §2.5.5 in one pass | no | open |
+| F-010 | `02_theoretical_background.md` §2.2.4 line 49 | `[REVIEW: dokładność grey-literature ścieżki Liquipedia_GameSpeed i BlizzardS2Protocol — peer-reviewed odpowiednik w Vinyals2017 do weryfikacji]` | in-text-flag | minor | intact | Vinyals2017 SC2LE PDF §3 or §4 confirming 22.4 loops/s | N/A (literature) | T13 | Pass-2: read Vinyals2017 PDF to confirm "22.4 times per second" explicit statement; if confirmed, demote Liquipedia to secondary; update flag | no | open |
+| F-011 | `02_theoretical_background.md` §2.2.4 line 51 | `[REVIEW: F6.5 Pass-2 audit — data wydania Patcha 2.0.8 requires separate peer-reviewed citation or new bib entry]` | in-text-flag | minor | intact | Patch 2.0.8 release date (2013-05-07 NA per Liquipedia) | N/A (grey-lit or official patch notes) | T13 | Pass-2: acquire patch-notes citation for Patch 2.0.8 release date or add new bib entry; close F6.5 flag | no | open |
+| F-012 | `02_theoretical_background.md` §2.3.2 line 61 | `[REVIEW: zweryfikować w Pass 2, czy istnieje recenzowana praca raportująca rozkłady czasu osiągania epok w 1v1 rankingowym AoE2 DE]` | in-text-flag | minor | prose-only | Peer-reviewed paper (e.g., CetinTas2023 or Enright) on AoE2 epoch-time distributions | N/A (literature) | T13 | Pass-2: search for peer-reviewed source; if absent, soften claim to "widely reported in community analyses" with grey-lit citation | no | open |
+| F-013 | `02_theoretical_background.md` §2.3.2 line 65 | `[REVIEW: pula map zmienia się; zweryfikować w Pass 2 reprezentatywność tej listy dla okna czasowego korpusów]` | in-text-flag | minor | intact | AoE2 map pool for 2022-08-28 — 2026-02-07 (official release notes or Liquipedia) | N/A | T13 | Pass-2: verify the listed maps (Arabia, Arena, Black Forest, Nomad, Hideout, Four Lakes, Gold Rush) are representative of the corpus window; update list if needed | no | open |
+| F-014 | `02_theoretical_background.md` §2.3.2 line 69 | `[REVIEW: DLC chronology completeness — Three Kingdoms (2025-05-06), Chronicles: Alexander (2025-10-14), Last Chieftains (2026-02-17)]` | in-text-flag | minor | intact | Official AoE2 DE DLC release dates | N/A | T13 | Pass-2: verify DLC release dates and confirm whether any DLC civs fall inside the corpus window 2022-08-28 — 2026-02-07; update civ count claim if needed | no | open |
+| F-015 | `02_theoretical_background.md` §2.4.4 line 117 | `[REVIEW: zweryfikować ostatecznie po Phase 03, czy konfiguracja SVM-linear ma być raportowana jako pełnoprawna metoda czy jako komentarz]` | in-text-flag | note | prose-only | N/A (Phase 03 empirical context) | Phase 03 output | T13 | After Phase 03: decide SVM-linear inclusion or exclusion; update §2.4.4 wording accordingly | no | open |
+| F-016 | `02_theoretical_background.md` §2.4.6 line 131 | `[REVIEW: jeśli w Phase 04/05 ujawni się wyraźna luka uzasadniająca GNN jako linię porównawczą dla SC2, zweryfikować rewizję tej decyzji]` | in-text-flag | note | prose-only | N/A (Phase 04/05 empirical context) | Phase 04/05 output | T13 | After Phase 04: revisit GNN exclusion decision; update §2.4.6 if empirical gap identified | no | open |
+| F-017 | `02_theoretical_background.md` §2.4.7 line 135 | `[REVIEW: po Phase 04 zweryfikować, czy obserwowana hierarchia metod uzasadnia kolejność prezentacji; jeśli MLP dominowany przez RF, przesunąć status]` | in-text-flag | note | prose-only | N/A (Phase 04 empirical context) | Phase 04 results | T13 | After Phase 04: reorder method hierarchy presentation if MLP systematically below RF | no | open |
+| F-018 | `02_theoretical_background.md` §2.5.3 line 163 | `[REVIEW: czy istnieją niezależne walidacje TrueSkill 2 na danych RTS lub esportowych poza Halo 5?]` | in-text-flag | minor | N-A | Literature search: TrueSkill 2 independent RTS/esports validation 2024–2026 | N/A (literature) | T13 | Pass-2: repeat literature search for TrueSkill 2 independent RTS validation; note absence explicitly if none found | no | open |
+| F-019 | `02_theoretical_background.md` §2.5.5 lines 185–186 | `[REVIEW: historyczne snapshoty Aligulac dla SC2EGSet retrospektywnych rankingów?]` and `[REVIEW: kalibracja Aligulac ~80% FAQ; Thorrez2024 exact value; F5.3 framing]` | in-text-flag | major | intact | Aligulac.com/about current FAQ wording; Thorrez2024 Table 2 PDF | N/A (literature) | T13 | Pass-2: (a) check Aligulac historical snapshot availability for SC2EGSet period; (b) confirm Thorrez2024 exact value — same closure as F-009 | no | open |
+| F-020 | `02_theoretical_background.md` §2.6.3 line 213 | `[REVIEW: Demšar §3.1.3 citation section — WebFetch could not confirm N≥5 recommendation location]` and `[REVIEW: F5.6 audit H3 — §3.1.3 vs §3.2 location for N≥10 threshold]` | in-text-flag | major | prose-only | Demsar2006 JMLR readable PDF | N/A (literature) | T13 | Pass-2: manually read Demsar2006 PDF to verify section locations for N≥5 (within-game) and N≥10 (cross-dataset) thresholds; swap section reference if wrong | no | open |
+| F-021 | `02_theoretical_background.md` §2.6.4 lines 229–230 | Two `[REVIEW:]` flags: (a) after Phase 04 check cross-game rank concordance; (b) after Phase 03 verify IID assumption for F 5×2 cv under temporal splits | in-text-flag | note | prose-only | N/A (Phase 03/04 empirical context) | Phase 03/04 outputs | T13 | After Phase 03/04: update §2.6.4 concordance discussion and temporal-split IID assessment | no | open |
+| F-022 | `03_related_work.md` §3.2.2 line 49 | `[REVIEW: dokładny zakres baselineów predykcyjnych w Vinyals2017 wymaga weryfikacji — praca skupia się głównie na agentach RL]` | in-text-flag | minor | N-A | Vinyals2017 SC2LE arXiv:1708.04782 full text | N/A (literature) | T14 | Pass-2: read Vinyals2017 to confirm or refute existence of win-prediction baselines in the paper | no | open |
+| F-023 | `03_related_work.md` §3.2.2 line 55 | `[REVIEW: dokładna struktura korpusu SC2EGSet — liczba gier 1v1 po filtracji — wystarczy odniesienie do §4.1.1]` | in-text-flag | minor | stale (C3-01) | N/A (no additional source needed; deferred to §4.1.1) | N/A | T14 | Pass-2 or Cat F edit: rewrite §3.2.2 sentence to use a forward-ref to §4.1.1 for exact file count rather than stating "17 930 / 55" — resolves C3-01 stale prose inconsistency (17930/55 vs 22390/70) | no | open |
+| F-024 | `03_related_work.md` §3.2.2 body line 55 | STALE PROSE (C3-01): "17 930 plików z 55 paczek turniejowych" vs artifact 22 390 / 70 dirs | lineage-stale | major | stale | Artifact `01_01_01_file_inventory.md` (sc2egset) — already confirmed intact; only prose is wrong | `01_01_01_file_inventory.md` (sc2egset) — intact | T14 | Class A wording fix: replace "17 930 plików z 55 paczek turniejowych" with a forward-ref to §4.1.3 Tabela 4.4a (22 390 / 70) | no | open |
+| F-025 | `03_related_work.md` §3.2.4 line 69 | `[REVIEW: dokładna wartość 80,13% wymaga weryfikacji w preprincie EsportsBench — webfetch nie odzyskał liczby z PDF]` | in-text-flag | major | intact | Thorrez2024 EsportsBench preprint Table 2 (PDF) | N/A (literature) | T14 | Same closure as F-009: read Thorrez2024 Table 2 PDF; confirm 80.13% value | no | open |
+| F-026 | `03_related_work.md` §3.3.1 line 91 | `[REVIEW: F6.7 Pass-2 audit — arXiv:1701.03162 split semantics (random vs temporal 9:1); 60,07%/Kinkade numeric attribution deferred to REVIEW_QUEUE]` | in-text-flag | major | intact | Yang2017Dota arXiv:1701.03162 PDF | N/A (literature) | T14 | Pass-2: read arXiv:1701.03162 PDF to confirm 9:1 split semantics and clarify 58.69% attribution; update §3.3.1 framing if needed | no | open |
+| F-027 | `03_related_work.md` §3.3.3 line 107 | `[REVIEW: в finalnej wersji warto wyselekcjonować 1-2 najsilniejsze prace recenzowane z CS:GO — preferowane Xenopoulos et al. lub kanoniczne IEEE]` | in-text-flag | minor | N-A | Xenopoulos et al. or equivalent peer-reviewed CS:GO prediction paper | N/A (literature) | T14 | Pass-2: identify and cite 1–2 canonical peer-reviewed CS:GO prediction papers; replace vague reference to "several 2022–2023 conference papers" | no | open |
+| F-028 | `03_related_work.md` §3.3.4 line 111 | `[REVIEW: niezbędne sięgnięcie do recenzowanych publikacji z 2025–2026 dla Valorant; obecne źródła to preprinty i prace dyplomowe]` | in-text-flag | minor | N-A | Peer-reviewed Valorant prediction papers 2025–2026 | N/A (literature) | T14 | Pass-2: search for 2025–2026 peer-reviewed Valorant prediction papers; upgrade or remove grey-lit claims; add citations | no | open |
+| F-029 | `03_related_work.md` §3.4.1 line 131 | `[REVIEW: 86% atrybucja do CetinTas2023 — weryfikacja przez IEEE Xplore oczekuje]` | in-text-flag | major | intact | CetinTas2023 IEEE Xplore DOI 10.1109/UBMK59864.2023.10391048 | N/A (literature) | T14 | Pass-2: read CetinTas2023 full text to confirm ~86% accuracy figure and exact methodology (NB/DT vs logistic regression per title) | no | open |
+| F-030 | `03_related_work.md` §3.4.1 line 133 | `[REVIEW: CetinTas2023 metodologiczne niejasności — "Regression Analysis" title vs NB/DT content; weryfikacja klasyfikacja vs regresja]` | in-text-flag | minor | N-A | CetinTas2023 IEEE Xplore full text | N/A (literature) | T14 | Pass-2: same read as F-029; confirm whether methodology is logistic regression (suggested by title) or NB/DT (suggested by methods section) | no | open |
+| F-031 | `03_related_work.md` §3.4.3 line 151 | `[REVIEW: EC'25 — konwencja cytowania dla formatu extended abstract (@inproceedings vs @misc)]` | in-text-flag | minor | N-A | ACM EC'25 proceedings citation convention | N/A (literature convention) | T14 | Pass-2: verify correct @inproceedings vs @misc citation type for ACM EC 2025 extended abstract; update bib entry accordingly | no | open |
+| F-032 | `03_related_work.md` §3.4.3 line 151 | `[REVIEW: ACM EC 2025 acceptance-rate figure — not cited in §3.4.3 prose]` | in-text-flag | note | N-A | ACM EC 2025 official acceptance statistics | N/A | T14 | Pass-2: optionally add acceptance-rate figure if needed to establish venue credibility; otherwise leave as note | no | open |
+| F-033 | `03_related_work.md` §3.4.4 line 159 | `[REVIEW: grey-literature acceptability — Pass 2 reconciliation with §2.2/§2.5 grey-lit decisions]` | in-text-flag | minor | N-A | PJAIT thesis guidelines on grey-literature acceptability | N/A | T14 | Pass-2: confirm consistent grey-lit acceptability policy across §2.2.4 (Liquipedia), §2.5.4 (Battle.net MMR), and §3.4.4 (Xie2020, Porcpine2020) | no | open |
+| F-034 | `03_related_work.md` §3.4.4 line 161 | `[REVIEW: F6.9 Pass-2 verify — odczyt oryginalnego tekstu Xie 2020 Medium post; R² vs accuracy 2% interpretation]` | in-text-flag | minor | N-A | Xie2020MediumAoE original Medium post text | N/A (grey-lit) | T14 | Pass-2: read Xie2020 original text to confirm R²-vs-accuracy interpretation; update §3.4.4 hedge if confirmed | no | open |
+| F-035 | `03_related_work.md` §3.4.4 line 163 | `[REVIEW: verify aoe2insights.com as Elbert2025EC data source via direct PDF read arXiv:2506.04475]` | in-text-flag | minor | N-A | Elbert2025EC arXiv:2506.04475 PDF | N/A (literature) | T14 | Pass-2: read Elbert2025EC PDF to confirm aoe2insights.com as primary data source; update §3.4.4 and §3.4.3 if needed | no | open |
+| F-036 | `03_related_work.md` §3.5 line 185 | `[NEEDS CITATION: F6.1 Pass-2 audit — 4 dodatkowe kandydatury autorskie (Brookhouse & Buckley 2025; Caldeira et al. 2025; Alhumaid & Tur 2025; Ferraz et al. 2025); WebSearch 2026-04-20 did not find them]` | in-text-flag | major | N-A | Manual library/Google Scholar search for these 4 potential papers | N/A (literature) | T14 | Pass-2: manually verify whether the 4 audit-seed author candidates exist; add citations if found; remove [NEEDS CITATION] if none found and note absence | no | open |
+| F-037 | `03_related_work.md` §3.5 line 187 | `[REVIEW: F6.2 Pass-2 audit — zweryfikować PDF Elbert2025EC pod kątem dokładnego opisu metody atrybucji (SHAP vs linear fixed-effects residualization)]` | in-text-flag | major | N-A | Elbert2025EC arXiv:2506.04475 PDF §3.4.3 | N/A (literature) | T14 | Pass-2: read Elbert §3.4.3; confirm or correct attribution method description; update §3.5 Luka 2 if SHAP is used | no | open |
+| F-038 | `03_related_work.md` §3.5 line 189 | `[REVIEW: narrowing przeciwko EsportsBench — zweryfikować w Pass 2, czy nowsza wersja EsportsBench dodała AoE2 lub ML-classifier benchmarking; dodatkowo zweryfikować Table 2 Thorrez 2024 pod kątem kalibracji]` | in-text-flag | major | intact | EsportsBench HuggingFace latest version + Thorrez2024 Table 2 PDF | N/A (literature) | T14 | Pass-2: check EsportsBench for AoE2 addition or ML-classifier inclusion; read Thorrez2024 Table 2 for reliability diagrams/Murphy/Brier; update Luka 3 constraints if needed | no | open |
+| F-039 | `04_data_and_methodology.md` §4.1.1 line 13 | `[REVIEW: CC-BY 4.0 license verification for SC2EGSet on Zenodo; version v2.1.0 vs record 17829625]` | in-text-flag | major | intact | Zenodo record 17829625 license and version metadata | N/A (external) | T11 | Pass-2: confirm CC-BY 4.0 license on Zenodo record 17829625; confirm version label v2.1.0 | no | open |
+| F-040 | `04_data_and_methodology.md` §4.1.1 line 19 | `[REVIEW: acquisition date proxy — research_log 2026-04-09; post-2024-03 patch distribution in 46 distinct versions; Step 01_05 items deferred]` | in-text-flag | minor | intact | sc2egset research_log.md 2026-04-09; 01_05 temporal EDA artifacts | `01_05_01_quarterly_grain` artifacts (sc2egset) | T11 | Pass-2: confirm acquisition date and patch distribution claim; 01_05 items remain deferred | no | open |
+| F-041 | `04_data_and_methodology.md` §4.1.2 (aoestats) line 83 | `[REVIEW: aoestats.io licence / ToS; 172 vs 171 file asymmetry; 43-day gap post-patch 2024-07]` | in-text-flag | minor | intact | aoestats.io ToS; sec_4_1_crosswalk rows 45–60 | `01_01_01_file_inventory.md` (aoestats) | T05 -> T11 | Pass-2: verify ToS licence for aoestats; check 172/171 asymmetry explanation; confirm 43-day gap dates | no | open |
+| F-042 | `04_data_and_methodology.md` §4.1.2 (aoestats) line 93 | `[REVIEW: dokładne wartości elo_diff zweryfikowane w T01 z 01_02_06; pełny rozkład zarezerwowany dla Step 01_05]` + `[REVIEW: Pass-2 — [PRE-canonical_slot] footnote; Polish idiom for provisional finding]` | in-text-flag | minor | intact | `01_02_06_bivariate_eda.md` (aoestats) | `01_02_06` artifact (aoestats) | T11 | Pass-2: verify -18.48 / -0.37 elo_diff exact values; confirm Polish idiom for "provisional finding" | no | open |
+| F-043 | `04_data_and_methodology.md` §4.1.2 (aoestats) line 101 | `[REVIEW: kohorta 744 graczy w oknie patch 66692 (§4.4.5 closure)]` | in-text-flag | note | intact | aoestats research_log.md; spec §6.3 | `01_05_05_icc_results.json` (aoestats) | T11 | Pass-2: confirm 744-player cohort claim consistent with §4.4.5 Tabela 4.7 context | no | open |
+| F-044 | `04_data_and_methodology.md` §4.1.2 (aoe2companion) line 124 | Multiple `[REVIEW:]` flags in §4.1.2.2 (license clarity; 43-day gap; profile_id max ~24.85M) | in-text-flag | minor | intact | aoe2companion ToS; `01_04_01_data_cleaning.json` (aoe2companion) | sec_4_1_crosswalk rows 89–101 | T05 -> T11 | Pass-2: verify aoe2companion ToS; confirm profile_id max 24.85M from 01_04_01 JSON | no | open |
+| F-045 | `04_data_and_methodology.md` §4.1.3 line 165 | Two `[REVIEW:]` flags: (a) BLOCKED/temporal density for Tabela 4.4a; (b) reference-window F5.4 paragraph | in-text-flag | minor | intact | Temporal density from 01_05 artifacts (all datasets) | `01_05_01_quarterly_grain` artifacts | T11 | Pass-2: add "median matches/month" row to Tabela 4.4a after 01_05 temporal EDA confirmed; confirm reference-window numbers | no | open |
+| F-046 | `04_data_and_methodology.md` §4.1.3 line 207 | `[REVIEW: F5.4 analogical use of Nakagawa2017/Gelman2007/Ukoumunne2003/WuCrespiWong2012 for reference-window ICC-bias claim; numbers from spec not notebook artifact]` | in-text-flag | minor | intact | spec `01_05_preregistration.md:580–582` (already verified intact); analogy with cited literature | `reports/specs/01_05_preregistration.md` | T11 | Pass-2: verify the four literature anchors (Nakagawa2017, Gelman2007, Ukoumunne2003, WuCrespiWong2012) actually support the reference-window argument by analogy | no | open |
+| F-047 | `04_data_and_methodology.md` §4.1.4 line 211 | Two `[REVIEW:]` flags: (a) post-F6 stale — aoestats Phase 06 CSV may now carry explicit [POP:ranked_ladder] tag; (b) F5.6 co-locus — Demsar §3.2 section citation unverified | in-text-flag | major | intact | BACKLOG F6 current status on master; Demsar2006 PDF §3.2 | `phase06_interface_aoestats.csv` (aoestats) | T11 | Pass-2: (a) check whether F6 has landed (PR #TBD reference) and rewrite §4.1.4 paragraph for post-F6 state; (b) verify Demsar §3.2 section per F-020 closure | conditional | open |
+| F-048 | `04_data_and_methodology.md` §4.1.4 line 213 | `[REVIEW: F5.6 audit H3 — adjacent to Demsar2006 §3.2 citation; swap deferred to post-Pass-2]` | in-text-flag | minor | prose-only | Demsar2006 PDF (same as F-020) | N/A | T11 | Pass-2: same closure as F-020; swap §3.2 → correct section if verified | no | open |
+| F-049 | `04_data_and_methodology.md` §4.2.1 line 227 | `[REVIEW: acceptability of narrating I10 fix research_log CROSS 2026-04-14 in thesis prose]` | in-text-flag | minor | intact | I10 invariant narrative; research_log CROSS 2026-04-14 | N/A | T11 | Pass-2: decide whether the I10 fix narrative is appropriate thesis content or should be removed; if removed, rewrite §4.2.1 ingestion paragraph | no | open |
+| F-050 | `04_data_and_methodology.md` §4.2.2 line 235 | `[REVIEW: Polish-terms verification for Formal operationalisation paragraph]` | in-text-flag | note | N-A | Polish linguistic review | N/A | T11 -> T18 | Pass-2: verify Polish idioms for identity-resolution terms (próg tolerancji, identyfikator przestrzeni nazw API, pseudonim widoczny, odporny na zmianę pseudonimu) | no | open |
+| F-051 | `04_data_and_methodology.md` §4.2.2 line 243 | `[REVIEW: framework-completeness framing for Branch (ii) without empirical instantiation — PJAIT acceptance]` | in-text-flag | minor | N-A | PJAIT thesis guidelines on framework completeness without instantiation | N/A | T11 | Pass-2: assess whether Branch (ii) framework-completeness note is acceptable to PJAIT examiner; soften or remove if problematic | no | open |
+| F-052 | `04_data_and_methodology.md` §4.2.2 line 263 | `[REVIEW: cardinality discrepancy 2 308 187 vs 2 468 478 for name column in aoe2companion]` | in-text-flag | minor | intact | `01_02_04_univariate_census.json` (aoe2companion) cardinality 2308187 vs `01_03_01_systematic_profile.json:72` cardinality 2468478 | Both artifacts (aoe2companion) | T11 | Pass-2: investigate and explain the 2308187 vs 2468478 name cardinality discrepancy; update note in Tabela 4.5 | no | open |
+| F-053 | `04_data_and_methodology.md` §4.2.2 line 265 | `[REVIEW: §4.3.1 forward-ref canonical key pair; re-use pseudonimu multi-account interpretation; I2 operacjonalizacja acceptability]` | in-text-flag | minor | N-A | §4.3.1 draft (BLOCKED — Phase 01 data, Phase 02) | N/A (future section) | T11 | Pass-2: verify that §4.3.1 forward-ref is consistent with current experimental protocol; confirm multi-account interpretation framing | no | open |
+| F-054 | `04_data_and_methodology.md` §4.2.3 line 299 | `[REVIEW: MMR MAR-primary / MNAR-sensitivity classification; Rubin1976 strict reading]` | in-text-flag | minor | intact | Rubin1976; van Buuren2018; Jakobsen2017 | sec_4_2_crosswalk row 35 | T11 | Pass-2: verify that MAR-primary/MNAR-sensitivity framing is defensible per Rubin1976; confirm Tabela 4.4b MMR cell is consistent with §4.2.3 text | no | open |
+| F-055 | `04_data_and_methodology.md` §4.2.3 line 305 | `[REVIEW: 80% threshold operational heuristic framing; DS-AOEC-04 "exception" phrasing; FMI rebuttal strength]` | in-text-flag | minor | intact | `01_04_01_data_cleaning.json:2436` threshold_source field | `01_04_01_data_cleaning.json` (sc2egset) | T11 | Pass-2: confirm 80% operational heuristic derivation from cleaning ledger is auditable and defensible; verify FMI rebuttal (Madley-Dowd2019) does not undermine Phase 01 choice | no | open |
+| F-056 | `04_data_and_methodology.md` §4.4.4 lines 373–377 | `[REVIEW: F5.6 audit H3 — §4.4.4 uses §3.2 Demšara citation (two loci lines 375+377); swap to §3.1.3 pending Pass-2 PDF verification]` | in-text-flag | major | prose-only | Demsar2006 JMLR PDF (same as F-020) | N/A | T11 | Pass-2: same closure as F-020; once section location confirmed, swap §3.2 → §3.1.3 or retain §3.2 at both loci in §4.4.4 | no | open |
+| F-057 | `04_data_and_methodology.md` §4.4.4 line 375 | `[REVIEW: Pass-2 TG1 candidate-framing flag — within-game statistical protocol is candidate; adoption deferred to §4.4.2 after Phase 04]` | in-text-flag | note | prose-only | N/A (Phase 04 empirical context) | Phase 04 outputs | T11 | After Phase 04: finalize §4.4.2 methodology protocol choice; update §4.4.4 candidate-framing flags | no | open |
+| F-058 | `04_data_and_methodology.md` §4.4.5 line 383 | `[REVIEW: kierunkowość lower-bound claim under logit link (Nakagawa2017 §2.2 + Browne2005)]` | in-text-flag | minor | intact | Nakagawa2017 §2.2; Browne2005 | N/A (literature) | T11 | Pass-2: verify Nakagawa2017 §2.2 + Browne2005 unambiguously support lower-bound claim for observed-scale ≤ latent-scale ICC under logit link | no | open |
+| F-059 | `04_data_and_methodology.md` §4.4.5 line 385 | `[REVIEW: Chung 2013 REML boundary-shrinkage precision]` | in-text-flag | minor | intact | Chung2013 | N/A (literature) | T11 | Pass-2: verify Chung2013 citation accurately supports REML boundary-shrinkage claim in §4.4.5 | no | open |
+| F-060 | `04_data_and_methodology.md` §4.4.5 Tabela 4.7 line 393 | `[UNVERIFIED: JSON icc.json does not name CI method explicitly; DEFEND doc suggests delta-method for sc2egset]` | in-text-flag | minor | intact | `variance_icc_sc2egset.csv` (sc2egset); DEFEND doc line 205 | `icc.json` (sc2egset) | T11 | Pass-2: check whether sc2egset ICC CI is delta-method; harmonize or annotate as mixed-method in Tabela 4.7 | no | open |
+| F-061 | `04_data_and_methodology.md` §4.4.5 line 387 | `[REVIEW: Gelman2007 §11-12 20-50 clusters argument for 744-cohort aoestats — requires strengthening via additional citation?]` | in-text-flag | minor | intact | Gelman2007 §11–12 | N/A (literature) | T11 | Pass-2: verify Gelman2007 §11–12 argument applies to 744-cohort; add additional ICC small-cohort citation if needed | no | open |
+| F-062 | `04_data_and_methodology.md` §4.4.5 line 397 | `[REVIEW: Tabela 4.7 CI method dla sc2egset; delta-method (DEFEND line 205) appropriate?]` (duplicate of F-060 in different location) | in-text-flag | minor | intact | Same as F-060 | Same as F-060 | T11 | Same action as F-060; consolidate the two flag instances | no | open |
+| F-063 | `04_data_and_methodology.md` §4.4.6 line 403 | `[REVIEW: per-slot vs aggregate dezambiguacja czytelna dla examinera]` | in-text-flag | minor | intact | N/A (examiner framing judgment) | N/A | T11 | Pass-2: confirm the raw-schema per-slot vs. post-Phase-02 UNION-ALL aggregate distinction is clear to a non-technical examiner | no | open |
+| F-064 | `04_data_and_methodology.md` §4.4.6 line 405 | `[REVIEW: post-F6 stale — "0 dopasowań na 137 wierszach" reflects pre-F6 master; after F6 grep returns 30 matches; requires Pass-2 rewrite]` | in-text-flag | major | intact | `phase06_interface_aoestats.csv` (aoestats) post-F6 state | `phase06_interface_aoestats.csv` (aoestats) | T11 | Pass-2: check whether F6 has landed; if so, rewrite §4.4.6 honest-match paragraph to reflect post-F6 state (30 matches on 136 rows) | conditional | open |
+| F-065 | `04_data_and_methodology.md` §4.4.6 line 405 | `[REVIEW: Pass-2 — §4.4.6 (c) closure narrative assumes F1 unexecuted; verify F1 status on master]` | in-text-flag | major | intact | BACKLOG F1 / canonical_slot amendment PR status | N/A | T11 | Pass-2: check F1 canonical_slot amendment PR status; if executed, rewrite §4.4.6 closure narrative from ACTIVE to HISTORICAL | conditional | open |
+| F-066 | `04_data_and_methodology.md` §4.4.6 line 405 | `[REVIEW: post-F1 resolved] — amendment operacyjny wykonany w PR #TBD` — workflow label "PR #TBD" in thesis body | workflow-leakage | major | intact | Canonical PR number for feat/aoestats-canonical-slot (or confirm not yet merged) | N/A | T05 -> T18 | Replace "PR #TBD" with actual PR number (e.g., #207) or remove this inline parenthetical entirely from academic prose; this is internal workflow language | no | open |
+| F-067 | `04_data_and_methodology.md` §4.1.2 line 93 | `planning/BACKLOG.md F1` referenced directly in thesis body | workflow-leakage | major | intact | N/A (internal planning reference) | N/A | T05 -> T18 | Remove or paraphrase `planning/BACKLOG.md F1` reference; replace with "a planned Phase 02 amendment" or equivalent academic phrasing | no | open |
+| F-068 | `04_data_and_methodology.md` §4.1.4 line 211 | `planning/BACKLOG.md F6` referenced directly in thesis body | workflow-leakage | major | intact | N/A (internal planning reference) | N/A | T05 -> T18 | Remove or paraphrase `planning/BACKLOG.md F6` reference; replace with academic phrasing referring to a documented artifact–spec discrepancy | no | open |
+| F-069 | `04_data_and_methodology.md` §4.4.5 line 397 | `planning/BACKLOG.md` referenced directly in thesis body (CI method inconsistency "odłożona jako Category-D w `planning/BACKLOG.md`") | workflow-leakage | major | intact | N/A (internal planning reference) | N/A | T18 | Remove `planning/BACKLOG.md` reference from §4.4.5 prose; rephrase as "deferred as a known minor inconsistency" | no | open |
+| F-070 | `04_data_and_methodology.md` §4.4.6 line 405 | `planning/BACKLOG.md F1` and `planning/BACKLOG.md` referenced twice directly in §4.4.6 body | workflow-leakage | major | intact | N/A | N/A | T05 -> T18 | Remove both `planning/BACKLOG.md` references from §4.4.6; replace with academic descriptions of the pending amendment | no | open |
+| F-071 | `04_data_and_methodology.md` §4.4.6 line 405 | `grep '[PRE-canonical_slot]'` — shell command literal used in academic thesis body | workflow-leakage | major | intact | N/A (implementation detail) | N/A | T18 | Replace shell command with a factual statement: "no phase-06 interface rows carry the [PRE-canonical_slot] annotation (0 of 136 rows)" | no | open |
+| F-072 | `04_data_and_methodology.md` §4.2.3 line 303 | `.claude/scientific-invariants.md:86` file path used directly in thesis body ("zgodność z I7 (`.claude/scientific-invariants.md:86)") | workflow-leakage | minor | intact | N/A (internal repo file reference) | N/A | T18 | Remove `.claude/scientific-invariants.md:86` from prose; replace with "per Invariant I7 (temporal discipline)" or equivalent | no | open |
+| F-073 | `04_data_and_methodology.md` §4.1.3 line 183 | `Phase 01 / Pipeline Section 01_04` in Tabela caption ("po wstępnym czyszczeniu (Phase 01 / Pipeline Section 01_04)") | workflow-leakage | minor | intact | N/A | N/A | T18 | Rephrase table caption to remove internal pipeline codes; use "after initial data cleaning" or similar | no | open |
+| F-074 | `04_data_and_methodology.md` §4.2.3 line 269 | "Reguły cleaning stosowane w **Phase 01** tworzą formalny rejestr" — Phase 01 as internal pipeline label in thesis body | workflow-leakage | minor | intact | N/A | N/A | T18 | Rephrase "Phase 01" to "the data exploration phase" or equivalent academic language | no | open |
+| F-075 | `04_data_and_methodology.md` §4.2.3 line 301 | "obrona strategii MissingIndicator jako jedynej dopuszczalnej w **Phase 01**" | workflow-leakage | minor | intact | N/A | N/A | T18 | Same as F-074: replace "Phase 01" with descriptive phrase | no | open |
+| F-076 | `04_data_and_methodology.md` Section 4.3 blocked comment line 327 | `BLOCKED — Phase 01 (Data Exploration), Pipeline Section 01_05; Phase 02 (Feature Engineering).` — in HTML comment but still in file | workflow-leakage | note | N-A | N/A | N/A | T18 | Verify this is inside an HTML comment `<!--...-->` and therefore not rendered; if so, minor/note level; if it appears in rendered output, demote to internal comment only | no | open |
+| F-077 | REVIEW_QUEUE.md line 45 | `§4.4.6 \| Post-F1 revision \| DRAFTED \| Pass-2: rewrite §4.4.6 closure paragraph to reflect canonical_slot amendment landed in PR #TBD (2026-04-20).` — "PR #TBD" in REVIEW_QUEUE pending table | workflow-leakage | major | intact | Canonical PR number for feat/aoestats-canonical-slot | N/A | T05 -> T17 | Replace "PR #TBD" with actual merged PR number in REVIEW_QUEUE.md, or note the amendment is pending | no | open |
+| F-078 | Cross-cutting (Chapters 1–4) | **AoE2 ranked-ladder / quickplay / matchmaking provenance**: `internalLeaderboardId IN (6, 18)` = rm_1v1 + qp_rm_1v1; BLOCKER-1 propagation from T05/Q2 — §4.1.2, §4.2.3, §4.1.3, §4.1.4 all reference aoe2companion scope without resolving qp_rm_1v1 (leaderboardId=18) semantics | external-audit | blocker | intact | aoe2companion API documentation confirming leaderboard ID 18 semantics (qp_rm_1v1 vs rm_1v1) | `01_05_03_stratification.py` artifact (aoe2companion) — confirmed_intact but flagged T05/Q2 | T05 | T05 must resolve BLOCKER-1: confirm whether leaderboardId=18 is "quick-play ranked" or true unranked; propagate terminology correction to §4.1.2 aoe2companion scope description and §4.2.3 Tabela 4.6 | no | open |
+| F-079 | Cross-cutting (Chapters 3–4) | **aoestats `leaderboard='random_map'` source semantics**: §4.2.3 Tabela 4.6 row 1 uses `leaderboard='random_map'` as scope-filter; §4.1.2 uses it consistently; but semantics of `random_map` as a label vs ladder-identifier needs external verification | external-audit | major | intact | aoestats.io API documentation or source schema confirming that `random_map` = standard 1v1 ranked map pool | `01_04_00_source_normalization.md` (aoestats) — confirmed_intact | T05 | T05 Q1: confirm `leaderboard='random_map'` label is unambiguously the standard 1v1 ranked mode; update prose if terminology needs clarification | no | open |
+| F-080 | Cross-cutting (Chapters 1–4) | **SC2 vs AoE2 cross-dataset comparability**: §1.4, §4.1.3, §4.1.4 acknowledge the population asymmetry (tournament vs. ladder). The thesis claims dataset-conditional conclusions but does not yet formally bound the comparability in §2.1 or §2.6.4. No in-text flag covers this at the aggregate level | external-audit | major | prose-only | N/A (methodological framing decision) | N/A | T09 | After Phase 04: add explicit bounded-comparability statement to §6.3 cross-game comparison discussion; ensure §4.1.4 framing is referenced | no | open |
+| F-081 | Cross-cutting (Chapters 2–4) | **SC2EGSet vs SC2ReSet / Zenodo record / tooling distinction**: §4.1.1 cites SC2EGSet [Bialecki2023] as the data source; SC2ReSet is a separate prior dataset; Zenodo record 17829625 must match SC2EGSet (not SC2ReSet). No in-text flag explicitly guards this | external-audit | major | intact | Zenodo record 17829625 metadata (title, dataset name, version) | N/A (external verification) | T11 | Pass-2: confirm Zenodo record 17829625 is titled "SC2EGSet" (not SC2ReSet) and version v2.1.0; add a clarifying footnote to §4.1.1 distinguishing SC2EGSet from SC2ReSet if both appear in literature | no | open |
+| F-082 | `01_introduction.md` §1.1 and `03_related_work.md` §3.3.5 | **GarciaMendez2025 target game, authors, venue/status, and accuracy**: Cited in §1.1 as example of explainable streaming prediction model. Full author list shows only García-Méndez and de Arriba-Pérez in bib. Game identity unconfirmed (suspected MOBA/FPS not RTS). Accuracy figure unconfirmed | external-audit | major | prose-only | ScienceDirect full-text GarciaMendez2025 (Entertainment Computing 55, 101027) | N/A | T12 -> T14 | Same as F-001/F-006: read full text; confirm game identity, full author list, and exact accuracy | no | open |
+| F-083 | `01_introduction.md` §1.1 and `03_related_work.md` §3.3.1 | **Hodge2021 phrasing and Dota 2 transfer limits**: §1.1 and §3.3.1 state "approximately 85% at five minutes". Hodge2021 covers professional tournament Dota 2. Transfer limits to RTS 1v1 contexts mentioned in §3.3.5 but not explicitly bounded in §1.1 framing | external-audit | minor | intact | Hodge2021 IEEE Trans. Games full-text Table 3 or equivalent | N/A (literature) | T12 -> T14 | Pass-2: verify exact 85% figure location in Hodge2021 (Table 3 or main results); ensure §1.1 framing hedges the MOBA-to-RTS transfer when citing this figure | no | open |
+| F-084 | `01_introduction.md` §1.4 and `02_theoretical_background.md` §2.3.2 | **AoE2 civilization count over the data window**: §1.1 and §2.3.2 state 50 civs (intact per T03 C1-01/C2-09). However REVIEW_QUEUE §1.4 entry notes DLC releases near end of window (Three Kingdoms 2025-05-06 outside window; Last Chieftains 2026-02-17 at window edge). Must confirm final count 50 is correct through 2026-02-07 | external-audit | major | intact | INVARIANTS.md:10 (aoestats) p0_civ n_distinct=50 — but Last Chieftains (2026-02-17) is exactly at or after corpus cutoff 2026-02-07 | `01_04_01_data_cleaning.md` (aoestats) | T12 -> T13 | Pass-2: verify that Last Chieftains DLC (2026-02-17) civs do NOT appear in the corpus window ending 2026-02-07; confirm n_distinct=50 counts only civs within the window | no | open |
+| F-085 | `02_theoretical_background.md` §2.6.3 and `04_data_and_methodology.md` §4.4.4 | **Demšar / Benavoli / Friedman / Nemenyi classifier-comparison framing**: F5.6 flags at §2.6.3 lines 211/213 and §4.4.4 lines 375/377. The Demsar2006 §3.1.3 vs §3.2 section location for the N≥5/N≥10 thresholds is unverified. This is already captured in F-020 and F-056 but listed separately as an external-audit issue | external-audit | major | prose-only | Demsar2006 JMLR PDF | N/A | T13 -> T11 | Same as F-020 and F-056: read Demsar2006 PDF to resolve section location; close both loci simultaneously | no | open |
+| F-086 | `04_data_and_methodology.md` §4.4.5 Tabela 4.7 | **ICC overcentrality and latent-vs-observed-scale risk**: §4.4.5 uses observed-scale ANOVA ICC as primary estimator and cites Nakagawa2017 as a lower-bound argument for latent-scale ICC under logit link. The "latent ≥ observed" claim is a directional argument; the exact magnitude is unverified | external-audit | major | intact | Nakagawa2017 §2.2; Browne2005 on probit-scale ICC | N/A (literature) | T11 | Pass-2: verify Nakagawa2017 §2.2 + Browne2005 establish the lower-bound direction unambiguously for binary outcome data; check that observed-scale ICC is explicitly acknowledged as a conservative estimate | no | open |
+| F-087 | `04_data_and_methodology.md` §4.4.4 and `02_theoretical_background.md` §2.6.2 | **ECE / calibration overclaiming**: §2.6.2 introduces ECE as the operational aggregate-level diagnostic; §4.4.4 echoes this framing. Risk: ECE is not itself a "proper scoring rule" (it is a descriptive calibration metric) — the section may overclaim if ECE is positioned alongside Brier/log-loss as a "proper rule". No in-text flag guards this distinction | external-audit | minor | N-A | Gneiting2007; any ECE-specific methodological paper | N/A | T13 -> T11 | Pass-2: verify §2.6.2 does not equate ECE with a proper scoring rule; add a clarifying parenthetical distinguishing ECE (descriptive calibration) from proper scoring rules (Brier, log-loss) | no | open |
+| F-088 | `03_related_work.md` §3.3.5 and `04_data_and_methodology.md` §4.4 (planned) | **Feature importance interpreted causally**: §1.1 line 11 and §3.3.5 mention SHAP / feature importance for coaching applications. §4.4 will include SHAP analysis. Risk: feature importance from classifiers is correlational, not causal — §1.4 explicitly disclaims causal claims, but §1.1's "coaching tools use feature importance to identify weaknesses" implies causality | external-audit | minor | prose-only | N/A (methodological framing) | N/A | T12 -> T14 -> T11 | Pass-2: verify §1.1 coaching-tools sentence is appropriately hedged against causal language; cross-check with §1.4 disclaimer | no | open |
+| F-089 | `03_related_work.md` §3.4.4 and §3.4.3 | **Grey literature vs peer-reviewed literature distinction**: §3.4.4 uses Xie2020MediumAoE and Porcpine2020EloAoE as evidence. §3.4.3 uses Elbert2025EC as "extended abstract" which is peer-reviewed but non-journal. The tier structure is labelled but may not be consistently enforced across all uses | external-audit | minor | N-A | PJAIT thesis guidelines on source tier acceptability | N/A | T14 | Pass-2: confirm PJAIT accepts the three-tier structure (peer-reviewed journal / conference / grey-lit) with explicit tier labelling; verify §3.4.4 grey-lit labelling is sufficient | no | open |
+| F-090 | `04_data_and_methodology.md` §4.1.2 (aoe2companion) line 151 | **aoe2companion ID 6 vs ID 18 / rm_1v1 vs qp_rm_1v1 (BLOCKER-1 propagation)**: Tabela CONSORT flow row "Po R01 `internalLeaderboardId IN (6, 18)` (rm_1v1 + qp_rm_1v1) filter" — the meaning of leaderboardId=18 ("qp_rm_1v1" quick-play or ranked?) is the BLOCKER-1 identified in notebook_regeneration_manifest.md. This appears explicitly in thesis prose as a corpus definition claim | external-audit | blocker | intact | aoe2companion API documentation for leaderboard IDs 6 and 18 | `01_05_03_stratification.py` (aoe2companion) artifact | T05 -> T11 | T05 must resolve BLOCKER-1 before §4.1.2 CONSORT table row is finalised; confirm leaderboard-14=18 semantics and update prose | no | open |
+| F-091 | REVIEW_QUEUE.md §2.5 entry (line 21) | REVIEW_QUEUE discrepancy: §2.5.5 EsportsBench version parenthetical was updated to v8.0/2025-12-31 (per local Pass-2 closure F6.6, 2026-04-21); but REVIEW_QUEUE still notes "v7.0 planned" text in older draft versions. REVIEW_QUEUE entry is historically accurate but the live chapter text may diverge from the queue entry's flag count | REVIEW_QUEUE-discrepancy | note | N-A | Compare live `02_theoretical_background.md` §2.5.5 text vs REVIEW_QUEUE entry | `02_theoretical_background.md` line 179 | T17 | Pass-2: verify that §2.5.5 line 179 currently reads "(wersja HuggingFace v8.0, cutoff 2025-12-31)" and no [REVIEW: F6.6] flag remains; update REVIEW_QUEUE entry to reflect closure | no | open |
+| F-092 | REVIEW_QUEUE.md §3.2 entry (line 24) | REVIEW_QUEUE discrepancy: §3.2.4 F6.6 [REVIEW: F6.6 Pass-2] flag for EsportsBench version was also locally closed (2026-04-21). REVIEW_QUEUE entry still lists it as flag. May be out of sync with live chapter text | REVIEW_QUEUE-discrepancy | note | N-A | Compare live `03_related_work.md` §3.2.4 line 77 vs REVIEW_QUEUE F6.6 entry | `03_related_work.md` line 77 | T17 | Pass-2: verify §3.2.4 no longer contains F6.6 [REVIEW] flag; update REVIEW_QUEUE flag count for §3.2 entry | no | open |
+| F-093 | REVIEW_QUEUE.md §3.3 entry (line 28) | REVIEW_QUEUE discrepancy: F6.8 Silva2018LoL bib ISSN locally closed (2026-04-21); REVIEW_QUEUE §3.3 entry still lists F6.8 as open flag. Minor sync issue | REVIEW_QUEUE-discrepancy | note | N-A | Compare live `thesis/references.bib` lines 500–506 vs REVIEW_QUEUE F6.8 entry | `thesis/references.bib` | T17 | Pass-2: verify the `% [REVIEW: F6.8]` comment has been removed from references.bib; update REVIEW_QUEUE flag count for §3.3 entry | no | open |
+| F-094 | REVIEW_QUEUE.md §4.4.6 line 45 (Pending table row) | REVIEW_QUEUE "Post-F1 revision" row for §4.4.6 states "Pass-2: rewrite §4.4.6 closure paragraph to reflect canonical_slot amendment landed in PR #TBD (2026-04-20)" — this is a REVIEW_QUEUE-level workflow-leakage where "PR #TBD" appears as a revision trigger. Also covered by F-077 | REVIEW_QUEUE-discrepancy | major | intact | Actual PR number for feat/aoestats-canonical-slot | N/A | T05 -> T17 | Replace "PR #TBD" with actual PR number in REVIEW_QUEUE pending table; update entry to reflect current F1/F6 status | no | open |
+| F-095 | Notebooks — sc2egset extras | **not_yet_assessed notebook: `01_04_05_cross_region_annotation.py`** (WP-7 extra step, PR #204) — not directly linked to a thesis claim in Chapters 1–4; added as Phase 01 supplement for cross-region fragmentation. No T04 external-audit issue points to this notebook's artifacts | notebook-not-assessed | note | N-A | N/A — no thesis claim depends on this artifact | N/A | T17 | Record as not assessed by T03/T04; revisit only if cross-region analysis becomes a thesis claim in Chapters 5–7 or if T04/T05 brings cross-region artifacts into scope | no | open |
+| F-096 | Notebooks — sc2egset extras | **not_yet_assessed notebook: `01_05_00_scaffold.py`** — scaffold notebook, no direct thesis claim | notebook-not-assessed | note | N-A | N/A | N/A | T17 | Not assessed by T03/T04; to be revisited only if scaffold content becomes relevant to thesis claims | no | open |
+| F-097 | Notebooks — sc2egset extras | **not_yet_assessed notebook: `01_05_10_cross_region_history_impact.py`** — cross-region history impact supplement | notebook-not-assessed | note | N-A | N/A | N/A | T17 | Not assessed by T03/T04; same as F-095 | no | open |
+| F-098 | Notebooks — aoestats extras | **not_yet_assessed notebook: `01_04_03b_canonical_slot_amendment.py`** — canonical_slot amendment (BACKLOG F1). Thesis claim §4.4.6 references this amendment as future work. If F1 has landed, this notebook would be confirmed_intact; if not, its status is pending | notebook-not-assessed | minor | N-A | BACKLOG F1 execution status | `01_04_03b_canonical_slot_amendment.py` (aoestats) | T05 | T05 will determine F1 status; if executed, reclassify this notebook as confirmed_intact and update §4.4.6 closure narrative | conditional | open |
+| F-099 | Notebooks — aoestats extras | **not_yet_assessed notebook: `01_04_06_old_rating_temporal_audit.py`** — old_rating temporal audit | notebook-not-assessed | note | N-A | N/A | N/A | T17 | Not assessed by T03/T04; no thesis claim depends on this artifact currently | no | open |
+| F-100 | Notebooks — aoestats extras | **not_yet_assessed notebook: `01_04_07_old_rating_conditional_annotation.py`** — old_rating conditional annotation | notebook-not-assessed | note | N-A | N/A | N/A | T17 | Not assessed by T03/T04; no thesis claim depends on this artifact currently | no | open |
+| F-101 | Notebooks — aoestats extras | **not_yet_assessed notebook: `01_05_00_scaffold.py` (aoestats implicit)** — Note: the manifest does not separately list an aoestats scaffold, but the `01_04_06` and `01_04_07` entries above, plus the `01_04_03b` entry, cover the 5 aoestats not_yet_assessed notebooks from the manifest summary (sc2egset=2, aoestats=5). All five are noted here for completeness. The fifth aoestats not_yet_assessed is implicitly covered by the manifest row for `01_04_03b` + `01_04_06` + `01_04_07` — see F-098/F-099/F-100 plus the `01_04_05` which is confirmed_intact per manifest | notebook-not-assessed | note | N-A | N/A | N/A | T17 | Informational: 5 aoestats not_yet_assessed notebooks per manifest summary are: 01_04_03b, 01_04_05 (confirmed_intact in manifest), 01_04_06, 01_04_07; plus potentially aoestats scaffold if it exists. All recorded as not assessed by T03/T04 | no | open |
+
+---
+
+## Summary statistics
+
+**Total ledger entries: 101 (F-001 through F-101)**
+
+---
+
+## T12 status update (2026-04-26)
+
+T12 (Chapter 1 cleanup rewrite) addressed the following Chapter 1 + Chapter-1-locus
+cross-cutting ledger rows. Status transitions are recorded inline; the ledger Status
+column above remains "open" for rows where Pass-2 verification is still required.
+
+| Ledger ID | T12 disposition | Detail |
+|-----------|----------------|--------|
+| F-001 | preserved | GarciaMendez2025 verification ([REVIEW] flag at §1.1 line 11 retained verbatim — Pass-2 owns ScienceDirect full-text read) |
+| F-002 | preserved | Shin1993/Forrest2005/Mangat2024 esports-betting transfer ([REVIEW] flag at §1.1 line 11 retained verbatim) |
+| F-003 | preserved | RQ wording finalisation ([REVIEW] flag at §1.3 line 29 retained verbatim — Phase 03/04 dependency) |
+| F-004 | preserved | RQ4 cold-start strata thresholds ([REVIEW] flag at §1.3 line 37 retained verbatim — Phase 03 dependency) |
+| F-005 | preserved | AoE2 mgz parser roadmap ([REVIEW] flag at §1.4 line 43 retained verbatim — AoE2 ROADMAP cross-check) |
+| F-006 | preserved | GarciaMendez2025 bib entry verification (line 83 [REVIEW] retained — same as F-001) |
+| F-007 | preserved | Mangat2024 bib entry verification (line 85 [REVIEW] retained) |
+| F-078 | partly-resolved-by-T12 (Chapter 1 portion) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation in Chapter 1 — Chapter 1 §1.1, §1.4 lines 41 + 45 rewritten using T05 Tier-4 (aoestats) and Tier-2/3 mixed-mode (aoe2companion) wording per T05 §4.4. Chapter 4 portion previously resolved by T11. Cross-cutting nature retained: Chapter 2 §2.2.3 portion routes to T13. |
+| F-079 | partly-resolved-by-T12 (Chapter 1 portion) | aoestats `random_map` Tier 4 framing applied to Chapter 1 §1.4 line 45 (CX-05 primary fix locus); never names aoestats as ranked ladder without qualification. Chapter 4 portion previously resolved by T11. |
+| F-080 | partly-resolved-by-T12 (Chapter 1 framing portion) | SC2 vs AoE2 cross-dataset comparability bounded statement: T12 added explicit "Charakter porównania krzyżowego" paragraph at §1.4 articulating four-axis confound framing per T09 §2 Final Comparison Frame. Full §6.3 bounded-comparability statement still deferred (Chapter 6 not yet drafted). |
+| F-082 | partly-resolved-by-T12 (Chapter 1 portion only — flag preserved verbatim) | GarciaMendez2025 cross-cutting (Ch 1 + Ch 3) — Chapter 1 §1.1 line 11 [REVIEW] flag retained verbatim per T12 instruction (Pass-2 / T14 owns full-text verification of authors, target game, accuracy figure). Chapter 3 §3.3.5 portion routes to T14. |
+| F-083 | preserved (Chapter 1 portion) | Hodge2021 phrasing + Dota 2 transfer limits — §1.1 line 11 framing was not the Chapter 1 cleanup target; Hodge2021 [REVIEW] not planted in Chapter 1; full transfer-limit verification routed to T14 (Chapter 3 §3.3.1) |
+| F-084 | partly-resolved-by-T12 (Chapter 1 framing portion, including §1.2 follow-up patch) | AoE2 civilization count 50 over data window: T12 added explicit roster-instability hedge at §1.1 line 13 ("do 50 cywilizacji… roster ulegał rozszerzeniu") and §1.1 line 15 / §1.3 RQ3 / §1.4 oś trzecia ("do 1 225 nieuporządkowanych par przy założeniu stałego rosteru"). T12 follow-up patch (2026-04-26) extends the same hedge to §1.2 line 23 generic structural cardinality framing: `(50 cywilizacji wobec 3 ras w SC2)` → `(do 50 cywilizacji obserwowanych w analizowanym oknie danych aoestats — liczba cywilizacji rosła w czasie wraz z premierami kolejnych dodatków DLC, zatem nie wszystkie pary były dostępne przez całe okno; wobec 3 ras w SC2)`. Chapter 1 framing portion now harmonised across §1.1 / §1.2 / §1.3 / §1.4. DLC chronology absolute verification (Three Kingdoms, Chronicles: Alexander, Last Chieftains) still routes to T13 (Chapter 2 §2.3.2). |
+| F-088 | partly-resolved-by-T12 (Chapter 1 portion) | SHAP/feature importance causal interpretation: Chapter 1 §1.1 coaching-tools sentence (line 11) NOT modified by T12 — wording is descriptive ("identyfikacji słabych punktów… na podstawie analizy ważności cech"), §1.4 already explicitly disclaims causal claims. RISK-13 hedge at §1.1 deemed unnecessary in current Chapter 1 wording; full SHAP causal hedge routes to T14 (Chapter 3 §3.3.5) and T11 (Chapter 4 §4.4 once SHAP analysis drafted). |
+
+**Counts of T12 dispositions:**
+- resolved-by-T12: 0 (all Chapter 1 [REVIEW] flags retained per Pass-2 dependency)
+- partly-resolved-by-T12: 6 (F-078 Chapter 1 portion; F-079 Chapter 1 portion; F-080 Chapter 1 framing portion; F-082 Chapter 1 portion; F-084 Chapter 1 framing portion; F-088 Chapter 1 portion)
+- preserved: 8 (F-001, F-002, F-003, F-004, F-005, F-006, F-007, F-083 Ch 1 portion)
+- routed elsewhere: F-082 Chapter 3 portion to T14; F-083 Chapter 3 portion to T14; F-084 Chapter 2 portion to T13; F-088 Chapter 3/4 portions to T14/T11
+
+**T12 also planted ONE NEW Chapter 1 [REVIEW] flag** at §1.1 line 13: `[REVIEW: T14 / Pass-2 — zweryfikować pełność tego stwierdzenia względem prac z lat 2024–2026 (m.in. Elbert2025EC oraz cztery kandydatury autorskie odnotowane w F-036)]`. This flag accompanies the bounded research-gap rewording per RISK-16 and routes to T14 (Chapter 3 literature verification).
+
+---
+
+## T11 status update (2026-04-26)
+
+T11 (Chapter 4 cleanup rewrite) addressed the following Chapter 4 ledger rows. Status
+transitions are recorded inline; the ledger Status column above remains "open" for rows
+where Pass-2 verification is still required.
+
+| Ledger ID | T11 disposition | Detail |
+|-----------|----------------|--------|
+| F-039 | preserved | SC2EGSet Zenodo CC-BY 4.0 + version verification — [REVIEW] flag retained pending Pass-2 metadata read |
+| F-040 | preserved | acquisition date proxy + 46 patches — [REVIEW] flag retained |
+| F-041 | preserved | aoestats ToS + 172/171 asymmetry — [REVIEW] flag retained |
+| F-042 | preserved | elo_diff exact values — [REVIEW] retained; provisional Polish idiom for "prowizoryczny" applied to PRE-canonical_slot wording |
+| F-043 | preserved | 744-cohort framing — [REVIEW] retained |
+| F-044 | preserved | aoe2companion ToS + profile_id max — [REVIEW] retained |
+| F-045 | preserved | temporal density Tabela 4.4a — [REVIEW] retained |
+| F-046 | preserved | F5.4 anchoring — [REVIEW] retained |
+| F-047 | partly-resolved-by-T11 | F6 stale flag content — `PR #TBD` removed; substantive rewrite pending Pass-2 |
+| F-048 | preserved | F5.6 co-locus — [REVIEW] retained pending Pass-2 PDF read |
+| F-049 | preserved | I10 narrative — [REVIEW] retained |
+| F-050 | preserved | Polish-terms verification §4.2.2 — [REVIEW] retained |
+| F-051 | preserved | Branch (ii) framework framing — [REVIEW] retained |
+| F-052 | preserved | name cardinality discrepancy — [REVIEW] retained |
+| F-053 | preserved | §4.3.1 forward-ref / multi-account — [REVIEW] retained |
+| F-054 | preserved | MMR MAR-primary / MNAR-sensitivity — [REVIEW] retained |
+| F-055 | preserved | 80% threshold operational heuristic — [REVIEW] retained |
+| F-056 | preserved | F5.6 §4.4.4 §3.2 vs §3.1.3 — [REVIEW] retained pending Pass-2 PDF read |
+| F-057 | preserved | TG1 candidate-framing — [REVIEW] reworded but retained |
+| F-058 | preserved | Nakagawa2017 lower-bound — [REVIEW] retained, claim weakened |
+| F-059 | preserved | Chung2013 REML — [REVIEW] retained |
+| F-060 | preserved | sc2egset CI method — [UNVERIFIED] retained in Tabela 4.7 |
+| F-061 | preserved | Gelman2007 §11–12 small-cohort — [REVIEW] retained |
+| F-062 | preserved | duplicate of F-060 — same disposition |
+| F-063 | preserved | per-slot vs aggregate examiner-readability — [REVIEW] retained |
+| F-064 | partly-resolved-by-T11 | post-F6 stale grep claim — workflow-leakage `grep` literal removed from prose; substantive count update deferred to Pass-2 |
+| F-065 | resolved-by-T11 | post-F1 closure narrative — `PR #TBD` removed; section reframed for post-F1 state per T05 F-098 reclassification (PR #185 confirmed merged) |
+| F-066 | resolved-by-T11 | `PR #TBD` workflow leakage — removed from §4.4.6 and §4.1.2.1 prose; replaced with neutral phrasing |
+| F-067 | resolved-by-T11 | `planning/BACKLOG.md F1` workflow leakage in §4.1.2.1 — removed; replaced with "planowane uzupełnienie schematu w fazie inżynierii cech" |
+| F-068 | resolved-by-T11 | `planning/BACKLOG.md F6` workflow leakage in §4.1.4 — paragraph rewritten to remove BACKLOG reference |
+| F-069 | resolved-by-T11 | `planning/BACKLOG.md` reference in §4.4.5 Tabela 4.7 footnote — removed; replaced with "znana drobna niespójność odłożona jako planowana drobna korekta w przyszłej iteracji harmonizacji metod CI" |
+| F-070 | resolved-by-T11 | `planning/BACKLOG.md F1` and `planning/BACKLOG.md` references in §4.4.6 — both removed; section reframed |
+| F-071 | resolved-by-T11 | `grep '[PRE-canonical_slot]'` shell literal in §4.4.6 — removed; replaced with factual statement "metadana artefaktu interfejsu temporalnego aoestats (`phase06_interface_aoestats.csv`, 136 wierszy danych) niesie tag `[PRE-canonical_slot]` w zaktualizowanym polu `notes` w 30 wierszach" |
+| F-072 | resolved-by-T11 | `.claude/scientific-invariants.md:86` file path leakage in §4.2.3 line 303 — removed; replaced with academic "zasada prowenancji liczb" reference (resolves RISK-08 BLOCKER-B per T10 Round 2) |
+| F-073 | resolved-by-T11 | `Phase 01 / Pipeline Section 01_04` in Tabela 4.4b caption — replaced with "po wstępnym czyszczeniu danych" |
+| F-074 | resolved-by-T11 | "Reguły cleaning stosowane w Phase 01" in §4.2.3 — replaced with "Reguły cleaning stosowane w etapie czyszczenia danych" |
+| F-075 | resolved-by-T11 | "Phase 01" in §4.2.3 line 301 (MissingIndicator strategy) — replaced with "etap czyszczenia danych" |
+| F-076 | partly-resolved-by-T11 | HTML comment §4.3 BLOCKED-Phase-01/02/03/04 strings — converted to academic placeholder language ("Sekcja oczekuje na materializację cech w fazie inżynierii cech", etc.) |
+| F-077 | resolved-by-T11 (in chapter prose) | `PR #TBD` reference in §4.4.6 chapter prose — removed; REVIEW_QUEUE entry updated separately. Note: original F-077 also covers REVIEW_QUEUE.md row line 45 — that entry remains for T17 to update REVIEW_QUEUE.md table (out of T11 scope) |
+| F-078 | resolved-by-T11 (in chapter prose) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation — Chapter 4 §4.1.3 / §4.2.3 / §4.1.4 / Tabela 4.4a/b / Tabela 4.5 all rewritten per T05 §4.4 + T09 CX-classification (RISK-01/02/03/04/23 mitigated in chapter prose) |
+| F-079 | resolved-by-T11 (in chapter prose) | aoestats `random_map` Tier 4 framing — applied throughout Chapter 4 |
+| F-080 | preserved | SC2 vs AoE2 cross-dataset comparability — bounded statement deferred to §6.3 (Chapter 6 not yet drafted; T09 evidence in matrix file) |
+| F-081 | partly-resolved-by-T11 | SC2EGSet vs SC2ReSet vs DatasetPreparator — added clarifying sentence in §4.1.1.0 with [REVIEW] flag for Pass-2 confirmation against full Bialecki2023 text |
+| F-090 | resolved-by-T11 (in chapter prose) | aoe2companion CONSORT row R01 wording — Tabela 4.3 R01 line updated to "(rm_1v1 ranked candidate, ID 6 + qp_rm_1v1 quickplay/matchmaking, ID 18)" |
+
+**Counts of T11 dispositions:**
+- resolved-by-T11: 16 (F-065, F-066, F-067, F-068, F-069, F-070, F-071, F-072, F-073, F-074, F-075, F-077 chapter portion, F-078 chapter portion, F-079 chapter portion, F-090 chapter portion, plus C4-T11 implicit deltas)
+- partly-resolved-by-T11: 4 (F-047, F-064, F-076, F-081)
+- preserved: 21 (Pass-2 verification still required for all the [REVIEW] flags listed above)
+- routed elsewhere: F-077 REVIEW_QUEUE portion routed to T17
+
+**Note on T11 scope discipline:** rows assigned in the original ledger to T18 (final consistency pass) for workflow-leakage cleanup were addressed proactively by T11 because they were collocated with §4.2.3 / §4.4.5 / §4.4.6 prose changes also owned by T11; per T10 RISK-08 explicit instruction, T18 must not be the first stage to notice or own §4.2.3 prose work. Rows that are pure REVIEW_QUEUE / bib hygiene (F-077 REVIEW_QUEUE portion, F-091/F-092/F-093/F-094) remain assigned to T17 as before.
+
+---
+
+## T13 status update (2026-04-26)
+
+T13 (Chapter 2 cleanup rewrite) addressed the following Chapter 2 + Chapter-2-locus
+cross-cutting ledger rows. Status transitions are recorded inline; the ledger Status
+column above remains "open" for rows where Pass-2 verification is still required.
+
+| Ledger ID | T13 disposition | Detail |
+|-----------|-----------------|--------|
+| F-008 | preserved | §2.1 line 15 closing-claim post-Phase-04 revisit — [REVIEW] flag retained verbatim (Phase 04 dependency, not a T13 literature-verification item) |
+| F-009 | preserved | §2.2.3 line 39 Thorrez2024 / Aligulac F4.5 — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 owns Table 2 PDF read + Aligulac-row check) |
+| F-010 | preserved | §2.2.4 line 49 Liquipedia_GameSpeed / BlizzardS2Protocol grey-lit — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 / T14 owns Vinyals2017 §3 PDF verification) |
+| F-011 | preserved | §2.2.4 line 51 Patch 2.0.8 release date — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 owns patch-notes citation acquisition; not in T13 bib-edit scope) |
+| F-012 | preserved | §2.3.2 line 61 epoch-time peer-reviewed source — [REVIEW] flag retained verbatim (literature search T14 territory) |
+| F-013 | preserved | §2.3.2 line 65 map pool representativeness — [REVIEW] flag retained verbatim (literature/Liquipedia verification T14 territory) |
+| F-014 | preserved | §2.3.2 line 69 DLC chronology completeness — [REVIEW] flag retained verbatim per T13 instruction; surrounding prose hedged with "do 50 cywilizacji obserwowanych w korpusie" + roster-instability sentence per RISK-12 / RISK-25 |
+| F-015 | preserved | §2.4.4 line 117 SVM-linear inclusion decision — [REVIEW] flag retained verbatim (Phase 03 dependency) |
+| F-016 | preserved | §2.4.6 line 131 GNN exclusion decision — [REVIEW] flag retained verbatim (Phase 04/05 dependency) |
+| F-017 | preserved | §2.4.7 line 135 method hierarchy reordering — [REVIEW] flag retained verbatim (Phase 04 dependency) |
+| F-018 | preserved | §2.5.3 line 163 TrueSkill 2 RTS independent validation — [REVIEW] flag retained verbatim per T13 instruction (Pass 2 / T14 owns literature search) |
+| F-019 | preserved | §2.5.5 lines 185–186 Aligulac historical snapshots + F4.5/F5.3 — both [REVIEW] flags retained verbatim per T13 instruction (Pass 2 / T14 owns Thorrez2024 Table 2 PDF read) |
+| F-020 | preserved | §2.6.3 line 213 Demšar §3.1.3 vs §3.2 location dispute — both [REVIEW] flags retained verbatim per T13 instruction (Pass 2 owns PDF section verification; T13 explicitly forbidden from declaring section-location certainty) |
+| F-021 | preserved | §2.6.4 lines 229–230 Phase 04 cross-game concordance + Phase 03 IID assumption — both [REVIEW] flags retained verbatim (Phase 03/04 dependencies) |
+| F-078 | partly-resolved-by-T13 (Chapter 2 portion) | AoE2 ranked-ladder/quickplay/matchmaking BLOCKER-1 propagation in Chapter 2 — §2.2.3 line 37 rewritten using T05 Tier-4 (aoestats) and Tier-2/3 mixed-mode (aoe2companion) wording per T05 §4.4. Chapter 1 portion previously partly-resolved-by-T12; Chapter 4 portion previously resolved-by-T11. Cross-cutting row remains open until full Pass-2 verification of source-specific tier labels. |
+| F-079 | partly-resolved-by-T13 (Chapter 2 portion) | aoestats `random_map` Tier 4 framing applied to Chapter 2 §2.2.3 line 37 (CX-08 PRIMARY FIX locus); never names aoestats as ranked ladder without qualification. Chapter 1 portion previously resolved-by-T12; Chapter 4 portion previously resolved-by-T11. |
+| F-080 | partly-resolved-by-T13 (Chapter 2 framing portion) | SC2 vs AoE2 cross-dataset comparability framing in Chapter 2 §2.2.3 — added explicit "SC2EGSet jest turniejowym korpusem replay'ów profesjonalnych… nie próbą meczów rankingowych z systemu matchmakingu" disclaimer; the existing §2.1 closing paragraph already frames the four-axis confound contextually via the data-availability asymmetry framing. Full §6.3 bounded-comparability statement still deferred (Chapter 6 not yet drafted). |
+| F-084 | partly-resolved-by-T13 (Chapter 2 portion, including §2.5.4 follow-up) | AoE2 civilization count 50 cross-cutting (Ch 1 + Ch 2): Chapter 1 portion previously partly-resolved-by-T12 (§1.1 / §1.2 / §1.3 / §1.4). T13 extends the same hedge to Chapter 2: §2.3.2 line 69 generic civ-count claim → "do 50 cywilizacji obserwowanych w korpusie" + roster-instability appendix; §2.3.2 line 71 1 225-pair claim → "przy założeniu stałego rosteru" hedge + interpretation paragraph; §2.5.4 line 173 1 225-pair claim → "wysokowymiarowa przestrzeń par cywilizacji (do 1 225 nieuporządkowanych par przy założeniu stałego rosteru zaobserwowanego pod koniec analizowanego okna danych aoestats)". Chapter 2 framing portion now harmonised across §2.3.2 / §2.5.4 with Chapter 1 §1.1 / §1.2 / §1.3 / §1.4 hedges. DLC chronology absolute verification (Three Kingdoms, Chronicles: Alexander, Last Chieftains) still routes to Pass-2 (F-014 retained). |
+| F-085 | preserved (Chapter 2 portion) | Demšar / Benavoli / Friedman / Nemenyi classifier-comparison framing — already revised in §2.6.3 to reject Nemenyi post-Benavoli2016 and present tests as candidates; §3.1.3 vs §3.2 section-location dispute is the F-020 / F-056 unverified item, retained as [REVIEW] flag for Pass 2 PDF verification |
+| F-087 | resolved-by-T13 (Chapter 2 portion) | ECE / calibration overclaiming in §2.6.2 — final ¶ rewritten to explicitly distinguish wynik Briera + strata logarytmiczna jako właściwe reguły punktacji (Gneiting2007) od ECE jako "funkcji pomocniczej, opisowej… której wartość oczekiwana nie jest minimalizowana wyłącznie przez raportowanie prawdziwej dystrybucji warunkowej, a estymacja zależy od arbitralnego wyboru schematu binningu". Operational frame redescribed as "dwie właściwe reguły punktacji jako miary główne plus zestaw diagnostyczny ECE + diagram rzetelności + dekompozycja Murphy'ego". Chapter 4 §4.4.4 portion previously resolved-by-T11 (F-087 was T13 -> T11 chain; T13 prose now matches T11 framing). |
+| F-091 | preserved (T17 territory) | REVIEW_QUEUE.md §2.5 entry v8.0 sync — T13 verified that §2.5.5 line 179 currently reads `(wersja HuggingFace v8.0, cutoff 2025-12-31)` and no [REVIEW: F6.6] flag remains in the chapter prose at this locus; the REVIEW_QUEUE pending-table entry at line 21 (REVIEW_QUEUE.md) reflects accurate post-2026-04-21 closure. F-091 is a REVIEW_QUEUE-internal sync row owned by T17, not a T13 prose item. |
+
+**Counts of T13 dispositions:**
+- resolved-by-T13: 1 (F-087 — ECE-not-a-proper-scoring-rule prose distinction in §2.6.2)
+- partly-resolved-by-T13: 4 (F-078 Chapter 2 portion; F-079 Chapter 2 portion; F-080 Chapter 2 framing portion; F-084 Chapter 2 framing portion including §2.3.2 + §2.5.4)
+- preserved (ledger concerns): 14 in-text Chapter 2 ledger entries F-008..F-021, plus cross-cutting cumulative concern F-085 sharing the same physical flag at §2.6.3 line 213 with F-020. F-091 is a REVIEW_QUEUE-discrepancy entry (REVIEW_QUEUE.md §2.5 row, no in-text Chapter 2 [REVIEW:] flag — metadata sync only; routes to T17). All retained per T13 instruction; Pass-2 verification still required.
+- physical Chapter 2 [REVIEW:] flag-bearing lines on disk (`rg -c` on Chapter 2): **15** (lines 15, 39, 49, 51, 61, 65, 69, 117, 131, 135, 163, 171, 185, 213, 229). Three of those lines (185, 213, 229) carry 2 `[REVIEW:` flags each, yielding **18 literal `[REVIEW:` occurrences** total. The 14 vs 15 vs 18 numbers reconcile as: 14 = ledger concerns F-008..F-021 (one ledger row per concern); 15 = unique flag-bearing lines on disk; 18 = literal `[REVIEW:` occurrences (lines 185 / 213 / 229 each pack two concerns into adjacent flags).
+- routed elsewhere: 0 (F-091 was already T17 territory pre-T13)
+
+**T13 did NOT plant any new [REVIEW] flags** in Chapter 2 — every flag in the post-T13 chapter prose was already present pre-T13. T13 made only structural / wording changes consistent with T05/T09/T10 evidence.
+
+**Note on T13 scope discipline:** T13's mandate (per planning/current_plan.md T13 spec lines 1117–1173) is structural cleanup informed by T05/T09/T10/T11/T12 evidence. T13 explicitly defers all literature verification (Demsar2006 PDF section locations, Thorrez2024 Table 2 exact values, Aligulac FAQ current wording, Vinyals2017 SC2LE confirmation, Nakagawa2017 / Browne2005 lower-bound verification, TrueSkill 2 RTS independent validation, AoE2 DLC chronology absolute timestamps, etc.) to T14 / Pass 2. Rows that are pure REVIEW_QUEUE sync (F-091/F-092/F-093/F-094) or pure literature checks remain assigned to T17 / T14 / Pass 2 as before. T13 also explicitly does NOT touch `WRITING_STATUS.md` per parent instruction — global synchronization belongs to T17.
+
+### By severity
+
+| Severity | Count |
+|----------|-------|
+| blocker | 2 (F-078, F-090) |
+| major | 38 |
+| minor | 37 |
+| note | 24 |
+
+### By issue type
+
+| Issue type | Count |
+|-----------|-------|
+| in-text-flag | 68 |
+| workflow-leakage | 9 (F-066 through F-076, F-077) |
+| external-audit | 14 (F-078 through F-090) |
+| lineage-stale | 1 (F-024) |
+| notebook-not-assessed | 7 (F-095 through F-101) |
+| REVIEW_QUEUE-discrepancy | 4 (F-091 through F-094) |
+
+### By chapter / source
+
+| Source | Count |
+|--------|-------|
+| Chapter 1 (`01_introduction.md`) | 7 (F-001 through F-007) |
+| Chapter 2 (`02_theoretical_background.md`) | 15 (F-008 through F-021, F-091) |
+| Chapter 3 (`03_related_work.md`) | 19 (F-022 through F-038, F-092, F-093) |
+| Chapter 4 (`04_data_and_methodology.md`) | 30 (F-039 through F-076) |
+| REVIEW_QUEUE.md | 4 (F-077, F-091–F-094) |
+| Cross-cutting external-audit | 14 (F-078 through F-090) |
+| Notebook-not-assessed | 7 (F-095 through F-101) |
+
+*Note: F-082 through F-090 are cross-cutting; they are counted in the cross-cutting row above.*
+*Note: F-091/F-092/F-093 have chapter ties but are counted under REVIEW_QUEUE/cross-cutting.*
+
+### By downstream task
+
+Routing was patched on 2026-04-26 to align each ledger row with the
+specific task semantics in `planning/current_plan.md` rather than
+collapsing the bulk into a generic "T09 Pass-2 cleanup" category. T09
+in the plan is the **Cross-dataset comparability matrix** task only —
+not a catch-all bucket. Counts below report **task appearances** (an
+entry with a multi-task chain such as `T05 -> T11` contributes one
+appearance to each task it lists). Total appearances therefore exceeds
+101.
+
+| Task | Appearances | Scope |
+|------|-------------|-------|
+| T05 | 12 | AoE2 ladder/quickplay/matchmaking + aoestats/aoe2companion source provenance (incl. BLOCKER-1 closure for ID 6 vs ID 18, aoestats `random_map` semantics, ToS verifications, BACKLOG F1/F6 status, PR-#TBD lookups) |
+| T09 | 1 | Cross-dataset comparability matrix only (**F-080 only** — SC2 vs AoE2 population asymmetry framing) |
+| T11 | 33 | Chapter 4 (data/methodology) cleanup — the bulk of methodology issues |
+| T12 | 11 | Chapter 1 (introduction/RQ/scope) cleanup |
+| T13 | 17 | Chapter 2 (theoretical-background) cleanup |
+| T14 | 21 | Chapter 3 (related-work / literature) cleanup |
+| T17 | 11 | REVIEW_QUEUE.md and WRITING_STATUS sync + notebook-not-assessed deferrals |
+| T18 | 12 | Final thesis consistency pass — workflow-leakage removal (Phase 01 in prose, BACKLOG.md / file-path / shell-command leakage, "PR #TBD" cleanup, Polish terminology consistency) |
+
+**Multi-task chains used**: `T05 -> T11` (3 rows: F-041, F-044, F-090); `T05 -> T17` (2 rows: F-077, F-094); `T05 -> T18` (4 rows: F-066, F-067, F-068, F-070); `T11 -> T18` (1 row: F-050); `T12 -> T13` (1 row: F-084); `T12 -> T14` (2 rows: F-082, F-083); `T13 -> T11` (2 rows: F-085, F-087); `T12 -> T14 -> T11` (1 row: F-088). Total chained entries: 16. Single-task entries: 85. Sum: 101 entries.
+
+**Why no rows remain at T09 except F-080**: every former-T09 entry has been reassigned to a specific chapter-cleanup task (T11/T12/T13/T14), source-provenance task (T05), spec/leakage/protocol task (T15 — none in current ledger), Phase-02 readiness task (T16 — none in current ledger), REVIEW_QUEUE sync task (T17), or final-consistency task (T18). T09 retains only F-080 because that is the single cross-cutting comparability claim that genuinely belongs in the cross-dataset comparability matrix.
+
+---
+
+## Escape-valve evaluation
+
+**Stale Steps discovered by T04: 0.**
+
+The only stale finding (C3-01, §3.2.2 file count 17930/55 vs 22390/70) was already identified in T03. T04 does not surface any new stale Steps or stale artifacts beyond T03's findings. The `>10 stale-Step escape valve` is **NOT triggered**.
+
+---
+
+## Notebook regeneration
+
+**No notebooks are marked `flagged_stale` by T04.** F-098 (`01_04_03b_canonical_slot_amendment.py`) is marked `conditional` — its status depends on whether BACKLOG F1 has been executed; this will be resolved by T05. All other not_yet_assessed notebooks (F-095 to F-097, F-099 to F-101) carry `no` for regeneration.
+
+---
+
+## T05 readiness
+
+T05 is ready to start. The two BLOCKER-severity items (F-078 and F-090) are exactly the aoe2companion leaderboard-ID semantics question (BLOCKER-1) that T05 is designed to address. No new stale Steps block T05 from executing.
+
+---
+
+## T14 status update (2026-04-26)
+
+T14 (Chapter 3 cleanup rewrite + bulk Pass-2 literature verification) addressed
+the following Chapter 3 + Chapter-3-locus cross-cutting ledger rows. Status
+transitions are recorded inline; the ledger Status column above remains "open"
+for rows where Pass-2 verification is still required.
+
+| Ledger ID | T14 disposition | Detail |
+|-----------|-----------------|--------|
+| F-022 | preserved | §3.2.2 line 49 Vinyals2017 baseline scope hedge — chapter prose already correctly hedges; arXiv:1708.04782 verified 2026-04-26 as primarily RL/agent paper with win prediction as auxiliary task; flag retained verbatim pending Pass-2 PDF read |
+| F-023 | preserved | §3.2.2 line 55 SC2EGSet corpus structure forward-ref to §4.1.1 — prose forward-ref already present; flag retained |
+| F-024 | preserved | C3-01 SC2EGSet 17 930 vs 22 390 prose inconsistency — Bialecki2023 paper carries the historical 17 930 / 55 figure pre-corpus expansion; chapter prose correctly traces via [Bialecki2023] citation with §4.1.3 Tabela 4.4a holding the post-merge 22 390 / 70 figure for the live corpus. Pass-2 wording-fix candidate for forward-ref consistency. |
+| F-025 | preserved | §3.2.4 line 77 EsportsBench 80.13% — preprint PDF binary FlateDecode failure mode noted in chapter prose flag wording per C3-T14-01; manual PDF read still required for Pass-2 |
+| F-026 | partly-resolved-by-T14 | §3.3.1 line 91 Yang2017Dota — 9:1 proportion confirmed via arXiv ar5iv HTML (`https://ar5iv.labs.arxiv.org/html/1701.03162`, dostęp 2026-04-26); split-method (random vs temporal) confirmed NOT specified in preprint text; 58.69% reattributed to Yang's own LR reimplementation of Conley/Kinkade baseline (not separate "60.07%" reading); refined chapter-prose [REVIEW] flag retained for definitive Pass-2 closure on split-method question |
+| F-027 | preserved | §3.3.3 line 107 CS:GO peer-reviewed selection — Xenopoulos et al. selection deferred to Pass-2; out of T14 scope |
+| F-028 | preserved | §3.3.4 line 111 Valorant peer-reviewed 2025–2026 — out of T14 scope |
+| F-029 | preserved | §3.4.1 line 131 CetinTas2023 86% — IEEE Xplore DOI 10.1109/UBMK59864.2023.10391048 verified via search snippet 2026-04-26; exact 86% value still pending Pass-2 manual PDF read |
+| F-030 | preserved | §3.4.1 line 133 CetinTas2023 NB/DT vs "Regression Analysis" title — methodology vs title tension preserved as in-prose [REVIEW] |
+| F-031 | preserved | §3.4.3 line 151 EC'25 citation convention extended-abstract @inproceedings vs @misc — bib retains @inproceedings with `note` clarifying extended-abstract format; Pass-2 librarian decision |
+| F-032 | preserved | §3.4.3 line 151 ACM EC 2025 acceptance-rate — note level, optional addition |
+| F-033 | preserved | §3.4.4 line 159 grey-literature acceptability PJAIT — out of T14 scope |
+| F-034 | preserved | §3.4.4 line 161 Xie2020 R²-vs-accuracy — Medium post text still requires Pass-2 manual read |
+| F-035 | resolved-by-T14 | §3.4.4 line 163 aoe2insights.com / Elbert2025EC source-confirmation — VERIFIED via arXiv HTML preprint `https://arxiv.org/html/2506.04475v1` (dostęp 2026-04-26): "The dataset was sourced from the analytics platform aoe2insights.com". Chapter-prose [REVIEW] flag at §3.4.4 line 163 REMOVED; replaced with verified citation hedge per C3-T14-08 |
+| F-036 | preserved | §3.5 line 185 4 author candidates (Brookhouse & Buckley, Caldeira et al., Alhumaid & Tur, Ferraz et al.) — WebSearch 2026-04-26 still does not surface these; [NEEDS CITATION] flag retained verbatim for Pass-2 manual library lookup |
+| F-037 | resolved-by-T14 | §3.5 line 187 Elbert2025EC attribution method — VERIFIED as linear FE residualization (NOT SHAP) via arXiv HTML preprint `https://arxiv.org/html/2506.04475v1` (dostęp 2026-04-26): "the Team Player Effect was identified as the extent to which a team's observed performance exceeded this predicted value when a specific individual was part of the group" — residualization via linear regression (NOT SHAP). Chapter-prose [REVIEW: F6.2 Pass-2 audit] flag REMOVED; speculative hedge "zgodnie z naszym odczytaniem… jeśli nasze odczytanie jest poprawne" REMOVED; replaced with verified description per C3-T14-11 |
+| F-038 | partly-resolved-by-T14 | §3.5 line 189 EsportsBench narrowing — version refresh: v8.0 / 2025-12-31 → v9.0 / 2026-03-31 (verified via HuggingFace dataset card 2026-04-26); AoE2-not-in-benchmark verified (20 titles: SC1, SC2, WC3, LoL, Dota 2, CS, Overwatch, Valorant, Rainbow Six, Halo, CoD, SF, Tekken, KoF, Guilty Gear, Rocket League, Smash Melee, Smash Ultimate, EA Sports FC, Tetris); calibration-metric coverage in Thorrez2024 Table 2 still requires Pass-2 manual PDF read (preprint PDF returned binary FlateDecode stream). [REVIEW] flag refined to scope to (a) post-2026-04-26 EsportsBench version updates and (b) preprint Table 2 metric inventory per C3-T14-12 |
+| F-082 | partly-resolved-by-T14 (Chapter 3 portion) | §3.5 line 191 GarciaMendez2025 cross-cutting cite — VERIFIED target game = streaming CS:GO context (Faceit, Leetify, Scope.gg, Steam APIs) per Entertainment Computing 55 / arXiv:2510.19671 / Universidade de Vigo author profile 2026-04-26; chapter prose at §3.5 Luka 4 line 191 already correctly framed as "streaming-ML kontekst" with refinement to "w środowiskach typu Counter-Strike, gdzie cechy są pozyskiwane przez API platformy strumieniowej" per C3-T14-13. Chapter 1 §1.1 portion remains in T12 territory (not edited by T14); cross-cutting closure pending Pass-2 manual full-text read of GarciaMendez2025. |
+| F-083 | partly-resolved-by-T14 (Chapter 3 portion) | §3.3.1 Hodge2021 phrasing + Dota 2 transfer limits — VERIFIED via IEEE Trans. Games 13(4) 368–379, DOI 10.1109/TG.2019.2948469 + York Research Database 2026-04-26: "their model achieved up to 85% accuracy after 5 minutes of gameplay" — chapter prose at §3.3.1 line 93 already correctly phrases this. Chapter 3 §3.3.5 already explicitly bounds MOBA-to-RTS transfer with four limitations. Chapter 1 §1.1 portion remains in T12 territory. |
+| F-088 | partly-resolved-by-T14 (Chapter 3 portion — no prose change required) | §3.3.5 line 117 SHAP causal interpretation in Chapter 3 — chapter prose already hedges via §1.4 cross-ref; T14 no Chapter 3 prose change required (RISK-13 Chapter 3 portion previously partly-resolved-by-T12); §4.4 SHAP analysis hedge still routes to T11 once Phase 02 SHAP analysis is drafted |
+
+**Counts of T14 dispositions:**
+- resolved-by-T14: 2 (F-035, F-037 — both substantively closed via web verification of Elbert2025EC source + attribution method)
+- partly-resolved-by-T14: 4 (F-026 split-method substantive narrowing; F-038 v9.0 refresh; F-082 Chapter 3 portion; F-083 Chapter 3 portion)
+- partly-resolved-by-T14 (Chapter 3 portion — no prose change required): 1 (F-088 — already hedged in §1.4 / §3.3.5)
+- preserved (verbatim, Pass-2 routing): 14 (F-022, F-023, F-024, F-025, F-027, F-028, F-029, F-030, F-031, F-032, F-033, F-034, F-036, F-024 prose-fix forwarded to Pass-2)
+
+**Note on T14 scope discipline:** T14's mandate (per `planning/current_plan.md` T14 spec lines 1174–1241) is structural cleanup informed by T05/T09/T10 evidence PLUS bulk Pass-2 literature verification (per `.claude/rules/thesis-writing.md` Literature Search Protocol). T14 explicitly performs WebSearch / WebFetch verification for every literature claim and does NOT rely on memory. Where verification could not be completed (PDF binary streams not extractable: Demsar2006, EsportsBench preprint, CetinTas2023 IEEE Xplore full PDF), the chapter-prose [REVIEW] flag is preserved or refined to reflect the specific failure mode. T14 explicitly does NOT touch `WRITING_STATUS.md` per parent instruction — global synchronization belongs to T17. T14 explicitly does NOT edit `pass2_evidence/sec_4_*_crosswalk.md` or `sec_4_*_halt_log.md` (frozen v1).
+
+**T14 also planted ZERO new [REVIEW] / [NEEDS CITATION] flags in Chapter 3** — every flag in the post-T14 chapter prose was already present pre-T14 (F-035 and F-037 removed; F-026 and F-025 reworded; F-038 reworded; all others preserved verbatim).
+
+---
+
+## T17 status update (2026-04-27)
+
+T17 (REVIEW_QUEUE / WRITING_STATUS / cleanup_flag_ledger synchronization) performed the
+following documentation-only changes. No thesis prose was edited in T17.
+
+### Physical flag inventory (post-T11/T12/T13/T14)
+
+Physical `[REVIEW:]`, `[UNVERIFIED:]`, `[NEEDS CITATION]` flags in Chapters 1–4 at T17 baseline:
+
+| Chapter | [REVIEW:] | [UNVERIFIED:] | [NEEDS CITATION] | [NEEDS JUSTIFICATION] | [TODO] | Total |
+|---------|-----------|--------------|------------------|-----------------------|--------|-------|
+| Chapter 1 (`01_introduction.md`) | 7 | 0 | 0 | 0 | 0 | 7 |
+| Chapter 2 (`02_theoretical_background.md`) | 15 | 0 | 0 | 0 | 0 | 15 |
+| Chapter 3 (`03_related_work.md`) | 13 | 0 | 1 | 0 | 0 | 14 |
+| Chapter 4 (`04_data_and_methodology.md`) | 27 | 1 | 0 | 0 | 0 | 28 |
+| **Total** | **62** | **1** | **1** | **0** | **0** | **64** |
+
+All 64 physical flags are accounted for in the ledger rows F-001 through F-101. No unregistered
+flags were found. Classification of each flag:
+
+- Flags removed by T11/T12/T13/T14 (resolved/partly-resolved): approximately 10 physical flags
+  removed across all chapters (workflow-leakage flags F-065 through F-077 chapter portions resolved
+  by T11; F-035 and F-037 removed from Chapter 3 by T14; F-087 ECE prose distinction resolved in
+  §2.6.2 by T13).
+- Remaining 64 flags: **all preserved** per Pass-2 dependency (see individual T11/T12/T13/T14
+  disposition tables above). No flag in the remaining 64 is intentionally unresolved without reason;
+  each has a Pass-2 verification item, a future-Phase dependency, or a deferred-to-T18/T20 routing.
+
+### T17 REVIEW_QUEUE changes
+
+| Change | Type |
+|--------|------|
+| §3.4 flag count corrected to 4 [REVIEW] post-T14 (F-035 removed from prose) | Modified |
+| §3.5 flag count corrected to 2 [REVIEW/NEEDS CITATION] post-T14 (F-037 removed; F-036 + F-038 retained) | Modified |
+| GATE-14A6 added as new pending item (SC2 tracker_events semantic validation, Step 01_03_05 not yet executed) | Added |
+| T16 Step 01_06_01 data-dictionary repair confirmed-intact note added | Added |
+
+### T17 WRITING_STATUS changes
+
+| Section | Old status | New status | Reason |
+|---------|-----------|-----------|--------|
+| §1.3 Research questions | DRAFTED | REVISED | T12 rewrote RQ3 hypothesis with four-confound disclaimer and added new [REVIEW] flag at line 13 |
+| §1.4 Scope and limitations | DRAFTED | REVISED | T12 substantially rewrote §1.4 corpus enumeration and added "Charakter porównania krzyżowego" paragraph |
+| §2.1 Gry strategiczne czasu rzeczywistego | DRAFTED | REVISED | T13 structural cleanup applied; [REVIEW] flag retained (Phase 04 dependency) |
+| §2.2 StarCraft II | DRAFTED | REVISED | T13 structural cleanup applied (Tier 4/mixed-mode framing + data-regime asymmetry statement); flags retained |
+| §2.3 Age of Empires II | DRAFTED | REVISED | T13 structural cleanup applied (DLC-chronology prose hedge + §2.5.4 civ-pair hedge); flags retained |
+| §2.5 Player skill rating systems | DRAFTED | REVISED | T13 structural cleanup applied (§2.5.4 civ-pair hedge harmonisation); all 4 [REVIEW] flags retained |
+| §3.4 AoE2 prediction | DRAFTED | REVISED | T14 applied bounded-gap framing + verified Elbert2025EC source; F-035 [REVIEW] removed; 4 flags remain |
+| Chapter 4 blocked sections note | — | Updated | GATE-14A6 note added: §4.4 cannot reach FINAL until Step 01_03_05 executes |
+
+No sections were elevated to FINAL in T17. All REVISED sections still carry at least one [REVIEW]
+or [NEEDS CITATION] flag and MUST NOT be marked FINAL until those flags are resolved.
+
+### T17 ledger row dispositions
+
+| Ledger ID | T17 disposition | Detail |
+|-----------|----------------|--------|
+| F-091 | confirmed-T17 (already closed) | REVIEW_QUEUE §2.5 entry v8.0 sync — T13 verified §2.5.5 line 179 already reads `(wersja HuggingFace v8.0, cutoff 2025-12-31)` with no [REVIEW: F6.6] flag. REVIEW_QUEUE §2.5 row's 2026-04-21 + 2026-04-26 closure notes record this. No further action needed. |
+| F-092 | confirmed-T17 (already closed) | REVIEW_QUEUE §3.2 entry F6.6 EsportsBench version — locally closed 2026-04-21; REVIEW_QUEUE §3.2 row already documents the closure. No further action needed. |
+| F-093 | confirmed-T17 (already closed) | REVIEW_QUEUE §3.3 entry F6.8 Silva2018LoL ISSN — locally closed 2026-04-21; REVIEW_QUEUE §3.3 row already documents the closure. No further action needed. |
+| F-094 | confirmed-T17 | REVIEW_QUEUE §4.4.6 Post-F1 row — T11 resolved the `PR #TBD` prose leakage in chapter prose; REVIEW_QUEUE line 49 already shows "Resolved-by-T11 (chapter-prose layer)". Substantive Post-F1 narrative rewrite remains deferred to Pass-2. |
+| F-077 | confirmed-T17 | REVIEW_QUEUE `PR #TBD` in §4.4.6 — T11 resolved chapter-prose layer per F-077 routing note; T17 confirms REVIEW_QUEUE row is already updated. |
+| F-078 | confirmed-resolved-cross-chapter (T17) | BLOCKER-1 (`qp_rm_1v1` ID 18) chapter-prose closure: Chapter 4 resolved-by-T11 (line 226); Chapter 1 partly-resolved-by-T12 (line 161); Chapter 2 partly-resolved-by-T13 (line 264); supporting artifact `data_quality_report_aoe2companion.md` regenerated and `confirmed_intact` via T07/T08 (`notebook_regeneration_manifest.md` line 139). T05 Q2 provenance verdict (Tier 2/3 mixed-mode for aoe2companion) is the source-of-truth wording authority for all chapter prose. No outstanding chapter-prose work; future Pass-2 verification limited to source-tier classification refinement. |
+| F-079 | confirmed-resolved-cross-chapter (T17) | aoestats `random_map` Tier 4 framing applied across Chapter 1 §1.4 (T12 line 162), Chapter 2 §2.2.3 (T13 line 265), Chapter 4 §4.2.3 / §4.1.2 (T11 line 227). aoestats source semantics remain semantically opaque per T05 Tier 4 conclusion (`aoe2_ladder_provenance_audit.md` §4.2.4); thesis prose hedges accordingly without claiming "ranked ladder" status. No outstanding chapter-prose work. |
+| F-080 | confirmed-partly-resolved-cross-chapter (T17) — §6.3 deferred | Cross-dataset comparability framing closed in Chapter 1–4 prose: T12 §1.4 "Charakter porównania krzyżowego" four-confound paragraph (line 163); T13 §2.2.3 disclaimer (line 266); T11 §4.1.4 dataset-conditional scoping (line 228); T14 Chapter 3 framing portion. Bounded statement at §6.3 remains deferred per Chapter 6 BLOCKED status (Phase 03/04 not yet executed). T09 cross-dataset comparability matrix (`cross_dataset_comparability_matrix.md`) supports this disposition. |
+| F-084 | confirmed-resolved-cross-chapter (T17) — Phase 02 feature-engineering gate retained | AoE2 civ-count / civ-pair hedge harmonised across Chapter 1 §1.1 / §1.2 / §1.3 / §1.4 (T12 line 166) and Chapter 2 §2.3.2 / §2.5.4 (T13 line 267). Civ-pair encoding (1 225 unordered pairs hypothesis under stable-roster assumption) remains a Phase 02 feature-engineering implementation question (RISK-25 in `methodology_risk_register.md`); no thesis prose claims feature-engineering implementation has been chosen. Pass-2 DLC-chronology absolute verification (Three Kingdoms, Last Chieftains, Chronicles: Alexander) routed via F-014. |
+| F-087 | confirmed-resolved-cross-chapter (T17) | ECE distinction fully closed: Chapter 2 §2.6.2 resolved-by-T13 (line 269) explicitly distinguishes wynik Briera + strata logarytmiczna jako właściwe reguły punktacji from ECE jako descriptive calibration diagnostic; Chapter 4 §4.4.4 portion previously resolved-by-T11 (T13 row notes "Chapter 4 §4.4.4 portion previously resolved-by-T11; T13 prose now matches T11 framing"). No remaining Chapter 4 wording issue. |
+| F-095 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_04_05_cross_region_annotation.py` — manifest status `not_yet_assessed` retained; no T16 14A.5 escalation triggered (cross-region fragmentation defer-with-gate per `phase02_readiness_hardening.md` §14A.5 routes to RISK-20 in `methodology_risk_register.md`, not to this notebook). No thesis claim depends on this notebook. |
+| F-096 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_05_00_scaffold.py` — manifest status `not_yet_assessed` retained; no thesis claim depends on this scaffold notebook. |
+| F-097 | confirmed-preserved-not-yet-assessed (T17) | sc2egset `01_05_10_cross_region_history_impact.py` — empirical FAIL verdict at W=30 (median undercount 16.0 games; p95 29.0) is used by `phase02_readiness_hardening.md` §14A.5 to defer with gate, but the notebook itself remains `not_yet_assessed` per manifest; F-097 disposition unchanged. |
+| F-098 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_03b_canonical_slot_amendment.py` — manifest status `not_yet_assessed`; conditional on BACKLOG F1 execution status; §4.4.6 chapter prose hedges accordingly per F-094 disposition. |
+| F-099 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_06_old_rating_temporal_audit.py` — manifest status `not_yet_assessed`; no thesis claim depends on this artifact. |
+| F-100 | confirmed-preserved-not-yet-assessed (T17) | aoestats `01_04_07_old_rating_conditional_annotation.py` — manifest status `not_yet_assessed`; no thesis claim depends on this artifact. |
+| F-101 | confirmed-preserved-informational (T17) | aoestats not_yet_assessed enumeration row — informational accounting only; no notebook-level disposition needed. |
+
+**Critical preservation note on T16 / Step 01_06_01 + Step 01_06_02 (NOT in F-095..F-101 range):**
+
+- aoe2companion `01_06_01_data_dictionary.py` (Data Dictionary) — `confirmed_intact` post-T16 14A.1 repair (`notebook_regeneration_manifest.md` line 138). NOT in F-095..F-101 range because never `not_yet_assessed` — was `confirmed_intact → flagged_stale → confirmed_intact` cycle within T16 14A.1 itself.
+- aoe2companion `01_06_02_data_quality_report.py` (Data Quality Report) — `confirmed_intact` post-T07/T08 regeneration (`notebook_regeneration_manifest.md` line 139); ledger row F-090 resolved-by-T11 (line 230). NOT in F-095..F-101 range because never `not_yet_assessed`.
+
+Neither notebook requires a F-095..F-101 ledger entry because both are tracked via the manifest's `confirmed_intact` status, not the `not_yet_assessed` registry. T17 confirms both are correctly recorded.
+
+**RISK-21 cross-link (F-102 explicit reference):**
+
+RISK-21 in `thesis/pass2_evidence/methodology_risk_register.md` is the methodology-risk record corresponding to ledger entry F-102 (GATE-14A6). Both link to Step 01_03_05 (not yet executed). RISK-21 status: open/gated. F-102 status: open. No further T17 action; routing through `phase02_readiness_hardening.md` §14A.6 + REVIEW_QUEUE pending item satisfies the audit-trail requirement.
+
+### F-102 — GATE-14A6 (new ledger row)
+
+| Field | Value |
+|-------|-------|
+| ID | F-102 |
+| Chapter / file / section | `04_data_and_methodology.md` §4.4 (in-game features — not yet drafted) |
+| Exact issue or flag | GATE-14A6: SC2 `tracker_events` semantic validation not executed; Step 01_03_05 not yet created/run |
+| Issue type | external-audit |
+| Severity | major |
+| Lineage status from T03 | N-A (Step 01_03_05 does not yet exist) |
+| Source needed | BlizzardS2Protocol or Vinyals2017 §3 — per-event semantics (cumulative vs. instantaneous) |
+| Artifact needed | Step 01_03_05 output artifact (new, not yet created) |
+| Downstream task | T15 (decision gate) → conditional T16 14A.6 (deferred) |
+| Proposed action | Do not claim validated tracker_events-derived features. Use permitted framing from `phase02_readiness_hardening.md` §14A.6. |
+| Regen required | Yes — new Step 01_03_05 creation required (not regen of existing artifact) |
+| Status | open — GATE-14A6 recorded; overclaiming prevented; Step 01_03_05 not yet scheduled |
+
+Added to REVIEW_QUEUE.md as new pending item (2026-04-27).
+
+### T15 non-blocker recommendation routing (T17 record)
+
+The T15 reviewer-deep non-blocker recommendation to record borderline patch-vs-minor
+classification calls in `audit_cleanup_summary.md` is OUT of T17 file scope. That file
+is not in the T17 write-list. The recommendation is routed to T20 (final audit summary)
+per the T17 task specification. No new ledger row is required at this stage because no
+existing entry tracks `audit_cleanup_summary.md` patch-vs-minor classification; T20 will
+create the appropriate entry when it assembles the final PR summary.
+
+**Counts of T17 dispositions:**
+- confirmed-T17 (already closed via earlier tasks): 5 (F-077, F-091, F-092, F-093, F-094)
+- confirmed-resolved-cross-chapter (T17): 4 (F-078, F-079, F-084, F-087)
+- confirmed-partly-resolved-cross-chapter (T17) — Chapter 6 deferred: 1 (F-080)
+- confirmed-preserved-not-yet-assessed (T17): 6 (F-095, F-096, F-097, F-098, F-099, F-100)
+- confirmed-preserved-informational (T17): 1 (F-101)
+- new row added: 1 (F-102 — GATE-14A6, cross-linked to RISK-21)
+- T15 routing note: 1 (non-blocker recommendation → T20)
+- **Total T17 actions: 19**
+- no ledger rows re-opened or newly flagged in T17

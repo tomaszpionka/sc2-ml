@@ -37,8 +37,13 @@ m1v1 = load_schema("matches_1v1_clean.yaml")
 pha = load_schema("player_history_all.yaml")
 
 def classify(notes_str, name):
+    # Use whole-word boundary matching (\bTARGET\b etc.) to avoid false positives.
+    # Example: player_history_all.rating notes say "started < target_match.started"
+    # which contains "target" as part of a compound phrase, NOT a temporal class label.
+    # Without word-boundary matching the old code incorrectly returned TARGET for that row.
+    import re
     n = (notes_str or "").upper()
-    if "TARGET" in n:
+    if re.search(r'\bTARGET\b', n):
         return "TARGET"
     if "POST_GAME_HISTORICAL" in n:
         return "POST_GAME_HISTORICAL"
