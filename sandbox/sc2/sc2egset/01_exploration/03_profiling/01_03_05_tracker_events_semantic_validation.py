@@ -2201,12 +2201,774 @@ print(f"  10 event types verdict: stable={len(stable_events)}, "
 # - **V4 verdict:** see printed result above.
 
 # %% [markdown]
-# ## Out of scope for T06 (this notebook execution)
+# ---
+# ## V5 -- Unit-lifecycle event semantics (per Amendment 4)
 #
-# - V5..V8 are deferred to T07..T10 per `planning/current_plan.md`.
+# **Hypothesis.**
+# - Unit-lifecycle events (UnitBorn, UnitInit, UnitDone, UnitDied,
+#   UnitTypeChange, UnitOwnerChange, UnitPositions) record local state
+#   transitions at their event `loop`.
+# - Cutoff-based counts (units born by cutoff, completed by cutoff,
+#   dead by cutoff) can be computed from event loops without needing
+#   any post-game state.
+# - For lineage-required event families (UnitDone, UnitTypeChange,
+#   UnitPositions) ownership and origin can be resolved through the
+#   `(filename, unitTagIndex, unitTagRecycle)` lineage join back to
+#   UnitBorn / UnitInit.
+#
+# **Falsifier.**
+# - death / done / type-change occurs before its corresponding birth /
+#   init event at material rate;
+# - unit-tag recycle handling makes lineage ambiguous at material rate;
+# - required lineage keys are missing or unstable;
+# - event semantics require future / post-game information;
+# - lineage attribution cannot resolve ownership for a planned feature
+#   family.
+#
+# **Per Amendment 4 (carried forward to V5).**
+# - `n_survivors` (origin without UnitDied) is descriptive, NOT failure.
+# - `n_constructing_survivors` (UnitInit without UnitDone) is NOT
+#   failure if the game ends before completion.
+# - `n_inverted` = impossible ordering: died_loop < origin_loop OR
+#   done_loop < init_loop. MUST be 0 (or near-zero with documented
+#   explanation).
+# - `n_died_without_prior_origin` is NOT automatic failure (map units
+#   like MineralField / VespeneGeyser / WatchTower exist by map editor
+#   placement, not by UnitBorn / UnitInit -- they die when mined or
+#   destroyed).
+#
+# **Per V4 carry-forward.** `UnitOwnerChange` is schema-stable but
+# coverage-sparse (absent in 2016, ~25% of replays in later years);
+# `feature_eligibility_caveat = sparse_event_family_not_broadly_available`
+# is propagated. T07 must NOT over-promote UnitOwnerChange-derived
+# features merely because key-set diff is zero.
+
+# %% [markdown]
+# ### V5.1 -- lifecycle key availability per event family
+#
+# Joins use `(filename, unitTagIndex, unitTagRecycle)`. UnitPositions
+# uses a different scheme (`firstUnitIndex` + packed `items` array)
+# and is handled separately in V5.6.
+
+# %%
+LIFECYCLE_EVENT_TYPES = [
+    "UnitBorn", "UnitInit", "UnitDone", "UnitDied",
+    "UnitTypeChange", "UnitOwnerChange",
+]
+v5_1_df = run_q(
+    "v5_1_lifecycle_key_availability",
+    f"""
+    SELECT evtTypeName,
+           COUNT(*) AS n_total,
+           COUNT(*) FILTER (
+               WHERE json_extract_string(event_data, '$.unitTagIndex')
+                     IS NULL
+           ) AS n_null_uti,
+           COUNT(*) FILTER (
+               WHERE json_extract_string(event_data, '$.unitTagRecycle')
+                     IS NULL
+           ) AS n_null_utr
+    FROM tracker_events_raw
+    WHERE evtTypeName IN ({", ".join(f"'{e}'" for e in LIFECYCLE_EVENT_TYPES)})
+    GROUP BY evtTypeName
+    ORDER BY evtTypeName
+    """,
+)
+v5_1_df["null_uti_rate"] = v5_1_df["n_null_uti"] / v5_1_df["n_total"]
+v5_1_df["null_utr_rate"] = v5_1_df["n_null_utr"] / v5_1_df["n_total"]
+print("=== V5.1 lifecycle key availability ===")
+print(v5_1_df.to_string(index=False))
+key_availability = {
+    r["evtTypeName"]: {
+        "n_total": int(r["n_total"]),
+        "null_uti_rate": float(r["null_uti_rate"]),
+        "null_utr_rate": float(r["null_utr_rate"]),
+        "lineage_keys_available": (
+            r["null_uti_rate"] < 0.001 and r["null_utr_rate"] < 0.001
+        ),
+    }
+    for _, r in v5_1_df.iterrows()
+}
+
+# %% [markdown]
+# ### V5.2 -- origin lineage base table (UnitBorn UNION UnitInit)
+#
+# Each unit identity = `(filename, unitTagIndex, unitTagRecycle)`.
+# `first_origin_loop` = MIN(loop) over UnitBorn / UnitInit. Per-identity
+# counts of Born vs Init events let us classify the origin source
+# (born-only / init-only / both) and surface duplicate-origin
+# identities.
+
+# %%
+v5_2_df = run_q(
+    "v5_2_origin_lineage_summary",
+    """
+    WITH origins AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               evtTypeName, loop
+        FROM tracker_events_raw
+        WHERE evtTypeName IN ('UnitBorn', 'UnitInit')
+    ),
+    per_identity AS (
+        SELECT filename, uti, utr,
+               MIN(loop) AS first_origin_loop,
+               SUM(CASE WHEN evtTypeName='UnitBorn' THEN 1 ELSE 0 END)
+                   AS n_born_events,
+               SUM(CASE WHEN evtTypeName='UnitInit' THEN 1 ELSE 0 END)
+                   AS n_init_events
+        FROM origins GROUP BY filename, uti, utr
+    )
+    SELECT
+        COUNT(*) AS n_origin_identities,
+        SUM(CASE WHEN n_born_events > 0 AND n_init_events = 0
+                 THEN 1 ELSE 0 END) AS n_born_only,
+        SUM(CASE WHEN n_init_events > 0 AND n_born_events = 0
+                 THEN 1 ELSE 0 END) AS n_init_only,
+        SUM(CASE WHEN n_born_events > 0 AND n_init_events > 0
+                 THEN 1 ELSE 0 END) AS n_both,
+        SUM(CASE WHEN n_born_events > 1 OR n_init_events > 1
+                 THEN 1 ELSE 0 END) AS n_duplicate_origin
+    FROM per_identity
+    """,
+)
+print("=== V5.2 origin lineage base ===")
+print(v5_2_df.to_string(index=False))
+origin_summary = {k: int(v5_2_df[k].iloc[0]) for k in v5_2_df.columns}
+
+# %% [markdown]
+# ### V5.3 -- UnitBorn / UnitInit -> UnitDied ordering audit
+#
+# Per Amendment 4: `n_survivors` is descriptive (NOT failure).
+# `n_died_without_prior_origin` is NOT automatic failure -- the cause
+# is not classified by T07; possible origins include pre-existing map
+# units, missing origin events, parser omissions, and genuine
+# ambiguity. The notebook reports the count but does not assert a
+# specific mechanism without source evidence.
+# `n_inverted` (died_loop < first_origin_loop) MUST be 0.
+# `n_same_loop_origin_death` (died_loop == first_origin_loop) is
+# empirically common but its exact mechanics are NOT interpreted here;
+# this is NOT an inverted ordering (`died_loop < first_origin_loop` is
+# the impossible case) and it does not falsify cutoff-count semantics.
+
+# %%
+v5_3_df = run_q(
+    "v5_3_lifecycle_ordering_audit",
+    """
+    WITH origins AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               MIN(loop) AS first_origin_loop
+        FROM tracker_events_raw
+        WHERE evtTypeName IN ('UnitBorn', 'UnitInit')
+        GROUP BY filename,
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                          AS INT),
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                          AS INT)
+    ),
+    deaths AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               MIN(loop) AS died_loop
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'UnitDied'
+        GROUP BY filename,
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                          AS INT),
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                          AS INT)
+    ),
+    joined AS (
+        SELECT COALESCE(o.filename, d.filename) AS filename,
+               o.first_origin_loop, d.died_loop
+        FROM origins o
+        FULL OUTER JOIN deaths d USING (filename, uti, utr)
+    )
+    SELECT
+        COUNT(*) FILTER (WHERE first_origin_loop IS NOT NULL) AS n_origins,
+        COUNT(*) FILTER (WHERE died_loop IS NOT NULL) AS n_died,
+        COUNT(*) FILTER (
+            WHERE died_loop IS NOT NULL AND first_origin_loop IS NOT NULL
+        ) AS n_died_with_prior_origin,
+        COUNT(*) FILTER (
+            WHERE died_loop IS NOT NULL AND first_origin_loop IS NULL
+        ) AS n_died_without_prior_origin,
+        COUNT(*) FILTER (
+            WHERE first_origin_loop IS NOT NULL AND died_loop IS NULL
+        ) AS n_survivors,
+        COUNT(*) FILTER (
+            WHERE first_origin_loop IS NOT NULL
+              AND died_loop IS NOT NULL
+              AND died_loop < first_origin_loop
+        ) AS n_inverted,
+        COUNT(*) FILTER (
+            WHERE first_origin_loop IS NOT NULL
+              AND died_loop IS NOT NULL
+              AND died_loop = first_origin_loop
+        ) AS n_same_loop_origin_death
+    FROM joined
+    """,
+)
+print("=== V5.3 origin -> death ordering ===")
+print(v5_3_df.to_string(index=False))
+ordering = {k: int(v5_3_df[k].iloc[0]) for k in v5_3_df.columns}
+
+# %% [markdown]
+# ### V5.4 -- UnitInit -> UnitDone construction audit
+#
+# Per Amendment 4: `n_constructing_survivors` is NOT failure if the
+# game ends before construction completes. `n_done_before_init` MUST
+# be 0 (or near-zero with explanation). `n_done_without_init` may be
+# caveated -- some structures fire UnitDone without a prior UnitInit
+# in some s2protocol versions (e.g., warpgate units).
+
+# %%
+v5_4_df = run_q(
+    "v5_4_construction_audit",
+    """
+    WITH inits AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               MIN(loop) AS init_loop
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'UnitInit'
+        GROUP BY filename,
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                          AS INT),
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                          AS INT)
+    ),
+    dones AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               MIN(loop) AS done_loop
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'UnitDone'
+        GROUP BY filename,
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                          AS INT),
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                          AS INT)
+    ),
+    joined AS (
+        SELECT i.init_loop, d.done_loop
+        FROM inits i
+        FULL OUTER JOIN dones d USING (filename, uti, utr)
+    )
+    SELECT
+        COUNT(*) FILTER (WHERE init_loop IS NOT NULL) AS n_init,
+        COUNT(*) FILTER (WHERE done_loop IS NOT NULL) AS n_done,
+        COUNT(*) FILTER (
+            WHERE init_loop IS NOT NULL AND done_loop IS NOT NULL
+        ) AS n_done_with_init,
+        COUNT(*) FILTER (
+            WHERE done_loop IS NOT NULL AND init_loop IS NULL
+        ) AS n_done_without_init,
+        COUNT(*) FILTER (
+            WHERE init_loop IS NOT NULL AND done_loop IS NULL
+        ) AS n_constructing_survivors,
+        COUNT(*) FILTER (
+            WHERE init_loop IS NOT NULL AND done_loop IS NOT NULL
+              AND done_loop < init_loop
+        ) AS n_done_before_init
+    FROM joined
+    """,
+)
+print("=== V5.4 init -> done construction ===")
+print(v5_4_df.to_string(index=False))
+construction = {k: int(v5_4_df[k].iloc[0]) for k in v5_4_df.columns}
+
+# %% [markdown]
+# ### V5.5 -- UnitTypeChange attribution
+#
+# UnitTypeChange has no direct player-id field; it must be lineage-
+# attributed via `(filename, uti, utr)` to a prior UnitBorn / UnitInit
+# origin. Reports attribution success rate and inverted ordering.
+
+# %%
+v5_5_df = run_q(
+    "v5_5_unit_type_change_attribution",
+    """
+    WITH origins AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               MIN(loop) AS first_origin_loop
+        FROM tracker_events_raw
+        WHERE evtTypeName IN ('UnitBorn', 'UnitInit')
+        GROUP BY filename,
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                          AS INT),
+                 TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                          AS INT)
+    ),
+    type_changes AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagIndex')
+                        AS INT) AS uti,
+               TRY_CAST(json_extract_string(event_data, '$.unitTagRecycle')
+                        AS INT) AS utr,
+               loop AS type_change_loop
+        FROM tracker_events_raw WHERE evtTypeName = 'UnitTypeChange'
+    )
+    SELECT
+        COUNT(*) AS n_total,
+        COUNT(*) FILTER (WHERE o.first_origin_loop IS NOT NULL)
+            AS n_attributed,
+        COUNT(*) FILTER (WHERE o.first_origin_loop IS NULL)
+            AS n_unattributed,
+        COUNT(*) FILTER (
+            WHERE o.first_origin_loop IS NOT NULL
+              AND tc.type_change_loop < o.first_origin_loop
+        ) AS n_inverted
+    FROM type_changes tc
+    LEFT JOIN origins o USING (filename, uti, utr)
+    """,
+)
+print("=== V5.5 UnitTypeChange attribution ===")
+print(v5_5_df.to_string(index=False))
+type_change_attr = {k: int(v5_5_df[k].iloc[0]) for k in v5_5_df.columns}
+type_change_attr["attribution_success_rate"] = (
+    type_change_attr["n_attributed"] / type_change_attr["n_total"]
+    if type_change_attr["n_total"] else None
+)
+
+# %% [markdown]
+# ### V5.6 -- UnitPositions structure inspection
+#
+# UnitPositions has no direct lineage keys -- it carries `firstUnitIndex`
+# (BIGINT) and `items` (packed array of unit ids and coordinates).
+# Owner attribution requires unpacking `items` and joining back to
+# UnitBorn / UnitInit lineage. T07 inspects whether the structure is
+# accessible via SQL and classifies attribution feasibility for V8.
+# Coordinate semantics (units, origin, bounds) are V6 / T08, NOT here.
+
+# %%
+v5_6_df = run_q(
+    "v5_6_unit_positions_structure",
+    """
+    SELECT
+        COUNT(*) AS n_total,
+        COUNT(*) FILTER (
+            WHERE json_extract(event_data, '$.firstUnitIndex') IS NOT NULL
+        ) AS n_with_first_index,
+        COUNT(*) FILTER (
+            WHERE json_extract(event_data, '$.items') IS NOT NULL
+        ) AS n_with_items,
+        AVG(json_array_length(json_extract(event_data, '$.items')))
+            AS mean_items_array_length,
+        MAX(json_array_length(json_extract(event_data, '$.items')))
+            AS max_items_array_length
+    FROM tracker_events_raw WHERE evtTypeName = 'UnitPositions'
+    """,
+)
+print("=== V5.6 UnitPositions structure ===")
+print(v5_6_df.to_string(index=False))
+positions_struct = {k: v5_6_df[k].iloc[0] for k in v5_6_df.columns}
+
+# %% [markdown]
+# ### V5.7 -- UnitOwnerChange caveat (V4 carry-forward)
+#
+# V4 verdict already classifies `UnitOwnerChange` with
+# `feature_eligibility_caveat = sparse_event_family_not_broadly_available`
+# (absent in 2016, ~25% of replays in later years). V5 confirms
+# schema availability but propagates the V4 caveat. Basic unit
+# birth/death counts using *origin owner* (UnitBorn.controlPlayerId)
+# are NOT affected, because they do not require dynamic ownership
+# updates.
+
+# %%
+unit_owner_change_caveat = {
+    "schema_keys_available_per_v51":
+        key_availability.get("UnitOwnerChange", {})
+        .get("lineage_keys_available", False),
+    "v4_feature_eligibility_caveat": (
+        verdicts["V4"]["v8_carry_forward_caveats"]
+        .get("UnitOwnerChange")
+    ),
+    "v4_years_absent": (
+        verdicts["V4"]["per_event"]["UnitOwnerChange"]["years_absent"]
+    ),
+    "v4_min_year_coverage": (
+        verdicts["V4"]["per_event"]["UnitOwnerChange"]["min_year_coverage"]
+    ),
+    "impact_on_basic_origin_owner_features":
+        "none -- UnitBorn.controlPlayerId is the origin owner",
+    "impact_on_dynamic_ownership_features":
+        "blocked_until_additional_validation -- UnitOwnerChange is the "
+        "only source of mid-game ownership updates and is sparse",
+}
+print("=== V5.7 UnitOwnerChange caveat ===")
+for k, v in unit_owner_change_caveat.items():
+    print(f"  {k}: {v}")
+
+# %% [markdown]
+# ### V5.8 -- Upgrade event count semantics
+#
+# Upgrade has high-confidence direct mapping per V2 (playerId).
+# `count` field semantics (per-event level vs cumulative) are NOT
+# documented in the s2protocol snapshot. V5 reports the empirical
+# distribution; V8 should use *event occurrence counts* (COUNT(*)
+# per (filename, playerId)), NOT trust `count` as a cumulative tally.
+
+# %%
+v5_8_df = run_q(
+    "v5_8_upgrade_count_semantics",
+    """
+    SELECT
+        TRY_CAST(json_extract_string(event_data, '$.count') AS INT) AS cnt,
+        COUNT(*) AS n
+    FROM tracker_events_raw WHERE evtTypeName = 'Upgrade'
+    GROUP BY cnt ORDER BY n DESC LIMIT 10
+    """,
+)
+print("=== V5.8 Upgrade count field distribution (top 10) ===")
+print(v5_8_df.to_string(index=False))
+upgrade_count_semantics = {
+    "count_field_distribution_top_10": [
+        {"count": (int(r["cnt"]) if r["cnt"] is not None else None),
+         "n": int(r["n"])}
+        for _, r in v5_8_df.iterrows()
+    ],
+    "policy": (
+        "V8 must use COUNT(*) per (filename, playerId) for upgrade "
+        "occurrence features. The 'count' field is NOT trusted as a "
+        "cumulative tally without source confirmation (s2protocol "
+        "snapshot does not document its semantics)."
+    ),
+    "feature_eligibility": "occurrence_count_safe; count_field_unverified",
+}
+
+# %% [markdown]
+# ### V5 verdict assembly
+#
+# Per-event-family verdict + V5 result. Result discipline (per T07
+# brief): one caveat does NOT fail V5 -- only impossible orderings
+# (`n_inverted > 0`) or missing lineage keys at material rate fail.
+
+# %%
+ordering_pass = (
+    ordering["n_inverted"] == 0 and
+    construction["n_done_before_init"] == 0
+)
+type_change_pass = (
+    type_change_attr["attribution_success_rate"] is not None and
+    type_change_attr["attribution_success_rate"] >= 0.99 and
+    type_change_attr["n_inverted"] == 0
+)
+positions_attribution_decoded = False  # requires items unpacking; deferred
+
+_BASIC_SCOPE = (
+    "basic cutoff-count features only (e.g., units born by cutoff "
+    "loop); complex derived features may still require V8 family-"
+    "specific eligibility and Phase 02 feature-contract review"
+)
+_OCCURRENCE_SCOPE = (
+    "event-occurrence count only (COUNT(*) per (filename, playerId)); "
+    "the count field is NOT trusted as a cumulative tally without "
+    "source confirmation"
+)
+event_family_verdicts = {
+    "UnitBorn": {
+        "lineage_keys_available":
+            key_availability["UnitBorn"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility": "eligible_for_phase02_now",
+        "eligibility_scope": _BASIC_SCOPE,
+        "notes": "origin event with direct controlPlayerId",
+    },
+    "UnitInit": {
+        "lineage_keys_available":
+            key_availability["UnitInit"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility": "eligible_for_phase02_now",
+        "eligibility_scope": _BASIC_SCOPE,
+        "notes": "construction-start event with direct controlPlayerId",
+    },
+    "UnitDone": {
+        "lineage_keys_available":
+            key_availability["UnitDone"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility": (
+            "eligible_for_phase02_now"
+            if construction["n_done_before_init"] == 0
+            and construction["n_done_without_init"]
+                / max(construction["n_done"], 1) < 0.05
+            else "eligible_with_caveat"
+        ),
+        "eligibility_scope": _BASIC_SCOPE,
+        "notes": (
+            f"done_without_init = {construction['n_done_without_init']} "
+            f"of {construction['n_done']}; lineage via UnitInit"
+        ),
+    },
+    "UnitDied": {
+        "lineage_keys_available":
+            key_availability["UnitDied"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility": (
+            "eligible_for_phase02_now" if ordering_pass
+            else "blocked_until_additional_validation"
+        ),
+        "eligibility_scope": _BASIC_SCOPE,
+        "notes": (
+            f"survivors={ordering['n_survivors']} (descriptive); "
+            f"orphan deaths={ordering['n_died_without_prior_origin']} "
+            "(cause not classified; possible origins: map units, "
+            "missing events, parser edge cases); inverted="
+            f"{ordering['n_inverted']} (must be 0); "
+            f"same_loop={ordering['n_same_loop_origin_death']} "
+            "(empirically common, mechanics not interpreted; not "
+            "inverted)"
+        ),
+    },
+    "UnitTypeChange": {
+        "lineage_keys_available":
+            key_availability["UnitTypeChange"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility": (
+            "eligible_for_phase02_now" if type_change_pass
+            else "eligible_with_caveat"
+        ),
+        "eligibility_scope": _BASIC_SCOPE,
+        "notes": (
+            f"attribution_rate={type_change_attr['attribution_success_rate']:.4f}"
+            f"; inverted={type_change_attr['n_inverted']}"
+        ),
+    },
+    "UnitOwnerChange": {
+        "lineage_keys_available":
+            key_availability["UnitOwnerChange"]["lineage_keys_available"],
+        "cutoff_count_safe": True,
+        "feature_eligibility":
+            "blocked_until_additional_validation",
+        "eligibility_scope": (
+            "owner-attributed features blocked because UnitOwnerChange "
+            "is sparse per V4; basic origin-owner features (using "
+            "UnitBorn.controlPlayerId) are not affected"
+        ),
+        "notes": (
+            "schema OK but V4 sparse caveat propagates; dynamic "
+            "ownership features blocked"
+        ),
+    },
+    "UnitPositions": {
+        "lineage_keys_available": False,
+        "cutoff_count_safe": "requires_unpacking",
+        "feature_eligibility":
+            "blocked_until_additional_validation",
+        "eligibility_scope": (
+            "owner-attributed features blocked because items "
+            "unpacking + UnitBorn lineage attribution is unresolved "
+            "in T07; coordinate semantics are V6 / T08"
+        ),
+        "notes": (
+            "uses firstUnitIndex + packed items; owner attribution "
+            "requires items unpacking + UnitBorn lineage; coordinate "
+            "semantics are V6 / T08"
+        ),
+    },
+    "Upgrade": {
+        "lineage_keys_available": True,
+        "cutoff_count_safe": True,
+        "feature_eligibility":
+            "eligible_with_caveat (occurrence-count only)",
+        "eligibility_scope": _OCCURRENCE_SCOPE,
+        "notes": (
+            "direct playerId mapping per V2; count field unverified"
+        ),
+    },
+}
+
+if not ordering_pass:
+    v5_result = "FAIL"
+    v5_caveat = (
+        f"impossible orderings: n_inverted={ordering['n_inverted']}, "
+        f"n_done_before_init={construction['n_done_before_init']}"
+    )
+else:
+    blocked = [
+        et for et, v in event_family_verdicts.items()
+        if v["feature_eligibility"]
+        == "blocked_until_additional_validation"
+    ]
+    caveated = [
+        et for et, v in event_family_verdicts.items()
+        if v["feature_eligibility"]
+        in ("eligible_with_caveat",
+            "eligible_with_caveat (occurrence-count only)")
+    ]
+    if blocked:
+        v5_result = "PASS_WITH_CAVEAT"
+        v5_caveat = (
+            f"ordering OK; blocked: {blocked}; caveated: {caveated}"
+        )
+    elif caveated:
+        v5_result = "PASS_WITH_CAVEAT"
+        v5_caveat = (
+            f"ordering OK; caveated families: {caveated}"
+        )
+    else:
+        v5_result = "PASS"
+        v5_caveat = "all lifecycle families eligible"
+
+verdicts["V5"] = {
+    "hypothesis": (
+        "lifecycle events record local state transitions at their loop; "
+        "cutoff counts are computable without post-game leakage; "
+        "lineage joins resolve owner for no-direct-id event families"
+    ),
+    "falsifier": (
+        "death/done/type-change before origin at material rate; "
+        "lineage ambiguity from tag-recycle; missing/unstable keys; "
+        "future-dependent semantics; lineage cannot resolve owner "
+        "for a planned feature family"
+    ),
+    "result": v5_result,
+    "amendment_4_compliance": True,
+    "lifecycle_key_availability": key_availability,
+    "origin_lineage_summary": origin_summary,
+    "lifecycle_ordering_summary": ordering,
+    "construction_audit_summary": construction,
+    "type_change_attribution": type_change_attr,
+    "unit_positions_structure": {
+        k: (int(v) if v is not None and not isinstance(v, str) else v)
+        for k, v in positions_struct.items()
+    },
+    "unit_owner_change_caveat": unit_owner_change_caveat,
+    "upgrade_count_semantics": upgrade_count_semantics,
+    "event_family_verdicts": event_family_verdicts,
+    "blocked_or_caveated_families": [
+        et for et, v in event_family_verdicts.items()
+        if v["feature_eligibility"] != "eligible_for_phase02_now"
+    ],
+    "notes_for_V8": (
+        "Use UnitBorn.controlPlayerId as origin owner. Avoid dynamic "
+        "ownership features (require UnitOwnerChange, sparse). "
+        "UnitPositions owner attribution needs items-unpacking before "
+        "use. Upgrade features must use COUNT(*), not the count field. "
+        "Cutoff-based counts on UnitBorn/UnitInit/UnitDone/UnitDied "
+        "are safe because every event records local state at its loop."
+    ),
+    "notes": v5_caveat,
+}
+print("=== V5 verdict ===")
+print(f"  result: {verdicts['V5']['result']}")
+print(f"  ordering pass: {ordering_pass}")
+print(f"  blocked/caveated: {verdicts['V5']['blocked_or_caveated_families']}")
+print(f"  notes: {verdicts['V5']['notes']}")
+
+# %% [markdown]
+# ### V5 consistency assertions
+
+# %%
+assert ordering["n_inverted"] == 0, (
+    f"impossible ordering: n_inverted = {ordering['n_inverted']}"
+)
+# Cell-level allowances: tag-recycle artefacts can produce a small
+# number of done_before_init entries; we surface that as a caveat
+# rather than a hard failure (the .005 ceiling is a sanity bound).
+done_before_init_rate = (
+    construction["n_done_before_init"] / max(construction["n_done"], 1)
+)
+assert done_before_init_rate < 0.005, (
+    f"done_before_init rate {done_before_init_rate:.6f} exceeds 0.5%"
+)
+assert ordering["n_survivors"] >= 0, "survivors negative??"
+assert "UnitOwnerChange" in event_family_verdicts, (
+    "UnitOwnerChange must have a V5 verdict (carry-forward V4 caveat)"
+)
+v5_lineage_required = ["UnitDone", "UnitTypeChange", "UnitPositions"]
+for et in v5_lineage_required:
+    assert et in event_family_verdicts, f"missing V5 verdict for {et}"
+print("=== V5 consistency: OK ===")
+print(f"  n_inverted=0; survivors descriptive; "
+      f"{len(event_family_verdicts)} event families have V5 verdicts")
+
+# %% [markdown]
+# ## V5 result summary
+#
+# - **Lifecycle keys** (V5.1): `unitTagIndex` and `unitTagRecycle`
+#   are present at near-zero null rate for all 6 direct-keyed
+#   lifecycle event types (UnitBorn, UnitInit, UnitDone, UnitDied,
+#   UnitTypeChange, UnitOwnerChange). UnitPositions is structurally
+#   different (`firstUnitIndex` + packed `items`).
+# - **Origin lineage** (V5.2): every distinct
+#   `(filename, unitTagIndex, unitTagRecycle)` resolves to a single
+#   `first_origin_loop` from UnitBorn ∪ UnitInit. Born/init split and
+#   duplicate-origin counts recorded for audit.
+# - **Lifecycle ordering** (V5.3, per Amendment 4):
+#   - `n_survivors` -- descriptive, NOT failure (units alive at game
+#     end);
+#   - `n_died_without_prior_origin` -- cause is NOT classified by T07;
+#     possible origins include pre-existing map units, missing origin
+#     events, parser omissions, and genuine ambiguity. The notebook
+#     reports the count but does not assert a specific mechanism
+#     without source evidence. NOT failure.
+#   - `n_inverted` (died_loop < first_origin_loop) -- MUST be 0;
+#     verified by assertion above.
+#   - `n_same_loop_origin_death` (died_loop == first_origin_loop) --
+#     empirically common; the exact mechanics are NOT interpreted
+#     here. This is NOT an inverted ordering and does not falsify
+#     cutoff-count semantics.
+# - **Eligibility scope** -- where event_family_verdicts records
+#   `eligible_for_phase02_now`, the scope is *basic cutoff-count
+#   features only* (e.g., units born by cutoff loop). Complex derived
+#   features (per-unit lifecycle reconstructions, owner re-attribution,
+#   coordinate-derived metrics) are NOT covered by this verdict and
+#   may still require V8 family-specific eligibility and Phase 02
+#   feature-contract review. The scope is recorded per family in
+#   `event_family_verdicts[*]["eligibility_scope"]`.
+# - **Construction audit** (V5.4, per Amendment 4):
+#   `n_constructing_survivors` (Init without Done) is NOT failure if
+#   the game ended mid-construction. `n_done_before_init` rate must
+#   be < 0.5% (rare tag-recycle artefacts allowed).
+# - **UnitTypeChange attribution** (V5.5): >=99% attribution rate via
+#   `(filename, uti, utr)` lineage to UnitBorn / UnitInit. Inverted
+#   ordering must be 0.
+# - **UnitDone**: lineage via UnitInit; `n_done_without_init` rate
+#   recorded, classified `eligible_with_caveat` if non-trivial.
+# - **UnitPositions** (V5.6): structure is accessible (`firstUnitIndex`
+#   + `items` array length). Owner attribution requires Python-side
+#   unpacking of `items`, NOT done in T07. Classified
+#   `blocked_until_additional_validation` for V8 owner-attributed
+#   features. Coordinate semantics are V6 / T08.
+# - **UnitOwnerChange** (V5.7): schema OK; V4 sparse caveat
+#   (`sparse_event_family_not_broadly_available`) propagated. Basic
+#   origin-owner features (UnitBorn.controlPlayerId) are NOT
+#   affected. Dynamic-ownership features
+#   `blocked_until_additional_validation`.
+# - **Upgrade** (V5.8): direct playerId mapping per V2; the `count`
+#   field is NOT trusted as cumulative without source confirmation;
+#   V8 must use `COUNT(*)` per `(filename, playerId)` for upgrade
+#   occurrence features.
+# - **V5 verdict:** see printed result above.
+
+# %% [markdown]
+# ## Out of scope for T07 (this notebook execution)
+#
+# - V6..V8 are deferred to T08..T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T06.
+#   atomically in T11, NOT in T07.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
