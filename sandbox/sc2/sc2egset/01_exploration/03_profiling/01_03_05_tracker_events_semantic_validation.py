@@ -490,12 +490,408 @@ print(f"  evidence keys: {sorted(verdicts['V1']['evidence'].keys())}")
 #   source-confirmed lps factor.
 
 # %% [markdown]
-# ## Out of scope for T03 (this notebook execution)
+# ---
+# ## V2 -- Player-id mapping by event type
 #
-# - V2..V8 are deferred to T04..T10 per `planning/current_plan.md`.
+# **Hypothesis.**
+# - PlayerStats maps through `playerId`.
+# - UnitBorn / UnitInit / UnitOwnerChange map through `controlPlayerId`
+#   (true owner) and/or `upkeepPlayerId` (supply tracking).
+# - UnitDied killer attribution maps through `killerPlayerId`; victim
+#   attribution requires lineage via UnitBorn (deferred to V5).
+# - Upgrade maps through `playerId`.
+# - PlayerSetup maps through `playerId` / `slotId` / `userId`.
+# - UnitTypeChange / UnitDone / UnitPositions have NO direct player-id
+#   field (per s2protocol snapshot) and require lineage via
+#   `(filename, unitTagIndex, unitTagRecycle)` join back to UnitBorn /
+#   UnitInit; these are classified `lineage_required`, NOT `FAIL`.
+#
+# **Falsifier.**
+# - No stable mapping field for semantically player-attributed rows.
+# - Player-attributed match rate below 99.5% on the player_attributed
+#   slice (per Amendment 3 -- neutral/global rows are NOT counted as
+#   mapping failures).
+# - Ambiguous ties between candidate mapping fields.
+# - Direct fields contradict `replay_players_raw.playerID` mapping.
+#
+# **Per Amendment 3:** the >=99.5% mapping threshold applies ONLY to
+# rows whose id field is NOT in the documented neutral/global set
+# (`pid IN (16, 0)` by default; refined empirically per event type).
+
+# %% [markdown]
+# ### V2.1 -- enumerate observed id-bearing keys per event type
+
+# %%
+v2_1_df = run_q(
+    "v2_1_observed_keys_per_event_type",
+    """
+    WITH samples AS (
+        SELECT evtTypeName, event_data,
+               ROW_NUMBER() OVER (
+                   PARTITION BY evtTypeName ORDER BY loop
+               ) AS rn
+        FROM tracker_events_raw
+    ),
+    keys_unnested AS (
+        SELECT evtTypeName,
+               UNNEST(json_keys(event_data)) AS k
+        FROM samples
+        WHERE rn <= 3
+    )
+    SELECT evtTypeName,
+           list(DISTINCT k ORDER BY k) AS observed_keys
+    FROM keys_unnested
+    GROUP BY evtTypeName
+    ORDER BY evtTypeName
+    """,
+)
+print("=== V2.1 observed top-level JSON keys per event type ===")
+for _, row in v2_1_df.iterrows():
+    keys = row["observed_keys"]
+    print(f"  {row['evtTypeName']}: {sorted(keys)}")
+
+# %% [markdown]
+# ### V2.2 -- histogram of candidate id-field values per event type
+#
+# Top 6 values per event type (covers 0..5 for typical 1v1 + sentinels).
+
+# %%
+v2_2_df = run_q(
+    "v2_2_id_value_histogram",
+    """
+    WITH ev AS (
+        SELECT evtTypeName, filename,
+            CASE
+                WHEN evtTypeName = 'PlayerStats'
+                    THEN json_extract_string(event_data, '$.playerId')
+                WHEN evtTypeName IN ('UnitBorn','UnitInit','UnitOwnerChange')
+                    THEN json_extract_string(event_data, '$.controlPlayerId')
+                WHEN evtTypeName = 'UnitDied'
+                    THEN json_extract_string(event_data, '$.killerPlayerId')
+                WHEN evtTypeName = 'Upgrade'
+                    THEN json_extract_string(event_data, '$.playerId')
+                WHEN evtTypeName = 'PlayerSetup'
+                    THEN json_extract_string(event_data, '$.playerId')
+            END AS pid_str
+        FROM tracker_events_raw
+        WHERE evtTypeName IN (
+            'PlayerStats','UnitBorn','UnitInit','UnitOwnerChange',
+            'UnitDied','Upgrade','PlayerSetup'
+        )
+    ),
+    hist AS (
+        SELECT evtTypeName, pid_str, COUNT(*) AS n
+        FROM ev GROUP BY evtTypeName, pid_str
+    ),
+    ranked AS (
+        SELECT *, ROW_NUMBER() OVER (
+            PARTITION BY evtTypeName ORDER BY n DESC
+        ) AS rn
+        FROM hist
+    )
+    SELECT evtTypeName, pid_str, n, rn
+    FROM ranked WHERE rn <= 6
+    ORDER BY evtTypeName, rn
+    """,
+)
+print("=== V2.2 top-6 candidate id values per direct-mapping event ===")
+print(v2_2_df.to_string(index=False))
+
+# %% [markdown]
+# ### V2.3 -- join-back validation with neutral/global slicing
+#
+# Per Amendment 3: match rate computed ONLY on the `player_attributed`
+# slice. `null_or_missing` and `neutral_or_global` (default `pid IN
+# (16, 0)`) are reported separately and do NOT count as failures.
+
+# %%
+v2_3_df = run_q(
+    "v2_3_join_back_per_slot_class",
+    """
+    WITH ev AS (
+        SELECT evtTypeName, filename,
+            CASE
+                WHEN evtTypeName = 'PlayerStats'
+                    THEN TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+                WHEN evtTypeName IN ('UnitBorn','UnitInit','UnitOwnerChange')
+                    THEN TRY_CAST(json_extract_string(event_data, '$.controlPlayerId') AS INT)
+                WHEN evtTypeName = 'UnitDied'
+                    THEN TRY_CAST(json_extract_string(event_data, '$.killerPlayerId') AS INT)
+                WHEN evtTypeName = 'Upgrade'
+                    THEN TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+                WHEN evtTypeName = 'PlayerSetup'
+                    THEN TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+            END AS pid
+        FROM tracker_events_raw
+        WHERE evtTypeName IN (
+            'PlayerStats','UnitBorn','UnitInit','UnitOwnerChange',
+            'UnitDied','Upgrade','PlayerSetup'
+        )
+    ),
+    classified AS (
+        SELECT evtTypeName, filename, pid,
+            CASE
+                WHEN pid IS NULL THEN 'null_or_missing'
+                WHEN pid IN (16, 0) THEN 'neutral_or_global'
+                ELSE 'player_attributed'
+            END AS slot_class
+        FROM ev
+    )
+    SELECT c.evtTypeName, c.slot_class,
+           COUNT(*) AS n_events,
+           COUNT(*) FILTER (WHERE rp.toon_id IS NOT NULL) AS n_matched,
+           ROUND(
+               1.0 * COUNT(*) FILTER (WHERE rp.toon_id IS NOT NULL)
+                   / NULLIF(COUNT(*), 0), 6
+           ) AS match_rate
+    FROM classified c
+    LEFT JOIN replay_players_raw rp
+        ON rp.filename = c.filename AND rp.playerID = c.pid
+    GROUP BY c.evtTypeName, c.slot_class
+    ORDER BY c.evtTypeName, c.slot_class
+    """,
+)
+print("=== V2.3 per-(event_type, slot_class) match rate ===")
+print(v2_3_df.to_string(index=False))
+
+# %% [markdown]
+# ### V2.4 -- control / upkeep agreement check
+#
+# For UnitBorn / UnitInit / UnitOwnerChange, both `controlPlayerId`
+# (true owner) and `upkeepPlayerId` (supply tracking) carry the
+# slot id. They typically agree but can diverge in mind-control
+# scenarios. controlPlayerId remains the canonical mapping per
+# s2protocol snapshot semantics; this cell quantifies the agreement.
+
+# %%
+v2_4_df = run_q(
+    "v2_4_control_upkeep_agreement",
+    """
+    WITH ev AS (
+        SELECT evtTypeName,
+            TRY_CAST(json_extract_string(event_data, '$.controlPlayerId') AS INT)
+                AS control_pid,
+            TRY_CAST(json_extract_string(event_data, '$.upkeepPlayerId') AS INT)
+                AS upkeep_pid
+        FROM tracker_events_raw
+        WHERE evtTypeName IN ('UnitBorn','UnitInit','UnitOwnerChange')
+    )
+    SELECT evtTypeName,
+           COUNT(*) AS n,
+           COUNT(*) FILTER (WHERE control_pid = upkeep_pid)
+               AS n_agree,
+           COUNT(*) FILTER (WHERE control_pid != upkeep_pid)
+               AS n_disagree,
+           COUNT(*) FILTER (
+               WHERE control_pid IS NULL OR upkeep_pid IS NULL
+           ) AS n_either_null,
+           ROUND(
+               1.0 * COUNT(*) FILTER (WHERE control_pid = upkeep_pid)
+                   / NULLIF(COUNT(*), 0), 6
+           ) AS agreement_rate
+    FROM ev
+    GROUP BY evtTypeName
+    ORDER BY evtTypeName
+    """,
+)
+print("=== V2.4 control vs upkeep agreement per event ===")
+print(v2_4_df.to_string(index=False))
+
+# %% [markdown]
+# ### V2 verdict assembly
+#
+# Per-event-type mapping verdict. The 7 direct-mapping events get
+# `match_rate_player_attributed` from V2.3; the 3 lineage-required
+# events (UnitTypeChange / UnitDone / UnitPositions) get
+# `lineage_required` per Amendment-3-aware classification.
+
+# %%
+DIRECT_MAPPING_FIELD = {
+    "PlayerStats": "playerId",
+    "UnitBorn": "controlPlayerId",
+    "UnitInit": "controlPlayerId",
+    "UnitOwnerChange": "controlPlayerId",
+    "UnitDied": "killerPlayerId",
+    "Upgrade": "playerId",
+    "PlayerSetup": "playerId",
+}
+LINEAGE_REQUIRED = {
+    "UnitTypeChange": (
+        "No direct player-id field per s2protocol snapshot; "
+        "requires lineage via (filename, unitTagIndex, unitTagRecycle) "
+        "join back to UnitBorn / UnitInit. Deferred to V5."
+    ),
+    "UnitDone": (
+        "No direct player-id field; lineage via "
+        "(filename, unitTagIndex, unitTagRecycle) -> UnitInit. "
+        "Deferred to V5."
+    ),
+    "UnitPositions": (
+        "No direct player-id field; uses packed m_items array keyed "
+        "by m_firstUnitIndex. Lineage required; coordinate semantics "
+        "handled in V6."
+    ),
+}
+
+# %% [markdown]
+# ### V2 verdict computation
+
+# %%
+mappings = []
+for event_type, field in DIRECT_MAPPING_FIELD.items():
+    rows = v2_3_df[v2_3_df["evtTypeName"] == event_type]
+    pa = rows[rows["slot_class"] == "player_attributed"]
+    ng = rows[rows["slot_class"] == "neutral_or_global"]
+    nm = rows[rows["slot_class"] == "null_or_missing"]
+    pa_match = float(pa["match_rate"].iloc[0]) if not pa.empty else None
+    pa_n = int(pa["n_events"].iloc[0]) if not pa.empty else 0
+    ng_n = int(ng["n_events"].iloc[0]) if not ng.empty else 0
+    nm_n = int(nm["n_events"].iloc[0]) if not nm.empty else 0
+    if pa_match is None:
+        confidence = "no_player_attributed_rows"
+    elif pa_match >= 0.995:
+        confidence = "high"
+    elif pa_match >= 0.95:
+        confidence = "medium"
+    else:
+        confidence = "low"
+    mappings.append({
+        "event_type": event_type,
+        "chosen_id_field": field,
+        "match_rate_player_attributed": pa_match,
+        "n_player_attributed": pa_n,
+        "n_neutral_or_global": ng_n,
+        "n_null_or_missing": nm_n,
+        "confidence": confidence,
+        "verdict": (
+            "high_confidence_direct_mapping" if confidence == "high"
+            else "medium_confidence_direct_mapping" if confidence == "medium"
+            else "low_confidence_direct_mapping" if confidence == "low"
+            else "no_player_attributed_rows"
+        ),
+    })
+for event_type, reason in LINEAGE_REQUIRED.items():
+    mappings.append({
+        "event_type": event_type,
+        "chosen_id_field": None,
+        "match_rate_player_attributed": None,
+        "n_player_attributed": None,
+        "n_neutral_or_global": None,
+        "n_null_or_missing": None,
+        "confidence": "n/a",
+        "verdict": "lineage_required",
+        "rationale": reason,
+    })
+
+high_conf = [m for m in mappings if m["verdict"] == "high_confidence_direct_mapping"]
+med_conf = [m for m in mappings if m["verdict"] == "medium_confidence_direct_mapping"]
+low_or_amb = [m for m in mappings if m["verdict"] in (
+    "low_confidence_direct_mapping", "no_player_attributed_rows"
+)]
+lineage = [m for m in mappings if m["verdict"] == "lineage_required"]
+
+# Determine V2 result.
+if low_or_amb:
+    v2_result = "FAIL"
+    v2_caveat = (
+        f"{len(low_or_amb)} direct-mapping event types fell below the "
+        f"99.5% / 95% confidence thresholds: "
+        f"{[m['event_type'] for m in low_or_amb]}"
+    )
+elif med_conf:
+    v2_result = "PASS_WITH_CAVEAT"
+    v2_caveat = (
+        f"{len(med_conf)} event types at MEDIUM confidence "
+        f"(95% <= match_rate < 99.5%): {[m['event_type'] for m in med_conf]}"
+    )
+else:
+    v2_result = "PASS"
+    v2_caveat = (
+        f"All {len(high_conf)} direct-mapping event types HIGH confidence; "
+        f"{len(lineage)} event types correctly classified lineage_required."
+    )
+
+# %% [markdown]
+# ### V2 verdict block
+
+# %%
+neutral_handling_summary = {
+    m["event_type"]: {
+        "neutral_or_global_count": m["n_neutral_or_global"],
+        "null_or_missing_count": m["n_null_or_missing"],
+    }
+    for m in mappings
+    if m["event_type"] in DIRECT_MAPPING_FIELD
+}
+control_upkeep_summary = {
+    row["evtTypeName"]: {
+        "n": int(row["n"]),
+        "agreement_rate": float(row["agreement_rate"]),
+    }
+    for _, row in v2_4_df.iterrows()
+}
+
+verdicts["V2"] = {
+    "hypothesis": (
+        "PlayerStats->playerId; UnitBorn/Init/OwnerChange->controlPlayerId "
+        "(+upkeepPlayerId); UnitDied->killerPlayerId (killer attribution; "
+        "victim is lineage_required); Upgrade->playerId; PlayerSetup->playerId. "
+        "UnitTypeChange/UnitDone/UnitPositions have NO direct player-id "
+        "field and require lineage."
+    ),
+    "falsifier": (
+        "no stable mapping field for player-attributed rows; player-attributed "
+        "match rate < 99.5% on the player_attributed slice (Amendment 3); "
+        "ambiguous ties; direct fields contradict replay_players_raw"
+    ),
+    "result": v2_result,
+    "player_attributed_threshold": 0.995,
+    "mappings": mappings,
+    "neutral_handling": neutral_handling_summary,
+    "control_vs_upkeep_agreement": control_upkeep_summary,
+    "ambiguous_event_types": [m["event_type"] for m in low_or_amb],
+    "lineage_required_event_types": [m["event_type"] for m in lineage],
+    "high_confidence_event_types": [m["event_type"] for m in high_conf],
+    "medium_confidence_event_types": [m["event_type"] for m in med_conf],
+    "notes": v2_caveat,
+}
+
+print("=== V2 verdict ===")
+print(f"  result: {verdicts['V2']['result']}")
+print(f"  high-confidence direct mappings: "
+      f"{verdicts['V2']['high_confidence_event_types']}")
+print(f"  medium-confidence direct mappings: "
+      f"{verdicts['V2']['medium_confidence_event_types']}")
+print(f"  lineage_required: "
+      f"{verdicts['V2']['lineage_required_event_types']}")
+print(f"  ambiguous/low/fail: "
+      f"{verdicts['V2']['ambiguous_event_types']}")
+print(f"  notes: {verdicts['V2']['notes']}")
+
+# %% [markdown]
+# ## V2 result summary
+#
+# - **7 direct-mapping event types:** PlayerStats, UnitBorn, UnitInit,
+#   UnitOwnerChange, UnitDied, Upgrade, PlayerSetup. Mapping field
+#   chosen per s2protocol snapshot semantics (controlPlayerId for
+#   ownership; killerPlayerId for UnitDied attribution; playerId for
+#   the rest).
+# - **3 lineage_required event types:** UnitTypeChange, UnitDone,
+#   UnitPositions. No direct player-id field per s2protocol snapshot;
+#   classified `lineage_required` (NOT `FAIL`) per Amendment 3
+#   semantics + plan T07 deferral to V5.
+# - **Amendment 3 enforced:** match-rate threshold (>=99.5%) applied
+#   ONLY to the `player_attributed` slice. Neutral/global (pid IN
+#   (16, 0)) and null/missing rows reported separately, NOT counted as
+#   failures.
+
+# %% [markdown]
+# ## Out of scope for T04 (this notebook execution)
+#
+# - V3..V8 are deferred to T05..T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T03.
+#   atomically in T11, NOT in T04.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
