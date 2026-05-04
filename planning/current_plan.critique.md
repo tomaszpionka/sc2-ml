@@ -1,225 +1,105 @@
-# Adversarial critique: thesis audit cleanup PR plan
+# Reviewer-Deep Critique — phase01/sc2egset-tracker-events-semantic-validation
 
-**Plan under review:** `planning/current_plan.md` (Category F, branch `thesis/audit-methodology-lineage-cleanup`, 20 tasks)
-**Reviewer:** reviewer-adversarial
-**Date:** 2026-04-26
+**Reviewed by:** reviewer-deep (user override of reviewer-adversarial for this plan)
+**Date:** 2026-05-04
+**Plan:** /Users/tomaszpionka/Projects/rts-outcome-prediction/planning/current_plan.md
+**Plan category:** A
+**Branch:** phase01/sc2egset-tracker-events-semantic-validation
+
+> **Process note:** Plan mode was active in the reviewer-deep agent during this review session, blocking write to `planning/current_plan.critique.md` from the agent itself. The full critique was delivered in chat by the agent and materialised verbatim to this path by the parent session for branch-provenance purposes. No file other than this one was modified by the parent on the agent's behalf. No T01–T13 task was executed.
 
 ## Verdict
-**ACCEPTABLE-WITH-REVISIONS** — the plan's *order* is sound (lineage audit → AoE2 provenance → ROADMAP/notebook → log → cross-dataset → spec → thesis → review) and the guardrails are explicit, but five concrete BLOCKERs must be resolved before T03 begins, plus the scope is borderline-too-large for one PR and several conditional manifest entries are weaker than the planner contract requires. None of the BLOCKERs invalidates the strategy; all are correctable in the plan text.
 
-## BLOCKER findings
+**PASS-WITH-NOTES**
 
-### BLOCKER-1 — `internalLeaderboardId = 18` is already on-disk classified as `qp_rm_1v1` (quickplay), yet the plan treats Q2 as an open empirical question and the existing thesis prose calls the combined population "Ladder rankingowy 1v1 (rm_1v1 + qp_rm_1v1)"
+The plan is internally consistent, lineage-coherent, executable as written, and the four user-named concerns (lineage discipline, schema discipline, validation-module safety, and gate-closure clarity) are substantively addressed. The plan honours every Q1–Q6 decision and every Amendment 1–9 verbatim. There are no BLOCKERs. There are 4 WARNINGs the executor should resolve in-flight, and several NOTEs worth recording for downstream visibility.
 
-**Tasks affected:** T05 (sub-step 4.2), T11 (Chapter 4), T12 (Chapter 1), Q2 in Open Questions, plus all four chapter rewrites that depend on the answer.
+## BLOCKERs (must resolve before T01 begins)
 
-**The attack:**
-The plan's Q2 says "Is `aoe2companion` `internalLeaderboardId = 18` ranked ladder, quickplay, or a distinct ladder-like population… resolves at T05 sub-step 4.2 with `@lookup` external verification." This frames the answer as unresolved. But the repo already contains decisive on-disk evidence that ID 18 = `qp_rm_1v1` (quickplay), not ranked ladder:
+None.
 
-- `sandbox/aoe2/aoe2companion/01_exploration/05_temporal_panel_eda/01_05_03_stratification.py:23` — comment literally reads "internalLeaderboardId=6 (rm_1v1) and =18 (qp_rm_1v1)".
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md:872` — leaderboard_raw top values include "6/rm_1v1 (54M), … 18/qp_rm_1v1 (7M)".
-- `thesis/chapters/04_data_and_methodology.md:177, 187, 255` — the thesis already labels the population "Ladder rankingowy 1v1 (rm_1v1 + qp_rm_1v1)", inheriting `qp_rm_1v1`'s "ranked ladder" label without justification.
-- `src/.../aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_quality_report_aoe2companion.md:29` — calls R01 "Retain 1v1 ranked ladder only" while the underlying filter retains `qp_rm_1v1`.
+## WARNINGs (should fix but not blocking)
 
-This is precisely the same-class contradiction Guardrail G12 is meant to catch: the labelling ("ranked ladder") and the empirical scope (a leaderboard ID externally documented as the *quickplay* random-map queue) directly conflict on master. The plan's Q2 framing inadvertently understates the seriousness — the thesis is *currently* labelling quickplay records as ranked ladder. T05 must not just "verify whether ID 18 is ranked or quickplay"; it must also (a) audit how that conflict propagated into the on-disk artifact `data_quality_report_aoe2companion.md` (which is generated — see BLOCKER-3), and (b) trace which downstream artifacts and thesis sections inherited the mis-label.
+1. **T01 step 2 omits required ROADMAP fields versus `step_template.yaml`.** The plan enumerates the YAML keys that T01 must include, but the enumeration is incomplete relative to both `docs/templates/step_template.yaml` (the schema source of truth) and the adjacent 01_03_04 block (lines 658–727 of `src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md`). Specifically, the following fields are required by template and present in 01_03_04 but not enumerated in T01 step 2: `description`, `manual_reference`, `method`, `reproducibility`, and the explicit `gate.artifact_check` (only `continue_predicate` and `halt_predicate` are mentioned). Additionally, `stratification` is `required: true` in the template; 01_03_04 omits it, but a NEW step authored under reviewer-deep scrutiny should not propagate that pre-existing gap silently. Fix: T01 step 2 must add an explicit "include all required template fields, including `description`, `manual_reference`, `method`, `stratification`, `reproducibility`, `gate.artifact_check`, `research_log_entry`" sentence, OR list each field by name as is done for the other keys. Without this, an executor reading T01 in isolation will produce a structurally incomplete ROADMAP block and the pre-commit `status chain consistency` check (mentioned in T13 step 2) may not catch the omission.
 
-**Proposed fix:**
-1. Update Q2 wording from "Is ID 18 ranked ladder, quickplay, or distinct?" to "*Confirm* the on-disk classification of ID 18 = `qp_rm_1v1` against external aoe2companion / aoe2.net documentation, and trace the propagation of the mis-label `1v1 ranked ladder` from the data quality report into Chapter 4 §4.1.3 and §4.2.3."
-2. Add a fallback to T05 4.2 step 5: "If external documentation is ambiguous (e.g., the aoe2companion REST API does not enumerate `internalLeaderboardId` semantics), treat ID 18 as `quickplay/matchmaking` (the conservative weakening) and weaken thesis terminology accordingly. Do NOT default to 'ranked ladder' on ambiguity."
-3. The §6 Stage 4.3 terminology ladder must explicitly map: ID 18 alone → "third-party 1v1 Random Map quickplay/matchmaking records (per `qp_rm_1v1` label found in stratification artifact 01_05_03)" unless the external verification overturns the on-disk evidence.
+2. **T11 step 4's STEP_STATUS row diverges from adjacent rows and from `step_status_template.yaml`.** The proposed yaml block in T11 step 4 includes an `artifact_file` key. Looking at the live STEP_STATUS.yaml, only one of 30+ rows uses `artifact_file` (01_05_08, the leakage audit). The template (`docs/templates/step_status_template.yaml`) does NOT define `artifact_file` as part of `entry_schema`; it lists only `step_number, name, pipeline_section, status, completed_at`. The plan's row also adds `started_at: "2026-05-04"` which is consistent with the 01_04_04 / 01_04_04b / 01_05_* rows but not with the 01_01_* / 01_02_* / 01_03_* rows that use only `completed_at`. This is a Q6 ("schema match" gating) concern by the plan's own framing — yet T11 step 4 hard-codes both fields rather than checking the adjacent row schema first. Fix: drop `artifact_file` (it is non-template, non-canonical for the 01_03 family) and either include both `started_at` and `completed_at` consistently or only `completed_at` to mirror the rest of the 01_03_* family. The plan's own §Gate Condition mechanical criterion 4 only requires `status: complete` — keep the row minimal.
 
----
+3. **T11 steps 5–6 are guarded by "if file exists with matching schema", but both files DO exist with a known schema and the plan should commit to the update unconditionally.** I verified live: `PIPELINE_SECTION_STATUS.yaml` (lines 1–53) and `PHASE_STATUS.yaml` (lines 1–40) both exist with the schemas defined in `docs/templates/pipeline_section_status_template.yaml` and `phase_status_template.yaml`. Both currently mark the section `01_03` as `complete` and Phase `01` as `complete`. Adding Step 01_03_05 with `status: in_progress` (or `complete`) per the derivation rules in the same files (`Pipeline section is in_progress when ANY step is in_progress or complete`; `Phase is in_progress when ANY pipeline section is in_progress or complete`) MUST cause `01_03` and Phase `01` to move from `complete` → `in_progress` while the step is open, then back to `complete` once the step lands as `complete`. The plan's hedge ("only if file exists with matching schema") is technically correct but reads as if it might be skipped — the executor should be told plainly that these updates ARE required and that the conditional gate is satisfied today. Fix: change "if file exists with matching schema" to "verified pre-execution: both files exist with template-matching schemas; update both as part of the same commit as STEP_STATUS.yaml so the derivation chain stays consistent through every commit hash."
 
-### BLOCKER-2 — `reports/specs/02_00_feature_input_contract.md` is at LOCKED v3 and `02_01_leakage_audit_protocol.md` is at LOCKED v1; both specs have a §7 amendment protocol that the plan does not reference
+4. **The plan's transition logic for Phase 01 status during execution is under-specified.** Phase 01 currently shows `status: complete`. T11 step 6 says the step will set Phase 01 to `in_progress` while the step is open and back to `complete` once it passes. But T11 packages BOTH the artifact regeneration AND the status updates into a single task. If the notebook produces `unable_to_decide` (T11 step 4 instructs `status: in_progress` and "PR halts to user") then `01_03` and Phase `01` will land on `master` flipped to `in_progress` permanently until a follow-up PR. That's correct semantically but should be flagged: the plan needs to either (a) explicitly say "if `unable_to_decide`, both PIPELINE_SECTION_STATUS and PHASE_STATUS are also flipped to `in_progress` in the same commit and the PR is opened in halt-state for user review" or (b) restructure so the status flip and the artifact regeneration are atomic. The current §Gate Condition mechanical criterion 5 only covers the `complete`-path closure. Fix: T11 step 6 should add an explicit "if `gate_14a6_decision = unable_to_decide`, set Phase 01 to `in_progress` in `PHASE_STATUS.yaml` in the same commit" branch.
 
-**Tasks affected:** T15 (instructions 2 and 6), T16 sub-blocks 14A.2 and 14A.3.
+## NOTEs (informational)
 
-**The attack:**
-- `reports/specs/02_00_feature_input_contract.md:13` — "CROSS-02-00-v3 (LOCKED 2026-04-21)".
-- `reports/specs/02_00_feature_input_contract.md:456` — "## §7 Spec Change Protocol" prescribing major (vN+1) and minor (vN.M+1) bumps, an amendment-log entry, and a frontmatter version bump in the same commit.
-- `reports/specs/02_01_leakage_audit_protocol.md:15` — "CROSS-02-01-v1 (LOCKED 2026-04-21)" with `155: Any amendment requires sign-off from both planner-science and reviewer-adversarial. Any change to §2 audit dimensions or §5 gate condition constitutes a major version increment (vN+1)."
+1. **Step naming is consistent with adjacent steps.** Step number `01_03_05` is unused (verified absent in ROADMAP.md, STEP_STATUS.yaml, PIPELINE_SECTION_STATUS.yaml, PHASE_STATUS.yaml, sandbox tree, and research_log.md). The notebook path target directory exists and contains 01_03_01–01_03_04 paired notebooks; the new pair will sit naturally alongside.
 
-The plan's T15 says only "Submit spec changes that affect methodology to `@reviewer-adversarial` per source §6 Stage 14 (no Cat-C demotion of methodology-affecting changes)." That captures the reviewer-adversarial signoff but **omits**: (i) the requirement to bump the version field (`v3 → v4` or `v3 → v3.1`), (ii) the requirement to add an amendment-log row in the same commit, (iii) the planner-science co-signoff, and (iv) the major-vs-minor classification rule (§7 says any change to §2 column-grain or §5 gate is a major bump). T16 14A.2 names "v1 enforcement mechanism" and "defer AST/pre-commit/CI tooling to v2 only if explicitly documented", which sounds like a v1→v2 bump but does not invoke the §7 amendment protocol procedurally.
+2. **GATE-14A6 framing matches the source documents verbatim.** I verified §Gate Condition's `closed` / `narrowed` / `unable_to_decide` vocabulary against `phase02_readiness_hardening.md` lines 244–253 (the binding gate text) and `methodology_risk_register.md` RISK-21 (lines 392–406). The plan does not alter the gate text — it only proposes to satisfy it. RISK-21's `Wording recommendation` (line 403) does mention `[CONDITIONAL: add this sentence only if in-game features are retained per T15 decision]` — that conditional is preserved by Q5 / Amendment 8 (no thesis chapter edits in this PR). Consistent.
 
-If the executor follows T15/T16 as written, the spec frontmatter will go stale, the amendment log will be empty, and CROSS-02-00 will silently drift from LOCKED v3 to a state where its frontmatter says v3 but its body has been mutated. That is a Guardrail G3 / I9 violation by another name (artifact's stated state ≠ on-disk state).
+3. **The `research_log.md` Step 01_03_05 entry must include `step_scope: query`** per `docs/templates/research_log_entry_template.yaml` lines 44–56 (filesystem | content | query | model). The plan's T11 step 3 lists "What/Why/How/Findings/Decisions taken/Decisions deferred/Thesis mapping/Open questions" but does not enumerate `step_scope`, `category`, `dataset`, or `artifacts_produced`. The template requires all of these for Category A entries. Not a BLOCKER because the template will be re-read by the executor at T11, but worth noting for handoff completeness.
 
-**Proposed fix:**
-Insert into T15 Instructions step 2 (and T16 14A.2/14A.3): "Apply the §7 Spec Change Protocol of the affected spec: classify the change as major (vN+1) or minor (vN.M+1) per the spec's own §7 rules; bump the `version` field in the frontmatter; add an amendment-log entry recording date, author, motivation, scope; obtain planner-science + reviewer-adversarial signoffs; commit the version bump and amendment-log row in the same commit as the body change." Add to T15 Verification: "spec version field has been bumped; amendment log has a new row dated within this PR."
+4. **The `notebook_regeneration_manifest.md` proposed row will be the first sc2egset Step row that did NOT pre-exist as `flagged_stale`.** Reviewing the manifest's status vocabulary (lines 8–13), the only path TO `confirmed_intact` is `flagged_stale → regenerated_pending_log → confirmed_intact`. T12 step 1 proposes appending Step 01_03_05 directly with status `confirmed_intact` (for `closed` and `narrowed`) and `flagged_stale` (for `unable_to_decide`). Direct `confirmed_intact` is technically defensible because the row is new and therefore "never stale," but the manifest's vocabulary doesn't encode "freshly created and intact." Worth a brief explanatory clause in the row to prevent future confusion, e.g., "freshly created in this PR; never `flagged_stale`."
 
----
+5. **Cell-cap discipline is correctly inherited.** `sandbox/notebook_config.toml` confirms `[cells] max_lines = 50`. T03 step 1 explicitly cites this cap. Several of the SQL queries (V2.3, V3.3, V5.2 in particular) approach 30–40 lines including the `WITH` CTE plus the SELECT — close to but under cap. Executor should be alert, not flagged.
 
-### BLOCKER-3 — T16 14A.1 ("data dictionary temporal-classification audit") names `01_06_01_data_dictionary.py` work-output but the File Manifest does not list the upstream notebook, ROADMAP step, research_log entry, or STEP_STATUS row that 14A.1 must update if the dictionary is generated (which it is)
+## Per-concern findings
 
-**Tasks affected:** T16 sub-block 14A.1; File Manifest.
+### 1. Lineage discipline
 
-**The attack:**
-- `sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py:114` — the data dictionary CSV is **generated** by this notebook.
-- T16 14A.1 step 3 correctly says: "If the data dictionary is generated, update the upstream ROADMAP Step and notebook/generator and regenerate the CSV (apply T06/T07 discipline)."
-- But the File Manifest only enumerates `sandbox/aoe2/aoe2companion/**` (conditional²) and `src/.../aoe2companion/reports/artifacts/**` (conditional²) and `src/.../aoe2companion/reports/research_log.md` (conditional³). The notebook, the artifact, and the log are conditional on T06's regeneration manifest declaring them stale. There is **no path** from "T16 14A.1 finds a temporal-classification contradiction in the data dictionary" to a binding manifest declaration; conditional² is keyed off T06, but T06 reads only T03/T04/T05 outputs — not T16's findings.
+The canonical chain (ROADMAP → notebook → artifact → research_log → STEP_STATUS → PIPELINE_SECTION_STATUS → PHASE_STATUS → manifest) is honoured in order of execution. T01 (ROADMAP-first) genuinely precedes T03 (notebook scaffold) — the plan does not allow the notebook to be created until the ROADMAP block exists. T02 is read-only assembly with no on-disk artifact, so it does not violate the precondition. T03–T10 exclusively touch the notebook pair, building V1–V8 in dependency order (V1 lps factor → V2 player mapping → V3 PlayerStats classification → V4 schema stability → V5 lifecycle → V6 coordinates → V7 leakage → V8 aggregation). T11 closes ROADMAP → artifact → research_log → STEP_STATUS in one task, which is acceptable because they are atomically committed together. T12 propagates to the manifest plus (conditionally) to two pass2_evidence files. T13 is purely PR mechanics.
 
-The planner contract Hard Rule reads: "no executor task may touch a file absent from the manifest." `sandbox/.../01_06_01_data_dictionary.py` is reachable only via the wildcard `sandbox/aoe2/aoe2companion/**`, and that wildcard fires only under conditional². If T16 14A.1 declares the dictionary generated but the manifest's footnote chain doesn't connect to T16 14A.1's findings, the executor faces a contract violation: it must either (a) refuse to touch the notebook (but then 14A.1 cannot be executed) or (b) touch it and violate the manifest contract.
+The ordering is correct. The only structural point worth flagging — captured under WARNING-3 above — is that T11 packages the upstream notebook outputs and the downstream status YAML updates in the same task; while this is fine for atomicity, the executor should commit them in a single commit (not two) so that no intermediate commit shows a stale STEP_STATUS row. The §File Manifest table is exhaustive and lists every file any task is allowed to touch — a tight scope perimeter consistent with the plan's "no scope creep" stance.
 
-**Proposed fix:**
-Add an explicit conditional⁶ for "files touched in T16 14A.1 generated-vs-hand-maintained workflow." The set of files is enumerable a priori:
-- `sandbox/aoe2/aoe2companion/01_exploration/06_decision_gates/01_06_01_data_dictionary.py` and `.ipynb`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.csv`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/artifacts/01_exploration/06_decision_gates/data_dictionary_aoe2companion.md`
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md` (Step 01_06_01 section)
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md` (Step 01_06_01 entry)
-- `src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml` (Step 01_06_01 row)
+One propagation concern: T12 step 1 (manifest update) is unconditional, but T12 steps 2 and 3 (phase02_readiness_hardening.md §14A.6 and methodology_risk_register.md RISK-21) are conditional on V8 producing an actionable verdict. This is correct per Q5: under `unable_to_decide`, only the manifest moves and the PR halts to user before T13 wrap-up. The plan correctly does NOT silently advance the readiness file on a partial verdict.
 
-These should be enumerated explicitly in the manifest, conditional⁶ on T16 14A.1 finding a temporal-classification contradiction. Alternatively, the conditional² wildcard `sandbox/aoe2/aoe2companion/**` should be tightened by adding "include files touched by T16 14A.1 if the dictionary is found generated" to footnote ², which the current footnote does not say (it's keyed exclusively to T06's manifest declarations).
+### 2. ROADMAP / notebook / artifact / research_log / STEP_STATUS discipline
 
----
+The plan does not invent fields beyond the 01_03_04 schema in any artifact-output sense. T01 step 5 explicitly forbids invention. The notebook contract is honoured: T03 step 1 names both the `.py` and `.ipynb` paths, T13 step 2 routes through the `jupytext-pair check` pre-commit hook, and the §File Manifest table lists both files. The `[cells] max_lines = 50` cap is cited.
 
-### BLOCKER-4 — `thesis/pass2_evidence/` already contains 5 files (`README.md`, `sec_4_1_crosswalk.md`, `sec_4_1_halt_log.md`, `sec_4_2_crosswalk.md`, `sec_4_2_halt_log.md`); the File Manifest neither lists nor accounts for them, and `claim_evidence_matrix.md` is declared Create even though the existing crosswalks fulfil most of its role
+That said, T01 step 2's enumeration of the YAML keys is INCOMPLETE relative to `step_template.yaml` (WARNING-1 above): it omits `description`, `manual_reference`, `method`, `stratification`, `reproducibility`, and the `gate.artifact_check` sub-key. The `stratification` field deserves special attention because it IS marked `required: true` in the template (lines 75–77) AND the existing 01_03_04 block omits it. Patching the omission for the new step would be the right structural choice; replicating the omission would propagate the schema gap.
 
-**Tasks affected:** T03 (claim_evidence_matrix first version), T11 (claim_evidence_matrix update), File Manifest.
+The STEP_STATUS row schema diverges from both the template and adjacent rows in two ways (WARNING-2 above): `artifact_file` is non-template; `started_at` is inconsistent with the 01_03_* family. Both are minor but matter for reviewer-grep predictability and for the derivation chain logic.
 
-**The attack:**
-- `thesis/pass2_evidence/sec_4_1_crosswalk.md` already maps thesis §4.1 numbers to artifact paths in an 8-column schema: claim_text → artifact_path → anchor → prose_form → artifact_form → normalized_value → datatype → hedging_needed.
-- `thesis/pass2_evidence/sec_4_2_crosswalk.md` does the same for §4.2, with 78 rows.
-- `thesis/pass2_evidence/README.md:11` — the existing index says: "Each artifact must be cited from at least one thesis chapter or tracking file; uncited artifacts should be either cited or removed."
+PIPELINE_SECTION_STATUS and PHASE_STATUS updates are conditional on schema match in T11 steps 5–6. Both files exist live with template-matching schemas; the conditional gate is satisfied today, and the conditional language should be tightened to a commitment rather than a hedge (WARNING-3). Mechanical Gate Condition criterion 5 ("Phase 01 returns to `complete` in `PHASE_STATUS.yaml` iff Step 01_03_05 status is `complete`") correctly enshrines this.
 
-The plan declares `claim_evidence_matrix.md` as **Create** (File Manifest line 1274) and gives it a first-version slot in T03. But the existing sec_4_*_crosswalk.md files are *already* a claim-evidence matrix, restricted to Chapter 4 only. The plan does not state whether `claim_evidence_matrix.md` will:
-- subsume / replace the existing crosswalks (in which case the manifest must list the existing crosswalks for Update or Delete);
-- coexist with them (in which case the plan owes a section explaining the relationship and the README index update);
-- only cover Chapters 1–3 (in which case naming is misleading).
+The research_log entry contract is partially specified (NOTE-3): the body sections are listed but the template's required header fields (`category`, `dataset`, `step_scope`, `artifacts_produced`) are not enumerated. The executor will re-read the template at T11, so this is not a BLOCKER; it is a handoff-completeness note.
 
-The README also has a frozen-at-Pass-2-handoff convention — re-drafting requires `sec_<id>_vN_<type>.md`. The plan does not specify whether T11's "ensure every number traces" produces `sec_4_v2_crosswalk.md` or mutates the v1 files. This is a Guardrail G3 / discipline question that an executor cannot answer from the plan.
+### 3. Validation-module safety vs unsafe parser assumptions
 
-**Proposed fix:**
-Add to T03 Instructions: "Examine the existing `thesis/pass2_evidence/{README.md, sec_4_1_crosswalk.md, sec_4_1_halt_log.md, sec_4_2_crosswalk.md, sec_4_2_halt_log.md}`. Decide whether `claim_evidence_matrix.md` (a) subsumes them (then list them as Update/Delete in the manifest), (b) is supplementary to them and covers Chapters 1–3 only (then name it accordingly and update the README index), or (c) replaces sec_4_*_crosswalk.md but versioned as sec_4_v2_*.md per the README's frozen-handoff convention. Record the decision in `dependency_lineage_audit.md`." Add corresponding rows to the File Manifest and to the read scope of T03.
+**V1 (loops/sec).** Q2 is honoured throughout. T03 step 5 explicitly states "Liquipedia is NOT the primary citation" and that under s2protocol-silence the recorded `lps_source` is "empirical … corroborated by s2protocol gameSpeed enum" — never a silent fallback to Liquipedia. The verification step explicitly checks `lps_source` does NOT name Liquipedia as primary. This is tight. The hypothesis/falsifier framing (T03 step 3) is concrete and machine-checkable.
 
----
+**V2 (player-id mapping).** Amendment 3 is enforced. T04 hypothesis (step 1) names the per-event-type hypotheses; falsifier (step 2) explicitly scopes the ≥99.5% threshold to "the player-attributed slice"; V2.3 SQL (step 5) includes a `CASE WHEN pid IN (16, 0) THEN 'neutral_or_global' ELSE 'player_attributed' END` slot classification AND computes match rate per slot via `GROUP BY slot_class`. The verdict structure (step 6) records `match_rate_player_attributed` and `neutral_handling` separately. The decision rule in T10 step 1 references the `(on player-attributed slice per Amendment 3)` qualifier explicitly. Tight.
 
-### BLOCKER-5 — Adversarial-review dispatch count exceeds the project's symmetric 3-round cap on intra-PR adversarial cycles
+**V3 (PlayerStats cumulative classification).** Q3 strict rule is honoured. T05 step 5 lists three classes (`safe_snapshot` / `safe_delta` / `unsafe_or_ambiguous`); T05 step 6 explicitly says "any field with `class: unsafe_or_ambiguous` AND used in a candidate cumulative-economy feature family forces that feature family to `blocked_until_additional_validation` in T10." T10 step 1's `eligible_for_phase02_now` clause requires "auto-downgrade rule from T02 does NOT fire" AND `blocked_until_additional_validation` clause includes "cumulative-economy semantics required AND V3 cumulative classification not proven (Q3 strict rule)." T05 step 4's cadence query is partitioned by `(filename, json_extract_string(event_data, '$.playerId'))` — the correct partitioning that the research_log lines 992–994 noted was missing in the dual-player-same-loop artifact. Tight.
 
-**Tasks affected:** T02 (plan critique gate), T05 (provenance audit, "Submit the audit to @reviewer-adversarial"), T10 (risk register stress-test), T15 (spec adversarial review), T16 14A.2 (spec adversarial review), T19 (full gate).
+**V4 (rare-event safeguard).** Amendment 6 is enforced. T06 step 3 declares Pass A (1% Bernoulli) and Pass B (per-event-type stratified, up to 10K rows per cell) with the explicit fallback rule: "for any event family whose Pass A sample has < 1000 events in any non-trivial gameVersion cohort, run a stratified resample." Truly-rare families (no 1000-event cell in entire corpus) are recorded as `coverage_too_sparse_for_stability_decision` rather than declared unstable. Verification step explicitly forbids `unstable` declarations from a Pass A sample below threshold without Pass B confirmation. Tight.
 
-**The attack:**
-The project memory entry `feedback_adversarial_cap_execution.md` states: "3-round adversarial cap symmetric — cap applies to execution-side review too, not just plan-side; symmetric rigor." Counting from the start of execution: T05 (round 1 against the provenance audit), T10 (round 2 against the risk register), T15 (round 3 against the specs), T16 14A.2 (round 4 against the spec change), T19 (round 5 against the final PR). That is five intra-execution adversarial dispatches, not counting the pre-execution plan critique gate at T02 and the pre-execution adversarial review of the master plan that the plan itself requests.
+**V5 (lifecycle survivors per Amendment 4).** T07 hypothesis/falsifier (steps 1–2) and the V5.2 SQL (step 4) cleanly separate `n_survivors` (`died_loop IS NULL` — descriptive only, NOT a failure) from `n_inverted` (`died_loop IS NOT NULL AND died_loop < born_loop` — IS a failure). Verification step requires `n_inverted = 0` for the UnitBorn → UnitDied pair. Step 5's cutoff-count semantic check is decoupled from full lifecycle closure ("Confirm cutoff-based counts are well-defined regardless of survivor status"), which is the structural point Amendment 4 demands. Tight.
 
-Even if some dispatches are "lightweight stress-tests" rather than full adversarial reviews, the plan does not differentiate them. An executor reading T05/T10/T15/T16/T19 will dispatch full adversarial cycles each time, unless told otherwise. Each adversarial round costs Opus-tier compute and adds latency; more importantly, repeated dispatches against the same body of work (the four chapters) will produce overlapping findings, encourage churn, and make verdict reconciliation across rounds difficult.
+**V6 (coordinates per Amendment 5).** T08 step 5 enforces the source-confirmation gate: "if s2protocol does NOT explicitly state coordinate units (cell vs sub-cell vs fixed-point) AND origin (0,0 vs map-center vs other), V6 verdict cannot be `eligible_for_phase02_now` — at best `eligible_with_caveat` with the source-confirmation gap recorded." Verification step requires "where `source_confirmed_units` or `source_confirmed_origin` is `false`, verdict is NOT `eligible_for_phase02_now`." The `[REVIEW]` follow-up note is correctly scoped to the artifact JSON (per Q5), not REVIEW_QUEUE.md. Tight.
 
-**Proposed fix:**
-Either (a) reclassify some dispatches as "@reviewer-deep mechanical-cum-methodology check" rather than "@reviewer-adversarial full critique"; (b) batch T05+T10+T15+T16 into a single mid-PR adversarial gate with a unified prompt; or (c) explicitly justify in the plan why the 3-round cap is exceeded for this PR (e.g., "this PR has 17 risks and cross-dataset scope; the cap is waived per user direction") and obtain user signoff. Recommendation: collapse T05's adversarial sub-step into T10 (stress-test the provenance audit and the risk register together), and collapse T16 14A.2's adversarial review into T15 (since both are spec-mutation cycles). Net adversarial cycles: T02 (plan), T10 (mid-PR audit gate covering provenance + risks), T15 (spec gate), T19 (final) = 4 rounds, still over the cap, but the cap-exceedance is now visible and justifiable.
+**V7 (leakage boundary per Amendment 2).** T09 step 4 enumerates the three settings (`pre_game`, `in_game_snapshot`, `post_game_or_blocked`) and explicitly states tracker-derived families ALWAYS carry `pre_game = not_applicable_to_pre_game`. Verification step requires `amendment_2_compliance: true` iff every tracker-derived family meets this. T10 step 1's `not_applicable_to_pre_game` clause says "mechanically: every tracker-derived family carries this status under the `pre_game` column per Amendment 2." T10 step 3's CSV columns include `status_pre_game, status_in_game_snapshot, status_post_game_or_blocked` — three explicit per-prediction-setting columns. Mechanical gate criterion 3 verifies "Every tracker-derived row has `status_pre_game = not_applicable_to_pre_game`." Tight.
 
----
+**V8 (aggregation per Amendment 1).** T10 step 4 explicitly states "Single PlayerStats snapshot eligible is NOT enough" to declare `closed`. The `closed` clause requires "every row with `planned_for_phase02 = "yes"` has either `status_in_game_snapshot = eligible_for_phase02_now` OR `status_in_game_snapshot = eligible_with_caveat`." This is restated identically in §Gate Condition. The candidate-family table (T10 step 2) is concrete, with 14 rows spanning all 8 event families plus a `planned_for_phase02` boolean to scope the aggregation. Tight.
 
-## WARNING findings
+No place in V1–V8 silently inflates a verdict.
 
-### WARNING-1 — Scope realism: 20 tasks, 11 evidence files, conditional regeneration across three datasets, four chapter rewrites — this is borderline two-to-three PRs in disguise
+### 4. GATE-14A6 closure-criteria clarity
 
-**Tasks affected:** PR scope as a whole.
+The three closure criteria are precisely stated and machine-checkable. The `closed` predicate has three conjuncts: every planned-yes row eligible (now or with caveat), AND no `evidence_source = "datasheet (text not extracted)"` in any planned family, AND no V3-cumulative-economy field unproven in a planned family. The `narrowed` predicate has three conjuncts: at least one planned-yes row eligible, at least one other planned-yes row blocked, and every blocked planned-yes row carries a non-empty `blocking_reason_if_blocked`. The `unable_to_decide` predicate is residual ("no defensible eligibility verdict can be assigned").
 
-**The attack:**
-- T03–T08 alone are six audit/regeneration tasks across three datasets. Each dataset has Phase 01 already complete (per PHASE_STATUS.yaml), so on-disk artifacts are extensive: `data/db/schemas/views/*.yaml`, `reports/artifacts/01_exploration/{01_acquisition,02_eda,03_profiling,04_cleaning,05_temporal_panel_eda,06_decision_gates}/**`. A single thesis-claim audit across all three datasets is non-trivial. The source plan §3 explicitly rejects two-PR branching, but rejection is not evidence the work fits.
-- T11–T14 are four chapter rewrites in Polish, with literature verification for ~10 references and dataset-population terminology revision. Each chapter is in the 5–15k character range (per WRITING_STATUS.md).
-- T15–T16 update specs that are LOCKED v3/v1 with their own change protocols.
-- T19 runs three review gates (mechanical + deep + adversarial).
+The criteria are restated in three locations: §Gate Condition, T10 step 4, and the T12 conditional update. I cross-checked: the `closed` definition matches verbatim across §Gate Condition and T10 step 4. The `narrowed` definition matches verbatim. The `unable_to_decide` definition is identical in spirit; T12 step 1 adds "the PR halts to user before completing T13" as the operational consequence. T11 step 4 adds "If `continue_predicate` fires `unable_to_decide`, status = `in_progress` and the PR halts to user." This is internally consistent.
 
-The plan does not estimate effort. A conservative reading: T03 alone is a multi-hour audit; T07 regeneration could trigger 30+ notebook executions if the manifest declares many Steps stale. The plan has no escape valve — no "if T07 regeneration scope exceeds N notebooks, escalate to user for scope split" clause.
+The risk of an executor accidentally promoting `narrowed` to `closed` is mitigated by the `closed` predicate's third conjunct: "no critical unknown … no `evidence_source = "datasheet (text not extracted)"` for any planned family AND no V3 cumulative-economy field unproven in a planned feature family." If even one planned-yes family has its evidence source recorded as datasheet-only, `closed` is foreclosed. Given Q1 forbids PDF text extraction, this conjunct will fire automatically for any planned family whose s2protocol coverage is ambiguous. The auto-downgrade rule (T02 step 4) and Q3 strict rule (T05 step 6) double-protect.
 
-**Recommendation:**
-Document this as a methodology risk in the risk register (T10): "PR scope risk — 20 tasks across thesis, three datasets, four chapters, two LOCKED specs. If T03 dependency lineage audit declares more than ~10 Steps stale, escalate to user for a scope-split decision before T06 begins." This is not a BLOCKER because the plan's serial ordering means a scope explosion is detected at T03/T06 and can be triaged then; but the executor must be told to escalate, not silently push through.
+The risk of `unable_to_decide` being silently downgraded to `narrowed` is the more subtle one. The gate predicates ARE mutually exclusive on paper, but the boundary between `narrowed` and `unable_to_decide` is set by the `narrowed` predicate's conjunct "at least one row with `planned_for_phase02 = "yes"` has `status_in_game_snapshot = eligible_for_phase02_now` OR `eligible_with_caveat`." If V1 fails (no canonical lps factor), V2 cannot map ANY event type, or V8 cannot compute verdicts at all, then no planned-yes row achieves either status and `narrowed` cannot fire — the verdict mechanically falls into `unable_to_decide`. The plan's `unable_to_decide` halt-predicate text in T01 step 4 confirms this: "V1 fails to confirm a single canonical loop-to-seconds factor; V2 finds an event type whose semantically-player-attributed records cannot be mapped at all; V8 cannot produce verdicts due to evidence insufficiency." Coherent.
 
-### WARNING-2 — Notebook validation has no documented standard command; T19 step 2 punts on this
+One subtle remaining ambiguity: the `narrowed` predicate requires "at least one OTHER planned-yes row has `status_in_game_snapshot = blocked_until_additional_validation`." If every planned-yes row is `eligible_for_phase02_now` OR `eligible_with_caveat` and ZERO are `blocked_until_additional_validation`, the verdict is `closed` (all eligible) per the `closed` predicate — provided the third conjunct also passes. This is the correct edge case but worth confirming the executor reads it the same way; the language "every row … has either … OR …" is unambiguous.
 
-**Tasks affected:** T07 (artifact regeneration verification), T19 (full review gate step 2).
+## Pass-2 dependencies recorded (informational only)
 
-**The attack:**
-- `pyproject.toml` declares `pytest`, `jupytext`, `nbconvert` as dev dependencies, but there is no `[tool.poetry.scripts]` or Makefile entry for "run-notebooks-and-validate".
-- `sandbox/README.md` describes notebook conventions but cites no validation command. `sandbox/notebook_config.toml` exposes a `[execution] timeout_seconds = 600` knob, suggesting nbconvert-based execution is the intent, but the actual command (`jupyter nbconvert --to notebook --execute …` or `papermill …`) is not standardized in repo docs.
-- T19 step 2: "Run available tests and notebook validation only if a standard command exists; do not invent commands."
-- T07 Verification step: "git diff shows updated notebook pairs that match `notebook_regeneration_manifest.md` declarations" and "@reviewer (mechanical) approves each per-dataset block." But mechanical review of a regenerated notebook depends on knowing whether it executed cleanly; an unexecuted .ipynb (no outputs cells, or stale outputs) won't be caught by `git diff --stat`.
-
-If T07 regenerates artifacts but cannot prove the notebook executed end-to-end (because T19 has no command), the entire regeneration is unaudited. This is not a BLOCKER because (a) Phase 01 is complete on all three datasets, so most likely T07 will declare zero notebooks stale; (b) jupytext's `.py:percent` ↔ `.ipynb` pairing means structural diffs are visible. But it is a concrete gap.
-
-**Recommendation:**
-Add to T07 Instructions step 1: "Notebook execution: use `source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace <notebook.ipynb>` with a 600s timeout per `sandbox/notebook_config.toml`. If a notebook fails to execute end-to-end, halt and document in `notebook_regeneration_manifest.md`; do not commit an .ipynb whose execution log shows errors." Cite `sandbox/notebook_config.toml [execution] timeout_seconds = 600` as the source for the timeout. Update T19 step 2 from "do not invent commands" to "use the nbconvert command above."
-
-### WARNING-3 — Branch-prefix deviation `thesis/...` is not in the conventional set `feat/ fix/ refactor/ docs/ test/ chore/` per `.claude/rules/git-workflow.md`; CHANGELOG/version-bump assumptions may key off the prefix
-
-**Tasks affected:** T01 (branch creation), T20 (PR-body draft), repo-wide PR/CHANGELOG conventions.
-
-**The attack:**
-- `.claude/rules/git-workflow.md` enumerates branches as `feat/ fix/ refactor/ docs/ test/ chore/` and prescribes "Version: minor for feat/refactor/docs, patch for fix/test/chore." `thesis/` is not in either list, so version-bump rule is undefined.
-- The plan records the deviation as Assumption B ("user-explicit override") and Q5 ("already user-approved"). That handles the policy question but not the operational consequence: if a CI hook, pre-commit script, or `gh pr create` template keys off the prefix, the deviation could trigger unexpected behavior.
-
-The user-approval is genuinely sufficient for the policy question per project memory `feedback_no_branches_without_approval.md` (the user explicitly approved). But the *operational* check ("does any CI / pre-commit / template / changelog rule break?") is not in the plan.
-
-**Recommendation:**
-Add to T01 Instructions: "Verify that the `thesis/` prefix does not break: (a) `.github/workflows/*.yml` filters keyed on branch name; (b) `.pre-commit-config.yaml` rules; (c) `.github/pull_request_template.md` placeholder substitution; (d) `.claude/rules/git-workflow.md` version-bump classification (decide: minor or patch). Document the version-bump classification chosen in `audit_cleanup_summary.md`." This is a 5-minute check; recording it once removes the risk.
-
-### WARNING-4 — Open Question Q3 ("aggregation semantics underlie aoestats records") risks empirical investigation during execution that should have been declared as a verification SQL in the plan
-
-**Tasks affected:** T05 sub-step 4.1; planner contract.
-
-**The attack:**
-The planner contract `docs/templates/planner_output_contract.md` line 4: "Empirical investigation during planning is prohibited." Q3 is correctly framed as an Unknown ("resolves at T05 sub-step 4.1"), not as a fact discovered in the plan — that's contract-compliant. But Q3 specifies neither the verification SQL the executor will run nor the artifact paths the executor will read. T05 4.1 says "Identify population fields … Verify what `leaderboard='random_map'` means in aoestats. Determine whether records represent ranked 1v1 Random Map ladder, public Random Map ladder, broader ranked multiplayer, source-specific aggregation, or insufficient documentation."
-
-That's a checklist, not an executable verification. The existing on-disk evidence (research_log.md:1077, "Jaccard index between true 1v1 and ranked 1v1 = 0.958755") and the cleaning logic (`leaderboard='random_map'` filter) are not mentioned as starting points. The executor will end up doing ad-hoc empirical work to "verify what `random_map` means" without a binding artifact to anchor against.
-
-**Recommendation:**
-Add to T05 4.1 Instructions: "Read `01_03_02_true_1v1_profile.md` (Jaccard 0.958755 finding) and `01_04_01_data_cleaning.md` (R02 rule) as the existing on-disk evidence. Verify against external aoestats source documentation (use `@lookup` for the aoestats README/repo) whether `leaderboard='random_map'` corresponds to the ranked random-map queue specifically, or to public/quickplay random-map records. If aoestats source documentation is silent, treat this as 'source-specific aggregation, scope semantically opaque' and weaken thesis terminology." This converts Q3 from a vague unknown into a bounded verification task.
-
-### WARNING-5 — Conditional File Manifest with footnotes ¹–⁵ is contract-compliant but the wildcard `sandbox/<game>/<dataset>/**` rows are too coarse to satisfy "no executor task may touch a file absent from the manifest"
-
-**Tasks affected:** File Manifest entries `sandbox/sc2/sc2egset/**`, `sandbox/aoe2/aoestats/**`, `sandbox/aoe2/aoe2companion/**`.
-
-**The attack:**
-The planner contract Hard Rule says "no executor task may touch a file absent from the manifest." `sandbox/sc2/sc2egset/**` matches every notebook under that directory (50+ files in real terms across `01_exploration/{01_acquisition,02_eda,03_profiling,04_cleaning,05_temporal_panel_eda,06_decision_gates}/`). This wildcard does technically satisfy the contract literally, but it concedes no boundary: an executor could regenerate any notebook under the directory and claim manifest compliance.
-
-This is a tension within the planner contract itself — some plans must touch unknown-in-advance subsets of a tree. The plan's footnote ² (conditional on T06 declaring the Step's artifacts stale) provides the bound, but the bound lives in the footnote text, not in the manifest row.
-
-**Recommendation:**
-Tighten the manifest row to: "Update (conditional² — only files declared stale in `notebook_regeneration_manifest.md` after T06; manifest is the authoritative bound)." This is a wording change with no functional cost; it makes the bound explicit. Also add to T07 Verification: "every modified file under `sandbox/<game>/<dataset>/**` has a corresponding row in `notebook_regeneration_manifest.md`. Files modified outside the manifest are a Hard Rule violation."
-
-## NOTE findings
-
-### NOTE-1 — T06 says "If a notebook must be edited: mark current artifacts from that Step as stale; do not silently reuse" but does not specify *how* the stale marking is done physically
-
-The marking could be a comment in the artifact, a YAML key in `STEP_STATUS.yaml`, a `STALE` filename suffix, or a column in `notebook_regeneration_manifest.md`. The plan implies the manifest is authoritative but never says so. **Suggestion:** "Stale marking lives in `notebook_regeneration_manifest.md` only; on-disk artifact filenames are not mutated; a downstream consumer of any artifact must consult the manifest before citing." Without this, an executor might rename `01_04_01_data_cleaning.md` → `01_04_01_data_cleaning_STALE.md`, breaking every downstream cross-reference in research logs and thesis prose.
-
-### NOTE-2 — Stage 14A.5 ("SC2 cross-region fragmentation") is bound to risk register but does not specify the retention threshold below which the dual-feature-paths fallback must be used
-
-T16 14A.5 says "Prefer sensitivity indicator or dual feature paths if strict filtering destroys sample size." "Destroys" is a magic word (Invariant I7 — no magic numbers): when does retention go from "acceptable" to "destroys"? Below 80%? Below 50%? Bound this empirically (e.g., to retention finding from `01_05_10` per the WP-3 work).
-
-### NOTE-3 — T19 mechanical checks regex `rg "Phase 01|PR #TBD|BACKLOG.md|grep|post-F1|master"` will yield false-positive matches on the bare word "master"
-
-`master` appears as a generic English/Polish noun in many contexts ("master plan", "master's thesis", "Master's degree"). The thesis title uses it: "A comparative analysis…" is described as a "master's thesis." T19 step 1 line 4 will produce noise. **Suggestion:** Tighten the regex to `\bmaster\b` (workflow-leakage usage typically reads "on master", "into master", or "merged to master") or specify "branch master" as the disallowed phrase. As-written, the executor will face noise to triage.
-
-### NOTE-4 — Plan fidelity to source: the plan re-emits all 18 stages from `final_production_pr_plan.md` faithfully and respects the source's cardinal ordering (lineage → AoE2 → ROADMAP → log → comparability → spec → thesis → review)
-
-I checked T01 ↔ Stage 0, T02 ↔ Stage 1, …, T20 ↔ Stage 18 — every source stage is present and the ordering is preserved. Cross-game comparability matrix (T09) precedes Chapter 4 (T11), which precedes Chapter 1 (T12), Chapter 2 (T13), Chapter 3 (T14). The dependency footnote chain T11 reads-from T09 and T11 sets the AoE2 terminology that T12/T13/T14 inherit. The ordering is sound.
-
-## Strengths
-
-1. **Lineage ordering is correctly enforced.** T03 (lineage audit) precedes T05 (provenance) precedes T06 (regeneration decision) precedes T07 (artifact regeneration) precedes T08 (log repair) precedes T11 (Chapter 4 rewrite) precedes T12/T13/T14 (Chapters 1/2/3). Read-scope footnotes consistently require T11 to read regenerated artifacts, T12 to read aoe2_ladder_provenance_audit.md, etc. The plan correctly forbids Chapter rewrite before artifact regeneration.
-
-2. **Generated-artifact protection (G4) is reflected in T07 step 5 and T16 14A.1.** T07 instruction 5 says "Do not edit any artifact manually if it is generated; only regenerate via its upstream notebook." T16 14A.1 step 3 correctly prescribes upstream-ROADMAP-then-notebook discipline for the data dictionary.
-
-3. **`tracker_events_raw` validation (T16 14A.6) is correctly gated on T15's decision to retain SC2 in-game telemetry features.** The cautions section is precise: "Do not assume final-tick `PlayerStats` minerals/vespene are cumulative totals." This rejects the unsafe assumption from the prior Pre-Phase-02 plan that the master plan §3 warned against.
-
-4. **The "ranked ladder" terminology ladder (master plan §6 Stage 4.3) is faithfully transcribed and bound to T05 acceptance.** Four tiers from "publicly indexed 1v1 ranked Random Map ladder matches" (strong evidence) to "third-party AoE2 multiplayer match records filtered to 1v1 Random Map-like matches" (insufficient evidence) — this is the right shape.
-
-5. **Two-PR branching is explicitly rejected in Out-of-scope, with the rationale traced to source §3.** Manual artifact edits and Cat-C demotion of methodology spec changes are likewise rejected. The unsafe items from the prior plan are enumerated in Out-of-scope. This is exactly what the source plan §3 demanded.
-
-6. **Read-scope chains (footnotes ¹–⁵) are non-trivial and correct in shape.** T11 reads from T09 + T10 + T07 outputs; T12 reads from T05 + T09 + T11. The dependency graph is acyclic and order-preserving.
-
-## Recommended pre-execution actions
-
-These map to BLOCKERs above; each must be resolved (or explicitly converted to a documented non-executable constraint per T02 step 3) before T03 begins.
-
-1. **Resolve BLOCKER-1:** Rewrite Q2 to acknowledge the on-disk `qp_rm_1v1` evidence; add fallback "default to quickplay/matchmaking on ambiguity, never default to ranked ladder"; bind T05 4.2 step 5 to that fallback. Trace propagation of the mis-label through `data_quality_report_aoe2companion.md` → thesis §4.1.3 / §4.2.3.
-2. **Resolve BLOCKER-2:** Insert §7 spec-amendment-protocol invocation into T15 instructions and T16 14A.2/14A.3 instructions. Require version bump, amendment-log row, planner-science + reviewer-adversarial co-signoff in the same commit.
-3. **Resolve BLOCKER-3:** Add a conditional⁶ footnote and explicit File Manifest rows for the 6 files that T16 14A.1 may touch if the data dictionary is found generated (which it is per `01_06_01_data_dictionary.py:114`).
-4. **Resolve BLOCKER-4:** In T03 Instructions, decide whether `claim_evidence_matrix.md` subsumes / coexists with / replaces the existing `sec_4_1_crosswalk.md` and `sec_4_2_crosswalk.md`. Add the existing 5 `pass2_evidence/` files to the File Manifest (Read scope at minimum; Update if subsumed; Delete if replaced). Decide handling under the existing README's "frozen at Pass-2 handoff" convention.
-5. **Resolve BLOCKER-5:** Collapse adversarial dispatches: merge T05's adversarial sub-step into T10; merge T16 14A.2's adversarial review into T15. Net adversarial cycles inside execution: T10 (mid-PR audit gate) + T15 (spec gate) + T19 (final). With T02 (pre-execution plan critique) the total is 4. Document this as cap-exceedance with user signoff, OR justify why some cycles count as @reviewer-deep, not @reviewer-adversarial.
-6. **Address WARNING-1, WARNING-2:** Add scope-explosion escape valve to T03/T06 (escalate to user if >10 Steps declared stale); cite explicit nbconvert command and timeout in T07/T19.
-7. **Address WARNING-3, WARNING-4:** Verify branch-prefix `thesis/` does not break CI/hooks/templates; document version-bump classification (minor for thesis ≈ docs?). Bind Q3's resolution to a specific verification SQL anchored on `01_03_02_true_1v1_profile.md` and `01_04_01_data_cleaning.md`.
-8. **Address NOTE-2:** Bind T16 14A.5's "destroys sample size" threshold empirically to the WP-3 retention finding.
-9. **Address NOTE-3:** Tighten T19 regex `master` to `\bbranch master\b` or equivalent; document the false-positive triage rule.
-
-Verdict: ACCEPTABLE-WITH-REVISIONS; BLOCKERs: 5; WARNINGs: 5; NOTEs: 4
+- **Chapter 4 §4.3.2 prose hedge update** for `narrowed` outcomes is deferred to a separate Category F thesis-sync task (per Q5 and Amendment 8). The §4.3.2 hedge stays in place under `narrowed` in this PR.
+- **`thesis/chapters/REVIEW_QUEUE.md` and `thesis/WRITING_STATUS.md` updates** are out of scope for this PR (Amendment 8). Coordinate-anomaly follow-up note (T08) lives in the artifact JSON only.
+- **CROSS-02-00 v3.0.1 and CROSS-02-01 v1.0.1 LOCKED specs** receive no amendment in this PR.
+- **`references.bib`** is not updated (s2protocol cited as URL/repo path; Liquipedia stays secondary).
+- **`pdfminer.six` / `pypdf` dependency add** is permanently INACTIVE in this PR per Q1 + Amendment 7. Datasheet-only fields are auto-downgraded.
+- **AoE2 cross-game symmetry**: this PR is SC2-only by construction (sc2egset has tracker_events; AoE2 datasets have no in-game telemetry). The asymmetry is documented in `cross_dataset_comparability_matrix.md` (cited by RISK-21 evidence source). No new asymmetry introduced.
+- **Phase 02 implementation work** (using validated families) is not in scope; T12 step 3's "route to Phase 02 implementers if any family is `eligible_for_phase02_now`" is a routing record, not an execution.
