@@ -65,7 +65,7 @@ The relevant external references are the s2protocol decoder source (Blizzard, ht
 
 **Instructions:**
 1. Read the existing 01_03_04 YAML block (lines 658–727) to confirm the schema used by the 01_03 family.
-2. Append a new Step 01_03_05 block after line 727 with: `step_number: "01_03_05"`; `name: "Tracker Events Semantic Validation"`; `phase: "01 -- Data Exploration"`; `pipeline_section: "01_03 -- Systematic Data Profiling"`; `dataset: "sc2egset"`; `predecessors: ["01_03_04"]`; `notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.py"`; `inputs.duckdb_tables: [tracker_events_raw, replay_players_raw, replays_meta_raw]`; `outputs.report: "artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.md"`; `outputs.data_artifacts: [01_03_05_tracker_events_semantic_validation.json, tracker_events_feature_eligibility.csv]`; `scientific_invariants_applied: [I3, I6, I7, I9, I10]`; `thesis_mapping: ["Chapter 4 -- Data and Methodology > 4.3.2 SC2 in-game telemetry feature eligibility", "Phase 02 (Feature Engineering) — decides which tracker-derived feature families enter scope"]`.
+2. Append a new Step 01_03_05 block after line 727 that includes EVERY field marked `required: true` in `docs/templates/step_template.yaml`. Concretely, the block MUST populate: `step_number: "01_03_05"`; `name: "Tracker Events Semantic Validation"`; `description` (one to two sentences explaining that the Step semantically validates the 10 tracker_events_raw event families across loops/sec, player-id mapping, PlayerStats cumulative semantics, schema stability, lifecycle, coordinates, and leakage boundaries to decide GATE-14A6); `phase: "01 -- Data Exploration"`; `pipeline_section: "01_03 -- Systematic Data Profiling"`; `manual_reference` (datasheet citation by section number only — no extracted text — plus s2protocol repo URL; format `<filename>.md, §<n>`); `dataset: "sc2egset"`; `question` (the semantic-validation question stated in step 3 below); `method` (two to four sentences describing the SQL-first approach across V1..V8 with s2protocol as primary citation authority and the auto-downgrade rule from T02); `stratification` (per-event-type and per-`gameVersion` stratification per Amendment 6, plus per-(filename, playerId) partitioning for V3 cadence per Amendment 3); `predecessors: ["01_03_04"]`; `notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.py"`; `inputs.duckdb_tables: [tracker_events_raw, replay_players_raw, replays_meta_raw]`; `outputs.report: "artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.md"`; `outputs.data_artifacts: [01_03_05_tracker_events_semantic_validation.json, tracker_events_feature_eligibility.csv]`; `reproducibility` (every reported number is reproduced inline in the .md from the captured `sql_queries` dict per Invariant 6; thresholds cited to s2protocol or to this plan's amendment list per Invariant 7; no random seeds needed because the analysis is deterministic SQL); `scientific_invariants_applied: [I3, I6, I7, I9, I10]`; `gate.artifact_check` (the three artifact files listed in `outputs` exist on disk, non-empty, and the JSON parses); `gate.continue_predicate` (text-matches §Gate Condition `closed`/`narrowed` rule below); `gate.halt_predicate` (the three halt conditions listed in step 4 below); `thesis_mapping: ["Chapter 4 -- Data and Methodology > 4.3.2 SC2 in-game telemetry feature eligibility", "Phase 02 (Feature Engineering) — decides which tracker-derived feature families enter scope"]`; `research_log_entry` (required on completion per `docs/templates/research_log_entry_template.yaml`; entry goes into the per-dataset `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md`, NOT into `reports/research_log.md`). If the adjacent 01_03_04 block omits a template-required field, do not replicate that omission silently; Step 01_03_05 must satisfy the current template unless the template itself is contradicted by repo validation tooling.
 3. The Step `question` field MUST be framed as semantic validation, NOT feature generation: *"For each tracker_events_raw event family, are the event-data field semantics, player-id mapping, cadence, coordinate units, and lifecycle semantics sufficiently understood to derive Phase 02 in-game-history features without parser-assumption risk? Which feature families are eligible_for_phase02_now, eligible_with_caveat, blocked_until_additional_validation, or not_applicable_to_pre_game?"*
 4. The `gate.continue_predicate` MUST text-match the closure rule in §Gate Condition below. The `gate.halt_predicate` MUST cover: V1 fails to confirm a single canonical loop-to-seconds factor; V2 finds an event type whose semantically-player-attributed records cannot be mapped at all; V8 cannot produce verdicts due to evidence insufficiency.
 5. Do NOT invent fields beyond the 01_03_04 schema. If 01_03_04 lacks a field needed here (e.g., `external_references`), include it only if `step_template.yaml` allows it.
@@ -458,19 +458,28 @@ The relevant external references are the s2protocol decoder source (Blizzard, ht
    - `01_03_05_tracker_events_semantic_validation.md` — narrative + per-V section + reproduced SQL.
    - `tracker_events_feature_eligibility.csv` — T10 per-prediction-setting columns.
 3. **research_log entry** (per `docs/templates/research_log_entry_template.yaml`): Date `2026-05-04`, Step `01_03_05`, sections What/Why/How/Findings/Decisions taken/Decisions deferred/Thesis mapping/Open questions. Findings: `gate_14a6_decision` value; per-V one-line summary; pointer to CSV.
-4. **STEP_STATUS.yaml:** insert
+4. **STEP_STATUS.yaml:** insert a row that mirrors the schema used by the adjacent 01_03_01..01_03_04 rows verified live (only `name`, `pipeline_section`, `status`, `completed_at` — neither `started_at` nor `artifact_file`). Use only fields supported by `docs/templates/step_status_template.yaml` `entry_schema` (`step_number`, `name`, `pipeline_section`, `status`, `completed_at`):
    ```yaml
    "01_03_05":
      name: "Tracker Events Semantic Validation"
      pipeline_section: "01_03"
      status: complete    # iff continue_predicate met
-     started_at: "2026-05-04"
      completed_at: "2026-05-04"
-     artifact_file: "01_03_05_tracker_events_semantic_validation.py"
    ```
-   If `continue_predicate` fires `unable_to_decide`, status = `in_progress` and the PR halts to user.
-5. **PIPELINE_SECTION_STATUS.yaml** (Q6): if file exists with matching schema, update only the `01_03` row to reflect Step 01_03_05 status. Do NOT invent new fields.
-6. **PHASE_STATUS.yaml** (Q6): if file exists with matching schema, set Phase 01 status to `in_progress` while Step is open, back to `complete` once Step gate passes. Do NOT invent new fields.
+   If `continue_predicate` fires `unable_to_decide`, status = `in_progress`, no `completed_at` is set, and the PR halts to user. Do NOT introduce `started_at`, `artifact_file`, or any other field outside the live template — `artifact_file` is non-canonical for the 01_03 family and the template does not define it. Artifact paths belong in research_log.md and generated artifacts, not in STEP_STATUS.yaml unless the live template explicitly supports them.
+5. **PIPELINE_SECTION_STATUS.yaml** (Q6): verified pre-execution: PIPELINE_SECTION_STATUS.yaml and PHASE_STATUS.yaml both exist with template-matching schemas; update both in the same commit as STEP_STATUS.yaml so the derivation chain remains consistent. Update only the `01_03` row to reflect Step 01_03_05 status per the derivation rule in `docs/templates/pipeline_section_status_template.yaml` (`Pipeline section is in_progress when ANY step is in_progress or complete`). Do NOT invent new fields.
+6. **PHASE_STATUS.yaml** (Q6): in the same commit as steps 4 and 5, update Phase 01 status per the derivation rule in `docs/templates/phase_status_template.yaml` (`Phase is in_progress when ANY pipeline section is in_progress or complete`). While Step 01_03_05 is open/`in_progress`, pipeline section `01_03` AND Phase `01` MUST reflect `in_progress`; when Step 01_03_05 completes successfully, pipeline section and Phase status may return to `complete` if all other steps/sections are complete. These two status files are part of the same lineage commit as the Step status closure. Do NOT invent new fields.
+
+   **`unable_to_decide` branch.** If `gate_14a6_decision = unable_to_decide`:
+   - Step 01_03_05 remains `status: in_progress` in STEP_STATUS.yaml;
+   - pipeline section `01_03` is set to `in_progress` in PIPELINE_SECTION_STATUS.yaml;
+   - Phase `01` is set to `in_progress` in PHASE_STATUS.yaml;
+   - all three are committed in the same commit;
+   - the PR halts to user review and does not proceed to T13 wrap-up as if validation succeeded.
+
+   This is not a lineage failure; it is the correct semantic state when the gate cannot be decided.
+
+7. **research_log entry required template fields.** The research_log entry from step 3 above must include the required template fields per `docs/templates/research_log_entry_template.yaml`: `step_scope` (use `query` — the Step operates at the DuckDB-query level per Invariant #9), `category` (use `A`), `dataset` (use `sc2egset`), `artifacts_produced` (list the three artifact paths from the notebook outputs). Renumbering note: this template-fields reminder is bundled into T11 because the existing step 3 already creates the entry; no separate task is added.
 
 **Verification:**
 - `git status` shows exactly the manifest files (no others).
@@ -485,8 +494,8 @@ The relevant external references are the s2protocol decoder source (Blizzard, ht
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv`
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md`
 - `src/rts_predict/games/sc2/datasets/sc2egset/reports/STEP_STATUS.yaml`
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/PIPELINE_SECTION_STATUS.yaml` (Q6 — only if file exists with matching schema)
-- `src/rts_predict/games/sc2/datasets/sc2egset/reports/PHASE_STATUS.yaml` (Q6 — only if file exists with matching schema)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/PIPELINE_SECTION_STATUS.yaml` (Q6 — both files verified pre-execution to exist with template-matching schemas; same-commit update is required, not conditional)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/PHASE_STATUS.yaml` (Q6 — both files verified pre-execution to exist with template-matching schemas; same-commit update is required, not conditional)
 
 **Read scope:**
 - T03..T10 notebook output
@@ -502,9 +511,9 @@ The relevant external references are the s2protocol decoder source (Blizzard, ht
 **Objective:** Close the lineage. **Per Q5:** do NOT edit thesis chapters in this PR. The conditional updates ONLY fire if T11 produced an actionable verdict — never silently mark GATE-14A6 closed if validation was wholly partial. REVIEW_QUEUE / Chapter 4 prose updates are out of scope for this PR.
 
 **Instructions:**
-1. **`thesis/pass2_evidence/notebook_regeneration_manifest.md`** — append a row under "sc2egset — Phase 01 notebooks":
-   - If `gate_14a6_decision = closed`: status `confirmed_intact`, cause "GATE-14A6 closed (Step 01_03_05)".
-   - If `gate_14a6_decision = narrowed`: status `confirmed_intact`, cause "GATE-14A6 narrowed per V8 CSV (Step 01_03_05)".
+1. **`thesis/pass2_evidence/notebook_regeneration_manifest.md`** — append a row under "sc2egset — Phase 01 notebooks". The `notebook_regeneration_manifest` new Step 01_03_05 row may go directly to `confirmed_intact` only with wording like "freshly created in this PR; never stale" appended to the cause string — this is acceptable because the row is freshly created in this PR and was never `flagged_stale`, but the manifest's vocabulary does not natively encode "freshly created and intact" so the explanatory clause prevents future confusion.
+   - If `gate_14a6_decision = closed`: status `confirmed_intact`, cause "GATE-14A6 closed (Step 01_03_05) — freshly created in this PR; never stale".
+   - If `gate_14a6_decision = narrowed`: status `confirmed_intact`, cause "GATE-14A6 narrowed per V8 CSV (Step 01_03_05) — freshly created in this PR; never stale".
    - If `gate_14a6_decision = unable_to_decide`: status `flagged_stale`, cause "unable_to_decide per V8 (Step 01_03_05)" — and the PR halts to user before completing T13.
 2. **(CONDITIONAL) `thesis/pass2_evidence/phase02_readiness_hardening.md` §14A.6** — append a "Post-validation update (2026-05-04)" subsection IFF V8 produced an actionable verdict (`closed` or `narrowed`). The new subsection records: `gate_14a6_decision` value; per-feature-family status table extracted from CSV; updated permitted thesis framing — only narrowed where validation actually delivered a verdict. **Do NOT remove the original §14A.6 text** (historical record). For `narrowed`, the subsection must enumerate which feature families remain blocked.
 3. **(CONDITIONAL) `thesis/pass2_evidence/methodology_risk_register.md` RISK-21** — update three cells iff T12 conditional update fires: `Mitigation already applied` ("Step 01_03_05 executed 2026-05-04; per-event-family semantic verdict recorded in `tracker_events_feature_eligibility.csv`"); `Residual uncertainty` (carry forward only `eligible_with_caveat` / `blocked_until_additional_validation` families); `Downstream task responsible` (route to Phase 02 implementers if any family is `eligible_for_phase02_now`). Severity stays `major`; status moves OPEN → CLOSED-WITH-CAVEAT iff at least one planned family is `eligible_for_phase02_now`; otherwise OPEN-NARROWED.
@@ -568,8 +577,8 @@ Every file ANY executor task is permitted to touch. Files NOT in this list MUST 
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv` | Create (notebook output, per-prediction-setting columns per Amendment 2) | T11 |
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` | Update — append 2026-05-04 Step 01_03_05 entry | T11 |
 | `src/rts_predict/games/sc2/datasets/sc2egset/reports/STEP_STATUS.yaml` | Update — add `01_03_05` row | T11 |
-| `src/rts_predict/games/sc2/datasets/sc2egset/reports/PIPELINE_SECTION_STATUS.yaml` | Update — `01_03` row only if file exists with matching schema (Q6) | T11 |
-| `src/rts_predict/games/sc2/datasets/sc2egset/reports/PHASE_STATUS.yaml` | Update — Phase 01 status only if file exists with matching schema (Q6) | T11 |
+| `src/rts_predict/games/sc2/datasets/sc2egset/reports/PIPELINE_SECTION_STATUS.yaml` | Update — `01_03` row, same commit as STEP_STATUS.yaml (Q6; verified pre-execution) | T11 |
+| `src/rts_predict/games/sc2/datasets/sc2egset/reports/PHASE_STATUS.yaml` | Update — Phase 01 status, same commit as STEP_STATUS.yaml (Q6; verified pre-execution) | T11 |
 | `thesis/pass2_evidence/notebook_regeneration_manifest.md` | Update — append Step 01_03_05 row | T12 |
 | `thesis/pass2_evidence/phase02_readiness_hardening.md` | Update — CONDITIONAL §14A.6 post-validation subsection (only if V8 actionable) | T12 |
 | `thesis/pass2_evidence/methodology_risk_register.md` | Update — CONDITIONAL RISK-21 cells (only if V8 actionable) | T12 |
@@ -602,8 +611,8 @@ Mechanical gate criteria (must hold for `closed` OR `narrowed`):
 1. `01_03_05_tracker_events_semantic_validation.json` exists, parses, contains all 8 verdict blocks (V1..V8) plus `gate_14a6_decision`.
 2. `tracker_events_feature_eligibility.csv` has > 0 rows; header includes `status_pre_game`, `status_in_game_snapshot`, `status_post_game_or_blocked` columns (Amendment 2).
 3. Every tracker-derived row has `status_pre_game = not_applicable_to_pre_game` (Amendment 2 compliance).
-4. `STEP_STATUS.yaml` `01_03_05` row exists with `status: complete` (or `in_progress` iff `unable_to_decide`).
-5. Phase 01 returns to `complete` in `PHASE_STATUS.yaml` iff Step 01_03_05 status is `complete`.
+4. `STEP_STATUS.yaml` `01_03_05` row exists with the minimal template-supported field set (`name`, `pipeline_section`, `status`, `completed_at`) — no `started_at`, no `artifact_file`, no other invented fields. Status is `complete` (with `completed_at: "2026-05-04"`) when `gate_14a6_decision ∈ {closed, narrowed}`. Status is `in_progress` (with no `completed_at`) when `gate_14a6_decision = unable_to_decide`; in that case the PIPELINE_SECTION_STATUS.yaml `01_03` row AND the PHASE_STATUS.yaml Phase 01 row are both set to `in_progress` in the same commit, and the PR halts to user before T13. This is the correct semantic state when the gate cannot be decided, not a lineage failure.
+5. Phase 01 returns to `complete` in `PHASE_STATUS.yaml` iff Step 01_03_05 status is `complete` AND every other pipeline section in Phase 01 is `complete` per the derivation rule in `docs/templates/phase_status_template.yaml`.
 6. `notebook_regeneration_manifest.md` has the new Step 01_03_05 row.
 7. If gate is `closed` or `narrowed` → `phase02_readiness_hardening.md` §14A.6 has the post-validation subsection AND RISK-21 cells updated.
 8. `git diff thesis/chapters/` is empty (Amendment 8).
@@ -632,7 +641,7 @@ All six pre-execution open questions raised by the planner have been resolved by
 - **Q3 (PlayerStats cumulative-classification severity)** — RESOLVED in T05 instructions and T10 decision rule. Strict (a): cumulative-economy features are `blocked_until_additional_validation` if cumulative semantics not proven; snapshot features may still be eligible if cadence + completeness + V2 mapping pass.
 - **Q4 (coordinate parser-bug framing)** — RESOLVED in T08 instructions. Option (c): descriptive AND `[REVIEW]` follow-up note in the artifact JSON if out-of-bounds rate is non-trivial; no parser-bug claims without source support.
 - **Q5 (`narrowed` vs `closed` thesis prose impact)** — RESOLVED in T12 instructions and File Manifest. Option (a): no thesis chapter edits in this PR; only Phase 02 readiness / manifest / risk evidence files in scope.
-- **Q6 (`PIPELINE_SECTION_STATUS.yaml`)** — RESOLVED in T11 instructions and File Manifest. Yes — update alongside `STEP_STATUS.yaml` and `PHASE_STATUS.yaml` if these files exist with matching schema; do not invent new fields.
+- **Q6 (`PIPELINE_SECTION_STATUS.yaml`)** — RESOLVED in T11 instructions and File Manifest. Yes — verified pre-execution: both `PIPELINE_SECTION_STATUS.yaml` and `PHASE_STATUS.yaml` exist with template-matching schemas; same-commit update with `STEP_STATUS.yaml` is required, not conditional. Do not invent new fields.
 
 Additional execution-time questions (no user decision required pre-execution):
 
