@@ -725,6 +725,149 @@ thesis_mapping:
 research_log_entry: "Required on completion."
 ```
 
+### Step 01_03_05 -- Tracker Events Semantic Validation
+
+```yaml
+step_number: "01_03_05"
+name: "Tracker Events Semantic Validation"
+description: >-
+  Semantic validation of tracker_events_raw across the 10 event families
+  catalogued in 01_03_04. Examines loops/sec time semantics, player-id
+  mapping per event type, PlayerStats cumulative-vs-instantaneous
+  semantics, cross-gameVersion schema stability, unit-lifecycle
+  ordering, coordinate units, and leakage-boundary discipline to decide
+  GATE-14A6 (per thesis/pass2_evidence/phase02_readiness_hardening.md
+  §14A.6). Validation only; no features extracted, no tables created
+  (I9).
+phase: "01 -- Data Exploration"
+pipeline_section: "01_03 -- Systematic Data Profiling"
+manual_reference: "01_DATA_EXPLORATION_MANUAL.md, Section 3"
+dataset: "sc2egset"
+question: >-
+  For each tracker_events_raw event family, are the event-data field
+  semantics, player-id mapping, cadence, coordinate units, and
+  lifecycle semantics sufficiently understood to derive Phase 02
+  in-game-history features without parser-assumption risk? Which
+  feature families are eligible_for_phase02_now, eligible_with_caveat,
+  blocked_until_additional_validation, or not_applicable_to_pre_game?
+method: >-
+  Eight validation modules V1-V8 executed SQL-first against
+  tracker_events_raw, replay_players_raw, and replays_meta_raw with
+  s2protocol decoder source as primary citation authority and the
+  SC2EGSet datasheet as secondary (cited by section number only -- no
+  text extraction, no new Python dependency). V1 game-loop / time
+  semantics; V2 player-id mapping per event type with neutral/global
+  slicing; V3 PlayerStats field semantics with strict
+  cumulative-classification rule; V4 event-type coverage and schema
+  stability with rare-family safeguard; V5 unit-lifecycle ordering;
+  V6 coordinate semantics (descriptive only unless source-confirmed);
+  V7 leakage boundary (tracker events never pre-game per Invariant
+  I3); V8 four-status per-prediction-setting eligibility verdict
+  feeding gate_14a6_decision. Auto-downgrade rule: any field whose
+  source authority cannot confirm the relevant property downgrades the
+  candidate verdict.
+stratification: >-
+  Per event type (10 types from 01_03_04). Per gameSpeed value
+  (re-confirmed cardinality 1, "Faster", in V1). Per gameVersion year
+  cohort for V4 schema-stability checks (Pass A 1% Bernoulli + Pass B
+  per-event-type stratified resample for rare families with <1000
+  events in any non-trivial gameVersion cohort). Per (filename,
+  playerId) partitioning for V3 PlayerStats cadence to remove the
+  two-players-at-same-loop artifact noted in research_log.md lines
+  992-994.
+predecessors:
+  - "01_03_04"
+notebook_path: "sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.py"
+inputs:
+  duckdb_tables:
+    - "tracker_events_raw"
+    - "replay_players_raw"
+    - "replays_meta_raw"
+  schema_yamls:
+    - "data/db/schemas/raw/tracker_events_raw.yaml"
+    - "data/db/schemas/raw/replay_players_raw.yaml"
+    - "data/db/schemas/raw/replays_meta_raw.yaml"
+  prior_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_04_event_profiling.json"
+    - "artifacts/01_exploration/03_profiling/01_03_03_table_utility.json"
+  external_references:
+    - ".claude/scientific-invariants.md"
+    - "thesis/pass2_evidence/phase02_readiness_hardening.md"
+    - "thesis/pass2_evidence/methodology_risk_register.md"
+    - "data/raw/SC2EGSet_datasheet.pdf"
+    - "https://github.com/Blizzard/s2protocol"
+outputs:
+  data_artifacts:
+    - "artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.json"
+    - "artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv"
+  report: "artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.md"
+reproducibility: >-
+  Every reported number is reproduced inline in the .md from the
+  captured sql_queries dict per Invariant 6. Loop-to-seconds factor
+  (22.4) cited to s2protocol as primary authority (not the Liquipedia
+  community-grey reference, which is contextual only). Thresholds
+  cited to s2protocol or to planning/current_plan.md amendment list
+  per Invariant 7. No random seeds needed because the analysis is
+  deterministic SQL.
+scientific_invariants_applied:
+  - number: "3"
+    how_upheld: >-
+      V7 explicitly enforces the < cutoff rule and classifies
+      tracker_events as IN_GAME, never PRE_GAME. Per-feature
+      eligibility verdict makes the temporal class explicit via the
+      status_pre_game CSV column.
+  - number: "6"
+    how_upheld: >-
+      Every reported number is accompanied by the SQL that produced
+      it; saved verbatim into the JSON artifact's sql_queries dict.
+  - number: "7"
+    how_upheld: >-
+      Loop-to-second factor cited to s2protocol source in V1; no
+      other constants introduced; thresholds derived from observed
+      distributions or cited to planning/current_plan.md amendment
+      list.
+  - number: "9"
+    how_upheld: >-
+      No future-step knowledge consumed; only 01_03_04 and earlier
+      artifacts plus external source documentation. No tables
+      created.
+  - number: "10"
+    how_upheld: >-
+      filename column already verified in 01_03_04 to be relative
+      paths; no new ingestion performed.
+gate:
+  artifact_check: >-
+    artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.json,
+    .md, and tracker_events_feature_eligibility.csv exist on disk and
+    are non-empty. JSON parses without error.
+  continue_predicate: >-
+    JSON contains 8 verdict blocks (V1..V8) and a top-level
+    gate_14a6_decision field with one of three values: closed,
+    narrowed (with enumerated blocked families), or unable_to_decide.
+    CSV has one row per (event_family, candidate_feature_family) with
+    explicit per-prediction-setting columns (status_pre_game,
+    status_in_game_snapshot, status_post_game_or_blocked) populated
+    from {eligible_for_phase02_now, eligible_with_caveat,
+    blocked_until_additional_validation, not_applicable_to_pre_game}.
+    Every tracker-derived row carries status_pre_game =
+    not_applicable_to_pre_game. All SQL stored in sql_queries dict
+    (I6). A single PlayerStats snapshot family eligible is NOT enough
+    to declare gate_14a6_decision = closed unless every
+    planned-for-Phase-02 family is also eligible/caveated.
+  halt_predicate: >-
+    Any of the following forces gate_14a6_decision = unable_to_decide
+    and halts the PR to user before T13: V1 fails to confirm a single
+    canonical loop-to-seconds factor; V2 finds an event type whose
+    semantically-player-attributed records cannot be mapped at all
+    (player-attributed slice match rate below 95% with no documented
+    neutral/global handling); V8 cannot produce verdicts due to
+    evidence insufficiency across the board.
+thesis_mapping:
+  - "Chapter 4 -- Data and Methodology > 4.3.2 SC2 in-game telemetry feature eligibility"
+  - "Phase 02 (Feature Engineering) -- decides which tracker-derived feature families enter scope"
+research_log_entry: "Required on completion."
+```
+
 ### Step 01_04_00 -- Source Normalization to Canonical Long Skeleton
 
 ```yaml
