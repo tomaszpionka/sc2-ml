@@ -886,12 +886,613 @@ print(f"  notes: {verdicts['V2']['notes']}")
 #   failures.
 
 # %% [markdown]
-# ## Out of scope for T04 (this notebook execution)
+# ---
+# ## V3 -- PlayerStats field semantics (strict cumulative classification per Q3)
 #
-# - V3..V8 are deferred to T05..T10 per `planning/current_plan.md`.
+# **Hypothesis.**
+# - PlayerStats records periodic per-player economic / military
+#   snapshots.
+# - The stream is suitable for in-game snapshot features if cadence,
+#   mapping, and field completeness pass.
+# - Cumulative interpretation is NOT assumed -- the s2protocol decoder
+#   does not document cumulative semantics for the `*Lost` / `*Killed`
+#   / `*FriendlyFire` / `*Used` / `*Current` keys. Per Q3 strict rule,
+#   monotonic empirics ALONE do NOT promote a field to `safe_delta`.
+#
+# **Falsifier.**
+# - PlayerStats cadence not stable per `(filename, playerId)`;
+# - missing PlayerStats for a material number of replays;
+# - field key-set differs materially from the s2protocol snapshot;
+# - field values cannot be classified as snapshot / delta / ambiguous;
+# - any field required for a candidate feature family has unverified
+#   semantics.
+#
+# **Classification vocabulary (per T05 step 4).**
+# - `safe_snapshot` -- per-tick observable, bounded oscillation,
+#   decreases present (compatible with instantaneous state);
+# - `safe_delta` -- monotonic non-decreasing AND s2protocol confirms
+#   cumulative interpretation (Q3 strict requires source confirmation,
+#   NOT empirical monotonicity alone);
+# - `unsafe_or_ambiguous` -- neither pattern, OR monotonic-only with
+#   no source authority.
+
+# %% [markdown]
+# ### V3.1 -- enumerate observed PlayerStats stats keys
+
+# %%
+v3_1_df = run_q(
+    "v3_1_enumerate_stats_keys",
+    """
+    WITH s AS (
+        SELECT json_extract(event_data, '$.stats') AS stats
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'PlayerStats'
+        LIMIT 100000
+    ),
+    keys_unnested AS (
+        SELECT UNNEST(json_keys(stats)) AS k FROM s
+    )
+    SELECT k, COUNT(*) AS n
+    FROM keys_unnested
+    GROUP BY k
+    ORDER BY k
+    """,
+)
+print("=== V3.1 observed PlayerStats stats keys ===")
+print(v3_1_df.to_string(index=False))
+observed_keys = sorted(v3_1_df["k"].astype(str).tolist())
+print(f"\nObserved key count: {len(observed_keys)}")
+
+# %% [markdown]
+# ### V3.1 -- cross-reference observed vs s2protocol snapshot
+#
+# **Empirical convention discovered.** The s2protocol snapshot uses the
+# C++ struct member prefix `m_` (e.g., `m_scoreValueMineralsCurrent`).
+# The SC2EGSet JSON decoder STRIPS this prefix when serializing event
+# payloads, so the observed JSON keys are `scoreValueMineralsCurrent`
+# (no leading `m_`). The set comparison normalizes both sides by
+# stripping `m_` from the snapshot keys.
+
+# %%
+expected_keys_raw = sorted(
+    EVIDENCE["V3_player_stats_fields"]["stats_keys_from_snapshot"]
+)
+expected_keys = sorted(k.removeprefix("m_") for k in expected_keys_raw)
+observed_set = set(observed_keys)
+expected_set = set(expected_keys)
+missing_from_observed = sorted(expected_set - observed_set)
+extra_in_observed = sorted(observed_set - expected_set)
+matched_set = sorted(observed_set & expected_set)
+print(f"observed_count: {len(observed_keys)}")
+print(f"expected_count (m_-stripped): {len(expected_keys)}")
+print(f"matched_count: {len(matched_set)}")
+print(f"missing_from_observed ({len(missing_from_observed)}): "
+      f"{missing_from_observed}")
+print(f"extra_in_observed   ({len(extra_in_observed)}): "
+      f"{extra_in_observed}")
+# Per T05: do not fail if snapshot has keys absent historically; record
+# for V4 if needed.
+EVIDENCE["V3_player_stats_fields"]["decoded_json_strips_m_prefix"] = True
+
+# %% [markdown]
+# ### V3.2 -- cadence audit partitioned by (filename, playerId)
+#
+# Top gaps in the per-player tracker series. Per-player partitioning
+# eliminates the cross-player co-fire seen in `research_log.md` lines
+# ~991-994. Any `gap=0` rows that remain are NOT cross-player co-fire
+# (the partition handles that) -- they are duplicate PlayerStats rows
+# for the same `(filename, playerId, loop)`. The dedicated cell below
+# verifies this empirically: the count of `(extra rows beyond the
+# first per duplicate group)` should match the `gap=0` row count.
+
+# %%
+v3_2_gap_df = run_q(
+    "v3_2_cadence_gap_distribution",
+    """
+    WITH ps AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+                   AS pid,
+               loop,
+               loop - LAG(loop) OVER (
+                   PARTITION BY
+                       filename,
+                       TRY_CAST(json_extract_string(event_data, '$.playerId')
+                                AS INT)
+                   ORDER BY loop
+               ) AS gap
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'PlayerStats'
+    )
+    SELECT gap, COUNT(*) AS n
+    FROM ps
+    WHERE gap IS NOT NULL
+    GROUP BY gap
+    ORDER BY n DESC
+    LIMIT 10
+    """,
+)
+print("=== V3.2 top-10 gap distribution per (filename, playerId) ===")
+print(v3_2_gap_df.to_string(index=False))
+
+# %% [markdown]
+# ### V3.2 -- per-replay coverage and per-player presence
+
+# %%
+v3_2_coverage_df = run_q(
+    "v3_2_per_replay_player_coverage",
+    """
+    WITH ps_player AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+                   AS pid
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'PlayerStats'
+        GROUP BY filename, pid
+    ),
+    per_replay AS (
+        SELECT filename, COUNT(DISTINCT pid) AS n_distinct_players
+        FROM ps_player
+        GROUP BY filename
+    )
+    SELECT n_distinct_players, COUNT(*) AS n_replays
+    FROM per_replay
+    GROUP BY n_distinct_players
+    ORDER BY n_distinct_players
+    """,
+)
+print("=== V3.2 distinct PlayerStats playerIds per replay ===")
+print(v3_2_coverage_df.to_string(index=False))
+
+# %% [markdown]
+# ### V3.2 -- verdict assembly
+
+# %%
+total_gap_rows = int(v3_2_gap_df["n"].sum())
+dominant_gap_row = v3_2_gap_df.iloc[0]
+dominant_gap = int(dominant_gap_row["gap"])
+dominant_gap_n = int(dominant_gap_row["n"])
+dominant_gap_frac = (
+    dominant_gap_n / total_gap_rows if total_gap_rows else 0.0
+)
+top_10_gaps = [
+    {"gap": int(r["gap"]), "n": int(r["n"])}
+    for _, r in v3_2_gap_df.iterrows()
+]
+n_replays_with_both_players = int(
+    v3_2_coverage_df[v3_2_coverage_df["n_distinct_players"] == 2]
+    ["n_replays"].sum()
+)
+n_replays_total_in_v32 = int(v3_2_coverage_df["n_replays"].sum())
+n_replay_player_pairs_no_ps = 0
+for _, r in v3_2_coverage_df.iterrows():
+    if int(r["n_distinct_players"]) < 2:
+        n_replay_player_pairs_no_ps += int(r["n_replays"]) * (
+            2 - int(r["n_distinct_players"])
+        )
+cadence_pass_160 = (dominant_gap == 160) and (dominant_gap_frac >= 0.95)
+print(
+    f"dominant_gap={dominant_gap}, frac={dominant_gap_frac:.4f}, "
+    f"replays_with_both_players={n_replays_with_both_players}/"
+    f"{n_replays_total_in_v32}, missing_replay_player_pairs="
+    f"{n_replay_player_pairs_no_ps}, cadence_pass={cadence_pass_160}"
+)
+
+# %% [markdown]
+# ### V3.2 -- explain gap=0: duplicate-row vs cross-player co-fire
+#
+# The partition on `(filename, playerId)` already excludes cross-player
+# co-fire from the gap series. A non-zero `gap=0` count therefore
+# implies same-player duplicate PlayerStats rows: multiple rows with
+# identical `(filename, playerId, loop)`. The query below counts those
+# duplicates; the sum of `n - 1` per duplicate group must equal the
+# `gap=0` row count from V3.2.
+
+# %%
+v3_2_dup_df = run_q(
+    "v3_2_same_player_duplicate_groups",
+    """
+    WITH ps AS (
+        SELECT filename,
+               TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)
+                   AS pid,
+               loop,
+               COUNT(*) AS n_at_same_key
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'PlayerStats'
+        GROUP BY filename, pid, loop
+    )
+    SELECT
+        COUNT(*) FILTER (WHERE n_at_same_key > 1) AS n_duplicate_groups,
+        COALESCE(SUM(n_at_same_key - 1) FILTER (WHERE n_at_same_key > 1), 0)
+            AS n_extra_rows_beyond_first
+    FROM ps
+    """,
+)
+n_duplicate_groups = int(v3_2_dup_df["n_duplicate_groups"].iloc[0])
+n_extra_rows = int(v3_2_dup_df["n_extra_rows_beyond_first"].iloc[0])
+gap_zero_row = v3_2_gap_df[v3_2_gap_df["gap"] == 0]
+gap_zero_n = int(gap_zero_row["n"].iloc[0]) if not gap_zero_row.empty else 0
+gap_zero_explained_by_duplicates = (n_extra_rows == gap_zero_n)
+print(f"duplicate_groups={n_duplicate_groups}, "
+      f"extra_rows_beyond_first={n_extra_rows}, "
+      f"gap_zero_n={gap_zero_n}, "
+      f"explained_by_duplicates={gap_zero_explained_by_duplicates}")
+
+# %% [markdown]
+# ### V3.3 -- field classification (per-(filename, playerId) monotonicity)
+#
+# Single SQL pass extracts every observed key as a DOUBLE column,
+# computes LAG within (filename, playerId) ordered by loop, then
+# aggregates: null count, min, max, n_with_prev, n_decreases. Per-field
+# null fractions and decrease fractions are computed in Python.
+
+# %%
+def _build_field_stats_sql(keys: list[str]) -> str:
+    """Build a single-pass SQL that aggregates monotonicity stats per key."""
+    extracts = ",\n        ".join(
+        f"TRY_CAST(json_extract_string(event_data, '$.stats.{k}') "
+        f"AS DOUBLE) AS \"{k}\""
+        for k in keys
+    )
+    lags = ",\n        ".join(
+        f'"{k}", LAG("{k}") OVER w AS "prev_{k}"' for k in keys
+    )
+    aggs = ",\n  ".join(
+        f'SUM(CASE WHEN "{k}" IS NULL THEN 1 ELSE 0 END) AS "n_null_{k}", '
+        f'MIN("{k}") AS "min_{k}", MAX("{k}") AS "max_{k}", '
+        f'SUM(CASE WHEN "prev_{k}" IS NOT NULL THEN 1 ELSE 0 END) '
+        f'AS "n_wp_{k}", '
+        f'SUM(CASE WHEN "prev_{k}" IS NOT NULL AND "{k}" < "prev_{k}" '
+        f'THEN 1 ELSE 0 END) AS "n_dec_{k}"'
+        for k in keys
+    )
+    return (
+        "WITH ps AS (\n"
+        "  SELECT filename,\n"
+        "    TRY_CAST(json_extract_string(event_data, '$.playerId') AS INT)\n"
+        "      AS pid,\n"
+        "    loop,\n"
+        f"    {extracts}\n"
+        "  FROM tracker_events_raw\n"
+        "  WHERE evtTypeName = 'PlayerStats'\n"
+        "),\n"
+        "with_lag AS (\n"
+        f"  SELECT filename, pid, loop,\n        {lags}\n"
+        "  FROM ps\n"
+        "  WINDOW w AS (PARTITION BY filename, pid ORDER BY loop)\n"
+        ")\n"
+        f"SELECT COUNT(*) AS n_total_rows,\n  {aggs}\nFROM with_lag"
+    )
+
+
+# %%
+v3_3_sql = _build_field_stats_sql(observed_keys)
+sql_queries["v3_3_field_stats"] = v3_3_sql
+print(f"V3.3 SQL length: {len(v3_3_sql)} chars; "
+      f"keys: {len(observed_keys)}")
+v3_3_df = conn.con.execute(v3_3_sql).df()
+n_total_rows = int(v3_3_df["n_total_rows"].iloc[0])
+print(f"V3.3 scanned n_total_rows = {n_total_rows}")
+
+# %% [markdown]
+# ### V3.3 -- per-field summary stats
+
+# %%
+import pandas as pd
+
+field_stats: list[dict] = []
+for k in observed_keys:
+    n_null = int(v3_3_df[f"n_null_{k}"].iloc[0])
+    minv = v3_3_df[f"min_{k}"].iloc[0]
+    maxv = v3_3_df[f"max_{k}"].iloc[0]
+    n_wp = int(v3_3_df[f"n_wp_{k}"].iloc[0])
+    n_dec = int(v3_3_df[f"n_dec_{k}"].iloc[0])
+    null_frac = n_null / n_total_rows if n_total_rows else None
+    dec_frac = n_dec / n_wp if n_wp else None
+    field_stats.append({
+        "key": k,
+        "n_null": n_null,
+        "null_fraction": null_frac,
+        "min": float(minv) if minv is not None else None,
+        "max": float(maxv) if maxv is not None else None,
+        "n_with_prev": n_wp,
+        "n_decreases": n_dec,
+        "frac_decreases": dec_frac,
+    })
+fs_df = pd.DataFrame(field_stats)
+print("=== V3.3 per-field summary statistics ===")
+print(
+    fs_df[["key", "null_fraction", "min", "max", "frac_decreases"]]
+    .to_string(index=False)
+)
+
+# %% [markdown]
+# ### V3.3 -- apply Q3 strict classification rule
+#
+# Per Q3 + T02 EVIDENCE: s2protocol does NOT document cumulative
+# semantics for any `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` /
+# `*Current` field. Therefore monotonic empirics ALONE cannot promote a
+# field to `safe_delta`. Monotonic-only fields default to
+# `unsafe_or_ambiguous`. The empty `SOURCE_CONFIRMS_CUMULATIVE` set
+# encodes this explicitly.
+
+# %%
+SOURCE_CONFIRMS_CUMULATIVE: set[str] = set()
+classified: list[dict] = []
+for fs in field_stats:
+    k = fs["key"]
+    dec_frac = fs["frac_decreases"]
+    if dec_frac is None or fs["n_with_prev"] == 0:
+        cls, reason = "unsafe_or_ambiguous", "insufficient_consecutive_pairs"
+    elif fs["min"] is not None and fs["min"] == fs["max"]:
+        cls = "unsafe_or_ambiguous"
+        reason = (
+            f"constant value {fs['min']}; cannot distinguish snapshot "
+            "vs cumulative"
+        )
+    elif dec_frac > 0:
+        cls = "safe_snapshot"
+        reason = f"bounded oscillation; frac_decreases={dec_frac:.6f}"
+    elif k in SOURCE_CONFIRMS_CUMULATIVE:
+        cls = "safe_delta"
+        reason = "monotonic non-decreasing AND s2protocol cumulative-confirmed"
+    else:
+        cls = "unsafe_or_ambiguous"
+        reason = (
+            f"monotonic non-decreasing (frac_decreases={dec_frac:.6f}) "
+            "but s2protocol silent on cumulative semantics (Q3 strict)"
+        )
+    classified.append({
+        **fs,
+        "classification": cls,
+        "classification_reason": reason,
+        "source_confirmed_cumulative": k in SOURCE_CONFIRMS_CUMULATIVE,
+    })
+
+import collections
+class_counts = collections.Counter(c["classification"] for c in classified)
+print("=== V3.3 classification counts ===")
+print(dict(class_counts))
+
+# %% [markdown]
+# ### V3.3 -- fixed-point handling note
+#
+# Per s2protocol README, `m_scoreValueFoodUsed` and `m_scoreValueFoodMade`
+# are stored in fixed point (divide by 4096 for integer values).
+# Whether the SC2EGSet decoded JSON is pre-scaled is NOT confirmed by
+# this notebook. T05 records the convention verbatim and does NOT apply
+# any divide-by-4096 transformation. Phase 02 must resolve scaling
+# discipline before any feature uses these fields.
+
+# %%
+FIXED_POINT_KEYS_SNAPSHOT = ["m_scoreValueFoodUsed", "m_scoreValueFoodMade"]
+FIXED_POINT_KEYS_OBSERVED = [
+    k.removeprefix("m_") for k in FIXED_POINT_KEYS_SNAPSHOT
+]
+fixed_point_handling = {
+    "policy": (
+        "T05 records fixed-point convention from s2protocol README "
+        "verbatim; does NOT divide by 4096; classification proceeds on "
+        "raw decoded values; Phase 02 must resolve scaling discipline."
+    ),
+    "verbatim_note": (
+        EVIDENCE["V3_player_stats_fields"]
+        ["s2protocol_fixed_point_note_verbatim"]
+    ),
+    "fields_in_snapshot": FIXED_POINT_KEYS_SNAPSHOT,
+    "fields_in_observed_form": FIXED_POINT_KEYS_OBSERVED,
+    "observed_in_sc2egset": [
+        k for k in FIXED_POINT_KEYS_OBSERVED if k in observed_keys
+    ],
+}
+print("=== V3.3 fixed-point handling ===")
+for fk, fv in fixed_point_handling.items():
+    print(f"  {fk}: {fv}")
+
+# %% [markdown]
+# ### V3 verdict assembly
+#
+# `cumulative_economy_blocked` is True iff at least one
+# `*Lost` / `*Killed` / `*FriendlyFire` field is NOT classified
+# `safe_delta`. Per the empty `SOURCE_CONFIRMS_CUMULATIVE` set, this is
+# True by construction in T05.
+
+# %%
+safe_snapshot_fields = sorted(
+    c["key"] for c in classified if c["classification"] == "safe_snapshot"
+)
+safe_delta_fields = sorted(
+    c["key"] for c in classified if c["classification"] == "safe_delta"
+)
+unsafe_fields = sorted(
+    c["key"] for c in classified
+    if c["classification"] == "unsafe_or_ambiguous"
+)
+all_classified = (len(classified) == len(observed_keys))
+cum_kw = ("Lost", "Killed", "FriendlyFire")
+cumulative_economy_blocked = any(
+    c["classification"] != "safe_delta"
+    for c in classified
+    if any(w in c["key"] for w in cum_kw)
+)
+
+if not cadence_pass_160:
+    v3_result = "FAIL"
+    v3_caveat = (
+        f"cadence audit: dominant_gap={dominant_gap} "
+        f"(frac={dominant_gap_frac:.4f}); expected 160 with frac>=0.95"
+    )
+elif missing_from_observed or extra_in_observed:
+    v3_result = "PASS_WITH_CAVEAT"
+    v3_caveat = (
+        f"key set drift vs s2protocol snapshot: "
+        f"missing={len(missing_from_observed)}, "
+        f"extra={len(extra_in_observed)}; cumulative-economy fields "
+        f"blocked per Q3 strict"
+    )
+else:
+    v3_result = "PASS_WITH_CAVEAT"
+    v3_caveat = (
+        "snapshot cadence and key-set match; "
+        f"{len(safe_snapshot_fields)} safe_snapshot fields enable "
+        "in-game snapshot features; cumulative-economy features "
+        "blocked because s2protocol silent on cumulative semantics "
+        "(Q3 strict)"
+    )
+
+# %% [markdown]
+# ### V3 verdict block
+
+# %%
+verdicts["V3"] = {
+    "hypothesis": (
+        "PlayerStats records periodic per-player economic / military "
+        "snapshots; suitable for in-game snapshot features if cadence, "
+        "mapping, and field completeness pass; cumulative interpretation "
+        "NOT assumed (Q3 strict)."
+    ),
+    "falsifier": (
+        "cadence not stable per (filename, playerId); missing PlayerStats "
+        "for material number of replays; key-set drift; values cannot be "
+        "classified; candidate feature family field semantics unverified"
+    ),
+    "result": v3_result,
+    "all_observed_keys_classified": all_classified,
+    "cadence_summary": {
+        "dominant_gap_loops": dominant_gap,
+        "dominant_gap_fraction": dominant_gap_frac,
+        "top_10_gaps": top_10_gaps,
+        "replays_with_both_players": n_replays_with_both_players,
+        "replays_total_with_playerstats": n_replays_total_in_v32,
+        "missing_replay_player_pairs": n_replay_player_pairs_no_ps,
+        "expected_dominant_gap_loops": 160,
+        "expected_dominant_gap_seconds_at_22_4_lps": 160 / 22.4,
+        "cadence_pass_160": cadence_pass_160,
+        "gap_zero_n": gap_zero_n,
+        "gap_zero_cause": (
+            "same-player duplicate PlayerStats tick rows; partition by "
+            "(filename, playerId) is correct"
+        ),
+        "gap_zero_explained_by_duplicates": gap_zero_explained_by_duplicates,
+        "duplicate_groups": n_duplicate_groups,
+        "duplicate_extra_rows_beyond_first": n_extra_rows,
+    },
+    "key_set_comparison": {
+        "observed_count": len(observed_keys),
+        "expected_count": len(expected_keys),
+        "matched_count": len(matched_set),
+        "missing_from_observed": missing_from_observed,
+        "extra_in_observed": extra_in_observed,
+    },
+    "field_classification": classified,
+    "safe_snapshot_fields": safe_snapshot_fields,
+    "safe_delta_fields": safe_delta_fields,
+    "unsafe_or_ambiguous_fields": unsafe_fields,
+    "cumulative_economy_blocked": cumulative_economy_blocked,
+    "fixed_point_handling": fixed_point_handling,
+    "notes": v3_caveat,
+}
+print("=== V3 verdict ===")
+print(f"  result: {verdicts['V3']['result']}")
+print(f"  safe_snapshot fields: {len(safe_snapshot_fields)}")
+print(f"  safe_delta fields:    {len(safe_delta_fields)}")
+print(f"  unsafe_or_ambiguous:  {len(unsafe_fields)}")
+print(f"  cumulative_economy_blocked: {cumulative_economy_blocked}")
+print(f"  notes: {verdicts['V3']['notes']}")
+
+# %% [markdown]
+# ### V3 classification consistency assertions
+#
+# Per T05 hygiene check section B: assert that the classification is
+# total, mutually exclusive, and that `safe_delta` remains 0 (since
+# `SOURCE_CONFIRMS_CUMULATIVE` is empty by design under Q3 strict).
+
+# %%
+assert len(classified) == len(observed_keys), (
+    f"classified count {len(classified)} != observed {len(observed_keys)}"
+)
+class_buckets = {c["key"]: c["classification"] for c in classified}
+assert len(class_buckets) == len(classified), "duplicate keys in classified"
+assert set(class_buckets.values()) <= {
+    "safe_snapshot", "safe_delta", "unsafe_or_ambiguous"
+}, "unexpected classification value"
+ss = set(safe_snapshot_fields)
+sd = set(safe_delta_fields)
+ua = set(unsafe_fields)
+assert (ss | sd | ua) == set(observed_keys), (
+    f"union of class lists != observed keys; "
+    f"diff={(ss | sd | ua) ^ set(observed_keys)}"
+)
+assert (ss & sd) == set(), f"safe_snapshot ∩ safe_delta = {ss & sd}"
+assert (ss & ua) == set(), f"safe_snapshot ∩ unsafe = {ss & ua}"
+assert (sd & ua) == set(), f"safe_delta ∩ unsafe = {sd & ua}"
+assert len(safe_delta_fields) == 0, (
+    "safe_delta MUST be empty under Q3 strict: SOURCE_CONFIRMS_CUMULATIVE "
+    "is empty by design"
+)
+print("=== V3 classification consistency: OK ===")
+print(f"  total: {len(classified)}; "
+      f"safe_snapshot: {len(safe_snapshot_fields)}; "
+      f"safe_delta: {len(safe_delta_fields)}; "
+      f"unsafe_or_ambiguous: {len(unsafe_fields)}")
+
+# %% [markdown]
+# ## V3 result summary
+#
+# - **Cadence:** dominant gap is 160 loops per `(filename, playerId)`,
+#   matching the SC2 tracker spec (~7.14s at 22.4 lps). The residual
+#   `gap=0` rows are NOT cross-player co-fire (partition handles that)
+#   -- they are same-player duplicate PlayerStats rows for the same
+#   `(filename, playerId, loop)`. Row count exactly matches the
+#   `n - 1` sum over duplicate groups, so this is a row-multiplicity
+#   caveat at ingestion, not a cadence partition error.
+# - **Key set:** observed PlayerStats stats keys match the s2protocol
+#   `protocol88500.py` snapshot after stripping the `m_` prefix (the
+#   SC2EGSet decoder strips that C++ struct member prefix when
+#   serializing JSON).
+# - **`safe_snapshot` (26 fields)** -- usable as a raw observed snapshot
+#   at a cutoff loop, with scaling and semantic caveats where flagged
+#   below. NOT a cumulative total. Includes:
+#     - all `*Current` / `*UsedCurrent*` / `*UsedInProgress*` /
+#       `*UsedActiveForces` / `*CollectionRate` /
+#       `WorkersActiveCount` / `FoodUsed` / `FoodMade`
+#       (oscillation observed, as expected for instantaneous state);
+#     - 5 of 6 `*Lost*` fields (`scoreValueMineralsLostArmy/Economy/
+#       Technology`, `scoreValueVespeneLostArmy`,
+#       `scoreValueVespeneLostTechnology`) -- small empirical decrease
+#       fractions and negative minima (e.g., min=-2033) suggest these
+#       are not pure cumulative tallies; treated as raw snapshots with
+#       a "negative-min caveat" for Phase 02.
+# - **`unsafe_or_ambiguous` (13 fields)** -- monotonic non-decreasing
+#   AND s2protocol silent on cumulative semantics, OR constant-zero:
+#     - all 6 `*Killed*` fields (Mineral and Vespene, Army/Economy/
+#       Technology) -- strictly monotonic, no source confirmation;
+#     - all 6 `*FriendlyFire*` fields -- mostly constant zero in 1v1
+#       Random Map, no source confirmation;
+#     - 1 of 6 `*Lost*` fields (`scoreValueVespeneLostEconomy`) --
+#       zero decreases observed AND no source confirmation.
+# - **`safe_delta` (0 fields)** -- empty by construction. Under Q3
+#   strict, `SOURCE_CONFIRMS_CUMULATIVE` is empty: monotonic empirics
+#   alone CANNOT promote a field to `safe_delta` without s2protocol
+#   confirmation, which is absent for every PlayerStats stats key.
+# - **Cumulative-economy feature families are blocked** until additional
+#   validation (Q3 strict + Amendment 1 aggregation in T10);
+#   snapshot feature families remain candidates pending V4..V7.
+# - **`safe_snapshot` does NOT mean cumulative total.** It means
+#   "usable as a raw observed snapshot at a cutoff loop, subject to the
+#   scaling caveat (FoodUsed/FoodMade) and the negative-minimum caveat
+#   (Lost fields)." Cumulative-style features remain blocked.
+# - **V3 verdict:** `PASS_WITH_CAVEAT` -- snapshot cadence and key-set
+#   pass; cumulative-economy feature families blocked per Q3 strict.
+
+# %% [markdown]
+# ## Out of scope for T05 (this notebook execution)
+#
+# - V4..V8 are deferred to T06..T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T04.
+#   atomically in T11, NOT in T05.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
