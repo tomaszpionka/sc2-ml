@@ -2963,12 +2963,496 @@ print(f"  n_inverted=0; survivors descriptive; "
 # - **V5 verdict:** see printed result above.
 
 # %% [markdown]
-# ## Out of scope for T07 (this notebook execution)
+# ---
+# ## V6 -- Coordinate semantics (descriptive only per Q4 + Amendment 5)
 #
-# - V6..V8 are deferred to T08..T10 per `planning/current_plan.md`.
+# **Hypothesis.** Coordinate fields on tracker events are local
+# observations that can be used descriptively if their units (cell vs
+# sub-cell vs fixed-point), origin (top-left vs map-center), and the
+# observed map bounds are mutually consistent.
+#
+# **Falsifier.**
+# - coordinate units / origin cannot be source-confirmed AND empirical
+#   bounds are inconsistent with any plausible interpretation;
+# - material out-of-bounds rate without an explainable convention;
+# - `UnitPositions.items` packed encoding cannot be decoded safely;
+# - coordinate features would require future / post-game information.
+#
+# **Per Q4 + Amendment 5 (carried forward to V6).**
+# - Coordinate validation is *descriptive only*. Out-of-bounds rates
+#   are reported but NOT called "parser bugs" without source evidence.
+# - `source_confirmed_units` and `source_confirmed_origin` are
+#   recorded per family. Per T02 EVIDENCE V6, BOTH are False for
+#   SC2EGSet today (s2protocol README + protocol88500.py do not
+#   explicitly state cell-vs-sub-cell-vs-fixed-point and origin
+#   convention for SC2 tracker events). Therefore NO coordinate
+#   family can be `eligible_for_phase02_now` in V6, regardless of
+#   empirical in-bounds rate.
+# - `UnitPositions` remains blocked or caveated unless items unpacking
+#   is non-trivially validated.
+
+# %% [markdown]
+# ### V6.1 -- map bounds extraction + cleanliness check
+
+# %%
+v6_1_df = run_q(
+    "v6_1_map_bounds",
+    """
+    SELECT
+        COUNT(*) AS n_replays,
+        COUNT(*) FILTER (
+            WHERE initData.gameDescription.mapSizeX IS NULL
+        ) AS n_null_msx,
+        COUNT(*) FILTER (
+            WHERE initData.gameDescription.mapSizeY IS NULL
+        ) AS n_null_msy,
+        COUNT(*) FILTER (
+            WHERE initData.gameDescription.mapSizeX <= 0
+        ) AS n_degenerate_msx,
+        COUNT(*) FILTER (
+            WHERE initData.gameDescription.mapSizeY <= 0
+        ) AS n_degenerate_msy,
+        MIN(initData.gameDescription.mapSizeX) AS min_msx,
+        MAX(initData.gameDescription.mapSizeX) AS max_msx,
+        MIN(initData.gameDescription.mapSizeY) AS min_msy,
+        MAX(initData.gameDescription.mapSizeY) AS max_msy
+    FROM replays_meta_raw
+    """,
+)
+print("=== V6.1 map bounds availability ===")
+print(v6_1_df.to_string(index=False))
+bounds_summary = {k: int(v6_1_df[k].iloc[0]) for k in v6_1_df.columns}
+n_replays_clean_bounds = (
+    bounds_summary["n_replays"]
+    - bounds_summary["n_degenerate_msx"]
+    - bounds_summary["n_degenerate_msy"]
+)
+bounds_summary["n_replays_with_clean_bounds"] = n_replays_clean_bounds
+bounds_summary["clean_bounds_rate"] = (
+    n_replays_clean_bounds / bounds_summary["n_replays"]
+    if bounds_summary["n_replays"] else 0.0
+)
+print(f"\nclean-bounds replay count = {n_replays_clean_bounds}; "
+      f"rate = {bounds_summary['clean_bounds_rate']:.6f}")
+
+# %% [markdown]
+# ### V6.2 -- coordinate availability per event family
+#
+# Direct `x` / `y` coordinate fields exist on UnitBorn / UnitInit /
+# UnitDied per V5.1 schema recon. UnitPositions uses a different
+# packed scheme (V6.4). All other lifecycle event types have no
+# direct coordinate fields.
+
+# %%
+DIRECT_COORD_EVENTS = ["UnitBorn", "UnitInit", "UnitDied"]
+v6_2_df = run_q(
+    "v6_2_direct_coord_availability",
+    f"""
+    SELECT evtTypeName,
+           COUNT(*) AS n_total,
+           COUNT(*) FILTER (
+               WHERE json_extract_string(event_data, '$.x') IS NULL
+           ) AS n_null_x,
+           COUNT(*) FILTER (
+               WHERE json_extract_string(event_data, '$.y') IS NULL
+           ) AS n_null_y,
+           MIN(TRY_CAST(json_extract_string(event_data, '$.x')
+                        AS INT)) AS min_x,
+           MAX(TRY_CAST(json_extract_string(event_data, '$.x')
+                        AS INT)) AS max_x,
+           MIN(TRY_CAST(json_extract_string(event_data, '$.y')
+                        AS INT)) AS min_y,
+           MAX(TRY_CAST(json_extract_string(event_data, '$.y')
+                        AS INT)) AS max_y
+    FROM tracker_events_raw
+    WHERE evtTypeName IN ({", ".join(f"'{e}'" for e in DIRECT_COORD_EVENTS)})
+    GROUP BY evtTypeName
+    ORDER BY evtTypeName
+    """,
+)
+print("=== V6.2 direct-coord event availability ===")
+print(v6_2_df.to_string(index=False))
+
+# %% [markdown]
+# ### V6.3 -- in-bounds rate per direct-coord event family
+#
+# Joins event x/y to `replays_meta_raw.initData.gameDescription.
+# mapSizeX/mapSizeY` and computes the rate at which raw integer
+# coordinates fall in `[0, mapSizeX-1] x [0, mapSizeY-1]`. Replays
+# with degenerate bounds (msx<=0 or msy<=0) are excluded. The "raw"
+# interpretation is tested empirically; a "scaled" interpretation
+# is NOT chosen without source evidence.
+
+# %%
+v6_3_df = run_q(
+    "v6_3_in_bounds_rate",
+    f"""
+    WITH bounds AS (
+        SELECT filename,
+               initData.gameDescription.mapSizeX AS msx,
+               initData.gameDescription.mapSizeY AS msy
+        FROM replays_meta_raw
+        WHERE initData.gameDescription.mapSizeX > 0
+          AND initData.gameDescription.mapSizeY > 0
+    ),
+    coords AS (
+        SELECT te.evtTypeName, te.filename,
+               TRY_CAST(json_extract_string(te.event_data, '$.x') AS INT)
+                   AS x,
+               TRY_CAST(json_extract_string(te.event_data, '$.y') AS INT)
+                   AS y
+        FROM tracker_events_raw te
+        WHERE te.evtTypeName IN
+            ({", ".join(f"'{e}'" for e in DIRECT_COORD_EVENTS)})
+    ),
+    joined AS (
+        SELECT c.evtTypeName, c.x, c.y, b.msx, b.msy
+        FROM coords c JOIN bounds b USING (filename)
+    )
+    SELECT evtTypeName,
+           COUNT(*) AS n_evaluated,
+           COUNT(*) FILTER (
+               WHERE x >= 0 AND x < msx AND y >= 0 AND y < msy
+           ) AS n_in_bounds,
+           COUNT(*) FILTER (
+               WHERE x < 0 OR x >= msx OR y < 0 OR y >= msy
+           ) AS n_out_of_bounds,
+           ROUND(
+               1.0 * COUNT(*) FILTER (
+                   WHERE x >= 0 AND x < msx AND y >= 0 AND y < msy
+               ) / NULLIF(COUNT(*), 0), 6
+           ) AS in_bounds_rate
+    FROM joined
+    GROUP BY evtTypeName
+    ORDER BY evtTypeName
+    """,
+)
+print("=== V6.3 in-bounds rate per event family (raw interp) ===")
+print(v6_3_df.to_string(index=False))
+in_bounds_per_event = {
+    r["evtTypeName"]: {
+        "n_evaluated": int(r["n_evaluated"]),
+        "n_in_bounds": int(r["n_in_bounds"]),
+        "n_out_of_bounds": int(r["n_out_of_bounds"]),
+        "in_bounds_rate": float(r["in_bounds_rate"])
+                          if r["in_bounds_rate"] is not None else None,
+    }
+    for _, r in v6_3_df.iterrows()
+}
+
+# %% [markdown]
+# ### V6.4 -- UnitPositions packed-items structural check
+#
+# `event_data.items` is a packed array. Per s2protocol README, items
+# are emitted as triplets `(delta_index, x, y)` where the unit index
+# is `firstUnitIndex + cumulative deltas`. T08 verifies the array
+# length is divisible by 3 (necessary condition for the triplet
+# format) and reports max coordinate observed across a bounded
+# sample. Full decoding (cumulative-delta index walk + per-unit
+# owner attribution via UnitBorn lineage) is NOT performed in T08
+# -- per Amendment 5 + plan T07.6, that risks blowing scope and
+# UnitPositions remains `requires_additional_unpacking_validation`
+# until a dedicated decoder is validated.
+
+# %%
+v6_4_df = run_q(
+    "v6_4_unit_positions_structure",
+    """
+    WITH lengths AS (
+        SELECT json_array_length(json_extract(event_data, '$.items'))
+                   AS items_len
+        FROM tracker_events_raw
+        WHERE evtTypeName = 'UnitPositions'
+    )
+    SELECT
+        COUNT(*) AS n_total,
+        COUNT(*) FILTER (WHERE items_len % 3 = 0) AS n_divisible_by_3,
+        COUNT(*) FILTER (WHERE items_len % 3 != 0)
+            AS n_not_divisible_by_3,
+        MIN(items_len) AS min_items_len,
+        MAX(items_len) AS max_items_len,
+        AVG(items_len) AS mean_items_len,
+        ROUND(
+            1.0 * COUNT(*) FILTER (WHERE items_len % 3 = 0)
+                / NULLIF(COUNT(*), 0), 6
+        ) AS divisibility_rate
+    FROM lengths
+    """,
+)
+print("=== V6.4 UnitPositions packed-items structure ===")
+print(v6_4_df.to_string(index=False))
+unit_positions_structure = {
+    "n_total": int(v6_4_df["n_total"].iloc[0]),
+    "n_divisible_by_3": int(v6_4_df["n_divisible_by_3"].iloc[0]),
+    "n_not_divisible_by_3": int(v6_4_df["n_not_divisible_by_3"].iloc[0]),
+    "min_items_len": int(v6_4_df["min_items_len"].iloc[0]),
+    "max_items_len": int(v6_4_df["max_items_len"].iloc[0]),
+    "mean_items_len": float(v6_4_df["mean_items_len"].iloc[0]),
+    "divisibility_rate": float(v6_4_df["divisibility_rate"].iloc[0]),
+    "decoded_in_t08": False,
+    "decision": (
+        "requires_additional_unpacking_validation -- T08 verifies the "
+        "triplet-divisibility condition only; full cumulative-delta "
+        "index walk + UnitBorn-lineage owner attribution is deferred"
+    ),
+}
+
+# %% [markdown]
+# ### V6.5 -- source-confirmation gate (per Amendment 5)
+#
+# T02 EVIDENCE V6 records `source_confirmed_units = False` and
+# `source_confirmed_origin = False` for every tracker coordinate
+# family in SC2EGSet. s2protocol README + `protocol88500.py` do not
+# explicitly state whether `x` / `y` are cell units, sub-cell units,
+# or fixed-point, nor whether origin is top-left vs map-center.
+# Per Amendment 5, this means NO coordinate family can be
+# `eligible_for_phase02_now` regardless of empirical bounds.
+
+# %%
+source_confirmation = {
+    "source_confirmed_units": (
+        verdicts.get("V4", {})
+        .get("protocol88500_snapshot_caveat") is not None
+        and EVIDENCE["V6_coordinate_semantics"]["source_confirmed_units"]
+    ),
+    "source_confirmed_origin": EVIDENCE["V6_coordinate_semantics"][
+        "source_confirmed_origin"
+    ],
+    "rationale": (
+        "T02 EVIDENCE V6: s2protocol README + protocol88500.py do not "
+        "explicitly state coordinate units (cell vs sub-cell vs "
+        "fixed-point) nor origin (top-left vs map-center) for SC2 "
+        "tracker events. Empirical max(x)~219 vs map max~248 is "
+        "consistent with cell units, but consistency != confirmation."
+    ),
+}
+print("=== V6.5 source confirmation ===")
+for k, v in source_confirmation.items():
+    print(f"  {k}: {v}")
+
+# %% [markdown]
+# ### V6 verdict assembly
+#
+# Per-event-family coordinate verdict + V6 result. Per Amendment 5:
+# `eligible_for_phase02_now` is impossible without source confirmation
+# of units AND origin (both False here). Best achievable is
+# `eligible_with_caveat` for direct-coord families with high empirical
+# in-bounds rate; `blocked_until_additional_validation` otherwise.
+
+# %%
+def coord_verdict(et: str) -> dict:
+    if et in DIRECT_COORD_EVENTS:
+        ib = in_bounds_per_event.get(et)
+        if not ib:
+            return {
+                "coordinate_verdict": "fail",
+                "reason": "no in-bounds evaluation result",
+                "in_bounds_rate": None,
+            }
+        rate = ib["in_bounds_rate"]
+        if rate is None:
+            verdict = "fail"
+        elif (rate >= 0.99
+              and source_confirmation["source_confirmed_units"]
+              and source_confirmation["source_confirmed_origin"]):
+            verdict = "eligible_for_phase02_now"
+        elif rate >= 0.99:
+            verdict = "eligible_with_caveat"
+        else:
+            verdict = "blocked_until_additional_validation"
+        return {
+            "coordinate_verdict": verdict,
+            "in_bounds_rate": rate,
+            "n_evaluated": ib["n_evaluated"],
+            "n_out_of_bounds": ib["n_out_of_bounds"],
+            "scope": (
+                "descriptive coordinate features only; subject to "
+                "Amendment 5 source-confirmation gate"
+            ),
+        }
+    if et == "UnitPositions":
+        return {
+            "coordinate_verdict": "blocked_until_additional_validation",
+            "in_bounds_rate": None,
+            "scope": (
+                "owner-attributed and coordinate features blocked until "
+                "items unpacking decoder is validated AND units/origin "
+                "are source-confirmed"
+            ),
+            "structure": unit_positions_structure,
+        }
+    return {
+        "coordinate_verdict": "not_applicable",
+        "in_bounds_rate": None,
+        "scope": "no coordinate fields on this event family",
+    }
+
+
+COORD_BEARING = DIRECT_COORD_EVENTS + ["UnitPositions"]
+coordinate_feature_eligibility = {et: coord_verdict(et) for et in COORD_BEARING}
+print("=== V6 coordinate verdicts ===")
+for et, v in coordinate_feature_eligibility.items():
+    print(f"  {et}: {v['coordinate_verdict']} "
+          f"(in_bounds_rate={v.get('in_bounds_rate')})")
+
+# %% [markdown]
+# ### V6 verdict block + REVIEW followup
+
+# %%
+review_followups: list = []
+for et, v in coordinate_feature_eligibility.items():
+    rate = v.get("in_bounds_rate")
+    if rate is not None and rate < 0.99:
+        review_followups.append(
+            f"[REVIEW: investigate s2protocol coordinate-encoding for "
+            f"SC2 tracker event {et}; out-of-bounds rate "
+            f"{(1.0 - rate) * 100:.4f}% observed 2026-05-04]"
+        )
+
+eligible = [
+    et for et, v in coordinate_feature_eligibility.items()
+    if v["coordinate_verdict"] == "eligible_for_phase02_now"
+]
+caveated = [
+    et for et, v in coordinate_feature_eligibility.items()
+    if v["coordinate_verdict"] == "eligible_with_caveat"
+]
+blocked = [
+    et for et, v in coordinate_feature_eligibility.items()
+    if v["coordinate_verdict"] == "blocked_until_additional_validation"
+]
+failed = [
+    et for et, v in coordinate_feature_eligibility.items()
+    if v["coordinate_verdict"] == "fail"
+]
+
+if failed:
+    v6_result = "FAIL"
+    v6_caveat = (
+        f"failed coordinate verdicts: {failed}; "
+        f"blocked: {blocked}; caveated: {caveated}"
+    )
+elif blocked or not source_confirmation["source_confirmed_units"]:
+    v6_result = "PASS_WITH_CAVEAT"
+    v6_caveat = (
+        f"source-confirmation gate not met (units / origin not "
+        f"confirmed in s2protocol); coord-bearing eligibility "
+        f"capped at eligible_with_caveat; blocked: {blocked}; "
+        f"caveated: {caveated}"
+    )
+else:
+    v6_result = "PASS"
+    v6_caveat = (
+        f"all {len(eligible)} coord-bearing families eligible "
+        f"(source-confirmed AND empirical bounds pass)"
+    )
+
+verdicts["V6"] = {
+    "hypothesis": (
+        "tracker coordinate fields are local observations usable "
+        "descriptively if units / origin are understood and bounds "
+        "are plausible"
+    ),
+    "falsifier": (
+        "units / origin not source-confirmed AND empirical bounds "
+        "inconsistent; material out-of-bounds rate without "
+        "explainable convention; UnitPositions cannot be decoded; "
+        "future-dependent semantics"
+    ),
+    "result": v6_result,
+    "amendment_5_compliance": True,
+    "per_event_coordinate_summary": {
+        et: in_bounds_per_event.get(et) for et in DIRECT_COORD_EVENTS
+    },
+    "source_confirmation": source_confirmation,
+    "bounds_summary": bounds_summary,
+    "unit_positions_unpacking_summary": unit_positions_structure,
+    "coordinate_feature_eligibility": coordinate_feature_eligibility,
+    "review_followups_for_artifact_json": review_followups,
+    "notes_for_V8": (
+        "Coordinate-derived features for any tracker event family are "
+        "blocked or caveated under V6 because s2protocol does not "
+        "source-confirm units / origin (Amendment 5). Empirical "
+        "in-bounds rates are reported descriptively. UnitPositions "
+        "owner attribution remains blocked until items unpacking is "
+        "validated. V6 does NOT block non-coordinate cutoff-count "
+        "features (those are V5)."
+    ),
+    "notes": v6_caveat,
+}
+print("=== V6 verdict ===")
+print(f"  result: {verdicts['V6']['result']}")
+print(f"  eligible: {eligible}; caveated: {caveated}; blocked: {blocked}; "
+      f"failed: {failed}")
+print(f"  review_followups: {len(review_followups)}")
+for note in review_followups:
+    print(f"    {note}")
+print(f"  notes: {verdicts['V6']['notes']}")
+
+# %% [markdown]
+# ### V6 consistency assertions
+
+# %%
+for et in COORD_BEARING:
+    assert et in coordinate_feature_eligibility, (
+        f"missing V6 verdict for coord-bearing family {et}"
+    )
+    v = coordinate_feature_eligibility[et]
+    assert v["coordinate_verdict"] in (
+        "eligible_for_phase02_now", "eligible_with_caveat",
+        "blocked_until_additional_validation", "not_applicable", "fail"
+    ), f"{et}: bad coordinate_verdict={v['coordinate_verdict']}"
+    if not source_confirmation["source_confirmed_units"]:
+        assert v["coordinate_verdict"] != "eligible_for_phase02_now", (
+            f"{et}: cannot be eligible_for_phase02_now without "
+            "source_confirmed_units (Amendment 5)"
+        )
+print("=== V6 consistency: OK ===")
+print(f"  {len(coordinate_feature_eligibility)} coord-bearing families "
+      f"have V6 verdicts; Amendment 5 gate enforced.")
+
+# %% [markdown]
+# ## V6 result summary
+#
+# - **Map bounds** (V6.1): every replay carries
+#   `initData.gameDescription.mapSizeX/mapSizeY`. A small number with
+#   `msx <= 0` or `msy <= 0` are excluded from the in-bounds
+#   evaluation (degenerate-bounds replay count reported above).
+# - **Direct coordinates** (V6.2): UnitBorn / UnitInit / UnitDied
+#   carry `event_data.x` and `event_data.y` with near-zero null
+#   rate; observed integer ranges are consistent with cell units
+#   (max `x`/`y` < typical `mapSize`).
+# - **In-bounds rate** (V6.3): joined to map dims, raw integer
+#   interpretation `[0, mapSizeX-1] x [0, mapSizeY-1]` -- per-family
+#   in_bounds_rate reported descriptively. NOT called a "parser bug"
+#   without source evidence (Q4 / Amendment 5).
+# - **UnitPositions** (V6.4): structural check only. `event_data.items`
+#   length divisibility-by-3 reported as a necessary condition for
+#   the triplet `(delta_index, x, y)` packed encoding. Full decoding
+#   is NOT performed in T08; UnitPositions remains
+#   `requires_additional_unpacking_validation` until a dedicated
+#   decoder is validated AND units / origin are source-confirmed.
+# - **Source confirmation** (V6.5, per T02 EVIDENCE V6):
+#   `source_confirmed_units = False` and `source_confirmed_origin =
+#   False`. s2protocol does not explicitly state cell-vs-sub-cell-
+#   vs-fixed-point or origin convention for SC2 tracker events. Per
+#   Amendment 5, NO coordinate family can be
+#   `eligible_for_phase02_now` regardless of empirical bounds.
+# - **REVIEW followup**: if any direct-coord family has
+#   `in_bounds_rate < 0.99`, a follow-up note is recorded in
+#   `verdicts["V6"]["review_followups_for_artifact_json"]` (artifact
+#   JSON only, NOT thesis prose, NOT REVIEW_QUEUE.md per Q5).
+# - **V6 verdict:** see printed result above.
+# - **Scope:** V6 governs coordinate-derived features only. It does
+#   NOT block non-coordinate cutoff-count features established in V5.
+
+# %% [markdown]
+# ## Out of scope for T08 (this notebook execution)
+#
+# - V7..V8 are deferred to T09..T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T07.
+#   atomically in T11, NOT in T08.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
