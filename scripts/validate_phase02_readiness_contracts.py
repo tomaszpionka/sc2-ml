@@ -251,14 +251,39 @@ def find_lines_containing(text: str, needle: str) -> list[tuple[int, str]]:
     return out
 
 
-def classify_ranked_only_context(line: str) -> str:
-    """Classify a line containing 'ranked-only'.
+def get_context_window(lines: list[str], line_no: int, radius: int = 1) -> str:
+    """Return joined text of a context window around line_no (1-based).
 
-    Returns 'OK_NEGATION' if the line uses the substring inside a known
+    The window spans
+    ``[max(1, line_no - radius) .. min(len(lines), line_no + radius)]``,
+    joined with a single space so phrases whose meaning straddles physical
+    line breaks remain matchable. This makes the ranked-language classifiers
+    robust to Markdown line-wrapping that splits negation markers from their
+    target substring (e.g., 'MUST NOT be called' on one line, 'unqualified
+    ranked ladder' on the next).
+
+    Boundary-clipped: returns an empty string if `lines` is empty or
+    `line_no < 1`.
+    """
+    if not lines or line_no < 1:
+        return ""
+    start = max(1, line_no - radius)
+    end = min(len(lines), line_no + radius)
+    return " ".join(lines[start - 1:end])
+
+
+def classify_ranked_only_context(context_text: str) -> str:
+    """Classify a context window containing 'ranked-only'.
+
+    The argument is a joined multi-line context window (see
+    `get_context_window`) so negation markers wrapped across Markdown line
+    breaks are still detected.
+
+    Returns 'OK_NEGATION' if the context uses 'ranked-only' inside a known
     negation, prohibition, or falsifier counter-example pattern;
     returns 'BLOCKER' otherwise.
     """
-    lower = line.lower()
+    lower = context_text.lower()
     if "not ranked-only" in lower:
         return "OK_NEGATION"
     if "must not" in lower and "ranked-only" in lower:
@@ -272,17 +297,22 @@ def classify_ranked_only_context(line: str) -> str:
     return "BLOCKER"
 
 
-def classify_ranked_ladder_context(line: str) -> str:
-    """Classify a line containing 'ranked ladder' (caller filters out 'ranked ladder only').
+def classify_ranked_ladder_context(context_text: str) -> str:
+    """Classify a context window containing 'ranked ladder'.
 
-    Returns 'OK_SOURCE_SPECIFIC' only when the line carries explicit ID-6
-    ranked-candidate context: 'ranked candidate', 'ID 6', or 'rm_1v1'. The bare
-    phrase 'ranked 1v1' is NOT sufficient by itself.
+    Caller is responsible for filtering out 'ranked ladder only' before
+    calling this classifier. The argument is a joined multi-line context
+    window (see `get_context_window`) so ID-6 / negation context wrapped
+    across line breaks is still detected.
+
+    Returns 'OK_SOURCE_SPECIFIC' only when the context carries explicit ID-6
+    ranked-candidate context: 'ranked candidate', 'ID 6', or 'rm_1v1'. The
+    bare phrase 'ranked 1v1' is NOT sufficient by itself.
 
     Returns 'OK_NEGATION' for prohibition / falsifier patterns;
     returns 'BLOCKER' otherwise.
     """
-    lower = line.lower()
+    lower = context_text.lower()
     # Source-specific OK requires explicit ID 6 / rm_1v1 / ranked-candidate context.
     # Generic 'ranked 1v1' alone is insufficient — it does not pin the source.
     if "ranked candidate" in lower:
@@ -420,6 +450,7 @@ def check_forbidden_substrings() -> Check:
         rel = str(path.relative_to(REPO_ROOT))
         if not text:
             continue
+        text_lines = text.splitlines()
         for substr in FORBIDDEN_SUBSTRINGS:
             for line_no, line in find_lines_containing(text, substr):
                 findings.append(
@@ -434,7 +465,8 @@ def check_forbidden_substrings() -> Check:
                 )
 
         for line_no, line in find_lines_containing(text, "ranked-only"):
-            classification = classify_ranked_only_context(line)
+            context_text = get_context_window(text_lines, line_no, radius=1)
+            classification = classify_ranked_only_context(context_text)
             if classification == "BLOCKER":
                 findings.append(
                     Finding(
@@ -442,20 +474,24 @@ def check_forbidden_substrings() -> Check:
                         location=f"{rel}:{line_no}",
                         description=(
                             "'ranked-only' not in negation about aoe2companion "
-                            f"mixed-mode: {line.strip()[:200]}"
+                            "mixed-mode (1-line context window). Line: "
+                            f"{line.strip()[:120]} | Context: "
+                            f"{context_text.strip()[:240]}"
                         ),
                     )
                 )
             else:
                 evidence.append(
                     f"{rel}:{line_no} {classification} (ranked-only): "
-                    f"{line.strip()[:120]}"
+                    f"line='{line.strip()[:80]}' "
+                    f"ctx='{context_text.strip()[:160]}'"
                 )
 
         for line_no, line in find_lines_containing(text, "ranked ladder"):
             if "ranked ladder only" in line:
                 continue
-            classification = classify_ranked_ladder_context(line)
+            context_text = get_context_window(text_lines, line_no, radius=1)
+            classification = classify_ranked_ladder_context(context_text)
             if classification == "BLOCKER":
                 findings.append(
                     Finding(
@@ -463,14 +499,17 @@ def check_forbidden_substrings() -> Check:
                         location=f"{rel}:{line_no}",
                         description=(
                             "'ranked ladder' not in negation/source-specific "
-                            f"context: {line.strip()[:200]}"
+                            "context (1-line context window). Line: "
+                            f"{line.strip()[:120]} | Context: "
+                            f"{context_text.strip()[:240]}"
                         ),
                     )
                 )
             else:
                 evidence.append(
                     f"{rel}:{line_no} {classification} (ranked ladder): "
-                    f"{line.strip()[:120]}"
+                    f"line='{line.strip()[:80]}' "
+                    f"ctx='{context_text.strip()[:160]}'"
                 )
 
     blockers = [f for f in findings if f.severity == "BLOCKER"]
