@@ -3944,12 +3944,605 @@ print(f"  {len(prediction_setting_matrix)} families; pre-game "
 #   classification for V8 / T10.
 
 # %% [markdown]
-# ## Out of scope for T09 (this notebook execution)
+# ---
+# ## V8 -- Final feature-family eligibility + GATE-14A6 decision
 #
-# - V8 is deferred to T10 per `planning/current_plan.md`.
+# **Aggregation rules (per Amendment 1 + plan T10 Step 1).**
+# - `eligible_for_phase02_now` iff: V1=PASS AND V2 mapping confidence
+#   `high` (player-attributed slice per Amendment 3) AND relevant
+#   V3/V4/V5/V6 verdicts PASS or PASS_WITH_CAVEAT AND V7 setting =
+#   `in_game_snapshot` AND auto-downgrade rule from T02 does NOT fire.
+# - `eligible_with_caveat` iff: any of {V3, V4, V5, V6} is
+#   PASS_WITH_CAVEAT but no FAIL AND V2 mapping at least `medium`
+#   AND V7 setting = `in_game_snapshot`.
+# - `blocked_until_additional_validation` iff: any of {V3, V4, V5, V6}
+#   is FAIL OR V2 mapping is `low` confidence OR V7 setting requires
+#   `post_game_or_blocked` OR cumulative-economy semantics required
+#   AND V3 cumulative classification not proven (Q3 strict).
+# - `not_applicable_to_pre_game` is mechanically the value of the
+#   `status_pre_game` column for every tracker-derived family per
+#   Amendment 2.
+#
+# **GATE-14A6 vocabulary (allowed values only).** `closed` /
+# `narrowed` / `unable_to_decide`. Per the T10 hygiene rule "do not
+# over-promote the gate": when any relevant tracker candidate family
+# remains `blocked_until_additional_validation` with a non-empty
+# `blocking_reason_if_blocked`, prefer `narrowed` and additionally
+# expose `initial_phase02_subset_ready: True` so the next pass knows
+# it can begin work on the eligible / caveated subset.
+
+# %% [markdown]
+# ### V8.1 -- candidate feature-family table
+
+# %%
+PRE_GAME = NOT_APPLICABLE  # alias from V7
+ELIGIBLE = "eligible_for_phase02_now"
+CAVEAT = "eligible_with_caveat"
+BLOCKED = "blocked_until_additional_validation"
+NOT_APP = "not_applicable"
+
+tracker_events_feature_eligibility_rows: list = [
+    {
+        "feature_family": "minerals_collection_rate_history_mean",
+        "source_event_family": "PlayerStats",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope": "snapshot history mean over events with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat": "V3 PASS_WITH_CAVEAT: snapshot field, oscillation observed",
+        "evidence_source": "V3 safe_snapshot classification + V2 high-confidence playerId mapping",
+        "upstream_verdicts": ["V1", "V2", "V3", "V7"],
+        "notes_for_phase02":
+            "use only events with loop <= cutoff_loop; aggregate as mean over snapshots",
+    },
+    {
+        "feature_family": "army_value_at_5min_snapshot",
+        "source_event_family": "PlayerStats",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "snapshot value of MineralsUsedCurrentArmy + VespeneUsedCurrentArmy at the latest PlayerStats with loop <= 6720 (~5 min @ 22.4 lps; V1 caveat)",
+        "blocking_reason_if_blocked": None,
+        "caveat": "V3 PASS_WITH_CAVEAT snapshot fields; V1 lps caveat on 5-min cutoff_seconds",
+        "evidence_source": "V3 safe_snapshot + V2 high-confidence playerId mapping",
+        "upstream_verdicts": ["V1", "V2", "V3", "V7"],
+        "notes_for_phase02":
+            "primary cutoff in loops (6720); seconds is contextual per V1 caveat",
+    },
+    {
+        "feature_family": "supply_used_at_cutoff_snapshot",
+        "source_event_family": "PlayerStats",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "snapshot value of scoreValueFoodUsed at latest PlayerStats with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat":
+            "V3 fixed-point caveat: scoreValueFoodUsed convention divide-by-4096 per s2protocol README; SC2EGSet decoded scaling NOT confirmed; Phase 02 must resolve scaling discipline before consuming",
+        "evidence_source": "V3 safe_snapshot + V3 fixed_point_handling note",
+        "upstream_verdicts": ["V1", "V2", "V3", "V7"],
+        "notes_for_phase02":
+            "do NOT divide by 4096 silently; confirm SC2EGSet decoder convention first",
+    },
+    {
+        "feature_family": "food_used_max_history",
+        "source_event_family": "PlayerStats",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "MAX(scoreValueFoodUsed) over PlayerStats events with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat":
+            "V3 safe_snapshot + V3 fixed-point caveat (FoodUsed); aggregator MAX over censored history is monotonic and well-defined",
+        "evidence_source": "V3 safe_snapshot + V3 fixed_point_handling note",
+        "upstream_verdicts": ["V1", "V2", "V3", "V7"],
+        "notes_for_phase02": "censor at cutoff_loop; do NOT use whole-replay max",
+    },
+    {
+        "feature_family": "count_units_built_by_cutoff_loop",
+        "source_event_family": "UnitBorn",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": ELIGIBLE,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope": "basic cutoff-count: COUNT(UnitBorn) per (filename, controlPlayerId) with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat": None,
+        "evidence_source": "V5 basic cutoff-count + V2 high-confidence controlPlayerId",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02": "exclude InvisibleTargetDummy and other engine entities at feature level",
+    },
+    {
+        "feature_family": "time_to_first_expansion_loop",
+        "source_event_family": "UnitBorn",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": BLOCKED,
+        "eligibility_scope":
+            "censored first-event: MIN(loop) over UnitBorn for expansion unit types (Hatchery / CommandCenter / Nexus) per (filename, controlPlayerId) with loop <= cutoff_loop; PLUS has_expansion_by_cutoff indicator; missing if no expansion by cutoff",
+        "blocking_reason_if_blocked":
+            "full-replay MIN(loop) is post-cutoff target leakage; that interpretation is blocked even though the censored interpretation is caveated",
+        "caveat":
+            "V7 time-to-first-event family: requires_censoring_at_cutoff=True; full_replay_min_loop_blocked=True",
+        "evidence_source": "V5 cutoff-count + V7 censored time-to-first definition",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02":
+            "MUST use censored definition; encode missing + indicator when not yet observed",
+    },
+    {
+        "feature_family": "count_units_killed_by_cutoff_loop",
+        "source_event_family": "UnitDied",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": ELIGIBLE,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "basic cutoff-count: COUNT(UnitDied) per (filename, killerPlayerId) with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat": None,
+        "evidence_source": "V5 basic cutoff-count + V2 high-confidence killerPlayerId mapping",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02": "killer attribution direct via killerPlayerId",
+    },
+    {
+        "feature_family": "count_units_lost_by_cutoff_loop",
+        "source_event_family": "UnitDied",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "lineage-attributed cutoff-count: UnitDied -> UnitBorn (filename, unitTagIndex, unitTagRecycle) -> controlPlayerId; COUNT per (filename, owner) with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat":
+            "V5 lineage attribution required for victim ownership (16,053,828 of 16,053,834 deaths attributable; 6 orphans descriptive only)",
+        "evidence_source": "V5 lifecycle ordering audit + UnitBorn-lineage join",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02":
+            "victim attribution via lineage; orphan deaths (~0.000037%) excluded from per-player counts",
+    },
+    {
+        "feature_family": "morph_count_by_cutoff_loop",
+        "source_event_family": "UnitTypeChange",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": ELIGIBLE,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "basic cutoff-count: COUNT(UnitTypeChange) per (filename, owner via UnitBorn lineage) with loop <= cutoff_loop",
+        "blocking_reason_if_blocked": None,
+        "caveat": None,
+        "evidence_source": "V5 attribution_rate=0.99999964 via lineage",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02": "owner via UnitBorn / UnitInit lineage join",
+    },
+    {
+        "feature_family": "count_upgrades_by_cutoff_loop",
+        "source_event_family": "Upgrade",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": CAVEAT,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "occurrence-count: COUNT(*) per (filename, playerId) with loop <= cutoff_loop; the 'count' field is NOT trusted as a cumulative tally",
+        "blocking_reason_if_blocked": None,
+        "caveat":
+            "V5 occurrence-count scope only; 'count' field is empirically always ~1 but its semantics are not source-confirmed",
+        "evidence_source": "V5 occurrence-count + V2 high-confidence playerId",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02": "use COUNT(*); do NOT trust upgrade.count as cumulative",
+    },
+    {
+        "feature_family": "mind_control_event_count",
+        "source_event_family": "UnitOwnerChange",
+        "planned_for_phase02": "no",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": BLOCKED,
+        "status_post_game_or_blocked": BLOCKED,
+        "eligibility_scope": "blocked",
+        "blocking_reason_if_blocked":
+            "V4 sparse_event_family_not_broadly_available (absent in 2016, present in ~25% of replays in 8 of 9 years); V5 dynamic-ownership features blocked; not broadly available as a feature family for cross-replay learning",
+        "caveat": "sparse coverage prevents broad use even when schema is stable",
+        "evidence_source": "V4 sparse caveat + V5 blocked",
+        "upstream_verdicts": ["V4", "V5", "V7"],
+        "notes_for_phase02":
+            "deferred: dynamic-ownership tracking is non-essential for initial Phase 02; revisit if a tournament-meta-aware variant is needed",
+    },
+    {
+        "feature_family": "army_centroid_at_cutoff_snapshot",
+        "source_event_family": "UnitPositions",
+        "planned_for_phase02": "no",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": BLOCKED,
+        "status_post_game_or_blocked": BLOCKED,
+        "eligibility_scope": "blocked",
+        "blocking_reason_if_blocked":
+            "V6 requires_additional_unpacking_validation (items packed-triplet decoder + UnitBorn-lineage owner attribution NOT validated); V6 source-confirmation gap (units / origin not source-confirmed per Amendment 5)",
+        "caveat": "decoder + source-confirmation pending",
+        "evidence_source": "V5 unpacking deferred + V6 source-confirmation gap",
+        "upstream_verdicts": ["V5", "V6", "V7"],
+        "notes_for_phase02":
+            "deferred: requires items decoder + coordinate units/origin source confirmation",
+    },
+    {
+        "feature_family": "building_construction_count_by_cutoff_loop",
+        "source_event_family": "UnitInit / UnitDone",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": ELIGIBLE,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "basic cutoff-count: COUNT(UnitInit) and COUNT(UnitDone) per (filename, controlPlayerId via UnitInit) with loop <= cutoff_loop; both ordering-safe per V5",
+        "blocking_reason_if_blocked": None,
+        "caveat": None,
+        "evidence_source": "V5 construction audit (n_done_with_init=100%, n_done_before_init=0)",
+        "upstream_verdicts": ["V1", "V2", "V5", "V7"],
+        "notes_for_phase02": "owner via UnitInit.controlPlayerId; UnitDone via UnitInit lineage",
+    },
+    {
+        "feature_family": "slot_identity_consistency",
+        "source_event_family": "PlayerSetup",
+        "planned_for_phase02": "yes",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": ELIGIBLE,
+        "status_post_game_or_blocked": NOT_APP,
+        "eligibility_scope":
+            "structural validity check: per-replay assertion that PlayerSetup playerId / slotId / userId map consistently to replay_players_raw",
+        "blocking_reason_if_blocked": None,
+        "caveat": None,
+        "evidence_source": "V2 high-confidence playerId on PlayerSetup",
+        "upstream_verdicts": ["V2", "V5", "V7"],
+        "notes_for_phase02": "feature-engineering sanity gate; not a model input",
+    },
+    {
+        "feature_family": "playerstats_cumulative_economy_fields",
+        "source_event_family": "PlayerStats",
+        "planned_for_phase02": "no",
+        "status_pre_game": PRE_GAME,
+        "status_in_game_snapshot": BLOCKED,
+        "status_post_game_or_blocked": BLOCKED,
+        "eligibility_scope": "blocked",
+        "blocking_reason_if_blocked":
+            "V3 cumulative_economy_blocked=True (Q3 strict): s2protocol does not confirm cumulative semantics for *Lost / *Killed / *FriendlyFire / *Used keys; SOURCE_CONFIRMS_CUMULATIVE is empty",
+        "caveat": "monotonic empirics alone do not promote to safe_delta",
+        "evidence_source": "V3 Q3 strict aggregation",
+        "upstream_verdicts": ["V3", "V7"],
+        "notes_for_phase02":
+            "deferred: requires source-confirmed cumulative semantics or alternative derivation",
+    },
+]
+print(f"=== V8.1 candidate feature-family rows ({len(tracker_events_feature_eligibility_rows)}) ===")
+for row in tracker_events_feature_eligibility_rows:
+    print(
+        f"  [{row['planned_for_phase02']:>3}] {row['feature_family']}: "
+        f"{row['status_in_game_snapshot']}"
+    )
+
+# %% [markdown]
+# ### V8.2 -- GATE-14A6 decision logic
+#
+# Per Amendment 1 + T10 hygiene rule "do not over-promote": prefer
+# `narrowed` when any relevant tracker candidate family is
+# `blocked_until_additional_validation` with a non-empty
+# `blocking_reason_if_blocked`, even if every planned-yes row is
+# eligible / caveated. Expose `initial_phase02_subset_ready` as a
+# side-flag so the next feature-engineering pass can begin on the
+# allowed subset.
+
+# %%
+planned_rows = [
+    r for r in tracker_events_feature_eligibility_rows
+    if r["planned_for_phase02"] == "yes"
+]
+not_planned_rows = [
+    r for r in tracker_events_feature_eligibility_rows
+    if r["planned_for_phase02"] != "yes"
+]
+planned_eligible = [r for r in planned_rows
+                    if r["status_in_game_snapshot"] == ELIGIBLE]
+planned_caveated = [r for r in planned_rows
+                    if r["status_in_game_snapshot"] == CAVEAT]
+planned_blocked = [r for r in planned_rows
+                   if r["status_in_game_snapshot"] == BLOCKED]
+not_planned_blocked = [r for r in not_planned_rows
+                       if r["status_in_game_snapshot"] == BLOCKED]
+
+# Two distinct predicates -- explicitly named to avoid the ambiguity
+# of a single "closed_predicate_satisfied" that could be misread as
+# the GATE-14A6 closure decision.
+#
+# planned_subset_ready_predicate_satisfied: scope = planned_for_phase02
+# == "yes" rows only. True iff every planned-yes row is eligible /
+# caveated AND none rely on datasheet-only unextracted evidence.
+# This is the "initial Phase 02 subset is ready to begin" predicate.
+#
+# full_tracker_scope_closed_predicate_satisfied: scope = ALL relevant
+# tracker candidate families (planned + not-planned). True iff the
+# planned-subset predicate holds AND no relevant tracker family is
+# blocked. This is the "full tracker_events_raw semantic scope is
+# closed" predicate -- the only one that warrants gate = closed.
+planned_subset_ready_predicate_satisfied = (
+    len(planned_blocked) == 0
+    and all(r["status_in_game_snapshot"] in (ELIGIBLE, CAVEAT)
+            for r in planned_rows)
+    and all(r["evidence_source"]
+            != "datasheet (text not extracted)"
+            for r in planned_rows)
+)
+any_relevant_blocked = (
+    len(planned_blocked) > 0 or len(not_planned_blocked) > 0
+)
+all_blocked_have_reason = all(
+    r["blocking_reason_if_blocked"] is not None
+    and len(str(r["blocking_reason_if_blocked"])) > 0
+    for r in (planned_blocked + not_planned_blocked)
+)
+full_tracker_scope_closed_predicate_satisfied = (
+    planned_subset_ready_predicate_satisfied
+    and not any_relevant_blocked
+)
+
+if (not planned_subset_ready_predicate_satisfied
+        and not any_relevant_blocked):
+    # Cannot satisfy planned-subset AND no blocked family with reason
+    # -> unable to decide
+    gate_14a6_decision = "unable_to_decide"
+    gate_14a6_rationale = (
+        "no defensible eligibility verdict: planned-subset predicate "
+        "not satisfied and no blocked family carries a reason"
+    )
+elif any_relevant_blocked and all_blocked_have_reason:
+    gate_14a6_decision = "narrowed"
+    gate_14a6_rationale = (
+        "The initial Phase 02 tracker-derived subset is ready: all "
+        f"{len(planned_rows)} planned_for_phase02=yes rows are "
+        "eligible_for_phase02_now or eligible_with_caveat. However, "
+        "the full tracker_events_raw semantic scope remains narrowed "
+        f"because {len(planned_blocked) + len(not_planned_blocked)} "
+        "relevant candidate families are blocked with explicit "
+        "reasons: "
+        f"{[r['feature_family'] for r in planned_blocked + not_planned_blocked]}. "
+        "Therefore gate_14a6_decision = narrowed and "
+        "initial_phase02_subset_ready = true."
+    )
+elif full_tracker_scope_closed_predicate_satisfied:
+    gate_14a6_decision = "closed"
+    gate_14a6_rationale = (
+        "closed: every planned-Phase-02 row is eligible / caveated "
+        "AND no relevant tracker candidate family is blocked"
+    )
+else:
+    gate_14a6_decision = "unable_to_decide"
+    gate_14a6_rationale = (
+        "fallback: blocked tracker family without reason"
+    )
+
+initial_phase02_subset_ready = (
+    len(planned_blocked) == 0
+    and len(planned_eligible) + len(planned_caveated) == len(planned_rows)
+)
+print(f"=== V8.2 GATE-14A6 ===")
+print(f"  decision: {gate_14a6_decision}")
+print(f"  initial_phase02_subset_ready: {initial_phase02_subset_ready}")
+print(
+    "  planned_subset_ready_predicate_satisfied: "
+    f"{planned_subset_ready_predicate_satisfied}"
+)
+print(
+    "  full_tracker_scope_closed_predicate_satisfied: "
+    f"{full_tracker_scope_closed_predicate_satisfied}"
+)
+print(f"  any_relevant_blocked: {any_relevant_blocked}")
+print(f"  rationale: {gate_14a6_rationale}")
+
+# %% [markdown]
+# ### V8.3 -- V8 verdict block
+
+# %%
+all_eligible = [r["feature_family"] for r in tracker_events_feature_eligibility_rows
+                if r["status_in_game_snapshot"] == ELIGIBLE]
+all_caveated = [r["feature_family"] for r in tracker_events_feature_eligibility_rows
+                if r["status_in_game_snapshot"] == CAVEAT]
+all_blocked = [r["feature_family"] for r in tracker_events_feature_eligibility_rows
+               if r["status_in_game_snapshot"] == BLOCKED]
+not_planned_count = len(not_planned_rows)
+
+verdicts["V8"] = {
+    "result": "PASS_WITH_CAVEAT"
+              if gate_14a6_decision == "narrowed"
+              else "PASS" if gate_14a6_decision == "closed"
+              else "FAIL",
+    "amendment_1_compliance": True,
+    "decision_rule_source": (
+        "plan T10 Step 1 + Amendment 1 + T10 hygiene rule (prefer "
+        "narrowed when any tracker family remains blocked)"
+    ),
+    "tracker_events_feature_eligibility_rows":
+        tracker_events_feature_eligibility_rows,
+    "n_rows": len(tracker_events_feature_eligibility_rows),
+    "n_planned_yes": len(planned_rows),
+    "n_planned_no": not_planned_count,
+    "eligible_feature_families": all_eligible,
+    "caveated_feature_families": all_caveated,
+    "blocked_feature_families": all_blocked,
+    "planned_eligible": [r["feature_family"] for r in planned_eligible],
+    "planned_caveated": [r["feature_family"] for r in planned_caveated],
+    "planned_blocked": [r["feature_family"] for r in planned_blocked],
+    "not_planned_blocked":
+        [r["feature_family"] for r in not_planned_blocked],
+    "gate_14a6_decision": gate_14a6_decision,
+    "gate_14a6_rationale": gate_14a6_rationale,
+    "initial_phase02_subset_ready": initial_phase02_subset_ready,
+    "planned_subset_ready_predicate_satisfied":
+        planned_subset_ready_predicate_satisfied,
+    "full_tracker_scope_closed_predicate_satisfied":
+        full_tracker_scope_closed_predicate_satisfied,
+    "predicate_field_note": (
+        "planned_subset_ready_predicate_satisfied applies ONLY to "
+        "planned_for_phase02=yes rows -- it indicates the initial "
+        "Phase 02 subset is ready, NOT the final GATE-14A6 closure "
+        "decision. full_tracker_scope_closed_predicate_satisfied is "
+        "the gate-closure predicate (planned-subset OK AND no "
+        "blocked relevant tracker family). Only the latter being "
+        "True warrants gate_14a6_decision = closed."
+    ),
+    "notes_for_phase02": (
+        "Phase 02 may begin work on the planned-eligible + "
+        "planned-caveated subset under their respective scopes. "
+        "Cumulative-economy / dynamic-ownership / coordinate "
+        "feature families remain blocked and require the "
+        "validations recorded in their blocking_reason_if_blocked "
+        "fields before they can enter scope."
+    ),
+}
+print(f"=== V8 verdict ===")
+print(f"  result: {verdicts['V8']['result']}")
+print(f"  gate_14a6_decision: {verdicts['V8']['gate_14a6_decision']}")
+print(f"  rows: {verdicts['V8']['n_rows']} "
+      f"(planned_yes={verdicts['V8']['n_planned_yes']}, "
+      f"planned_no={verdicts['V8']['n_planned_no']})")
+print(f"  eligible: {len(all_eligible)}; caveated: {len(all_caveated)}; "
+      f"blocked: {len(all_blocked)}")
+print(f"  initial_phase02_subset_ready: {initial_phase02_subset_ready}")
+
+# %% [markdown]
+# ### V8 consistency assertions
+
+# %%
+ALLOWED_GATE_VALUES = {"closed", "narrowed", "unable_to_decide"}
+ALLOWED_STATUS_VALUES = {ELIGIBLE, CAVEAT, BLOCKED, NOT_APP}
+assert gate_14a6_decision in ALLOWED_GATE_VALUES, (
+    f"gate_14a6_decision={gate_14a6_decision} not in allowed set"
+)
+# T10 hygiene-pass invariants: the substantive outcome and the
+# clarified predicate semantics must hold simultaneously.
+assert gate_14a6_decision == "narrowed", (
+    f"gate_14a6_decision must be 'narrowed' under current V1-V7 "
+    f"results (got {gate_14a6_decision})"
+)
+assert initial_phase02_subset_ready is True, (
+    "initial_phase02_subset_ready must be True (12/12 planned-yes "
+    "rows eligible/caveated)"
+)
+assert planned_subset_ready_predicate_satisfied is True, (
+    "planned_subset_ready_predicate_satisfied must be True"
+)
+assert full_tracker_scope_closed_predicate_satisfied is False, (
+    "full_tracker_scope_closed_predicate_satisfied must be False "
+    "(blocked tracker families exist with explicit reasons); "
+    "no blocked row is silently treated as gate-closed"
+)
+for row in tracker_events_feature_eligibility_rows:
+    assert row["status_pre_game"] == NOT_APPLICABLE, (
+        f"{row['feature_family']}: status_pre_game must be "
+        f"not_applicable_to_pre_game (Amendment 2)"
+    )
+    assert row["status_in_game_snapshot"] in (ELIGIBLE, CAVEAT, BLOCKED), (
+        f"{row['feature_family']}: bad status_in_game_snapshot"
+    )
+    assert row["status_post_game_or_blocked"] in ALLOWED_STATUS_VALUES, (
+        f"{row['feature_family']}: bad status_post_game_or_blocked"
+    )
+    if row["status_in_game_snapshot"] == BLOCKED:
+        assert (row["blocking_reason_if_blocked"] is not None
+                and len(str(row["blocking_reason_if_blocked"])) > 0), (
+            f"{row['feature_family']}: blocked but no "
+            "blocking_reason_if_blocked"
+        )
+
+# Coordinate-family hard rule (Amendment 5)
+for row in tracker_events_feature_eligibility_rows:
+    if row["source_event_family"] in (
+        "UnitPositions",
+        "UnitBorn / UnitInit / UnitDied",  # direct x/y row, if added later
+    ):
+        assert row["status_in_game_snapshot"] != ELIGIBLE, (
+            f"{row['feature_family']}: coordinate family cannot be "
+            "eligible_for_phase02_now without source-confirmed "
+            "units/origin (Amendment 5 / V6)"
+        )
+
+# Cumulative economy + UnitOwnerChange + UnitPositions families must be blocked
+for row in tracker_events_feature_eligibility_rows:
+    if row["feature_family"] == "playerstats_cumulative_economy_fields":
+        assert row["status_in_game_snapshot"] == BLOCKED
+    if row["source_event_family"] == "UnitOwnerChange":
+        assert row["status_in_game_snapshot"] == BLOCKED
+    if (row["source_event_family"] == "UnitPositions"
+            and "coordinate" in row["feature_family"]):
+        assert row["status_in_game_snapshot"] == BLOCKED
+
+# Time-to-first must require censoring
+for row in tracker_events_feature_eligibility_rows:
+    if "time_to_first" in row["feature_family"]:
+        assert row["status_in_game_snapshot"] in (CAVEAT, BLOCKED), (
+            f"{row['feature_family']}: time-to-first must be "
+            "censored at cutoff (caveated or blocked)"
+        )
+print("=== V8 consistency: OK ===")
+print(f"  {verdicts['V8']['n_rows']} rows; "
+      f"gate={gate_14a6_decision}; "
+      f"all coord/cumul/sparse families blocked as required")
+
+# %% [markdown]
+# ## V8 result summary
+#
+# - **15 candidate feature families** enumerated, each with the
+#   per-Amendment-2 three-status columns + `eligibility_scope` +
+#   `blocking_reason_if_blocked` + `caveat` + `evidence_source` +
+#   `upstream_verdicts` + `notes_for_phase02`.
+# - **Planned for Phase 02 (12 of 15):** PlayerStats snapshot
+#   features (4: collection rate mean, army value @ 5 min, supply
+#   used @ cutoff, food used max history), UnitBorn cutoff count
+#   and censored time-to-first-expansion, UnitDied killed/lost
+#   cutoff counts, UnitTypeChange morph count, Upgrade occurrence
+#   count, UnitInit/UnitDone construction count, PlayerSetup slot
+#   consistency.
+# - **Not planned for Phase 02 (3 of 15):** PlayerStats cumulative
+#   economy fields (Q3 strict), UnitOwnerChange mind-control event
+#   count (V4 sparse), UnitPositions army centroid (V6 unpacking +
+#   source-confirmation gap). Each carries a non-empty
+#   `blocking_reason_if_blocked`.
+# - **GATE-14A6 decision:** `narrowed`. Two distinct predicates are
+#   exposed to avoid ambiguity:
+#   - `planned_subset_ready_predicate_satisfied` (scope = planned-yes
+#     rows only): True. Indicates the initial Phase 02 subset is ready
+#     to begin work; it is NOT the final GATE-14A6 closure decision.
+#   - `full_tracker_scope_closed_predicate_satisfied` (scope = ALL
+#     relevant tracker candidate families): False. Three blocked
+#     candidate families remain (mind_control_event_count,
+#     army_centroid_at_cutoff_snapshot, playerstats_cumulative_economy_
+#     fields), each with explicit `blocking_reason_if_blocked`.
+#   - Only the FULL-scope predicate being True warrants
+#     `gate_14a6_decision = closed`; here it is False, so the gate
+#     is `narrowed`.
+# - **`initial_phase02_subset_ready`:** True -- all 12 planned-yes
+#   rows are eligible or caveated; Phase 02 can begin work on this
+#   subset under each row's `eligibility_scope`.
+# - **No CSV / JSON / MD artifact written in T10.** Per the plan,
+#   the machine-readable rows live in `verdicts["V8"]
+#   ["tracker_events_feature_eligibility_rows"]`; T11 atomically
+#   writes the CSV, JSON, and MD artifacts and updates research_log
+#   + STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS.
+
+# %% [markdown]
+# ## Out of scope for T10 (this notebook execution)
+#
+# - T11 (artifact regeneration + research_log + STEP_STATUS /
+#   PIPELINE_SECTION_STATUS / PHASE_STATUS closure) is the next step
+#   per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T09.
+#   atomically in T11, NOT in T10.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
