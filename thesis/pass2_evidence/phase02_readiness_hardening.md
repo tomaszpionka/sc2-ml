@@ -380,7 +380,9 @@ T16 scope and status is unchanged from T10 register.
 
 ---
 
-## Next owner task
+## Historical next-owner note from PR #207 / T16
+
+**This section is retained for provenance. It was superseded by the PR #208 post-validation update above (§14A.6 POST-VALIDATION UPDATE): Step 01_03_05 executed, GATE-14A6 is `narrowed`, and the initial Phase 02 subset is ready. Treat the T17 instructions below as historical context only — they describe the planned state when validation had not yet executed.**
 
 **T17** is ready to begin.
 
@@ -400,3 +402,27 @@ T17 must:
    status until tracker_events validation executes.
 3. Update `thesis/pass2_evidence/cleanup_flag_ledger.md` to match final chapter state
    post-T11/T12/T13/T14.
+
+---
+
+## Current next owner after PR #208
+
+**Status (2026-05-05):** Step 01_03_05 has executed end-to-end in PR #208. GATE-14A6 outcome is `narrowed`. The initial Phase 02 tracker-derived subset is ready. The full SC2EGSet `tracker_events_raw` semantic scope is **not** fully closed.
+
+**Phase 02 may begin now, but only on the eligible / caveated subset.** The contract is `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv` (15 rows; per-prediction-setting columns per Amendment 2). Phase 02 must consume this CSV and respect each row's `eligibility_scope` and `caveat`. The 12 `planned_for_phase02 = "yes"` rows comprise 11 candidate feature / model-input families plus 1 feature-engineering sanity gate (`slot_identity_consistency`, which is a structural validity check, NOT a model input).
+
+**The full tracker scope remains not fully closed.** Three blocked candidate families remain `blocked_until_additional_validation` with explicit `blocking_reason_if_blocked`:
+- `playerstats_cumulative_economy_fields` — V3 Q3 strict: s2protocol does not confirm cumulative semantics for `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` keys.
+- `mind_control_event_count` — V4 `sparse_event_family_not_broadly_available` (UnitOwnerChange absent in 2016, present at ~25% of replays in 8 of 9 years); V5 dynamic-ownership blocked.
+- `army_centroid_at_cutoff_snapshot` — V6 `requires_additional_unpacking_validation` (UnitPositions packed-items decoder + UnitBorn-lineage owner attribution NOT validated) + Amendment 5 source-confirmation gap (units / origin not source-confirmed).
+
+**Chapter 4 may later be synchronized to the narrowed outcome**, but **thesis chapters are not edited in PR #208**. A future thesis-sync PR (Category F) may draft §4.3.2 / §4.4 prose against the post-validation framing recorded in the §14A.6 POST-VALIDATION UPDATE subsection above. Until that PR lands, the original GATE-14A6 hard-gate framing remains binding for any tracker-feature claim outside the validated planned subset.
+
+**Future owner: Phase 02 feature-engineering plan.** Must:
+1. Consume `tracker_events_feature_eligibility.csv` as the authoritative per-family contract.
+2. Preserve `status_pre_game = not_applicable_to_pre_game` for every tracker-derived feature (Amendment 2 / Invariant I3).
+3. Use the cutoff rule `event.loop <= cutoff_loop` (game loops); seconds is contextual only with V1 caveat.
+4. For PlayerStats `safe_snapshot` features, resolve the SC2EGSet decoder scaling for `scoreValueFoodUsed` / `scoreValueFoodMade` (divide-by-4096 vs pre-scaled per s2protocol README) before consumption.
+5. For time-to-first-event features, use the cutoff-censored definition (`first_event_loop = MIN(loop)` over events with `loop <= cutoff_loop` PLUS a `has_event_occurred_by_cutoff` indicator); full-replay `MIN(loop)` is post-cutoff target leakage and remains blocked.
+6. For Upgrade features, use `COUNT(*)` per `(filename, playerId)`; the `count` field is NOT trusted as cumulative without source confirmation.
+7. NOT use any of the 3 blocked families until a future dedicated Step validates them.
