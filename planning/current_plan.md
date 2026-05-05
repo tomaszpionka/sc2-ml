@@ -315,42 +315,84 @@ PY`
 
 ---
 
-### T05 — Cross-spec consistency pass
+### T05 — Cross-spec consistency pass (reproducible validator + report)
 
-**Objective:** Verify that new documents do not contradict locked specs, evidence files, or source-specific AoE2 / SC2 constraints.
+**Objective:** Verify that T01–T04 outputs do not contradict locked specs, evidence files, or source-specific AoE2 / SC2 constraints — and emit a thesis-grade reproducibility record (deterministic Python validator + machine-readable JSON report + human-readable Markdown report) so the audit is independently re-runnable rather than transcript-only.
+
+**Scope clarification.** T05 is a **spec / document consistency audit**, not an empirical dataset analysis. It validates the readiness contracts and locked-spec relationships by reading specs, planning files, and the SC2 tracker eligibility CSV; it does NOT read raw data, query DuckDB, or compute statistics over feature values. **Therefore it does NOT require a sandbox notebook.** Future empirical Phase 02 data analysis still requires the canonical lineage chain per `.claude/rules/data-analysis-lineage.md`: ROADMAP stub → notebook scaffold → one validation module → user review → commit → next module → artifact generation only after all validation modules pass → research_log / STEP_STATUS / manifest closure → reviewer-deep gate.
+
+**Supersession of transcript-only pass.** The earlier transcript-only T05 read-only pass executed by Opus in this PR session before this amendment is **superseded** by the reproducible script + report deliverables defined below. The transcript pass remains valid as a preliminary scoping run; final T05 closure requires the validator and the two report artifacts.
 
 **Instructions:**
-1. Search new files for prohibited terms:
-   - `ranked ladder only`
-   - unqualified `ranked ladder` in AoE2 combined or aoestats context
-   - `GATE-14A6 closed`
-   - `full tracker scope closed`
-   - `tracker-derived pre-game`
-2. Verify every `tracker_events_feature_eligibility.csv` row is represented or explicitly routed in `02_02`.
-3. Verify all feature-family rows include `grain` and `prediction_setting`.
-4. Verify all leakage audit families include a falsifier.
-5. Verify cold-start sections contain no fixed pseudocount or threshold unless explicitly marked future-derived.
-6. Verify no notebooks, generated artifacts, raw data, or thesis chapters are touched.
 
-**Sanity check:** `git diff --name-only` contains only the planned docs/rules/research-log files.
+1. Author the deterministic validator at `scripts/validate_phase02_readiness_contracts.py`. The script must:
+   - be read-only (no file writes outside the two report paths it owns; no network access; no raw-data reads);
+   - take its input file list from constants at the top of the script;
+   - use `git diff --name-only master..HEAD` (read-only) to enumerate the PR file scope;
+   - read the SC2 tracker eligibility CSV (`src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv`) directly and use it as the authoritative SC2 tracker contract;
+   - emit the JSON report at `reports/specs/02_04_cross_spec_consistency_report.json` and the Markdown report at `reports/specs/02_04_cross_spec_consistency_report.md`;
+   - exit non-zero if any BLOCKER fires; emit warnings without exit-non-zero;
+   - run deterministically: same input state → same output (apart from `run_date` and the recorded `commit_hash`).
 
-**Falsifier:** Any touched notebook, generated artifact, raw-data path, or thesis chapter halts before commit.
+2. Validation dimensions (validator implements each as a named check function with PASS / WARNING / BLOCKER classification):
+   1. **PR file scope** — `git diff master..HEAD --name-only` matches the File Manifest exactly; any out-of-manifest path is BLOCKER.
+   2. **Required positive phrases** in T01–T04 outputs — `tracker-derived features are never pre-game`, `history_time < target_time`, `event.loop <= cutoff_loop`, `aoestats Tier 4`, `aoe2companion mixed-mode`, `GATE-14A6 outcome: narrowed`, `full tracker scope is not closed`, `does not replace CROSS-02-01-v1.0.1` (each phrase checked in the files where it is mandated).
+   3. **Forbidden substrings** in T01–T04 outputs — `ranked ladder only`, `tracker-derived pre-game`, `full tracker scope closed`, `feature tables generated`, `replaces CROSS-02-01`, `supersedes CROSS-02-01`, plus a `ranked-only` exception that allows the substring only in negation about aoe2companion mixed-mode / combined scope.
+   4. **Non-supersession of CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1** — frontmatter `supersedes: null` for CROSS-02-02-v1 and CROSS-02-03-v1; explicit non-supersession / non-replacement clauses present in the prose.
+   5. **SC2 tracker eligibility consistency** against the CSV — 5 / 7 / 3 row split confirmed; the 3 blocked families excluded by name; `slot_identity_consistency` declared as sanity gate, not model input; `GATE-14A6 outcome: narrowed`; `full tracker scope is not closed`; `event.loop <= cutoff_loop`; loops/22.4 contextual only.
+   6. **AoE2 source-label discipline** — `aoestats Tier 4`; ID 6 = `rm_1v1` ranked candidate; ID 18 = `qp_rm_1v1` quickplay/matchmaking-derived; ID 6 + ID 18 = `aoe2companion mixed-mode`, not ranked-only.
+   7. **Temporal leakage rules** — strict `<` for history; per-dataset anchors (`details_timeUTC`, `started_timestamp`, `started`); UTC DuckDB session for aoestats TIMESTAMPTZ; `event.loop <= cutoff_loop`; full-replay aggregates forbidden for cutoff snapshots; no target-game final state; no post-game rating delta; no global normalization before split.
+   8. **Cold-start / no-magic-number gates** — no fixed pseudocount `m`, threshold `K`, smoothing strength `α`, or prior committed in CROSS-02-02 / CROSS-02-03; constants must be empirically derived or literature-cited; missing history must be encoded explicitly.
+   9. **CROSS-02-03 D1–D15 audit-family completeness** — each of D1 through D15 declared with a pass condition and a failure route; future audit artifact schema (§9.2) declares all 14 fields (`spec_version`, `feature_family_id`, `dataset`, `prediction_setting`, `source_table_or_event_family`, `source_grain`, `model_input_grain`, `temporal_anchor`, `cutoff_rule`, `audit_dimensions_passed`, `caveats`, `blocking_reason`, `verdict`, `reviewer_notes`); §1.2 / §9.1 / §12 explicitly state that T04 generates no artifact and creates no notebook.
 
-**Artifact validation:** Use markdown grep checks and, where possible, frontmatter parsing for the three new Markdown files.
+3. JSON report (`reports/specs/02_04_cross_spec_consistency_report.json`) required fields:
+   - `spec_id` (e.g., `"CROSS-02-04-v1"`) and `spec_version`;
+   - `script_path` (`scripts/validate_phase02_readiness_contracts.py`);
+   - `command_line` (the exact invocation that produced the artifact);
+   - `commit_hash` (git HEAD at run time);
+   - `branch` (`phase02/feature-engineering-readiness`);
+   - `run_date` (ISO date);
+   - `inputs` (list of files read);
+   - `assumptions` (list of stated assumptions, e.g., "tracker eligibility CSV is the authoritative SC2 contract");
+   - `sanity_checks` (list of sanity-check descriptions);
+   - `falsifiers` (list of falsifier observations that fire BLOCKER);
+   - `checks` (one entry per validation dimension above; each carries `name`, `verdict`, `details`, optional `evidence`);
+   - `verdict` (`"PASS"` / `"PASS_WITH_WARNINGS"` / `"BLOCKED"`);
+   - `warnings` (list of WARNING entries with location and description);
+   - `blockers` (list of BLOCKER entries with location and description).
 
-**Lineage:** Validation results should be summarized in the final PR body and reviewer-deep notes.
+4. Markdown report (`reports/specs/02_04_cross_spec_consistency_report.md`) is a human-readable rendering of the JSON, with the same 9-dimension table structure plus an explicit lineage section listing input files, command line, and commit hash.
+
+5. The validator MUST NOT mutate any file outside the two report paths it owns. It MUST NOT trigger network calls or read raw data. The two report files are treated as generated artifacts — their canonical regeneration path is the validator script; do not hand-edit them.
+
+6. Verify no notebooks, generated artifacts, raw data, ROADMAPs, research_logs, status YAMLs, or thesis chapters are touched (validator dimension 1 enforces this mechanically).
+
+**Sanity check:** `git diff master..HEAD --name-only` after T05 contains only the planned T01–T04 outputs plus the three new T05 files (script + JSON + MD). Validator exit code is 0 (PASS) or matches the recorded WARNING-with-no-BLOCKER outcome.
+
+**Falsifier:** Any BLOCKER detected by the validator halts T05 closure. Any T01–T04 spec amendment required to clear a BLOCKER must follow `.claude/rules/data-analysis-lineage.md` (no batched fix-and-validate; emit BLOCKER first, then patch with explicit user approval, then re-run validator).
+
+**Artifact validation:** Validator output JSON parses; required JSON fields present; Markdown report renders; both reports cite the commit hash and command line. Reproducibility is verified by re-running the validator on the same commit and confirming bit-identical output (apart from `run_date`).
+
+**Lineage:** Validator output is cited in T06 PR body and reviewer-deep notes. Validator script is the canonical regeneration path for the two reports; manual edits are forbidden.
 
 **Verification:**
-- `git diff --name-only` matches the File Manifest below.
-- `rg` checks above pass.
-- Optional: small Python script validates frontmatter and required section headings.
+- `test -f scripts/validate_phase02_readiness_contracts.py`
+- `python3 -c "import json; json.load(open('reports/specs/02_04_cross_spec_consistency_report.json'))"`
+- `test -s reports/specs/02_04_cross_spec_consistency_report.md`
+- Markdown report contains: `verdict`, `commit_hash`, `command_line`, validation dimensions 1–9.
 
 **File scope:**
-- no new files; edits to T01-T04 docs only if validation finds a contradiction
+- `scripts/validate_phase02_readiness_contracts.py` (create)
+- `reports/specs/02_04_cross_spec_consistency_report.json` (create — generated by the script)
+- `reports/specs/02_04_cross_spec_consistency_report.md` (create — generated by the script)
+- T01–T04 docs ONLY if the validator finds a BLOCKER that requires a documented contradiction fix; halt for explicit user approval before any such patch.
 
 **Read scope:**
-- T01-T04 outputs
-- all source artifacts
+- T01–T04 outputs
+- locked specs CROSS-02-00 / CROSS-02-01
+- planning files
+- `tracker_events_feature_eligibility.csv` (sc2egset reports artifact, read-only)
+- `git diff` output (read-only)
 
 ---
 
@@ -398,13 +440,16 @@ PY`
 
 | File | Action |
 |------|--------|
-| `planning/current_plan.md` | Rewrite with this plan |
-| `thesis/pass2_evidence/phase01_closeout_summary.md` | Create |
-| `.claude/rules/data-analysis-lineage.md` | Create |
-| `reports/specs/02_02_feature_engineering_plan.md` | Create |
-| `reports/specs/02_03_temporal_feature_audit_protocol.md` | Create |
-| `reports/research_log.md` | Update |
-| `CHANGELOG.md` | Conditional update only if project convention requires |
+| `planning/current_plan.md` | Rewrite with this plan; T05A planning amendment 2026-05-05 (reproducible-validator T05) |
+| `thesis/pass2_evidence/phase01_closeout_summary.md` | Create (T01) |
+| `.claude/rules/data-analysis-lineage.md` | Create (T02) |
+| `reports/specs/02_02_feature_engineering_plan.md` | Create (T03) |
+| `reports/specs/02_03_temporal_feature_audit_protocol.md` | Create (T04) |
+| `scripts/validate_phase02_readiness_contracts.py` | Create (T05 reproducible validator; deterministic, read-only) |
+| `reports/specs/02_04_cross_spec_consistency_report.json` | Create (T05 generated report — JSON; produced by the validator) |
+| `reports/specs/02_04_cross_spec_consistency_report.md` | Create (T05 generated report — Markdown; produced by the validator) |
+| `reports/research_log.md` | Update (T06) |
+| `CHANGELOG.md` | Conditional update only if project convention requires (T06) |
 
 ## Gate Condition
 

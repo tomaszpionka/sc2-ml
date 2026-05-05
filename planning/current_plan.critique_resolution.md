@@ -49,3 +49,38 @@ The execution-side reviewer-deep gate (per plan T06) is reserved for PR wrap-up.
 - T06 (research_log update + reviewer-deep gate + conditional CHANGELOG): BLOCKED until T01–T05 are committed.
 
 The iterative execution protocol per user direction is to commit after each task and gate at the user-review boundary.
+
+---
+
+## T05A planning amendment (2026-05-05)
+
+After the preliminary T05 transcript-only read-only pass executed by Opus in
+this PR session, the user requested full thesis-grade reproducibility for T05.
+
+- **T05 scope amended** from transcript-only read-only pass to a reproducible
+  deterministic Python validator (`scripts/validate_phase02_readiness_contracts.py`)
+  plus generated machine-readable JSON and human-readable Markdown reports
+  (`reports/specs/02_04_cross_spec_consistency_report.json` and
+  `reports/specs/02_04_cross_spec_consistency_report.md`).
+- The validator emits assumptions, sanity checks, falsifiers, inputs, command
+  line, commit hash, verdict, warnings, and blockers — so the T05 audit is
+  independently re-runnable rather than transcript-only.
+- The earlier transcript-only T05 pass remains valid as a preliminary scoping
+  run; final T05 closure requires the script and the two report artifacts.
+- **This is a process-hardening amendment, not an empirical scope expansion.**
+  T05 still reads only specs, planning files, the SC2 tracker eligibility CSV,
+  and read-only `git diff` output; it does not read raw data, query DuckDB, or
+  compute statistics over feature values.
+- **No notebooks are introduced** because T05 validates specs/docs, not
+  empirical data. Future Phase 02 empirical data analysis still requires
+  ROADMAP stub + sandbox notebook scaffold + one validation module + user
+  review before artifact generation per
+  `.claude/rules/data-analysis-lineage.md`.
+- File Manifest updated to include the three new T05 implementation files
+  (validator script + JSON report + Markdown report).
+- Reviewer-deep adversarial cap is unchanged; no new adversarial round is
+  consumed by this amendment.
+
+The active plan's T05 task block has been rewritten in `planning/current_plan.md`
+to reflect this amendment. T01–T04 deliverables are unaffected. T06 reviewer-deep
+gate now also reads the T05 validator output as part of its consistency check.
