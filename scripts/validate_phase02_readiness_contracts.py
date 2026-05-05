@@ -275,11 +275,19 @@ def classify_ranked_only_context(line: str) -> str:
 def classify_ranked_ladder_context(line: str) -> str:
     """Classify a line containing 'ranked ladder' (caller filters out 'ranked ladder only').
 
-    Returns 'OK_SOURCE_SPECIFIC' for ID 6 ranked-candidate phrasing,
-    'OK_NEGATION' for prohibition / falsifier patterns, 'BLOCKER' otherwise.
+    Returns 'OK_SOURCE_SPECIFIC' only when the line carries explicit ID-6
+    ranked-candidate context: 'ranked candidate', 'ID 6', or 'rm_1v1'. The bare
+    phrase 'ranked 1v1' is NOT sufficient by itself.
+
+    Returns 'OK_NEGATION' for prohibition / falsifier patterns;
+    returns 'BLOCKER' otherwise.
     """
     lower = line.lower()
-    if "ranked candidate" in lower or "ranked 1v1" in lower:
+    # Source-specific OK requires explicit ID 6 / rm_1v1 / ranked-candidate context.
+    # Generic 'ranked 1v1' alone is insufficient — it does not pin the source.
+    if "ranked candidate" in lower:
+        return "OK_SOURCE_SPECIFIC"
+    if "id 6" in lower or "rm_1v1" in lower:
         return "OK_SOURCE_SPECIFIC"
     if "must not" in lower and "ranked ladder" in lower:
         return "OK_NEGATION"
@@ -1192,6 +1200,21 @@ def build_report_payload(
             str(PLANNING_INDEX.relative_to(REPO_ROOT)),
         ]
     )
+    declared_generated_outputs = [
+        path
+        for path in T05_DECLARED_OUTPUTS
+        if path.endswith(".json") or path.endswith(".md")
+    ]
+    reproducibility_note = (
+        "These reports are generated from the validator script at the recorded "
+        "head_sha BEFORE the reports themselves are committed. The recorded "
+        "head_sha therefore does NOT include the run's report files; the report "
+        "commit lands afterwards. To reproduce a previous run byte-for-byte "
+        "(apart from the run_date field), check out the recorded head_sha and "
+        "re-run the recorded command_line. Determinism is guaranteed by the "
+        "validator's stable list/dict ordering, sort_keys JSON output, and "
+        "stdlib-only construction."
+    )
     return {
         "spec_id": SPEC_ID,
         "spec_version": SPEC_ID,
@@ -1202,6 +1225,8 @@ def build_report_payload(
         "base_ref": ctx.base_ref,
         "head_sha": ctx.head_sha,
         "run_date": ctx.run_date,
+        "declared_generated_outputs": declared_generated_outputs,
+        "reproducibility_note": reproducibility_note,
         "input_files": input_files,
         "assumptions": [
             (
@@ -1296,6 +1321,23 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines.append("```")
     lines.append(payload["command_line"])
     lines.append("```")
+    lines.append("")
+
+    lines.append("## Generated outputs")
+    lines.append("")
+    lines.append(
+        "These reports are written by "
+        "`scripts/validate_phase02_readiness_contracts.py`. They are NOT "
+        "hand-edited; their canonical regeneration path is the validator script."
+    )
+    lines.append("")
+    for path in payload["declared_generated_outputs"]:
+        lines.append(f"- `{path}`")
+    lines.append("")
+
+    lines.append("## Reproducibility note")
+    lines.append("")
+    lines.append(payload["reproducibility_note"])
     lines.append("")
 
     lines.append("## Inputs read")
@@ -1413,10 +1455,9 @@ def build_context(args: argparse.Namespace) -> ValidatorContext:
     diff_files_raw = run_git("diff", "--name-only", f"{args.base}..HEAD")
     diff_files = [line for line in diff_files_raw.splitlines() if line.strip()]
     diff_stat = run_git("diff", "--stat", f"{args.base}..HEAD")
-    command_line = " ".join(
+    quoted_args = " ".join(
         shlex.quote(part)
         for part in [
-            "python3",
             "scripts/validate_phase02_readiness_contracts.py",
             "--base",
             args.base,
@@ -1427,6 +1468,12 @@ def build_context(args: argparse.Namespace) -> ValidatorContext:
             "--run-date",
             args.run_date,
         ]
+    )
+    # Record the repo-standard reproduction command (per CLAUDE.md commands table)
+    # rather than a bare `python3 ...` invocation. The shell prefix is intentionally
+    # unquoted so the recorded string is directly executable in zsh.
+    command_line = (
+        "source .venv/bin/activate && poetry run python " + quoted_args
     )
     return ValidatorContext(
         base_ref=args.base,
