@@ -269,6 +269,63 @@ T17 (REVIEW_QUEUE and WRITING_STATUS synchronization) must:
 
 ---
 
+### 14A.6 — POST-VALIDATION UPDATE (PR #208, 2026-05-05)
+
+**This subsection is appended by T12 of PR #208 `phase01/sc2egset-tracker-events-semantic-validation`. It records the outcome of Step 01_03_05 execution. The original §14A.6 historical/gated text above remains unchanged for provenance.**
+
+**Status: GATE-14A6 OUTCOME — `narrowed`. Step 01_03_05 executed end-to-end. Initial Phase 02 tracker-derived subset is ready. The full SC2EGSet `tracker_events_raw` semantic scope is not fully closed.**
+
+#### What changed
+
+- Step 01_03_05 (Tracker Events Semantic Validation) was created and executed in PR #208 across T01–T11. Eight validation modules ran: V1 loop/time semantics, V2 player-id mapping, V3 PlayerStats field semantics, V4 event coverage and key-set stability, V5 unit lifecycle ordering, V6 coordinate semantics, V7 leakage boundary, V8 final feature-family eligibility aggregation.
+- Three artifacts were generated atomically in T11 under `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/`:
+  - `01_03_05_tracker_events_semantic_validation.json` (167 KB; V1..V8 verdicts + EVIDENCE + 25 named SQL queries).
+  - `01_03_05_tracker_events_semantic_validation.md` (10 KB).
+  - `tracker_events_feature_eligibility.csv` (15 rows; explicit per-prediction-setting columns per Amendment 2).
+- Status chain closed: `STEP_STATUS.yaml` Step 01_03_05 = complete (2026-05-05); `PIPELINE_SECTION_STATUS.yaml` 01_03 already complete; `PHASE_STATUS.yaml` Phase 01 already complete. Pre-commit "status chain consistency (Tier 7)" hook passed.
+
+#### GATE-14A6 outcome
+
+- **`gate_14a6_decision = narrowed`** (NOT `closed`). Per the T10 hygiene rule: prefer `narrowed` when any tracker candidate family remains blocked with a reason, even if every planned-yes row passes the strict closed predicate.
+- **`initial_phase02_subset_ready = true`** — every `planned_for_phase02 = "yes"` row in `tracker_events_feature_eligibility.csv` is `eligible_for_phase02_now` or `eligible_with_caveat`.
+- Two distinct predicates are exposed in the JSON / CSV / MD artifact to avoid ambiguity (T10 hygiene-pass renamed the prior single `closed_predicate_satisfied` field):
+  - `planned_subset_ready_predicate_satisfied = true` (scope: `planned_for_phase02 = "yes"` rows only).
+  - `full_tracker_scope_closed_predicate_satisfied = false` (scope: ALL relevant tracker candidate families; only this predicate being True warrants `gate_14a6_decision = closed`).
+- Tracker-derived feature families remain **NEVER pre-game** (Amendment 2 / Invariant I3): every row in the eligibility CSV carries `status_pre_game = not_applicable_to_pre_game`. Programmatic assertions in V7 and V8 enforce this.
+
+#### What Phase 02 may use
+
+Phase 02 may use **only the eligible / caveated planned subset** listed in `tracker_events_feature_eligibility.csv` (12 of 15 rows), each consumed under the row's recorded `eligibility_scope` and `caveat`:
+
+- 5 `eligible_for_phase02_now` (basic cutoff-count scope only): `count_units_built_by_cutoff_loop`, `count_units_killed_by_cutoff_loop`, `morph_count_by_cutoff_loop`, `building_construction_count_by_cutoff_loop`, `slot_identity_consistency`.
+- 7 `eligible_with_caveat` (scope per row): 4 PlayerStats snapshot families (`minerals_collection_rate_history_mean`, `army_value_at_5min_snapshot`, `supply_used_at_cutoff_snapshot`, `food_used_max_history`), `time_to_first_expansion_loop` (cutoff-censored only — full-replay `min(loop)` blocked), `count_units_lost_by_cutoff_loop` (lineage-attributed), `count_upgrades_by_cutoff_loop` (occurrence-count only; the `count` field is not trusted as cumulative).
+
+#### Blocked families remain blocked (3, all planned-no)
+
+- **Cumulative PlayerStats economy fields** (`playerstats_cumulative_economy_fields`) — V3 Q3 strict: s2protocol does not confirm cumulative semantics for `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` keys. Any future use requires source-confirmed cumulative semantics or an alternative derivation.
+- **UnitOwnerChange dynamic ownership / mind-control features** (`mind_control_event_count`) — V4 sparse_event_family_not_broadly_available (absent in 2016, present at ~25% of replays in 8 of 9 years); V5 dynamic-ownership blocked. Any future use requires a tournament-meta-aware variant or a different feature design.
+- **UnitPositions / army-centroid coordinate features** (`army_centroid_at_cutoff_snapshot`) — V6 requires_additional_unpacking_validation (items packed-triplet decoder + UnitBorn-lineage owner attribution NOT validated); V6 source-confirmation gap (units / origin not source-confirmed per Amendment 5). Any future use requires both a validated decoder AND coordinate-units/origin source confirmation.
+
+#### Permitted thesis framing (post-validation)
+
+The original GATE-14A6 hard gate above limited Chapter 4 to a single permitted framing while validation was pending. After T11, the permitted framing is broadened ONLY for the planned-yes subset. Recommended Chapter 4 §4.3 / §4.4 wording (when drafted):
+
+> "SC2 in-game telemetry features derived from `tracker_events_raw` are validated for use in an in-game-snapshot setting under Step 01_03_05 (GATE-14A6 closed to `narrowed`, 2026-05-05). The validated subset comprises 12 candidate feature families with explicit per-family eligibility scopes recorded in `tracker_events_feature_eligibility.csv`. Three additional candidate families (PlayerStats cumulative economy, UnitOwnerChange dynamic ownership, UnitPositions coordinate features) remain `blocked_until_additional_validation` and are excluded from initial Phase 02 scope. Tracker-derived features are never pre-game; the cutoff rule is `event.loop <= cutoff_loop` (game loops; the seconds conversion `cutoff_seconds ~ cutoff_loop / 22.4` carries the V1 caveat that the lps factor is empirically corroborated by `gameSpeed='Faster'` but not directly source-confirmed by s2protocol)."
+
+The Chapter 4 hedge in the original §14A.6 (above) **remains valid** for any blocked or unvalidated tracker family unless and until a separate thesis-sync PR drafts §4.3 / §4.4 prose against the new artifact. **T12 does NOT edit thesis chapters.**
+
+#### Future validation route
+
+To promote `full_tracker_scope_closed_predicate_satisfied` from `false` to `true`, a future Step (or Steps) would need to:
+- Validate cumulative semantics for PlayerStats `*Lost` / `*Killed` / `*FriendlyFire` fields against an authoritative source (Blizzard or a corroborating replay-engine experiment).
+- Implement and validate a UnitPositions packed-items decoder (`(delta_index, x, y)` triplet walk + UnitBorn-lineage owner attribution).
+- Source-confirm SC2 tracker coordinate units (cell vs sub-cell vs fixed-point) and origin (top-left vs map-center).
+- Either redesign UnitOwnerChange features for sparse coverage (e.g., tournament-meta-aware) or accept their narrow availability.
+
+These are out of scope for the current PR.
+
+---
+
 ## Spec versions — before and after T16
 
 | Spec | Before T16 | After T16 | Amendment? |
@@ -298,18 +355,25 @@ No spec amendments were introduced in T16. Both specs remain at the T15 baseline
 
 ## SC2 tracker_events validation status
 
-**NOT executed.** Hard gate (GATE-14A6) recorded above. Thesis methodology must not
-claim validated tracker_events-derived features. RISK-21 in `methodology_risk_register.md`
-remains OPEN (conditional on T15 decision to retain in-game telemetry scope).
+**Executed in PR #208 (2026-05-05).** Step 01_03_05 produced V1..V8 verdicts and
+the three artifacts listed in the post-validation subsection above. GATE-14A6
+outcome: `narrowed`. The initial Phase 02 tracker-derived subset (12 of 15
+candidate feature families) is ready under each row's `eligibility_scope`; 3
+families remain `blocked_until_additional_validation` with explicit reasons.
+Thesis methodology MAY claim validated status for the planned-yes subset under
+the wording recorded in the post-validation subsection; thesis methodology MUST
+NOT claim that the full `tracker_events_raw` semantic scope is closed.
+RISK-21 in `methodology_risk_register.md` is updated from OPEN to
+MITIGATED-NARROWED (planned subset mitigated; blocked families remain OPEN).
 
 ---
 
 ## Remaining risks (pointers to methodology_risk_register.md)
 
-| Risk ID | Sub-step relevance | Status after T16 |
-|---------|--------------------|-----------------|
-| RISK-20 | 14A.5 (cross-region fragmentation) | DEFERRED — empirical retention % awaits Phase 02 |
-| RISK-21 | 14A.6 (tracker_events semantics) | OPEN — GATE-14A6 prevents overclaiming; Step 01_03_05 not yet executed |
+| Risk ID | Sub-step relevance | Status after T16 (historical) | Status after PR #208 T12 (current) |
+|---------|--------------------|-----------------|-----------------|
+| RISK-20 | 14A.5 (cross-region fragmentation) | DEFERRED — empirical retention % awaits Phase 02 | DEFERRED (unchanged) |
+| RISK-21 | 14A.6 (tracker_events semantics) | OPEN — GATE-14A6 prevents overclaiming; Step 01_03_05 not yet executed | MITIGATED-NARROWED — Step 01_03_05 executed; planned subset ready; blocked families remain OPEN with explicit reasons |
 
 All other RISK entries (RISK-01 through RISK-19, RISK-22 through RISK-26) are outside
 T16 scope and status is unchanged from T10 register.
