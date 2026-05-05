@@ -3447,12 +3447,509 @@ print(f"  {len(coordinate_feature_eligibility)} coord-bearing families "
 #   NOT block non-coordinate cutoff-count features established in V5.
 
 # %% [markdown]
-# ## Out of scope for T08 (this notebook execution)
+# ---
+# ## V7 -- Leakage boundary + per-prediction-setting eligibility
 #
-# - V7..V8 are deferred to T09..T10 per `planning/current_plan.md`.
+# **Hypothesis.** Tracker events are safe for in-game snapshot feature
+# construction iff features are computed from events satisfying
+# `event.loop <= cutoff_loop` AND the target prediction setting is
+# explicitly *in-game*, NOT *pre-game*. Per scientific-invariants.md
+# Invariant I3 / Amendment 2, tracker-event-derived feature families
+# are NEVER classified `pre_game`.
+#
+# **Falsifier.**
+# - any tracker-derived feature family marked available for `pre_game`;
+# - boundary rule uses future events after cutoff;
+# - event-loop values cannot be ordered relative to replay timeline;
+# - events appear beyond replay end at material rate;
+# - seconds conversion is treated as source-confirmed when V1 only
+#   supports empirical / caveated conversion.
+#
+# **Per Amendment 2 (carried forward to V7).** Every candidate
+# tracker-derived feature family classifies into exactly three
+# prediction-setting columns:
+# - `status_pre_game` -- ALWAYS `not_applicable_to_pre_game`;
+# - `status_in_game_snapshot` -- driven by V1..V6 verdicts;
+# - `status_post_game_or_blocked` -- requires post-game state OR
+#   cumulative semantics V3 could not confirm OR V4 sparse-coverage
+#   carry-forward.
+#
+# **Per V1 carry-forward.** V1 was `PASS_WITH_CAVEAT`: 22.4 lps is
+# empirically corroborated by `gameSpeed=Faster` but NOT directly
+# source-confirmed by s2protocol. Therefore the **primary cutoff
+# boundary is in game loops**. Seconds is contextual only:
+# `cutoff_seconds ~ cutoff_loop / 22.4` carries the V1 caveat.
+
+# %% [markdown]
+# ### V7.1 -- replay-loop boundary check
+#
+# Confirms `loop >= 0` on every tracker event AND no event has
+# `loop > header.elapsedGameLoops`. Both must be 0 for the cutoff
+# rule `event.loop <= cutoff_loop` to be unambiguously safe.
+
+# %%
+v7_1_df = run_q(
+    "v7_1_loop_boundary_check",
+    """
+    SELECT
+        COUNT(*) AS n_events_total,
+        COUNT(*) FILTER (WHERE te.loop < 0) AS n_events_loop_negative,
+        COUNT(*) FILTER (
+            WHERE te.loop > rm.header.elapsedGameLoops
+        ) AS n_events_after_replay_end,
+        COUNT(DISTINCT te.filename) FILTER (
+            WHERE te.loop > rm.header.elapsedGameLoops
+        ) AS n_replays_with_after_end_events
+    FROM tracker_events_raw te
+    JOIN replays_meta_raw rm USING (filename)
+    """,
+)
+print("=== V7.1 replay-loop boundary ===")
+print(v7_1_df.to_string(index=False))
+loop_boundary = {k: int(v7_1_df[k].iloc[0]) for k in v7_1_df.columns}
+boundary_pass = (
+    loop_boundary["n_events_loop_negative"] == 0
+    and loop_boundary["n_events_after_replay_end"] == 0
+)
+loop_boundary["boundary_pass"] = boundary_pass
+print(f"\nboundary_pass = {boundary_pass}")
+
+# %% [markdown]
+# ### V7.2 -- prediction-setting matrix
+#
+# Machine-readable mapping for every candidate tracker-derived
+# feature family. Per Amendment 2: `status_pre_game` is ALWAYS
+# `not_applicable_to_pre_game`. `status_in_game_snapshot` is driven
+# by V3/V5/V6. `status_post_game_or_blocked` records cumulative
+# semantics gaps (V3 strict) and sparse / unpacking caveats (V4/V6).
+
+# %%
+_LOOP_RULE = "event.loop <= cutoff_loop"
+_LOOP_TIME_NOTE = (
+    "primary cutoff boundary is event.loop; cutoff_seconds ~ "
+    "cutoff_loop / 22.4 carries V1 caveat (lps empirically "
+    "corroborated by gameSpeed='Faster', not directly source-"
+    "confirmed by s2protocol)"
+)
+NOT_APPLICABLE = "not_applicable_to_pre_game"
+
+prediction_setting_matrix: list = [
+    {
+        "feature_family": "playerstats_snapshot_fields",
+        "source_event_family": "PlayerStats",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "eligible_with_caveat",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low if cutoff_loop is enforced strictly",
+        "reason": (
+            "V3 PASS_WITH_CAVEAT: 26 safe_snapshot fields per Q3 "
+            "strict; cumulative-economy fields blocked separately"
+        ),
+    },
+    {
+        "feature_family": "playerstats_cumulative_economy_fields",
+        "source_event_family": "PlayerStats",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "blocked_until_additional_validation",
+        "status_post_game_or_blocked":
+            "blocked_until_additional_validation",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": (
+            "high without source confirmation that 'cumulative' "
+            "semantics hold across the full replay duration"
+        ),
+        "reason": (
+            "V3 cumulative_economy_blocked = True (Q3 strict): "
+            "s2protocol does not confirm cumulative semantics for "
+            "Lost / Killed / FriendlyFire / Used* keys"
+        ),
+    },
+    {
+        "feature_family": "unitborn_cutoff_counts",
+        "source_event_family": "UnitBorn",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot": "eligible_for_phase02_now",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": (
+            "V5 basic cutoff-count scope; ordering audit n_inverted=0"
+        ),
+    },
+    {
+        "feature_family": "unitinit_cutoff_counts",
+        "source_event_family": "UnitInit",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot": "eligible_for_phase02_now",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": "V5 basic cutoff-count scope",
+    },
+    {
+        "feature_family": "unitdone_cutoff_counts",
+        "source_event_family": "UnitDone",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot": "eligible_for_phase02_now",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": (
+            "V5 basic cutoff-count scope; 100% of UnitDone events "
+            "trace to UnitInit (n_done_without_init=0); "
+            "n_done_before_init=0"
+        ),
+    },
+    {
+        "feature_family": "unitdied_cutoff_counts",
+        "source_event_family": "UnitDied",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot": "eligible_for_phase02_now",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": (
+            "V5 basic cutoff-count scope; n_inverted=0; "
+            "survivors / orphan deaths are descriptive, not failure"
+        ),
+    },
+    {
+        "feature_family": "unittypechange_cutoff_counts",
+        "source_event_family": "UnitTypeChange",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot": "eligible_for_phase02_now",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": (
+            "V5 attribution_rate=0.99999964 via lineage; n_inverted=0"
+        ),
+    },
+    {
+        "feature_family": "upgrade_occurrence_counts",
+        "source_event_family": "Upgrade",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "eligible_with_caveat",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": (
+            "low if COUNT(*) is used; medium if 'count' field is "
+            "trusted as cumulative without source confirmation"
+        ),
+        "reason": (
+            "V5 occurrence-count scope only; 'count' field is "
+            "essentially always 1 but its semantics are not source-"
+            "confirmed"
+        ),
+    },
+    {
+        "feature_family": "unitownerchange_dynamic_ownership",
+        "source_event_family": "UnitOwnerChange",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "blocked_until_additional_validation",
+        "status_post_game_or_blocked":
+            "blocked_until_additional_validation",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low (data is sparse, not future-dependent)",
+        "reason": (
+            "V4 sparse_event_family_not_broadly_available (absent "
+            "in 2016, ~25% of replays in later years); V5 dynamic-"
+            "ownership features blocked"
+        ),
+    },
+    {
+        "feature_family": "unitborn_unitinit_unitdied_direct_xy",
+        "source_event_family": "UnitBorn / UnitInit / UnitDied",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "eligible_with_caveat",
+        "status_post_game_or_blocked": "not_applicable",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": "low",
+        "reason": (
+            "V6 in_bounds_rate=1.0 (raw integer interpretation); "
+            "Amendment 5 caps eligibility at eligible_with_caveat "
+            "because source_confirmed_units AND source_confirmed_"
+            "origin are False"
+        ),
+    },
+    {
+        "feature_family": "unitpositions_coordinate_features",
+        "source_event_family": "UnitPositions",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "blocked_until_additional_validation",
+        "status_post_game_or_blocked":
+            "blocked_until_additional_validation",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": (
+            "low (data not future-dependent; blocked on decoder "
+            "validation, not on leakage)"
+        ),
+        "reason": (
+            "V6 requires_additional_unpacking_validation: items "
+            "triplet-divisibility passed but full cumulative-delta "
+            "decoder + UnitBorn-lineage owner attribution not "
+            "performed; Amendment 5 source-confirmation gate also "
+            "not met"
+        ),
+    },
+    {
+        "feature_family": "time_to_first_event_features",
+        "source_event_family": "any tracker event family",
+        "status_pre_game": NOT_APPLICABLE,
+        "status_in_game_snapshot":
+            "eligible_with_caveat",
+        "status_post_game_or_blocked":
+            "blocked_until_additional_validation",
+        "cutoff_rule": _LOOP_RULE,
+        "loop_time_conversion_note": _LOOP_TIME_NOTE,
+        "leakage_risk": (
+            "HIGH unless censoring at cutoff is enforced. The "
+            "feature MUST be computed strictly from events with "
+            "loop <= cutoff_loop. Computing min(loop) over the "
+            "FULL replay (any event with loop > cutoff_loop) is "
+            "post-cutoff target leakage and remains blocked."
+        ),
+        "reason": (
+            "eligible_with_caveat only for censored first-observed-"
+            "by-cutoff features: compute first_event_loop = "
+            "min(event.loop) over events satisfying event.loop <= "
+            "cutoff_loop; if no such event exists by cutoff, encode "
+            "as not-yet-observed / missing plus a "
+            "has_event_occurred_by_cutoff indicator. Full-replay "
+            "time-to-first-event (min(loop) over the entire match) "
+            "is post-cutoff leakage and remains blocked."
+        ),
+        "requires_censoring_at_cutoff": True,
+        "full_replay_min_loop_blocked": True,
+        "safe_definition": (
+            "first_event_loop = min(event.loop) among events with "
+            "loop <= cutoff_loop only; PLUS "
+            "has_event_occurred_by_cutoff = (count of events with "
+            "loop <= cutoff_loop > 0); when has_event_occurred_by_"
+            "cutoff is False, first_event_loop is missing / "
+            "not-yet-observed (NOT a post-cutoff value)"
+        ),
+        "unsafe_definition_blocked": (
+            "min(event.loop) over the full replay; any value that "
+            "would reveal an event with loop > cutoff_loop"
+        ),
+    },
+]
+print(f"=== V7.2 prediction-setting matrix ({len(prediction_setting_matrix)} families) ===")
+for fam in prediction_setting_matrix:
+    print(
+        f"  {fam['feature_family']}: "
+        f"pre_game={fam['status_pre_game']}, "
+        f"in_game={fam['status_in_game_snapshot']}, "
+        f"post={fam['status_post_game_or_blocked']}"
+    )
+
+# %% [markdown]
+# ### V7.3 -- pre-game assertion (per Amendment 2)
+#
+# Programmatic check: every tracker-derived candidate feature family
+# MUST have `status_pre_game = not_applicable_to_pre_game`. If any
+# row violates this, V7 result = FAIL.
+
+# %%
+non_pre_game_violations = [
+    fam for fam in prediction_setting_matrix
+    if fam["status_pre_game"] != NOT_APPLICABLE
+]
+pre_game_assertion_passed = (len(non_pre_game_violations) == 0)
+print(f"pre_game_assertion_passed = {pre_game_assertion_passed}")
+if non_pre_game_violations:
+    print("VIOLATIONS:")
+    for v in non_pre_game_violations:
+        print(f"  {v['feature_family']}: {v['status_pre_game']}")
+
+# %% [markdown]
+# ### V7 verdict assembly + result
+
+# %%
+in_game_eligible = [
+    fam["feature_family"] for fam in prediction_setting_matrix
+    if fam["status_in_game_snapshot"] == "eligible_for_phase02_now"
+]
+in_game_caveated = [
+    fam["feature_family"] for fam in prediction_setting_matrix
+    if fam["status_in_game_snapshot"] == "eligible_with_caveat"
+]
+in_game_blocked = [
+    fam["feature_family"] for fam in prediction_setting_matrix
+    if fam["status_in_game_snapshot"]
+    == "blocked_until_additional_validation"
+]
+
+if not pre_game_assertion_passed:
+    v7_result = "FAIL"
+    v7_caveat = (
+        f"Amendment 2 violation: {len(non_pre_game_violations)} "
+        "tracker-derived family marked available for pre_game"
+    )
+elif not boundary_pass:
+    v7_result = "FAIL"
+    v7_caveat = (
+        f"loop boundary failed: "
+        f"n_events_loop_negative={loop_boundary['n_events_loop_negative']}, "
+        f"n_events_after_replay_end="
+        f"{loop_boundary['n_events_after_replay_end']}"
+    )
+elif in_game_blocked or in_game_caveated:
+    v7_result = "PASS_WITH_CAVEAT"
+    v7_caveat = (
+        f"leakage boundary OK; in-game blocked: {in_game_blocked}; "
+        f"caveated: {in_game_caveated}; cutoff in loops; seconds "
+        f"conversion is contextual only (V1 caveat)"
+    )
+else:
+    v7_result = "PASS"
+    v7_caveat = (
+        f"all {len(in_game_eligible)} in-game feature families "
+        f"eligible; leakage boundary OK"
+    )
+
+verdicts["V7"] = {
+    "hypothesis": (
+        "tracker events are safe for in-game snapshot features iff "
+        "event.loop <= cutoff_loop AND target setting is in-game; "
+        "tracker-derived families NEVER pre-game"
+    ),
+    "falsifier": (
+        "any tracker-derived family marked pre-game; boundary uses "
+        "future events; events beyond replay end at material rate; "
+        "seconds conversion overclaimed as source-confirmed"
+    ),
+    "result": v7_result,
+    "amendment_2_compliance": pre_game_assertion_passed,
+    "boundary_rule": _LOOP_RULE,
+    "loop_time_conversion_note": _LOOP_TIME_NOTE,
+    "loop_boundary_summary": loop_boundary,
+    "pre_game_assertion_passed": pre_game_assertion_passed,
+    "non_pre_game_violations": non_pre_game_violations,
+    "prediction_setting_matrix": prediction_setting_matrix,
+    "in_game_eligible_families": in_game_eligible,
+    "in_game_caveated_families": in_game_caveated,
+    "in_game_blocked_families": in_game_blocked,
+    "leakage_notes": (
+        "Cutoff is enforced as 'event.loop <= cutoff_loop'. Phase 02 "
+        "must additionally enforce the cross-replay condition "
+        "(target-match start_loop_in_player_history) -- this Step "
+        "validates the within-replay rule only. "
+        "TIME-TO-FIRST-EVENT FEATURES require explicit censoring at "
+        "cutoff: compute min(event.loop) only over events with "
+        "loop <= cutoff_loop, plus a has_event_occurred_by_cutoff "
+        "indicator; when no such event exists, the feature is "
+        "not-yet-observed / missing (NOT a post-cutoff value). "
+        "Full-replay min(loop) is post-cutoff leakage and remains "
+        "blocked."
+    ),
+    "notes_for_V8": (
+        "Every tracker-derived family carries status_pre_game = "
+        "not_applicable_to_pre_game. V8 must propagate this column "
+        "verbatim into tracker_events_feature_eligibility.csv. "
+        "Cutoff_loop is the primary boundary; cutoff_seconds is "
+        "derived from loop / 22.4 with V1 caveat. Use COUNT(*) for "
+        "Upgrade occurrence; do not trust the count field. "
+        "PlayerStats cumulative-economy fields remain blocked "
+        "(Q3 strict). UnitOwnerChange dynamic-ownership remains "
+        "blocked (V4 sparse). UnitPositions remains blocked "
+        "(V6 unpacking + source-confirmation gap)."
+    ),
+    "notes": v7_caveat,
+}
+print("=== V7 verdict ===")
+print(f"  result: {verdicts['V7']['result']}")
+print(f"  amendment_2_compliance: {pre_game_assertion_passed}")
+print(f"  boundary_pass: {boundary_pass}")
+print(f"  in_game_eligible: {len(in_game_eligible)}")
+print(f"  in_game_caveated: {len(in_game_caveated)}")
+print(f"  in_game_blocked:  {len(in_game_blocked)}")
+print(f"  notes: {verdicts['V7']['notes']}")
+
+# %% [markdown]
+# ### V7 consistency assertions
+
+# %%
+assert pre_game_assertion_passed, (
+    f"Amendment 2 violation: tracker-derived families marked pre-game: "
+    f"{[v['feature_family'] for v in non_pre_game_violations]}"
+)
+assert boundary_pass, (
+    f"loop boundary failed: {loop_boundary}"
+)
+for fam in prediction_setting_matrix:
+    assert fam["status_pre_game"] == NOT_APPLICABLE, (
+        f"{fam['feature_family']}: bad status_pre_game"
+    )
+    assert fam["status_in_game_snapshot"] in (
+        "eligible_for_phase02_now", "eligible_with_caveat",
+        "blocked_until_additional_validation"
+    ), f"{fam['feature_family']}: bad status_in_game_snapshot"
+    assert fam["cutoff_rule"] == _LOOP_RULE, (
+        f"{fam['feature_family']}: cutoff_rule must be in loops, "
+        "not seconds"
+    )
+print("=== V7 consistency: OK ===")
+print(f"  {len(prediction_setting_matrix)} families; pre-game "
+      "assertion enforced; cutoff in loops; "
+      f"loop_boundary={loop_boundary['boundary_pass']}")
+
+# %% [markdown]
+# ## V7 result summary
+#
+# - **Loop boundary** (V7.1): every tracker event has `loop >= 0` AND
+#   `loop <= header.elapsedGameLoops`. The cutoff rule
+#   `event.loop <= cutoff_loop` is unambiguously safe within each
+#   replay; Phase 02 must additionally enforce the cross-replay
+#   condition (target-match start in player history).
+# - **Prediction-setting matrix** (V7.2): 12 candidate tracker-derived
+#   feature families enumerated, each with three explicit status
+#   columns (`status_pre_game` / `status_in_game_snapshot` /
+#   `status_post_game_or_blocked`), `cutoff_rule`,
+#   `loop_time_conversion_note`, `leakage_risk`, and `reason`.
+# - **Pre-game assertion** (V7.3, per Amendment 2 / I3): EVERY
+#   tracker-derived family has `status_pre_game =
+#   not_applicable_to_pre_game`. Verified by assertion above.
+# - **Cutoff rule** -- expressed primarily in **game loops**:
+#   `event.loop <= cutoff_loop`. The seconds conversion
+#   (`cutoff_seconds ~ cutoff_loop / 22.4`) is contextual only; it
+#   carries the V1 caveat (lps empirically corroborated by
+#   `gameSpeed='Faster'` but NOT directly source-confirmed by
+#   s2protocol). V7 does NOT make seconds the primary boundary.
+# - **In-game eligibility distribution** (driven by V3/V5/V6):
+#   `eligible_for_phase02_now`, `eligible_with_caveat`, and
+#   `blocked_until_additional_validation` counts printed above.
+# - **V7 verdict:** see printed result above. V7 itself does not
+#   block features beyond what V3/V5/V6 already established; it
+#   formalises the leakage boundary and the per-prediction-setting
+#   classification for V8 / T10.
+
+# %% [markdown]
+# ## Out of scope for T09 (this notebook execution)
+#
+# - V8 is deferred to T10 per `planning/current_plan.md`.
 # - Final `.md` / `.json` / `.csv` artifacts under
 #   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T08.
+#   atomically in T11, NOT in T09.
 # - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
 #   T11-atomic per WARNING-3 + WARNING-4 fold.
 # - research_log entry is T11.
