@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- _No active plan._
+- `planning/current_plan.md` — Phase 02 feature-engineering readiness contracts after PR #207 and PR #208 (Category A, branch `phase02/feature-engineering-readiness`).
 
 ## Agent routing
 

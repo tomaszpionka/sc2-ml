@@ -19,6 +19,25 @@ merged to `master`.
 
 ### Removed
 
+## [3.45.0] — 2026-05-05 (PR #209: phase02/feature-engineering-readiness)
+
+### Added
+
+- Phase 02 feature-engineering readiness contracts (PR #209, `phase02/feature-engineering-readiness`). Documentation/specification-only readiness work preparing Phase 02 entry across sc2egset, aoestats, and aoe2companion. **No feature generation, notebooks, generated dataset artifacts, dataset ROADMAPs, status YAMLs, or thesis chapters were modified.**
+  - `planning/current_plan.md` + `planning/current_plan.critique.md` + `planning/current_plan.critique_resolution.md` + `planning/INDEX.md` — active Phase 02 plan, plan-stage reviewer-deep PASS-WITH-NOTES (0 unresolved BLOCKERs), and T05A planning amendment converting T05 from a read-only transcript pass to a reproducible deterministic Python validator with JSON + Markdown report deliverables.
+  - `thesis/pass2_evidence/phase01_closeout_summary.md` (T01) — Phase 01 → Phase 02 entry-condition gate document for all three datasets; not thesis chapter prose; mandatory phrases `GATE-14A6 outcome: narrowed`, `full tracker scope is not closed`, `aoestats Tier 4`, `aoe2companion mixed-mode`, `tracker-derived features are never pre-game` validated.
+  - `.claude/rules/data-analysis-lineage.md` (T02) — anti-GIGO workflow rule enforcing ROADMAP / notebook / artifact non-batching; assumption / sanity-check / falsifier review before any artifact generation; tracker-CSV constraint; AoE2 source-label discipline; agent-and-model routing guidance.
+  - `reports/specs/02_02_feature_engineering_plan.md` (T03) — CROSS-02-02-v1 (DRAFT / PR-local until reviewed); Phase 02 feature-engineering plan specifying prediction settings (`pre_game`, `history_enriched_pre_game`, `in_game_snapshot`), feature table grains, per-dataset minimal feature families, leakage checks, cold-start gates, AoE2 source-specific labels, SC2 tracker eligibility constraints, and proposed Phase 02 ROADMAP steps (proposals only; does not supersede locked CROSS-02-00-v3.0.1 or CROSS-02-01-v1.0.1).
+  - `reports/specs/02_03_temporal_feature_audit_protocol.md` (T04) — CROSS-02-03-v1 (DRAFT / PR-local until reviewed); design-time temporal feature audit protocol with 15 audit dimensions D1–D15, explicit pass conditions and failure routes, and declared (not yet generated) future audit artifact schema.
+  - `scripts/validate_phase02_readiness_contracts.py` + `reports/specs/02_04_cross_spec_consistency_report.json` + `reports/specs/02_04_cross_spec_consistency_report.md` (T05A/T05B1/T05B2) — reproducible deterministic cross-spec consistency validator and its generated reports; verdict `PASS` across all 9 checked dimensions; 0 blockers.
+  - `reports/research_log.md` — new [CROSS] 2026-05-05 entry recording PR #209 scope, committed deliverables, consistency verdict, and Phase 02 constraints.
+
+### Changed
+
+### Fixed
+
+### Removed
+
 ## [3.44.0] — 2026-05-05 (PR #208: phase01/sc2egset-tracker-events-semantic-validation)
 
 ### Added

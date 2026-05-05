@@ -15,6 +15,54 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-05-05 — Phase 02 readiness contracts (T01–T05B2; PR #209 `phase02/feature-engineering-readiness`)
+
+**Source:** PR #209 `phase02/feature-engineering-readiness`; 11 commits — `9bda24ce` (planning baseline + reviewer-deep PASS-WITH-NOTES), `a4f45ffd` (T01 closeout summary), `0bd9fc2f` (T02 lineage rule), `108f9d2d` + `64001250` (T03 spec + AoE2 wording / history-join semantics micro-fix), `1985114a` (T04 spec), `5ca5e605` (T05A planning amendment), `b7ce3a88` + `0595afb5` + `e3cf8923` (T05B1 validator + reproducibility-metadata + line-wrapping classifier hardening), `f0a436cf` (T05B2 generated reports). HEAD as of T06A entry: `f0a436cf`.
+
+**Scope:** Documentation/specification readiness for Phase 02 entry. **No notebooks, feature tables, generated dataset artifacts, raw data, dataset ROADMAPs, per-dataset research logs, status YAMLs (`STEP_STATUS.yaml` / `PIPELINE_SECTION_STATUS.yaml` / `PHASE_STATUS.yaml`), or thesis chapters were modified.** No model training, encoder, scaler, or split was created. No locked spec was amended.
+
+**Committed deliverables:**
+
+- `planning/current_plan.md` + `planning/current_plan.critique.md` + `planning/current_plan.critique_resolution.md` + `planning/INDEX.md` — active Phase 02 plan; plan-stage reviewer-deep PASS-WITH-NOTES (0 unresolved BLOCKERs); T05A planning amendment 2026-05-05 converting T05 from a transcript-only read-only pass to a reproducible deterministic Python validator + JSON + Markdown report deliverables.
+- `thesis/pass2_evidence/phase01_closeout_summary.md` (T01) — Phase 01 → Phase 02 readiness gate document; **not thesis chapter prose and does not update Chapter 4**.
+- `.claude/rules/data-analysis-lineage.md` (T02) — anti-GIGO workflow rule (ROADMAP / notebook / artifact non-batching; assumption / sanity / falsifier discipline before artifact generation; tracker-CSV constraint; AoE2 source-label discipline; agent / model routing).
+- `reports/specs/02_02_feature_engineering_plan.md` (T03) — **CROSS-02-02-v1, DRAFT / PR-local until reviewed**; Phase 02 feature-engineering plan: prediction settings (`pre_game`, `history_enriched_pre_game`, `in_game_snapshot`), feature table grains and focal/opponent projection requirements, per-dataset minimal feature families, planned leakage checks, cold-start gates without magic pseudocounts, AoE2 source-specific labels, SC2 tracker eligibility constraint, proposed Phase 02 ROADMAP steps as proposals only.
+- `reports/specs/02_03_temporal_feature_audit_protocol.md` (T04) — **CROSS-02-03-v1, DRAFT / PR-local until reviewed**; design-time temporal feature audit protocol; 15 audit dimensions D1–D15 with explicit pass conditions and failure routes; future audit artifact schema declared but not generated.
+- `scripts/validate_phase02_readiness_contracts.py` (T05B1) — deterministic, read-only, stdlib-only Python validator (argparse: `--base`, `--out-json`, `--out-md`, `--run-date`); 9 named checks covering PR file scope, required + forbidden terminology with line-wrapping context window, non-supersession, SC2 tracker eligibility, AoE2 source-label discipline, temporal leakage rules, cold-start / no-magic-number gates, and CROSS-02-03 D1–D15 + future audit schema completeness; emits JSON + Markdown reports with `command_line`, `head_sha`, `branch`, `base_ref`, `run_date`, `input_files`, `assumptions`, `sanity_checks`, `falsifiers`, per-check evidence, and `verdict`; exits non-zero on `BLOCKED`. Static checks: ruff and mypy clean.
+- `reports/specs/02_04_cross_spec_consistency_report.json` (T05B2) — generated machine-readable report.
+- `reports/specs/02_04_cross_spec_consistency_report.md` (T05B2) — generated human-readable report.
+
+**T05B2 validator outcome:** verdict = **PASS**; **0 BLOCKERs**, **0 WARNINGs**, 0 NOTEs across all 9 named checks (PR file scope; required positive phrases; forbidden substrings; non-supersession of CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1; SC2 tracker eligibility consistency against `tracker_events_feature_eligibility.csv` (5/7/3 split, 3 blocked families excluded by name, `slot_identity_consistency` declared as sanity gate not model input); AoE2 source-label discipline; temporal leakage rules; cold-start / no-magic-number gates; CROSS-02-03 D1–D15 + future audit schema completeness). The reports record `head_sha` = `e3cf8923bf293eb0a269a951b7b743418c01dcca` (the post-line-wrapping-classifier-fix commit that produced the PASS run); the T05B2 commit `f0a436cf` is the report commit that lands on top of `e3cf8923`.
+
+**Reproduction command (verbatim):**
+
+```
+source .venv/bin/activate && poetry run python scripts/validate_phase02_readiness_contracts.py --base master --out-json reports/specs/02_04_cross_spec_consistency_report.json --out-md reports/specs/02_04_cross_spec_consistency_report.md --run-date 2026-05-05
+```
+
+The two `02_04_*` reports are generated artifacts; do not hand-edit them. Regenerate through the validator script and re-commit.
+
+**Preserved key constraints:**
+
+- **CROSS-02-02-v1** (T03 spec) and **CROSS-02-03-v1** (T04 spec) are **DRAFT / PR-local until the reviewer-deep gate** prescribed by the active plan returns PASS or PASS-WITH-NOTES. Until that lock, no Phase 02 ROADMAP, notebook, or generated artifact may consume them as authoritative.
+- **CROSS-02-00-v3.0.1** remains the locked input contract baseline (VIEW names, row grain, per-dataset I3 temporal anchors, cross-game categorical encoding protocol, column-level classification). Not amended by this PR.
+- **CROSS-02-01-v1.0.1** remains the locked post-materialization / pre-training leakage audit gate. CROSS-02-03 complements but **does not replace** CROSS-02-01-v1.0.1.
+- **GATE-14A6 outcome: narrowed.** Per PR #208 §14A.6 POST-VALIDATION UPDATE: `gate_14a6_decision = narrowed`; `planned_subset_ready_predicate_satisfied = true`; `full_tracker_scope_closed_predicate_satisfied = false`.
+- **The full tracker scope is not closed.** Three SC2 tracker candidate families remain `blocked_until_additional_validation` per the tracker eligibility CSV: `mind_control_event_count` (V4 sparse coverage; V5 dynamic-ownership blocked), `army_centroid_at_cutoff_snapshot` (V6 packed-items decoder + UnitBorn-lineage owner attribution NOT validated), `playerstats_cumulative_economy_fields` (V3 Q3 strict: cumulative semantics not source-confirmed for `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` keys). Phase 02 may consume only the 12 planned-yes rows under each row's recorded `eligibility_scope` and `caveat`.
+- **Tracker-derived features are never pre-game.** Amendment 2 of PR #208 / Invariant I3: every row in `tracker_events_feature_eligibility.csv` carries `status_pre_game = not_applicable_to_pre_game`.
+- **aoestats Tier 4 semantic opacity** (`leaderboard='random_map'`; queue semantics unverified against upstream API documentation). aoestats is not called unqualified ranked ladder anywhere in T01–T04 deliverables.
+- **aoe2companion mixed-mode ID 6 + ID 18, not ranked-only.** ID 6 = `rm_1v1` ranked candidate (Tier 2); ID 18 = `qp_rm_1v1` quickplay/matchmaking-derived (Tier 3); combined scope is mixed-mode.
+
+**Phase 02 implication:** PR #209 establishes the documentation/specification baseline for Phase 02 entry. CROSS-02-02-v1 and CROSS-02-03-v1 lock once the reviewer-deep gate clears them. Empirical Phase 02 work (any feature-generation notebook, SQL view, or feature table) remains blocked until that lock and is bound to `.claude/rules/data-analysis-lineage.md`: ROADMAP stub → notebook scaffold → one validation module → user review → commit → next module → artifact generation only after all validation modules pass → research_log / STEP_STATUS / manifest closure → reviewer-deep gate.
+
+**Next gate (T06):**
+
+- **reviewer-deep** must review the full PR before T06 closure. Reviewer-deep covers structural correctness, spec compliance, invariant tracing, anti-GIGO discipline, and the integrity of the T05 validator output.
+- **reviewer-adversarial is NOT invoked** unless reviewer-deep raises an unresolved methodology BLOCKER. Per `.claude/rules/data-analysis-lineage.md`, reviewer-adversarial dispatch is reserved for Phase 03+ methodology-sensitive work or unresolved methodology BLOCKERs surfaced by reviewer-deep.
+- After reviewer-deep PASS or PASS-WITH-NOTES, T06B (conditional `CHANGELOG.md` update + version-bump classification per branch-prefix convention) closes the PR.
+
+---
+
 ## [CROSS] 2026-04-26 — Cross-dataset comparison-frame decision (T09 audit cleanup)
 
 **Source:** T09 executor (thesis/audit-methodology-lineage-cleanup).
