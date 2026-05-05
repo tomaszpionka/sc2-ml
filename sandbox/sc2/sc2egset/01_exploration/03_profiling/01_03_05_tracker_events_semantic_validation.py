@@ -4535,16 +4535,290 @@ print(f"  {verdicts['V8']['n_rows']} rows; "
 #   + STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS.
 
 # %% [markdown]
-# ## Out of scope for T10 (this notebook execution)
+# ---
+# ## T11 -- Atomic artifact generation
 #
-# - T11 (artifact regeneration + research_log + STEP_STATUS /
-#   PIPELINE_SECTION_STATUS / PHASE_STATUS closure) is the next step
-#   per `planning/current_plan.md`.
-# - Final `.md` / `.json` / `.csv` artifacts under
-#   `reports/artifacts/01_exploration/03_profiling/` are produced
-#   atomically in T11, NOT in T10.
-# - STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS updates are
-#   T11-atomic per WARNING-3 + WARNING-4 fold.
-# - research_log entry is T11.
+# Writes the three Step 01_03_05 artifact files from the executed
+# notebook state:
+# - `01_03_05_tracker_events_semantic_validation.json`
+# - `01_03_05_tracker_events_semantic_validation.md`
+# - `tracker_events_feature_eligibility.csv`
+#
+# Per Invariant 6, every reported number is reproduced inline in the
+# markdown from the captured `sql_queries` dict. Per Invariant 9, only
+# this Step's own state (verdicts + sql_queries + EVIDENCE) is used.
+# Per the T11 brief: do not manually edit generated artifacts; if the
+# text is wrong, patch this notebook and regenerate.
+
+# %%
+import csv
+import datetime as _dt
+import json as _json
+
+artifact_dir.mkdir(parents=True, exist_ok=True)
+T11_RUN_DATE = "2026-05-05"
+JSON_PATH = artifact_dir / "01_03_05_tracker_events_semantic_validation.json"
+MD_PATH = artifact_dir / "01_03_05_tracker_events_semantic_validation.md"
+CSV_PATH = artifact_dir / "tracker_events_feature_eligibility.csv"
+
+
+def _to_jsonable(v):
+    """Convert numpy / pandas types to native Python for JSON."""
+    if v is None or isinstance(v, (bool, int, float, str)):
+        return v
+    if isinstance(v, dict):
+        return {str(k): _to_jsonable(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple, set)):
+        return [_to_jsonable(x) for x in v]
+    try:
+        return v.item()  # numpy scalar
+    except Exception:
+        return str(v)
+
+
+# %% [markdown]
+# ### T11 -- write JSON
+
+# %%
+artifact_json = {
+    "step": "01_03_05",
+    "name": "Tracker Events Semantic Validation",
+    "dataset": "sc2egset",
+    "game": "sc2",
+    "phase": "01",
+    "pipeline_section": "01_03",
+    "predecessors": ["01_03_04"],
+    "generated_date": T11_RUN_DATE,
+    "invariants_applied": ["I3", "I6", "I7", "I9", "I10"],
+    "gate_14a6_decision": verdicts["V8"]["gate_14a6_decision"],
+    "initial_phase02_subset_ready":
+        verdicts["V8"]["initial_phase02_subset_ready"],
+    "planned_subset_ready_predicate_satisfied":
+        verdicts["V8"]["planned_subset_ready_predicate_satisfied"],
+    "full_tracker_scope_closed_predicate_satisfied":
+        verdicts["V8"]["full_tracker_scope_closed_predicate_satisfied"],
+    "predicate_field_note": verdicts["V8"]["predicate_field_note"],
+    "verdicts": _to_jsonable(verdicts),
+    "evidence": _to_jsonable(EVIDENCE),
+    "sql_queries": _to_jsonable(sql_queries),
+    "notes": [
+        "Tracker-derived feature families are NEVER pre-game (Amendment 2 / Invariant I3).",
+        "T11 does NOT implement Phase 02 features; it only validates "
+        "semantics and produces machine-readable eligibility rows.",
+    ],
+}
+JSON_PATH.write_text(_json.dumps(artifact_json, indent=2, ensure_ascii=False) + "\n")
+print(f"Wrote JSON: {JSON_PATH} ({JSON_PATH.stat().st_size} bytes)")
+
+# %% [markdown]
+# ### T11 -- write CSV (15 rows, explicit column order)
+
+# %%
+CSV_COLUMNS = [
+    "feature_family", "source_event_family", "planned_for_phase02",
+    "status_pre_game", "status_in_game_snapshot",
+    "status_post_game_or_blocked",
+    "eligibility_scope", "blocking_reason_if_blocked", "caveat",
+    "evidence_source", "upstream_verdicts", "notes_for_phase02",
+]
+with CSV_PATH.open("w", newline="") as fh:
+    w = csv.writer(fh, quoting=csv.QUOTE_ALL)
+    w.writerow(CSV_COLUMNS)
+    for row in verdicts["V8"]["tracker_events_feature_eligibility_rows"]:
+        out = []
+        for col in CSV_COLUMNS:
+            v = row.get(col)
+            if v is None:
+                out.append("")
+            elif isinstance(v, list):
+                out.append(",".join(str(x) for x in v))
+            else:
+                out.append(str(v))
+        w.writerow(out)
+print(f"Wrote CSV: {CSV_PATH} ({CSV_PATH.stat().st_size} bytes)")
+
+# %% [markdown]
+# ### T11 -- build + write Markdown report
+
+# %%
+def _verdict_block(name: str, v: dict) -> str:
+    lines = [f"### {name} -- {v.get('result', 'n/a')}"]
+    lines.append("")
+    if "hypothesis" in v:
+        lines.append(f"- **Hypothesis:** {v['hypothesis']}")
+    if "falsifier" in v:
+        lines.append(f"- **Falsifier:** {v['falsifier']}")
+    if "notes" in v:
+        lines.append(f"- **Notes:** {v['notes']}")
+    if "caveat" in v and v.get("caveat"):
+        lines.append(f"- **Caveat:** {v['caveat']}")
+    if "amendment_2_compliance" in v:
+        lines.append(
+            f"- amendment_2_compliance: {v['amendment_2_compliance']}"
+        )
+    if "amendment_4_compliance" in v:
+        lines.append(
+            f"- amendment_4_compliance: {v['amendment_4_compliance']}"
+        )
+    if "amendment_5_compliance" in v:
+        lines.append(
+            f"- amendment_5_compliance: {v['amendment_5_compliance']}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+# %%
+def _build_md() -> str:
+    g = verdicts["V8"]
+    rows = g["tracker_events_feature_eligibility_rows"]
+    parts = []
+    parts.append(f"# Step 01_03_05 -- Tracker Events Semantic Validation\n")
+    parts.append(
+        f"**Dataset:** sc2egset  \n"
+        f"**Game:** sc2  \n"
+        f"**Phase:** 01 -- Data Exploration  \n"
+        f"**Pipeline section:** 01_03 -- Systematic Data Profiling  \n"
+        f"**Predecessor:** 01_03_04  \n"
+        f"**Generated:** {T11_RUN_DATE}  \n"
+        f"**Invariants applied:** I3, I6, I7, I9, I10\n"
+    )
+    parts.append("---\n")
+    parts.append("## GATE-14A6 decision\n")
+    parts.append(
+        f"- **gate_14a6_decision:** `{g['gate_14a6_decision']}` "
+        "(NOT fully closed; the planned subset is ready but the full "
+        "tracker scope remains narrowed)\n"
+        f"- **initial_phase02_subset_ready:** "
+        f"`{g['initial_phase02_subset_ready']}`\n"
+        f"- **planned_subset_ready_predicate_satisfied:** "
+        f"`{g['planned_subset_ready_predicate_satisfied']}` "
+        "(scope: planned_for_phase02=yes rows only)\n"
+        f"- **full_tracker_scope_closed_predicate_satisfied:** "
+        f"`{g['full_tracker_scope_closed_predicate_satisfied']}` "
+        "(scope: ALL relevant tracker candidate families; only this "
+        "predicate being True warrants `gate_14a6_decision = closed`)\n\n"
+        f"**Rationale.** {g['gate_14a6_rationale']}\n"
+    )
+    parts.append("---\n## Verdict summary (V1..V8)\n")
+    for name in ["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"]:
+        if name in verdicts:
+            parts.append(_verdict_block(name, verdicts[name]))
+    parts.append("---\n## Feature-family eligibility table\n")
+    parts.append(
+        f"15 candidate feature families: 12 planned-for-Phase-02, "
+        "3 not planned (blocked with explicit reasons).\n\n"
+    )
+    parts.append("| feature_family | source | planned | in_game_snapshot |"
+                 " blocking_reason_if_blocked |\n")
+    parts.append("|---|---|---|---|---|\n")
+    for r in rows:
+        reason = (r["blocking_reason_if_blocked"] or "").replace("|", "/")
+        if len(reason) > 90:
+            reason = reason[:87] + "..."
+        parts.append(
+            f"| `{r['feature_family']}` | {r['source_event_family']} | "
+            f"{r['planned_for_phase02']} | {r['status_in_game_snapshot']} "
+            f"| {reason} |\n"
+        )
+    parts.append("\nFull rows (with eligibility_scope, caveat, "
+                 "evidence_source, upstream_verdicts, notes_for_phase02) "
+                 "are in `tracker_events_feature_eligibility.csv` and the "
+                 "JSON artifact.\n")
+    parts.append("---\n## Blocked families (3, all planned-no)\n")
+    for r in rows:
+        if r["status_in_game_snapshot"] == "blocked_until_additional_validation":
+            parts.append(
+                f"- **`{r['feature_family']}`** "
+                f"({r['source_event_family']}): "
+                f"{r['blocking_reason_if_blocked']}\n"
+            )
+    parts.append("---\n## SQL query registry\n")
+    parts.append(f"{len(sql_queries)} named queries captured per "
+                 "Invariant 6. Names:\n\n")
+    for qn in sorted(sql_queries.keys()):
+        parts.append(f"- `{qn}`\n")
+    parts.append("\n---\n## Notes\n")
+    parts.append(
+        "- **Tracker-derived features are NEVER pre-game** "
+        "(Amendment 2 / Invariant I3). Every row in the eligibility "
+        "table carries `status_pre_game = not_applicable_to_pre_game`.\n"
+        "- **T11 does NOT implement Phase 02 features.** It validates "
+        "semantics, classifies feature-family eligibility, and writes "
+        "machine-readable artifacts (JSON / CSV / MD). Phase 02 must "
+        "consume `tracker_events_feature_eligibility.csv` and respect "
+        "each row's `eligibility_scope` and `blocking_reason_if_blocked`.\n"
+        "- **Initial planned-subset readiness** is NOT the same as "
+        "**full tracker-events scope closure**. The two predicates are "
+        "exposed separately in this artifact and in the JSON.\n"
+    )
+    return "".join(parts)
+
+
+MD_PATH.write_text(_build_md())
+print(f"Wrote MD: {MD_PATH} ({MD_PATH.stat().st_size} bytes)")
+
+# %% [markdown]
+# ### T11 -- artifact validation assertions
+
+# %%
+# JSON validation
+_loaded = _json.loads(JSON_PATH.read_text())
+assert _loaded["gate_14a6_decision"] == "narrowed"
+assert _loaded["initial_phase02_subset_ready"] is True
+assert _loaded["planned_subset_ready_predicate_satisfied"] is True
+assert _loaded["full_tracker_scope_closed_predicate_satisfied"] is False
+assert "closed_predicate_satisfied" not in _loaded, (
+    "ambiguous closed_predicate_satisfied must not be top-level"
+)
+for vname in ["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"]:
+    assert vname in _loaded["verdicts"], f"missing verdict {vname}"
+
+# CSV validation
+import pandas as _pd
+_csv = _pd.read_csv(CSV_PATH)
+assert len(_csv) == 15, f"CSV has {len(_csv)} rows, expected 15"
+required_cols = {
+    "feature_family", "source_event_family", "planned_for_phase02",
+    "status_pre_game", "status_in_game_snapshot",
+    "status_post_game_or_blocked", "eligibility_scope",
+    "blocking_reason_if_blocked", "caveat", "evidence_source",
+    "notes_for_phase02",
+}
+assert required_cols.issubset(set(_csv.columns)), (
+    f"CSV missing required cols: {required_cols - set(_csv.columns)}"
+)
+for col in ["status_pre_game", "status_in_game_snapshot",
+            "status_post_game_or_blocked"]:
+    assert _csv[col].notna().all(), f"CSV has null {col}"
+assert (_csv["status_pre_game"] == "not_applicable_to_pre_game").all(), (
+    "every row must have status_pre_game = not_applicable_to_pre_game"
+)
+blocked = _csv[_csv["status_in_game_snapshot"]
+                == "blocked_until_additional_validation"]
+for _, r in blocked.iterrows():
+    assert r["blocking_reason_if_blocked"] and r["blocking_reason_if_blocked"].strip(), (
+        f"blocked row {r['feature_family']} has empty "
+        "blocking_reason_if_blocked"
+    )
+
+# Markdown validation
+_md = MD_PATH.read_text()
+assert "narrowed" in _md.lower()
+assert "initial_phase02_subset_ready" in _md
+assert "planned_subset_ready_predicate_satisfied" in _md
+assert "full_tracker_scope_closed_predicate_satisfied" in _md
+assert "blocked" in _md.lower()
+assert "Tracker-derived features are NEVER pre-game" in _md
+assert "T11 does NOT implement Phase 02 features" in _md
+print("=== T11 artifact validation: OK ===")
+print(f"  JSON: {JSON_PATH.stat().st_size} bytes")
+print(f"  CSV:  {CSV_PATH.stat().st_size} bytes ({len(_csv)} rows)")
+print(f"  MD:   {MD_PATH.stat().st_size} bytes")
+
+# %% [markdown]
+# ## Out of scope for T11 (this notebook execution)
+#
+# - T12 (manifest + phase02_readiness_hardening §14A.6 + RISK-21
+#   update) is the next step per `planning/current_plan.md`.
 # - thesis chapter prose, AoE2 datasets, specs, pyproject, poetry,
 #   Phase 02 feature engineering -- all out of scope.
