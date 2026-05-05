@@ -13,6 +13,16 @@ merged to `master`.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [3.45.0] — 2026-05-05 (PR #209: phase02/feature-engineering-readiness)
+
+### Added
+
 - Phase 02 feature-engineering readiness contracts (PR #209, `phase02/feature-engineering-readiness`). Documentation/specification-only readiness work preparing Phase 02 entry across sc2egset, aoestats, and aoe2companion. **No feature generation, notebooks, generated dataset artifacts, dataset ROADMAPs, status YAMLs, or thesis chapters were modified.**
   - `planning/current_plan.md` + `planning/current_plan.critique.md` + `planning/current_plan.critique_resolution.md` + `planning/INDEX.md` — active Phase 02 plan, plan-stage reviewer-deep PASS-WITH-NOTES (0 unresolved BLOCKERs), and T05A planning amendment converting T05 from a read-only transcript pass to a reproducible deterministic Python validator with JSON + Markdown report deliverables.
   - `thesis/pass2_evidence/phase01_closeout_summary.md` (T01) — Phase 01 → Phase 02 entry-condition gate document for all three datasets; not thesis chapter prose; mandatory phrases `GATE-14A6 outcome: narrowed`, `full tracker scope is not closed`, `aoestats Tier 4`, `aoe2companion mixed-mode`, `tracker-derived features are never pre-game` validated.
