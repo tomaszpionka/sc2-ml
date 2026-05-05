@@ -2,6 +2,116 @@
 
 ---
 
+## 2026-05-05 — [Phase 01 / Step 01_03_05] Tracker events semantic validation (GATE-14A6)
+
+**Category:** A (science)
+**Dataset:** sc2egset
+**Branch:** phase01/sc2egset-tracker-events-semantic-validation
+**Step scope:** query
+**Artifacts produced:**
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.json`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.md`
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv`
+
+### What
+
+Semantically validated the 10 tracker_events_raw event families across 8 modules (V1 loop/time semantics, V2 player-id mapping, V3 PlayerStats field semantics, V4 event coverage and key-set stability, V5 unit lifecycle ordering, V6 coordinate semantics, V7 leakage boundary, V8 final feature-family eligibility aggregation). Produced a 15-row machine-readable feature-eligibility table with explicit per-prediction-setting columns (Amendment 2) and a GATE-14A6 closure decision per Amendment 1. All work performed in `sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.{py,ipynb}` against `tracker_events_raw` (62,003,411 rows), `replays_meta_raw` (22,390 rows), and `replay_players_raw` (44,817 rows).
+
+### Why
+
+Phase 01 closure required a hard gate (GATE-14A6) preventing thesis methodology from claiming SC2 tracker_events semantics that were not validated in this codebase (per `thesis/pass2_evidence/phase02_readiness_hardening.md` §14A.6 and RISK-21 in the methodology risk register). Without this Step, Phase 02 feature engineering could over-promote tracker-derived features (e.g., treating `*Lost` / `*Killed` / `*FriendlyFire` PlayerStats fields as cumulative totals without source confirmation; using `UnitOwnerChange` features broadly despite sparse coverage; treating `UnitPositions` coordinates as cell-unit-confirmed). GATE-14A6 forces every tracker-derived candidate feature family through eight semantic checks before it can enter Phase 02 scope.
+
+### How (reproducibility)
+
+The notebook records every SQL verbatim in the `sql_queries` dict per Invariant 6. Twenty-five named queries are captured (full list in the JSON artifact's `sql_queries` key). Key boundary queries:
+
+- **V7.1 loop boundary** (62,003,411 events; 0 negative-loop, 0 past-replay-end):
+  ```sql
+  SELECT COUNT(*) AS n_events_total,
+         COUNT(*) FILTER (WHERE te.loop < 0) AS n_events_loop_negative,
+         COUNT(*) FILTER (WHERE te.loop > rm.header.elapsedGameLoops)
+             AS n_events_after_replay_end
+  FROM tracker_events_raw te JOIN replays_meta_raw rm USING (filename)
+  ```
+- **V5.3 lifecycle ordering** (n_inverted = 0 across 25,523,759 origin identities):
+  ```sql
+  WITH origins AS (SELECT filename, uti, utr, MIN(loop) AS first_origin_loop
+                   FROM tracker_events_raw
+                   WHERE evtTypeName IN ('UnitBorn','UnitInit') GROUP BY ...),
+       deaths  AS (SELECT filename, uti, utr, MIN(loop) AS died_loop
+                   FROM tracker_events_raw WHERE evtTypeName = 'UnitDied' GROUP BY ...)
+  SELECT COUNT(*) FILTER (WHERE first_origin_loop IS NOT NULL
+                            AND died_loop IS NOT NULL
+                            AND died_loop < first_origin_loop) AS n_inverted ...
+  ```
+
+The full reproducible Q&A is in the notebook and JSON artifact. Notebook re-execution: `source .venv/bin/activate && poetry run jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.ipynb`.
+
+### Findings
+
+- V1 (loop / time semantics): **PASS_WITH_CAVEAT.** `details.gameSpeed` cardinality = 1 (`Faster`) across 22,390 replays; `tracker_after_end = 0`; `lps_source` is empirical corroborated by `gameSpeed='Faster'` (s2protocol does not document 22.4 lps directly).
+- V2 (player-id mapping): **PASS.** All 7 direct-mapping event types HIGH confidence (≥99.5% match-rate on player_attributed slice per Amendment 3); 3 lineage_required event types correctly classified.
+- V3 (PlayerStats field semantics): **PASS_WITH_CAVEAT.** 39 observed stats keys, all classified (26 safe_snapshot, 0 safe_delta, 13 unsafe_or_ambiguous). Cumulative-economy fields (`*Lost` / `*Killed` / `*FriendlyFire` / `*Used`) blocked per Q3 strict because s2protocol does not confirm cumulative semantics; `cumulative_economy_blocked = True`. SC2EGSet decoder strips the `m_` prefix from snapshot keys (recorded as `decoded_json_strips_m_prefix = True`). Fixed-point caveat for `scoreValueFoodUsed` / `scoreValueFoodMade` recorded verbatim (divide-by-4096 NOT applied by T05).
+- V4 (event coverage + key-set stability): **PASS_WITH_CAVEAT.** All 10 event families coverage- and key-set-stable across 9 years (2016–2024) and 2 non-trivial gameVersion cohorts (`4.8`, `5.0`). UnitOwnerChange flagged with `feature_eligibility_caveat = sparse_event_family_not_broadly_available` (absent in 2016, present at 22.31–28.85% across 8 of 9 years).
+- V5 (unit lifecycle): **PASS_WITH_CAVEAT.** `n_inverted = 0`; `n_done_before_init = 0`; UnitTypeChange attribution rate 99.99996%; UnitDone via UnitInit at 100%. `n_survivors` (9,469,931), `n_died_without_prior_origin` (6 of 16M), `n_constructing_survivors` (132,506), `n_same_loop_origin_death` (2,804,314) all reported descriptively per Amendment 4.
+- V6 (coordinate semantics): **PASS_WITH_CAVEAT.** `in_bounds_rate = 1.000000` for UnitBorn / UnitInit / UnitDied across 21,825 clean-bounds replays. UnitPositions packed-items length divisible-by-3 in 100% of 941,249 events. Per Amendment 5: `source_confirmed_units = False` AND `source_confirmed_origin = False`, so no coordinate family is `eligible_for_phase02_now` regardless of bounds.
+- V7 (leakage boundary): **PASS_WITH_CAVEAT.** 0 events with `loop < 0`; 0 events with `loop > header.elapsedGameLoops` across 62M-event corpus. 12 candidate feature families enumerated, all with `status_pre_game = not_applicable_to_pre_game` per Amendment 2 / Invariant I3. Cutoff rule recorded primarily in game loops (`event.loop <= cutoff_loop`); seconds is contextual only (V1 caveat). Time-to-first-event features explicitly require censoring at cutoff (`requires_censoring_at_cutoff = True`, `full_replay_min_loop_blocked = True`).
+- V8 (feature-family eligibility): **PASS_WITH_CAVEAT.** 15-row eligibility table written to CSV. 12 planned-yes / 3 planned-no.
+  - `gate_14a6_decision = narrowed`
+  - `initial_phase02_subset_ready = true`
+  - `planned_subset_ready_predicate_satisfied = true` (scope: planned-yes rows only)
+  - `full_tracker_scope_closed_predicate_satisfied = false` (scope: ALL relevant tracker candidate families; only this predicate being True warrants `gate_14a6_decision = closed`)
+  - Eligible / caveated / blocked counts: **5 eligible**, **7 caveated**, **3 blocked**.
+- Key eligible planned subset families (5): `count_units_built_by_cutoff_loop`, `count_units_killed_by_cutoff_loop`, `morph_count_by_cutoff_loop`, `building_construction_count_by_cutoff_loop`, `slot_identity_consistency`.
+- Key caveated planned subset families (7): 4 PlayerStats snapshot families (`minerals_collection_rate_history_mean`, `army_value_at_5min_snapshot`, `supply_used_at_cutoff_snapshot`, `food_used_max_history`), `time_to_first_expansion_loop` (cutoff-censored), `count_units_lost_by_cutoff_loop` (lineage-attributed), `count_upgrades_by_cutoff_loop` (occurrence-count only).
+- Key blocked families (3, all planned-no):
+  - `playerstats_cumulative_economy_fields` — V3 Q3 strict: s2protocol does not confirm cumulative semantics for `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` keys.
+  - `unitownerchange_dynamic_ownership` (`mind_control_event_count`) — V4 sparse_event_family_not_broadly_available; V5 dynamic-ownership blocked.
+  - `unitpositions_coordinate_features` (`army_centroid_at_cutoff_snapshot`) — V6 requires_additional_unpacking_validation; Amendment 5 source-confirmation gap (units / origin not confirmed).
+
+### What this means
+
+The initial Phase 02 SC2 tracker-derived feature subset is ready: every `planned_for_phase02 = "yes"` row is eligible or caveated, with explicit per-row `eligibility_scope`. However, the full SC2EGSet tracker_events_raw semantic scope remains **narrowed**, not closed, because three relevant candidate families are blocked with explicit reasons. The thesis methodology should not claim that the full tracker_events scope is validated; it should claim only that the planned-yes subset is ready under each row's recorded `eligibility_scope` and `caveat`. RISK-21 (open) is materially mitigated for the planned subset and remains open for the blocked families.
+
+### Decisions taken
+
+- GATE-14A6 closed to `narrowed` (not `closed`) per the T10 conservative hygiene rule: prefer `narrowed` when any tracker candidate family remains blocked with a reason, even if every planned-yes row passes the strict closed predicate.
+- Replaced the ambiguous `closed_predicate_satisfied` field with two explicitly named predicates (`planned_subset_ready_predicate_satisfied` / `full_tracker_scope_closed_predicate_satisfied`) plus a `predicate_field_note` documenting which one warrants `closed`.
+- All tracker-derived feature families carry `status_pre_game = not_applicable_to_pre_game` (Amendment 2 / Invariant I3); enforced by programmatic assertion in V7 and again in V8.
+- Cutoff boundary expressed primarily in game loops (`event.loop <= cutoff_loop`); seconds (`cutoff_loop / 22.4`) is contextual only with V1 caveat.
+- Time-to-first-event features explicitly require cutoff censoring; full-replay `min(loop)` is blocked.
+- Upgrade features must use `COUNT(*)` per `(filename, playerId)`; the `count` field is NOT trusted as cumulative without source confirmation.
+- PlayerStats `safe_snapshot` does NOT mean cumulative total; complex derived features (per-unit lifecycle reconstructions, owner re-attribution, coordinate-derived metrics) require V8 family-specific eligibility AND Phase 02 feature-contract review.
+
+### Decisions deferred
+
+- Full UnitPositions packed-items decoder + UnitBorn-lineage owner attribution (deferred until a dedicated decoder is validated).
+- Coordinate units / origin source confirmation for SC2 tracker events (Amendment 5 source-confirmation gate).
+- Resolution of SC2EGSet `scoreValueFoodUsed` / `scoreValueFoodMade` decoder scaling (divide-by-4096 vs pre-scaled) — must be resolved before Phase 02 consumes those fields.
+- Cumulative-semantics validation for `*Lost` / `*Killed` / `*FriendlyFire` PlayerStats fields (would require either a Blizzard-authoritative source or a corroborating replay-engine experiment).
+- UnitOwnerChange dynamic-ownership feature design (sparse coverage prevents broad use; revisit if a tournament-meta-aware variant is needed).
+- Cross-replay leakage condition (target-match `start_loop_in_player_history`) — Phase 02 enforces this; T07 validated only the within-replay rule.
+
+### Acknowledged trade-offs
+
+- T07 declined to write a custom UnitPositions packed-items decoder because that risks blowing the notebook scope and would not resolve the V6 source-confirmation gap. UnitPositions remains `requires_additional_unpacking_validation`.
+- The narrowed gate trades thesis-defensibility (no over-claim) against feature breadth (3 tracker families blocked). The planned-yes subset of 12 families is empirically sufficient for an initial in-game-snapshot baseline; the blocked families can be added later under their own validation steps.
+
+### Thesis mapping
+
+- **Chapter 4 — Data and Methodology > §4.3.2 SC2 in-game telemetry feature eligibility.** Cite `tracker_events_feature_eligibility.csv` as the authoritative per-family table. Quote the GATE-14A6 wording: gate is **narrowed**, initial planned subset is ready, full tracker scope is not closed.
+- **Phase 02 (Feature Engineering)** consumes `tracker_events_feature_eligibility.csv` and respects each row's `eligibility_scope` + `blocking_reason_if_blocked`.
+- **`phase02_readiness_hardening.md` §14A.6 / RISK-21**: T12 will mark the gate as `narrowed` and update the readiness verdict (T12 scope, NOT this entry).
+
+### Open questions / follow-ups
+
+- Whether Phase 02's PlayerStats snapshot features should additionally validate FoodUsed / FoodMade scaling on a sample before consumption.
+- Whether the `time_to_first_expansion_loop` feature's "expansion unit type" definition should be race-aware (Hatchery / CommandCenter / Nexus) or fall back to a generic "any base structure with controlPlayerId" join.
+- Whether the 6 orphan UnitDied events (units with no UnitBorn / UnitInit predecessor) should be inspected case-by-case to rule out parser edge cases beyond the de-minimis threshold.
+- Whether a future T-step should attempt the UnitPositions decoder + Amendment 5 source-confirmation work (likely a dedicated step, not in-line in 01_03).
+
+---
+
 ## 2026-04-21 — [Phase 01 / Step 01_04_05] Cross-region fragmentation Phase 01 annotation
 
 **Category:** A (science)

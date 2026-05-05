@@ -39,6 +39,7 @@ All Phase 01 sc2egset steps are `complete` per STEP_STATUS.yaml (completed 2026-
 | sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_02_true_1v1_identification.py | 01_03_02 | intact | C2-01; sec_4_1_crosswalk (555 Random, 22379 replays, 26 Undecided) | confirmed_intact | — |
 | sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_03_table_utility.py | 01_03_03 | intact | Background only | confirmed_intact | — |
 | sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_04_event_profiling.py | 01_03_04 | intact | C2-04, C2-05, C2-06, C2-07; sec_4_1_crosswalk (event counts, PlayerStats period) | confirmed_intact | — |
+| sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.py | 01_03_05 | intact (newly created in PR #208; never flagged_stale) — V1..V8 verdicts; GATE-14A6 = narrowed; initial_phase02_subset_ready = true; full_tracker_scope_closed_predicate_satisfied = false | §4.3.2 SC2 in-game telemetry feature eligibility (T12+T13 propagation; not yet drafted in chapter); RISK-21 mitigated-narrowed | **confirmed_intact** | — |
 | sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_00_source_normalization.py | 01_04_00 | intact | sec_4_1_crosswalk (side win_pct, matches_long_raw count) | confirmed_intact | — |
 | sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_01_data_cleaning.py | 01_04_01 | intact | sec_4_1_crosswalk (missingness ledger: MMR 83.95%, APM 2.53%, clanTag, highestLeague) | confirmed_intact | — |
 | sandbox/sc2/sc2egset/01_exploration/04_cleaning/01_04_02_data_cleaning_execution.py | 01_04_02 | intact | sec_4_1_crosswalk (matches_flat_clean 22209/44418/28-30 cols; 18 assertions PASS) | confirmed_intact | — |
@@ -234,6 +235,42 @@ The required sequencing — with manifest status transitions explicit at each st
 
 ---
 
+### Step 01_03_05 — sc2egset Tracker Events Semantic Validation (PR #208 newly created)
+
+**T11 closure date:** 2026-05-05
+
+**Status:** `confirmed_intact` (freshly created in PR #208 `phase01/sc2egset-tracker-events-semantic-validation`; never flagged_stale; notebook executed fresh-kernel in T11; artifacts generated and research_log / STEP_STATUS lineage closed).
+
+**Cause:** — (not a regeneration of an existing artifact; new Step satisfying GATE-14A6 from `phase02_readiness_hardening.md` §14A.6 + RISK-21).
+
+**Notebook pair:**
+- `sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.py`
+- `sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.ipynb`
+
+**Generated artifacts (T11):**
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.md` (10,262 bytes)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.json` (167,154 bytes)
+- `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv` (15 rows; 7,612 bytes; per-prediction-setting columns per Amendment 2)
+
+**research_log entry:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md` — heading `## 2026-05-05 — [Phase 01 / Step 01_03_05] Tracker events semantic validation (GATE-14A6)`.
+
+**STEP_STATUS entry:** `src/rts_predict/games/sc2/datasets/sc2egset/reports/STEP_STATUS.yaml` — `"01_03_05"`: name "Tracker Events Semantic Validation", pipeline_section "01_03", status complete, completed_at "2026-05-05" (template-supported fields only; no `artifact_file` key).
+
+**Lineage closure (T11):** ROADMAP (Step 01_03_05 added in T01 PR #208) → notebook (T03..T10) → artifacts (T11) → research_log (T11) → STEP_STATUS / PIPELINE_SECTION_STATUS / PHASE_STATUS (T11). Full chain closed; pre-commit "status chain consistency (Tier 7)" hook passed.
+
+**GATE-14A6 outcome:**
+- `gate_14a6_decision = narrowed`
+- `initial_phase02_subset_ready = true`
+- `planned_subset_ready_predicate_satisfied = true` (scope: planned_for_phase02=yes rows only)
+- `full_tracker_scope_closed_predicate_satisfied = false` (scope: ALL relevant tracker candidate families; only this predicate being True warrants `closed`)
+- 15 feature-family rows: 12 planned-yes (5 eligible_for_phase02_now + 7 eligible_with_caveat); 3 planned-no (blocked with explicit `blocking_reason_if_blocked`).
+
+**Stale artifact remaining:** none. The Step is freshly created; no prior artifact exists.
+
+**Important interpretation note:** the initial planned-Phase-02 tracker-derived subset is ready, but the **full SC2EGSet `tracker_events_raw` semantic scope is not fully closed**. Three blocked candidate families (`mind_control_event_count` / UnitOwnerChange dynamic-ownership, `army_centroid_at_cutoff_snapshot` / UnitPositions coordinate, `playerstats_cumulative_economy_fields`) require additional validation before they can enter Phase 02 scope. Chapter 4 prose must not collapse these two predicates into "validated" or "closed".
+
+---
+
 ## Phase 02+ notebooks (all datasets)
 
 No Phase 02+ notebooks exist yet. When created, they will be added to this manifest.
@@ -248,19 +285,19 @@ No Phase 02+ notebooks exist yet. When created, they will be added to this manif
 
 ## Summary
 
-**Last updated:** 2026-04-26 by T08 executor (thesis/audit-methodology-lineage-cleanup).
-**Change from T06 baseline:** aoe2companion Step 01_06_02 transitioned from `flagged_stale` → `regenerated_pending_log` (T07) → `confirmed_intact` (T08). Count: confirmed_intact 84→85; flagged_stale 0; regenerated_pending_log 1→0.
-**Change from T07 baseline:** aoe2companion Step 01_06_02 transitioned from `regenerated_pending_log` to `confirmed_intact` by T08 (research_log entry added + STEP_STATUS comment appended). Full repair lineage closed.
+**Last updated:** 2026-05-05 by T12 executor (PR #208 `phase01/sc2egset-tracker-events-semantic-validation`).
+**Change from T08 baseline (2026-04-26):** sc2egset Step 01_03_05 newly created in PR #208 and added as `confirmed_intact` (full lineage closed in T11; never flagged_stale). Count: sc2egset confirmed_intact 32→33; Total confirmed_intact 85→86.
+**Change from T06/T07 baseline (historical):** aoe2companion Step 01_06_02 transitioned from `flagged_stale` → `regenerated_pending_log` (T07) → `confirmed_intact` (T08). Count: confirmed_intact 84→85; flagged_stale 0; regenerated_pending_log 1→0.
 
 | Dataset | confirmed_intact | not_yet_assessed | flagged_stale | regenerated_pending_log | phase_blocked |
 |---------|-----------------|-----------------|---------------|------------------------|---------------|
-| sc2egset (Phase 01) | 32 | 2 | 0 | 0 | 0 |
+| sc2egset (Phase 01) | 33 | 2 | 0 | 0 | 0 |
 | aoestats (Phase 01) | 22 | 5 | 0 | 0 | 0 |
 | aoe2companion (Phase 01) | 31 | 0 | 0 | 0 | 0 |
 | Phase 02+ (all) | 0 | 0 | 0 | 0 | n/a (no notebooks exist) |
-| **Total** | **85** | **7** | **0** | **0** | **0** |
+| **Total** | **86** | **7** | **0** | **0** | **0** |
 
-**0 notebooks are flagged_stale. 0 notebooks are regenerated_pending_log.** All aoe2companion Phase 01 notebooks are `confirmed_intact`. Full repair lineage for Step 01_06_02 is closed.
+**0 notebooks are flagged_stale. 0 notebooks are regenerated_pending_log.** All sc2egset and aoe2companion Phase 01 notebooks are `confirmed_intact` (or `not_yet_assessed`). Full repair lineage for Step 01_06_02 (aoe2companion) and full creation lineage for Step 01_03_05 (sc2egset, PR #208) are closed.
 
 The 7 `not_yet_assessed` notebooks are supplementary or extra-step notebooks not directly linked
 to a thesis claim in Chapters 1–4 (cross-region annotation, scaffold, extra cleaning steps).

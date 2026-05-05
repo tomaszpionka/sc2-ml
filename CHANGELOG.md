@@ -19,6 +19,21 @@ merged to `master`.
 
 ### Removed
 
+## [3.44.0] — 2026-05-05 (PR #208: phase01/sc2egset-tracker-events-semantic-validation)
+
+### Added
+
+- New SC2EGSet Phase 01 Step 01_03_05 — Tracker Events Semantic Validation. Closes the GATE-14A6 hard gate from `thesis/pass2_evidence/phase02_readiness_hardening.md` §14A.6 + RISK-21 by validating `tracker_events_raw` (62,003,411 rows) semantics across 8 modules (V1 loop / time semantics, V2 player-id mapping, V3 PlayerStats field semantics, V4 event coverage and key-set stability, V5 unit lifecycle ordering, V6 coordinate semantics, V7 leakage boundary, V8 final feature-family eligibility aggregation). Notebook pair `sandbox/sc2/sc2egset/01_exploration/03_profiling/01_03_05_tracker_events_semantic_validation.{py,ipynb}`. Three artifacts under `src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/`: `01_03_05_tracker_events_semantic_validation.json` (V1..V8 verdicts + 25 named SQL queries; 167 KB), `01_03_05_tracker_events_semantic_validation.md` (10 KB), `tracker_events_feature_eligibility.csv` (15 rows; per-prediction-setting columns per Amendment 2; 7.6 KB).
+- GATE-14A6 outcome: `gate_14a6_decision = narrowed`; `initial_phase02_subset_ready = true`; two distinct predicates exposed (`planned_subset_ready_predicate_satisfied = true` for the 12 planned-yes rows; `full_tracker_scope_closed_predicate_satisfied = false` because 3 candidate families remain blocked). Tracker-derived features remain NEVER pre-game (Amendment 2 / Invariant I3); cutoff rule is `event.loop <= cutoff_loop` (game loops; seconds conversion `cutoff_loop / 22.4` is contextual only, V1 caveat).
+- 12 planned Phase 02 tracker feature families ready under each row's `eligibility_scope`: 5 `eligible_for_phase02_now` (UnitBorn / UnitInit / UnitDone / UnitDied / UnitTypeChange basic cutoff counts, PlayerSetup slot consistency, UnitInit+UnitDone construction count) + 7 `eligible_with_caveat` (4 PlayerStats snapshot families, censored time-to-first-expansion, UnitDied victim attribution via UnitBorn lineage, Upgrade occurrence-count). 3 blocked families with explicit reasons: PlayerStats cumulative-economy fields (Q3 strict — s2protocol does not confirm cumulative semantics for `*Lost` / `*Killed` / `*FriendlyFire` / `*Used` keys), UnitOwnerChange dynamic ownership (V4 `sparse_event_family_not_broadly_available`), UnitPositions coordinate features (V6 unpacking + Amendment 5 source-confirmation gap).
+- Step 01_03_05 ROADMAP entry, research_log entry (2026-05-05), STEP_STATUS row (`01_03_05`: complete, completed_at "2026-05-05"). PIPELINE_SECTION_STATUS / PHASE_STATUS already at derived values (01_03=complete, Phase 01=complete) so the chain remains consistent.
+
+### Changed
+
+- `thesis/pass2_evidence/notebook_regeneration_manifest.md` — new sc2egset Step 01_03_05 row (confirmed_intact; never flagged_stale) + detail record with full GATE-14A6 outcome + summary counts updated (sc2egset confirmed_intact 32 → 33; Total 85 → 86).
+- `thesis/pass2_evidence/phase02_readiness_hardening.md` — appended POST-VALIDATION subsection under §14A.6 recording GATE-14A6 = narrowed, both predicates, what Phase 02 may use (12 of 15 rows), 3 blocked families with reasons, recommended thesis framing for §4.3 / §4.4, future validation route. Original §14A.6 historical/gated text preserved unchanged. "SC2 tracker_events validation status" flipped from NOT executed to Executed (PR #208, 2026-05-05). "Remaining risks" pointer table extended with current-state column.
+- `thesis/pass2_evidence/methodology_risk_register.md` — RISK-21 transitioned from OPEN to **MITIGATED-NARROWED** via a new `Status (PR #208 T12, 2026-05-05)` row at the top of the RISK-21 table; risk is NOT marked fully resolved (3 blocked families remain OPEN with explicit reasons + FoodUsed/FoodMade scaling caveat). Updated Evidence source / Mitigation applied / Residual uncertainty / Wording recommendation / Future validation route / Downstream task responsible.
+
 ## [3.43.1] — 2026-04-21 (PR #TBD: chore/cross-research-log-refresh)
 
 ### Changed

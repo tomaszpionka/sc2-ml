@@ -79,6 +79,11 @@ steps:
     pipeline_section: "01_03"
     status: complete
     completed_at: "2026-04-15"
+  "01_03_05":
+    name: "Tracker Events Semantic Validation"
+    pipeline_section: "01_03"
+    status: complete
+    completed_at: "2026-05-05"
   "01_04_00":
     name: "Source Normalization to Canonical Long Skeleton"
     pipeline_section: "01_04"
