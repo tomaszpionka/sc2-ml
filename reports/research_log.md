@@ -15,6 +15,51 @@ live in per-dataset logs — one per game/dataset combination.
 
 ---
 
+## [CROSS] 2026-05-06 — Post-PR-#209 cleanup and Phase 02 contract lock (cleanup PR `docs/phase02-contracts-lock-and-planning-cleanup`)
+
+**Source:** Branch `docs/phase02-contracts-lock-and-planning-cleanup` cut from master at PR #209 merge commit `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z). Three commits applied so far: `34f156c8` (planning checkpoint), `29aae461` (T01 spec lock), `ec718293` (T02 planning purge).
+
+**Scope.** Category C administrative cleanup. Documentation-only. **No dataset ROADMAPs, notebooks, generated dataset artifacts, raw data, status YAMLs (`STEP_STATUS.yaml` / `PIPELINE_SECTION_STATUS.yaml` / `PHASE_STATUS.yaml`), thesis chapters, `thesis/pass2_evidence/` files, or `thesis/reviews_and_others/` files were modified.**
+
+**T01 — Phase 02 readiness contract lock.** CROSS-02-02 and CROSS-02-03 transitioned from DRAFT (PR-local) to LOCKED (binding) via each spec's own §14 / §13 patch lane:
+
+- `reports/specs/02_02_feature_engineering_plan.md` → **CROSS-02-02-v1.0.1 LOCKED 2026-05-06** (commit `29aae461`).
+- `reports/specs/02_03_temporal_feature_audit_protocol.md` → **CROSS-02-03-v1.0.1 LOCKED 2026-05-06** (same commit).
+- Administrative lock transition only. No feature-family table cell semantics changed (CROSS-02-02 §6/§7/§8/§11 untouched). No audit dimension semantics changed (CROSS-02-03 D1–D15 untouched). `spec_id` literals preserved at `CROSS-02-02-v1` / `CROSS-02-03-v1` per each spec's patch convention. The validator `scripts/validate_phase02_readiness_contracts.py` was not re-run; `reports/specs/02_04_cross_spec_consistency_report.{json,md}` remain on master under PR #209's recorded `head_sha` `e3cf8923` as the canonical record.
+
+**T02 — Planning purge per `planning/README.md` §Purge protocol.** Commit `ec718293`:
+
+- `planning/current_plan.md` reset to `<!-- No active plan -->` placeholder.
+- `planning/current_plan.critique.md` deleted.
+- `planning/current_plan.critique_resolution.md` deleted.
+- `planning/INDEX.md` reset to no-active-plan template (agent routing table preserved).
+- `planning/README.md` amended (Option A) to document the resolution-file lifecycle: §Contents lifecycle table gains a new row for `current_plan.critique_resolution.md` (Ephemeral; critique-resolution companion); §Purge protocol step 2 explicit on symmetric deletion alongside `current_plan.critique.md`. `planning/BACKLOG.md` untouched (permanent append/claim per §Contents).
+
+**T00b repository hygiene audit (summary; not committed verbatim).** A read-only hygiene audit classified `planning/`, `thesis/reviews_and_others/`, `thesis/pass2_evidence/`, and `thesis/plans/` files for keep / delete-candidate / migrate-archive-candidate / blocked-from-deletion. Binding outcome:
+
+- **No `thesis/pass2_evidence/` deletions performed.** Every file in that directory has either active citations (specs, validator, research_log, REVIEW_QUEUE) or a documented audit-trail role per the README's "frozen at Pass-2 handoff time" convention.
+- **No `thesis/reviews_and_others/` deletions performed.** `pass2_dispatch.md`, `related_work_historical_rts_prediction.md`, and `related_work_rating_systems.md` are actively cited; `claude_chat.md` and `pass2_status.md` have 0 grep references but are flagged as future-PR triage candidates only.
+- **No file moves performed.** Two relocation candidates in `planning/` (`CHAPTER_4_DEFEND_IN_THESIS.md`, `final_production_pr_plan.md`) flagged for separate future PRs.
+
+**Follow-up candidates (flag-only, no action this PR):**
+
+1. `thesis/reviews_and_others/claude_chat.md` (0 grep refs; review-of-§1.1 dated 2026-04-13).
+2. `thesis/reviews_and_others/pass2_status.md` (0 grep refs; status handoff dated 2026-04-21; tracked work closed by PR #207).
+3. `planning/CHAPTER_4_DEFEND_IN_THESIS.md` relocation candidate (cited by `thesis/WRITING_STATUS.md` and `thesis/chapters/REVIEW_QUEUE.md`; could move to `thesis/pass2_evidence/historical_plans/` or be promoted to `planning/README.md` §Contents as permanent).
+4. `planning/final_production_pr_plan.md` relocation candidate (cited by `thesis/pass2_evidence/audit_cleanup_summary.md`; pre-PR-#207 production plan; historical).
+5. `thesis/pass2_evidence/README.md` index refresh (currently enumerates 8 files; the directory contains 16+; stale).
+
+**Sibling cross-dataset Phase 02 contract triplet now fully LOCKED:**
+
+- `CROSS-02-00-v3.0.1` (LOCKED 2026-04-26; unchanged in this PR).
+- `CROSS-02-01-v1.0.1` (LOCKED 2026-04-26; unchanged in this PR).
+- `CROSS-02-02-v1.0.1` (LOCKED 2026-05-06; this PR).
+- `CROSS-02-03-v1.0.1` (LOCKED 2026-05-06; this PR).
+
+**Out-of-scope confirmations.** No edits to `reports/specs/02_00_feature_input_contract.md`, `reports/specs/02_01_leakage_audit_protocol.md`, `scripts/validate_phase02_readiness_contracts.py`, `reports/specs/02_04_cross_spec_consistency_report.{json,md}`, or any per-dataset `research_log.md`. No `STEP_STATUS.yaml` / `PIPELINE_SECTION_STATUS.yaml` / `PHASE_STATUS.yaml` edits. No raw data, no notebooks, no generated dataset artifacts, no thesis chapter prose, no thesis/pass2_evidence deletions, no thesis/reviews_and_others deletions, no file moves, no validator regeneration.
+
+---
+
 ## [CROSS] 2026-05-05 — Phase 02 readiness contracts (T01–T05B2; PR #209 `phase02/feature-engineering-readiness`)
 
 **Source:** PR #209 `phase02/feature-engineering-readiness`; 11 commits — `9bda24ce` (planning baseline + reviewer-deep PASS-WITH-NOTES), `a4f45ffd` (T01 closeout summary), `0bd9fc2f` (T02 lineage rule), `108f9d2d` + `64001250` (T03 spec + AoE2 wording / history-join semantics micro-fix), `1985114a` (T04 spec), `5ca5e605` (T05A planning amendment), `b7ce3a88` + `0595afb5` + `e3cf8923` (T05B1 validator + reproducibility-metadata + line-wrapping classifier hardening), `f0a436cf` (T05B2 generated reports). HEAD as of T06A entry: `f0a436cf`.
