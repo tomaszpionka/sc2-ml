@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- `planning/current_plan.md` — Phase 02 feature-engineering readiness contracts after PR #207 and PR #208 (Category A, branch `phase02/feature-engineering-readiness`).
+- `planning/current_plan.md` — Post-PR-#209 cleanup, DRAFT → LOCKED activation, and planning purge for CROSS-02-02 / CROSS-02-03 (Category C, branch `docs/phase02-contracts-lock-and-planning-cleanup`).
 
 ## Agent routing
 

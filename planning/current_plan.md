@@ -1,484 +1,318 @@
 ---
-category: A
-branch: phase02/feature-engineering-readiness
-date: 2026-05-05
-planner_model: gpt-5.5-pro
+category: C
+branch: docs/phase02-contracts-lock-and-planning-cleanup
+date: 2026-05-06
+base_ref: master
+base_commit: ef3fc627be1793c135711b8bc3715ecda7490cf7
+planner_model: opus
 dataset: null
 phase: "02"
-pipeline_section: "02_01 -- Pre-Game vs In-Game Boundary"
-invariants_touched: [I3, I5, I6, I7, I8, I9, I10]
+pipeline_section: "post-PR209 cleanup"
+invariants_touched: []
 source_artifacts:
-  - thesis/pass2_evidence/audit_cleanup_summary.md
-  - thesis/pass2_evidence/phase02_readiness_hardening.md
-  - thesis/pass2_evidence/methodology_risk_register.md
-  - thesis/pass2_evidence/cross_dataset_comparability_matrix.md
-  - thesis/pass2_evidence/aoe2_ladder_provenance_audit.md
-  - thesis/pass2_evidence/notebook_regeneration_manifest.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv
-  - reports/specs/02_00_feature_input_contract.md
-  - reports/specs/02_01_leakage_audit_protocol.md
-  - docs/PHASES.md
-  - docs/TAXONOMY.md
-  - docs/templates/plan_template.md
-  - docs/templates/step_template.yaml
-  - docs/ml_experiment_lifecycle/02_FEATURE_ENGINEERING_MANUAL.md
-  - .claude/scientific-invariants.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/ROADMAP.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/research_log.md
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/STEP_STATUS.yaml
-  - src/rts_predict/games/sc2/datasets/sc2egset/reports/PHASE_STATUS.yaml
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/ROADMAP.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/research_log.md
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/STEP_STATUS.yaml
-  - src/rts_predict/games/aoe2/datasets/aoestats/reports/PHASE_STATUS.yaml
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/ROADMAP.md
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/research_log.md
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/STEP_STATUS.yaml
-  - src/rts_predict/games/aoe2/datasets/aoe2companion/reports/PHASE_STATUS.yaml
+  - planning/README.md
+  - planning/current_plan.md
+  - planning/current_plan.critique.md
+  - planning/current_plan.critique_resolution.md
+  - reports/specs/02_02_feature_engineering_plan.md
+  - reports/specs/02_03_temporal_feature_audit_protocol.md
+  - reports/specs/02_04_cross_spec_consistency_report.json
+  - reports/specs/02_04_cross_spec_consistency_report.md
+  - reports/research_log.md
+  - CHANGELOG.md
+  - pyproject.toml
+  - .claude/rules/data-analysis-lineage.md
 critique_required: true
-research_log_ref: reports/research_log.md#2026-05-05-cross-phase02-feature-engineering-readiness-contracts
+research_log_ref: reports/research_log.md#2026-05-06-post-pr209-cleanup
 ---
 
-# Plan: Phase 02 feature-engineering readiness contracts after PR #207 and PR #208
+# Plan: Post-merge cleanup, DRAFT → LOCKED activation, and planning purge for CROSS-02-02 / CROSS-02-03 (after PR #209)
 
 ## Scope
 
-This plan prepares the next PR on branch `phase02/feature-engineering-readiness`. The PR is a documentation/specification readiness PR for Phase 02. It creates the Phase 01 closeout summary and two Phase 02 contract/protocol specs, plus a data-analysis lineage rule that prevents ROADMAP → notebook → artifact batching. It does **not** generate feature tables, create feature-generation notebooks, train models, edit thesis chapters, touch raw data, or modify generated artifacts.
+Documentation-only post-merge cleanup. PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z); this plan executes the post-merge cleanup. Four narrowly-scoped tasks:
 
-The user-specified branch prefix `phase02/` intentionally differs from the Category-A `feat/` convention. T00 must verify that no hook, workflow, or repo validation depends on branch-prefix matching before implementation begins. If a validation tool rejects the prefix, halt and ask whether to switch to `feat/phase02-feature-engineering-readiness`.
+- **T01** — flip the front-matter `status: DRAFT` → `status: LOCKED` in `reports/specs/02_02_feature_engineering_plan.md` (CROSS-02-02-v1) and `reports/specs/02_03_temporal_feature_audit_protocol.md` (CROSS-02-03-v1), and update each spec's §1 / §14 / §15 / §16 lock-banner prose to reflect the LOCKED state. No body content edits beyond banner / lock-status prose.
+- **T02** — execute the planning purge protocol from `planning/README.md` for the merged PR #209 artifacts, and amend `planning/README.md` §Contents lifecycle table to register `current_plan.critique_resolution.md` as a recognized ephemeral planning artifact.
+- **T03** — append a short `[CROSS] 2026-05-06` hygiene-only entry to `reports/research_log.md` recording the post-merge T00b activation event: CROSS-02-02-v1 and CROSS-02-03-v1 transitioned from DRAFT (PR-local) to LOCKED (binding) by way of this cleanup PR; cite PR #209 merge commit `ef3fc627be1793c135711b8bc3715ecda7490cf7` and the new branch `docs/phase02-contracts-lock-and-planning-cleanup`. No follow-up CROSS entries created.
+- **T04** — PR wrap-up via `.claude/rules/git-workflow.md` (version bump, CHANGELOG entry, commit, propose push + `gh pr create`).
 
-## Problem Statement
+This plan executes the post-merge cleanup. PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z) and the on-disk DRAFT specs (CROSS-02-02-v1, CROSS-02-03-v1) plus the consistency verdict (PASS / 0 blockers, head_sha `e3cf8923`) provide the gate evidence the LOCKED transition prose cites.
 
-PR #207 hardened thesis methodology, AoE2 provenance, evidence lineage, and stale-artifact discipline. PR #208 executed SC2EGSet Step `01_03_05` and produced the tracker-event eligibility contract. The current state is therefore suitable for Phase 02 planning, but not for direct feature materialization.
+## Problem statement
 
-The risk to avoid is GIGO with nice lineage: a ROADMAP entry, notebook, artifacts, and research log can still be scientifically wrong if the notebook's assumptions, falsifiers, and sanity checks were never reviewed before artifact generation. Phase 02 must therefore begin with explicit feature-family boundaries, temporal rules, source-specific labels, grains, and leakage gates before any feature-generation notebook is authored.
+PR #209 (`phase02/feature-engineering-readiness`) merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z); this plan executes the post-merge cleanup. As of merge, the on-disk state is:
 
-This PR will convert the post-PR #207/#208 evidence into three thesis-/pipeline-facing documents:
+- `reports/specs/02_02_feature_engineering_plan.md` carries `status: DRAFT` and §1 / §14 / §16 explicitly state "DRAFT / PR-local until reviewed" pending the active Phase 02 readiness plan's reviewer-deep gate. The PR #209 reviewer-deep verdict (PASS-WITH-NOTES, 0 BLOCKERs) is the gate that the spec's own lock-condition prose cites.
+- `reports/specs/02_03_temporal_feature_audit_protocol.md` carries the identical `status: DRAFT` front-matter plus §1 / §13 / §14.1 / §15 parallel lock-condition prose.
+- `reports/specs/02_04_cross_spec_consistency_report.json` records `verdict: PASS`, `blockers: 0`, `head_sha: e3cf8923` — the cross-spec consistency gate is satisfied.
+- `planning/current_plan.md`, `planning/current_plan.critique.md`, `planning/current_plan.critique_resolution.md`, and `planning/INDEX.md` still hold the merged PR #209 plan and its companions; per `planning/README.md` §Purge protocol, these must be purged on the first session after merge.
+- `planning/README.md` §Contents lifecycle table does **not** list `current_plan.critique_resolution.md`. PR #209 introduced this file (T05A planning amendment companion) but did not register it in the lifecycle table; the purge protocol therefore touches an unlisted file asymmetrically. This is a small but real documentation-hygiene gap.
 
-1. `thesis/pass2_evidence/phase01_closeout_summary.md`
-2. `reports/specs/02_02_feature_engineering_plan.md`
-3. `reports/specs/02_03_temporal_feature_audit_protocol.md`
+The two DRAFT specs cannot become binding until the lock-condition prose is updated and the front-matter status flipped — which is what T01 does.
 
-It will also add `.claude/rules/data-analysis-lineage.md` to encode the anti-GIGO workflow rule.
+## Assumptions
 
-## Assumptions & unknowns
+1. PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z); this plan executes the post-merge cleanup. The reviewer-deep gate the DRAFT specs cite has therefore already cleared (PASS-WITH-NOTES, 0 BLOCKERs) on master.
+2. CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1 remain LOCKED and binding; nothing in T01–T04 amends them or re-versions them. They are not superseded by CROSS-02-02-v1 or CROSS-02-03-v1.
+3. The cross-spec consistency verdict (`02_04_cross_spec_consistency_report.json`, verdict PASS, 0 blockers, head_sha `e3cf8923`) is the binding readiness evidence for the DRAFT → LOCKED transition; the validator script is **not** re-run as part of T01–T04.
+4. No dataset-scoped ROADMAPs, STEP_STATUS, PIPELINE_SECTION_STATUS, or PHASE_STATUS files are edited. All Phase status remains untouched.
+5. Per-dataset research logs (sc2egset, aoestats, aoe2companion) are not edited. T03 is a CROSS-only entry.
+6. No notebooks, no generated dataset artifacts, no raw data, no thesis chapters, no `thesis/pass2_evidence/` deletions, no `thesis/reviews_and_others/` deletions, no file moves, no validator regeneration.
+7. The branch is `docs/phase02-contracts-lock-and-planning-cleanup`, created off master after PR #209 was merged; `base_ref` is `master`, `base_commit` is the merge SHA `ef3fc627be1793c135711b8bc3715ecda7490cf7`.
+8. Version bump is **minor** (3.45.0 → 3.46.0): the change set includes a docs amendment to `planning/README.md` (lifecycle table extension) plus spec lock-state activation, both of which qualify as docs-with-content under `.claude/rules/git-workflow.md` step 2 ("minor for feat/refactor/docs").
 
-- **Assumption:** Phase 01 is complete for `sc2egset`, `aoestats`, and `aoe2companion`; Phase 02 is not started for all three datasets.
-- **Assumption:** `reports/specs/02_00_feature_input_contract.md` and `reports/specs/02_01_leakage_audit_protocol.md` remain LOCKED and binding. New specs in this PR must not supersede or silently amend them.
-- **Assumption:** `tracker_events_feature_eligibility.csv` is the authoritative contract for SC2 tracker-derived in-game snapshot source families.
-- **Assumption:** No generated artifact is stale at PR start unless T00 finds a manifest contradiction.
-- **Unknown:** Whether the repository permits branch prefix `phase02/`. T00 resolves this mechanically.
-- **Unknown:** Whether Phase 02 should later materialize a tiny validation slice. This PR does not implement one; it can only define the approval gate for such a slice.
-- **Unknown:** Specific cold-start thresholds and pseudocounts. These cannot be fixed in this PR; the specs must define derivation gates and validation requirements only.
+## Literature / methodology context
 
-## Literature context
+This is documentation-hygiene work; no literature contrast is required. The work is governed by:
 
-The Phase 02 methodology comes from the repository-local Feature Engineering manual: temporal availability boundaries, symmetric pairwise representation, rolling-window feature discipline, leakage prevention, categorical-encoding controls, and feature catalog documentation. The source manuals and scientific invariants are binding; no new external literature is introduced by this planning PR.
-
-[OPINION] The correct Phase 02 sequence is contract → reviewer-deep → ROADMAP stubs → tiny validated slice → artifact generation → research log/status closure. Directly generating model-ready feature tables from the current baseline is not defensible because it would conflate source-family eligibility with feature-value correctness.
+- `.claude/scientific-invariants.md` — invariants are not modified; T01 only flips a status flag and amends lock-condition prose for two specs whose invariants_touched list (I3, I5, I6, I7, I8, I9, I10) was already validated by the PR #209 reviewer-deep pass.
+- `docs/PHASES.md` — phase boundaries unchanged.
+- `planning/README.md` — purge protocol governs T02; T02 also extends this document's own §Contents lifecycle table.
+- `.claude/rules/git-workflow.md` — governs T04.
+- `.claude/rules/data-analysis-lineage.md` — governs the non-batching rule, artifact discipline, and stop conditions; this plan does not generate any artifacts and does not touch any notebooks, so the rule's notebook / feature-engineering / temporal leakage clauses do not bind. The agent-and-model routing clauses do bind: T01 and T03 are mechanically specified docs edits (`@executor` on Sonnet sufficient); T02 is mechanical but touches a markdown table and a planning protocol (`@executor` on Sonnet sufficient with explicit instructions); T04 is the standard PR wrap-up flow (`@executor` on Sonnet sufficient).
 
 ## Execution Steps
 
-### T00 — Preflight, branch-prefix safety, and read-only baseline
+### T01 — Lock CROSS-02-02-v1 and CROSS-02-03-v1
 
-**Objective:** Confirm the branch, status chain, and no-stale-artifact baseline before any file is changed.
+**Goal.** Transition CROSS-02-02-v1 and CROSS-02-03-v1 from DRAFT (PR-local) to LOCKED (binding) on master, by way of this cleanup PR. PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z); this plan executes the post-merge cleanup, which is the gate-clearing event the DRAFT specs cite. After T01, both specs are authoritative and may be consumed by future Phase 02 ROADMAP entries, notebooks, and generated artifacts.
 
-**Instructions:**
-1. Start from `master` after PR #207 and PR #208 are merged.
-2. Create branch `phase02/feature-engineering-readiness` exactly as user requested.
-3. Verify `git status --short` is clean.
-4. Verify no `.github/workflows` or pre-commit hook depends on the branch prefix. If branch-prefix validation exists and rejects `phase02/`, halt.
-5. Read all files listed in `source_artifacts` frontmatter, especially the five Pass-2 evidence files, `tracker_events_feature_eligibility.csv`, specs `02_00` / `02_01`, and all dataset ROADMAP / research_log / STEP_STATUS / PHASE_STATUS files.
-6. Record a local checklist in the PR body draft or T01 source notes; do not create a generated artifact.
+**Files touched.**
+- `reports/specs/02_02_feature_engineering_plan.md` — front-matter + §1 (lock-condition banner) + §14 (state transition) + §16 (status table / governance closing) only. No edits to §2–§13, §15, or appendices.
+- `reports/specs/02_03_temporal_feature_audit_protocol.md` — front-matter + §1 (lock-condition banner) + §13 (state transition) + §14.1 (consumption-readiness clause) + §15 (status table / governance closing) only. No edits to §2–§12, §14 (excluding §14.1), or appendices.
 
-**Sanity check:** Phase 01 complete and Phase 02 not_started for `sc2egset`, `aoestats`, and `aoe2companion`; Step `01_03_05` complete for `sc2egset`; manifest has no `flagged_stale` or `regenerated_pending_log` rows relevant to Phase 02 entry.
+**Instructions (mechanical).**
 
-**Falsifier:** Any Phase 01 not complete, any Phase 02 already in_progress, any relevant manifest row `flagged_stale` / `regenerated_pending_log`, or any branch-prefix hook failure halts the PR before T01.
+1. In `reports/specs/02_02_feature_engineering_plan.md`:
+   1. Update front-matter: `status: DRAFT` → `status: LOCKED`; `date: 2026-05-05` → `date: 2026-05-06`. Leave `spec_id`, `version`, `invariants_touched`, `datasets_bound`, `sibling_specs`, `supersedes` unchanged.
+   2. In §1.1 / §1 lock-condition banner: replace the "DRAFT / PR-local until reviewed" sentence with a "LOCKED on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (PR #209 merged 2026-05-05T21:00:02Z; cleanup PR `docs/phase02-contracts-lock-and-planning-cleanup` 2026-05-06)" sentence. Cite the cross-spec consistency verdict (`02_04_cross_spec_consistency_report.json` PASS, 0 blockers, head_sha `e3cf8923`) as the readiness gate.
+   3. In §14 (state transition / change protocol section): record the DRAFT → LOCKED transition with the same SHA / date / cleanup-PR attribution; preserve all prior change-protocol prose.
+   4. In §16 (status table / governance closing section): update the status row from DRAFT to LOCKED; preserve all other rows.
+   5. No edits to §2 / §3 / §4 / §5 / §6 / §7 / §8 / §9 / §10 / §11 / §12 / §13 / §15 prose.
 
-**Artifact validation:** N/A — no artifact is produced.
+2. In `reports/specs/02_03_temporal_feature_audit_protocol.md`:
+   1. Update front-matter: `status: DRAFT` → `status: LOCKED`; `date: 2026-05-05` → `date: 2026-05-06`. Leave `spec_id`, `version`, `invariants_touched`, `datasets_bound`, `sibling_specs`, `supersedes` unchanged.
+   2. In §1.1 / §1 lock-condition banner: same DRAFT → LOCKED prose replacement as for CROSS-02-02 above.
+   3. In §13 (state transition / change protocol section): same as CROSS-02-02 §14 above.
+   4. In §14.1 (consumption-readiness clause): update from "may not be consumed until LOCKED" to "is now LOCKED and may be consumed by Phase 02 ROADMAP entries, notebooks, and generated artifacts as of this cleanup PR" — preserving the rest of §14's prose unchanged.
+   5. In §15 (status table / governance closing section): update the status row from DRAFT to LOCKED; preserve all other rows.
+   6. No edits to §2 / §3 / §4 / §5 / §6 / §7 / §8 / §9 / §10 / §11 / §12 / §14 (excluding §14.1) prose.
 
-**Lineage:** T00 must cite the status files and manifest rows in the PR body or T01 notes.
+**Deliverables.** Two specs LOCKED on master via this cleanup PR.
 
-**Verification:**
-- `git status --short` is empty before edits.
-- `grep -R "branch" .github .pre-commit-config.yaml .claude/rules 2>/dev/null` or equivalent finds no branch-prefix gate blocking `phase02/`.
-- Phase-status files are read and their Phase 01 / Phase 02 statuses are transcribed into T01.
+**Gate.** Both specs carry `status: LOCKED` in front-matter; both lock-banner sections cite the PR #209 merge SHA, the merge timestamp, and this cleanup PR branch; both governance/status closing sections show LOCKED. No other prose in either spec is modified.
 
-**File scope:**
-- none
+**Agent routing.** `@executor` on Sonnet (mechanical specified edits to two files, no methodological reasoning required).
 
-**Read scope:**
-- all `source_artifacts` frontmatter files
-
----
-
-### T01 — Create `phase01_closeout_summary.md`
-
-**Objective:** Create a single closeout document that states what Phase 01 has closed for Phase 02 and what remains narrowed/deferred.
-
-**Instructions:**
-1. Create `thesis/pass2_evidence/phase01_closeout_summary.md`.
-2. Include a top-level status table with rows:
-   - `sc2egset` — Phase 01 complete; Phase 02 not_started; pre-game/history ready with declared residuals.
-   - `sc2egset tracker-derived in-game snapshot` — initial planned subset ready with caveats; full tracker scope narrowed, not closed.
-   - `aoestats` — Phase 01 complete; Phase 02 not_started; pre-game/history ready under Tier 4 semantic opacity wording.
-   - `aoe2companion` — Phase 01 complete; Phase 02 not_started; pre-game/history ready under mixed-mode ID 6 + ID 18 wording.
-3. Explicitly state that this closeout is not thesis chapter prose and does not update Chapter 4.
-4. Explicitly state that AoE2 must not be called unqualified ranked ladder; use the source-specific labels from T05/T09.
-5. Explicitly state the three SC2 tracker blocked families and that they remain outside initial Phase 02 scope.
-6. Include an evidence-lineage table with columns: `claim`, `source_file`, `source_step_or_spec`, `current_verdict`, `phase02_consequence`.
-7. Include a sanity/falsifier/validation/lineage subsection.
-
-**Sanity check:** Every closeout claim has a source path; every dataset has Phase 01 complete and Phase 02 not_started status cited from the dataset status files.
-
-**Falsifier:** Any sentence implying full SC2 tracker scope is `closed`, aoestats is simply ranked ladder, or aoe2companion ID 6 + ID 18 is ranked-only blocks the file.
-
-**Artifact validation:** Markdown must contain these exact phrases: `GATE-14A6 outcome: narrowed`, `full tracker scope is not closed`, `aoestats Tier 4`, `aoe2companion mixed-mode`, `tracker-derived features are never pre-game`.
-
-**Lineage:** Cite/point to PR #208 tracker artifacts, `phase02_readiness_hardening.md`, `aoe2_ladder_provenance_audit.md`, `cross_dataset_comparability_matrix.md`, `notebook_regeneration_manifest.md`, and all three PHASE_STATUS files.
-
-**Verification:**
-- `test -s thesis/pass2_evidence/phase01_closeout_summary.md`
-- `rg "GATE-14A6 outcome: narrowed|full tracker scope is not closed|aoestats Tier 4|aoe2companion mixed-mode|tracker-derived features are never pre-game" thesis/pass2_evidence/phase01_closeout_summary.md`
-- `! rg "ranked ladder only|ranked-only|GATE-14A6.*closed" thesis/pass2_evidence/phase01_closeout_summary.md`
-
-**File scope:**
-- `thesis/pass2_evidence/phase01_closeout_summary.md`
-
-**Read scope:**
-- T00 source files
-
----
-
-### T02 — Add data-analysis lineage guardrail rule
-
-**Objective:** Add a repo rule that prevents generated artifacts from being treated as evidence before assumptions, falsifiers, and sanity checks are reviewed.
-
-**Instructions:**
-1. Create `.claude/rules/data-analysis-lineage.md`.
-2. Include the binding rule: `A generated artifact is not evidence unless the notebook's assumptions, falsifiers, and sanity checks were reviewed before artifact generation.`
-3. Include the execution sequence:
-   - ROADMAP stub only.
-   - Notebook scaffold + one validation module.
-   - Execute and report.
-   - User/reviewer review.
-   - Commit checkpoint.
-   - Next validation module.
-   - Generate artifacts only after validation modules pass.
-   - Then research_log / STEP_STATUS / manifest.
-   - Then reviewer-deep.
-4. Include a halt rule: if a result is surprising or contradicts assumptions, halt before artifact generation.
-5. Make the rule apply to empirical data analysis and feature-engineering steps; do not make it retroactively invalidate confirmed Phase 01 artifacts.
-
-**Sanity check:** Rule is framed as a workflow guardrail, not as a claim about existing artifacts being invalid.
-
-**Falsifier:** Any text that says ROADMAP, notebook, artifact, and next step may be batched in one empirical execution blocks the file.
-
-**Artifact validation:** Markdown must include the exact binding rule sentence and the halt rule.
-
-**Lineage:** Cite/point to `audit_cleanup_summary.md` stale-artifact discipline and `notebook_regeneration_manifest.md` status vocabulary.
-
-**Verification:**
-- `test -s .claude/rules/data-analysis-lineage.md`
-- `rg "A generated artifact is not evidence" .claude/rules/data-analysis-lineage.md`
-- `rg "halt before artifact generation" .claude/rules/data-analysis-lineage.md`
-
-**File scope:**
-- `.claude/rules/data-analysis-lineage.md`
-
-**Read scope:**
-- `thesis/pass2_evidence/audit_cleanup_summary.md`
-- `thesis/pass2_evidence/notebook_regeneration_manifest.md`
-
----
-
-### T03 — Create `reports/specs/02_02_feature_engineering_plan.md`
-
-**Objective:** Define the Phase 02 feature-engineering contract: minimal feature families, prediction settings, source labels, feature grains, and proposed ROADMAP steps without implementing notebooks or feature tables.
-
-**Instructions:**
-1. Create `reports/specs/02_02_feature_engineering_plan.md` with frontmatter:
-   - `spec_id: CROSS-02-02-v1`
-   - `version: CROSS-02-02-v1`
-   - `status: LOCKED`
-   - `date: 2026-05-05`
-   - `datasets_bound: [sc2egset, aoestats, aoe2companion]`
-   - `sibling_specs: [CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1]`
-   - `supersedes: null`
-2. Add a non-supersession clause: this spec does not replace or amend `02_00` or `02_01`; it consumes them.
-3. Define prediction settings:
-   - `pre_game`
-   - `history_pre_game`
-   - `in_game_snapshot`
-   - `blocked_or_deferred`
-4. Define feature table grains:
-   - source-family catalog grain: one row per `(dataset_tag, prediction_setting, source_family)`.
-   - canonical candidate feature matrix grain: one row per `(dataset_tag, match_id, focal_player_id, opponent_id, prediction_setting)`.
-   - in-game snapshot candidate grain: one row per `(dataset_tag, match_id, focal_player_id, opponent_id, cutoff_loop)`.
-   - future final feature catalog grain: one row per materialized feature column, owned by `02_08`.
-5. Define minimal feature families by dataset and prediction setting. Each row must include `dataset`, `source_label`, `prediction_setting`, `feature_family`, `source_table_or_artifact`, `grain`, `allowed_now`, `constraints`, and `downstream_section`.
-6. Include at least these cross-dataset minimal families:
-   - static matchup/context features: faction/race/civ, opponent faction, map when available, patch/era context when available.
-   - rating or rating-proxy features: SC2 MMR missingness / future reconstructed rating, aoestats `old_rating` conditional pre-game, aoe2companion `rating` with NULL handling.
-   - history features: prior match count, prior win rate, rolling/expanding form, time since prior match, map/faction proficiency, matchup history.
-   - cold-start indicators and smoothed history features, with derivation gates only.
-7. Include SC2 in-game snapshot families by importing `tracker_events_feature_eligibility.csv` constraints. The spec must list 5 eligible-now rows, 7 caveated rows, 3 blocked rows, and mark `slot_identity_consistency` as a sanity gate, not a model input.
-8. Include AoE2 source-specific labels and stratification:
-   - `aoestats`: Tier 4 semantic opacity; source label `leaderboard='random_map'`; not ranked-only.
-   - `aoe2companion`: ID 6 `rm_1v1` ranked candidate; ID 18 `qp_rm_1v1` quickplay/matchmaking-derived; combined scope mixed-mode; stratify/sensitivity by `internalLeaderboardId`.
-9. Include proposed Phase 02 ROADMAP steps as a proposal table only. Do not edit dataset ROADMAPs in this PR unless a later user approval explicitly changes scope.
-
-**Sanity check:** Every feature-family row declares a grain and prediction setting.
-
-**Falsifier:** Any SC2 tracker-derived family marked `pre_game`, any blocked tracker family marked `allowed_now = true`, any AoE2 row labelled unqualified ranked ladder, or any family lacking grain/prediction_setting blocks the spec.
-
-**Artifact validation:** Frontmatter parses; required sections exist; all feature-family rows use controlled vocabularies; spec contains no notebook paths and no materialized feature-table paths except proposed future placeholders.
-
-**Lineage:** Each row must reference one of: `02_00`, `02_01`, Phase 01 closeout summary, `tracker_events_feature_eligibility.csv`, AoE2 provenance audit, comparability matrix, or dataset status/artifact files.
-
-**Verification:**
-- `test -s reports/specs/02_02_feature_engineering_plan.md`
-- `python - <<'PY'
-from pathlib import Path
-p=Path('reports/specs/02_02_feature_engineering_plan.md')
-s=p.read_text()
-required=['CROSS-02-02-v1','prediction_setting','feature table grains','tracker_events_feature_eligibility.csv','aoestats Tier 4','aoe2companion','mixed-mode','slot_identity_consistency']
-missing=[x for x in required if x not in s]
-assert not missing, missing
-for banned in ['ranked ladder only','tracker-derived pre-game','full tracker scope closed']:
-    assert banned not in s, banned
-PY`
-
-**File scope:**
+**Allowed files.**
 - `reports/specs/02_02_feature_engineering_plan.md`
-
-**Read scope:**
-- T01 closeout summary
-- T00 source files
-
----
-
-### T04 — Create `reports/specs/02_03_temporal_feature_audit_protocol.md`
-
-**Objective:** Define the temporal feature audit protocol for Phase 02 candidate feature construction. This protocol complements the locked CROSS-02-01 pre-training leakage audit; it does not replace it.
-
-**Instructions:**
-1. Create `reports/specs/02_03_temporal_feature_audit_protocol.md` with frontmatter:
-   - `spec_id: CROSS-02-03-v1`
-   - `version: CROSS-02-03-v1`
-   - `status: LOCKED`
-   - `date: 2026-05-05`
-   - `datasets_bound: [sc2egset, aoestats, aoe2companion]`
-   - `sibling_specs: [CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1, CROSS-02-02-v1]`
-   - `supersedes: null`
-2. Add a non-supersession clause: CROSS-02-01 remains the mandatory pre-training/materialization leakage audit. CROSS-02-03 adds feature-family design-time and source-specific temporal checks.
-3. Define mandatory audit families:
-   - `HISTORY_STRICT_LT_TARGET`: every `player_history_all` feature uses dataset-specific anchor and `ph.<anchor> < target.started_at`.
-   - `INGAME_LOOP_CUTOFF`: every SC2 tracker snapshot uses `event.loop <= cutoff_loop`.
-   - `NO_TARGET_OR_POSTGAME_DIRECT`: no target/post-game field is projected directly for target match.
-   - `TRAIN_FOLD_ONLY_FIT`: scalers, imputers, encoders, and smoothing priors fit on training fold only.
-   - `KFOLD_TARGET_ENCODING`: target encoding uses cross-fitting or is prohibited.
-   - `SYMMETRIC_FOCAL_OPPONENT`: focal and opponent features computed by same function or same SQL pattern.
-   - `SOURCE_LABEL_STRATIFICATION`: AoE2 source-specific labels and `internalLeaderboardId` stratification retained.
-   - `SC2_TRACKER_ELIGIBILITY`: tracker CSV governs all in-game snapshot families.
-   - `COLD_START_GATE`: no cold-start threshold or pseudocount without empirical derivation and training-fold fit scope.
-   - `GENERATED_ARTIFACT_DISCIPLINE`: no artifact generation before assumptions/falsifiers/sanity checks are reviewed.
-4. Define a future audit artifact schema for feature-generation PRs, but state that this PR emits no such audit artifact because no feature-generation notebook or table is created.
-5. Define cold-start gates:
-   - `n_prior_matches` and `is_cold_start` must be explicit features or masks.
-   - global priors/smoothing values must be derived from training folds only.
-   - first-match rows must not be dropped silently.
-   - any threshold must be data-derived or literature-cited per I7.
-6. Define a failure matrix: what observation halts a future feature-generation step.
-
-**Sanity check:** CROSS-02-03 clearly distinguishes design-time checks from CROSS-02-01 post-materialization/pre-training checks.
-
-**Falsifier:** Any statement that CROSS-02-03 replaces CROSS-02-01, allows feature training without CROSS-02-01 audit after materialization, or permits tracker-derived pre-game features blocks the spec.
-
-**Artifact validation:** Frontmatter parses; every audit family has `scope`, `pass_condition`, `falsifier`, `evidence_required`, and `future_artifact_field`.
-
-**Lineage:** Each audit family cites a source invariant/spec/artifact path and downstream Phase 02 section.
-
-**Verification:**
-- `test -s reports/specs/02_03_temporal_feature_audit_protocol.md`
-- `rg "does not replace|CROSS-02-01 remains|event.loop <= cutoff_loop|ph.<anchor> < target.started_at|training fold" reports/specs/02_03_temporal_feature_audit_protocol.md`
-- `! rg "replaces CROSS-02-01|tracker-derived.*pre-game|full-dataset scaler" reports/specs/02_03_temporal_feature_audit_protocol.md`
-
-**File scope:**
 - `reports/specs/02_03_temporal_feature_audit_protocol.md`
 
-**Read scope:**
-- T01 closeout summary
-- T02 rule
-- T03 feature-engineering plan
-- `reports/specs/02_01_leakage_audit_protocol.md`
+**Forbidden files.** Everything else (especially: status YAMLs, ROADMAPs, per-dataset research_logs, notebooks, generated artifacts, raw data, thesis chapters, the validator script, `02_04_cross_spec_consistency_report.{json,md}`).
 
----
+**Stop condition.** Halt before commit if:
+- the front-matter `status` field cannot be flipped without unintended diff,
+- the lock-condition banner edits change body content beyond the banner,
+- the §14 / §13 / §14.1 / §15 / §16 edits change body content beyond status rows / state-transition lines,
+- any edit accidentally touches `02_04_cross_spec_consistency_report.{json,md}`,
+- any edit accidentally touches a sibling LOCKED spec (CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1).
 
-### T05 — Cross-spec consistency pass (reproducible validator + report)
+### T02 — Planning purge + README amendment
 
-**Objective:** Verify that T01–T04 outputs do not contradict locked specs, evidence files, or source-specific AoE2 / SC2 constraints — and emit a thesis-grade reproducibility record (deterministic Python validator + machine-readable JSON report + human-readable Markdown report) so the audit is independently re-runnable rather than transcript-only.
+**Goal.** Execute the `planning/README.md` §Purge protocol for the merged PR #209 artifacts, and amend `planning/README.md` §Contents lifecycle table to register `current_plan.critique_resolution.md` as a recognized ephemeral planning artifact (so the asymmetric purge of an unlisted file is corrected before the next Cat A/F PR).
 
-**Scope clarification.** T05 is a **spec / document consistency audit**, not an empirical dataset analysis. It validates the readiness contracts and locked-spec relationships by reading specs, planning files, and the SC2 tracker eligibility CSV; it does NOT read raw data, query DuckDB, or compute statistics over feature values. **Therefore it does NOT require a sandbox notebook.** Future empirical Phase 02 data analysis still requires the canonical lineage chain per `.claude/rules/data-analysis-lineage.md`: ROADMAP stub → notebook scaffold → one validation module → user review → commit → next module → artifact generation only after all validation modules pass → research_log / STEP_STATUS / manifest closure → reviewer-deep gate.
+**Files touched.**
+- `planning/current_plan.md` — replaced wholesale with `<!-- No active plan -->`.
+- `planning/current_plan.critique.md` — deleted.
+- `planning/current_plan.critique_resolution.md` — deleted.
+- `planning/INDEX.md` — reset to template state per `planning/README.md` §Purge protocol step 3.
+- `planning/README.md` — §Contents lifecycle table amendment (Option A, default).
 
-**Supersession of transcript-only pass.** The earlier transcript-only T05 read-only pass executed by Opus in this PR session before this amendment is **superseded** by the reproducible script + report deliverables defined below. The transcript pass remains valid as a preliminary scoping run; final T05 closure requires the validator and the two report artifacts.
+**Instructions (mechanical).**
 
-**Instructions:**
+1. Replace `planning/current_plan.md` with exactly `<!-- No active plan -->` (single-line HTML comment, no trailing newline beyond what the editor adds). Per `planning/README.md` §Purge protocol step 1.
+2. Delete `planning/current_plan.critique.md`. Per §Purge protocol step 2.
+3. Delete `planning/current_plan.critique_resolution.md`. The file is an ephemeral critique-resolution companion and is purged symmetrically with `current_plan.critique.md`; the README amendment in step 5 below formalizes its lifecycle.
+4. Reset `planning/INDEX.md` to its template state. Per §Purge protocol step 3. The current INDEX.md content is the active-plan pointer for PR #209; replace with the template (active plan = none, agent routing table preserved).
+5. Amend `planning/README.md` **§Contents lifecycle table**.
+   - **Option A (default):** add one row after the existing `current_plan.critique.md` row:
+     ```
+     | `current_plan.critique_resolution.md` | Ephemeral | Resolution log accompanying critique (Cat A/F when critique present) |
+     ```
+     Justification: the file is an ephemeral critique-resolution companion and is purged symmetrically with `current_plan.critique.md`.
+   - **Option B (fallback):** allowed only if the lifecycle table structure prevents a clean row insertion (e.g., column-width or markdown-rendering constraints). In that fallback, register the file in the §Lifecycle prose body (step 1 of the lifecycle list) using the same purpose description as Option A, and add a one-line note in §Purge protocol covering the deletion.
+6. No other edits to `planning/README.md` (no changes to §Lifecycle other than the Option-B fallback case, no changes to §Purge protocol other than the Option-B fallback case, no changes to §Source-of-truth).
 
-1. Author the deterministic validator at `scripts/validate_phase02_readiness_contracts.py`. The script must:
-   - be read-only (no file writes outside the two report paths it owns; no network access; no raw-data reads);
-   - take its input file list from constants at the top of the script;
-   - use `git diff --name-only master..HEAD` (read-only) to enumerate the PR file scope;
-   - read the SC2 tracker eligibility CSV (`src/rts_predict/games/sc2/datasets/sc2egset/reports/artifacts/01_exploration/03_profiling/tracker_events_feature_eligibility.csv`) directly and use it as the authoritative SC2 tracker contract;
-   - emit the JSON report at `reports/specs/02_04_cross_spec_consistency_report.json` and the Markdown report at `reports/specs/02_04_cross_spec_consistency_report.md`;
-   - exit non-zero if any BLOCKER fires; emit warnings without exit-non-zero;
-   - run deterministically: same input state → same output (apart from `run_date` and the recorded `commit_hash`).
+**Commit message.** Per `planning/README.md` §Purge protocol prescription: `chore(planning): purge artifacts from merged PR #209`. The README amendment goes in the same commit (it is a co-located doc-hygiene fix to the same protocol whose execution it accompanies).
 
-2. Validation dimensions (validator implements each as a named check function with PASS / WARNING / BLOCKER classification):
-   1. **PR file scope** — `git diff master..HEAD --name-only` matches the File Manifest exactly; any out-of-manifest path is BLOCKER.
-   2. **Required positive phrases** in T01–T04 outputs — `tracker-derived features are never pre-game`, `history_time < target_time`, `event.loop <= cutoff_loop`, `aoestats Tier 4`, `aoe2companion mixed-mode`, `GATE-14A6 outcome: narrowed`, `full tracker scope is not closed`, `does not replace CROSS-02-01-v1.0.1` (each phrase checked in the files where it is mandated).
-   3. **Forbidden substrings** in T01–T04 outputs — `ranked ladder only`, `tracker-derived pre-game`, `full tracker scope closed`, `feature tables generated`, `replaces CROSS-02-01`, `supersedes CROSS-02-01`, plus a `ranked-only` exception that allows the substring only in negation about aoe2companion mixed-mode / combined scope.
-   4. **Non-supersession of CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1** — frontmatter `supersedes: null` for CROSS-02-02-v1 and CROSS-02-03-v1; explicit non-supersession / non-replacement clauses present in the prose.
-   5. **SC2 tracker eligibility consistency** against the CSV — 5 / 7 / 3 row split confirmed; the 3 blocked families excluded by name; `slot_identity_consistency` declared as sanity gate, not model input; `GATE-14A6 outcome: narrowed`; `full tracker scope is not closed`; `event.loop <= cutoff_loop`; loops/22.4 contextual only.
-   6. **AoE2 source-label discipline** — `aoestats Tier 4`; ID 6 = `rm_1v1` ranked candidate; ID 18 = `qp_rm_1v1` quickplay/matchmaking-derived; ID 6 + ID 18 = `aoe2companion mixed-mode`, not ranked-only.
-   7. **Temporal leakage rules** — strict `<` for history; per-dataset anchors (`details_timeUTC`, `started_timestamp`, `started`); UTC DuckDB session for aoestats TIMESTAMPTZ; `event.loop <= cutoff_loop`; full-replay aggregates forbidden for cutoff snapshots; no target-game final state; no post-game rating delta; no global normalization before split.
-   8. **Cold-start / no-magic-number gates** — no fixed pseudocount `m`, threshold `K`, smoothing strength `α`, or prior committed in CROSS-02-02 / CROSS-02-03; constants must be empirically derived or literature-cited; missing history must be encoded explicitly.
-   9. **CROSS-02-03 D1–D15 audit-family completeness** — each of D1 through D15 declared with a pass condition and a failure route; future audit artifact schema (§9.2) declares all 14 fields (`spec_version`, `feature_family_id`, `dataset`, `prediction_setting`, `source_table_or_event_family`, `source_grain`, `model_input_grain`, `temporal_anchor`, `cutoff_rule`, `audit_dimensions_passed`, `caveats`, `blocking_reason`, `verdict`, `reviewer_notes`); §1.2 / §9.1 / §12 explicitly state that T04 generates no artifact and creates no notebook.
+**Deliverables.** Planning directory in clean post-merge state with `current_plan.critique_resolution.md` formally recognized in the lifecycle table going forward.
 
-3. JSON report (`reports/specs/02_04_cross_spec_consistency_report.json`) required fields:
-   - `spec_id` (e.g., `"CROSS-02-04-v1"`) and `spec_version`;
-   - `script_path` (`scripts/validate_phase02_readiness_contracts.py`);
-   - `command_line` (the exact invocation that produced the artifact);
-   - `commit_hash` (git HEAD at run time);
-   - `branch` (`phase02/feature-engineering-readiness`);
-   - `run_date` (ISO date);
-   - `inputs` (list of files read);
-   - `assumptions` (list of stated assumptions, e.g., "tracker eligibility CSV is the authoritative SC2 contract");
-   - `sanity_checks` (list of sanity-check descriptions);
-   - `falsifiers` (list of falsifier observations that fire BLOCKER);
-   - `checks` (one entry per validation dimension above; each carries `name`, `verdict`, `details`, optional `evidence`);
-   - `verdict` (`"PASS"` / `"PASS_WITH_WARNINGS"` / `"BLOCKED"`);
-   - `warnings` (list of WARNING entries with location and description);
-   - `blockers` (list of BLOCKER entries with location and description).
+**Gate.** `planning/current_plan.md` contains exactly `<!-- No active plan -->`; `planning/current_plan.critique.md` and `planning/current_plan.critique_resolution.md` no longer exist; `planning/INDEX.md` matches its template state; `planning/README.md` §Contents lifecycle table contains the new row (Option A) or §Lifecycle and §Purge protocol have been minimally extended (Option B).
 
-4. Markdown report (`reports/specs/02_04_cross_spec_consistency_report.md`) is a human-readable rendering of the JSON, with the same 9-dimension table structure plus an explicit lineage section listing input files, command line, and commit hash.
+**Agent routing.** `@executor` on Sonnet (mechanical specified edits and deletions, no methodological reasoning required).
 
-5. The validator MUST NOT mutate any file outside the two report paths it owns. It MUST NOT trigger network calls or read raw data. The two report files are treated as generated artifacts — their canonical regeneration path is the validator script; do not hand-edit them.
+**Allowed files.**
+- `planning/current_plan.md`
+- `planning/current_plan.critique.md`
+- `planning/current_plan.critique_resolution.md`
+- `planning/INDEX.md`
+- `planning/README.md`
 
-6. Verify no notebooks, generated artifacts, raw data, ROADMAPs, research_logs, status YAMLs, or thesis chapters are touched (validator dimension 1 enforces this mechanically).
+**Forbidden files.** Everything else.
 
-**Sanity check:** `git diff master..HEAD --name-only` after T05 contains only the planned T01–T04 outputs plus the three new T05 files (script + JSON + MD). Validator exit code is 0 (PASS) or matches the recorded WARNING-with-no-BLOCKER outcome.
+**Stop condition.** Halt before commit if:
+- the README §Contents lifecycle table cannot be cleanly amended via Option A AND Option B fallback also fails,
+- the §Purge protocol step 3 INDEX.md template is ambiguous (re-confirm what "template state" means by reading the current INDEX.md and stripping only the active-plan reference, preserving the agent routing table),
+- any deletion accidentally targets `BACKLOG.md` (which is permanent / append/claim and must not be deleted).
 
-**Falsifier:** Any BLOCKER detected by the validator halts T05 closure. Any T01–T04 spec amendment required to clear a BLOCKER must follow `.claude/rules/data-analysis-lineage.md` (no batched fix-and-validate; emit BLOCKER first, then patch with explicit user approval, then re-run validator).
+### T03 — Root research_log CROSS hygiene entry
 
-**Artifact validation:** Validator output JSON parses; required JSON fields present; Markdown report renders; both reports cite the commit hash and command line. Reproducibility is verified by re-running the validator on the same commit and confirming bit-identical output (apart from `run_date`).
+**Goal.** Append one short `[CROSS] 2026-05-06` entry to the top `reports/research_log.md` recording the post-merge T00b activation event: CROSS-02-02-v1 and CROSS-02-03-v1 transitioned from DRAFT (PR-local) to LOCKED (binding) by way of the cleanup PR `docs/phase02-contracts-lock-and-planning-cleanup`, citing PR #209 merge commit `ef3fc627be1793c135711b8bc3715ecda7490cf7` and the cross-spec consistency verdict (PASS, 0 blockers, head_sha `e3cf8923`). This is a hygiene entry; no follow-up CROSS entries are added.
 
-**Lineage:** Validator output is cited in T06 PR body and reviewer-deep notes. Validator script is the canonical regeneration path for the two reports; manual edits are forbidden.
+**Files touched.** `reports/research_log.md` — exactly one new CROSS entry appended at the top of the CROSS section, dated `2026-05-06`.
 
-**Verification:**
-- `test -f scripts/validate_phase02_readiness_contracts.py`
-- `python3 -c "import json; json.load(open('reports/specs/02_04_cross_spec_consistency_report.json'))"`
-- `test -s reports/specs/02_04_cross_spec_consistency_report.md`
-- Markdown report contains: `verdict`, `commit_hash`, `command_line`, validation dimensions 1–9.
+**Instructions (mechanical).**
 
-**File scope:**
-- `scripts/validate_phase02_readiness_contracts.py` (create)
-- `reports/specs/02_04_cross_spec_consistency_report.json` (create — generated by the script)
-- `reports/specs/02_04_cross_spec_consistency_report.md` (create — generated by the script)
-- T01–T04 docs ONLY if the validator finds a BLOCKER that requires a documented contradiction fix; halt for explicit user approval before any such patch.
+1. Append a new `[CROSS] 2026-05-06` entry at the top of the CROSS section in `reports/research_log.md` with the following structure:
+   - **Purpose.** Record post-merge T00b activation: DRAFT → LOCKED transition for CROSS-02-02-v1 and CROSS-02-03-v1.
+   - **T00b summary.** PR #209 (`phase02/feature-engineering-readiness`) merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z). Cleanup PR `docs/phase02-contracts-lock-and-planning-cleanup` (2026-05-06): T01 flipped both specs to `status: LOCKED`; T02 ran the planning purge and amended `planning/README.md` §Contents lifecycle table. Cross-spec consistency verdict: PASS, 0 blockers, head_sha `e3cf8923` (`reports/specs/02_04_cross_spec_consistency_report.json`).
+   - **Follow-up candidates.** None at this time. Future Phase 02 ROADMAP entries that consume CROSS-02-02-v1 / CROSS-02-03-v1 are out of scope for this PR and are scheduled in subsequent dataset-scoped plans.
+   - **Out-of-scope confirmations.** No dataset ROADMAPs edited; no notebooks; no generated artifacts; no raw data; no status YAMLs; no thesis chapters; no `thesis/pass2_evidence/` deletions; no `thesis/reviews_and_others/` deletions; no file moves; no validator regeneration; no edits to `02_00`, `02_01`, or `scripts/validate_phase02_readiness_contracts.py`; no edits to per-dataset research logs.
+2. Do not modify any prior CROSS entries. Do not modify the index table at the top of `reports/research_log.md` unless it tracks the "CROSS" last-entry date — in which case bump that single cell to `2026-05-06 (T00b activation)`.
 
-**Read scope:**
-- T01–T04 outputs
-- locked specs CROSS-02-00 / CROSS-02-01
-- planning files
-- `tracker_events_feature_eligibility.csv` (sc2egset reports artifact, read-only)
-- `git diff` output (read-only)
+**Deliverables.** One new CROSS hygiene entry on master; no other research_log changes.
 
----
+**Gate.** The new `[CROSS] 2026-05-06` entry exists at the top of the CROSS section; the four sub-bullets (Purpose, T00b summary, Follow-up candidates, Out-of-scope confirmations) match the contents above; PR #209 merge SHA `ef3fc627be1793c135711b8bc3715ecda7490cf7` is cited; the cleanup branch `docs/phase02-contracts-lock-and-planning-cleanup` is cited; the cross-spec consistency verdict is cited. No prior entries modified. Per-dataset research logs untouched.
 
-### T06 — Research-log / changelog closure and reviewer-deep gate
+**Agent routing.** `@executor` on Sonnet (mechanical specified docs edit).
 
-**Objective:** Close the documentation/spec PR with a cross-cutting research-log entry and reviewer-deep pass before implementation tasks are approved.
+**Allowed files.** `reports/research_log.md`.
 
-**Instructions:**
-1. Add a reverse-chronological entry to `reports/research_log.md` for CROSS Phase 02 readiness contracts.
-2. Update `CHANGELOG.md` only if current project convention requires an `[Unreleased]` entry for new specs/rules. If no convention requires it, leave unchanged and state so in the PR body.
-3. Run reviewer-deep. Do not run reviewer-adversarial unless reviewer-deep raises an unresolved BLOCKER.
-4. Reviewer-deep must explicitly evaluate:
-   - no notebook or artifact generation occurred;
-   - no thesis chapters were edited;
-   - no generated artifacts were manually patched;
-   - full SC2 tracker scope remains narrowed, not closed;
-   - every feature family declares grain and prediction setting;
-   - source-specific AoE2 labels are preserved;
-   - CROSS-02-03 does not supersede CROSS-02-01;
-   - cold-start thresholds are gates, not magic constants.
+**Forbidden files.** Everything else (especially: per-dataset `src/rts_predict/games/<game>/datasets/<dataset>/reports/research_log.md`).
 
-**Sanity check:** Reviewer-deep returns PASS or PASS-WITH-NOTES with 0 unresolved BLOCKERs.
+**Stop condition.** Halt before commit if:
+- the CROSS section header cannot be located unambiguously,
+- the index table at the top tracks CROSS last-entry date in a format that would require re-rendering more than the single date cell,
+- any per-dataset research_log appears in the diff.
 
-**Falsifier:** Any reviewer-deep BLOCKER must be resolved in-doc before commit; if it changes scope beyond docs/specs/rules/log, halt for user approval.
+### T04 — PR wrap-up via git-workflow
 
-**Artifact validation:** N/A — no generated artifacts.
+**Goal.** Bump version 3.45.0 → 3.46.0, move CHANGELOG `[Unreleased]` to a new `[3.46.0]` stanza, commit the release bump, and propose the push + `gh pr create` commands per `.claude/rules/git-workflow.md`.
 
-**Lineage:** Root research-log entry lists all created docs/rules and states that no feature generation occurred.
+**Files touched.**
+- `pyproject.toml` — `version = "3.45.0"` → `version = "3.46.0"`. (Single source per project rules; no `__init__.py` version edits.)
+- `CHANGELOG.md` — `[Unreleased]` stanza moved to `[3.46.0] — 2026-05-06 (PR #<TBD>: docs/phase02-contracts-lock-and-planning-cleanup)`; `[Unreleased]` left empty with the four standard subsection headers (Added / Changed / Fixed / Removed).
 
-**Verification:**
-- `rg "phase02/feature-engineering-readiness|CROSS-02-02-v1|CROSS-02-03-v1" reports/research_log.md`
-- reviewer-deep checklist attached to PR body or committed as `planning/current_plan.critique.md` if that repo pattern is being used for this PR.
+**Instructions (mechanical).**
 
-**File scope:**
-- `reports/research_log.md`
-- `CHANGELOG.md` only if convention requires
-- T01-T04 docs if reviewer-deep finds fixable issues
+1. Per `.claude/rules/git-workflow.md` step 1: skip pytest / coverage / ruff / mypy manual runs (no .py files in this PR's diff); pre-commit hooks remain the binding gate at commit time.
+2. Per step 2: bump is **minor** (docs PR with content amendments).
+3. Per step 3: edit `pyproject.toml` `version = "3.45.0"` → `version = "3.46.0"`.
+4. Per step 4: in `CHANGELOG.md`, move `[Unreleased]` content into a new `[3.46.0] — 2026-05-06 (PR #<TBD>: docs/phase02-contracts-lock-and-planning-cleanup)` stanza. The `<TBD>` placeholder convention is explicit:
+   - At version-bump commit time the CHANGELOG entry will read literally `## [3.46.0] — 2026-05-06 (PR #<TBD>: docs/phase02-contracts-lock-and-planning-cleanup)`.
+   - After `gh pr create` issues a PR number, the executor substitutes `<TBD>` with the issued number in a tightly-scoped follow-up commit on the same branch (single-file edit to `CHANGELOG.md`, commit message `chore(release): substitute PR number in CHANGELOG for 3.46.0`).
+   - This **matches the PR #209 precedent** at master commit `73416179` (the T06C CHANGELOG entry that originally carried `<TBD>`-style placeholder language and was post-substituted at PR creation).
+5. The `[3.46.0]` stanza body must summarize:
+   - **Changed.** CROSS-02-02-v1 and CROSS-02-03-v1 transitioned from DRAFT to LOCKED (T01); citation to PR #209 merge commit `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z).
+   - **Changed.** `planning/README.md` §Contents lifecycle table extended to register `current_plan.critique_resolution.md` as ephemeral (T02).
+   - **Removed.** `planning/current_plan.critique.md`, `planning/current_plan.critique_resolution.md` (T02 purge).
+   - **Changed.** `planning/current_plan.md` reset to `<!-- No active plan -->`; `planning/INDEX.md` reset to template (T02 purge).
+   - **Added.** `reports/research_log.md` — new `[CROSS] 2026-05-06` T00b activation entry (T03).
+6. Per step 5: leave `[Unreleased]` with empty Added / Changed / Fixed / Removed subsection headers.
+7. Per step 6: commit `chore(release): bump version to 3.46.0`.
+8. Per step 7: propose to user the push command (`git push -u origin docs/phase02-contracts-lock-and-planning-cleanup`) and the `gh pr create --title "..." --body-file .github/tmp/pr.txt` invocation per the rule's PR Body Format. Write the PR body via the Write tool to `.github/tmp/pr.txt` (per project memory). After the user runs `gh pr create`, perform the `<TBD>` → issued PR number substitution commit described in step 4 above; then delete `.github/tmp/pr.txt` per project memory.
 
-**Read scope:**
-- all outputs from T01-T05
+**PR title.** `docs(phase02): lock CROSS-02-02 / CROSS-02-03 and run planning purge`.
 
----
+**PR body** (per `.claude/rules/git-workflow.md` PR Body Format):
+
+> ## Summary
+>
+> - Lock CROSS-02-02-v1 (`reports/specs/02_02_feature_engineering_plan.md`) and CROSS-02-03-v1 (`reports/specs/02_03_temporal_feature_audit_protocol.md`) on master via this cleanup PR; PR #209 merge SHA `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z) is the reviewer-deep gate-clearing event the DRAFT specs cited; cross-spec consistency verdict PASS / 0 blockers / head_sha `e3cf8923` (`reports/specs/02_04_cross_spec_consistency_report.json`).
+> - Execute `planning/README.md` §Purge protocol for the merged PR #209 artifacts and amend `planning/README.md` §Contents lifecycle table to register `current_plan.critique_resolution.md` as ephemeral.
+> - Append a single `[CROSS] 2026-05-06` T00b activation entry to `reports/research_log.md`.
+> - No dataset ROADMAPs, notebooks, generated artifacts, raw data, status YAMLs, thesis chapters, per-dataset research logs, or `02_04_cross_spec_consistency_report.{json,md}` are modified.
+>
+> ## Test plan
+>
+> - [x] Pre-commit hooks (ruff, mypy) pass at commit time (no .py changes expected to alter lint/type surface).
+> - [x] Both specs flipped to `status: LOCKED` with PR #209 SHA citation; no body content edits beyond banner / lock-status prose.
+> - [x] `planning/current_plan.md` is `<!-- No active plan -->`; critique + resolution files deleted; INDEX.md template; README.md lifecycle table extended.
+> - [x] `reports/research_log.md` new `[CROSS] 2026-05-06` T00b entry only.
+> - [x] `pyproject.toml` `version = "3.46.0"`; `CHANGELOG.md` `[Unreleased]` empty; `[3.46.0]` stanza present pre-substitution; post-`gh pr create`, `<TBD>` substituted in a follow-up commit on this branch.
+>
+> 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+**Deliverables.** One commit `chore(release): bump version to 3.46.0` plus the propose-to-user push + PR creation command pair, plus the post-PR `<TBD>` substitution commit.
+
+**Gate.** `pyproject.toml` shows `3.46.0`; `CHANGELOG.md` `[Unreleased]` empty; `[3.46.0]` stanza present and correctly attributed; PR opened with title and body matching above; `<TBD>` replaced with issued PR number on the same branch.
+
+**Agent routing.** `@executor` on Sonnet (standard PR wrap-up flow per `.claude/rules/git-workflow.md`; no methodological reasoning required).
+
+**Allowed files.** `pyproject.toml`, `CHANGELOG.md`, `.github/tmp/pr.txt`, `.github/tmp/commit.txt`.
+
+**Forbidden files.** Everything else.
+
+**Stop condition.** Halt before commit if:
+- pre-commit hooks fail unexpectedly,
+- `CHANGELOG.md` `[Unreleased]` was not empty pre-edit (it should be — this is the first version-bump after the PR #209 release),
+- the `<TBD>` substitution follow-up commit would touch any file other than `CHANGELOG.md`.
 
 ## File Manifest
 
-| File | Action |
-|------|--------|
-| `planning/current_plan.md` | Rewrite with this plan; T05A planning amendment 2026-05-05 (reproducible-validator T05) |
-| `thesis/pass2_evidence/phase01_closeout_summary.md` | Create (T01) |
-| `.claude/rules/data-analysis-lineage.md` | Create (T02) |
-| `reports/specs/02_02_feature_engineering_plan.md` | Create (T03) |
-| `reports/specs/02_03_temporal_feature_audit_protocol.md` | Create (T04) |
-| `scripts/validate_phase02_readiness_contracts.py` | Create (T05 reproducible validator; deterministic, read-only) |
-| `reports/specs/02_04_cross_spec_consistency_report.json` | Create (T05 generated report — JSON; produced by the validator) |
-| `reports/specs/02_04_cross_spec_consistency_report.md` | Create (T05 generated report — Markdown; produced by the validator) |
-| `reports/research_log.md` | Update (T06) |
-| `CHANGELOG.md` | Conditional update only if project convention requires (T06) |
+The PR's expected diff scope, by task:
+
+- **T01:**
+  - `reports/specs/02_02_feature_engineering_plan.md`
+  - `reports/specs/02_03_temporal_feature_audit_protocol.md`
+- **T02:**
+  - `planning/current_plan.md` (content replaced)
+  - `planning/current_plan.critique.md` (deleted)
+  - `planning/current_plan.critique_resolution.md` (deleted)
+  - `planning/INDEX.md` (reset)
+  - `planning/README.md` (lifecycle table amended)
+- **T03:**
+  - `reports/research_log.md`
+- **T04:**
+  - `pyproject.toml`
+  - `CHANGELOG.md`
+  - `.github/tmp/pr.txt` (created during PR flow; deleted after)
+  - `.github/tmp/commit.txt` (created during commit flow; deleted after)
+
+Total expected committed-files set on this branch: 9 modified/deleted content files (not counting `.github/tmp/` which is created and removed in-session).
 
 ## Gate Condition
 
-The PR is complete only if all of the following are true:
+The plan is complete when, after merge:
 
-- `phase01_closeout_summary.md` exists and states: Phase 01 complete for all three datasets; Phase 02 not_started; SC2 pre-game/history ready; SC2 planned tracker in-game snapshot subset ready with caveats; full SC2 tracker scope narrowed/not closed; AoE2 pre-game/history ready under source-specific labels.
-- `.claude/rules/data-analysis-lineage.md` exists and contains the exact generated-artifact guardrail.
-- `02_02_feature_engineering_plan.md` exists and defines minimal feature families by dataset/prediction setting, source labels, feature grains, and proposed Phase 02 ROADMAP steps without editing dataset ROADMAPs.
-- `02_03_temporal_feature_audit_protocol.md` exists and complements, but does not replace, `02_01_leakage_audit_protocol.md`.
-- Every feature-family row declares grain and prediction setting.
-- Every leakage/audit rule declares sanity check, falsifier, evidence requirement, and future artifact field.
-- No feature-generation notebook, model-ready feature table, raw data, generated artifact, model-training code, or thesis chapter is touched.
-- Reviewer-deep returns PASS or PASS-WITH-NOTES with 0 unresolved BLOCKERs.
+- both Phase 02 cross-specs (CROSS-02-02-v1, CROSS-02-03-v1) are LOCKED on master and cite the PR #209 merge SHA `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z);
+- the planning directory is clean (no orphan `current_plan.critique*.md` files; `current_plan.md` placeholder; INDEX.md template);
+- `planning/README.md` §Contents lifecycle table includes `current_plan.critique_resolution.md`;
+- `reports/research_log.md` has the single `[CROSS] 2026-05-06` T00b activation entry;
+- version is 3.46.0; CHANGELOG `[3.46.0]` stanza published with substituted PR number;
+- no dataset ROADMAPs, notebooks, generated artifacts, raw data, status YAMLs, thesis chapters, per-dataset research logs, or `02_04_cross_spec_consistency_report.{json,md}` were modified.
 
 ## Out of scope
 
-- Feature-generation notebooks.
-- Tiny validation slice execution.
-- Model-ready feature tables or DuckDB feature views.
-- Train/test splits, encoders, scalers, models, baselines, or metrics.
-- Thesis chapter prose edits.
-- Raw data edits.
-- Manual patching or regeneration of existing generated artifacts.
-- Dataset ROADMAP edits, unless the user explicitly approves converting the proposal table into ROADMAP stubs in a later task.
-- Closing full SC2 tracker scope; current PR must preserve `narrowed` outcome.
+Hard exclusions (reproduced verbatim from the user-supplied binding constraint list):
+
+- No dataset ROADMAP edits.
+- No notebooks.
+- No generated artifacts.
+- No raw data.
+- No status YAMLs.
+- No thesis chapters.
+- No `thesis/pass2_evidence/` deletions.
+- No `thesis/reviews_and_others/` deletions.
+- No file moves.
+- No validator/report regeneration.
+- No edits to `02_00`, `02_01`, or `scripts/validate_phase02_readiness_contracts.py`.
+- No edits to per-dataset research logs.
 
 ## Open questions
 
-- Should the next implementation PR add dataset ROADMAP stubs immediately after this contract PR, or first create a non-executing feature-source catalog? Resolves by user decision after this PR.
-- Should a tiny validation slice be permitted in the first implementation PR? Resolves by user decision; default is no.
-- Should CROSS-02-03 eventually gain CI/pre-commit enforcement? Resolves after the first feature-generation PR proves the audit schema.
-- Should `CHANGELOG.md` be updated for spec/rule-only changes? Resolves by checking current repository convention during T06.
+None. All five PR-#209-reviewer-deep documentation-hygiene WARNINGs are addressed in this plan as mechanical edits with explicit instructions.
+
+---
+**Plan-stage critique queue:** plan ready for implementation (reviewer-deep gate already cleared).
