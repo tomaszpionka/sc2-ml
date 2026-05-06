@@ -19,7 +19,7 @@ merged to `master`.
 
 ### Removed
 
-## [3.46.0] — 2026-05-06 (PR #<TBD>: docs/phase02-contracts-lock-and-planning-cleanup)
+## [3.46.0] — 2026-05-06 (PR #210: docs/phase02-contracts-lock-and-planning-cleanup)
 
 ### Changed
 
