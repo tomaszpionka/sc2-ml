@@ -19,6 +19,29 @@ merged to `master`.
 
 ### Removed
 
+## [3.46.0] — 2026-05-06 (PR #<TBD>: docs/phase02-contracts-lock-and-planning-cleanup)
+
+### Changed
+
+- CROSS-02-02-v1.0.1 and CROSS-02-03-v1.0.1 locked (DRAFT → LOCKED) on master after PR #209 merged at `ef3fc627be1793c135711b8bc3715ecda7490cf7` (2026-05-05T21:00:02Z). Both specs flipped via their own §14 / §13 patch lanes (v1 → v1.0.1). `spec_id` literals preserved; no table cell values changed; no audit dimension D1–D15 semantics changed. Validator and `02_04_cross_spec_consistency_report.{json,md}` unchanged.
+- Sibling cross-dataset Phase 02 contract triplet now fully LOCKED: `CROSS-02-00-v3.0.1`, `CROSS-02-01-v1.0.1`, `CROSS-02-02-v1.0.1`, `CROSS-02-03-v1.0.1`.
+- `planning/current_plan.md` reset to `<!-- No active plan -->` placeholder per `planning/README.md` §Purge protocol.
+- `planning/INDEX.md` reset to no-active-plan template (agent routing table preserved).
+- `planning/README.md` amended (Option A) — §Contents lifecycle table extended with new row for `current_plan.critique_resolution.md` (Ephemeral; critique-resolution companion); §Purge protocol step 2 made explicit on symmetric deletion alongside `current_plan.critique.md`.
+
+### Removed
+
+- `planning/current_plan.critique.md` (per §Purge protocol step 2; merged-PR-#209-local artifact).
+- `planning/current_plan.critique_resolution.md` (per amended §Purge protocol step 2; merged-PR-#209-local artifact).
+
+### Added
+
+- `reports/research_log.md` — new `[CROSS] 2026-05-06 — Post-PR-#209 cleanup and Phase 02 contract lock` entry summarizing T01 (spec lock), T02 (planning purge), and the T00b repository hygiene audit (no `thesis/pass2_evidence/` deletions; no `thesis/reviews_and_others/` deletions; no file moves; 5 follow-up candidates flagged for future PRs).
+
+### Unchanged in this PR
+
+- No dataset ROADMAPs, notebooks, generated dataset artifacts, raw data, `STEP_STATUS.yaml` / `PIPELINE_SECTION_STATUS.yaml` / `PHASE_STATUS.yaml` files, thesis chapters, `thesis/pass2_evidence/` files, or `thesis/reviews_and_others/` files were modified. `reports/specs/02_00_feature_input_contract.md`, `reports/specs/02_01_leakage_audit_protocol.md`, `reports/specs/02_04_cross_spec_consistency_report.{json,md}`, and `scripts/validate_phase02_readiness_contracts.py` are unchanged.
+
 ## [3.45.0] — 2026-05-05 (PR #209: phase02/feature-engineering-readiness)
 
 ### Added
