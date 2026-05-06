@@ -1,8 +1,8 @@
 ---
 spec_id: CROSS-02-03-v1
-version: CROSS-02-03-v1
-status: DRAFT
-date: 2026-05-05
+version: CROSS-02-03-v1.0.1
+status: LOCKED
+date: 2026-05-06
 invariants_touched: [I3, I5, I6, I7, I8, I9, I10]
 datasets_bound: [sc2egset, aoestats, aoe2companion]
 sibling_specs: [CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1, CROSS-02-02-v1]
@@ -11,7 +11,7 @@ supersedes: null
 
 # Cross-Dataset Phase 02 Design-Time Temporal Feature Audit Protocol
 
-## CROSS-02-03-v1 (DRAFT / PR-local until reviewed, 2026-05-05)
+## CROSS-02-03-v1.0.1 (LOCKED 2026-05-06; PR #209 merged ef3fc627 on 2026-05-05T21:00:02Z)
 
 This document is the cross-dataset Phase 02 **design-time temporal feature
 audit protocol**. It defines the per-feature-family checks that must pass at
@@ -19,10 +19,7 @@ design time — i.e., before any feature-generation notebook is authored or any
 feature column is materialized. It is the design-time sibling to
 CROSS-02-01-v1.0.1's post-materialization / pre-training leakage audit gate.
 
-This spec is **DRAFT / PR-local until reviewed**: it becomes binding only
-after the reviewer-deep gate prescribed by the active Phase 02 readiness plan
-returns PASS or PASS-WITH-NOTES. Until then, no Phase 02 ROADMAP, notebook,
-or generated artifact may consume this document as authoritative.
+This spec is **LOCKED 2026-05-06** as `CROSS-02-03-v1.0.1` via the §13 patch lane after the reviewer-deep gate prescribed by the PR #209 readiness plan returned PASS-WITH-NOTES with 0 unresolved BLOCKERs (PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` on 2026-05-05T21:00:02Z; cross-spec consistency verdict PASS / 0 blockers / head_sha `e3cf8923` per `reports/specs/02_04_cross_spec_consistency_report.json`); it now joins `CROSS-02-00-v3.0.1` and `CROSS-02-01-v1.0.1` in the binding cross-dataset Phase 02 contract triplet, complementing CROSS-02-01-v1.0.1's post-materialization audit gate without replacing it. This is an administrative lock transition only — no audit dimension D1–D15 semantics changed; the validator is not re-run; the `02_04` consistency reports remain on master under PR #209's recorded `head_sha`.
 
 ---
 
@@ -86,7 +83,7 @@ lifecycle. CROSS-02-03 audits **definitions**; CROSS-02-01-v1.0.1 audits
 |------|--------|------|-------------------------|
 | `reports/specs/02_00_feature_input_contract.md` (**CROSS-02-00-v3.0.1**) | LOCKED 2026-04-26 | Authoritative input contract: VIEW names, column grain, join keys, per-dataset I3 anchors, cross-game encoding protocol, column-level classification | CROSS-02-03 reads §3.2 anchor table, §5 column classification, §4 encoding protocol |
 | `reports/specs/02_01_leakage_audit_protocol.md` (**CROSS-02-01-v1.0.1**) | LOCKED 2026-04-26 | Authoritative post-materialization / pre-training leakage audit gate | CROSS-02-03 complements but does not replace |
-| `reports/specs/02_02_feature_engineering_plan.md` (**CROSS-02-02-v1**) | DRAFT 2026-05-05 | Feature-engineering plan: feature families, prediction settings, grains, source labels, leakage-check declarations, cold-start gates, proposed Phase 02 ROADMAP steps | CROSS-02-03 audits the feature-family rows declared by CROSS-02-02-v1 §6 / §7 / §8 |
+| `reports/specs/02_02_feature_engineering_plan.md` (**CROSS-02-02-v1.0.1**) | LOCKED 2026-05-06 | Feature-engineering plan: feature families, prediction settings, grains, source labels, leakage-check declarations, cold-start gates, proposed Phase 02 ROADMAP steps | CROSS-02-03 audits the feature-family rows declared by CROSS-02-02-v1.0.1 §6 / §7 / §8 |
 
 CROSS-02-03 does not modify any of the three sibling specs.
 
@@ -679,3 +676,4 @@ pre-existing audit artifacts.
 | Version | Date | Author | Classification | Summary |
 |---------|------|--------|----------------|---------|
 | CROSS-02-03-v1 (DRAFT) | 2026-05-05 | T04 executor (claude-opus-4-7) on branch `phase02/feature-engineering-readiness` | Initial DRAFT | Initial draft. Defines the design-time temporal feature audit protocol: audit object, 15 audit dimensions (D1–D15), per-dataset temporal anchor table, prediction-setting rules, SC2 tracker constraints, AoE2 source-label constraints, future audit artifact schema, gate outcomes, and relationship to T05 cross-spec consistency pass. **DRAFT / PR-local until reviewed**: spec becomes binding only after reviewer-deep gate per the active Phase 02 readiness plan returns PASS or PASS-WITH-NOTES. **Does not replace CROSS-02-01-v1.0.1**; complements the locked post-materialization audit gate. Does not modify CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1, or CROSS-02-02-v1. |
+| CROSS-02-03-v1.0.1 (LOCKED) | 2026-05-06 | T01 executor on branch `docs/phase02-contracts-lock-and-planning-cleanup` | Patch (status transition) per §13 | DRAFT → LOCKED via §13 patch lane after reviewer-deep PASS-WITH-NOTES on PR #209 (0 unresolved BLOCKERs); PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` on 2026-05-05T21:00:02Z. No table cell values changed in §4 / §5 / §6 / §7 / §8 / §9 / §10 / §11 / §12; no audit dimension D1–D15 semantics changed. Frontmatter `version` and `status` bumped, body title and §1 hedge sentence collapsed to LOCKED, §14.1 sibling pointer for CROSS-02-02 updated to v1.0.1 / LOCKED. Sibling cross-dataset Phase 02 triplet now binding (CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1, CROSS-02-03-v1.0.1). Complementary to CROSS-02-01-v1.0.1's post-materialization audit gate; does not replace it. Validator and `02_04_cross_spec_consistency_report.{json,md}` unchanged in this commit. |

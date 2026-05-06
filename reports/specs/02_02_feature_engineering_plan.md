@@ -1,8 +1,8 @@
 ---
 spec_id: CROSS-02-02-v1
-version: CROSS-02-02-v1
-status: DRAFT
-date: 2026-05-05
+version: CROSS-02-02-v1.0.1
+status: LOCKED
+date: 2026-05-06
 invariants_touched: [I3, I5, I6, I7, I8, I9, I10]
 datasets_bound: [sc2egset, aoestats, aoe2companion]
 sibling_specs: [CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1]
@@ -11,7 +11,7 @@ supersedes: null
 
 # Cross-Dataset Phase 02 Feature-Engineering Plan
 
-## CROSS-02-02-v1 (DRAFT / PR-local until reviewed, 2026-05-05)
+## CROSS-02-02-v1.0.1 (LOCKED 2026-05-06; PR #209 merged ef3fc627 on 2026-05-05T21:00:02Z)
 
 This document is the cross-dataset Phase 02 feature-engineering plan. It defines
 the per-family feature contract — prediction settings, grains, source labels,
@@ -19,12 +19,7 @@ temporal anchors, leakage falsifiers, cold-start gates, and proposed Phase 02
 section-level steps — before any feature-generation notebook or table is
 authored.
 
-This is a planning/specification artifact only. It is **DRAFT / PR-local until
-reviewed**: the spec becomes binding only after the reviewer-deep gate prescribed
-by the active Phase 02 readiness plan returns PASS or PASS-WITH-NOTES. Until
-then, no Phase 02 ROADMAP, notebook, or generated artifact may consume this
-document as authoritative; CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1 remain the
-sole binding cross-dataset Phase 02 contracts.
+This spec is **LOCKED 2026-05-06** as `CROSS-02-02-v1.0.1` via the §14 patch lane after the reviewer-deep gate prescribed by the PR #209 readiness plan returned PASS-WITH-NOTES with 0 unresolved BLOCKERs (PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` on 2026-05-05T21:00:02Z; cross-spec consistency verdict PASS / 0 blockers / head_sha `e3cf8923` per `reports/specs/02_04_cross_spec_consistency_report.json`); it now joins `CROSS-02-00-v3.0.1` and `CROSS-02-01-v1.0.1` in the binding cross-dataset Phase 02 contract triplet. This is an administrative lock transition only — no feature-family table cell semantics changed; the validator is not re-run; the `02_04` consistency reports remain on master under PR #209's recorded `head_sha`.
 
 ---
 
@@ -716,3 +711,4 @@ CROSS-02-00-v3.0.1 and CROSS-02-01-v1.0.1.
 | Version | Date | Author | Classification | Summary |
 |---------|------|--------|----------------|---------|
 | CROSS-02-02-v1 (DRAFT) | 2026-05-05 | T03 executor (claude-opus-4-7) on branch `phase02/feature-engineering-readiness` | Initial DRAFT | Initial draft. Defines Phase 02 feature-engineering plan, prediction settings, feature table grains, per-dataset minimal feature families, leakage checks, cold-start gates, source-specific AoE2 labels, SC2 tracker eligibility constraint, and proposed Phase 02 ROADMAP steps. **DRAFT / PR-local until reviewed**: spec becomes binding only after reviewer-deep gate per the active Phase 02 readiness plan returns PASS or PASS-WITH-NOTES. Does not supersede CROSS-02-00-v3.0.1 or CROSS-02-01-v1.0.1; complement to a future CROSS-02-03 spec that will operationalize the §10 leakage checks. |
+| CROSS-02-02-v1.0.1 (LOCKED) | 2026-05-06 | T01 executor on branch `docs/phase02-contracts-lock-and-planning-cleanup` | Patch (status transition) per §14 | DRAFT → LOCKED via §14 patch lane after reviewer-deep PASS-WITH-NOTES on PR #209 (0 unresolved BLOCKERs); PR #209 merged on master at `ef3fc627be1793c135711b8bc3715ecda7490cf7` on 2026-05-05T21:00:02Z. No table cell values changed; no §2–§13 prose changed. Frontmatter `version` and `status` bumped, body title and §1 hedge sentence collapsed to LOCKED, sibling cross-dataset Phase 02 triplet now binding (CROSS-02-00-v3.0.1, CROSS-02-01-v1.0.1, CROSS-02-02-v1.0.1). Validator and `02_04_cross_spec_consistency_report.{json,md}` unchanged in this commit. |
