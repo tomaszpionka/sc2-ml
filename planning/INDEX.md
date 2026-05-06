@@ -1,7 +1,7 @@
 # Planning Index
 
 ## Active plan
-- `planning/current_plan.md` — Post-PR-#209 cleanup, DRAFT → LOCKED activation, and planning purge for CROSS-02-02 / CROSS-02-03 (Category C, branch `docs/phase02-contracts-lock-and-planning-cleanup`).
+- _No active plan._
 
 ## Agent routing
 

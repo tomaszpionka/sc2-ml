@@ -11,6 +11,7 @@ Operational orchestration directory for the plan/execute two-session workflow.
 | `BACKLOG.md` | Permanent (append/claim) | Deferred follow-ups from merged PRs; a session claims one item → fleshes it into `current_plan.md` |
 | `current_plan.md` | Ephemeral | The authoritative plan for the active PR |
 | `current_plan.critique.md` | Ephemeral | Adversarial critique (Cat A/F mandatory; B/D conditional) |
+| `current_plan.critique_resolution.md` | Ephemeral | Critique-resolution companion / plan-review resolution log (Cat A/F when critique present) |
 
 ## Lifecycle
 
@@ -36,7 +37,7 @@ On the first session after merge to master, commit once as
 `chore(planning): purge artifacts from merged PR #N`:
 
 1. Replace `current_plan.md` with `<!-- No active plan -->`
-2. Delete `current_plan.critique.md` (if present)
+2. Delete `current_plan.critique.md` and `current_plan.critique_resolution.md` (if present)
 3. Reset `INDEX.md` to its template state
 
 ## Source-of-truth
